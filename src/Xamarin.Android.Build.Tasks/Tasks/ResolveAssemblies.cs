@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				return Execute (resolver);
 			}
 		}

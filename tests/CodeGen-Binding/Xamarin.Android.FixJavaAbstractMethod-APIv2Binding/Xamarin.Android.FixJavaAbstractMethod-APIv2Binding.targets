@@ -5,8 +5,8 @@
       Inputs="@(InputJarSource)"
       Outputs="@(InputJar)">
     <MakeDir Directories="Jars\classes" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\javac&quot; -source 1.5 -target 1.6 -d &quot;Jars\classes&quot; @(InputJarSource -&gt; '%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JavaSdkDirectory)\bin\jar&quot; cf &quot;@(InputJar)&quot; -C &quot;Jars\classes&quot; ." />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;Jars\classes&quot; @(InputJarSource -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;@(InputJar)&quot; -C &quot;Jars\classes&quot; ." />
   </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="bin;obj;Jars\classes;@(InputJar)"/>

@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 			var rp = new ReaderParameters {
 				InMemory    = true,
 			};
-			using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false, loadReaderParameters: rp)) {
+			using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false, loadReaderParameters: rp)) {
 				return Execute (res);
 			}
 		}

@@ -31,14 +31,18 @@ namespace Xamarin.Android.Tools
 			var prefix = Path.GetDirectoryName (appDir);
 			var hash = XAZipFolderNameToHash (Path.GetFileName (Path.GetDirectoryName (Path.GetDirectoryName (prefix))));
 
+			var refAssembliesDirectories = new List<string> ();
 			var progFiles = Environment.GetEnvironmentVariable ("ProgramFiles(x86)");
 			var vsInstall = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
 			if (string.IsNullOrEmpty (vsInstall)) {
 				vsInstall = progFiles;
+			} else {
+				refAssembliesDirectories.Add (Path.Combine (vsInstall, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid"));
 			}
+			refAssembliesDirectories.Add (Path.Combine (progFiles, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"));
+			
 			var msbuildTargets  = Path.Combine (vsInstall, "MSBuild", "Xamarin", "Android");
 			var newTargets      = Path.Combine (prefix, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
-			var refAssemblies   = Path.Combine (progFiles, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid");
 			var newAssemblies   = Path.Combine (prefix, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
 
 			if (Path.DirectorySeparatorChar != '\\') {
@@ -47,29 +51,35 @@ namespace Xamarin.Android.Tools
 			}
 
 			if (args.Length == 0 || args.Any (v => string.Equals (v, "install", StringComparison.OrdinalIgnoreCase) || string.Equals (v, "/install", StringComparison.OrdinalIgnoreCase))) {
-				return Install (msbuildTargets, newTargets, refAssemblies, newAssemblies, hash);
+				return Install (hash, msbuildTargets, newTargets, refAssembliesDirectories, newAssemblies);
 			}
 			if (args.Any (v => string.Equals (v, "uninstall", StringComparison.OrdinalIgnoreCase) || string.Equals (v, "/uninstall", StringComparison.OrdinalIgnoreCase))) {
-				return Uninstall (msbuildTargets, refAssemblies, hash);
+				var directories = new List<string> (refAssembliesDirectories);
+				directories.Add (msbuildTargets);
+				return Uninstall (hash, directories);
 			}
 			Console.Error.WriteLine ($"{AppName}: Invalid command `{string.Join (" ", args)}`.");
 			return 1;
 		}
 
-		static int Install (string msbuildTargets, string newTargets, string refAssemblies, string newAssemblies, string hash)
+		static int Install (string hash, string msbuildTargets, string newTargets, List<string> refAssembliesDirectories, string newAssemblies)
 		{
-			var backupAssemblies    = GetNewBackupName (refAssemblies, hash);
-			var backupTargets       = GetNewBackupName (msbuildTargets, hash);
 			try {
-				Directory.CreateDirectory (Path.GetDirectoryName (refAssemblies));
-				Directory.CreateDirectory (Path.GetDirectoryName (msbuildTargets));
-
-				if (CreateSymbolicLink (refAssemblies, newAssemblies, backupAssemblies) &&
-						CreateSymbolicLink (msbuildTargets, newTargets, backupTargets)) {
-					Console.WriteLine ("Success!");
-					return 0;
+				foreach (var refAssemblies in refAssembliesDirectories) {
+					var backupAssemblies = GetNewBackupName (refAssemblies, hash);
+					Directory.CreateDirectory (Path.GetDirectoryName (refAssemblies));
+					if (!CreateSymbolicLink (refAssemblies, newAssemblies, backupAssemblies))
+						return 1;
 				}
-				return 1;
+
+				var backupTargets = GetNewBackupName (msbuildTargets, hash);
+				Directory.CreateDirectory (Path.GetDirectoryName (msbuildTargets));
+				if (!CreateSymbolicLink (msbuildTargets, newTargets, backupTargets)) {
+					return 1;
+				}
+
+				Console.WriteLine ("Success!");
+				return 0;
 			}
 			catch (UnauthorizedAccessException e) {
 				Console.Error.WriteLine ($"{AppName}: {e.Message}");
@@ -130,18 +140,14 @@ namespace Xamarin.Android.Tools
 			return true;
 		}
 
-		static int Uninstall (string msbuildTargets, string refAssemblies, string hash)
+		static int Uninstall (string hash, List<string> directories)
 		{
-			var backupTargets       = GetExistingBackupName (msbuildTargets, hash);
-			var backupAssemblies    = GetExistingBackupName (refAssemblies, hash);
-
-			Directory.Delete (msbuildTargets);
-			if (backupTargets != null && Directory.Exists (backupTargets)) {
-				Directory.Move (backupTargets, msbuildTargets);
-			}
-			Directory.Delete (refAssemblies);
-			if (backupAssemblies != null && Directory.Exists (backupAssemblies)) {
-				Directory.Move (backupAssemblies, refAssemblies);
+			foreach (var directory in directories) {
+				var backup = GetExistingBackupName (directory, hash);
+				Directory.Delete (directory);
+				if (backup != null && Directory.Exists (backup)) {
+					Directory.Move (backup, directory);
+				}
 			}
 			return 0;
 		}

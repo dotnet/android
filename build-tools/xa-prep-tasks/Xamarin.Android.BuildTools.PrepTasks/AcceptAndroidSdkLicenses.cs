@@ -11,10 +11,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Required]
 		public string AndroidSdkDirectory { get; set; }
 
+		public string JavaSdkDirectory { get; set; }
+
 		public override bool Execute ()
 		{
+			Log.LogMessage (MessageImportance.Low, $"Task {nameof (AcceptAndroidSdkLicenses)}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkDirectory)}: {AndroidSdkDirectory}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkDirectory)}: {JavaSdkDirectory}");
+
 			var licdir = Path.Combine (Path.Combine (AndroidSdkDirectory, "licenses"));
 			Directory.CreateDirectory (licdir);
+
+			if (!string.IsNullOrEmpty (JavaSdkDirectory)) {
+				Environment.SetEnvironmentVariable ("JAVA_HOME", JavaSdkDirectory);
+			}
 
 			string _;
 			var path = Which.GetProgramLocation ("sdkmanager", out _, new [] { Path.Combine (AndroidSdkDirectory, "tools", "bin") });

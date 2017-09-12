@@ -46,6 +46,7 @@ java_classes_init (void)
 {
 	JNIEnv *env = get_jnienv ();
 	NetworkInterface_class = (*env)->FindClass (env, "java/net/NetworkInterface");
+	NetworkInterface_class = (*env)->NewGlobalRef (env, NetworkInterface_class);
 	NetworkInterface_getByName = (*env)->GetStaticMethodID (env, NetworkInterface_class, "getByName", "(Ljava/lang/String;)Ljava/net/NetworkInterface;");
 	NetworkInterface_isUp = (*env)->GetMethodID (env, NetworkInterface_class, "isUp", "()Z");
 	NetworkInterface_supportsMulticast = (*env)->GetMethodID (env, NetworkInterface_class, "supportsMulticast", "()Z");

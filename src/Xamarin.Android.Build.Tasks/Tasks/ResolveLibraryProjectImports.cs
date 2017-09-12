@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
 
-			using (var resolver = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: false)) {
+			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
 			}
 
@@ -105,7 +105,8 @@ namespace Xamarin.Android.Tasks
 				var document = new XDocument (
 					new XDeclaration ("1.0", "UTF-8", null),
 					new XElement ("Paths",
-						new XElement ("Jars", string.Join (";", Jars)),
+						new XElement ("Jars",
+							Jars.Select(e => new XElement ("Jar", e))),
 						new XElement ("ResolvedResourceDirectories",
 							ResolvedResourceDirectories.Select(e => new XElement ("ResolvedResourceDirectory", e))),
 						new XElement ("ResolvedAssetDirectories", 

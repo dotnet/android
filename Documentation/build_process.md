@@ -217,6 +217,27 @@ when packaing Release applications.
 
     This property is `False` by default.
 
+-   **AndroidErrorOnCustomJavaObject** &ndash; A boolean property that
+    determines whether types may implement `Android.Runtime.IJavaObject`
+    *without* also inheriting from `Java.Lang.Object` or `Java.Lang.Throwable`:
+
+        class BadType : IJavaObject {
+            public IntPtr Handle {
+                get {return IntPtr.Zero;}
+            }
+        
+            public void Dispose()
+            {
+            }
+        }
+
+    When True, such types will generate an XA4212 error, otherwise a
+    XA4212 warning will be generated.
+
+    Support for this property was added in Xamarin.Android 8.1.
+
+    This property is `True` by default.
+
 -   **AndroidFastDeploymentType** &ndash; A `:` (colon)-separated list
     of values to control what types can be deployed to the
     [Fast Deployment directory](#Fast_Deployment) on the target device
@@ -565,6 +586,12 @@ when packaing Release applications.
     in the string. 
 
     Added in Xamarin.Android 7.2.
+
+-  **AndroidUseManagedDesignTimeResourceGenerator** &ndash; A boolean property which
+    will switch over the design time builds to use the managed resource parser rather
+    than `aapt`.
+
+    Added in Xamarin.Android 8.1.
 
 ## Binding Project Build Properties
 

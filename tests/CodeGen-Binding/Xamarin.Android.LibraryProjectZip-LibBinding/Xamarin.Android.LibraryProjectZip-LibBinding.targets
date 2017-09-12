@@ -5,10 +5,10 @@
       Inputs="jni\simple-lib.c;jni\Android.mk"
       Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-1\NativeLib.zip">
     <Error
-        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
+        Condition="!Exists ('$(NdkBuildPath)')"
         Text="Could not locate Android NDK."
     />
-    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" />
     <MakeDir Directories="$(OutputPath)\native-lib-1" />
     <Exec
         Command="zip -r ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
@@ -20,11 +20,11 @@
       Inputs="simple2\jni\simple2-lib.c;simple2\jni\Android.mk"
       Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-2\NativeLib2.zip">
     <Error
-        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
+        Condition="!Exists ('$(NdkBuildPath)')"
         Text="Could not locate Android NDK."
     />
     <Exec
-        Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;"
+        Command="&quot;$(NdkBuildPath)&quot;"
         WorkingDirectory="simple2"
     />
     <MakeDir Directories="$(OutputPath)\native-lib-2" />

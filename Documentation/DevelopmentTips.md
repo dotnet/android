@@ -148,15 +148,15 @@ make variable:
 ## Running Individual `.apk` Projects
 
 See also the [`tests/RunApkTests.targets`](../tests/RunApkTests.targets) and
-[`build-tools/scripts/UnitTestApks.targets`](../build-tools/scripts/UnitTestApks.targets)
+[`build-tools/scripts/TestApks.targets`](../build-tools/scripts/TestApks.targets)
 files.
 
 All `.apk`-based unit test projects provide the following targets:
 
-* `DeployUnitTestApks`: Installs the associated `.apk` to an Android device.
-* `UndeployUnitTestApks`: Uninstalls the associated `.apk` from an Android device.
-* `RunUnitTestApks`: Executes the unit tests contained within a `.apk`.
-    Must be executed *after* the `DeployUnitTestApks` target.
+* `DeployTestApks`: Installs the associated `.apk` to an Android device.
+* `UndeployTestApks`: Uninstalls the associated `.apk` from an Android device.
+* `RunTestApks`: Executes the unit tests contained within a `.apk`.
+    Must be executed *after* the `DeployTestApks` target.
 
 To run an individual `.apk`-based test project, a package must be built, using the
 `SignAndroidPackage` target, installed, and executed.
@@ -164,23 +164,23 @@ To run an individual `.apk`-based test project, a package must be built, using t
 For example:
 
 	$ tools/scripts/xabuild /t:SignAndroidPackage tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ tools/scripts/xabuild /t:DeployUnitTestApks tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ tools/scripts/xabuild /t:RunUnitTestApks    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	$ tools/scripts/xabuild /t:DeployTestApks tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	$ tools/scripts/xabuild /t:RunTestApks    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
 ### Running A Single Test Fixture
 
 A single NUnit *Test Fixture* -- a class with the `[TestFixture]`
 custom attribute -- may be executed instead of executing *all* test fixtures.
 
-The `RunUnitTestApks` target accepts a `TestFixture` MSBuild property
+The `RunTestApks` target accepts a `TestFixture` MSBuild property
 to specify the test fixture class to execute:
 
-	$ tools/scripts/xabuild /t:RunUnitTestApks \
+	$ tools/scripts/xabuild /t:RunTestApks \
 	    /p:TestFixture=Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
 	    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
 If using `Xamarin.Android.NUnitLite` for projects outside the `xamarin-android`
-repository, such as NUnit tests for a custom app, the `RunUnitTestApks` target
+repository, such as NUnit tests for a custom app, the `RunTestApks` target
 will not exist. In such scenarios, the [`adb shell am`][adb-shell-am]
 `instrument` command can be used instead. It follows the format:
 

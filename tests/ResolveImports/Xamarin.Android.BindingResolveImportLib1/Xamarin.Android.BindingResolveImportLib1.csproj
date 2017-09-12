@@ -59,7 +59,7 @@
     </CleanDependsOn>
   </PropertyGroup>
   <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib1.java" Outputs="Jars/lib1.zip">
-    <Exec Command="javac -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib1.java" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib1.java" />
     <Exec WorkingDirectory="Jars" Command="zip -r lib1.jar com" />
     <MakeDir Directories="Jars/zipped;Jars/zipped/bin" />
     <Copy SourceFiles="Jars/lib1.jar;Properties/AndroidManifest.xml" DestinationFiles="Jars/zipped/bin/lib1.jar;Jars/zipped/bin/AndroidManifest.xml" />

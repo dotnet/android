@@ -34,10 +34,10 @@
     <RequiredProgram Include="intltoolize"          Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>intltool</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="javac">
+    <RequiredProgram Include="$(JavaCPath)">
       <MinimumVersion>1.8</MinimumVersion>
       <CurrentVersionCommand                        Condition=" '$(HostOS)' != 'Windows' ">$(MSBuildThisFileDirectory)..\scripts\javac-version</CurrentVersionCommand>
-      <CurrentVersionCommand                        Condition=" '$(HostOS)' == 'Windows' ">javac -version 2&gt;&amp;1</CurrentVersionCommand>
+      <CurrentVersionCommand                        Condition=" '$(HostOS)' == 'Windows' ">&quot;$(JavaCPath)&quot; -version 2&gt;&amp;1</CurrentVersionCommand>
       <UbuntuInstall>$(_AptGetInstall) openjdk-8-jdk</UbuntuInstall>
     </RequiredProgram>
     <RequiredProgram Include="make"                 Condition=" '$(HostOS)' != 'Windows' " />

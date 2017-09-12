@@ -8,13 +8,13 @@
     <AndroidNativeLibrary Include="libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
   <Import Project="Mono.Android-Tests.projitems" />
-  <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
+  <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
   <Target Name="BuildNativeLibs"
       BeforeTargets="Build"
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\reuse-threads.c;jni\Android.mk"
       Outputs="@(AndroidNativeLibrary)">
-    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')" />
-    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" />
   </Target>
 </Project>

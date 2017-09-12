@@ -1,0 +1,6 @@
+# measure time of last monodroid-timing message appearance
+last-Debug=monodroid-timing:\s+(?<message>.*)$
+
+# measure time of runtime and JNIEnv initialization end
+init-Debug=monodroid-timing:\s+(?<message>Runtime\.init: end native-to-managed.*)$
+JNI.init-Debug=monodroid-timing:\s+(?<message>JNIEnv\.Initialize end:.*)$

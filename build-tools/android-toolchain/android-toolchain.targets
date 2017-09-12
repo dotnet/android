@@ -128,7 +128,7 @@
     <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
   </ItemGroup>
   <Target Name="_AcceptAndroidSdkLicenses">
-	<AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" />
+    <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
   </Target>
   <Target Name="_CreateMxeToolchains"
       DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"

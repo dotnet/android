@@ -4,13 +4,14 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
 
   <PropertyGroup>
-    <_TestImageName>XamarinAndroidUnitTestRunner</_TestImageName>
+    <_TestImageName>XamarinAndroidTestRunner</_TestImageName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
   </PropertyGroup>
 
@@ -107,50 +108,64 @@
 
   <!--
     <ItemGroup>
-      <UnitTestApk Include="ApkFile">
+      <TestApk Include="ApkFile">
         <Package></Package>
         <InstrumentationType></InstrumentationType>
         <ResultsPath></ResultsPath>
-      </UnitTestApk>
+      </TestApk>
     </ItemGroup>
     -->
 
-  <Target Name="DeployUnitTestApks"
-      Condition=" '@(UnitTestApk)' != '' ">
+  <Target Name="DeployTestApks"
+      Condition=" '@(TestApk)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(UnitTestApk.Identity)&quot;"
+        Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(TestApk.Identity)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
   </Target>
 
-  <Target Name="UndeployUnitTestApks"
-      Condition=" '@(UnitTestApk)' != '' ">
+  <Target Name="UndeployTestApks"
+      Condition=" '@(TestApk)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(UnitTestApk.Package)&quot;"
+        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(TestApk.Package)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
   </Target>
 
-  <Target Name="RunUnitTestApks"
-      Condition=" '@(UnitTestApk)' != '' ">
+  <Target Name="RunTestApks"
+      Condition=" '@(TestApk)' != '' ">
     <RunInstrumentationTests
+        Condition=" '%(TestApk.InstrumentationType)' != ''"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
-        Component="%(UnitTestApk.Package)/%(UnitTestApk.InstrumentationType)"
-        NUnit2TestResultsFile="%(UnitTestApk.ResultsPath)"
+        Component="%(TestApk.Package)/%(TestApk.InstrumentationType)"
+        NUnit2TestResultsFile="%(TestApk.ResultsPath)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
+    <RunUITests
+        Condition=" '%(TestApk.Activity)' != '' "
+        AdbTarget="$(_AdbTarget)"
+        AdbOptions="$(AdbOptions)"
+        Activity="%(TestApk.Activity)"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)">
+    </RunUITests>
     <PropertyGroup>
-      <_DefinitionsFilename Condition=" '%(UnitTestApk.TimingDefinitionsFilename)' == '' ">$(MSBuildThisFileDirectory)/TimingDefinitions.txt</_DefinitionsFilename>
-      <_DefinitionsFilename Condition=" '%(UnitTestApk.TimingDefinitionsFilename)' != '' ">%(UnitTestApk.TimingDefinitionsFilename)</_DefinitionsFilename>
-      <_LogcatFilenameEnd>-logcat-$(Configuration)$(_AotName).txt</_LogcatFilenameEnd>
+      <_LogcatFilename>logcat-$(Configuration)$(_AotName).txt</_LogcatFilename>
     </PropertyGroup>
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > %(UnitTestApk.Package)$(_LogcatFilenameEnd)" />
-    <ProcessLogcatTiming LogcatFilename="%(UnitTestApk.Package)$(_LogcatFilenameEnd)" ApplicationPackageName="%(UnitTestApk.Package)" ResultsFilename="%(UnitTestApk.ResultsPath)" DefinitionsFilename="$(_DefinitionsFilename)" />
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_LogcatFilename)" />
+    <ProcessLogcatTiming
+        Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' "
+        InputFilename="$(_LogcatFilename)"
+        ApplicationPackageName="%(TestApk.Package)"
+        ResultsFilename="%(TestApk.ResultsPath)"
+        DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
+        AddResults="true"
+        Activity="%(TestApk.Activity)" />
   </Target>
 </Project>

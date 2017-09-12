@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -51,6 +52,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseSharedRuntime { get; set; }
 
+		public bool ErrorOnCustomJavaObject { get; set; }
+
 		[Required]
 		public string ResourceDirectory { get; set; }
 
@@ -69,6 +72,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
 			Log.LogDebugMessage ("  AndroidSdkDir: {0}", AndroidSdkDir);
 			Log.LogDebugMessage ("  AndroidSdkPlatform: {0}", AndroidSdkPlatform);
+			Log.LogDebugMessage ($"  {nameof (ErrorOnCustomJavaObject)}: {ErrorOnCustomJavaObject}");
 			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
 			Log.LogDebugMessage ("  MergedAndroidManifestOutput: {0}", MergedAndroidManifestOutput);
 			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
@@ -83,7 +87,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (var res = new DirectoryAssemblyResolver (Log.LogWarning, loadDebugSymbols: true)) {
+				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true)) {
 					Run (res);
 				}
 			}
@@ -93,13 +97,22 @@ namespace Xamarin.Android.Tasks
 					Log.LogMessage (e.ToString ());
 			}
 
+			if (Log.HasLoggedErrors) {
+				// Ensure that on a rebuild, we don't *skip* the `_GenerateJavaStubs` target,
+				// by ensuring that the target outputs have been deleted.
+				Files.DeleteFile (MergedAndroidManifestOutput, Log);
+				Files.DeleteFile (AcwMapFile, Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.jm"), Log);
+				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.mj"), Log);
+			}
+
 			return !Log.HasLoggedErrors;
 		}
 
 		void Run (DirectoryAssemblyResolver res)
 		{
 			PackageNamingPolicy pnp;
-			JniType.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
+			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
 			var temp = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (temp);
 
@@ -117,9 +130,12 @@ namespace Xamarin.Android.Tasks
 			var fxAdditions = MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)
 				.Where (a => assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (a)));
 			assemblies = assemblies.Concat (fxAdditions).ToList ();
-			
+
 			// Step 1 - Find all the JLO types
-			var all_java_types = JavaTypeScanner.GetJavaTypes (assemblies, res, Log.LogWarning);
+			var scanner = new JavaTypeScanner (this.CreateTaskLogger ()) {
+				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
+			};
+			var all_java_types = scanner.GetJavaTypes (assemblies, res);
 
 			WriteTypeMappings (all_java_types);
 
@@ -144,7 +160,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var type in java_types) {
 				string managedKey = type.FullName.Replace ('/', '.');
-				string javaKey    = JniType.ToJniName (type).Replace ('/', '.');
+				string javaKey    = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 
 				acw_map.WriteLine ("{0};{1}", type.GetPartialAssemblyQualifiedName (), javaKey);
 				acw_map.WriteLine ("{0};{1}", type.GetAssemblyQualifiedName (), javaKey);
@@ -173,7 +189,7 @@ namespace Xamarin.Android.Tasks
 				managed.Add (managedKey, type);
 				java.Add (javaKey, type);
 				acw_map.WriteLine ("{0};{1}", managedKey, javaKey);
-				acw_map.WriteLine ("{0};{1}", JniType.ToCompatJniName (type).Replace ('/', '.'), javaKey);
+				acw_map.WriteLine ("{0};{1}", JavaNativeTypeManager.ToCompatJniName (type).Replace ('/', '.'), javaKey);
 			}
 
 			acw_map.Close ();
@@ -246,8 +262,8 @@ namespace Xamarin.Android.Tasks
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in java_types) {
-				if (JniType.IsApplication (type) || JniType.IsInstrumentation (type)) {
-					string javaKey = JniType.ToJniName (type).Replace ('/', '.');				
+				if (JavaNativeTypeManager.IsApplication (type) || JavaNativeTypeManager.IsInstrumentation (type)) {
+					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');				
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (), javaKey);
 				}

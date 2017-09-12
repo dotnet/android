@@ -329,7 +329,7 @@ monodroid_get_system_property (const char *name, char **value)
 #ifdef RELEASE
 #define MAX_OVERRIDES 1
 #else
-#define MAX_OVERRIDES 2
+#define MAX_OVERRIDES 3
 #endif
 static char* override_dirs [MAX_OVERRIDES];
 
@@ -410,6 +410,7 @@ get_primary_override_dir (JNIEnv *env, jstring home)
 
 static char *primary_override_dir;
 static char *external_override_dir;
+static char *external_legacy_override_dir;
 
 static void
 create_update_dir (char *override_dir)
@@ -651,6 +652,7 @@ get_libmonosgen_path ()
 	// external storage locations so we need to file copy the shared object to an internal
 	// storage location before loading it.
 	copy_monosgen_to_internal_location (primary_override_dir, external_override_dir);
+	copy_monosgen_to_internal_location (primary_override_dir, external_legacy_override_dir);
 
 	int i;
 	for (i = 0; i < MAX_OVERRIDES; ++i)
@@ -2512,6 +2514,7 @@ get_ds2_path ()
 	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
 		file = monodroid_strdup_printf ("%s", gdbservers [i]);
 		copy_file_to_internal_location (primary_override_dir, external_override_dir, file);
+		copy_file_to_internal_location (primary_override_dir, external_legacy_override_dir, file);
 		free (file);
 	}
 
@@ -3895,7 +3898,7 @@ create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArra
 }
 
 JNIEXPORT void JNICALL
-Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jstring externalStorageDir, jobjectArray assemblies, jstring packageName)
+Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
 {
 	char *runtime_args = NULL;
 	char *connect_args;
@@ -3925,9 +3928,13 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	setup_environment (env, runtimeApks);
 
 	primary_override_dir = get_primary_override_dir (env, (*env)->GetObjectArrayElement (env, appDirs, 0));
-	esd = (*env)->GetStringUTFChars (env, externalStorageDir, NULL);
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), NULL);
 	external_override_dir = monodroid_strdup_printf ("%s", esd);
-	(*env)->ReleaseStringUTFChars (env, externalStorageDir, esd);
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), esd);
+
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), NULL);
+	external_legacy_override_dir = monodroid_strdup_printf ("%s", esd);
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), esd);
 
 	init_categories (primary_override_dir);
 	create_update_dir (primary_override_dir);
@@ -3939,6 +3946,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 #ifndef RELEASE
 	override_dirs [1] = external_override_dir;
+	override_dirs [2] = external_legacy_override_dir;
 	for (i = 0; i < MAX_OVERRIDES; ++i) {
 		const char *p = override_dirs [i];
 		if (!directory_exists (p))

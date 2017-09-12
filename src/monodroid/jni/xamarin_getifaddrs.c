@@ -25,80 +25,186 @@
 #include "logger.h"
 #include "xamarin_getifaddrs.h"
 
-/* These aren't defined in android's rtnetlink.h (as of ndk 9d). We define fake values for them if
- * they aren't found so that the debug code works properly. We could skip them but future versions
- * of the NDK might include definitions for them.
+/* Some of these aren't defined in android's rtnetlink.h (as of ndk 16). We define values for all of
+ * them if they aren't found so that the debug code works properly. We could skip them but future
+ * versions of the NDK might include definitions for them.
+ * Values are taken from Linux headers shipped with glibc
  */
+#ifndef IFLA_UNSPEC
+#define IFLA_UNSPEC 0
+#endif
+
+#ifndef IFLA_ADDRESS
+#define IFLA_ADDRESS 1
+#endif
+
+#ifndef IFLA_BROADCAST
+#define IFLA_BROADCAST 2
+#endif
+
+#ifndef IFLA_IFNAME
+#define IFLA_IFNAME 3
+#endif
+
+#ifndef IFLA_MTU
+#define IFLA_MTU 4
+#endif
+
+#ifndef IFLA_LINK
+#define IFLA_LINK 5
+#endif
+
+#ifndef IFLA_QDISC
+#define IFLA_QDISC 6
+#endif
+
+#ifndef IFLA_STATS
+#define IFLA_STATS 7
+#endif
+
+#ifndef IFLA_COST
+#define IFLA_COST 8
+#endif
+
+#ifndef IFLA_PRIORITY
+#define IFLA_PRIORITY 9
+#endif
+
+#ifndef IFLA_MASTER
+#define IFLA_MASTER 10
+#endif
+
+#ifndef IFLA_WIRELESS
+#define IFLA_WIRELESS 11
+#endif
+
+#ifndef IFLA_PROTINFO
+#define IFLA_PROTINFO 12
+#endif
+
+#ifndef IFLA_TXQLEN
+#define IFLA_TXQLEN 13
+#endif
+
+#ifndef IFLA_MAP
+#define IFLA_MAP 14
+#endif
+
+#ifndef IFLA_WEIGHT
+#define IFLA_WEIGHT 15
+#endif
+
+#ifndef IFLA_OPERSTATE
+#define IFLA_OPERSTATE 16
+#endif
+
+#ifndef IFLA_LINKMODE
+#define IFLA_LINKMODE 17
+#endif
+
 #ifndef IFLA_LINKINFO
-#define IFLA_LINKINFO 1000
+#define IFLA_LINKINFO 18
 #endif
 
 #ifndef IFLA_NET_NS_PID
-#define IFLA_NET_NS_PID 1001
+#define IFLA_NET_NS_PID 19
 #endif
 
 #ifndef IFLA_IFALIAS
-#define IFLA_IFALIAS 1002
+#define IFLA_IFALIAS 20
 #endif
 
 #ifndef IFLA_NUM_VF
-#define IFLA_NUM_VF 1003
+#define IFLA_NUM_VF 21
 #endif
 
 #ifndef IFLA_VFINFO_LIST
-#define IFLA_VFINFO_LIST 1004
+#define IFLA_VFINFO_LIST 22
 #endif
 
 #ifndef IFLA_STATS64
-#define IFLA_STATS64 1005
+#define IFLA_STATS64 23
 #endif
 
 #ifndef IFLA_VF_PORTS
-#define IFLA_VF_PORTS 1006
+#define IFLA_VF_PORTS 24
 #endif
 
 #ifndef IFLA_PORT_SELF
-#define IFLA_PORT_SELF 1007
+#define IFLA_PORT_SELF 25
 #endif
 
 #ifndef IFLA_AF_SPEC
-#define IFLA_AF_SPEC 1008
+#define IFLA_AF_SPEC 26
 #endif
 
 #ifndef IFLA_GROUP
-#define IFLA_GROUP 1009
+#define IFLA_GROUP 27
 #endif
 
 #ifndef IFLA_NET_NS_FD
-#define IFLA_NET_NS_FD 1010
+#define IFLA_NET_NS_FD 28
 #endif
 
 #ifndef IFLA_EXT_MASK
-#define IFLA_EXT_MASK 1011
+#define IFLA_EXT_MASK 29
 #endif
 
 #ifndef IFLA_PROMISCUITY
-#define IFLA_PROMISCUITY 1012
+#define IFLA_PROMISCUITY 30
 #endif
 
 #ifndef IFLA_NUM_TX_QUEUES
-#define IFLA_NUM_TX_QUEUES 1013
+#define IFLA_NUM_TX_QUEUES 31
 #endif
 
 #ifndef IFLA_NUM_RX_QUEUES
-#define IFLA_NUM_RX_QUEUES 1014
+#define IFLA_NUM_RX_QUEUES 32
 #endif
 
 #ifndef IFLA_CARRIER
-#define IFLA_CARRIER 1015
+#define IFLA_CARRIER 33
 #endif
 
 #ifndef IFLA_PHYS_PORT_ID
-#define IFLA_PHYS_PORT_ID 1016
+#define IFLA_PHYS_PORT_ID 34
 #endif
 
-/* The amount of data we read from the kernel in one call */
-#define RESPONSE_BUFFER_SIZE 1024
+#ifndef IFLA_CARRIER_CHANGES
+#define IFLA_CARRIER_CHANGES 35
+#endif
+
+#ifndef IFLA_PHYS_SWITCH_ID
+#define IFLA_PHYS_SWITCH_ID 36
+#endif
+
+#ifndef IFLA_LINK_NETNSID
+#define IFLA_LINK_NETNSID 37
+#endif
+
+#ifndef IFLA_PHYS_PORT_NAME
+#define IFLA_PHYS_PORT_NAME 38
+#endif
+
+#ifndef IFLA_PROTO_DOWN
+#define IFLA_PROTO_DOWN 39
+#endif
+
+#ifndef IFLA_GSO_MAX_SEGS
+#define IFLA_GSO_MAX_SEGS 40
+#endif
+
+#ifndef IFLA_GSO_MAX_SIZE
+#define IFLA_GSO_MAX_SIZE 41
+#endif
+
+#ifndef IFLA_PAD
+#define IFLA_PAD 42
+#endif
+
+#ifndef IFLA_XDP
+#define IFLA_XDP 43
+#endif
 
 /* Maximum interface address label size, should be more than enough */
 #define MAX_IFA_LABEL_SIZE 1024
@@ -390,21 +496,30 @@ append_ifaddr (struct _monodroid_ifaddrs *addr, struct _monodroid_ifaddrs **ifad
 static int
 parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifaddrs_head, struct _monodroid_ifaddrs **last_ifaddr)
 {
-	ssize_t length;
 	struct msghdr netlink_reply;
 	struct iovec reply_vector;
 	struct nlmsghdr *current_message;
 	struct _monodroid_ifaddrs *addr;
-	unsigned char response [RESPONSE_BUFFER_SIZE];
+	int ret = -1;
+	unsigned char *response = NULL;
 
 	assert (session);
 	assert (ifaddrs_head);
 	assert (last_ifaddr);
-	
+
+	int buf_size = getpagesize ();
+	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
+
+	response = (unsigned char*)malloc (sizeof (*response) * buf_size);
+	if (!response) {
+		goto cleanup;
+	}
+
+	ssize_t length = 0;
 	while (1) {
-		memset (response, 0, RESPONSE_BUFFER_SIZE);
+		memset (response, 0, buf_size);
 		memset (&reply_vector, 0, sizeof (reply_vector));
-		reply_vector.iov_len = RESPONSE_BUFFER_SIZE;
+		reply_vector.iov_len = buf_size;
 		reply_vector.iov_base = response;
 		
 		memset (&netlink_reply, 0, sizeof (netlink_reply));
@@ -413,17 +528,34 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 		netlink_reply.msg_iovlen = 1;
 		netlink_reply.msg_iov = &reply_vector;
 
-		log_debug (LOG_NETLINK, "receiving message...\n");
 		length = recvmsg (session->sock_fd, &netlink_reply, 0);
 		log_debug (LOG_NETLINK, "  length == %d\n", (int)length);
 
 		if (length < 0) {
 			log_debug (LOG_NETLINK, "Failed to receive reply from netlink. %s\n", strerror (errno));
-			return -1;
+			goto cleanup;
 		}
 
+#if DEBUG
+		log_debug (LOG_NETLINK, "response flags:");
+		if (netlink_reply.msg_flags == 0)
+			log_debug (LOG_NETLINK, "   [NONE]");
+		else {
+			if (netlink_reply.msg_flags & MSG_EOR)
+				log_debug (LOG_NETLINK, "   MSG_EOR");
+			if (netlink_reply.msg_flags & MSG_TRUNC)
+				log_debug (LOG_NETLINK, "   MSG_TRUNC");
+			if (netlink_reply.msg_flags & MSG_CTRUNC)
+				log_debug (LOG_NETLINK, "   MSG_CTRUNC");
+			if (netlink_reply.msg_flags & MSG_OOB)
+				log_debug (LOG_NETLINK, "   MSG_OOB");
+			if (netlink_reply.msg_flags & MSG_ERRQUEUE)
+				log_debug (LOG_NETLINK, "   MSG_ERRQUEUE");
+		}
+#endif
+
 		if (length == 0)
-			return 0; /* done, apparently */
+			break;
 
 		for (current_message = (struct nlmsghdr*)response; current_message && NLMSG_OK (current_message, length); current_message = NLMSG_NEXT (current_message, length)) {
 			log_debug (LOG_NETLINK, "next message... (type: %u)\n", current_message->nlmsg_type);
@@ -432,24 +564,39 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 				case RTM_NEWLINK:
 					log_debug (LOG_NETLINK, "  dumping link...\n");
 					addr = get_link_info (current_message);
-					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0)
-						return -1;
+					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0) {
+						ret = -1;
+						goto cleanup;
+					}
 					log_debug (LOG_NETLINK, "  done\n");
 					break;
 
 				case RTM_NEWADDR:
 					log_debug (LOG_NETLINK, "  got an address\n");
 					addr = get_link_address (current_message, ifaddrs_head);
-					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0)
-						return -1;
+					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0) {
+						ret = -1;
+						goto cleanup;
+					}
 					break;
 					
 				case NLMSG_DONE:
 					log_debug (LOG_NETLINK, "  message done\n");
-					return 0;
+					ret = 0;
+					goto cleanup;
+					break;
+
+				default:
+					log_debug (LOG_NETLINK, "  message type: %u", current_message->nlmsg_type);
+					break;
 			}
 		}
-	}	
+	}
+
+  cleanup:
+	if (response)
+		free (response);
+	return ret;
 }
 
 static int
@@ -636,7 +783,7 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 				netmask_data [prefix_bytes + 1] = 0xff << (8 - (prefix_length % 8));
 			log_debug (LOG_NETLINK, "   netmask is: ");
 			for (i = 0; i < data_length; i++) {
-				log_debug (LOG_NETLINK, "%s%u", i == 0 ? "" : ".", (unsigned char)ifa->ifa_netmask->sa_data [i]);
+				log_debug (LOG_NETLINK, "%s%u", i == 0 ? " " : ".", (unsigned char)ifa->ifa_netmask->sa_data [i]);
 			}
 			log_debug (LOG_NETLINK, "\n");
 		}
@@ -645,10 +792,11 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 	return 0;
 }
 
+
 static struct _monodroid_ifaddrs *
 get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **ifaddrs_head)
 {
-	size_t length;
+	size_t length = 0;
 	struct rtattr *attribute;
 	struct ifaddrmsg *net_address;
 	struct _monodroid_ifaddrs *ifa = NULL;
@@ -658,6 +806,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	assert (message);
 	net_address = NLMSG_DATA (message);
 	length = IFA_PAYLOAD (message);
+	log_debug (LOG_NETLINK, "   address data length: %u", length);
 	if (length <= 0) {
 		goto error;
 	}
@@ -670,14 +819,17 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	ifa->ifa_flags = get_interface_flags_by_index (net_address->ifa_index, ifaddrs_head);
 	
 	attribute = IFA_RTA (net_address);
+	log_debug (LOG_NETLINK, "   reading attributes");
 	while (RTA_OK (attribute, length)) {
 		payload_size = RTA_PAYLOAD (attribute);
+		log_debug (LOG_NETLINK, "     attribute payload_size == %u\n", payload_size);
 		sa = NULL;
 		
 		switch (attribute->rta_type) {
 			case IFA_LABEL: {
 				int room_for_trailing_null = 0;
 
+				log_debug (LOG_NETLINK, "     attribute type: LABEL");
 				if (payload_size > MAX_IFA_LABEL_SIZE) {
 					payload_size = MAX_IFA_LABEL_SIZE;
 					room_for_trailing_null = 1;
@@ -697,9 +849,10 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 			}
 
 			case IFA_LOCAL:
+				log_debug (LOG_NETLINK, "     attribute type: LOCAL");
 				if (ifa->ifa_addr) {
 					/* P2P protocol, set the dst/broadcast address union from the original address.
-					 * Since ifa_addr is set it means IFA_ADDRESST occured earlier and that address
+					 * Since ifa_addr is set it means IFA_ADDRESS occured earlier and that address
 					 * is indeed the P2P destination one.
 					 */
 					ifa->_monodroid_ifa_dstaddr = ifa->ifa_addr;
@@ -709,6 +862,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				break;
 
 			case IFA_BROADCAST:
+				log_debug (LOG_NETLINK, "     attribute type: BROADCAST");
 				if (ifa->_monodroid_ifa_dstaddr) {
 					/* IFA_LOCAL happened earlier, undo its effect here */
 					free (ifa->_monodroid_ifa_dstaddr);
@@ -718,6 +872,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				break;
 
 			case IFA_ADDRESS:
+				log_debug (LOG_NETLINK, "     attribute type: ADDRESS");
 				if (ifa->ifa_addr) {
 					/* Apparently IFA_LOCAL occured earlier and we have a P2P connection
 					 * here. IFA_LOCAL carries the destination address, move it there
@@ -726,6 +881,26 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 					ifa->ifa_addr = NULL;
 				}
 				sa = &ifa->ifa_addr;
+				break;
+
+			case IFA_UNSPEC:
+				log_debug (LOG_NETLINK, "     attribute type: UNSPEC");
+				break;
+
+			case IFA_ANYCAST:
+				log_debug (LOG_NETLINK, "     attribute type: ANYCAST");
+				break;
+
+			case IFA_CACHEINFO:
+				log_debug (LOG_NETLINK, "     attribute type: CACHEINFO");
+				break;
+
+			case IFA_MULTICAST:
+				log_debug (LOG_NETLINK, "     attribute type: MULTICAST");
+				break;
+
+			default:
+				log_debug (LOG_NETLINK, "     attribute type: %u", attribute->rta_type);
 				break;
 		}
 
@@ -899,6 +1074,15 @@ struct enumvalue iflas[] = {
 	ENUM_VALUE_ENTRY (IFLA_NUM_RX_QUEUES),
 	ENUM_VALUE_ENTRY (IFLA_CARRIER),
 	ENUM_VALUE_ENTRY (IFLA_PHYS_PORT_ID),
+	ENUM_VALUE_ENTRY (IFLA_CARRIER_CHANGES),
+	ENUM_VALUE_ENTRY (IFLA_PHYS_SWITCH_ID),
+	ENUM_VALUE_ENTRY (IFLA_LINK_NETNSID),
+	ENUM_VALUE_ENTRY (IFLA_PHYS_PORT_NAME),
+	ENUM_VALUE_ENTRY (IFLA_PROTO_DOWN),
+	ENUM_VALUE_ENTRY (IFLA_GSO_MAX_SEGS),
+	ENUM_VALUE_ENTRY (IFLA_GSO_MAX_SIZE),
+	ENUM_VALUE_ENTRY (IFLA_PAD),
+	ENUM_VALUE_ENTRY (IFLA_XDP),
 	{ -1, 0 }
 };
 

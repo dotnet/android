@@ -9,10 +9,10 @@
   />
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
-      Condition=" '$(DoNotLoadOSProperties)' != 'True' "
+      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>7.4.99</ProductVersion>
+    <ProductVersion>8.1.99</ProductVersion>
     <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">26</AndroidLatestApiLevel>
     <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v8.0</AndroidLatestFrameworkVersion>
@@ -48,6 +48,7 @@
     <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <AntDirectory>$(AndroidToolchainDirectory)\ant</AntDirectory>
+    <AntToolPath>$(AntDirectory)\bin</AntToolPath>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:x86</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
@@ -97,6 +98,8 @@
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\tools</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
+    <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
+    <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>
   </PropertyGroup>
   <!--
     "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere

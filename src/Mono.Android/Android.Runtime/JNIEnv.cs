@@ -11,8 +11,7 @@ using System.Threading;
 using System.Text;
 
 using Java.Interop;
-
-using JniType	    = Java.Interop.Tools.TypeNameMappings.JniType;
+using Java.Interop.Tools.TypeNameMappings;
 
 #if JAVA_INTEROP
 using JniNativeMethod = Java.Interop.JniNativeMethodRegistration;
@@ -172,7 +171,7 @@ namespace Android.Runtime {
 				Delegate callback;
 				if (toks [2] == "__export__") {
 					var mname = toks [0].Substring (2);
-					var minfo = type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).Where (m => m.Name == mname && JniType.GetJniSignature (m) == toks [1]).FirstOrDefault ();
+					var minfo = type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).Where (m => m.Name == mname && JavaNativeTypeManager.GetJniSignature (m) == toks [1]).FirstOrDefault ();
 					if (minfo == null)
 						throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
 					callback = CreateDynamicCallback (minfo);
@@ -542,9 +541,9 @@ namespace Android.Runtime {
 
 		public static IntPtr FindClass (System.Type type)
 		{
-			int rank = JniType.GetArrayInfo (type, out type);
+			int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
 			try {
-				return FindClass (JniType.ToJniName (GetJniName (type), rank));
+				return FindClass (JavaNativeTypeManager.ToJniName (GetJniName (type), rank));
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
@@ -552,17 +551,17 @@ namespace Android.Runtime {
 				string jni = Java.Interop.TypeManager.GetJniTypeName (type);
 				if (jni != null) {
 					e.Dispose ();
-					return FindClass (JniType.ToJniName (jni, rank));
+					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
 				}
 
 				// Though it's tempting to call TypeManager.RegisterType() to avoid
 				// calling GetCustomAttributes() again, this isn't necessary as
 				// JNIEnv.FindClass() will invoke the static constructor for the type,
 				// which will (indirectly) call TypeManager.RegisterType().
-				jni = JniType.ToJniNameFromAttributes (type);
+				jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
-					return FindClass (JniType.ToJniName (jni, rank));
+					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
 				}
 				throw;
 			}
@@ -883,7 +882,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("type");
 			var java  = monodroid_typemap_managed_to_java (type.AssemblyQualifiedName);
 			return java == IntPtr.Zero
-				? JniType.ToJniName (type)
+				? JavaNativeTypeManager.ToJniName (type)
 				: Marshal.PtrToStringAnsi (java);
 		}
 

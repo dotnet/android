@@ -49,7 +49,7 @@ install::
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	if [ ! -e "$(prefix)/bin/mono" ]; then \
-		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"
+		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"; \
 	fi
 
 uninstall::
@@ -96,8 +96,10 @@ prepare-external: prepare-deps
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	(cd $(call GetPath,JavaInterop) && make prepare)
-	(cd $(call GetPath,JavaInterop) && make bin/BuildDebug/JdkInfo.props)
+	$(foreach conf, $(CONFIGURATIONS), \
+		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(conf)) && \
+		(cd $(call GetPath,JavaInterop) && make bin/Build$(conf)/JdkInfo.props CONFIGURATION=$(conf)) && ) \
+	true
 
 prepare-props: prepare-external
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
@@ -156,7 +158,8 @@ TEST_APK_PROJECTS = \
 	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
 TEST_APK_PROJECTS_RELEASE = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj
+	src/Mono.Android/Test/Mono.Android-Tests.csproj \
+	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
 
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
 define BUILD_TEST_APK

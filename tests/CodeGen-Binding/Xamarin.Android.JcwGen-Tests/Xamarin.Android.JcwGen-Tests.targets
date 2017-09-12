@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Xamarin.Android.JcwGen-Tests.projitems" />
-  <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
+  <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
   <Target Name="BuildNativeLibs"
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\Android.mk;jni\timing.c"
       Outputs="@(AndroidNativeLibrary)">
     <Error
-        Condition="!Exists ('$(AndroidNdkDirectory)\ndk-build')"
+        Condition="!Exists ('$(NdkBuildPath)')"
         Text="Could not locate Android NDK."
     />
-    <Exec Command="&quot;$(AndroidNdkDirectory)\ndk-build&quot;" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" />
   </Target>
   <Target Name="RunTests"
       DependsOnTargets="AndroidPrepareForBuild">

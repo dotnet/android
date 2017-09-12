@@ -1,7 +1,10 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll"  TaskName="Xamarin.Android.Tools.BootstrapTasks.Ant" />
   <Target Name="_BuildProGuard">
-    <Exec
-        Command="$(AntDirectory)\bin\ant -verbose -f buildscripts\build.xml proguard"
+    <Ant
+        Arguments="-verbose -f buildscripts\build.xml proguard"
+        ToolPath="$(AntToolPath)"
+        JavaSdkDirectory="$(JavaSdkDirectory)"
         WorkingDirectory="$(ProGuardSourceFullPath)"
     />
     <MakeDir Directories="$(OutputPath)" />
@@ -28,8 +31,10 @@
     <Delete Files="$(OutputPath)\lib\proguard.jar" />
     <Delete Files="$(OutputPath)\bin\proguard.sh" />
     <Delete Files="$(OutputPath)\bin\proguard.bat" />
-    <Exec
-        Command="$(AntDirectory)\bin\ant -f buildscripts\build.xml clean"
+    <Ant
+        Arguments="-f buildscripts\build.xml clean"
+        ToolPath="$(AntToolPath)"
+        JavaSdkDirectory="$(JavaSdkDirectory)"
         WorkingDirectory="$(ProGuardSourceFullPath)"
     />
   </Target>

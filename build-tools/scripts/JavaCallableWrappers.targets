@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="GenerateJavaCallableWrappers"
       AfterTargets="$(JavaCallableWrapperAfterTargets)"
-      Inputs="$(JavaCallableWrapperAbsAssembly)"
+      Inputs="$(JavaCallableWrapperAbsAssembly);@(JavaCallableWrapperSource)"
       Outputs="$(OutputPath)mono.android.jar">
     <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw\bin" />
     <PropertyGroup>
@@ -20,7 +20,7 @@
     </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)jcw\classes.txt"
-        Lines="@(_CommonJavaSources);@(_JavaSources)"
+        Lines="@(JavaCallableWrapperSource);@(_JavaSources)"
         Overwrite="True"
     />
     <PropertyGroup>
@@ -30,15 +30,15 @@
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
     </PropertyGroup>
     <Exec
-        Command="javac $(_Target) $(_D) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;$(_MonoAndroidJar)&quot; @$(IntermediateOutputPath)jcw\classes.txt"
+        Command="&quot;$(JavaCPath)&quot; $(_Target) $(_D) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;$(_MonoAndroidJar)&quot; @$(IntermediateOutputPath)jcw\classes.txt"
     />
     <Exec
         Condition="Exists('$(_MonoAndroidJar)')"
-        Command="jar uf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
+        Command="&quot;$(JarPath)&quot; uf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
     />
     <Exec
         Condition="!Exists('$(_MonoAndroidJar)')"
-        Command="jar cf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
+        Command="&quot;$(JarPath)&quot; cf &quot;$(_MonoAndroidJar)&quot; -C &quot;$(IntermediateOutputPath)jcw\bin&quot; ."
     />
   </Target>
   <Target Name="_GenerateMonoAndroidDex16"

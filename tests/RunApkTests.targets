@@ -9,19 +9,21 @@
     <_AotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_AotName>
   </PropertyGroup>
   <!--
-    Note that the `.csproj` for each `@(UnitTestApk)` entry *must* be added to
-    `$(TEST_APK_PROJECTS)` in the toplevel Makefile so that the `.apk` is built.
+    Note that the `.csproj` for each `@(TestApk)` entry *must* be added to
+    `$(TEST_APK_PROJECTS)` and/or `$(TEST_APK_PROJECTS_RELEASE)`
+    in the toplevel Makefile so that the `.apk` is built.
     -->
   <Import Project="..\src\Mono.Android\Test\Mono.Android-Tests.projitems" />
   <Import Project="..\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.projitems" Condition=" '$(Configuration)' == 'Debug' " />
   <Import Project="..\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.projitems"  Condition=" '$(Configuration)' == 'Debug' " />
-  <Import Project="..\build-tools\scripts\UnitTestApks.targets" />
+  <Import Project="..\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.projitems"  Condition=" '$(Configuration)' == 'Release' And '$(AotAssemblies)' != 'true' " />
+  <Import Project="..\build-tools\scripts\TestApks.targets" />
   <PropertyGroup>
     <RunApkTestsDependsOn>
       AcquireAndroidTarget;
-      UndeployUnitTestApks;
-      DeployUnitTestApks;
-      RunUnitTestApks;
+      UndeployTestApks;
+      DeployTestApks;
+      RunTestApks;
       ReleaseAndroidTarget
     </RunApkTestsDependsOn>
   </PropertyGroup>

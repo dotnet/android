@@ -20,9 +20,27 @@ namespace Xamarin.Android.ApiMerge {
 		public ApiDescription (string source)
 		{
 			Contents = XDocument.Load (source);
-			foreach (var package in Contents.Element ("api").Elements ("package")) {
-				AddPackage (package);
+
+			string platform;
+			XElement api = GetRoot (Contents, source, out platform);
+			foreach (var package in api.Elements ("package")) {
+				AddPackage (package, platform);
 			}
+		}
+
+		XElement GetRoot (XDocument doc, string sourcePath, out string platform)
+		{
+			XElement api = doc.Element ("api");
+			XAttribute platformAttribute = api.Attributes ("platform").LastOrDefault ();
+			if (platformAttribute != null)
+				platform = platformAttribute.Value?.Trim ();
+			else
+				platform = null;
+
+			if (String.IsNullOrEmpty (platform))
+				throw new InvalidOperationException ($"API source '{sourcePath}' root element misses the 'platform' attribute");
+
+			return api;
 		}
 
 		public void Merge (string apiLocation)
@@ -32,18 +50,22 @@ namespace Xamarin.Android.ApiMerge {
 			int apiLevel = int.Parse (filename.Substring (4, filename.IndexOf ('.', 4) - 4));
 #endif
 			var n = XDocument.Load (apiLocation);
-			foreach (var npackage in n.Elements ("api").Elements ("package")) {
+			string platform = null;
+			XElement api = GetRoot (n, apiLocation, out platform);
+
+			foreach (var npackage in api.Elements ("package")) {
 				var spackage = GetPackage ((string) npackage.Attribute ("name"));
 				if (spackage == null) {
-					AddNewPackage (npackage, apiLocation);
+					AddNewPackage (npackage, apiLocation, platform);
 					continue;
 				}
 				foreach (var ntype in npackage.Elements ()) {
 					var stype = GetType (spackage, ntype);
 					if (stype == null) {
-						AddNewType (spackage, ntype, apiLocation);
+						AddNewType (spackage, ntype, apiLocation, platform);
 						continue;
 					}
+					UpdateDeprecatedSince (stype, ntype, platform);
 					foreach (var a in ntype.Attributes ()) {
 						var sattr = stype.Attribute (a.Name);
 						switch (a.Name.LocalName) {
@@ -89,9 +111,11 @@ namespace Xamarin.Android.ApiMerge {
 					foreach (var nmember in ntype.Elements ()) {
 						var smember = GetMember (stype, nmember);
 						if (smember == null) {
-							AddNewMember (stype, nmember, apiLocation);
+							AddNewMember (stype, nmember, apiLocation, platform);
 							continue;
 						}
+
+						UpdateDeprecatedSince (smember, nmember, platform);
 						if (nmember.Name.LocalName == "field") {
 							// FIXME: enable this to get the latest field attributes precisely.
 							/*
@@ -114,7 +138,7 @@ namespace Xamarin.Android.ApiMerge {
 						if (nmember.Name.LocalName == "method" || nmember.Name.LocalName == "constructor") {
 							smember = GetConstructorOrMethod (stype, nmember);
 							if (smember == null) {
-								AddNewMember (stype, nmember, apiLocation);
+								AddNewMember (stype, nmember, apiLocation, platform);
 								continue;
 							}
 							foreach (var a in nmember.Attributes ()) {
@@ -177,7 +201,7 @@ namespace Xamarin.Android.ApiMerge {
 
 		void FixupOverrides ()
 		{
-			foreach (var type in Contents.Elements ("api").Elements ("package").Elements ("class")) {
+			foreach (var type in Contents.Element ("api").Elements ("package").Elements ("class")) {
 				foreach (var method in type.Elements ("method")) {
 					XElement baseType, sourceType = type;
 					string extends;
@@ -193,14 +217,14 @@ namespace Xamarin.Android.ApiMerge {
 			}
 		}
 
-		void AddPackage (XElement package)
+		void AddPackage (XElement package, string platform)
 		{
 			foreach (var type in package.Elements ()) {
-				AddType (type);
+				AddType (type, platform);
 			}
 		}
 
-		void AddType (XElement type)
+		void AddType (XElement type, string platform)
 		{
 			string package  = (string) type.Parent.Attribute ("name");
 			string typeName = (string) type.Attribute ("name");
@@ -215,7 +239,54 @@ namespace Xamarin.Android.ApiMerge {
 				}
 				return;
 			}
+			UpdateDeprecatedSince (type, platform);
 			Types.Add (fullName, type);
+		}
+
+		void UpdateDeprecatedSince (XElement oldElement, XElement newElement, string platform)
+		{
+			if (oldElement == null || newElement == null)
+				return;
+
+			XAttribute deprecatedNew = newElement.Attributes ("deprecated").LastOrDefault ();
+			if (deprecatedNew == null)
+				// Removal of the attribute doesn't affect deprecated-since
+				return;
+
+			XAttribute deprecatedOld = oldElement.Attributes ("deprecated").LastOrDefault ();
+
+			bool deprecatedSinceNow = false;
+			if (deprecatedOld == null) {
+				deprecatedSinceNow |= String.Compare ("deprecated", deprecatedNew.Value, StringComparison.Ordinal) == 0;
+			} else if (String.Compare ("not deprecated", deprecatedOld.Value, StringComparison.Ordinal) == 0 &&
+			           String.Compare ("deprecated", deprecatedNew.Value, StringComparison.Ordinal) == 0) {
+				deprecatedSinceNow = true;
+			}
+
+			if (!deprecatedSinceNow)
+				return;
+
+			SetDeprecatedSince (oldElement, platform);
+		}
+
+		void UpdateDeprecatedSince (XElement newElement, string platform)
+		{
+			XAttribute deprecated = newElement?.Attributes ("deprecated").LastOrDefault ();
+			if (deprecated == null || String.Compare ("deprecated", deprecated.Value, StringComparison.Ordinal) != 0)
+				return;
+			SetDeprecatedSince (newElement, platform);
+		}
+
+		void SetDeprecatedSince (XElement element, string platform)
+		{
+			if (element == null)
+				return;
+
+			XAttribute deprecatedSince = element.Attributes ("deprecated-since").LastOrDefault ();
+			if (deprecatedSince == null)
+				element.Add (new XAttribute ("deprecated-since", platform));
+			else
+				deprecatedSince.SetValue (platform);
 		}
 
 		XElement AddWithLocation (XElement old, XElement child, string location)
@@ -225,25 +296,27 @@ namespace Xamarin.Android.ApiMerge {
 			return (XElement) old.LastNode;
 		}
 
-		void AddNewPackage (XElement newPackage, string location)
+		void AddNewPackage (XElement newPackage, string location, string platform)
 		{
+			UpdateDeprecatedSince (newPackage, platform);
 			AddWithLocation (Contents.Element ("api"), newPackage, location);
 		}
 
-		void AddNewType (XElement sourcePackage, XElement newType, string location)
+		void AddNewType (XElement sourcePackage, XElement newType, string location, string platform)
 		{
 			var t = AddWithLocation (sourcePackage, newType, location);
-			AddType (t);
+			AddType (t, platform);
 		}
 
-		void AddNewMember (XElement sourceType, XElement newMember, string location)
+		void AddNewMember (XElement sourceType, XElement newMember, string location, string platform)
 		{
+			UpdateDeprecatedSince (newMember, platform);
 			AddWithLocation (sourceType, newMember, location);
 		}
 
 		XElement GetPackage (string package)
 		{
-			return Contents.Elements ("api").Elements ("package")
+			return Contents.Element ("api").Elements ("package")
 				.FirstOrDefault (p => ((string) p.Attribute ("name")) == package);
 		}
 

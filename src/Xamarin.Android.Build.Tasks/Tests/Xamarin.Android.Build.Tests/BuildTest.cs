@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -209,12 +210,32 @@ printf ""%d"" x
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
+			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
+			if (checkMinLlvmPath) {
+				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
+				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
+	<uses-sdk android:minSdkVersion=""10"" />
+	<application android:label=""{proj.ProjectName}"">
+	</application>
+</manifest>";
+			}
 			using (var b = CreateApkBuilder (path)) {
+				if (!b.CrossCompilerAvailable (supportedAbis))
+					Assert.Ignore ("Cross compiler was not available");
 				b.ThrowOnBuildFailure = false;
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
+				if (checkMinLlvmPath) {
+					// LLVM passes a direct path to libc.so, and we need to use the libc.so
+					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
+					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
+					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-9.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
+					var m           = rightLibc.Match (b.LastBuildOutput);
+					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
+				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 						"bundles", abi, "libmonodroid_bundle_app.so");
@@ -258,6 +279,8 @@ printf ""%d"" x
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			using (var b = CreateApkBuilder (path)) {
+				if (!b.CrossCompilerAvailable (supportedAbis))
+					Assert.Ignore ("Cross compiler was not available");
 				b.ThrowOnBuildFailure = false;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
@@ -354,6 +377,9 @@ printf ""%d"" x
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
+				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep");
+				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
+				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 			}
 		}
@@ -1052,6 +1078,8 @@ namespace App1
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			using (var b = CreateApkBuilder ("temp/SequencePointChecks", false, false)) {
+				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
+					Assert.Ignore ("Cross compiler was not available");
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -1733,11 +1761,12 @@ public class Test
 		}
 
 		[Test]
-		public void BuildInDesignTimeMode ()
+		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false ,false)) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				builder.Target = "UpdateAndroidResources";
@@ -1989,6 +2018,36 @@ namespace "+ libName + @" {
 			Assert.IsTrue(sb.Build(new string[] { "Configuration=Release" }), "Solution should have built.");
 			Assert.IsTrue(sb.BuildProject(app1, "SignAndroidPackage"), "Build of project should have succeeded");
 			sb.Dispose();
+		}
+
+		[Test]
+		public void XA4212 ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+			};
+			proj.Sources.Add (new BuildItem ("Compile", "MyBadJavaObject.cs") { TextContent = () => @"
+using System;
+using Android.Runtime;
+namespace UnnamedProject {
+    public class MyBadJavaObject : IJavaObject
+    {
+        public IntPtr Handle {
+			get {return IntPtr.Zero;}
+        }
+
+        public void Dispose ()
+        {
+        }
+    }
+}" });
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4212.");
+				StringAssert.Contains ($"error XA4", builder.LastBuildOutput, "Error should be XA4212");
+				StringAssert.Contains ($"Type `UnnamedProject.MyBadJavaObject` implements `Android.Runtime.IJavaObject`", builder.LastBuildOutput, "Error should mention MyBadJavaObject");
+				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
+				StringAssert.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
+			}
 		}
 	}
 }

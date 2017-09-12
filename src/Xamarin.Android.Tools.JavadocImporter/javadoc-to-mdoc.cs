@@ -465,7 +465,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 				.Append (name)
 				.Append ("(");
 			bool first = true;
-			foreach (JniType t in JniType.FromSignature (mregister.Signature)) {
+			foreach (JniTypeName t in JavaNativeTypeManager.FromSignature (mregister.Signature)) {
 				if (!first)
 					anchor.Append (", ");
 				first = false;

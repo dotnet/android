@@ -522,7 +522,7 @@ namespace Xamarin.Android.Tasks
 		{
 			int count = 0;
 			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			using (var res = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false)) {
+			using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 			foreach (var assembly in EmbeddedNativeLibraryAssemblies)
 				res.Load (assembly.ItemSpec);
 				foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
@@ -534,7 +534,7 @@ namespace Xamarin.Android.Tasks
 						var data = ressozip.GetResourceData ();
 						using (var ms = new MemoryStream (data)) {
 							using (var zip = ZipArchive.Open (ms)) {
-								foreach (var e in zip.Where (x => abis.Any (a => x.FullName.Contains (a)))) {
+								foreach (var e in zip.Where (x => abis.Any (a => x.FullName.Contains ($"/{a}/")))) {
 									if (e.IsDirectory)
 										continue;
 									var key = e.FullName.Replace ("native_library_imports", "lib");

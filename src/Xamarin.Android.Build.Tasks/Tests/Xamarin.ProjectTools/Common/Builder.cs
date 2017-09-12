@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 	public class Builder : IDisposable
 	{
 		const string fixed_osx_xbuild_path = "/Library/Frameworks/Mono.framework/Commands";
+		const string fixed_linux_xbuild_path = "/usr/bin";
 		const string xbuildapp = "xbuild";
 		const string msbuildapp = "msbuild";
 		string msbuildExe;
@@ -26,9 +27,10 @@ namespace Xamarin.ProjectTools
 		string GetUnixBuildExe ()
 		{
 			RunningMSBuild = false;
-			string path = Path.Combine (fixed_osx_xbuild_path, xbuildapp);
+			var tooldir = Directory.Exists (fixed_osx_xbuild_path) ? fixed_osx_xbuild_path : fixed_linux_xbuild_path;
+			string path = Path.Combine (tooldir, xbuildapp);
 			if (!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("USE_MSBUILD"))) {
-				path = Path.Combine (fixed_osx_xbuild_path, msbuildapp);
+				path = Path.Combine (tooldir, msbuildapp);
 				RunningMSBuild = true;
 			}
 			return File.Exists (path) ? path : msbuildapp;
@@ -61,6 +63,28 @@ namespace Xamarin.ProjectTools
 					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
 				}
 			}
+		}
+
+		public bool CrossCompilerAvailable (string supportedAbis)
+		{
+			var crossCompilerLookup = new Dictionary<string, string> {
+				{ "armeabi-v7a", "cross-arm" },
+				{ "armeabi", "cross-arm" },
+				{ "x86", "cross-x86" },
+				{ "x86_64", "cross-x86_64" },
+				{ "arm64-v8a", "cross-arm64" },
+			};
+			bool result = true;
+			foreach (var abi in supportedAbis.Split (';')) {
+				var fileName = crossCompilerLookup [abi];
+				if (IsUnix) {
+					result &= (File.Exists (Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android", "Darwin", fileName)) ||
+						File.Exists (Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android", "Linux", fileName)));
+				} else {
+					result &= File.Exists (Path.Combine (FrameworkLibDirectory, ".exe"));
+				}
+			}
+			return result;
 		}
 
 		public string LatestTargetFrameworkVersion () {

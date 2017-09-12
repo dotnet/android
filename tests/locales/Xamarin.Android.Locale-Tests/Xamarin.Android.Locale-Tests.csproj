@@ -70,7 +70,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Xamarin.Android.Locale-Tests.projitems" />
-  <Import Project="..\..\..\build-tools\scripts\UnitTestApks.targets" />
+  <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
   <ItemGroup>
     <EmbeddedResource Include="strings.de-DE.resx" />
     <EmbeddedResource Include="strings.fr-FR.resx" />
