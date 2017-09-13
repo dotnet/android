@@ -270,6 +270,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "123",
+				/* useLagacy */ true,
 				/* pattern */ null,
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -279,6 +280,17 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -288,6 +300,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "1",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ "versionCode=123",
 				/* shouldBuild */ true,
@@ -297,6 +310,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -306,6 +320,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ true,
 				/* pattern */ null,
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -315,6 +330,17 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "200123;300123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -324,6 +350,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -333,6 +360,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
@@ -342,6 +370,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
@@ -351,6 +380,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
@@ -360,7 +390,7 @@ namespace Bug12935
 
 		[Test]
 		[TestCaseSource("VersionCodeTestSource")]
-		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -377,6 +407,8 @@ namespace Bug12935
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
 			else
 				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+			if (useLegacy)
+				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", "VersionCodeTests"), false, false)) {
 				builder.ThrowOnBuildFailure = false;
