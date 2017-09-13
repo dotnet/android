@@ -15,7 +15,7 @@ using Java.Interop.Tools.Cecil;
 
 using ArchiveFileList = System.Collections.Generic.List<System.Tuple<string, string>>;
 using Mono.Cecil;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks

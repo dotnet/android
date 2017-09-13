@@ -21,7 +21,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using System.Xml;
 using System.Text;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
 

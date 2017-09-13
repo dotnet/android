@@ -87,11 +87,9 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			MonoAndroidHelper.InitializeAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
 			try {
 				return RunTask ();
 			} finally {
-				MonoAndroidHelper.ClearAndroidLogger (ErrorHandler, WarningHandler, InfoHandler, DebugHandler);
 			}
 		}
 

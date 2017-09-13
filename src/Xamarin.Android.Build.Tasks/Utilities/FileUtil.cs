@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Xamarin.Android.Build.Utilities
+namespace Xamarin.Android.Tools
 {
 	class FileUtil
 	{

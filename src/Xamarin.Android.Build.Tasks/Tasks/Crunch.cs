@@ -7,7 +7,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
 using ThreadingTasks = System.Threading.Tasks;
 

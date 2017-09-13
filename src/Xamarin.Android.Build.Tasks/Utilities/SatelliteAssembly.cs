@@ -2,9 +2,9 @@
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace Xamarin.Android.Build.Utilities
+namespace Xamarin.Android.Tools
 {
-	public class SatelliteAssembly {
+	class SatelliteAssembly {
 		// culture match courtesy: http://stackoverflow.com/a/3962783/83444
 		static readonly Regex SatelliteChecker = new Regex (
 			Regex.Escape (Path.DirectorySeparatorChar.ToString ()) +

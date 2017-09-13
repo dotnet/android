@@ -1,9 +1,12 @@
 ﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.BuildTools.PrepTasks
 {
@@ -29,19 +32,15 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
 
-			AndroidLogger.Error += ErrorHandler;
-			AndroidLogger.Warning += WarningHandler;
-			AndroidLogger.Info += InfoHandler;
+			var androidSdk    = new AndroidSdkInfo (CreateTaskLogger (this), AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			try {
-				AndroidSdk.Refresh (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
-
-				var javaSdkPath = AndroidSdk.JavaSdkPath;
+				var javaSdkPath = androidSdk.JavaSdkPath;
 				if (string.IsNullOrEmpty(javaSdkPath)) {
 					Log.LogError ("JavaSdkPath is blank");
 					return false;
 				}
 
-				Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdk.JavaSdkPath)}: {javaSdkPath}");
+				Log.LogMessage (MessageImportance.Low, $"  {nameof (androidSdk.JavaSdkPath)}: {javaSdkPath}");
 
 				var jvmPath = Path.Combine (javaSdkPath, "jre", "bin", "server", "jvm.dll");
 				if (!File.Exists (jvmPath)) {
@@ -82,25 +81,25 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				return !Log.HasLoggedErrors;
 			}
 			finally {
-				AndroidLogger.Error -= ErrorHandler;
-				AndroidLogger.Warning -= WarningHandler;
-				AndroidLogger.Info -= InfoHandler;
 			}
 		}
 
-		private void ErrorHandler (string task, string message)
+		static Action<TraceLevel, string> CreateTaskLogger (Task task)
 		{
-			Log.LogError ($"{task}: {message}");
-		}
-
-		private void WarningHandler (string task, string message)
-		{
-			Log.LogWarning ($"{task}: {message}");
-		}
-
-		private void InfoHandler (string task, string message)
-		{
-			Log.LogMessage (MessageImportance.Low, $"{task}: {message}");
+			Action<TraceLevel, string> logger = (level, value) => {
+				switch (level) {
+				case TraceLevel.Error:
+					task.Log.LogError (value);
+					break;
+				case TraceLevel.Warning:
+					task.Log.LogWarning (value);
+					break;
+				default:
+					task.Log.LogMessage (MessageImportance.Low, "{0}", value);
+					break;
+				}
+			};
+			return logger;
 		}
 	}
 }

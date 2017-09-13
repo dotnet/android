@@ -8,7 +8,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tools;
-using Xamarin.Android.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {

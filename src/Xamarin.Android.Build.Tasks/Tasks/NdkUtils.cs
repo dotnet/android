@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Diagnostics;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			string extension = OS.IsWindows ? ".exe" : string.Empty;
 			List<string> toolPaths  = null;
 			foreach (var platbase in toolchains) {
-				string path = Path.Combine (platbase, "prebuilt", AndroidSdk.AndroidNdkHostPlatform, "bin", GetNdkToolchainPrefix (arch) + tool + extension);
+				string path = Path.Combine (platbase, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", GetNdkToolchainPrefix (arch) + tool + extension);
 				if (File.Exists (path))
 					return path;
 				if (toolPaths == null)
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks
 				toolPaths.Add (path);
 			}
 			{
-				string path = Path.Combine (androidNdkPath, "prebuilt", AndroidSdk.AndroidNdkHostPlatform, "bin", tool);
+				string path = Path.Combine (androidNdkPath, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", tool);
 				if (File.Exists (path))
 					return path;
 				if (toolPaths == null)
