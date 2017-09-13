@@ -943,7 +943,7 @@ namespace Xamarin.Android.Tasks {
 				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
 			if (code > maxVersionCode || code < 0)
 				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
-			VersionCode = versionCode;
+			VersionCode = versionCode.TrimStart ('0');
 		}
 	}
 }
