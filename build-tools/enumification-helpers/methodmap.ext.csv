@@ -744,9 +744,9 @@
 16, android.view.accessibility, AccessibilityNodeInfo, focusSearch, direction, Android.Views.FocusSearchDirection
 16, android.view.accessibility, AccessibilityNodeInfo, getMovementGranularities, return, Android.Views.Accessibility.MovementGranularity
 16, android.view.accessibility, AccessibilityNodeInfo, setMovementGranularities, granularities, Android.Views.Accessibility.MovementGranularity
-16, android.view.accessibility, AccessibilityNodeProvider, performAction, action, Android.AccessibilityServices.GlobalAction
-16, android.view, View, performAccessibilityAction, action, Android.AccessibilityServices.GlobalAction
-16, android.view, View.AccessibilityDelegate, performAccessibilityAction, action, Android.AccessibilityServices.GlobalAction
+16, android.view.accessibility, AccessibilityNodeProvider, performAction, action, Android.Views.Accessibility.Action
+16, android.view, View, performAccessibilityAction, action, Android.Views.Accessibility.Action
+16, android.view, View.AccessibilityDelegate, performAccessibilityAction, action, Android.Views.Accessibility.Action
 16, android.view, View, getImportantForAccessibility, return, Android.Views.ImportantForAccessibility
 16, android.view, View, setImportantForAccessibility, mode, Android.Views.ImportantForAccessibility
 16, android.view, View, getWindowSystemUiVisibility, return, Android.Views.SystemUiFlags

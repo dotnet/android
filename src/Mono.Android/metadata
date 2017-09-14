@@ -3,6 +3,14 @@
        regarded as obfuscated, so avoid that by explicitly marking not. -->
   <attr path="/api/package[@name='android']/class[@name='Manifest.permission']" name="obfuscated">false</attr>
 
+  <!-- FIXME: we should remove this fixup in the future release. It was
+  introduced due to mismatching enum use, and we already marked the API as
+  [Obsolete] -->
+  <attr path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityEvent']/method[@name='getAction']" name="propertyName"></attr>
+  <attr path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityEvent']/method[@name='setAction']" name="propertyName"></attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getAccessibilityAction']" name="propertyName"></attr>
+  <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setAccessibilityAction']" name="propertyName"></attr>
+
   <!-- FIXME: hack to workaround api-merge bug that brings two identical methods (it doesn't care generic type params) -->
   <remove-node path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate' and @merge.SourceFile]" />
 
