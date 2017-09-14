@@ -125,7 +125,7 @@
     />
   </Target>
   <Target Name="_GenerateXACommonProps"
-      DependsOnTargets="GetXAVersionInfo"
+      DependsOnTargets="ResolveReferences;GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
       Inputs="Xamarin.Android.Common.props.in"
       Outputs="Xamarin.Android.Common.props">
