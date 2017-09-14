@@ -10,7 +10,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
-	public class ManifestTest : BaseTest
+	public partial class ManifestTest : BaseTest
 	{
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
@@ -467,20 +467,6 @@ namespace Bug12935
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
 			}
 		}
-
-		static object[] DebuggerAttributeCases = new object[] {
-			// DebugType, isRelease, extpected
-			new object[] { "", true, false, },
-			new object[] { "", false, true, },
-			new object[] { "None", true, false, },
-			new object[] { "None", false, false, },
-			new object[] { "PdbOnly", true, false, },
-			new object[] { "PdbOnly", false, true, },
-			new object[] { "Full", true, false, },
-			new object[] { "Full", false, true, },
-			new object[] { "Portable", true, false, },
-			new object[] { "Portable", false, true, },
-		};
 
 		[Test]
 		[TestCaseSource ("DebuggerAttributeCases")]

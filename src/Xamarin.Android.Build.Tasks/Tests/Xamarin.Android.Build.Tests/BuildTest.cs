@@ -222,7 +222,9 @@ printf ""%d"" x
 			}
 			using (var b = CreateApkBuilder (path)) {
 				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ("Cross compiler was not available");
+					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
+				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
+					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
@@ -281,6 +283,8 @@ printf ""%d"" x
 			using (var b = CreateApkBuilder (path)) {
 				if (!b.CrossCompilerAvailable (supportedAbis))
 					Assert.Ignore ("Cross compiler was not available");
+				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
+					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
