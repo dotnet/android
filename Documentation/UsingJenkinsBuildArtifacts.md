@@ -114,6 +114,8 @@ Within the elevated command prompt, execute the `setup-windows.exe` program:
 	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
 	Executing: MKLINK /D "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\MonoAndroid" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild-frameworks\MonoAndroid"
 	Executing: MKLINK /D "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Android" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Android"
+	Executing: MKLINK "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Xamarin.Android.Sdk.props" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Xamarin.Android.Sdk.props"
+	Executing: MKLINK "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Xamarin\Xamarin.Android.Sdk.targets" "C:\xa-sdk\oss-xamarin.android_v7.4.99.57_Darwin-x86_64_master_97f08f7\bin\Debug\lib\xamarin.android\xbuild\Xamarin\Xamarin.Android.Sdk.targets"
 	Success!
 
 To uninstall, run `setup-windows.exe /uninstall`:

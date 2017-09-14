@@ -13,6 +13,17 @@ namespace Xamarin.Android.Tools
 		Directory   = 1,
 	}
 
+	class SymbolicLink
+	{
+		public string Source { get; set; }
+
+		public string Target { get; set; }
+
+		public bool IsFile { get; set; }
+
+		public SymbolLinkFlag Flag => IsFile ? SymbolLinkFlag.File : SymbolLinkFlag.Directory;
+	}
+
 	class SetupWindows
 	{
 		static string AppName;
@@ -28,22 +39,41 @@ namespace Xamarin.Android.Tools
 				return 1;
 			}
 			// prefix should be: oss-xamarin.anroid-*/bin/Debug
-			var prefix = Path.GetDirectoryName (appDir);
-			var hash = XAZipFolderNameToHash (Path.GetFileName (Path.GetDirectoryName (Path.GetDirectoryName (prefix))));
+			var prefix        = Path.GetDirectoryName (appDir);
+			var hash          = XAZipFolderNameToHash (Path.GetFileName (Path.GetDirectoryName (Path.GetDirectoryName (prefix))));
+			var newAssemblies = Path.Combine (prefix, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
 
-			var refAssembliesDirectories = new List<string> ();
+			var links = new List<SymbolicLink> ();
 			var progFiles = Environment.GetEnvironmentVariable ("ProgramFiles(x86)");
 			var vsInstall = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
+
 			if (string.IsNullOrEmpty (vsInstall)) {
 				vsInstall = progFiles;
 			} else {
-				refAssembliesDirectories.Add (Path.Combine (vsInstall, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid"));
+				links.Add (new SymbolicLink {
+					Source = Path.Combine (vsInstall, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid"),
+					Target = newAssemblies,
+				});
 			}
-			refAssembliesDirectories.Add (Path.Combine (progFiles, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"));
-			
-			var msbuildTargets  = Path.Combine (vsInstall, "MSBuild", "Xamarin", "Android");
-			var newTargets      = Path.Combine (prefix, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
-			var newAssemblies   = Path.Combine (prefix, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
+
+			links.Add (new SymbolicLink {
+				Source = Path.Combine (progFiles, "Reference Assemblies", "Microsoft", "Framework", "MonoAndroid"),
+				Target = newAssemblies,
+			});
+			links.Add (new SymbolicLink {
+				Source = Path.Combine (vsInstall, "MSBuild", "Xamarin", "Android"),
+				Target = Path.Combine (prefix, "lib", "xamarin.android", "xbuild", "Xamarin", "Android"),
+			});
+			links.Add (new SymbolicLink {
+				Source = Path.Combine (vsInstall, "MSBuild", "Xamarin", "Xamarin.Android.Sdk.props"),
+				Target = Path.Combine (prefix, "lib", "xamarin.android", "xbuild", "Xamarin", "Xamarin.Android.Sdk.props"),
+				IsFile = true,
+			});
+			links.Add (new SymbolicLink {
+				Source = Path.Combine (vsInstall, "MSBuild", "Xamarin", "Xamarin.Android.Sdk.targets"),
+				Target = Path.Combine (prefix, "lib", "xamarin.android", "xbuild", "Xamarin", "Xamarin.Android.Sdk.targets"),
+				IsFile = true,
+			});
 
 			if (Path.DirectorySeparatorChar != '\\') {
 				Console.Error.WriteLine ($"{AppName}: This program is for use on Windows.");
@@ -51,31 +81,24 @@ namespace Xamarin.Android.Tools
 			}
 
 			if (args.Length == 0 || args.Any (v => string.Equals (v, "install", StringComparison.OrdinalIgnoreCase) || string.Equals (v, "/install", StringComparison.OrdinalIgnoreCase))) {
-				return Install (hash, msbuildTargets, newTargets, refAssembliesDirectories, newAssemblies);
+				return Install (hash, links);
 			}
 			if (args.Any (v => string.Equals (v, "uninstall", StringComparison.OrdinalIgnoreCase) || string.Equals (v, "/uninstall", StringComparison.OrdinalIgnoreCase))) {
-				var directories = new List<string> (refAssembliesDirectories);
-				directories.Add (msbuildTargets);
-				return Uninstall (hash, directories);
+				return Uninstall (hash, links);
 			}
 			Console.Error.WriteLine ($"{AppName}: Invalid command `{string.Join (" ", args)}`.");
 			return 1;
 		}
 
-		static int Install (string hash, string msbuildTargets, string newTargets, List<string> refAssembliesDirectories, string newAssemblies)
+		static int Install (string hash, List<SymbolicLink> links)
 		{
 			try {
-				foreach (var refAssemblies in refAssembliesDirectories) {
-					var backupAssemblies = GetNewBackupName (refAssemblies, hash);
-					Directory.CreateDirectory (Path.GetDirectoryName (refAssemblies));
-					if (!CreateSymbolicLink (refAssemblies, newAssemblies, backupAssemblies))
+				foreach (var link in links) {
+					var backup = GetNewBackupName (link.Source, hash);
+					Directory.CreateDirectory (Path.GetDirectoryName (link.Source));
+					if (!CreateSymbolicLink (link, backup)) {
 						return 1;
-				}
-
-				var backupTargets = GetNewBackupName (msbuildTargets, hash);
-				Directory.CreateDirectory (Path.GetDirectoryName (msbuildTargets));
-				if (!CreateSymbolicLink (msbuildTargets, newTargets, backupTargets)) {
-					return 1;
+					}
 				}
 
 				Console.WriteLine ("Success!");
@@ -125,28 +148,46 @@ namespace Xamarin.Android.Tools
 			return folder + ".pre-" + hash;
 		}
 
-		static bool CreateSymbolicLink (string source, string target, string backup)
+		static bool CreateSymbolicLink (SymbolicLink link, string backup)
 		{
-			Console.WriteLine ($"Executing: MKLINK /D \"{source}\" \"{target}\"");
-			if (Directory.Exists (source)) {
-				Directory.Move (source, backup);
+			if (link.IsFile) {
+				Console.WriteLine ($"Executing: MKLINK \"{link.Source}\" \"{link.Target}\"");
+				if (File.Exists (link.Source)) {
+					File.Move (link.Source, backup);
+				}
+			} else {
+				Console.WriteLine ($"Executing: MKLINK /D \"{link.Source}\" \"{link.Target}\"");
+				if (Directory.Exists (link.Source)) {
+					Directory.Move (link.Source, backup);
+				}
 			}
-			if (!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
+			if (!CreateSymbolicLink (link.Source, link.Target, link.Flag)) {
 				var error = new Win32Exception (Marshal.GetLastWin32Error ()).Message;
-				Console.Error.WriteLine ($"{AppName}: Unable to create symbolic link from `{source}` to `{target}`: {error}");
-				Directory.Move (backup, source);
+				Console.Error.WriteLine ($"{AppName}: Unable to create symbolic link from `{link.Source}` to `{link.Target}`: {error}");
+				if (link.IsFile) {
+					File.Move (backup, link.Source);
+				} else {
+					Directory.Move (backup, link.Source);
+				}
 				return false;
 			}
 			return true;
 		}
 
-		static int Uninstall (string hash, List<string> directories)
+		static int Uninstall (string hash, List<SymbolicLink> links)
 		{
-			foreach (var directory in directories) {
-				var backup = GetExistingBackupName (directory, hash);
-				Directory.Delete (directory);
-				if (backup != null && Directory.Exists (backup)) {
-					Directory.Move (backup, directory);
+			foreach (var link in links) {
+				var backup = GetExistingBackupName (link.Source, hash);
+				if (link.IsFile) {
+					File.Delete (link.Source);
+					if (backup != null && File.Exists (backup)) {
+						File.Move (backup, link.Source);
+					}
+				} else {
+					Directory.Delete (link.Source);
+					if (backup != null && Directory.Exists (backup)) {
+						Directory.Move (backup, link.Source);
+					}
 				}
 			}
 			return 0;
@@ -157,7 +198,7 @@ namespace Xamarin.Android.Tools
 			var prefix = GetBackupNamePrefix (folder, hash);
 			var path    = Path.GetDirectoryName (prefix);
 			var pattern = Path.GetFileName (prefix) + "*.*";
-			return Directory.EnumerateDirectories (path, pattern, SearchOption.TopDirectoryOnly)
+			return Directory.EnumerateFileSystemEntries (path, pattern, SearchOption.TopDirectoryOnly)
 				.FirstOrDefault ();
 		}
 

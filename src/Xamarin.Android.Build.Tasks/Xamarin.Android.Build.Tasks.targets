@@ -40,6 +40,12 @@
     </None>
     <None
         Condition=" '$(OS)' == 'Windows_NT' "
+        Include="MSBuild\Xamarin\Xamarin.Android.Sdk.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>..\Xamarin.Android.Sdk.targets</Link>
+    </None>
+    <None
+        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.Before.targets</Link>
