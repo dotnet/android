@@ -1,0 +1,7 @@
+namespace Xamarin.Android.BclTests {
+	partial class App {
+		public static string[] TestAssemblyNames = {
+			@ASSEMBLIES@
+		};
+	}
+}

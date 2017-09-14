@@ -57,6 +57,14 @@
     <_BclAssembly Include="@(MonoProfileAssembly)" />
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
+    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Identity)')" />
+    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Filename).pdb')" />
+    <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
+    <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')" />
+  </ItemGroup>
+  <ItemGroup>
+    <_BclTestOutput Include="@(_BclTestAssemblyDestination)" />
+    <_BclTestOutput Include="$(XAInstallPrefix)\..\..\bcl-tests\bcl-tests.zip" />
   </ItemGroup>
   <ItemGroup>
     <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
@@ -286,7 +294,7 @@
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems;_ConfigureRuntimes"
       Inputs="@(_RuntimeBuildStamp)"
-      Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)">
+      Outputs="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource);@(_BclTestOutput)">
     <Exec
         Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Command="make $(MakeConcurrency) # %(_MonoRuntime.Identity)"
@@ -295,6 +303,51 @@
     />
     <Touch
         Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)"
+    />
+    <Exec
+        Command="make $(MakeConcurrency) -i test # %(_MonoRuntime.Identity)"
+        IgnoreStandardErrorWarningFormat="True"
+        WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\runtime"
+    />
+    <Copy
+        SourceFiles="@(_BclTestAssemblySource)"
+        DestinationFiles="@(_BclTestAssemblyDestination)"
+    />
+    <Touch
+        Files="@(_BclTestAssemblyDestination)"
+    />
+    <ItemGroup>
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.cs" />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\.gitattributes" />
+      <_BclTestContentDest  Include="@(_BclTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\Test\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <ItemGroup>
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\test.nupkg" />
+      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\test.nupkg" />
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\archive.zip" />
+      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\archive.zip" />
+    </ItemGroup>
+    <ItemGroup>
+      <_ZipTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression.FileSystem\foo\**\*.*" />
+      <_ZipTestContentDest  Include="@(_ZipTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\foo\%(RecursiveDir)%(Filename)%(Extension)')" />
+      <_BclTestContent      Include="@(_ZipTestContent)" />
+      <_BclTestContentDest  Include="@(_ZipTestContentDest)" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_BclTestContent)"
+        DestinationFiles="@(_BclTestContentDest)"
+    />
+    <Exec
+        Condition="!Exists('$(XAInstallPrefix)\..\..\bcl-tests\Test\test.db')"
+        Command="sqlite3 &quot;$(XAInstallPrefix)\..\..\bcl-tests\Test\test.db&quot; &lt; &quot;$(MonoSourceFullPath)\mcs\class\Mono.Data.Sqlite\Test\test.sql&quot;"
+    />
+    <Exec
+        Command="zip -r bcl-tests.zip ."
+        WorkingDirectory="$(XAInstallPrefix)\..\..\bcl-tests"
+    />
+    <Touch
+        Files="$(XAInstallPrefix)\..\..\bcl-tests\bcl-tests.zip"
     />
   </Target>
   <Target Name="_InstallRuntimes"
@@ -577,6 +630,7 @@
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />
+      <BundleItem Include="@(_BclTestOutput)" />
     </ItemGroup>
   </Target>
   <Target Name="ForceBuild"

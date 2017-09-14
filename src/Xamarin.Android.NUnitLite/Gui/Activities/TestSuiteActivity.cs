@@ -32,6 +32,11 @@ namespace Xamarin.Android.NUnitLite
 			set { AndroidRunner.Runner.GCAfterEachFixture = value; }
 		}
 
+		protected ITestFilter Filter {
+			get { return AndroidRunner.Runner.Filter; }
+			set { AndroidRunner.Runner.Filter = value; }
+		}
+
 		protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
@@ -48,6 +53,8 @@ namespace Xamarin.Android.NUnitLite
 				AndroidRunner.Runner.Options.LoadFromBundle (Intent.Extras);
 			}
 			AndroidRunner.Runner.AddTestFilters (GetIncludedCategories (), GetExcludedCategories ());
+
+			UpdateFilter ();
 
 			FindViewById<TextView> (Resource.Id.RunTestsButton).Click += (o, e) => {
 				AndroidRunner.Runner.Run (current_test, this);
@@ -102,6 +109,12 @@ namespace Xamarin.Android.NUnitLite
 		protected virtual IEnumerable <string> GetExcludedCategories ()
 		{
 			return null;
+		}
+
+		// Subclasses can override this method to update the test filtering that the runner will use.
+		// Subclasses should set the `Filter` property to their new filter value
+		protected virtual void UpdateFilter ()
+		{
 		}
 
 		public void AddTest (Assembly assembly)

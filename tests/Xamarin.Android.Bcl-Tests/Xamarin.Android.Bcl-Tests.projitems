@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <TestApk Include="$(OutputPath)Xamarin.Android.Bcl_Tests-Signed.apk">
+      <Package>Xamarin.Android.Bcl_Tests</Package>
+      <InstrumentationType>xamarin.android.bcltests.TestInstrumentation</InstrumentationType>
+      <ResultsPath>$(MSBuildThisFileDirectory)..\..\TestResult-Xamarin.Android.Bcl_Tests.xml</ResultsPath>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+    </TestApk>
+  </ItemGroup>
+</Project>
