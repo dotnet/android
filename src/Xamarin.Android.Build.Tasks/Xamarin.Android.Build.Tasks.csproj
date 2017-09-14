@@ -357,6 +357,12 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\MarkException.cs">
       <Link>Linker\Mono.Linker\MarkException.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\ConsoleLogger.cs">
+      <Link>Linker\Mono.Linker\ConsoleLogger.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\ILogger.cs">
+      <Link>Linker\Mono.Linker\ILogger.cs</Link>
+    </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
