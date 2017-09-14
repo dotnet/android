@@ -230,6 +230,7 @@
     <Compile Include="Android.Util\Base64OutputStream.cs" />
     <Compile Include="Android.Util\Log.cs" />
     <Compile Include="Android.Util\SparseArray.cs" />
+    <Compile Include="Android.Views\View.AccessibilityDelegate.cs" />
     <Compile Include="Android.Views\InputDevice.cs" />
     <Compile Include="Android.Views\KeyCharacterMap.cs" />
     <Compile Include="Android.Views\KeyEvent.cs" />
@@ -240,6 +241,7 @@
     <Compile Include="Android.Views\Window.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityEvent.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityManager.cs" />
+    <Compile Include="Android.Views.Accessibility\AccessibilityNodeProvider.cs" />
     <Compile Include="Android.Views.InputMethods\InputMethodManager.cs" />
     <Compile Include="Android.Widget\AbsListView.cs" />
     <Compile Include="Android.Widget\AdapterView.cs" />

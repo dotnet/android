@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Android.AccessibilityServices;
+using Android.OS;
 using Android.Runtime;
 
 namespace Android.Views {
@@ -10,6 +12,14 @@ namespace Android.Views {
 #endif
 
 	public partial class View {
+
+#if ANDROID_16
+		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
+		public bool PerformAccessibilityAction (GlobalAction action, Bundle arguments)
+		{
+			return PerformAccessibilityAction ((Android.Views.Accessibility.Action) (int) action, arguments);
+		}
+#endif
 
 		public T FindViewById<T> (int id)
 			where T : Android.Views.View
