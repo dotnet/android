@@ -182,7 +182,7 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		protected virtual void CleanupTest ()
 		{
-			if (TestContext.CurrentContext.Test.Properties ["Output"] == null)
+			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories
