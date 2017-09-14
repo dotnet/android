@@ -78,7 +78,7 @@
   </PropertyGroup>
   <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib2.java" Outputs="Jars/lib2.jar">
     <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib2.java" />
-    <Exec WorkingDirectory="Jars" Command="zip -r lib2.jar com" />
+    <Exec WorkingDirectory="Jars" Command="&quot;$(JarPath)&quot; cf lib2.jar com" />
   </Target>
   <Target Name="CleanJar">
     <RemoveDir Directories="Jars/bin" />
