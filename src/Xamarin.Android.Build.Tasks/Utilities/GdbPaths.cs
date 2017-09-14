@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Xamarin.Android.Tools
 {
-	enum AndroidDebugServer
+	public enum AndroidDebugServer
 	{
 		/// GNU's GDB debug server (provided by Android NDK)
 		Gdb,
@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools
 		Llgs
 	}
 		
-	class GdbPaths
+	public class GdbPaths
 	{
 		public static AndroidDebugServer? GetAndroidDebugServer (string name)
 		{
