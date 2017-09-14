@@ -402,11 +402,18 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
+		public IEnumerable<XElement> ResolveDuplicates (IEnumerable<XElement> elements)
+		{
+			foreach (var e in elements)
+				foreach (var d in ResolveDuplicates (e.Elements ()))
+					yield return d;
+			foreach (var d in elements.GroupBy (x => x.ToFullString ()).SelectMany (x => x.Skip (1)))
+				yield return d;
+		}
+
 		void RemoveDuplicateElements ()
 		{
-			var duplicates = doc.Descendants ()
-			                    .GroupBy (x => x.ToFullString ())
-					    .SelectMany (x => x.Skip (1));
+			var duplicates = ResolveDuplicates (doc.Elements ());
 			foreach (var duplicate in duplicates)
 				duplicate.Remove ();
 			
