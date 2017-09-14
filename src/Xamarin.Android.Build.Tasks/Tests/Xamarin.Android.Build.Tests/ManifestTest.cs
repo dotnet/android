@@ -512,7 +512,56 @@ namespace Bug12935
 				References = {
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
+				Packages = {
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				},
 			};
+			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
+				TextContent = () => @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.Support.V4.App;
+using Android.Util;
+[Activity (Label = ""TestActivity1"")]
+[IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
+public class TestActivity1 : FragmentActivity {
+}
+				",
+			});
+			proj.Sources.Add (new BuildItem.Source ("TestActivity2.cs") {
+				TextContent = () => @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.Support.V4.App;
+using Android.Util;
+[Activity (Label = ""TestActivity2"")]
+[IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
+public class TestActivity2 : FragmentActivity {
+}
+				",
+			});
 			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
 				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
@@ -526,6 +575,15 @@ namespace Bug12935
 						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
 					Assert.AreEqual (manifest.IndexOf ("meta-data", StringComparison.OrdinalIgnoreCase),
 					                 manifest.LastIndexOf ("meta-data", StringComparison.OrdinalIgnoreCase), "There should be only one meta-data element");
+
+					var doc = XDocument.Parse (manifest);
+					var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+
+					var activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
+					var e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity2");
+					Assert.IsNotNull (e, "Manifest should contain an activity for TestActivity2");
+					Assert.IsNotNull (e.Element ("intent-filter"), "TestActivity2 should have an intent-filter");
+					Assert.IsNotNull (e.Element ("intent-filter").Element ("action"), "TestActivity2 should have an intent-filter/action");
 				}
 			}
 		}
