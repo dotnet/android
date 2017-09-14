@@ -38,9 +38,10 @@
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaCallableWrapperGenerator.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaTypeScanner.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\TypeNameMapGenerator.cs" />
+    <Compile Include="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
+      <Link>JavaNativeTypeManager.cs</Link>
+    </Compile>
   </ItemGroup>
-  <Import Project="..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
-  <Import Project="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
       <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
@@ -63,5 +64,6 @@
       <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <Import Project="..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

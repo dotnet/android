@@ -112,8 +112,6 @@
   <ItemGroup>
     <Folder Include="MonoDroid.Generation\" />
   </ItemGroup>
-  <Import Project="..\..\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
-  <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj">
@@ -135,6 +133,10 @@
     <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
       <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
       <Name>Xamarin.Android.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
+      <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
+      <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

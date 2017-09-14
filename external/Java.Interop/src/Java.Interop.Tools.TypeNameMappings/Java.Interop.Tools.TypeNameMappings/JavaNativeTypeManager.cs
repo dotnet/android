@@ -10,25 +10,33 @@ using Java.Interop;
 using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
 using Android.Runtime;
-#if !GENERATOR
 using Java.Interop.Tools.JavaCallableWrappers;
-#endif  // !GENERATOR
 #endif  // HAVE_CECIL
 
-namespace Java.Interop.Tools.TypeNameMappings {
+namespace Java.Interop.Tools.TypeNameMappings
+{
 
+#if HAVE_CECIL
+	public
+#endif
 	enum PackageNamingPolicy {
 		LowercaseHash,
 		Lowercase,
 		LowercaseWithAssemblyName,
 	}
 
-	public class JniTypeName
+#if HAVE_CECIL
+	public
+#endif
+	class JniTypeName
 	{
 		public string Type { get; internal set; }
 		public bool IsKeyword { get; internal set; }
 	}
 
+#if HAVE_CECIL
+	public
+#endif
 	static class JavaNativeTypeManager {
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -143,7 +151,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 				"java/lang/Object";
 		}
 
-		public static string ToJniName (Type type, ExportParameterKind exportKind)
+		static string ToJniName (Type type, ExportParameterKind exportKind)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -159,12 +167,8 @@ namespace Java.Interop.Tools.TypeNameMappings {
 				return GetSpecialExportJniType (type.FullName, exportKind);
 
 			return ToJniName (type, t => t.DeclaringType, t => t.Name, GetPackageName, t => {
-#if !GEN_JAVA_STUBS && !GENERATOR && !JAVADOC_TO_MDOC
 				return ToJniNameFromAttributes (t);
-#else
-				return null;
-#endif
-			});
+			}, _ => false);
 		}
 
 		public static string ToJniName (string jniType, int rank)
@@ -255,7 +259,6 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return null;
 		}
 
-#if !GEN_JAVA_STUBS && !JAVADOC_TO_MDOC
 		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
 		public static string ToJniNameFromAttributes (Type type)
 		{
@@ -347,7 +350,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return rank == 0 && pJniName.Length > 1 ? "L" + pJniName + ";" : ToJniName (pJniName, rank);
 		}
 
-		public static ExportParameterKind GetExportKind (System.Reflection.ICustomAttributeProvider p)
+		static ExportParameterKind GetExportKind (System.Reflection.ICustomAttributeProvider p)
 		{
 			foreach (ExportParameterAttribute a in p.GetCustomAttributes (typeof (ExportParameterAttribute), false))
 				return a.Kind;
@@ -370,7 +373,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
 		}
 
-		public static string GetJniTypeName (Type typeRef, ExportParameterKind exportKind)
+		internal static string GetJniTypeName (Type typeRef, ExportParameterKind exportKind)
 		{
 			return GetJniTypeName<Type,Type> (typeRef, exportKind, t => t, t => {
 				Type etype;
@@ -385,7 +388,6 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			var ret = ToJniNameFromAttributes (type);
 			return ret ?? ToJniName (type, exportKind);
 		}
-#endif
 
 #if HAVE_CECIL
 
@@ -401,12 +403,12 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return new ExportParameterAttribute ((ExportParameterKind)attr.ConstructorArguments [0].Value);
 		}
 
-		internal static bool IsApplication (TypeDefinition type)
+		public static bool IsApplication (TypeDefinition type)
 		{
 			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Application");
 		}
 
-		internal static bool IsInstrumentation (TypeDefinition type)
+		public static bool IsInstrumentation (TypeDefinition type)
 		{
 			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Instrumentation");
 		}
@@ -430,7 +432,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
 		}
 
-		public static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
+		internal static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
 		{
 			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
 				TypeReference etype;
@@ -441,7 +443,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 
 		public static string ToCompatJniName (Mono.Cecil.TypeDefinition type)
 		{
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes);
+			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition));
 		}
 
 		static string ToCompatPackageName (Mono.Cecil.TypeDefinition type)
@@ -456,7 +458,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 				"java/lang/Object";
 		}
 
-		public static string ToJniName (TypeDefinition type, ExportParameterKind exportKind)
+		static string ToJniName (TypeDefinition type, ExportParameterKind exportKind)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -471,7 +473,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 				return GetSpecialExportJniType (type.FullName, exportKind);
 			}
 
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, GetPackageName, ToJniNameFromAttributes);
+			return ToJniName (type, t => t.DeclaringType, t => t.Name, GetPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition));
 		}
 
 		static string ToJniNameFromAttributes (TypeDefinition type)
@@ -562,7 +564,7 @@ namespace Java.Interop.Tools.TypeNameMappings {
 		}
 #endif
 
-		static string ToJniName<T> (T type, Func<T, T> decl, Func<T, string> name, Func<T, string> ns, Func<T, string> overrideName)
+		static string ToJniName<T> (T type, Func<T, T> decl, Func<T, string> name, Func<T, string> ns, Func<T, string> overrideName, Func<T,bool> shouldUpdateName)
 			where T : class
 		{
 			var nameParts   = new List<string> ();
@@ -576,12 +578,9 @@ namespace Java.Interop.Tools.TypeNameMappings {
 					break;
 				}
 				var n   = name (declType).Replace ('`', '_');
-#if HAVE_CECIL
-				var td  = declType as TypeDefinition;
-				if (IsNonStaticInnerClass (td)) {
+				if (shouldUpdateName (declType)) {
 					n = "$" + name (decl (declType)) + "_" + n;
 				}
-#endif
 				nameParts.Add (n);
 			}
 
