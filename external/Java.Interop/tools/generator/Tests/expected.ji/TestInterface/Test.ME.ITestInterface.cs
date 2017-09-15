@@ -48,6 +48,33 @@ namespace Test.ME {
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler:Test.ME.ITestInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		int GetSpanFlags (global::Java.Lang.Object tag);
 
+		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='append' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+		[Register ("append", "(Ljava/lang/CharSequence;)V", "GetAppend_Ljava_lang_CharSequence_Handler:Test.ME.ITestInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+		void Append (global::Java.Lang.ICharSequence value);
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='identity' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+		[Register ("identity", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;", "GetIdentity_Ljava_lang_CharSequence_Handler:Test.ME.ITestInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+		global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value);
+
+	}
+
+	public static partial class ITestInterfaceExtensions {
+
+		public static void Append (this Test.ME.ITestInterface self, string value)
+		{
+			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			self.Append (jls_value);
+			jls_value?.Dispose ();
+		}
+
+		public static string Identity (this Test.ME.ITestInterface self, string value)
+		{
+			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			global::Java.Lang.ICharSequence __result = self.IdentityFormatted (jls_value);
+			var __rsval = __result?.ToString ();
+			jls_value?.Dispose ();
+			return __rsval;
+		}
 	}
 
 	[global::Android.Runtime.Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
@@ -127,6 +154,66 @@ namespace Test.ME {
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
 			int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			return __ret;
+		}
+
+		static Delegate cb_append_Ljava_lang_CharSequence_;
+#pragma warning disable 0169
+		static Delegate GetAppend_Ljava_lang_CharSequence_Handler ()
+		{
+			if (cb_append_Ljava_lang_CharSequence_ == null)
+				cb_append_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_Append_Ljava_lang_CharSequence_);
+			return cb_append_Ljava_lang_CharSequence_;
+		}
+
+		static void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		{
+			global::Test.ME.ITestInterface __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			__this.Append (value);
+		}
+#pragma warning restore 0169
+
+		IntPtr id_append_Ljava_lang_CharSequence_;
+		public unsafe void Append (global::Java.Lang.ICharSequence value)
+		{
+			if (id_append_Ljava_lang_CharSequence_ == IntPtr.Zero)
+				id_append_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "append", "(Ljava/lang/CharSequence;)V");
+			IntPtr native_value = CharSequence.ToLocalJniHandle (value);
+			JValue* __args = stackalloc JValue [1];
+			__args [0] = new JValue (native_value);
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_append_Ljava_lang_CharSequence_, __args);
+			JNIEnv.DeleteLocalRef (native_value);
+		}
+
+		static Delegate cb_identity_Ljava_lang_CharSequence_;
+#pragma warning disable 0169
+		static Delegate GetIdentity_Ljava_lang_CharSequence_Handler ()
+		{
+			if (cb_identity_Ljava_lang_CharSequence_ == null)
+				cb_identity_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, IntPtr>) n_Identity_Ljava_lang_CharSequence_);
+			return cb_identity_Ljava_lang_CharSequence_;
+		}
+
+		static IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		{
+			global::Test.ME.ITestInterface __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			IntPtr __ret = CharSequence.ToLocalJniHandle (__this.IdentityFormatted (value));
+			return __ret;
+		}
+#pragma warning restore 0169
+
+		IntPtr id_identity_Ljava_lang_CharSequence_;
+		public unsafe global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
+		{
+			if (id_identity_Ljava_lang_CharSequence_ == IntPtr.Zero)
+				id_identity_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "identity", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
+			IntPtr native_value = CharSequence.ToLocalJniHandle (value);
+			JValue* __args = stackalloc JValue [1];
+			__args [0] = new JValue (native_value);
+			global::Java.Lang.ICharSequence __ret = global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_identity_Ljava_lang_CharSequence_, __args), JniHandleOwnership.TransferLocalRef);
+			JNIEnv.DeleteLocalRef (native_value);
 			return __ret;
 		}
 

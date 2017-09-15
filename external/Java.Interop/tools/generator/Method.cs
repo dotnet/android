@@ -687,24 +687,27 @@ namespace MonoDroid.Generation {
 				call.Append (pname);
 			}
 			sw.WriteLine ("{0}{1}{2}{3} ({4});", indent, RetVal.IsVoid ? String.Empty : opt.GetOutputName (RetVal.FullName) + " __result = ", haveSelf ? "self." : "", AdjustedName, call.ToString ());
-			foreach (Parameter p in Parameters) {
-				if (p.Type == "Java.Lang.ICharSequence")
-					sw.WriteLine ("{0}if ({1} != null) {1}.Dispose ();", indent, p.GetName ("jls_"));
-				else if (p.Type == "Java.Lang.ICharSequence[]")
-					sw.WriteLine ("{0}if ({1} != null) foreach (global::Java.Lang.String s in {1}) if (s != null) s.Dispose ();", indent, p.GetName ("jlca_"));
-			}
 			switch (RetVal.FullName) {
 			case "void":
 				break;
 			case "Java.Lang.ICharSequence[]":
-				sw.WriteLine ("{0}return CharSequence.ArrayToStringArray (__result);", indent);
+				sw.WriteLine ("{0}var __rsval = CharSequence.ArrayToStringArray (__result);", indent);
 				break;
 			case "Java.Lang.ICharSequence":
-				sw.WriteLine ("{0}return __result == null ? null : __result.ToString ();", indent);
+				sw.WriteLine ("{0}var __rsval = __result?.ToString ();", indent);
 				break;
 			default:
-				sw.WriteLine ("{0}return __result;", indent);
+				sw.WriteLine ("{0}var __rsval = __result;", indent);
 				break;
+			}
+			foreach (Parameter p in Parameters) {
+				if (p.Type == "Java.Lang.ICharSequence")
+					sw.WriteLine ("{0}{1}?.Dispose ();", indent, p.GetName ("jls_"));
+				else if (p.Type == "Java.Lang.ICharSequence[]")
+					sw.WriteLine ("{0}if ({1} != null) foreach (global::Java.Lang.String s in {1}) s?.Dispose ();", indent, p.GetName ("jlca_"));
+			}
+			if (!RetVal.IsVoid) {
+				sw.WriteLine ($"{indent}return __rsval;");
 			}
 		}
 

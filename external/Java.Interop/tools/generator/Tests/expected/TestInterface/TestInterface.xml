@@ -18,6 +18,9 @@
 				default void defaultInterfaceMethod()
 				{
 				}
+
+				void append(CharSequence value);
+				CharSequence identity(CharSequence value);
 			}
 		-->
 		<interface abstract="true" deprecated="not deprecated" final="false" name="TestInterface" static="false" visibility="public">
@@ -31,6 +34,12 @@
 			</field>
 			<field deprecated="not deprecated" final="true" name="DEFAULT_FOO" static="true" transient="false" type="java.lang.Object" type-generic-aware="java.lang.Object" visibility="public" volatile="false">
 			</field>
+			<method abstract="true" deprecated="not deprecated" final="false" name="append" native="false" return="void" static="false" synchronized="false" visibility="public">
+				<parameter name="value" type="java.lang.CharSequence" />
+			</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="identity" native="false" return="java.lang.CharSequence" static="false" synchronized="false" visibility="public">
+				<parameter name="value" type="java.lang.CharSequence" />
+			</method>
 		</interface>
 		<!--
 			public abstract class TestInterfaceImplementation implements TestInterface {
