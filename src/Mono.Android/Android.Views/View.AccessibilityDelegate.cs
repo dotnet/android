@@ -14,8 +14,8 @@ namespace Android.Views
 			{
 				return PerformAccessibilityAction (host, (Android.Views.Accessibility.Action) (int) action, args);
 			}
-		}
 #endif
+		}
 	}
 }
 
