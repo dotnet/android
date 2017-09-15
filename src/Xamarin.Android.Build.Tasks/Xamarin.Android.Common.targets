@@ -1493,10 +1493,9 @@ because xbuild doesn't support framework reference assemblies.
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
 		<FilteredAssemblies Include="%(ReferenceCopyLocalPaths.Identity)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' "/>
-		<!-- Fallback to @(ReferencePath) if @(ReferenceCopyLocalPaths) is empty. This is for xbuild support -->
+				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' "/>
 		<FilteredAssemblies Include="%(ReferencePath.Identity)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '@(ReferenceCopyLocalPaths)' == '' "/>
+				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies

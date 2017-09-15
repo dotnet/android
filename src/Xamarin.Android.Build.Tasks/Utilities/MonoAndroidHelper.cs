@@ -303,10 +303,15 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsReferenceAssembly (string assembly)
 		{
-			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters() { InMemory = true, ReadSymbols = false, });
-			if (!a.HasCustomAttributes)
+			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters () { InMemory = true, ReadSymbols = false, });
+			return IsReferenceAssembly (a);
+		}
+
+		public static bool IsReferenceAssembly (AssemblyDefinition assembly)
+		{
+			if (!assembly.HasCustomAttributes)
 				return false;
-			return a.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
+			return assembly.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)
