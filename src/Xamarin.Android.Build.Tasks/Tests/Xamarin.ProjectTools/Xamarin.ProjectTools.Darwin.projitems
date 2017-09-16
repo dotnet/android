@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Content Include="$(XAInstallPrefix)xbuild\Xamarin\Android\libzip.3.0.dylib">
+    <Content Include="$(XAInstallPrefix)xbuild\Xamarin\Android\libzip.5.0.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

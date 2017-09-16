@@ -9,6 +9,10 @@ SOLUTION      = Xamarin.Android.sln
 TEST_TARGETS  = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
 
+ifeq ($(OS_NAME),Darwin)
+export MACOSX_DEPLOYMENT_TARGET := 10.11
+endif
+
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
 endif

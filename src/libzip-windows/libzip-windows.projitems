@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <CMakeBinary32>\usr\bin\cmake</CMakeBinary32>
+    <CMakeBinary64>$(CMakeBinary32)</CMakeBinary64>
+    <CMakeFlags32>-DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\mingw-linux-32.cmake</CMakeFlags32>
+    <CMakeFlags64>-DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\mingw-linux-64.cmake</CMakeFlags64>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' ">
+    <CMakeBinary64>cmake</CMakeBinary64>
+    <CMakeBinary32>cmake</CMakeBinary32>
+    <CMakeCommonFlags>-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON -DBUILD_SHARED_LIBS=ON</CMakeCommonFlags>
+    <CMakeFlags32>$(CMakeCommonFlags) -DCMAKE_C_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc -DCMAKE_CXX_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++ -DCMAKE_RC_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-windres -DCMAKE_FIND_ROOT_PATH=$(AndroidMxeFullPath)\$(MingwCommandPrefix32)</CMakeFlags32>
+    <CMakeFlags64>$(CMakeCommonFlags) -DCMAKE_C_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc -DCMAKE_CXX_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++ -DCMAKE_RC_COMPILER=$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-windres -DCMAKE_FIND_ROOT_PATH=$(AndroidMxeFullPath)\$(MingwCommandPrefix64)</CMakeFlags64>
+  </PropertyGroup>
   <ItemGroup>
     <_LibZipTarget Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <CMake>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-cmake</CMake>
-      <CMakeFlags></CMakeFlags>
+      <CMake>$(CMakeBinary64)</CMake>
+      <CMakeFlags>$(CMakeFlags64)</CMakeFlags>
       <OutputLibrary>x64/libzip.dll</OutputLibrary>
       <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
     </_LibZipTarget>
     <_LibZipTarget Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
-      <CMake>$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-cmake</CMake>
-      <CMakeFlags></CMakeFlags>
+      <CMake>$(CMakeBinary32)</CMake>
+      <CMakeFlags>$(CMakeFlags32)</CMakeFlags>
       <OutputLibrary>libzip.dll</OutputLibrary>
       <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
     </_LibZipTarget>
