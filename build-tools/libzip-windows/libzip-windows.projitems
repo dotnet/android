@@ -3,13 +3,13 @@
   <ItemGroup>
     <_LibZipTarget Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <CMake>$(AndroidMxeFullPath)\bin\x86_64-w64-mingw32.static-cmake</CMake>
-      <CMakeFlags></CMakeFlags>
+      <CMakeFlags>-DBUILD_SHARED_LIBS=ON</CMakeFlags>
       <OutputLibrary>x64/libzip.dll</OutputLibrary>
       <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
     </_LibZipTarget>
     <_LibZipTarget Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
       <CMake>$(AndroidMxeFullPath)\bin\i686-w64-mingw32.static-cmake</CMake>
-      <CMakeFlags></CMakeFlags>
+      <CMakeFlags>-DBUILD_SHARED_LIBS=ON</CMakeFlags>
       <OutputLibrary>libzip.dll</OutputLibrary>
       <OutputLibraryPath>lib/libzip.dll</OutputLibraryPath>
     </_LibZipTarget>
