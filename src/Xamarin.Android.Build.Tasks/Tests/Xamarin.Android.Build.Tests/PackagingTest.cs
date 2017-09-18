@@ -98,6 +98,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				Packages = {
+					new Package () {
+						Id = "System.Runtime.InteropServices.WindowsRuntime",
+						Version = "4.0.1",
+						TargetFramework = "monoandroid71",
+					},
+				},
 			};
 			proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
 			var expectedFiles = new string [] {

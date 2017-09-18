@@ -24,8 +24,22 @@
 
 		<ItemGroup Condition="'$(_HasReferenceToSystemRuntime)' == 'true'">
 			<_DesignTimeFacadeAssemblies Include="%(DesignTimeFacadeDirectories.Identity)*.dll"/>
-			<ReferencePath Remove="@(_DesignTimeFacadeAssemblies)"/>
-			<ReferencePath Include="%(_DesignTimeFacadeAssemblies.Identity)">
+		</ItemGroup>
+
+		<CreateItem Include="%(_DesignTimeFacadeAssemblies.FileName)"
+				AdditionalMetadata="OriginalIdentity=%(_DesignTimeFacadeAssemblies.Identity)">
+			<Output TaskParameter="Include" ItemName="_DesignTimeFacadeAssemblies_Names" />
+		</CreateItem>
+
+		<CreateItem Include="%(ReferencePath.FileName)"
+				AdditionalMetadata="OriginalIdentity=%(ReferencePath.Identity)">
+			<Output TaskParameter="Include" ItemName="_ReferencePath_Names" />
+		</CreateItem>
+
+		<ItemGroup>
+			<_DesignTimeFacadeAssemblies_Names Remove="@(_ReferencePath_Names)"/>
+
+			<ReferencePath Include="@(_DesignTimeFacadeAssemblies_Names->'%(OriginalIdentity)')">
 				<WinMDFile>false</WinMDFile>
 				<CopyLocal>false</CopyLocal>
 				<ResolvedFrom>ImplicitlyExpandDesignTimeFacades</ResolvedFrom>
