@@ -179,6 +179,11 @@ namespace Xamarin.Android.JcwGenTests {
 				if (e.GetType ().ToString () != "Java.Lang.AbstractMethodError")
 					throw e;
 			}
+
+			var mi = ic.GetType ().GetMethod ("MethodWithCursor");
+
+			if (mi != null && mi.GetMethodBody ().LocalVariables.Count == 0)
+				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
 		}
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
