@@ -188,5 +188,18 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 		}
+
+		[Test]
+		public void ExplicitPackageNamingPolicy ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "unnamedproject", "MainActivity.java"));
+				Assert.IsTrue (text.Contains ("package unnamedproject;"), "expected package not found in the source.");
+			}
+		}
 	}
 }
