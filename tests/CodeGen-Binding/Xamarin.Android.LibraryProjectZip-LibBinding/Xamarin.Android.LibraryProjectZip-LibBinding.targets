@@ -43,7 +43,7 @@
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
     <Exec
-        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory)"
+        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
         Command=".\gradlew assembleDebug --stacktrace"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
