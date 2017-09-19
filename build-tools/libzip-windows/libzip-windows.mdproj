@@ -15,23 +15,7 @@
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-  <PropertyGroup>
-    <BuildDependsOnLocal Condition=" '$(HostOS)' == 'Darwin' ">
-      ResolveReferences;
-      _BuildUnlessCached
-    </BuildDependsOnLocal>
-  </PropertyGroup>
   <Import Project="libzip-windows.props" />
   <Import Project="libzip-windows.projitems" />
   <Import Project="libzip-windows.targets" />
-  <Import Project="..\libzip\libzip.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj" Condition=" '$(HostOS)' != 'Windows' ">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" Condition=" '$(HostOS)' != 'Windows' " />
-  <Target Name="Clean" />
 </Project>
