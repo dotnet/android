@@ -3,13 +3,13 @@
   <ItemGroup>
     <_LibZipTarget Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
       <CMake>cmake</CMake>
-      <CMakeFlags>-DCMAKE_OSX_ARCHITECTURES=&quot;i386;x86_64&quot;</CMakeFlags>
+      <CMakeFlags>-DCMAKE_OSX_ARCHITECTURES=&quot;i386;x86_64&quot; -DBUILD_SHARED_LIBS=ON</CMakeFlags>
       <OutputLibrary>libzip.3.0.dylib</OutputLibrary>
       <OutputLibraryPath>lib/libzip.3.0.dylib</OutputLibraryPath>
     </_LibZipTarget>
     <_LibZipTarget Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) AND '$(_LinuxBuildLibZip)' == 'true' ">
       <CMake>cmake</CMake>
-      <CMakeFlags></CMakeFlags>
+      <CMakeFlags>-DBUILD_SHARED_LIBS=ON</CMakeFlags>
       <OutputLibrary>libzip.so</OutputLibrary>
       <OutputLibraryPath>lib/libzip.so</OutputLibraryPath>
     </_LibZipTarget>
