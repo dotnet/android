@@ -140,8 +140,14 @@ namespace MonoDroid.Tuner
 			if (type == null)
 				return null;
 
-			if (type.Module.Assembly.Name.Name == "System.Core")
+			switch (type.Module.Assembly.Name.Name) {
+			case "mscorlib":
+				ProcessCorlib (type);
+				break;
+			case "System.Core":
 				ProcessSystemCore (type);
+				break;
+			}
 
 			if (type.HasMethods && type.HasInterfaces && type.Implements (ICustomMarshalerName)) {
 				foreach (MethodDefinition method in type.Methods) {
@@ -153,6 +159,40 @@ namespace MonoDroid.Tuner
 			}
 
 			return type;
+		}
+
+		bool DebugBuild {
+			get { return _context.LinkSymbols; }
+		}
+
+		void ProcessCorlib (TypeDefinition type)
+		{
+			switch (type.Namespace) {
+			case "System.Runtime.CompilerServices":
+				switch (type.Name) {
+				case "AsyncTaskMethodBuilder":
+					if (DebugBuild) {
+						MarkNamedMethod (type, "SetNotificationForWaitCompletion");
+						MarkNamedMethod (type, "get_ObjectIdForDebugger");
+					}
+					break;
+				case "AsyncTaskMethodBuilder`1":
+					if (DebugBuild) {
+						MarkNamedMethod (type, "SetNotificationForWaitCompletion");
+						MarkNamedMethod (type, "get_ObjectIdForDebugger");
+					}
+					break;
+				}
+				break;
+			case "System.Threading.Tasks":
+				switch (type.Name) {
+				case "Task":
+					if (DebugBuild)
+						MarkNamedMethod (type, "NotifyDebuggerOfWaitCompletion");
+					break;
+				}
+				break;
+			}
 		}
 
 		void ProcessSystemCore (TypeDefinition type)
