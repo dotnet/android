@@ -1054,9 +1054,11 @@ namespace App1
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
 						inApk = ZipHelper.ReadFileFromZip (apk, string.Format ("lib/{0}/libmono-profiler-log.so", abi));
 						if (string.Compare (expectedRuntime, "debug", StringComparison.OrdinalIgnoreCase) == 0) {
-							Assert.IsNotNull (inApk, "libmono-profiler-log.so should exist in the apk.");
+							if (inApk == null)
+								Assert.Fail ("libmono-profiler-log.so should exist in the apk.");
 						} else {
-							Assert.IsNull (inApk, "libmono-profiler-log.so should not exist in the apk.");
+							if (inApk != null)
+								Assert.Fail ("libmono-profiler-log.so should not exist in the apk.");
 						}
 					}
 				}
