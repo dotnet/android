@@ -388,8 +388,11 @@ namespace Xamarin.ProjectTools
 				return;
 
 			var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-			var psi = new ProcessStartInfo (isWindows ? "NuGet.exe" : "mono") {
-				Arguments = $"{(isWindows ? "" : "\"" + Path.Combine (Root,"NuGet.exe") + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
+			var nuget = Path.Combine (Root, "NuGet.exe");
+			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
+				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 			var process = Process.Start (psi);
 			process.WaitForExit ();
