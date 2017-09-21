@@ -58,9 +58,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 				Log.LogMessage (MessageImportance.Normal, $"Skipping uri '{uri}' as destination file already exists '{destinationFile}'.");
 				return;
 			}
-			var dp  = Path.GetDirectoryName (destinationFile);
-			var dn  = Path.GetFileName (destinationFile);
-			var tempPath    = Path.Combine (dp, "." + dn + ".download");
+			var dp       = Path.GetDirectoryName (destinationFile);
+			var dn       = Path.GetFileName (destinationFile);
+			var tempPath = Path.Combine (dp, "." + dn + ".download");
+			Directory.CreateDirectory(dp);
 
 			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
 			try {
