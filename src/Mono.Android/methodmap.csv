@@ -2284,8 +2284,8 @@
 26, android.app.admin, DevicePolicyManager, bindDeviceAdminServiceAsUser, flags, Android.Content.Bind
 26, android.app.admin, DevicePolicyManager, resetPasswordWithToken, flags, Android.App.Admin.ResetPasswordFlags
 26, android.app.admin, DevicePolicyManager, lockNow, flags, Android.App.Admin.DevicePolicyManagerFlags
-26, android.app.assist, AssistStructure.ViewNode, getAutofillType, return, Android.Text.InputTypes
-26, android.app.assist, AssistStructure.ViewNode, getInputType, return, Android.Views.AutofillType
+26, android.app.assist, AssistStructure.ViewNode, getAutofillType, return, Android.Views.AutofillType
+26, android.app.assist, AssistStructure.ViewNode, getInputType, return, Android.Text.InputTypes
 26, android.app.job, JobInfo.Builder, setClipData, grantFlags, Android.Content.ActivityFlags
 26, android.app.job, JobInfo, getClipGrandFlags, grantFlags, Android.Content.ActivityFlags
 26, android.app.job, JobParameters, getClipGrandFlags, grantFlags, Android.Content.ActivityFlags
