@@ -33,43 +33,36 @@
       <Link>..\..\Novell\MonoDroid.FSharp.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>..\Xamarin.Android.Sdk.props</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>..\Xamarin.Android.Sdk.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.Before.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Xamarin.Android.Windows.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>\Xamarin.Android.Common\ImportAfter\Xamarin.Android.Windows.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common.After.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Common.After.targets</Link>
     </None>
     <None
-        Condition=" '$(OS)' == 'Windows_NT' "
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common.Before.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Common.Before.targets</Link>
