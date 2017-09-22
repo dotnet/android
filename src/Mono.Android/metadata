@@ -1378,4 +1378,7 @@
   <remove-node path="/api/package/interface/implements[@name='java.lang.AutoCloseable']" />
 
 
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']" name="argsType">MediaCasEventArgs</attr>
+  <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']/method[@name='onEvent']/parameter[@name='MediaCas']" name="managedName">mediaCas</attr>
+
 </metadata>
