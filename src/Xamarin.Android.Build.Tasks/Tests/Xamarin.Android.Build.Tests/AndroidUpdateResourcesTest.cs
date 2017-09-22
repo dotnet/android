@@ -985,7 +985,7 @@ namespace Lib1 {
 		[Test]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
-			int maxBuildTimeMs = 5000;
+			int maxBuildTimeMs = 8000;
 			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParserAndLibraries");
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
