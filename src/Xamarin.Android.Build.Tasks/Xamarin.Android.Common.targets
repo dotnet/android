@@ -404,6 +404,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    CacheFile="$(_AndroidResourcePathsCache)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    DesignTimeBuild="$(DesignTimeBuild)"
+   ContinueOnError="$(DesignTimeBuild)"
   />
 </Target>
 
@@ -1293,6 +1294,7 @@ because xbuild doesn't support framework reference assemblies.
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    ExplicitCrunch="$(AndroidExplicitCrunch)"
+   ContinueOnError="$(DesignTimeBuild)"
  />
  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
@@ -1371,6 +1373,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	
 	<CopyGeneratedJavaResourceClasses
