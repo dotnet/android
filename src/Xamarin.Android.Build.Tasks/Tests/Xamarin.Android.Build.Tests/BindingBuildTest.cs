@@ -228,11 +228,10 @@ namespace Com.Ipaulpro.Afilechooser {
 				IsRelease = true,
 			};
 			binding.AndroidClassParser = "class-parse";
-			var multidexJar = Environment.OSVersion.Platform == PlatformID.Win32NT
-				? Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "MSBuild", "Xamarin", "Android", "android-support-multidex.jar") 
-				: Path.Combine ("$(MonoDroidInstallDirectory)", "lib", "xamarin.android", "xbuild", "Xamarin", "Android", "android-support-multidex.jar");
-			binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
+
 			using (var bindingBuilder = CreateDllBuilder ("temp/BindingCustomJavaApplicationClass/MultiDexBinding")) {
+				string multidexJar = Path.Combine (bindingBuilder.FrameworkLibDirectory, "android-support-multidex.jar");
+				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\MultiDexBinding\\UnnamedProject.csproj"));

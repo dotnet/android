@@ -32,6 +32,6 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
-  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" Condition=" '$(HostOS)' != 'Windows' " />
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
   <Target Name="Clean" />
 </Project>
