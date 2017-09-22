@@ -89,6 +89,12 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public string AndroidMSBuildDirectory {
+			get {
+				return IsUnix ? Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android") : FrameworkLibDirectory;
+			}
+		}
+
 		public string FrameworkLibDirectory {
 			get {
 				if (IsUnix) {
