@@ -383,6 +383,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_SetupDesignTimeBuildForCompile">
 	<PropertyGroup>
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
+		<ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">True</ManagedDesignTimeBuild>
+		<ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
 	</PropertyGroup>
 </Target>
 
@@ -1041,19 +1043,6 @@ because xbuild doesn't support framework reference assemblies.
 		Overwrite="true"/>
 </Target>
 
-<Choose>
-	<When Condition=" $(AndroidUseManagedDesignTimeResourceGenerator) == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">
-		<PropertyGroup>
-			<ManagedDesignTimeBuild>True</ManagedDesignTimeBuild>
-		</PropertyGroup>
-	</When>
-	<Otherwise>
-		<PropertyGroup>
-			<ManagedDesignTimeBuild>False</ManagedDesignTimeBuild>
-		</PropertyGroup>
-	</Otherwise>
-</Choose>
-
 <!-- Managed DesignTime Resource Generation -->
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
 		Inputs="@(AndroidResource);@(ReferencePath)"
@@ -1093,7 +1082,7 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent"> 
 </Target>
 
-<Target Name="UpdateAndroidResources" DependsOnTargets="_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
+<Target Name="UpdateAndroidResources" DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
 		
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
