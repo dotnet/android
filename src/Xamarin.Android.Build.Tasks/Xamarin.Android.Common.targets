@@ -141,6 +141,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 -->
 
 <PropertyGroup>
+	<ResolveNuGetPackageAssetsDependsOn>
+		_SetLatestTargetFrameworkVersion;
+		$(ResolveNuGetPackageAssetsDependsOn)
+	</ResolveNuGetPackageAssetsDependsOn>
 	<GetReferenceAssemblyPathsDependsOn>
 		_SetLatestTargetFrameworkVersion;
 		$(GetReferenceAssemblyPathsDependsOn)
@@ -171,6 +175,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
+	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
 	<AndroidUseLatestPlatformSdk Condition="'$(AndroidUseLatestPlatformSdk)' == ''">False</AndroidUseLatestPlatformSdk>
@@ -190,7 +195,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
-	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 
 	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
 	<AndroidUseDebugRuntime
@@ -607,6 +611,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
+<Target Name="_SetLatestTargetFrameworkVersionForPackageReference" BeforeTargets="_GetRestoreTargetFrameworksOutput" DependsOnTargets="_SetLatestTargetFrameworkVersion">
+</Target>
+
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
 			AndroidApiLevel="$(AndroidApiLevel)"
@@ -647,9 +654,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
+		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
+				Condition="'$(TargetFrameworkProfile)' != ''"
+		/>
 	</CreateProperty>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
+				Condition="'$(TargetFrameworkProfile)' == ''"
+		/>
+		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
 	</CreateProperty>
