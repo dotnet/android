@@ -238,7 +238,7 @@ and `$(TargetFrameworkVersion)`s. If you want a complete environment --
 
     make jenkins
 
-Unit tests are build in a separate target:
+Unit tests are built in a separate target:
 
     make all-tests
 
@@ -251,7 +251,11 @@ To build Xamarin.Android, ensure you are using MSBuild version 15+ and run:
 
 These are roughly the same as how `make prepare` and `make` are used on other platforms.
 
-_NOTE: there is not currently an equivalent of `make jenkins` or `make all-tests` on Windows._
+Unit tests are built on Windows via:
+
+    msbuild Xamarin.Android-Tests.sln /p:XAIntegratedTests=False 
+
+_NOTE: there is not currently an equivalent of `make jenkins` on Windows._
 
 _Troubleshooting: Ensure you check your MSBuild version(`msbuild -version`) and path for the proper version of MSBuild._
 

@@ -572,6 +572,10 @@ when packaing Release applications.
     You can define custom items using the [AndroidVersionCodeProperties](#AndroidVersionCodeProperties) 
     property.
 
+    By default the value will be set to `{abi}{versionCode:D6}`. If a developer
+    wants to keep the old behaviour you can override the default by setting
+    the [AndroidUseLegacyVersionCode](#AndroidUseLegacyVersionCode) property to `true`
+
     Added in Xamarin.Android 7.2.
 
     <a name="AndroidVersionCodeProperties" class="injected"></a>
@@ -586,6 +590,15 @@ when packaing Release applications.
     in the string. 
 
     Added in Xamarin.Android 7.2.
+
+    <a name="AndroidUseLegacyVersionCode" class="injected"></a>
+-   **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
+    the developer to revert the versionCode calculation back to its old pre 
+    Xamarin.Android 8.2 behaviour. This should ONLY be used for developers 
+    with existing applications in the Google Play Store. It is highly recommended
+    that the new [AndroidVersionCodePattern](#AndroidVersionCodePattern) property is used.
+
+    Added in Xamarin.Android 8.2.
 
 -  **AndroidUseManagedDesignTimeResourceGenerator** &ndash; A boolean property which
     will switch over the design time builds to use the managed resource parser rather

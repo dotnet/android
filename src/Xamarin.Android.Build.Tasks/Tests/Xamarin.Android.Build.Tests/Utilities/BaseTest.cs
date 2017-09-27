@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
 			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 			if (string.IsNullOrEmpty (sdkPath))
-				sdkPath = $"{home}/android-toolchain/sdk";
+				sdkPath = Path.Combine (home, "android-toolchain", "sdk");
 			string adb = Path.Combine (sdkPath, "platform-tools", "adb" + ext);
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
 			proc.WaitForExit ();
@@ -182,7 +182,7 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		protected virtual void CleanupTest ()
 		{
-			if (TestContext.CurrentContext.Test.Properties ["Output"] == null)
+			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories

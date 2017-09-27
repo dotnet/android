@@ -5,11 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Build.Framework;
+using MBF = Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using System.IO;
 using MonoDroid.Tuner;
 using Mono.Linker;
+using ML = Mono.Linker;
 using Xamarin.Android.Tools;
 
 using Java.Interop.Tools.Cecil;
@@ -17,7 +19,7 @@ using Java.Interop.Tools.Diagnostics;
 
 namespace Xamarin.Android.Tasks
 {
-	public class LinkAssemblies : Task
+	public class LinkAssemblies : Task, ML.ILogger
 	{
 		[Required]
 		public string UseSharedRuntime { get; set; }
@@ -122,7 +124,7 @@ namespace Xamarin.Android.Tasks
 				var newerThan = File.GetLastWriteTime (LinkOnlyNewerThan);
 				var skipOldOnes = ResolvedAssemblies.Where (a => File.GetLastWriteTime (a.ItemSpec) < newerThan);
 				foreach (var old in skipOldOnes)
-					Log.LogMessage (MessageImportance.Low, "  Skip linking unchanged file: " + old.ItemSpec);
+					Log.LogMessage (MBF.MessageImportance.Low, "  Skip linking unchanged file: " + old.ItemSpec);
 				skiplist = skipOldOnes.Select (a => Path.GetFileNameWithoutExtension (a.ItemSpec)).Concat (skiplist).ToList ();
 			}
 
@@ -139,7 +141,7 @@ namespace Xamarin.Android.Tasks
 			// Link!
 			try {
 				LinkContext link_context;
-				Linker.Process (options, out link_context);
+				Linker.Process (options, this, out link_context);
 
 				var copydst = OptionalDestinationDirectory ?? OutputDirectory;
 
@@ -179,6 +181,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return true;
+		}
+
+		public void LogMessage (ML.MessageImportance importance, string message, params object [] values)
+		{
+			var mbfImportance = MBF.MessageImportance.Low;
+
+			if (importance == ML.MessageImportance.High)
+				mbfImportance = MBF.MessageImportance.High;
+
+			Log.LogMessage (mbfImportance, message, values);
 		}
 	}
 }

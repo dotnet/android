@@ -10,7 +10,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
-	public class ManifestTest : BaseTest
+	public partial class ManifestTest : BaseTest
 	{
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
@@ -270,6 +270,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "123",
+				/* useLagacy */ true,
 				/* pattern */ null,
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -279,6 +280,17 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "123",
+			},
+			new object[] {
+				/* seperateApk */ false,
+				/* abis */ "armeabi-v7a",
+				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -288,6 +300,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a",
 				/* versionCode */ "1",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ "versionCode=123",
 				/* shouldBuild */ true,
@@ -297,6 +310,7 @@ namespace Bug12935
 				/* seperateApk */ false,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -306,6 +320,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ true,
 				/* pattern */ null,
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -315,6 +330,17 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "123",
+				/* useLagacy */ false,
+				/* pattern */ null,
+				/* props */ null,
+				/* shouldBuild */ true,
+				/* expected */ "200123;300123",
+			},
+			new object[] {
+				/* seperateApk */ true,
+				/* abis */ "armeabi-v7a;x86",
+				/* versionCode */ "123",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -324,6 +350,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
@@ -333,6 +360,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
@@ -342,6 +370,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
@@ -351,6 +380,7 @@ namespace Bug12935
 				/* seperateApk */ true,
 				/* abis */ "armeabi-v7a;x86",
 				/* versionCode */ "12",
+				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
@@ -360,7 +390,7 @@ namespace Bug12935
 
 		[Test]
 		[TestCaseSource("VersionCodeTestSource")]
-		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -377,6 +407,8 @@ namespace Bug12935
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
 			else
 				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+			if (useLegacy)
+				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", "VersionCodeTests"), false, false)) {
 				builder.ThrowOnBuildFailure = false;
@@ -435,20 +467,6 @@ namespace Bug12935
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
 			}
 		}
-
-		static object[] DebuggerAttributeCases = new object[] {
-			// DebugType, isRelease, extpected
-			new object[] { "", true, false, },
-			new object[] { "", false, true, },
-			new object[] { "None", true, false, },
-			new object[] { "None", false, false, },
-			new object[] { "PdbOnly", true, false, },
-			new object[] { "PdbOnly", false, true, },
-			new object[] { "Full", true, false, },
-			new object[] { "Full", false, true, },
-			new object[] { "Portable", true, false, },
-			new object[] { "Portable", false, true, },
-		};
 
 		[Test]
 		[TestCaseSource ("DebuggerAttributeCases")]
@@ -512,7 +530,56 @@ namespace Bug12935
 				References = {
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
+				Packages = {
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				},
 			};
+			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
+				TextContent = () => @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.Support.V4.App;
+using Android.Util;
+[Activity (Label = ""TestActivity1"")]
+[IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
+public class TestActivity1 : FragmentActivity {
+}
+				",
+			});
+			proj.Sources.Add (new BuildItem.Source ("TestActivity2.cs") {
+				TextContent = () => @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.Support.V4.App;
+using Android.Util;
+[Activity (Label = ""TestActivity2"")]
+[IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
+public class TestActivity2 : FragmentActivity {
+}
+				",
+			});
 			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
 				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
@@ -526,6 +593,15 @@ namespace Bug12935
 						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
 					Assert.AreEqual (manifest.IndexOf ("meta-data", StringComparison.OrdinalIgnoreCase),
 					                 manifest.LastIndexOf ("meta-data", StringComparison.OrdinalIgnoreCase), "There should be only one meta-data element");
+
+					var doc = XDocument.Parse (manifest);
+					var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+
+					var activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
+					var e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity2");
+					Assert.IsNotNull (e, "Manifest should contain an activity for TestActivity2");
+					Assert.IsNotNull (e.Element ("intent-filter"), "TestActivity2 should have an intent-filter");
+					Assert.IsNotNull (e.Element ("intent-filter").Element ("action"), "TestActivity2 should have an intent-filter/action");
 				}
 			}
 		}

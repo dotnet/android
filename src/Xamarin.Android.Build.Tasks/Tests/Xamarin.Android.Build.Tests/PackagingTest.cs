@@ -98,6 +98,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				Packages = {
+					new Package () {
+						Id = "System.Runtime.InteropServices.WindowsRuntime",
+						Version = "4.0.1",
+						TargetFramework = "monoandroid71",
+					},
+				},
 			};
 			proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
 			var expectedFiles = new string [] {
@@ -179,6 +186,19 @@ namespace Xamarin.Android.Build.Tests
 					foreach (var file in libFiles)
 						Assert.IsTrue(abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
 				}
+			}
+		}
+
+		[Test]
+		public void ExplicitPackageNamingPolicy ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "unnamedproject", "MainActivity.java"));
+				Assert.IsTrue (text.Contains ("package unnamedproject;"), "expected package not found in the source.");
 			}
 		}
 	}

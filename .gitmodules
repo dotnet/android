@@ -37,7 +37,11 @@
 	path = external/proguard
 	url = https://github.com/xamarin/proguard.git
 	branch = master
-[submodule "xamarin-android-api-compatibility"]
+[submodule "external/xamarin-android-api-compatibility"]
 	path = external/xamarin-android-api-compatibility
 	url = https://github.com/xamarin/xamarin-android-api-compatibility.git
+	branch = master
+[submodule "external/xamarin-android-tools"]
+	path = external/xamarin-android-tools
+	url = https://github.com/xamarin/xamarin-android-tools
 	branch = master

@@ -141,6 +141,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 -->
 
 <PropertyGroup>
+	<ResolveNuGetPackageAssetsDependsOn>
+		_SetLatestTargetFrameworkVersion;
+		$(ResolveNuGetPackageAssetsDependsOn)
+	</ResolveNuGetPackageAssetsDependsOn>
 	<GetReferenceAssemblyPathsDependsOn>
 		_SetLatestTargetFrameworkVersion;
 		$(GetReferenceAssemblyPathsDependsOn)
@@ -171,13 +175,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
+	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
 	<AndroidUseLatestPlatformSdk Condition="'$(AndroidUseLatestPlatformSdk)' == ''">False</AndroidUseLatestPlatformSdk>
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' Or '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
 	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
@@ -188,7 +195,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
-	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 
 	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
 	<AndroidUseDebugRuntime
@@ -381,6 +387,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_SetupDesignTimeBuildForCompile">
 	<PropertyGroup>
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
+		<ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">True</ManagedDesignTimeBuild>
+		<ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
 	</PropertyGroup>
 </Target>
 
@@ -402,6 +410,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    CacheFile="$(_AndroidResourcePathsCache)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    DesignTimeBuild="$(DesignTimeBuild)"
+   ContinueOnError="$(DesignTimeBuild)"
   />
 </Target>
 
@@ -602,6 +611,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
+<Target Name="_SetLatestTargetFrameworkVersionForPackageReference" BeforeTargets="_GetRestoreTargetFrameworksOutput" DependsOnTargets="_SetLatestTargetFrameworkVersion">
+</Target>
+
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
 			AndroidApiLevel="$(AndroidApiLevel)"
@@ -642,9 +654,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
+		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
+				Condition="'$(TargetFrameworkProfile)' != ''"
+		/>
 	</CreateProperty>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
+				Condition="'$(TargetFrameworkProfile)' == ''"
+		/>
+		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
 	</CreateProperty>
@@ -1039,19 +1057,6 @@ because xbuild doesn't support framework reference assemblies.
 		Overwrite="true"/>
 </Target>
 
-<Choose>
-	<When Condition=" $(AndroidUseManagedDesignTimeResourceGenerator) == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">
-		<PropertyGroup>
-			<ManagedDesignTimeBuild>True</ManagedDesignTimeBuild>
-		</PropertyGroup>
-	</When>
-	<Otherwise>
-		<PropertyGroup>
-			<ManagedDesignTimeBuild>False</ManagedDesignTimeBuild>
-		</PropertyGroup>
-	</Otherwise>
-</Choose>
-
 <!-- Managed DesignTime Resource Generation -->
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
 		Inputs="@(AndroidResource);@(ReferencePath)"
@@ -1091,7 +1096,7 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent"> 
 </Target>
 
-<Target Name="UpdateAndroidResources" DependsOnTargets="_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
+<Target Name="UpdateAndroidResources" DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
 		
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
@@ -1291,6 +1296,7 @@ because xbuild doesn't support framework reference assemblies.
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    ExplicitCrunch="$(AndroidExplicitCrunch)"
+   ContinueOnError="$(DesignTimeBuild)"
  />
  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
@@ -1369,6 +1375,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	
 	<CopyGeneratedJavaResourceClasses
@@ -1492,10 +1499,9 @@ because xbuild doesn't support framework reference assemblies.
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
 		<FilteredAssemblies Include="%(ReferenceCopyLocalPaths.Identity)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' "/>
-		<!-- Fallback to @(ReferencePath) if @(ReferenceCopyLocalPaths) is empty. This is for xbuild support -->
+				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' "/>
 		<FilteredAssemblies Include="%(ReferencePath.Identity)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '@(ReferenceCopyLocalPaths)' == '' "/>
+				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies

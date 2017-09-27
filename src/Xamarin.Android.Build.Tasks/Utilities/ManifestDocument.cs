@@ -21,7 +21,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using System.Xml;
 using System.Text;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
 
@@ -402,11 +402,18 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
+		public IEnumerable<XElement> ResolveDuplicates (IEnumerable<XElement> elements)
+		{
+			foreach (var e in elements)
+				foreach (var d in ResolveDuplicates (e.Elements ()))
+					yield return d;
+			foreach (var d in elements.GroupBy (x => x.ToFullString ()).SelectMany (x => x.Skip (1)))
+				yield return d;
+		}
+
 		void RemoveDuplicateElements ()
 		{
-			var duplicates = doc.Descendants ()
-			                    .GroupBy (x => x.ToFullString ())
-					    .SelectMany (x => x.Skip (1));
+			var duplicates = ResolveDuplicates (doc.Elements ());
 			foreach (var duplicate in duplicates)
 				duplicate.Remove ();
 			
@@ -943,7 +950,7 @@ namespace Xamarin.Android.Tasks {
 				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
 			if (code > maxVersionCode || code < 0)
 				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
-			VersionCode = versionCode;
+			VersionCode = versionCode.TrimStart ('0');
 		}
 	}
 }

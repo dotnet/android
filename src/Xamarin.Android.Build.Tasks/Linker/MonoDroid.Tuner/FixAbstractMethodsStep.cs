@@ -142,8 +142,7 @@ namespace MonoDroid.Tuner
 				var iface    = ifaceInfo.InterfaceType;
 				var ifaceDef = iface.Resolve ();
 				if (ifaceDef == null) {
-					if (Context.LogInternalExceptions)
-						Console.WriteLine ("Unable to unresolve interface: {0}", iface.FullName);
+					Context.LogMessage ("Unable to unresolve interface: {0}", iface.FullName);
 					continue;
 				}
 				if (ifaceDef.HasGenericParameters)
@@ -191,8 +190,7 @@ namespace MonoDroid.Tuner
 
 			type.Methods.Add (newMethod);
 
-			if (Context.LogInternalExceptions)
-				Console.WriteLine ("Added method: {0} to type: {1} scope: {2}", method, type.FullName, type.Scope);
+			Context.LogMessage ("Added method: {0} to type: {1} scope: {2}", method, type.FullName, type.Scope);
 		}
 
 		MethodReference abstractMethodErrorConstructor;

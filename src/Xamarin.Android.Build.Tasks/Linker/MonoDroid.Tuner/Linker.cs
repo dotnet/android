@@ -15,7 +15,7 @@ namespace MonoDroid.Tuner
 {
 	class Linker
 	{
-		public static void Process (LinkerOptions options, out LinkContext context)
+		public static void Process (LinkerOptions options, ILogger logger, out LinkContext context)
 		{
 			var pipeline = CreatePipeline (options);
 
@@ -24,7 +24,7 @@ namespace MonoDroid.Tuner
 				foreach (var assembly in options.RetainAssemblies)
 					pipeline.PrependStep (new ResolveFromAssemblyStep (assembly));
 
-			context = CreateLinkContext (options, pipeline);
+			context = CreateLinkContext (options, pipeline, logger);
 			context.Resolver.AddSearchDirectory (options.OutputDirectory);
 
 			Run (pipeline, context);
@@ -35,7 +35,7 @@ namespace MonoDroid.Tuner
 			pipeline.Process (context);
 		}
 
-		static LinkContext CreateLinkContext (LinkerOptions options, Pipeline pipeline)
+		static LinkContext CreateLinkContext (LinkerOptions options, Pipeline pipeline, ILogger logger)
 		{
 			var context = new LinkContext (pipeline, options.Resolver);
 			if (options.DumpDependencies) {
@@ -43,7 +43,8 @@ namespace MonoDroid.Tuner
 				if (prepareDependenciesDump != null)
 					prepareDependenciesDump.Invoke (context.Annotations, null);
 			}
-			context.LogInternalExceptions = Xamarin.Android.Tasks.MonoAndroidHelper.LogInternalExceptions;
+			context.LogInternalExceptions = true;
+			context.Logger = logger;
 			context.CoreAction = AssemblyAction.Link;
 			context.LinkSymbols = true;
 			context.SymbolReaderProvider = new DefaultSymbolReaderProvider (true);

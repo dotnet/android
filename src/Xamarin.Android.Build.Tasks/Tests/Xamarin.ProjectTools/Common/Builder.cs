@@ -14,7 +14,6 @@ namespace Xamarin.ProjectTools
 		const string fixed_linux_xbuild_path = "/usr/bin";
 		const string xbuildapp = "xbuild";
 		const string msbuildapp = "msbuild";
-		string msbuildExe;
 
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
@@ -36,11 +35,63 @@ namespace Xamarin.ProjectTools
 			return File.Exists (path) ? path : msbuildapp;
 		}
 
+		string GetVisualStudio2017Directory ()
+		{
+			var editions = new [] {
+				"Enterprise",
+				"Professional",
+				"Community",
+				"BuildTools"
+			};
+
+			var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+			foreach (var edition in editions) {
+				var dir = Path.Combine (x86, "Microsoft Visual Studio", "2017", edition);
+				if (Directory.Exists (dir))
+					return dir;
+			}
+
+			return null;
+		}
+
+		string GetWindowsBuildExe ()
+		{
+			RunningMSBuild = true;
+
+			//First try environment variable
+			string msbuildExe = Environment.GetEnvironmentVariable ("XA_MSBUILD_EXE");
+			if (!string.IsNullOrEmpty (msbuildExe) && File.Exists (msbuildExe))
+				return msbuildExe;
+
+			//Next try VS 2017, MSBuild 15.0
+			var visualStudioDirectory = GetVisualStudio2017Directory ();
+			if (!string.IsNullOrEmpty(visualStudioDirectory)) {
+				msbuildExe = Path.Combine (visualStudioDirectory, "MSBuild", "15.0", "Bin", "MSBuild.exe");
+
+				if (File.Exists (msbuildExe))
+					return msbuildExe;
+			}
+
+			//Try older than VS 2017, MSBuild 14.0
+			msbuildExe = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "MSBuild", "14.0", "Bin", "MSBuild.exe");
+			if (File.Exists (msbuildExe))
+				return msbuildExe;
+			
+			//MSBuild 4.0 last resort
+			return Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Windows), "Microsoft.NET", "Framework", "v4.0.30319", "MSBuild.exe");
+		}
+
 		public string MSBuildExe {
 			get {
 				return IsUnix
 					? GetUnixBuildExe ()
-					: msbuildExe;
+					: GetWindowsBuildExe ();
+			}
+		}
+
+		public string AndroidMSBuildDirectory {
+			get {
+				return IsUnix ? Path.Combine (FrameworkLibDirectory, "xbuild", "Xamarin", "Android") : FrameworkLibDirectory;
 			}
 		}
 
@@ -59,6 +110,10 @@ namespace Xamarin.ProjectTools
 					return Path.Combine (outdir, "lib", "xamarin.android");
 				}
 				else {
+					var visualStudioDirectory = GetVisualStudio2017Directory ();
+					if (!string.IsNullOrEmpty (visualStudioDirectory))
+						return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
+
 					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
 				}
@@ -113,13 +168,6 @@ namespace Xamarin.ProjectTools
 		{
 			IsUnix = Environment.OSVersion.Platform != PlatformID.Win32NT;
 			BuildLogFile = "build.log";
-			// Allow the override of the location of MSBuild and try a couple of backup paths for 
-			// MSBuild 14.0 and 4.0 
-			msbuildExe = Environment.GetEnvironmentVariable ("XA_MSBUILD_EXE");
-			if (String.IsNullOrEmpty (msbuildExe) || !File.Exists (msbuildExe))
-				msbuildExe = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "MSBuild", "14.0", "Bin", "MSBuild.exe");
-			if (!File.Exists (msbuildExe))
-				msbuildExe = string.Format ("{0}\\Microsoft.NET\\Framework\\v4.0.30319\\msbuild.exe", Environment.GetEnvironmentVariable ("WINDIR"));
 		}
 
 		public void Dispose ()

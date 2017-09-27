@@ -57,9 +57,9 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessLogcatTiming.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Utilities\Xamarin.Android.Build.Utilities.csproj">
-      <Project>{91713046-c358-4647-b162-ed4e1442f3d8}</Project>
-      <Name>Xamarin.Android.Build.Utilities</Name>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
+      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

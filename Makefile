@@ -10,7 +10,7 @@ SOLUTION      = Xamarin.Android.sln
 NUNIT_TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Build.Tests.dll
 
-NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe
+NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.6.0/tools/nunit3-console.exe
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -97,6 +97,7 @@ prepare-external: prepare-deps
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
 	$(foreach conf, $(CONFIGURATIONS), \
+		(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(conf)) && \
 		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(conf)) && \
 		(cd $(call GetPath,JavaInterop) && make bin/Build$(conf)/JdkInfo.props CONFIGURATION=$(conf)) && ) \
 	true

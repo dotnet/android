@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 
 using Java.Interop.Tools.Cecil;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {

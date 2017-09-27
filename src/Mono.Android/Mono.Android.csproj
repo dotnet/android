@@ -76,7 +76,11 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
+  <ItemGroup>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
+      <Link>JavaNativeTypeManager.cs</Link>
+    </Compile>
+  </ItemGroup>
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -230,6 +234,7 @@
     <Compile Include="Android.Util\Base64OutputStream.cs" />
     <Compile Include="Android.Util\Log.cs" />
     <Compile Include="Android.Util\SparseArray.cs" />
+    <Compile Include="Android.Views\View.AccessibilityDelegate.cs" />
     <Compile Include="Android.Views\InputDevice.cs" />
     <Compile Include="Android.Views\KeyCharacterMap.cs" />
     <Compile Include="Android.Views\KeyEvent.cs" />
@@ -240,6 +245,7 @@
     <Compile Include="Android.Views\Window.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityEvent.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityManager.cs" />
+    <Compile Include="Android.Views.Accessibility\AccessibilityNodeProvider.cs" />
     <Compile Include="Android.Views.InputMethods\InputMethodManager.cs" />
     <Compile Include="Android.Widget\AbsListView.cs" />
     <Compile Include="Android.Widget\AdapterView.cs" />

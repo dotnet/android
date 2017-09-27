@@ -14,7 +14,6 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
@@ -357,6 +356,12 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\MarkException.cs">
       <Link>Linker\Mono.Linker\MarkException.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\ConsoleLogger.cs">
+      <Link>Linker\Mono.Linker\ConsoleLogger.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Mono.Linker\ILogger.cs">
+      <Link>Linker\Mono.Linker\ILogger.cs</Link>
+    </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
@@ -483,6 +488,8 @@
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Include="Tasks\Unzip.cs" />
     <Compile Include="Utilities\AssemblyIdentityMap.cs" />
+    <Compile Include="Utilities\GdbPaths.cs" />
+    <Compile Include="Utilities\SatelliteAssembly.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
@@ -587,10 +594,6 @@
       <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
       <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.Build.Utilities\Xamarin.Android.Build.Utilities.csproj">
-      <Project>{91713046-C358-4647-B162-ED4E1442F3D8}</Project>
-      <Name>Xamarin.Android.Build.Utilities</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj">
       <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>
       <Name>Xamarin.Android.Tools.Bytecode</Name>
@@ -634,6 +637,10 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj">
       <Project>{C0487169-8F81-497F-919E-EB42B1D0243F}</Project>
       <Name>Xamarin.Android.Cecil.Mdb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
+      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

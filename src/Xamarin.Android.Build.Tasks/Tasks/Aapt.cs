@@ -11,7 +11,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks

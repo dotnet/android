@@ -108,13 +108,13 @@
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.Build.Tasks</Name>
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj">
+    <ProjectReference Include="..\..\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.NUnitLite</Name>
       <Project>{4D603AA3-3BFD-43C8-8050-0CD6C2601126}</Project>
       <Private>False</Private>

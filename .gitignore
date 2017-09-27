@@ -1,4 +1,5 @@
 *.userprefs
+*.user
 bin
 Configuration.Override.props
 Configuration.OperatingSystem.props
@@ -11,6 +12,7 @@ TestResult.xml
 TestResult-*.xml
 TestResult-*.csv
 .vs/
+.gradle/
 Resource.designer.cs
 logcat-*.txt
 apk-sizes-*.txt

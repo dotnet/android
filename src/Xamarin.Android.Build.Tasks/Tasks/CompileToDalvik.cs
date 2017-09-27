@@ -7,7 +7,7 @@ using System.IO;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -115,8 +115,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (OptionalObfuscatedJarFile))
 				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
 			else {
-				foreach (var cls in Directory.GetFiles (ClassesOutputDirectory, "*.class", SearchOption.AllDirectories))
-					cmd.AppendFileNameIfNotNull (cls);
+				cmd.AppendFileNameIfNotNull (ClassesOutputDirectory);
 				foreach (var jar in JavaLibrariesToCompile)
 					cmd.AppendFileNameIfNotNull (jar.ItemSpec);
 			}

@@ -11,7 +11,7 @@
     <Exec Command="&quot;$(NdkBuildPath)&quot;" />
     <MakeDir Directories="$(OutputPath)\native-lib-1" />
     <Exec
-        Command="zip -r ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        Command="&quot;$(JarPath)&quot; cf ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
         WorkingDirectory="libs"
     />
   </Target>
@@ -30,11 +30,11 @@
     <MakeDir Directories="$(OutputPath)\native-lib-2" />
     <MakeDir Directories="$(OutputPath)\native-lib-2\aar-test" />
     <Exec
-        Command="zip -r ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        Command="&quot;$(JarPath)&quot; cf ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
         WorkingDirectory="simple2/libs"
     />
     <Exec
-        Command="zip -r NativeLib2.zip aar-test"
+        Command="&quot;$(JarPath)&quot; cf NativeLib2.zip aar-test"
         WorkingDirectory="$(OutputPath)\native-lib-2"
     />
   </Target>
@@ -43,7 +43,7 @@
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
     <Exec
-        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory)"
+        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
         Command=".\gradlew assembleDebug --stacktrace"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />

@@ -6,7 +6,7 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using Mono.Security.Cryptography;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 using Mono.Cecil;
 
@@ -27,6 +27,7 @@ namespace Xamarin.Android.Tasks
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static string[] TargetFrameworkDirectories;
 		public static AndroidVersions   SupportedVersions;
+		public static AndroidSdkInfo    AndroidSdk;
 
 		readonly static byte[] Utf8Preamble = System.Text.Encoding.UTF8.GetPreamble ();
 
@@ -80,9 +81,34 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
+		static TaskLoggingHelper androidSdkLogger;
+
 		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath)
 		{
-			AndroidSdk.Refresh (sdkPath, ndkPath, javaPath);
+			Action<TraceLevel, string> logger = (level, value) => {
+				var log = androidSdkLogger;
+				switch (level) {
+				case TraceLevel.Error:
+					if (log == null)
+						Console.Error.Write (value);
+					else
+						log.LogError ("{0}", value);
+					break;
+				case TraceLevel.Warning:
+					if (log == null)
+						Console.WriteLine (value);
+					else
+						log.LogWarning ("{0}", value);
+					break;
+				default:
+					if (log == null)
+						Console.WriteLine (value);
+					else
+						log.LogDebugMessage ("{0}", value);
+					break;
+				}
+			};
+			AndroidSdk  = new AndroidSdkInfo (logger, sdkPath, ndkPath, javaPath);
 		}
 
 		public static void RefreshSupportedVersions (string[] referenceAssemblyPaths)
@@ -163,22 +189,14 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
 		}
 
-		public static void InitializeAndroidLogger (MessageHandler error, MessageHandler warning,
-			MessageHandler info, MessageHandler debug)
+		public static void InitializeAndroidLogger (TaskLoggingHelper logger)
 		{
-			AndroidLogger.Error += error;
-			AndroidLogger.Warning += warning;
-			AndroidLogger.Info += info;
-			AndroidLogger.Debug += debug;
+			androidSdkLogger    = logger;
 		}
 
-		public static void ClearAndroidLogger (MessageHandler error, MessageHandler warning,
-			MessageHandler info, MessageHandler debug)
+		public static void ClearAndroidLogger ()
 		{
-			AndroidLogger.Error -= error;
-			AndroidLogger.Warning -= warning;
-			AndroidLogger.Info -= info;
-			AndroidLogger.Debug -= debug;
+			androidSdkLogger    = null;
 		}
 #endif
 
@@ -285,10 +303,15 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsReferenceAssembly (string assembly)
 		{
-			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters() { InMemory = true, ReadSymbols = false, });
-			if (!a.HasCustomAttributes)
+			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters () { InMemory = true, ReadSymbols = false, });
+			return IsReferenceAssembly (a);
+		}
+
+		public static bool IsReferenceAssembly (AssemblyDefinition assembly)
+		{
+			if (!assembly.HasCustomAttributes)
 				return false;
-			return a.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
+			return assembly.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)

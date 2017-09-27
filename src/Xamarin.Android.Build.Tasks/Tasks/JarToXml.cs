@@ -6,7 +6,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Ensure that the user has the platform they are targeting installed
-			var jarpath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions), "android.jar");
+			var jarpath = Path.Combine (MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions), "android.jar");
 
 			if (!File.Exists (jarpath)) {
 				Log.LogError ("Could not find android.jar for API Level {0}.  This means the Android SDK platform for API Level {0} is not installed.  Either install it in the Android SDK Manager, or change your Android Bindings project to target an API version that is installed. ({1} missing.)", AndroidApiLevel, jarpath);
@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Arguments sent to jar2xml
-			var jarpath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions), "android.jar");
+			var jarpath = Path.Combine (MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions), "android.jar");
 			cmd.AppendSwitchIfNotNull ("--ref=", Path.GetFullPath (jarpath));
 
 			cmd.AppendSwitchIfNotNull ("--out=", Path.GetFullPath (OutputFile));

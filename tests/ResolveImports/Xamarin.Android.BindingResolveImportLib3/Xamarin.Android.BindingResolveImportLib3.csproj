@@ -78,10 +78,10 @@
   </PropertyGroup>
   <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib3.java" Outputs="Jars/lib3.zip">
     <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib3.java" />
-    <Exec WorkingDirectory="Jars" Command="zip -r lib3.jar com" />
+    <Exec WorkingDirectory="Jars" Command="&quot;$(JarPath)&quot; cf lib3.jar com" />
     <MakeDir Directories="Jars/zipped;Jars/zipped/bin" />
     <Copy SourceFiles="Jars/lib3.jar;Properties/AndroidManifest.xml" DestinationFiles="Jars/zipped/bin/lib3.jar;Jars/zipped/bin/AndroidManifest.xml" />
-    <Exec WorkingDirectory="Jars/zipped" Command="zip -r lib3.zip bin" />
+    <Exec WorkingDirectory="Jars/zipped" Command="&quot;$(JarPath)&quot; cf lib3.zip bin" />
     <Copy SourceFiles="Jars/zipped/lib3.zip" DestinationFiles="Jars/lib3.zip" />
   </Target>
   <Target Name="CleanJar">
