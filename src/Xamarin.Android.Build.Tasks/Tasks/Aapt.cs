@@ -365,6 +365,10 @@ namespace Xamarin.Android.Tasks
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
 					line = int.Parse (match.Groups["line"].Value) + 1;
 				var error = match.Groups["message"].Value;
+				if (error.Contains ("warning")) {
+					LogWarning (singleLine);
+					return;
+				}
 
 				// Try to map back to the original resource file, so when the user
 				// double clicks the error, it won't take them to the obj/Debug copy
