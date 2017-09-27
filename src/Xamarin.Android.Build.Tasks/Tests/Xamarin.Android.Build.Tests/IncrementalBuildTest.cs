@@ -10,7 +10,7 @@ using System.Xml.Linq;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Fixtures | ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]

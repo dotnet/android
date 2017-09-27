@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Fixtures | ParallelScope.Children)]
 	public class BindingBuildTest : BaseTest
 	{
 #pragma warning disable 414
@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (typeof(BindingBuildTest), "ClassParseOptions")]
 		public void BuildBasicBindingLibrary (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -34,7 +34,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (typeof (BindingBuildTest), "ClassParseOptions")]
 		public void CleanBasicBindingLibrary (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (typeof (BindingBuildTest), "ClassParseOptions")]
 		public void BuildAarBindigLibraryStandalone (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (typeof (BindingBuildTest), "ClassParseOptions")]
 		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (typeof (BindingBuildTest), "ClassParseOptions")]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {

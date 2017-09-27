@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Fixtures | ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{
 #pragma warning disable 414
