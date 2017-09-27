@@ -11,7 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[Parallelizable (ParallelScope.Fixtures)]
-	public partial class BuildTest : BaseTest
+	public partial class BuildBasicApplicationTextFixture : BaseTest
 	{
 		[Test]
 		public void BuildBasicApplication ()
@@ -21,7 +21,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationReleaseTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationRelease ()
 		{
@@ -30,7 +34,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationFSharpTestFixture : BaseTest
+	{
 		[Test]
 		[Category ("Minor")]
 		public void BuildBasicApplicationFSharp ()
@@ -40,7 +48,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationReleaseFSharpTestFixture : BaseTest
+	{
 		[Test]
 		[Category ("Minor")]
 		public void BuildBasicApplicationReleaseFSharp ()
@@ -50,7 +62,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class FSharpAppHasAndroidDefineTestFixture : BaseTest
+	{
 		[Test]
 		public void FSharpAppHasAndroidDefine ()
 		{
@@ -73,7 +89,11 @@ printf ""%d"" x
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationAndCleanTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
@@ -91,7 +111,11 @@ printf ""%d"" x
 				Assert.AreEqual (0, files.Count (), "{0} should be Empty. Found {1}", proj.OutputPath, string.Join (Environment.NewLine, files));
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationWithLibraryAndCleanTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildApplicationWithLibraryAndClean ([Values (false, true)] bool isRelease)
 		{
@@ -141,7 +165,11 @@ printf ""%d"" x
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildMkBundleApplicationReleaseTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildMkBundleApplicationRelease ()
 		{
@@ -166,7 +194,11 @@ printf ""%d"" x
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildMkBundleApplicationReleaseAllAbiTestFixture : BaseTest
+	{
 		[Test]
 		[Category ("Minor")]
 		public void BuildMkBundleApplicationReleaseAllAbi ()
@@ -195,9 +227,13 @@ printf ""%d"" x
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildAotApplicationTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (typeof(BuildTest), "AotChecks")]
 		[Category ("Minor")]
 		public void BuildAotApplication (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -265,9 +301,13 @@ printf ""%d"" x
 					"the _BuildApkEmbed target should be skipped");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildAotApplicationAndBundleTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (typeof (BuildTest), "AotChecks")]
 		[Category ("Minor")]
 		public void BuildAotApplicationAndBundle (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -316,9 +356,13 @@ printf ""%d"" x
 					"the _BuildApkEmbed target should be skipped");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildProguardEnabledProjectTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("ProguardChecks")]
+		[TestCaseSource (typeof (BuildTest), "ProguardChecks")]
 		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk)
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
@@ -326,25 +370,11 @@ printf ""%d"" x
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
-		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
-		{
-			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
-				TextContent = () => "public class ManyMethods { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
-				TextContent = () => "public class ManyMethods2 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "}",
-				Encoding = Encoding.ASCII
-			});
-			return proj;
-		}
-
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationOver65536MethodsTestFixture : BaseTest
+	{
 		[Test]
 		[Category ("Minor")]
 		public void BuildApplicationOver65536Methods ()
@@ -356,7 +386,11 @@ printf ""%d"" x
 				b.Clean (proj);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CreateMultiDexWithSpacesInConfigTestFixture : BaseTest
+	{
 		[Test]
 		public void CreateMultiDexWithSpacesInConfig ()
 		{
@@ -367,9 +401,13 @@ printf ""%d"" x
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildMultiDexApplicationTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("JackFlagAndFxVersion")]
+		[TestCaseSource (typeof (BuildTest), "JackFlagAndFxVersion")]
 		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -387,7 +425,11 @@ printf ""%d"" x
 				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class MultiDexCustomMainDexFileListTestFixture : BaseTest
+	{
 		[Test]
 		public void MultiDexCustomMainDexFileList ()
 		{
@@ -402,7 +444,11 @@ printf ""%d"" x
 			b.Clean (proj);
 			b.Dispose ();
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CustomApplicationClassAndMultiDexTestFixture : BaseTest
+	{
 		[Test]
 		public void CustomApplicationClassAndMultiDex ()
 		{
@@ -433,7 +479,11 @@ namespace UnnamedProject {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BasicApplicationRepetitiveBuildTestFixture : BaseTest
+	{
 		[Test]
 		public void BasicApplicationRepetitiveBuild ()
 		{
@@ -461,7 +511,11 @@ namespace UnnamedProject {
 					"the _Sign target should run");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BasicApplicationRepetitiveReleaseBuildTestFixture : BaseTest
+	{
 		[Test]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
@@ -503,7 +557,11 @@ namespace UnnamedProject {
 					"the _Sign target should run");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationCheckMdbTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationCheckMdb ()
 		{
@@ -516,7 +574,11 @@ namespace UnnamedProject {
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationCheckMdbRepeatBuildTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationCheckMdbRepeatBuild ()
 		{
@@ -538,7 +600,11 @@ namespace UnnamedProject {
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildAppCheckDebugSymbolsTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildAppCheckDebugSymbols ()
 		{
@@ -602,7 +668,11 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationCheckMdbAndPortablePdbTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
@@ -661,7 +731,11 @@ namespace App1
 					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationCheckConfigFilesTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationCheckConfigFiles ()
 		{
@@ -687,7 +761,12 @@ namespace App1
 					"the _CopyConfigFiles target should be skipped");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationCheckItEmitsAWarningWithContentItemsTestFixture : BaseTest
+	{
+		[Test]
 		public void BuildApplicationCheckItEmitsAWarningWithContentItems ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -708,7 +787,11 @@ namespace App1
 					"Build Output did not contain the correct error message");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerunTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun ()
 		{
@@ -727,7 +810,11 @@ namespace App1
 					"The _AddStaticResources should NOT have been run");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class AaptErrorWhenDuplicateStringEntryTestFixture : BaseTest
+	{
 		[Test]
 		[Ignore ("Re enable when MergeResources work is complete")]
 		public void AaptErrorWhenDuplicateStringEntry ()
@@ -746,7 +833,11 @@ namespace App1
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckJavaErrorTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckJavaError ()
 		{
@@ -775,7 +866,11 @@ namespace App1
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class XA5213IsRaisedWhenOutOfMemoryErrorIsThrownTestFixture : BaseTest
+	{
 		[Test]
 		/// <summary>
 		/// Based on issue raised in
@@ -835,7 +930,11 @@ namespace App1
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class DuplicateValuesInResourceCaseMapTestFixture : BaseTest
+	{
 		[Test]
 		/// <summary>
 		/// Based on issue raised in
@@ -862,7 +961,11 @@ namespace App1
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckLintErrorsAndWarningsTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckLintErrorsAndWarnings ()
 		{
@@ -886,7 +989,11 @@ namespace App1
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckLintConfigMergingTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckLintConfigMerging ()
 		{
@@ -921,7 +1028,11 @@ namespace App1
 				Assert.IsFalse (File.Exists (lintFile), "{0} should have been deleted on clean.", lintFile);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildLibraryWhichUsesResourcesTestFixture : BaseTest
+	{
 		[Test]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
@@ -944,7 +1055,11 @@ namespace App1
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class TestAndroidStoreKeyTestFixture : BaseTest
+	{
 #pragma warning disable 414
 		static object [] AndroidStoreKeyTests = new object [] {
 						// isRelease, AndroidKeyStore, ExpectedResult
@@ -984,7 +1099,11 @@ namespace App1
 					"The Wrong keystore was used to sign the apk");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationWithJavaSourceTestFixture : BaseTest
+	{
 #pragma warning disable 414
 		static object [] BuildApplicationWithJavaSourceChecks = new object [] {
 			new object[] {
@@ -1028,9 +1147,13 @@ namespace App1
 			} finally {
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckWhichRuntimeIsIncludedTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("RuntimeChecks")]
+		[TestCaseSource (typeof (BuildTest), "RuntimeChecks")]
 		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
@@ -1066,9 +1189,13 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckSequencePointGenerationTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource ("SequencePointChecks")]
+		[TestCaseSource (typeof (BuildTest), "SequencePointChecks")]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
 			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
 		{
@@ -1132,7 +1259,11 @@ namespace App1
 				Assert.IsTrue (!Directory.Exists (msymarchive), "{0} should have been deleted on Clean", msymarchive);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildApplicationWithMonoEnvironmentTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
@@ -1162,7 +1293,11 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckMonoDebugIsAddedToEnvironmentTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
@@ -1190,7 +1325,11 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildWithNativeLibrariesTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
@@ -1269,7 +1408,11 @@ namespace App1
 			}
 			Directory.Delete (path, recursive: true);
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildWithExternalJavaLibraryTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildWithExternalJavaLibrary ()
 		{
@@ -1293,7 +1436,11 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckItemMetadataTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckItemMetadata ([Values (true, false)] bool isRelease)
 		{
@@ -1330,7 +1477,11 @@ namespace App1
 				StringAssert.Contains ("ResourceMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidResource");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckLogicalNamePathSeperatorsTestFixture : BaseTest
+	{
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
 		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease)
@@ -1370,7 +1521,11 @@ namespace App1
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class ApplicationJavaClassPropertiesTestFixture : BaseTest
+	{
 		[Test]
 		public void ApplicationJavaClassProperties ()
 		{
@@ -1382,7 +1537,11 @@ namespace App1
 			Assert.IsTrue (appsrc.Contains ("android.test.mock.MockApplication"), "app class");
 			builder.Dispose ();
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class ApplicationIdPlaceholderTestFixture : BaseTest
+	{
 		[Test]
 		public void ApplicationIdPlaceholder ()
 		{
@@ -1394,7 +1553,11 @@ namespace App1
 			Assert.IsTrue (appsrc.Contains ("<provider android:name=\"UnnamedProject.UnnamedProject\""), "placeholder not replaced");
 			builder.Dispose ();
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class ResourceExtractionTestFixture : BaseTest
+	{
 		[Test]
 		public void ResourceExtraction ()
 		{
@@ -1419,7 +1582,11 @@ namespace App1
 				Assert.IsTrue (builder.Build (proj), "Second Build should have succeeded");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckTargetFrameworkVersionTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckTargetFrameworkVersion ([Values (true, false)] bool isRelease)
 		{
@@ -1435,7 +1602,11 @@ namespace App1
 
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class GeneratorValidateEventNameTestFixture : BaseTest
+	{
 #pragma warning disable 414
 		public static object [] GeneratorValidateEventNameArgs = new object [] {
 			new object [] { false, true, string.Empty, string.Empty },
@@ -1503,7 +1674,11 @@ public class Test
 				Assert.AreEqual (failureExpected, !result, "Should build fail?");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class GeneratorValidateMultiMethodEventNameTestFixture : BaseTest
+	{
 #pragma warning disable 414
 		public static object [] GeneratorValidateMultiMethodEventNameArgs = new object [] {
 			new object [] { false, "BG8505", string.Empty, string.Empty },
@@ -1570,7 +1745,11 @@ public class Test
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildReleaseApplicationTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildReleaseApplication ()
 		{
@@ -1581,7 +1760,11 @@ public class Test
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildReleaseApplicationWithSpacesInPathTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildReleaseApplicationWithSpacesInPath ()
 		{
@@ -1605,7 +1788,11 @@ public class Test
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildReleaseApplicationWithNugetPackagesTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildReleaseApplicationWithNugetPackages ()
 		{
@@ -1621,7 +1808,11 @@ public class Test
 										"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildWithTlsProviderTestFixture : BaseTest
+	{
 		static object [] TlsProviderTestCases =
 		{
 			// androidTlsProvider, isRelease, extpected
@@ -1658,7 +1849,11 @@ public class Test
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildAfterAddingNugetTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildAfterAddingNuget ()
 		{
@@ -1675,9 +1870,13 @@ public class Test
 				Assert.IsTrue (doc.Contains ("Xamarin.Android.Support.v7.CardView/24.2.1"), "CardView should be resolved as a reference.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckTargetFrameworkVersion2TestFixture : BaseTest
+	{
 		[Test]
-		public void CheckTargetFrameworkVersion ()
+		public void CheckTargetFrameworkVersion2 ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -1690,7 +1889,11 @@ public class Test
 				StringAssert.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildBasicApplicationCheckPdbTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildBasicApplicationCheckPdb ()
 		{
@@ -1763,7 +1966,11 @@ public class Test
 					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildInDesignTimeModeTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
@@ -1782,7 +1989,11 @@ public class Test
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been skipped.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class CheckLibraryImportsUpgradeTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckLibraryImportsUpgrade ([Values(false, true)] bool useShortFileNames)
 		{
@@ -1830,7 +2041,11 @@ public class Test
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class ValidateJavaVersionTestFixture : BaseTest
+	{
 #pragma warning disable 414
 		static object [] validateJavaVersionTestCases = new object [] {
 			new object [] {
@@ -1928,7 +2143,11 @@ public class Test
 				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public partial class BuildAMassiveAppTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildAMassiveApp()
 		{
