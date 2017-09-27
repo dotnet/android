@@ -133,7 +133,7 @@ define RUN_NUNIT_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	$(RUNTIME) --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
-		$(if $(RUN),-run:$(RUN)) \
+		$(if $(TEST),--test=$(TEST)) \
 		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
 	|| true ; \

@@ -275,8 +275,10 @@ namespace Xamarin.ProjectTools
 			LastBuildOutput += string.Format ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
 			LastBuildOutput += string.Format ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
 
-			if (buildLogFullPath != null)
+			if (buildLogFullPath != null) {
+				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
 				File.WriteAllText (buildLogFullPath, LastBuildOutput);
+			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
 				throw new FailedBuildException (message, null, LastBuildOutput);

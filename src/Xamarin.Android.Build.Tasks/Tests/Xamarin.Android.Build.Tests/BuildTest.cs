@@ -10,7 +10,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest : BaseTest
 	{
 		[Test]
@@ -80,7 +80,7 @@ printf ""%d"" x
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "BuildApplicationAndClean"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
@@ -123,7 +123,7 @@ printf ""%d"" x
 				ProjectName = "App1",
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 			};
-			var projectPath = Path.Combine ("temp", "BuildApplicationWithLibraryAndClean");
+			var projectPath = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), false, false)) {
 				Assert.IsTrue (libb.Build (lib), "Build of library should have succeeded");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), false, false)) {
@@ -376,7 +376,7 @@ printf ""%d"" x
 			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 
-			using (var b = CreateApkBuilder ("temp/BuildMultiDexApplication")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/classes.dex")),
@@ -607,7 +607,7 @@ namespace App1
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb")) {
+			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbAndPortablePdb")) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContent = "https://www.dropbox.com/s/s4br29kvuy8ygz1/PdbTestLibrary.dll?dl=1"
@@ -940,7 +940,7 @@ namespace App1
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty ("AndroidResgenClass", "Resource");
 			proj.SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + proj.Language.DefaultExtension);
-			using (var b = CreateDllBuilder ("temp/BuildLibraryWhichUsesResources")) {
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -977,7 +977,7 @@ namespace App1
 			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
 				BinaryContent = () => data
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "TestAndroidStoreKey"), false, false)) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssert.Contains (expected, b.LastBuildOutput,
@@ -1043,7 +1043,7 @@ namespace App1
 				proj.SetProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk", embedassebmlies.Value);
 			else
 				proj.RemoveProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "CheckWhichRuntimeIsIncluded"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
@@ -1081,7 +1081,7 @@ namespace App1
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
-			using (var b = CreateApkBuilder ("temp/SequencePointChecks", false, false)) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
 					Assert.Ignore ("Cross compiler was not available");
 				b.Verbosity = LoggerVerbosity.Diagnostic;
@@ -1144,7 +1144,7 @@ namespace App1
 				},
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "BuildApplicationWithMonoEnvironment"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -1170,7 +1170,7 @@ namespace App1
 				IsRelease = true,
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "CheckMonoDebugIsAddedToEnvironment"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -1472,7 +1472,7 @@ public class Test
 	}
 }
 ".Replace ("%%ARGS%%", methodArgs);
-			var path = Path.Combine (Root, "temp", "GeneratorValidateEventName");
+			var path = Path.Combine (Root, "temp", $"GeneratorValidateEventName{failureExpected}{warningExpected}");
 			var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
 			if (Directory.Exists (javaDir))
 				Directory.Delete (javaDir, true);
@@ -1536,7 +1536,7 @@ public class Test
 	}
 }
 ".Replace ("%%ARGS%%", methodArgs);
-			var path = Path.Combine (Root, "temp", "GeneratorValidateMultiMethodEventName");
+			var path = Path.Combine (Root, "temp", $"GeneratorValidateMultiMethodEventName{failureExpected}{expectedWarning}");
 			var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
 			if (Directory.Exists (javaDir))
 				Directory.Delete (javaDir, true);
@@ -1786,7 +1786,7 @@ public class Test
 		[Test]
 		public void CheckLibraryImportsUpgrade ([Values(false, true)] bool useShortFileNames)
 		{
-			var path = Path.Combine ("temp", "CheckLibraryImportsUpgrade");
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var libproj = new XamarinAndroidLibraryProject () {
 				IsRelease = true,
 				ProjectName = "Library1"
@@ -1927,6 +1927,8 @@ public class Test
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
 				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
+			Directory.Delete (javaPath, recursive: true);
+			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
 
 		[Test]

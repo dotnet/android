@@ -48,6 +48,10 @@ namespace Xamarin.ProjectTools
 			public override string DefaultAssemblyInfo {
 				get { return default_assembly_info_fs; }
 			}
+			public override string ToString ()
+			{
+				return "FSharp";
+			}
 		}
 
 		class CSharpLanguage : XamarinAndroidProjectLanguage
@@ -72,6 +76,10 @@ namespace Xamarin.ProjectTools
 			}
 			public override string DefaultAssemblyInfo {
 				get { return default_assembly_info_cs; }
+			}
+			public override string ToString ()
+			{
+				return "CSharp";
 			}
 		}
 	}
