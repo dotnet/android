@@ -1607,7 +1607,7 @@
 26, android.bluetooth, BluetoothGattServer, setPreferredPhy, rxPhy, Android.Bluetooth.BluetoothPhy
 26, android.bluetooth, BluetoothGattServer, setPreferredPhy, phyOptions, Android.Bluetooth.BluetoothPhyOption
 
-26, android.view, ViewStructure, setAutofillType, p0, Android.Views.AutofillType
+26, android.view, ViewStructure, setAutofillType, type, Android.Views.AutofillType
 26, android.view, Window, getColorMode, return, Android.Content.PM.ActivityColorMode
 26, android.view, Window, setColorMode, colorMode, Android.Content.PM.ActivityColorMode
 26, android.view, WindowManager.LayoutParams, getColorMode, return, Android.Content.PM.ActivityColorMode
