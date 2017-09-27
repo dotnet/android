@@ -10,6 +10,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Parallelizable (ParallelScope.Fixtures | ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>

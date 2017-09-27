@@ -15,7 +15,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Fixtures)]
-	public class AndroidUpdateResourcesTest : BaseTest
+	public class RepetitiveBuildTestFixture : BaseTest
 	{
 		[Test]
 		public void RepetitiveBuild ()
@@ -34,7 +34,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"), "incorrectly skipped some build");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class DesignTimeBuildTestFixture : BaseTest
+	{
 		[Test]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
 		{
@@ -114,7 +118,11 @@ using System.Runtime.CompilerServices;
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckEmbeddedSupportLibraryResourcesTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckEmbeddedSupportLibraryResources ()
 		{
@@ -137,7 +145,11 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class MoveResourceTestFixture : BaseTest
+	{
 		[Test]
 		public void MoveResource ()
 		{
@@ -159,7 +171,11 @@ using System.Runtime.CompilerServices;
 				Assert.IsFalse (b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"), "incorrectly skipped some build");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class ReportAaptErrorsInOrigionalFileNameTestFixture : BaseTest
+	{
 		[Test]
 		public void ReportAaptErrorsInOriginalFileName ()
 		{
@@ -172,7 +188,11 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class RepetiviteBuildUpdateSingleResourceTestFixture : BaseTest
+	{
 		[Test]
 		public void RepetiviteBuildUpdateSingleResource ()
 		{
@@ -216,7 +236,11 @@ using System.Runtime.CompilerServices;
 					"The Target _CreateBaseApk should not have been skipped");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class Check9PatchFilesAreProcessedTestFixture : BaseTest
+	{
 		[Test]
 		public void Check9PatchFilesAreProcessed ([Values(false, true)] bool explicitCrunch)
 		{
@@ -269,7 +293,11 @@ using System.Runtime.CompilerServices;
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckXmlResourcesFilesAreProcessedTestFixture : BaseTest
+	{
 		[Test]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
@@ -372,7 +400,11 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckResourceDesignerIsCreatedTestFixture : BaseTest
+	{
 		static object[] ReleaseLanguage = new object[] {
 			new object[] { false, XamarinAndroidProjectLanguage.CSharp },
 			new object[] { true, XamarinAndroidProjectLanguage.CSharp },
@@ -400,9 +432,13 @@ namespace UnnamedProject
 					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckResourceDesignerIsUpdatedWhenReadOnlyTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(typeof(CheckResourceDesignerIsCreatedTestFixture), "ReleaseLanguage")]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -423,9 +459,13 @@ namespace UnnamedProject
 					"{0} should be writable", designerPath);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckOldResourceDesignerIsNotUsedTestFixture : BaseTest
+	{
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(typeof (CheckResourceDesignerIsCreatedTestFixture), "ReleaseLanguage")]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -453,10 +493,14 @@ namespace UnnamedProject
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckOldResourceDesignerWithWrongCasingIsRemovedTestFixture : BaseTest
+	{
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(typeof (CheckResourceDesignerIsCreatedTestFixture), "ReleaseLanguage")]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -485,7 +529,11 @@ namespace UnnamedProject
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class TargetGenerateJavaDesignerForComponentIsSkippedTestFixture : BaseTest
+	{
 		[Test]
 		public void TargetGenerateJavaDesignerForComponentIsSkipped ([Values(false, true)] bool isRelease)
 		{ 
@@ -515,7 +563,11 @@ namespace UnnamedProject
 					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckAaptErrorRaisedForMissingResourceTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckAaptErrorRaisedForMissingResource ()
 		{
@@ -543,7 +595,11 @@ namespace UnnamedProject
 				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckAaptErrorRaisedForInvalidDirectoryNameTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckAaptErrorRaisedForInvalidDirectoryName ()
 		{
@@ -562,7 +618,11 @@ namespace UnnamedProject
 				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckAaptErrorRaisedForInvalidFileNameTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckAaptErrorRaisedForInvalidFileName ()
 		{
@@ -579,7 +639,11 @@ namespace UnnamedProject
 				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckAaptErrorRaisedForDuplicateResourceinAppTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
@@ -601,7 +665,11 @@ namespace UnnamedProject
 				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckWarningsRaisedForDuplicateResourcesAcrossEntireProjectTestFixture : BaseTest
+	{
 		[Test]
 		[Ignore ("Ignore until our own MergeResources is implemented")]
 		public void CheckWarningsRaisedForDuplicateResourcesAcrossEntireProject () 
@@ -670,7 +738,11 @@ namespace UnnamedProject
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class InternationalResourceTestTestFixture : BaseTest
+	{
 		[Test]
 		[Ignore ("Enable once Merge Resources is finished")]
 		public void InternationalResourceTest ([Values (false, true)] bool explicitCrunch)
@@ -749,7 +821,11 @@ namespace UnnamedProject
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class MergeResourcesTestFixture : BaseTest
+	{
 		[Test]
 		[Ignore ("Enable once Merge Resources is finished")]
 		public void MergeResources ([Values(false, true)] bool explicitCrunch)
@@ -836,7 +912,11 @@ namespace UnnamedProject
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckFilesAreRemovedTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckFilesAreRemoved () {
 
@@ -872,7 +952,11 @@ namespace UnnamedProject
 					"Theme.xml was NOT removed from the intermediate directory");
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class CheckDontUpdateResourceIfNotNeededTestFixture : BaseTest
+	{
 		[Test]
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
@@ -944,7 +1028,11 @@ namespace Lib1 {
 				}
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class BuildAppWithManagedResourceParserTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildAppWithManagedResourceParser()
 		{
@@ -981,7 +1069,11 @@ namespace Lib1 {
 
 			}
 		}
+	}
 
+	[Parallelizable (ParallelScope.Fixtures)]
+	public class BuildAppWithManagedResourceParserAndLibrariesTestFixture : BaseTest
+	{
 		[Test]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{

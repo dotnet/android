@@ -159,6 +159,24 @@ namespace Xamarin.Android.Build.Tests
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
+		protected XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+		{
+			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
+			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
+				TextContent = () => "public class ManyMethods { \n"
+					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
+					+ "}",
+				Encoding = Encoding.ASCII
+			});
+			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
+				TextContent = () => "public class ManyMethods2 { \n"
+					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
+					+ "}",
+				Encoding = Encoding.ASCII
+			});
+			return proj;
+		}
+
 		[OneTimeSetUp]
 		public void FixtureSetup ()
 		{
