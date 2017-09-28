@@ -152,26 +152,31 @@ namespace Xamarin.Android.Tasks
 			LibraryJars = new ITaskItem[0];
 		}
 
-		public override bool Execute ()
-		{
+
+		string [] disabledIssues = new string [] {
 			// We need to hard code this test in because Lint will issue an Error 
 			// if android:debuggable appears in the manifest. We actually need that
 			// in debug mode. It seems the android tools do some magic to
 			// decide if its needed or not.
-			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("HardcodedDebugMode"))
-				DisabledIssues = "HardcodedDebugMode" + (!string.IsNullOrEmpty(DisabledIssues) ? ","+DisabledIssues : "");
-
+			"HardcodedDebugMode",
 			// We need to hard code this test as disabled in because Lint will issue a warning
 			// for all the resources not used. Now because we don't have any Java code
 			// that means for EVERYTHING! Which will be a HUGE amount of warnings for a large project
-			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("UnusedResources"))
-				DisabledIssues = "UnusedResources" + (!string.IsNullOrEmpty(DisabledIssues) ? ","+DisabledIssues : "");
-
+			"UnusedResources",
 			// We need to hard code this test as disabled in because Lint will issue a warning
 			// for the MonoPackageManager.java since we have to use a static to keep track of the
 			// application instance.
-			if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains ("StaticFieldLeak"))
-				DisabledIssues = "StaticFieldLeak" + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
+			"StaticFieldLeak",
+			// We don't call base.Super () for onCreate so we need to ignore this too.
+			"MissingSuperCall",
+		};
+
+		public override bool Execute ()
+		{
+			foreach (var disabled in disabledIssues) {
+				if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (disabled))
+					DisabledIssues = disabled + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
+			}
 			
 			Log.LogDebugMessage ("Lint Task");
 			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
