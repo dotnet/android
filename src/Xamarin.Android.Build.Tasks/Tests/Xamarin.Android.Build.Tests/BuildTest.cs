@@ -1273,13 +1273,14 @@ namespace App1
 		[Test]
 		public void BuildWithExternalJavaLibrary ()
 		{
+			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
 			string multidex_jar = @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android\android-support-multidex.jar";
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
 				AndroidClassParser = "class-parse",
 			};
-			using (var bbuilder = CreateDllBuilder ("temp/BuildWithExternalJavaLibraryBinding")) {
+			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
 				Assert.IsTrue (bbuilder.Build (binding));
 				var proj = new XamarinAndroidApplicationProject () {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
@@ -1288,7 +1289,7 @@ namespace App1
 							TextContent = () => "public class Foo { public void X () { new Android.Support.Multidex.MultiDexApplication (); } }"
 						} },
 				};
-				using (var builder = CreateApkBuilder ("temp/BuildWithExternalJavaLibrary")) {
+				using (var builder = CreateApkBuilder (Path.Combine (path, "BuildWithExternalJavaLibrary"))) {
 					Assert.IsTrue (builder.Build (proj));
 				}
 			}
