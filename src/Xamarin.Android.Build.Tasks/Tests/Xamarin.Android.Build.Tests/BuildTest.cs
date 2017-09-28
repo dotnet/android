@@ -1485,8 +1485,6 @@ public class Test
 			proj.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "test.jar")) {
 				BinaryContent = new JarContentBuilder () {
 					BaseDirectory = Path.Combine (path, "java"),
-					JavacFullPath = "javac",
-					JarFullPath = "jar",
 					JarFileName = "test.jar",
 					JavaSourceFileName = Path.Combine ("com", "xamarin", "testing", "Test.java"),
 					JavaSourceText = java
@@ -1549,8 +1547,6 @@ public class Test
 			proj.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "test.jar")) {
 				BinaryContent = new JarContentBuilder () {
 					BaseDirectory = Path.Combine (path, "java"),
-					JavacFullPath = "javac",
-					JarFullPath = "jar",
 					JarFileName = "test.jar",
 					JavaSourceFileName = Path.Combine ("com", "xamarin", "testing", "Test.java"),
 					JavaSourceText = java

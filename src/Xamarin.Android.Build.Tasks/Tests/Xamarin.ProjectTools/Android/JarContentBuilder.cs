@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -15,6 +15,23 @@ namespace Xamarin.ProjectTools
 		// It can support more than one file but we don't need compllicated one yet.
 		public string JavaSourceFileName { get; set; }
 		public string JavaSourceText { get; set; }
+
+		public JarContentBuilder ()
+		{
+			Action<TraceLevel, string> logger = (level, value) => {
+				switch (level) {
+					case TraceLevel.Error:
+						throw new Exception ($"AndroidSdkInfo {level}: {value}");
+					default:
+						Console.WriteLine ($"AndroidSdkInfo {level}: {value}");
+						break;
+				}
+			};
+
+			var androidSdk = new AndroidSdkInfo (logger);
+			JavacFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "javac");
+			JarFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "jar");
+		}
 
 		public override byte [] Build ()
 		{
