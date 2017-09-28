@@ -1279,7 +1279,7 @@ namespace App1
 				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
 				AndroidClassParser = "class-parse",
 			};
-			using (var bbuilder = CreateDllBuilder ("temp/BuildWithExternalJavaLibraryBinding", true, false)) {
+			using (var bbuilder = CreateDllBuilder ("temp/BuildWithExternalJavaLibraryBinding")) {
 				Assert.IsTrue (bbuilder.Build (binding));
 				var proj = new XamarinAndroidApplicationProject () {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
@@ -1536,7 +1536,7 @@ public class Test
 	}
 }
 ".Replace ("%%ARGS%%", methodArgs);
-			var path = Path.Combine (Root, "temp", $"GeneratorValidateMultiMethodEventName{failureExpected}{expectedWarning}");
+			var path = Path.Combine (Root, "temp", $"GeneratorValidateMultiMethodEventName{failureExpected}{expectedWarning}{methodArgs}");
 			var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
 			if (Directory.Exists (javaDir))
 				Directory.Delete (javaDir, true);
