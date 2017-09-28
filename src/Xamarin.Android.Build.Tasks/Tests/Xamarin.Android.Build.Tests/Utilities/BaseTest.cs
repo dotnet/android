@@ -207,7 +207,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (!Directory.Exists (output))
 				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed) {
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
+			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
 				FileSystemUtils.SetDirectoryWriteable (output);
 				Directory.Delete (output, recursive: true);
 			} else {

@@ -322,7 +322,7 @@ printf ""%d"" x
 		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk)
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
-			using (var b = CreateApkBuilder ("temp/BuildProguard Enabled Project(1)")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{enableProguard}{useLatestSdk}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -1916,7 +1916,7 @@ public class Test
 				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Directory.Exists(Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFrameworkVersion)))
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
