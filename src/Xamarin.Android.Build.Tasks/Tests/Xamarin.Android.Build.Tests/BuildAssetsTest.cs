@@ -9,6 +9,7 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Parallelizable (ParallelScope.Children)]
 	public class BuildAssetsTest : BaseTest
 	{
 		[Test]

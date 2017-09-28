@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
@@ -389,7 +389,7 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			using (var b = CreateApkBuilder ("temp/CheckResourceDesignerIsCreated")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 					"Resource.Designer"  + proj.Language.DefaultExtension);
@@ -409,7 +409,7 @@ namespace UnnamedProject
 				Language = language,
 				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder ("temp/CheckResourceDesignerIsUpdatedWhenReadOnly")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultDesignerExtension);
 				var attr = File.GetAttributes (designerPath);
@@ -436,7 +436,7 @@ namespace UnnamedProject
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
-			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerIsNotUsed")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				if (File.Exists (designer))
 					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
@@ -467,7 +467,7 @@ namespace UnnamedProject
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.Designer" + proj.Language.DefaultExtension);
-			using (var b = CreateApkBuilder ("temp/CheckOldResourceDesignerWithWrongCasingIsRemoved")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var designer = proj.Sources.FirstOrDefault (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 				designer = designer ?? proj.OtherBuildItems.FirstOrDefault (x => x.Include () == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 				Assert.IsNotNull (designer, $"Failed to retrieve the Resource.designer.{proj.Language.DefaultDesignerExtension}");
@@ -496,7 +496,7 @@ namespace UnnamedProject
 			proj.Packages.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
 			proj.Packages.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var b = CreateApkBuilder ("temp/TargetGenerateJavaDesignerForComponentIsSkipped")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssert.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
@@ -570,7 +570,7 @@ namespace UnnamedProject
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
+			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidFileName");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;

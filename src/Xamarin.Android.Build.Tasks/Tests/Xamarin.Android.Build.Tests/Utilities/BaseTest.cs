@@ -53,6 +53,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
+
+		public string TestName {
+			get {
+				var result = TestContext.CurrentContext.Test.Name;
+				foreach (var c in invalidChars.Concat (Path.GetInvalidPathChars ().Concat (Path.GetInvalidFileNameChars ()))) {
+					result = result.Replace (c, '_');
+				}
+				return result.Replace ("_", string.Empty);
+			}
+		}
+
 		protected void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
@@ -195,7 +207,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (!Directory.Exists (output))
 				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed) {
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
+			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
 				FileSystemUtils.SetDirectoryWriteable (output);
 				Directory.Delete (output, recursive: true);
 			} else {

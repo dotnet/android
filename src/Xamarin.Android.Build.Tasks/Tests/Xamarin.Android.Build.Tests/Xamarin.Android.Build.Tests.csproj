@@ -36,7 +36,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
-      <HintPath>..\..\..\..\packages\NUnit.3.6.0\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>..\..\..\..\packages\NUnit.3.7.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

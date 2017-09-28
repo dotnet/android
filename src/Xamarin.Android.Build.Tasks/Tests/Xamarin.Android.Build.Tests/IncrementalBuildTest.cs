@@ -9,8 +9,7 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
@@ -141,7 +140,7 @@ namespace Lib2
 				},
 			};
 			lib2.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
-			var path = Path.Combine (Root, "temp", "ResolveNativeLibrariesInManagedReferences");
+			var path = Path.Combine (Root, "temp", $"ResolveNativeLibrariesInManagedReferences_{useShortFileNames}");
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
 				Assert.IsTrue (libbuilder.Build (lib), "lib 1st. build failed");
