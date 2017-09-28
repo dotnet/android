@@ -15,6 +15,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          SdkVersion      {get; set;}
 		public                  string          AndroidAbi      {get; set;}
 		public                  string          AndroidSdkHome  {get; set;}
+		public                  string          JavaSdkHome     {get; set;}
 
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
@@ -31,6 +32,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (CreateAndroidEmulator)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidAbi)}: {AndroidAbi}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkHome)}: {AndroidSdkHome}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkHome)}: {JavaSdkHome}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (ImageName)}: {ImageName}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (SdkVersion)}: {SdkVersion}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (TargetId)}: {TargetId}");
@@ -87,6 +89,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (!string.IsNullOrEmpty (AndroidSdkHome)) {
 				psi.EnvironmentVariables ["ANDROID_SDK_HOME"] = AndroidSdkHome;
 				Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_HOME=\"{AndroidSdkHome}\"");
+			}
+			if (!string.IsNullOrEmpty (JavaSdkHome)) {
+				psi.EnvironmentVariables ["JAVA_HOME"] = JavaSdkHome;
+				Log.LogMessage (MessageImportance.Low, $"\tJAVA_HOME=\"{JavaSdkHome}\"");
 			}
 			var p = new Process () {
 				StartInfo   = psi,

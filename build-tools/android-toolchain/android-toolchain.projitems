@@ -125,7 +125,7 @@
       <HostOS></HostOS>
       <DestDir>extras\android\m2repository</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="x86-21_r04.zip">
+    <AndroidSdkItem Include="x86-21_r05.zip">
       <HostOS></HostOS>
       <RelUrl>sys-img/android/</RelUrl>
       <DestDir>system-images\android-21\default\x86</DestDir>

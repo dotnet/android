@@ -28,6 +28,7 @@
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidAbi="x86"
         AndroidSdkHome="$(AndroidSdkDirectory)"
+        JavaSdkHome="$(JavaSdkDirectory)"
         SdkVersion="21"
         ImageName="$(_TestImageName)"
         ToolExe="$(AvdManagerToolExe)"
