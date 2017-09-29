@@ -113,7 +113,7 @@
 
   <!-- Mono runtimes settings -->
   <PropertyGroup>
-    <_ArmNdkPlatformPath>$(AndroidToolchainDirectory)\ndk\platforms\android-4</_ArmNdkPlatformPath>
+    <_ArmNdkPlatformPath>$(AndroidToolchainDirectory)\ndk\platforms\android-9</_ArmNdkPlatformPath>
     <_ArmAr>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-ar</_ArmAr>
     <_ArmAs>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-as</_ArmAs>
     <_ArmCc>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-clang</_ArmCc>
