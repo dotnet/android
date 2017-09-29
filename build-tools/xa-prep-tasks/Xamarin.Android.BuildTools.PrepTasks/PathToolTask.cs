@@ -9,6 +9,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 	{
 		protected   abstract    string          ToolBaseName { get; }
 
+		public      override    string          ToolExe {
+			get { return base.ToolExe; }
+			set { if (value != ToolBaseName) base.ToolExe = value; }
+		}
+
 		protected   override    string          ToolName {
 			get {
 				var dirs = string.IsNullOrEmpty (ToolPath)
