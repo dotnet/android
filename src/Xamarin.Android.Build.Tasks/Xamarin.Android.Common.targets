@@ -1997,7 +1997,7 @@ because xbuild doesn't support framework reference assemblies.
     Jars="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference);@(_ReferenceJavaLibs)"
     JavacTargetVersion="$(JavacTargetVersion)"
     JavacSourceVersion="$(JavacSourceVersion)"
-       />
+  />
 
   <Touch Files="$(IntermediateOutputPath)_javac.stamp" AlwaysCreate="true" />
 </Target>
@@ -2075,7 +2075,6 @@ because xbuild doesn't support framework reference assemblies.
     JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
     ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
     DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
-    ProguardJarInput="$(IntermediateOutputPath)proguard\__proguard_input__.jar"
     ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
     EnableLogging="$(ProguardEnableLogging)"
     DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"

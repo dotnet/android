@@ -16,6 +16,14 @@ namespace Xamarin.ProjectTools
 		public string JavaSourceFileName { get; set; }
 		public string JavaSourceText { get; set; }
 
+		string GetPathFromRegistry (string valueName)
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+				return (string)Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
+			}
+			return null;
+		}
+
 		public JarContentBuilder ()
 		{
 			Action<TraceLevel, string> logger = (level, value) => {
@@ -28,7 +36,19 @@ namespace Xamarin.ProjectTools
 				}
 			};
 
-			var androidSdk = new AndroidSdkInfo (logger);
+			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
+			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
+			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
+			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+			var androidSdk = new AndroidSdkInfo (logger, androidSdkPath: sdkPath, androidNdkPath: ndkPath);
 			JavacFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "javac");
 			JarFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "jar");
 		}
