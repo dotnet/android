@@ -37,7 +37,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AssemblyIdentityMapFile { get; set; }
 
-		public string CacheFile { get; set;} 
+		public string CacheFile { get; set; }
+
+		[Required]
+		public bool DesignTimeBuild { get; set; }
 
 		[Output]
 		public string [] Jars { get; set; }
@@ -204,6 +207,11 @@ namespace Xamarin.Android.Tasks
 					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
 						resolvedEnvironments.Add (env);
 					}
+					continue;
+				}
+
+				if (!File.Exists (assemblyPath) && DesignTimeBuild) {
+					Log.LogDebugMessage ("Skipping non existant dependancy '{0}' due to design time build.", assemblyPath);
 					continue;
 				}
 

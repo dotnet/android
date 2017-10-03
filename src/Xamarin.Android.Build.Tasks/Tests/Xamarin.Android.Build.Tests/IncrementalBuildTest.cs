@@ -59,20 +59,20 @@ public class TestMe {
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "JavacTaskDoesNotRunOnSecondBuild"), false, false)) {
 				Assert.IsTrue (b.Build (app), "First build should have succeeded");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"the _CompileJava target should not be skipped");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_BuildApkEmbed\" because"),
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should not be skipped");
 				var expectedOutput = Path.Combine (Root, b.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes", 
 					"com", "android", "test", "TestMe.class");
 				Assert.IsTrue (File.Exists (expectedOutput), string.Format ("{0} should exist.", expectedOutput));
 				Assert.IsTrue (b.Build (app), "Second build should have succeeded");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"the _CompileJava target should be skipped");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_BuildApkEmbed\" because"),
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should be skipped");
 				Assert.IsTrue (File.Exists (expectedOutput), string.Format ("{0} should exist.", expectedOutput));
 			}

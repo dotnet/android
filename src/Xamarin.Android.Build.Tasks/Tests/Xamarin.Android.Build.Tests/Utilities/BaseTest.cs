@@ -222,7 +222,13 @@ namespace Xamarin.Android.Build.Tests
 					TestContext.Out.WriteLine ("*************************************************************************");
 					TestContext.Out.WriteLine (file);
 					TestContext.Out.WriteLine ();
-					TestContext.Out.WriteLine (File.ReadAllText (file));
+					using (StreamReader reader = new StreamReader (file)) {
+						string line;
+						while ((line = reader.ReadLine ()) != null) {
+							TestContext.Out.WriteLine (line);
+							TestContext.Out.Flush ();
+						}
+					}
 					TestContext.Out.WriteLine ("*************************************************************************");
 					TestContext.Out.Flush ();
 				}

@@ -131,12 +131,16 @@ printf ""%d"" x
 					//var fi = new FileInfo (Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath,
 					//	"__library_projects__", "Library1", "library_project_imports", ""));
 					//fi.Attributes != FileAttributes.ReadOnly;
+					var ignoreFiles = new string [] {
+						"TemporaryGeneratedFile",
+						"CopyComplete"
+					};
 					Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 					var fileCount = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-						.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile")).Count ();
+						.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i))).Count ();
 					Assert.AreEqual (0, fileCount, "{0} should be Empty", proj.IntermediateOutputPath);
 					fileCount = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath), "*", SearchOption.AllDirectories)
-						.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile")).Count ();
+						.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i))).Count ();
 					Assert.AreEqual (0, fileCount, "{0} should be Empty", proj.OutputPath);
 				}
 			}
@@ -258,10 +262,10 @@ printf ""%d"" x
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"the _CompileJava target should be skipped");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_BuildApkEmbed\" because"),
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should be skipped");
 			}
 		}
@@ -309,10 +313,10 @@ printf ""%d"" x
 				}
 				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"the _CompileJava target should be skipped");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_BuildApkEmbed\" because"),
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should be skipped");
 			}
 		}
@@ -449,15 +453,15 @@ namespace UnnamedProject {
 					b.LastBuildTime, firstBuildTime
 				);
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"),
+					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_StripEmbeddedLibraries\" because"),
+					b.Output.IsTargetSkipped ("_StripEmbeddedLibraries"),
 					"the _StripEmbeddedLibraries target should not run");
 				proj.AndroidResources.First ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"),
+					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should run");
 			}
 		}
@@ -485,21 +489,20 @@ namespace UnnamedProject {
 					b.LastBuildTime, firstBuildTime
 				);
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"),
+					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_StripEmbeddedLibraries\" because"),
+					b.Output.IsTargetSkipped ("_StripEmbeddedLibraries"),
 					"the _StripEmbeddedLibraries target should not run");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_LinkAssembliesShrink\" because"),
+					b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
 					"the _LinkAssembliesShrink target should not run");
 				foo.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsTrue (b.LastBuildOutput.Contains ("Target CoreCompile needs to be built as input file ") ||
-		    b.LastBuildOutput.Contains ("Building target \"CoreCompile\" completely."),
+				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"),
 					"the Core Compile target should run");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"),
+					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should run");
 			}
 		}
@@ -530,8 +533,11 @@ namespace UnnamedProject {
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_CopyPdbFiles"),
+					"the _CopyPdbFiles target should be skipped");
 				Assert.IsTrue (
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
@@ -592,13 +598,31 @@ namespace App1
 					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
-					Assert.IsTrue (
+					Assert.IsFalse (
 						File.Exists (linkDst),
-						"Library1.pdb must be copied to linkdst directory");
+						"Library1.pdb should not be copied to linkdst directory because it has no Abstrsact methods to fix up.");
 					Assert.IsTrue (
 						File.Exists (linkSrc),
 						"Library1.pdb must be copied to linksrc directory");
-					FileAssert.AreEqual (linkDst, assetsPdb, $"Library1.pdb in {assetsPdb} should match {linkDst}");
+					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + ".apk"))) {
+						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
+						var filedata = File.ReadAllBytes (linkSrc);
+						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", linkSrc);
+					}
+					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.pdb");
+					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.pdb");
+					Assert.IsTrue (
+						File.Exists (linkDst),
+						"App1.pdb should be copied to linkdst directory because it has Abstrsact methods to fix up.");
+					Assert.IsTrue (
+						File.Exists (linkSrc),
+						"App1.pdb must be copied to linksrc directory");
+					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should not differ.", linkSrc, linkDst);
+					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.dll");
+					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.dll");
+					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should match.", linkSrc, linkDst);
+
 				}
 			}
 		}
@@ -648,13 +672,13 @@ namespace App1
 					"NetStandard16.pdb must be copied to Intermediate directory");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
 				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
 					File.GetLastAccessTimeUtc (pdbToMdbPath),
@@ -683,7 +707,7 @@ namespace App1
 					"UnnamedProject.dll.config was must be copied to Intermediate directory");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyConfigFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyConfigFiles"),
 					"the _CopyConfigFiles target should be skipped");
 			}
 		}
@@ -717,13 +741,12 @@ namespace App1
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should not have failed");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Target _AddStaticResources needs to be built as output file") ||
-		    b.LastBuildOutput.Contains ("Building target \"_AddStaticResources\" completely."),
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_AddStaticResources"),
 					"The _AddStaticResources should have been run");
 				Assert.IsTrue (b.Build (proj), "Build should not have failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_AddStaticResources\" because"),
+					b.Output.IsTargetSkipped ("_AddStaticResources"),
 					"The _AddStaticResources should NOT have been run");
 			}
 		}
@@ -1048,6 +1071,8 @@ namespace App1
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
+				if (debugSymbols && optimize.HasValue && optimize.Value && debugType == "" && !b.RunningMSBuild)
+					expectedRuntime = "debug";
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in supportedAbi) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
@@ -1745,15 +1770,16 @@ public class Test
 							"assemblies/PdbTestLibrary.pdb"),
 							"assemblies/PdbTestLibrary.pdb should not exist in the apk.");
 				}
+				b.BuildLogFile = "build1.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
 				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
-					b.LastBuildOutput.Contains ("Skipping target \"_CopyMdbFiles\" because"),
+					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
 					File.GetLastAccessTimeUtc (pdbToMdbPath),

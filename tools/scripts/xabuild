@@ -83,7 +83,7 @@ else
 fi
 
 if [[ "$MSBUILD" == "msbuild" ]] ; then
-	exec mono "$prefix/bin/xabuild.exe" "$@"
+	exec mono "$prefix/bin/xabuild.exe" "$@" "/p:MonoDroidInstallDirectory=$prefix"
 	exit $?
 fi
 
@@ -129,7 +129,7 @@ export MSBuildExtensionsPath="$TARGETS_DIR"
 
 case "$MSBUILD" in
 	*msbuild*)
-		XABUILD_FLAGS+=(/p:TargetFrameworkRootPath="$TARGETS_DIR-frameworks")
+		XABUILD_FLAGS+=(/p:TargetFrameworkRootPath="$TARGETS_DIR-frameworks/")
 		;;
 	*xbuild*)
 		export XBUILD_FRAMEWORK_FOLDERS_PATH="$TARGETS_DIR-frameworks"

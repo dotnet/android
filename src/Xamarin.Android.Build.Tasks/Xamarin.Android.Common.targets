@@ -277,6 +277,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 </PropertyGroup>
 
+<!-- Force Xbuild to behave like msbuild -->
+<PropertyGroup>
+	<DebugSymbols Condition=" '$(DebugType)' == 'None' ">false</DebugSymbols>
+	<DebugType Condition=" '$(DebugType)' == 'None' ">portable</DebugType>
+</PropertyGroup>
+
 <Choose>
 	<When Condition=" '$(DebugSymbols)' == 'True' And '$(DebugType)' != '' And ('$(EmbedAssembliesIntoApk)' == 'False' Or '$(Optimize)' != 'True') ">
 		<PropertyGroup>
@@ -456,7 +462,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_StripEmbeddedLibraries"
   Inputs="@(ResolvedAssemblies)" 
   Outputs="$(_AndroidStripFlag)"
-  DependsOnTargets="_CopyIntermediateAssemblies;_CopyMdbFiles">
+  DependsOnTargets="_CopyIntermediateAssemblies;_CopyPdbFiles;_CopyMdbFiles">
     <StripEmbeddedLibraries
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
       Assemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
@@ -1079,6 +1085,7 @@ because xbuild doesn't support framework reference assemblies.
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
 		UseManagedResourceGenerator="True"
+		DesignTimeBuild="$(DesignTimeBuild)"
 	/>
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
@@ -1148,6 +1155,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
+		DesignTimeBuild="$(DesignTimeBuild)"
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
@@ -1411,6 +1419,7 @@ because xbuild doesn't support framework reference assemblies.
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
 		UseManagedResourceGenerator="False"
+		DesignTimeBuild="$(DesignTimeBuild)"
 	/>
 
 	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
@@ -1644,25 +1653,49 @@ because xbuild doesn't support framework reference assemblies.
 		Overwrite="false" />
 </Target>
 
-<Target Name="_CopyMdbFiles"
-		Inputs="@(_ResolvedMdbFiles);@(_ResolvedPortablePdbFiles)"
-		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-		DependsOnTargets="_ConvertPdbFiles;_CollectMdbFiles" >
+<Target Name="_CopyPdbFiles"
+		Inputs="@(_ResolvedPortablePdbFiles)"
+		Outputs="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		DependsOnTargets="_ConvertPdbFiles">
 	<CopyMdbFiles
-			SourceFiles="@(_ResolvedMdbFiles);@(_ResolvedPortablePdbFiles)"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
-		<Output TaskParameter="CopiedFiles" ItemName="_MdbFilesCopied" />
+			SourceFiles="@(_ResolvedPortablePdbFiles)"
+			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
+		<Output TaskParameter="CopiedFiles" ItemName="_PdbFilesCopied" />
+		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
 	</CopyMdbFiles>
 	<Copy
-			SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+			SourceFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
+			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
 			SkipUnchangedFiles="true">
-		<Output TaskParameter="CopiedFiles" ItemName="_DebugFilesCopiedToLinkerSrc" />
+		<Output TaskParameter="CopiedFiles" ItemName="_PdbDebugFilesCopiedToLinkerSrc" />
+		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
 	</Copy>
 	<Touch Files="@(_DebugFilesCopiedToLinkerSrc)" />
 	<WriteLinesToFile
 		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_MdbFilesCopied);@(_DebugFilesCopiedToLinkerSrc)"
+		Lines="@(_PdbFilesCopied->'%(FullPath)');@(_PdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
+		Overwrite="false" />
+</Target>
+
+<Target Name="_CopyMdbFiles"
+		Inputs="@(_ResolvedMdbFiles)"
+		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		DependsOnTargets="_CollectMdbFiles" >
+	<CopyMdbFiles
+			SourceFiles="@(_ResolvedMdbFiles)"
+			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
+		<Output TaskParameter="CopiedFiles" ItemName="_MdbFilesCopied" />
+	</CopyMdbFiles>
+	<Copy
+			SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
+			DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+			SkipUnchangedFiles="true">
+		<Output TaskParameter="CopiedFiles" ItemName="_MdbDebugFilesCopiedToLinkerSrc" />
+	</Copy>
+	<Touch Files="@(_DebugFilesCopiedToLinkerSrc)" />
+	<WriteLinesToFile
+		File="$(IntermediateOutputPath)$(CleanFile)"
+		Lines="@(_MdbFilesCopied->'%(FullPath)');@(_MdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
 		Overwrite="false" />
 </Target>
 	

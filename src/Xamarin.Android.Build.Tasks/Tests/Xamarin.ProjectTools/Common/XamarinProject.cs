@@ -61,7 +61,6 @@ namespace Xamarin.ProjectTools
 			SetProperty ("ConsolePause", "false");
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
-			SetProperty ("BuildingInsideVisualStudio", "True");
 			SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
 
 			SetProperty (DebugProperties, "DebugSymbols", "true");
@@ -257,7 +256,7 @@ namespace Xamarin.ProjectTools
 					Timestamp = ItemGroupList.SelectMany (ig => ig).Where (i => i.Timestamp != null).Select (i => (DateTimeOffset)i.Timestamp).Max (),
 					Path = ProjectFilePath,
 					Content = SaveProject (),
-					Encoding = System.Text.Encoding.Unicode
+					Encoding = System.Text.Encoding.UTF8,
 				});
 			}
 

@@ -28,10 +28,10 @@ namespace Xamarin.Android.Build.Tests
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"), "failed to skip some build");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
 				proj.AndroidResources.First ().Timestamp = null; // means "always build"
 				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"), "incorrectly skipped some build");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
 		}
 
@@ -74,15 +74,18 @@ using System.Runtime.CompilerServices;
 				},
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+			if (useManagedParser)
+				proj.SetProperty ("BuildingInsideVisualStudio", "True");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
+					l.Target = "Build";
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
-					Assert.IsTrue (b.Clean(proj), "App should have cleaned successfully");
-					Assert.IsTrue (b.UpdateAndroidResources (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
+					b.Target = "Compile";
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
 					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping download of "),
 						"failed to skip the downloading of files.");
@@ -156,7 +159,7 @@ using System.Runtime.CompilerServices;
 				image.Timestamp = DateTimeOffset.UtcNow.AddMinutes (1);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, oldpath)), "XamarinProject.UpdateProjectFiles() failed to delete file");
-				Assert.IsFalse (b.LastBuildOutput.Contains ("Skipping target \"_Sign\" because"), "incorrectly skipped some build");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
 		}
 
@@ -194,25 +197,23 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_GenerateAndroidResourceDir\" because"),
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should have been skipped");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"The Target _CompileJava should have been skipped");
 				image1.Timestamp = DateTime.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Target _GenerateAndroidResourceDir needs to be built as input file") ||
-                    b.LastBuildOutput.Contains ("Building target \"_GenerateAndroidResourceDir\" completely."),
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should not have been skipped");
 				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Skipping target \"_CompileJava\" because"),
+					b.Output.IsTargetSkipped ("_CompileJava"),
 					"The Target _CompileJava (2) should have been skipped");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("Target _CreateBaseApk needs to be built as input file") ||
-					b.LastBuildOutput.Contains ("Building target \"_CreateBaseApk\" completely."),
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_CreateBaseApk"),
 					"The Target _CreateBaseApk should not have been skipped");
 			}
 		}
@@ -957,7 +958,7 @@ namespace Lib1 {
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
 				appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 				appBuilder.Target = "Compile";
-				Assert.IsTrue (appBuilder.Build (appProj, parameters: new string[] { "DesignTimeBuild=true"} ),
+				Assert.IsTrue (appBuilder.Build (appProj, parameters: new string[] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" } ),
 					"DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1021,15 +1022,17 @@ namespace Lib1 {
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				libBuilder.ThrowOnBuildFailure = false;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
 					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					appBuilder.ThrowOnBuildFailure = false;
 					libBuilder.Target = "Compile";
-					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true" }), "Library project should have built");
+					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Library project should have built");
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
 					appBuilder.Target = "Compile";
-					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true" }), "Library project should have built");
+					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Application project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1049,7 +1052,7 @@ namespace Lib1 {
 					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should not have run.");
 					appBuilder.Target = "Compile";
-					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true" }), "App project should have built");
+					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "App project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
