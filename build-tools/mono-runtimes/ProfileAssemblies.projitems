@@ -188,4 +188,72 @@
     <MonoProfileAssembly Include="System.Xml.Linq.dll" />
     <MonoProfileAssembly Include="System.Xml.Serialization.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <MonoTestAssembly Include="monodroid_corlib_test.dll">
+      <SourcePath>corlib</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_I18N.CJK_test.dll">
+      <SourcePath>I18N/CJK</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_I18N.MidEast_test.dll">
+      <SourcePath>I18N/MidEast</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_I18N.West_test.dll">
+      <SourcePath>I18N/West</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Mono.CSharp_test.dll">
+      <SourcePath>Mono.CSharp</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Mono.Data.Sqlite_test.dll">
+      <SourcePath>Mono.Data.Sqlite</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Mono.Data.Tds_test.dll">
+      <SourcePath>Mono.Data.Tds</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Mono.Security_test.dll">
+      <SourcePath>Mono.Security</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System_test.dll">
+      <SourcePath>System</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Core_test.dll">
+      <SourcePath>System.Core</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Data_test.dll">
+      <SourcePath>System.Data</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.IO.Compression.FileSystem_test.dll">
+      <SourcePath>System.IO.Compression.FileSystem</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.IO.Compression_test.dll">
+      <SourcePath>System.IO.Compression</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Json_test.dll">
+      <SourcePath>System.Json</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Net.Http_test.dll">
+      <SourcePath>System.Net.Http</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Numerics_test.dll">
+      <SourcePath>System.Numerics</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_test.dll">
+      <SourcePath>System.Runtime.Serialization</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.ServiceModel.Web_test.dll">
+      <SourcePath>System.ServiceModel.Web</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Transactions_test.dll">
+      <SourcePath>System.Transactions</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Xml_test.dll">
+      <SourcePath>System.XML</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
+      <SourcePath>System.Xml.Linq</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="nunitlite.dll">
+      <SourcePath>lib/monodroid</SourcePath>
+    </MonoTestAssembly>
+  </ItemGroup>
 </Project>

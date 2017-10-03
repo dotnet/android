@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
+  <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
+  <Import Project="..\..\build-tools\scripts\TestApks.targets" />
+  <Import Project="..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
+  <Target Name="_AddTestAssemblies"
+      DependsOnTargets="_RemapAssemblies"
+      BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')" />
+      <Reference Remove="$(IntermediateOutputPath)nunitlite.dll" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_RemapAssemblies"
+      Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
+      Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <ItemGroup>
+      <_Source  Include="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_NUnit>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Xamarin.Android.NUnitLite.dll</_NUnit>
+    </PropertyGroup>
+    <Exec
+        Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
+    />
+    <Copy
+        SourceFiles="..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
+        DestinationFolder="$(IntermediateOutputPath)"
+    />
+  </Target>
+  <ItemGroup>
+    <_TestResource Include="..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.es-ES.resources">
+      <Culture>es-ES</Culture>
+      <Name>monodroid_corlib_test.resources.dll</Name>
+    </_TestResource>
+    <_TestResource Include="..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.nn-NO.resources">
+      <Culture>nn-NO</Culture>
+      <Name>monodroid_corlib_test.resources.dll</Name>
+    </_TestResource>
+  </ItemGroup>
+  <Target Name="_CreateTestResources"
+      BeforeTargets="ResolveAssemblyReferences"
+      DependsOnTargets="_ExtractTestResources"
+      Inputs="@(_TestResource)"
+      Outputs="$(IntermediateOutputPath)%(_TestResource.Culture)\%(_TestResource.Name)">
+    <MakeDir Directories="$(IntermediateOutputPath)%(_TestResource.Culture)" />
+    <AL
+        OutputAssembly="$(IntermediateOutputPath)%(Culture)\%(Name)"
+        Version="1.0.0.0"
+        Culture="%(Culture)"
+        EmbedResources="@(_TestResource)"
+    />
+  </Target>
+  <Target Name="_ExtractTestResources"
+      Inputs="..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
+      Outputs="@(_TestResource)">
+    <SystemUnzip
+        SourceFiles="..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
+        HostOS="$(HostOS)"
+        DestinationFolder="..\..\bin\$(Configuration)\bcl-tests"
+    />
+  </Target>
+  <Target Name="_GenerateApp_cs"
+      Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
+      Outputs="$(IntermediateOutputPath)\App.cs">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)\App.cs" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_Assemblies>@(MonoTestAssembly->'"%(Identity)"', ',  ')</_Assemblies>
+    </PropertyGroup>
+    <ReplaceFileContents
+        SourceFile="App.cs.in"
+        DestinationFile="$(IntermediateOutputPath)App.cs"
+        Replacements="@ASSEMBLIES@=$(_Assemblies)"
+    />
+  </Target>
+</Project>

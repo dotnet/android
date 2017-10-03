@@ -10,6 +10,7 @@ using Android.Runtime;
 using Android.Util;
 
 using NUnitLite.Runner;
+using NUnit.Framework.Api;
 using NUnit.Framework.Internal;
 
 namespace Xamarin.Android.NUnitLite {
@@ -20,6 +21,11 @@ namespace Xamarin.Android.NUnitLite {
 		protected bool GCAfterEachFixture {
 			get { return AndroidRunner.Runner.GCAfterEachFixture; }
 			set { AndroidRunner.Runner.GCAfterEachFixture = value; }
+		}
+
+		protected ITestFilter Filter {
+			get { return AndroidRunner.Runner.Filter; }
+			set { AndroidRunner.Runner.Filter = value; }
 		}
 
 		protected TestSuiteInstrumentation (IntPtr handle, JniHandleOwnership transfer)
@@ -44,6 +50,8 @@ namespace Xamarin.Android.NUnitLite {
 
 			AndroidRunner.Runner.Options.LoadFromBundle (arguments);
 			AndroidRunner.Runner.AddTestFilters (GetIncludedCategories (), GetExcludedCategories ());
+
+			UpdateFilter ();
 
 			AndroidRunner.Runner.Initialized = true;
 			var results = new Bundle ();
@@ -144,6 +152,10 @@ namespace Xamarin.Android.NUnitLite {
 		protected virtual IEnumerable <string> GetExcludedCategories ()
 		{
 			return null;
+		}
+
+		protected virtual void UpdateFilter ()
+		{
 		}
 	}
 }

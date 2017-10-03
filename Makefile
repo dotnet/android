@@ -156,7 +156,8 @@ run-ji-tests:
 TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
-	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj \
+	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
 
 TEST_APK_PROJECTS_RELEASE = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
