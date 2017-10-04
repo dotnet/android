@@ -5,9 +5,11 @@
     <_CommonCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2</_CommonCFlags>
     <_HostWinCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
     <_HostWinCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
-    <_BtlsConfigureFlags>--enable-dynamic-btls --with-btls-android-ndk=$(AndroidToolchainDirectory)\ndk</_BtlsConfigureFlags>
-    <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile4_x=no --with-monodroid --enable-nls=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonConfigureFlags>
-    <_TargetConfigureFlags>$(_CommonConfigureFlags) --enable-minimal=ssa,interpreter,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables --disable-iconv --disable-boehm $(_BtlsConfigureFlags)</_TargetConfigureFlags>
+    <_BtlsConfigureFlags>--with-btls-android-ndk=$(AndroidToolchainDirectory)\ndk</_BtlsConfigureFlags>
+    <_CommonConfigureFlags>--without-ikvm-native --enable-maintainer-mode --with-profile2=no --with-profile4=no --with-monodroid --enable-nls=no </_CommonConfigureFlags>
+    <_CommonHostConfigureFlags>$(_CommonConfigureFlags) --with-mcs-docs=no --disable-mono-debugger --disable-iconv --disable-boehm</_CommonHostConfigureFlags>
+    <_CommonTargetConfigureFlags>$(_CommonConfigureFlags) --with-profile4_x=no --with-sigaltstack=yes --with-tls=pthread mono_cv_uscore=yes</_CommonTargetConfigureFlags>
+    <_TargetConfigureFlags>$(_CommonTargetConfigureFlags) --enable-minimal=ssa,portability,attach,verifier,full_messages,sgen_remset,sgen_marksweep_par,sgen_marksweep_fixed,sgen_marksweep_fixed_par,sgen_copying,logging,security,shared_handles --disable-mcs-build --disable-executables --disable-iconv --disable-boehm $(_BtlsConfigureFlags)</_TargetConfigureFlags>
     <_SecurityCFlags>-fstack-protector</_SecurityCFlags>
     <_TargetCFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCFlags>
     <_TargetCxxFlags>$(_SecurityCFlags) -DMONODROID=1</_TargetCxxFlags>

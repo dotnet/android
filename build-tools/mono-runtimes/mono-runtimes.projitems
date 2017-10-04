@@ -167,7 +167,7 @@
       <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-objdump</Objdump>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) $(_CommonHostConfigureFlags) --disable-dynamic-btls --disable-mcs-build --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
@@ -190,7 +190,7 @@
       <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-objdump</Objdump>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix32) --target=$(MingwCommandPrefix32) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix32) --target=$(MingwCommandPrefix32) $(_CommonHostConfigureFlags) --disable-dynamic-btls --disable-mcs-build --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
@@ -211,7 +211,7 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile4_x=no --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <ConfigureFlags>$(_CommonHostConfigureFlags)</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>dylib</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
@@ -232,7 +232,7 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile4_x=no --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <ConfigureFlags>$(_CommonHostConfigureFlags)</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
