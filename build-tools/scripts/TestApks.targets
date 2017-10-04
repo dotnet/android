@@ -101,6 +101,20 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
     />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        ContinueOnError="True"
+        Command="kill -HUP $(_EmuPid)"
+    />
+    <Sleep
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        Milliseconds="5000"
+    />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        ContinueOnError="True"
+        Command="kill -KILL $(_EmuPid)"
+    />
     <Error
         Condition="'@(_FailedComponent)' != ''"
         Text="Execution of the following components did not complete successfully: @(_FailedComponent->'%(Identity)', ', ')"

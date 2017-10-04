@@ -27,13 +27,26 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			get { return false; }
 		}
 
+		enum CommandState {
+			CheckSdk,
+			CheckPM,
+		}
+
+		CommandState            state;
+
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (CheckAdbTarget)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AdbTarget)}: {AdbTarget}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (SdkVersion)}: {SdkVersion}");
 
+			state = CommandState.CheckSdk;
 			base.Execute ();
+
+			if (IsValidTarget) {
+				state = CommandState.CheckPM;
+				base.Execute ();
+			}
 
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (AdbTarget)}: {AdbTarget}");
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (IsValidTarget)}: {IsValidTarget}");
@@ -49,7 +62,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return $"{AdbTarget} shell getprop ro.build.version.sdk";
+			switch (state) {
+			case CommandState.CheckSdk:
+				return $"{AdbTarget} shell getprop ro.build.version.sdk";
+			case CommandState.CheckPM:
+				return $"{AdbTarget} shell pm path com.android.shell";
+			}
+			throw new InvalidOperationException ($"Unknown state `{state}`!");
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
@@ -57,6 +76,19 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
 			if (string.IsNullOrEmpty (singleLine))
 				return;
+
+			switch (state) {
+			case CommandState.CheckSdk:
+				CheckSdkOutput (singleLine, messageImportance);
+				break;
+			case CommandState.CheckPM:
+				CheckPMOutput (singleLine, messageImportance);
+				break;
+			}
+		}
+
+		void CheckSdkOutput (string singleLine, MessageImportance messageImportance)
+		{
 			if (singleLine.Equals ("List of devices attached", StringComparison.OrdinalIgnoreCase))
 				return;
 			// Ignore stderr
@@ -84,6 +116,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				    int.TryParse (singleLine, out target) &&
 					target >= required) {
 				IsValidTarget   = true;
+				return;
+			}
+		}
+
+		void CheckPMOutput (string singleLine, MessageImportance messageImportance)
+		{
+			if (singleLine.Contains ("Error: Could not access the Package Manager") ||
+				    singleLine.Contains ("Failure ")) {
+				IsValidTarget   = false;
 				return;
 			}
 		}
