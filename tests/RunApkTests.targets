@@ -12,6 +12,11 @@
     Note that the `.csproj` for each `@(TestApk)` entry *must* be added to
     `$(TEST_APK_PROJECTS)` and/or `$(TEST_APK_PROJECTS_RELEASE)`
     in the toplevel Makefile so that the `.apk` is built.
+
+    The `<Import/>` should have `Condition=" '$(Configuration)' == 'Debug' "`
+    if the test should only be run in the Debug configuration. If it will be
+    built in Release configuration, *also* update
+    `$(TEST_APK_PROJECTS_RELEASE)` within the toplevel `Makefile`.
     -->
   <Import Project="..\src\Mono.Android\Test\Mono.Android-Tests.projitems" />
   <Import Project="..\tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.projitems" />
