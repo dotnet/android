@@ -31,7 +31,13 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
-			return base.Execute ();
+			var result = base.Execute ();
+			if (!result)
+				return result;
+			// compress all the class files
+			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "classes.zip"), FileMode.OpenOrCreate))
+				zip.AddDirectory (ClassesOutputDirectory, "");
+			return result;
 		}
 
 		protected override string GenerateCommandLineCommands ()
