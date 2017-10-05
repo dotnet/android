@@ -161,7 +161,6 @@ TEST_APK_PROJECTS = \
 
 TEST_APK_PROJECTS_RELEASE = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
-	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj \
 	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
 
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
