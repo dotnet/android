@@ -31,12 +31,14 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] DroidDoc2Paths { get; set; }
 
+		public ITaskItem [] ApiXmlDocPaths { get; set; }
+
 		public ITaskItem [] JavaDocs { get; set; }
 
 		public IEnumerable<ITaskItem> DocsPaths {
 			get {
 				Func<ITaskItem[],IEnumerable<ITaskItem>> f = l => l ?? Enumerable.Empty<ITaskItem> ();
-				return f (JavaDocPaths).Concat (f (Java7DocPaths)).Concat (f (Java8DocPaths)).Concat (f (DroidDocPaths)).Concat (f (DroidDoc2Paths)).Concat (f (JavaDocs));
+				return f (JavaDocPaths).Concat (f (Java7DocPaths)).Concat (f (Java8DocPaths)).Concat (f (DroidDocPaths)).Concat (f (DroidDoc2Paths)).Concat (f (ApiXmlDocPaths)).Concat (f (JavaDocs));
 			}
 		}
 
@@ -50,6 +52,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogTaskItems ("  Java8DocPaths: ", Java8DocPaths);
 			Log.LogTaskItems ("  DroidDocPaths: ", DroidDocPaths);
 			Log.LogTaskItems ("  DroidDoc2Paths: ", DroidDoc2Paths);
+			Log.LogTaskItems ("  ApiXmlDocPaths: ", ApiXmlDocPaths);
 			Log.LogTaskItems ("  JavaDocs: ", JavaDocs);
 
 			using (var output = new StreamWriter (OutputFile, append: false, 
