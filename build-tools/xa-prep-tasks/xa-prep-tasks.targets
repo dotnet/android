@@ -5,7 +5,7 @@
   <Import Project="..\bundle\bundle-path.targets" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
-    <_AzureBaseUri>https://xamjenkinsartifact.blob.core.windows.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
+    <_AzureBaseUri>https://xamjenkinsartifact.azureedge.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
     <_NuGetUri>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</_NuGetUri>
     <_NuGetPath>$(MSBuildThisFileDirectory)\..\..\.nuget</_NuGetPath>
   </PropertyGroup>
