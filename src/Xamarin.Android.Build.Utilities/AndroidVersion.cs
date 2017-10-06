@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Utilities
 			this.OSVersion = osVersion;
 			this.CodeName = codeName;
 			this.Version = version;
-			this.FrameworkVersion = frameworkVersion;
+			this.FrameworkVersion = frameworkVersion ?? "v" + osVersion;
 			this.Stable = stable;
 		}
 
