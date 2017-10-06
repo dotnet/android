@@ -54,8 +54,8 @@
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
-    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.4.0</MonoRequiredMinimumVersion>
-    <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).147</MonoRequiredDarwinMinimumVersion>
+    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.6.0</MonoRequiredMinimumVersion>
+    <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).0</MonoRequiredDarwinMinimumVersion>
     <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\linker</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>

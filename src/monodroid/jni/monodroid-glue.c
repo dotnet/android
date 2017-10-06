@@ -3426,7 +3426,7 @@ set_trace_options (void)
 /* Profiler support cribbed from mono/metadata/profiler.c */
 
 typedef void (*ProfilerInitializer) (const char*);
-#define INITIALIZER_NAME "mono_profiler_startup"
+#define INITIALIZER_NAME "mono_profiler_init"
 
 static mono_bool
 load_profiler (void *handle, const char *desc, const char *symbol)
@@ -3470,7 +3470,7 @@ load_embedded_profiler (const char *desc, const char *name)
 }
 
 static mono_bool
-load_profiler_from_directory (const char *directory, const char *libname, const char *desc)
+load_profiler_from_directory (const char *directory, const char *libname, const char *desc, const char *name)
 {
 	char *full_name = path_combine (directory, libname);
 	int  exists     = file_exists (full_name);
@@ -3485,7 +3485,9 @@ load_profiler_from_directory (const char *directory, const char *libname, const 
 	free (full_name);
 
 	if (h) {
-		mono_bool result = load_profiler (h, desc, INITIALIZER_NAME);
+		char *symbol = monodroid_strdup_printf ("%s_%s", INITIALIZER_NAME, name);
+		mono_bool result = load_profiler (h, desc, symbol);
+		free (symbol);
 		if (result)
 			return 1;
 		dlclose (h);
@@ -3515,18 +3517,18 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 	for (oi = 0; oi < MAX_OVERRIDES; ++oi) {
 		if (!directory_exists (override_dirs [oi]))
 			continue;
-		if ((found = load_profiler_from_directory (override_dirs [oi], libname, desc)))
+		if ((found = load_profiler_from_directory (override_dirs [oi], libname, desc, mname)))
 			break;
 	}
 
 	do {
 		if (found)
 			break;
-		if ((found = load_profiler_from_directory (app_libdir, libname, desc)))
+		if ((found = load_profiler_from_directory (app_libdir, libname, desc, mname)))
 			break;
 		if ((found = load_embedded_profiler (desc, mname)))
 			break;
-		if (libmono_path != NULL && (found = load_profiler_from_directory (libmono_path, libname, desc)))
+		if (libmono_path != NULL && (found = load_profiler_from_directory (libmono_path, libname, desc, mname)))
 			break;
 	} while (0);
 
