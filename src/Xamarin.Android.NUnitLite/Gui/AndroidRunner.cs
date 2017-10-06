@@ -351,7 +351,7 @@ namespace Xamarin.Android.NUnitLite
 			if (suite != null)
 				return suite;
 			else {
-				var ts = new TestSuite ("");
+				var ts = new TestSuite (global::Android.App.Application.Context.PackageName);
 				Console.Error.WriteLine (ts.FullName);
 				foreach (var i in AssemblyLevel.Cast<NUnitTest> ())
 					ts.Add (i);

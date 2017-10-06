@@ -216,7 +216,7 @@ namespace NUnitLite.Runner
             else
             {
                 xmlWriter.WriteStartElement("test-case");
-                xmlWriter.WriteAttributeString("name", result.Name);
+                xmlWriter.WriteAttributeString("name", global::Android.App.Application.Context.PackageName + ", " + result.FullName);
             }
 
             if (test.Properties.ContainsKey(PropertyNames.Description))
