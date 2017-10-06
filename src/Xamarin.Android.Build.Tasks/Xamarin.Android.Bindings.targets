@@ -375,6 +375,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       Java7DocPaths="$(Java7DocPaths)"
       Java8DocPaths="$(Java8DocPaths)"
       DroidDocPaths="$(DroidDocPaths)"
+      ApiXmlDocPaths="$(ApiXmlDocPaths)"
       JavaDocs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
     />
 
