@@ -39,9 +39,6 @@ namespace Xamarin.Android.Tasks
 		public string AcwMapFile { get; set; }
 
 		[Required]
-		public string ProguardJarInput { get; set; }
-
-		[Required]
 		public string ProguardJarOutput { get; set; }
 
 		[Required]
@@ -89,7 +86,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
 			Log.LogDebugMessage ("  ProguardGeneratedApplicationConfiguration: {0}", ProguardGeneratedApplicationConfiguration);
-			Log.LogDebugMessage ("  ProguardJarInput: {0}", ProguardJarInput);
 			Log.LogDebugMessage ("  ProguardJarOutput: {0}", ProguardJarOutput);
 			Log.LogDebugTaskItems ("  ProguardGeneratedReferenceConfiguration:", ProguardGeneratedReferenceConfiguration);
 			Log.LogDebugTaskItems ("  ProguardGeneratedApplicationConfiguration:", ProguardGeneratedApplicationConfiguration);
@@ -126,17 +122,10 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (ProguardJarPath));
 			}
 
-			if (!ClassesOutputDirectory.EndsWith (Path.DirectorySeparatorChar.ToString ()))
+			if (!ClassesOutputDirectory.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.OrdinalIgnoreCase))
 				ClassesOutputDirectory += Path.DirectorySeparatorChar;
-			var classesFullPath = Path.GetFullPath (ClassesOutputDirectory);
 
-			if (File.Exists (ProguardJarInput))
-				File.Delete (ProguardJarInput);
-			using (var zip = ZipArchive.Open (ProguardJarInput, FileMode.Create)) {
-				foreach (var file in Directory.GetFiles (classesFullPath, "*", SearchOption.AllDirectories))
-					zip.AddFile (file, Path.Combine (Path.GetDirectoryName (file.Substring (classesFullPath.Length)), Path.GetFileName (file)));
-			}
-
+			var classesZip = Path.Combine (ClassesOutputDirectory, "classes.zip");
 			var acwLines = File.ReadAllLines (AcwMapFile);
 			using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration))
 				for (int i = 0; i + 3 < acwLines.Length; i += 4)
@@ -149,7 +138,7 @@ namespace Xamarin.Android.Tasks
 
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
-			injars.Add (ProguardJarInput);
+			injars.Add (classesZip);
 			if (JavaLibrariesToEmbed != null)
 				foreach (var jarfile in JavaLibrariesToEmbed)
 					injars.Add (jarfile.ItemSpec);

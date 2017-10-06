@@ -10,6 +10,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -410,7 +411,7 @@ namespace Bug12935
 			if (useLegacy)
 				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", "VersionCodeTests"), false, false)) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
 				if (!shouldBuild)

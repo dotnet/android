@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Children)]
 	public class BindingBuildTest : BaseTest
 	{
 #pragma warning disable 414
@@ -28,7 +28,7 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
-			using (var b = CreateDllBuilder ("temp/BuildBasicBindingLibrary")) {
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -44,7 +44,7 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
-			using (var b = CreateDllBuilder ("temp/CleanBasicBindingLibrary")) {
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
 				var fileCount = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			proj.AndroidClassParser = classParser;
-			var b = CreateDllBuilder ("temp/BuildAarBindigLibraryStandalone");
+			var b = CreateDllBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			b.Dispose ();
 
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 					<attr path=""/api/package[@name='com.soundcloud.android.crop']/class[@name='RotateBitmap']"" name='visibility'>public</attr>
 				</metadata>";
 			proj.AndroidClassParser = classParser;
-			var b = CreateDllBuilder ("temp/BuildAarBindigLibraryWithNuGetPackageOfJar");
+			var b = CreateDllBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			b.Dispose ();
 		}
@@ -152,7 +152,7 @@ namespace Com.Ipaulpro.Afilechooser {
 	}                                                   
 }"
 			});
-			var b = CreateDllBuilder ("temp/BuildLibraryZipBindigLibraryWithAarOfJar", false, false);
+			var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false);
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			b.Dispose ();
 		}
@@ -276,14 +276,15 @@ namespace Com.Ipaulpro.Afilechooser {
 			binding.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
 				WebContent = "https://www.dropbox.com/s/5ovudccigydohys/javaBindingIssue.jar?dl=1"
 			});
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
-			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "BindingCheckHiddenFiles", "Binding"))) {
+			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "Binding"))) {
 				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));
 				proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
-				using (var b = CreateApkBuilder (Path.Combine ("temp", "BindingCheckHiddenFiles", "App"))) {
+				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
 					if (useShortFileNames)

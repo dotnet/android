@@ -69,13 +69,18 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
 
-			bool ret = base.Execute ();
+			bool ret = false;
+			try {
+				ret = base.Execute ();
 
-			DexOutputs = Directory.GetFiles (Path.GetDirectoryName (ClassesOutputDirectory), "*.dex", SearchOption.TopDirectoryOnly);
+				DexOutputs = Directory.GetFiles (Path.GetDirectoryName (ClassesOutputDirectory), "*.dex", SearchOption.TopDirectoryOnly);
 
-			Log.LogDebugTaskItems ("  DexOutputs: ", DexOutputs);
+				Log.LogDebugTaskItems ("  DexOutputs: ", DexOutputs);
+			} catch (FileNotFoundException ex) {
+				Log.LogErrorFromException (ex);
+			}
 
-			return ret;
+			return ret && !Log.HasLoggedErrors;
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -115,7 +120,11 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (OptionalObfuscatedJarFile))
 				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
 			else {
-				cmd.AppendFileNameIfNotNull (ClassesOutputDirectory);
+				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "classes.zip"));
+				if (!File.Exists (zip)) {
+					throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");
+				}
+				cmd.AppendFileNameIfNotNull (zip);
 				foreach (var jar in JavaLibrariesToCompile)
 					cmd.AppendFileNameIfNotNull (jar.ItemSpec);
 			}

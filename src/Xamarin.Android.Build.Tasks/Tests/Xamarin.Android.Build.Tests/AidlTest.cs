@@ -9,7 +9,7 @@ using System.Text;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Parallelizable (ParallelScope.Fixtures)]
+	[Parallelizable (ParallelScope.Children)]
 	public class AidlTest : BaseTest
 	{
 		void TestAidl (string testName, string aidl)

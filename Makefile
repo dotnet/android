@@ -10,7 +10,7 @@ SOLUTION      = Xamarin.Android.sln
 NUNIT_TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Build.Tests.dll
 
-NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.6.0/tools/nunit3-console.exe
+NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -133,7 +133,7 @@ define RUN_NUNIT_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	$(RUNTIME) --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
-		$(if $(RUN),-run:$(RUN)) \
+		$(if $(TEST),--test=$(TEST)) \
 		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
 	|| true ; \
@@ -156,7 +156,8 @@ run-ji-tests:
 TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
-	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj \
+	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
 
 TEST_APK_PROJECTS_RELEASE = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
