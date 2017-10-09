@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
-using Xamarin.Android.Build.Utilities;
+using Xamarin.Android.Tools;
 using System.Collections.Generic;
 
 namespace Xamarin.Android.Tasks
