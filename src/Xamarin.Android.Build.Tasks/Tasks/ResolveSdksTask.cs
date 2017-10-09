@@ -110,9 +110,6 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string LintToolPath { get; set; }
 
-		[Output]
-		public string LintToolVersion { get; set; }
-
 		static bool             IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string  ZipAlign  = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
@@ -180,12 +177,6 @@ namespace Xamarin.Android.Tasks
 					break;
 				}
 			}
-
-			Version lintVersion = new Version ();
-			if (!string.IsNullOrEmpty (LintToolPath)) {
-				lintVersion = GetLintVersion (Path.Combine (LintToolPath, Lint));
-			}
-			LintToolVersion = lintVersion.ToString ();
 
 			foreach (var dir in AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
@@ -286,7 +277,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  SupportedApiLevel: {0}", SupportedApiLevel);
 			Log.LogDebugMessage ("  AndroidSequencePointMode: {0}", AndroidSequencePointsMode);
 			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
-			Log.LogDebugMessage ("  LintToolVersion: {0}", LintToolVersion);
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (CacheFile));
@@ -311,8 +301,7 @@ namespace Xamarin.Android.Tasks
 						new XElement ("MonoAndroidIncludePath", MonoAndroidIncludePath),
 						new XElement ("SupportedApiLevel", SupportedApiLevel),
 						new XElement ("AndroidSequencePointsMode", AndroidSequencePointsMode.ToString ()),
-						new XElement ("LintToolPath", LintToolPath),
-						new XElement ("LintToolVersion", LintToolVersion)
+						new XElement ("LintToolPath", LintToolPath)
 					));
 				document.Save (CacheFile);
 			}
@@ -322,7 +311,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 		static readonly Regex javaVersionRegex = new Regex (@"""(?<version>[\d\.]+)_\d+""");
-		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
@@ -344,26 +332,6 @@ namespace Xamarin.Android.Tasks
 			if (buildTools >= new Version (24, 0, 1))
 				return new Version (1, 8);
 			return Version.Parse (MinimumSupportedJavaVersion);
-		}
-
-		Version GetLintVersion (string tool) {
-			var sb = new StringBuilder ();
-			MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
-					sb.AppendLine (e.Data);
-				}, (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
-					sb.AppendLine (e.Data);
-				}
-			);
-			var versionInfo = sb.ToString ();
-			// lint: version 26.0.2
-			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
-			Version versionNumber;
-			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
-				return versionNumber;
-			}
-			return new Version ();
 		}
 
 		bool ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)

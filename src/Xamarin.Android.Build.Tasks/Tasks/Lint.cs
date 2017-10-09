@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Xamarin.Android.Tools;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Xamarin.Android.Tasks
 {
@@ -172,17 +173,25 @@ namespace Xamarin.Android.Tasks
 			{ "StaticFieldLeak", new Version(26, 0, 2) },
 		};
 
+		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
+
 		public override bool Execute ()
 		{
-			Version lintToolVersion = Version.Parse (LintToolVersion);
+			Log.LogDebugMessage ("Lint Task");
+
+			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
+				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
+				return false;
+			}
+
+			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (lintToolVersion >= issue.Value) {
 					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
 						DisabledIssues = issue.Key + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
 				}
 			}
-			
-			Log.LogDebugMessage ("Lint Task");
+
 			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
 			Log.LogDebugMessage ("  EnabledChecks: {0}", EnabledIssues);
 			Log.LogDebugMessage ("  DisabledChecks: {0}", DisabledIssues);
@@ -193,11 +202,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ClassDirectories:", ClassDirectories);
 			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
 			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
-
-			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
-				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
-				return false;
-			}
 
 			base.Execute ();
 
@@ -307,6 +311,31 @@ namespace Xamarin.Android.Tasks
 				lintRoot.Add (issues);
 			}
 			return config;
+		}
+
+		Version GetLintVersion (string tool)
+		{
+			var sb = new StringBuilder ();
+			var result = MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			}, (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			}
+			);
+			if (result != 0) {
+				Log.LogWarning ($"Could not get version from '{tool}'");
+				return new Version ();
+			}
+			var versionInfo = sb.ToString ();
+			// lint: version 26.0.2
+			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
+			Version versionNumber;
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+				return versionNumber;
+			}
+			return new Version ();
 		}
 	}
 }
