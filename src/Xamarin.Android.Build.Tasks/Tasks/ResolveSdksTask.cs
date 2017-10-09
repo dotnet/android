@@ -178,7 +178,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
+			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;
