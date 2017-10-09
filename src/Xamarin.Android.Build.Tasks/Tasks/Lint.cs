@@ -51,9 +51,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string IntermediateOutputPath { get; set; }
 
-		[Required]
-		public string LintToolVersion { get; set; }
-
 		/// <summary>
 		/// Location of an xml config files used to 
 		/// determine whether issues are enabled or disabled 
