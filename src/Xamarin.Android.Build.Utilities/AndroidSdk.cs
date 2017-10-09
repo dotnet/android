@@ -100,11 +100,7 @@ namespace Xamarin.Android.Build.Utilities
 				return dir;
 
 			var level = versions.GetApiLevelFromId (id);
-			dir       = level.HasValue ? GetPlatformDirectory (level.Value) : null;
-			if (dir != null && Directory.Exists (dir))
-				return dir;
-
-			return null;
+			return level.HasValue ? GetPlatformDirectory (level.Value) : null;
 		}
 
 		public static bool IsPlatformInstalled (int apiLevel)
