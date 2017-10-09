@@ -181,6 +181,13 @@ The [Signing Properties](#Signing_Properties) are also relevant
 when packaing Release applications.
 
 
+-   **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
+    the signing algorithm to use with `jarsigner -sigalg`.
+
+    The default value is `md5withRSA`.
+
+    Added in Xamarin.Android 8.2.
+
 -   **AndroidApplication** &ndash; A boolean value that indicates
     whether the project is for an Android Application (`True`) or for
     an Android Library Project (`False` or not present).
