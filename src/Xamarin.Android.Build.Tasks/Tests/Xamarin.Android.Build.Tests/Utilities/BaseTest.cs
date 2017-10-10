@@ -65,6 +65,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static string AndroidSdkPath {
+			get {
+				var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+				if (string.IsNullOrEmpty (sdkPath))
+					sdkPath = Path.Combine (home, "android-toolchain", "sdk");
+				return sdkPath;
+			}
+		}
+
 		protected void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
@@ -74,11 +84,7 @@ namespace Xamarin.Android.Build.Tests
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
-			if (string.IsNullOrEmpty (sdkPath))
-				sdkPath = Path.Combine (home, "android-toolchain", "sdk");
-			string adb = Path.Combine (sdkPath, "platform-tools", "adb" + ext);
+			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
 			proc.WaitForExit ();
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();

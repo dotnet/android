@@ -613,6 +613,16 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.1.
 
+-  **AndroidUseApkSigner** &ndash; A bool property which allows the developer to
+    use the to the `apksigner` tool rather than the `jarsigner`.
+
+    Added in Xamarin.Android 8.2.
+
+-  **AndroidApkSignerAdditionalArguments** &ndash; A string property which allows
+    the developer to provide additional arguments to the `apksigner` tool.
+
+    Added in Xamarin.Android 8.2.
+
 ## Binding Project Build Properties
 
 The following MSBuild properties are used with

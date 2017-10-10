@@ -201,5 +201,27 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (text.Contains ("package unnamedproject;"), "expected package not found in the source.");
 			}
 		}
+
+		[Test]
+		public void CheckSignApk ([Values(true, false)] bool useApkSigner)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+			if (useApkSigner && !File.Exists (Path.Combine (AndroidSdkPath, "build-tools", "26.0.1", "apksigner"+ ext))) {
+				Assert.Ignore ("Skipping test. Required build-tools verison 26.0.1 is not installed.");
+			}
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			if (useApkSigner) {
+				proj.SetProperty ("AndroidUseApkSigner", "true");
+				proj.SetProperty ("AndroidBuildToolsVersion", "26.0.1");
+			} else {
+				proj.RemoveProperty ("AndroidUseApkSigner");
+			}
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+			}
+		}
 	}
 }

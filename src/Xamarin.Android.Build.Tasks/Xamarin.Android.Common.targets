@@ -22,6 +22,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidSignPackage" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidCreateDebugKey" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidZipAlign" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadResolvedSdksCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2428,7 +2429,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(KeytoolToolExe)"
 		Command="-list"
 		Condition="'$(AndroidKeyStore)'==''" />
-	<AndroidSignPackage
+	<AndroidSignPackage Condition=" '$(AndroidUseApkSigner)' != 'true' "
 		UnsignedApk="%(ApkAbiFilesIntermediate.FullPath)"
 		SignedApkDirectory="$(OutDir)"
 		KeyStore="$(_ApkKeyStore)"
@@ -2441,24 +2442,41 @@ because xbuild doesn't support framework reference assemblies.
 		TimestampAuthorityCertificateAlias="$(JarsignerTimestampAuthorityCertificateAlias)"
 		SigningAlgorithm="$(AndroidApkSigningAlgorithm)"
 	/>
+	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
+		Source="%(ApkAbiFilesIntermediate.FullPath)"
+		DestinationDirectory="$(OutDir)"
+		ToolPath="$(ZipAlignToolPath)"
+		ToolExe="$(ZipalignToolExe)"
+	/>
+	<AndroidApkSigner Condition=" '$(AndroidUseApkSigner)' == 'true' "
+		ApkToSign="$(ApkFileSigned)"
+		KeyStore="$(_ApkKeyStore)"
+		KeyAlias="$(_ApkKeyAlias)"
+		KeyPass="$(_ApkKeyPass)"
+		StorePass="$(_ApkStorePass)"
+		ToolPath="$(AndroidSdkBuildToolsBinPath)"
+		ToolExe="$(ApkSignerToolExe)"
+		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
+	/>
 	<Message Text="Signed android package '$(ApkFileSigned)'" />
 	<ItemGroup>
 		<ApkAbiFilesSigned Include="$(ApkFileSigned)" />
 		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
-	<Delete Files="%(ApkAbiFilesSigned.FullPath)" />
+	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' != 'true' "/>
 	<ItemGroup>
 		<ApkAbiFilesUnaligned Include="$(OutDir)$(_AndroidPackage)-Signed-Unaligned.apk" />
 		<ApkAbiFilesUnaligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
 	</ItemGroup>
-	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'" />
-	<AndroidZipAlign
+	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'true' "/>
+	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'true' "
 		Source="%(ApkAbiFilesUnaligned.FullPath)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
 	/>
-	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
+	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)"/>
 </Target>
 
 <Target Name="SignAndroidPackage" DependsOnTargets="Build;Package;_Sign">
