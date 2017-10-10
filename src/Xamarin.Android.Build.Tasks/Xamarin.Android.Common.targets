@@ -2439,6 +2439,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(JarsignerToolExe)"
 		TimestampAuthorityUrl="$(JarsignerTimestampAuthorityUrl)"
 		TimestampAuthorityCertificateAlias="$(JarsignerTimestampAuthorityCertificateAlias)"
+		SigningAlgorithm="$(_ApkSigningAlgorithm)"
 	/>
 	<Message Text="Signed android package '$(ApkFileSigned)'" />
 	<ItemGroup>
