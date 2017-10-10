@@ -118,6 +118,11 @@ include tests/api-compatibility/api-compatibility.mk
 
 run-all-tests: run-nunit-tests run-ji-tests run-apk-tests run-api-compatibility-tests
 
+rename-test-cases:
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/TestApks.targets \
+		/t:RenameTestCases /p:RenameTestCasesGlob="$(if $(RENAME_GLOB),$(RENAME_GLOB),`pwd`/TestResult-\*.xml)" \
+		$(if $(KEEP_TEST_SOURCES),/p:DeleteTestCaseSourceFiles=False)
+
 clean:
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
 	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
@@ -140,14 +145,18 @@ define RUN_NUNIT_TEST
 	if [ -f "bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt" ] ; then \
 		cat bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ; \
 	fi
+	$(MAKE) rename-test-cases RENAME_GLOB="`pwd`/TestResult-$(basename $(notdir $(1))).xml"
 endef
 
 run-nunit-tests: $(NUNIT_TESTS)
+ifneq ($(SKIP_NUNIT_TESTS),)
 	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))
+endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
 	$(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) all
 	ANDROID_SDK_PATH="$(call GetPath,AndroidSdk)" $(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) run-all-tests || true
+	$(MAKE) rename-test-cases RENAME_GLOB='"$(call GetPath,JavaInterop)"/TestResult-*Tests.xml'
 	cp "$(call GetPath,JavaInterop)"/TestResult-*.xml .
 
 # .apk files to test on-device need to:
@@ -157,11 +166,11 @@ TEST_APK_PROJECTS = \
 	src/Mono.Android/Test/Mono.Android-Tests.csproj \
 	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
 	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj \
-	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
-
-TEST_APK_PROJECTS_RELEASE = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj \
+	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj \
 	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+
+TEST_APK_PROJECTS_AOT = \
+	src/Mono.Android/Test/Mono.Android-Tests.csproj \
 
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
 define BUILD_TEST_APK
@@ -177,7 +186,6 @@ endef
 
 run-apk-tests:
 	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS), )
-ifneq ($(wildcard bin/Release),)
-	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_RELEASE), /p:Configuration=Release)
-	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_RELEASE), /p:Configuration=Release /p:AotAssemblies=true)
+ifeq ($(CONFIGURATION),Release)
+	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_AOT), /p:AotAssemblies=true)
 endif

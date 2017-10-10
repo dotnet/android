@@ -4,7 +4,7 @@
     <TestApk Include="$(OutputPath)Xamarin.Android.Bcl_Tests-Signed.apk">
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <InstrumentationType>xamarin.android.bcltests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(MSBuildThisFileDirectory)..\..\TestResult-Xamarin.Android.Bcl_Tests.xml</ResultsPath>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Bcl_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
     </TestApk>
   </ItemGroup>

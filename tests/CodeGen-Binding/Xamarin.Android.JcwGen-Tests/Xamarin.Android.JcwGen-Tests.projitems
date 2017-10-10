@@ -4,7 +4,7 @@
     <TestApk Include="$(OutputPath)Xamarin.Android.JcwGen_Tests-Signed.apk">
       <Package>Xamarin.Android.JcwGen_Tests</Package>
       <InstrumentationType>xamarin.android.jcwgentests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
     </TestApk>
   </ItemGroup>
