@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-storepass ", StorePass);
 			cmd.AppendSwitchIfNotNull ("-keypass ", KeyPass);
 			cmd.AppendSwitchIfNotNull ("-digestalg ", "SHA1");
-			cmd.AppendSwitchIfNotNull ("-sigalg ", string.IsNullorWitespace(SigningAlgorithm) ? "md5withRSA" :SigningAlgorithm);
+			cmd.AppendSwitchIfNotNull ("-sigalg ", string.IsNullOrWhiteSpace(SigningAlgorithm) ? "md5withRSA" :SigningAlgorithm);
 			cmd.AppendSwitchIfNotNull ("-signedjar ", String.Format ("{0}{1}{2}-Signed-Unaligned.apk", SignedApkDirectory, Path.DirectorySeparatorChar, Path.GetFileNameWithoutExtension (UnsignedApk)));
 
 			cmd.AppendFileNameIfNotNull (UnsignedApk);
