@@ -38,7 +38,7 @@ LOCAL_C_INCLUDES	:= \
 	$(LOCAL_PATH) \
 	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include \
 	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include/$(TARGET_ARCH_ABI)/eglib \
-	"$(MONO_PATH)/eglib/src" \
+	"$(MONO_PATH)/mono/eglib" \
 	$(LOCAL_PATH)/zip
 
 LOCAL_LDLIBS    := -llog -lz -lstdc++
