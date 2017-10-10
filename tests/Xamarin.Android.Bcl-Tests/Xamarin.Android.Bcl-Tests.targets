@@ -62,6 +62,7 @@
         HostOS="$(HostOS)"
         DestinationFolder="..\..\bin\$(Configuration)\bcl-tests"
     />
+    <Touch Files="@(_TestResource)" />
   </Target>
   <Target Name="_GenerateApp_cs"
       Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"

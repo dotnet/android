@@ -4,7 +4,7 @@
     <TestApk Include="$(OutputPath)Xamarin.Android.Locale_Tests-Signed.apk">
       <Package>Xamarin.Android.Locale_Tests</Package>
       <InstrumentationType>xamarin.android.localetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.Locale_Tests.xml</ResultsPath>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Locale_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
     </TestApk>
   </ItemGroup>

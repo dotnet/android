@@ -3,6 +3,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
@@ -182,5 +183,43 @@
         DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
         AddResults="true"
         Activity="%(TestApk.Activity)" />
+  </Target>
+  <Target Name="RenameTestCases">
+    <Error
+        Condition=" '$(RenameTestCasesGlob)' == '' "
+        Text="Please set `%24(RenameTestCasesGlob)`."
+    />
+    <Error
+        Condition=" '$(Configuration)' == '' "
+        Text="Please set `%24(Configuration)`."
+    />
+    <PropertyGroup>
+      <_DeleteSource Condition=" '$(DeleteTestCaseSourceFiles)' != '' ">$(DeleteTestCaseSourceFiles)</_DeleteSource>
+      <_DeleteSource Condition=" '$(_DeleteSource)' == '' ">True</_DeleteSource>
+    </PropertyGroup>
+    <ItemGroup>
+      <_RenameSource1 Include="$(RenameTestCasesGlob)" />
+    </ItemGroup>
+    <ItemGroup>
+      <_RenameSource  Include="%(_RenameSource1.Identity)">
+        <DestinationFolder>@(_RenameSource1->'%(RootDir)%(Directory)')</DestinationFolder>
+      </_RenameSource>
+    </ItemGroup>
+    <RenameTestCases
+        Configuration="$(Configuration)"
+        DeleteSourceFiles="$(_DeleteSource)"
+        SourceFile="%(_RenameSource.Identity)"
+        DestinationFolder="%(_RenameSource.DestinationFolder)"
+    />
+  </Target>
+  <Target Name="RenameApkTestCases"
+      Condition=" '@(TestApk)' != '' ">
+    <RenameTestCases
+        Condition=" '%(TestApk.ResultsPath)' != '' "
+        Configuration="$(Configuration)$(_AotName)"
+        DeleteSourceFiles="True"
+        DestinationFolder="$(MSBuildThisFileDirectory)..\.."
+        SourceFile="%(TestApk.ResultsPath)"
+    />
   </Target>
 </Project>
