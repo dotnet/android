@@ -6,6 +6,8 @@ using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 using Xamarin.Android.Tools;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Xamarin.Android.Tasks
 {
@@ -152,33 +154,41 @@ namespace Xamarin.Android.Tasks
 			LibraryJars = new ITaskItem[0];
 		}
 
-
-		string [] disabledIssues = new string [] {
+		static readonly Dictionary<string, Version> DisabledIssuesByVersion = new Dictionary<string, Version> () {
 			// We need to hard code this test in because Lint will issue an Error 
 			// if android:debuggable appears in the manifest. We actually need that
 			// in debug mode. It seems the android tools do some magic to
 			// decide if its needed or not.
-			"HardcodedDebugMode",
+			{ "HardcodedDebugMode", new Version(1, 0) },
 			// We need to hard code this test as disabled in because Lint will issue a warning
 			// for all the resources not used. Now because we don't have any Java code
 			// that means for EVERYTHING! Which will be a HUGE amount of warnings for a large project
-			"UnusedResources",
+			{ "UnusedResources", new Version(1, 0) },
 			// We need to hard code this test as disabled in because Lint will issue a warning
 			// for the MonoPackageManager.java since we have to use a static to keep track of the
 			// application instance.
-			"StaticFieldLeak",
-			// We don't call base.Super () for onCreate so we need to ignore this too.
-			"MissingSuperCall",
+			{ "StaticFieldLeak", new Version(26, 0, 2) },
 		};
+
+		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
 
 		public override bool Execute ()
 		{
-			foreach (var disabled in disabledIssues) {
-				if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (disabled))
-					DisabledIssues = disabled + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
-			}
-			
 			Log.LogDebugMessage ("Lint Task");
+
+			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
+				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
+				return false;
+			}
+
+			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
+			foreach (var issue in DisabledIssuesByVersion) {
+				if (lintToolVersion >= issue.Value) {
+					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
+						DisabledIssues = issue.Key + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
+				}
+			}
+
 			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
 			Log.LogDebugMessage ("  EnabledChecks: {0}", EnabledIssues);
 			Log.LogDebugMessage ("  DisabledChecks: {0}", DisabledIssues);
@@ -189,11 +199,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ClassDirectories:", ClassDirectories);
 			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
 			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
-
-			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
-				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
-				return false;
-			}
 
 			base.Execute ();
 
@@ -303,6 +308,31 @@ namespace Xamarin.Android.Tasks
 				lintRoot.Add (issues);
 			}
 			return config;
+		}
+
+		Version GetLintVersion (string tool)
+		{
+			var sb = new StringBuilder ();
+			var result = MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			}, (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			}
+			);
+			if (result != 0) {
+				Log.LogWarning ($"Could not get version from '{tool}'");
+				return new Version ();
+			}
+			var versionInfo = sb.ToString ();
+			// lint: version 26.0.2
+			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
+			Version versionNumber;
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+				return versionNumber;
+			}
+			return new Version ();
 		}
 	}
 }
