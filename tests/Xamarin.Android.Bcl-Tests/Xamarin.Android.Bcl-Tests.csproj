@@ -62,7 +62,7 @@
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="System.Net\NetworkChangeTest.cs" />
     <Compile Include="System.Net.Http\HttpClientTest.cs" />
-    <Compile Include="$(IntermediateOutputPath)\App.cs" Condition=" Exists('$(IntermediateOutputPath)\App.cs') "/>
+    <Compile Include="$(IntermediateOutputPath)\App.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
