@@ -47,6 +47,16 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.CreateDirectory (frameworkDir);
 			try {
 				Directory.CreateDirectory (Path.Combine (frameworkDir, "MonoAndroid"));
+				Directory.CreateDirectory (Path.Combine (frameworkDir, "MonoAndroid", "v5.1"));
+				File.WriteAllLines (Path.Combine (frameworkDir, "MonoAndroid", "v5.1", "AndroidApiInfo.xml"), new []{
+					"<AndroidApiInfo>",
+					"  <Id>22</Id>",
+					"  <Level>22</Level>",
+					"  <Name>Marshmallow</Name>",
+					"  <Version>v5.1</Version>",
+					"  <Stable>True</Stable>",
+					"</AndroidApiInfo>",
+				});
 				Directory.CreateDirectory (Path.Combine (frameworkDir, "MonoAndroid", "v6.0"));
 				File.WriteAllLines (Path.Combine (frameworkDir, "MonoAndroid", "v6.0", "AndroidApiInfo.xml"), new []{
 					"<AndroidApiInfo>",
@@ -67,12 +77,17 @@ namespace Xamarin.Android.Tools.Tests
 					"  <Stable>False</Stable>",
 					"</AndroidApiInfo>",
 				});
-				var versions    = new AndroidVersions (new [] { Path.Combine (frameworkDir, "MonoAndroid", "v6.0") });
+				var versions    = new AndroidVersions (new [] {
+					Path.Combine (frameworkDir, "MonoAndroid", "v5.1"),
+					Path.Combine (frameworkDir, "MonoAndroid", "v6.0")
+				});
 				Assert.IsNotNull (versions.FrameworkDirectories);
 				Assert.AreEqual (1,     versions.FrameworkDirectories.Count);
 				Assert.AreEqual (Path.Combine (frameworkDir, "MonoAndroid"), versions.FrameworkDirectories [0]);
 				Assert.IsNotNull (versions.MaxStableVersion);
 				Assert.AreEqual (23,    versions.MaxStableVersion.ApiLevel);
+				Assert.IsNotNull (versions.MinStableVersion);
+				Assert.AreEqual (22, versions.MinStableVersion.ApiLevel);
 			}
 			finally {
 				Directory.Delete (frameworkDir, recursive: true);
@@ -90,6 +105,8 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (0,     versions.FrameworkDirectories.Count);
 			Assert.IsNotNull (versions.MaxStableVersion);
 			Assert.AreEqual (2,     versions.MaxStableVersion.ApiLevel);
+			Assert.IsNotNull (versions.MinStableVersion);
+			Assert.AreEqual (1, versions.MinStableVersion.ApiLevel);
 		}
 
 		static AndroidVersions CreateTestVersions ()

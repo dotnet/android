@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tools
 
 		public  IReadOnlyList<string>       FrameworkDirectories            { get; }
 		public  AndroidVersion              MaxStableVersion                { get; private set; }
+		public  AndroidVersion              MinStableVersion                { get; private set; }
 
 		public AndroidVersions (IEnumerable<string> frameworkDirectories)
 		{
@@ -61,6 +62,9 @@ namespace Xamarin.Android.Tools
 				installedVersions.Add (version);
 				if (MaxStableVersion == null || (version.Stable && MaxStableVersion.TargetFrameworkVersion < version.TargetFrameworkVersion)) {
 					MaxStableVersion    = version;
+				}
+				if (MinStableVersion == null || (version.Stable && MinStableVersion.TargetFrameworkVersion > version.TargetFrameworkVersion)) {
+					MinStableVersion = version;
 				}
 			}
 		}
