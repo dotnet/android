@@ -565,11 +565,11 @@ namespace MonoDroid.Generation {
 			bool needsProperty = false;
 			foreach (Field f in fields) {
 				if (ContainsName (f.Name)) {
-					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}.{2}, due to a duplicate field, method or nested type name.", this.Namespace, this.Name, f.Name);
+					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}, due to a duplicate field, method or nested type name. {2} (Java type: {3})", this.FullName, f.Name, HasNestedType (f.Name) ? "(Nested type)" : ContainsProperty (f.Name, false) ? "(Property)" : "(Method)", this.JavaName);
 					continue;
 				}
 				if (seen != null && seen.Contains (f.Name)) {
-					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}.{2}, due to a duplicate field.", this.Namespace, this.Name, f.Name);
+					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", this.FullName, f.Name, this.JavaName);
 					continue;
 				}
 				if (f.Validate (opt, TypeParameters)) {
