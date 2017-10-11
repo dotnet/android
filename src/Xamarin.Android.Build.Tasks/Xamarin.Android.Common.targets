@@ -2478,7 +2478,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
 	/>
-	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)"/>
+	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
 
 <Target Name="SignAndroidPackage" DependsOnTargets="Build;Package;_Sign">
