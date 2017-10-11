@@ -110,11 +110,18 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string LintToolPath { get; set; }
 
+		[Output]
+		public string ApkSignerToolExe { get; set; }
+
+		[Output]
+		public bool AndroidUseApkSigner { get; set; }
+
 		static bool             IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string  ZipAlign  = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
 		static readonly string  Android   = IsWindows ? "android.bat" : "android";
 		static readonly string  Lint      = IsWindows ? "lint.bat" : "lint";
+		static readonly string  ApkSigner = "apksigner";
 
 
 		public override bool Execute ()
@@ -214,6 +221,9 @@ namespace Xamarin.Android.Tasks
 							Aapt, AndroidSdkPath, Path.DirectorySeparatorChar, Android));
 				return false;
 			}
+
+			ApkSignerToolExe = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsBinPath, ApkSigner);
+			AndroidUseApkSigner = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, ApkSignerToolExe));
 
 			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {
 				ZipAlignPath = new[]{

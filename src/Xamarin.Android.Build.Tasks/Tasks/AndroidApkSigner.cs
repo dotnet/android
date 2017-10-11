@@ -28,6 +28,21 @@ namespace Xamarin.Android.Tasks
 
 		public string AdditionalArguments { get; set; }
 
+		public override bool Execute ()
+		{
+			Log.LogDebugMessage ("AndroidApkSigner:");
+			Log.LogDebugMessage ("  ApkToSign: {0}", ApkToSign);
+			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
+			Log.LogDebugMessage ("  AdditionalArguments: {0}", AdditionalArguments);
+
+			if (!File.Exists (GenerateFullPathToTool ())) {
+				Log.LogError ($"'{GenerateFullPathToTool ()}' does not exist. You need to install android-sdk build-tools 26.0.1 or above.");
+				return false;
+			}
+
+			return base.Execute ();
+		}
+
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = new CommandLineBuilder ();
@@ -67,7 +82,7 @@ namespace Xamarin.Android.Tasks
 			if (singleLine.Length == 0)
 				return;
 
-			if (singleLine.StartsWith ("Warning:")) {
+			if (singleLine.StartsWith ("Warning:", StringComparison.OrdinalIgnoreCase)) {
 				Log.LogWarning (singleLine);
 				return;
 			}
@@ -77,7 +92,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override string ToolName {
 			get {
-				return IsWindows ? "apksigner.ext" : "apksigner";
+				return ToolExe;
 			}
 		}
 	}
