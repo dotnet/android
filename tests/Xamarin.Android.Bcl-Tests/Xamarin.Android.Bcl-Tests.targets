@@ -67,9 +67,6 @@
       Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
       Outputs="$(IntermediateOutputPath)\App.cs">
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)\App.cs" />
-    </ItemGroup>
     <PropertyGroup>
       <_Assemblies>@(MonoTestAssembly->'"%(Identity)"', ',  ')</_Assemblies>
     </PropertyGroup>

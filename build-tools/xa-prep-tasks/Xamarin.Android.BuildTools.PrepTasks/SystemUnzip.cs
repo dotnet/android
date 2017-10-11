@@ -108,7 +108,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 				p.WaitForExit ();
 			}
 
-			var entries = GetExtractedSourceEntries (nestedTemp);
+			var entries = GetExtractedSourceDirectories (nestedTemp);
 
 			var seenDestFiles   = new HashSet<string> ();
 
@@ -164,12 +164,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			}
 		}
 
-		IEnumerable<string> GetExtractedSourceEntries (string root)
+		IEnumerable<string> GetExtractedSourceDirectories (string root)
 		{
-			var entries = Directory.EnumerateFileSystemEntries (root, SourceEntryGlobParts [0], SearchOption.TopDirectoryOnly);
+			var entries = Directory.EnumerateDirectories (root, SourceEntryGlobParts [0], SearchOption.TopDirectoryOnly);
 			for (int i = 1; i < SourceEntryGlobParts.Length; ++i) {
 				entries = entries
-					.SelectMany (e => Directory.EnumerateFileSystemEntries (e, SourceEntryGlobParts [i], SearchOption.TopDirectoryOnly));
+					.SelectMany (e => Directory.EnumerateDirectories (e, SourceEntryGlobParts [i], SearchOption.TopDirectoryOnly));
 			}
 			return entries;
 		}
