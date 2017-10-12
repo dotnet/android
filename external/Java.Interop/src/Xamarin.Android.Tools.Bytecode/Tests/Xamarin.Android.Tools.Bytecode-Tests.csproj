@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -73,8 +74,8 @@
   </PropertyGroup>
   <Target Name="BuildClasses" Inputs="@(TestJar)" Outputs="@(TestJar-&gt;'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
     <MakeDir Directories="$(IntermediateOutputPath)classes" />
-    <Exec Command="&quot;javac&quot; -parameters -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar->'%(Identity)', ' ')" />
-    <Exec Command="&quot;javac&quot; -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -parameters -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Bytecode.csproj">

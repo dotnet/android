@@ -70,9 +70,13 @@ namespace generatortests
 			var env = Environment.GetEnvironmentVariable ("FACADES_PATH");
 			if (env != null)
 				return env;
-			return Path.Combine (
-					Path.GetDirectoryName (typeof (object).Assembly.Location),
-					"Facades");
+
+			var dir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+			var facades = Path.Combine (dir, "Facades");
+			if (Directory.Exists (facades))
+				return facades;
+
+			return dir;
 		}
 	}
 }

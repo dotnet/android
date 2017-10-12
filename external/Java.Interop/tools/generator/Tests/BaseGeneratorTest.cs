@@ -40,7 +40,7 @@ namespace generatortests
 			}
 			bool    hasErrors;
 			string  compilerOutput;
-			BuiltAssembly = Compiler.Compile (Options, "Mono.Andoroid", AdditionalSourceDirectories,
+			BuiltAssembly = Compiler.Compile (Options, "Mono.Android", AdditionalSourceDirectories,
 				out hasErrors, out compilerOutput);
 			Assert.AreEqual (false, hasErrors, compilerOutput);
 			Assert.IsNotNull (BuiltAssembly);
@@ -79,8 +79,8 @@ namespace generatortests
 			result = File.Exists (file1) && File.Exists (file2);
 
 			if (result) {
-				byte[] f1 = File.ReadAllBytes (file1);
-				byte[] f2 = File.ReadAllBytes (file2);
+				byte[] f1 = ReadAllBytesIgnoringLineEndings (file1);
+				byte[] f2 = ReadAllBytesIgnoringLineEndings (file2);
 
 				var hash = MD5.Create ();
 				var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
@@ -89,6 +89,22 @@ namespace generatortests
 			}
 
 			return result;
+		}
+
+		private byte[] ReadAllBytesIgnoringLineEndings (string path)
+		{
+			using (var memoryStream = new MemoryStream ()) {
+ 				using (var file = File.OpenRead (path)) {
+ 					int readByte;
+ 					while ((readByte = file.ReadByte()) != -1) {
+ 						byte b = (byte)readByte;
+ 						if (b != '\r' && b != '\n') {
+ 							memoryStream.WriteByte (b);
+ 						}
+ 					}
+ 				}
+				return memoryStream.ToArray ();
+			}
 		}
 
 		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null)

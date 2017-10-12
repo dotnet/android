@@ -48,7 +48,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Java.Runtime.Environment.dll.config">
+    <Content Include="Java.Runtime.Environment.dll.config" Condition=" '$(OS)' != 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
