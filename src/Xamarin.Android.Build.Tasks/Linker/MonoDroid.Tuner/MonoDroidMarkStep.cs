@@ -5,6 +5,7 @@ using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
 
 using Mono.Linker.Steps;
+using Mono.Tuner;
 
 namespace MonoDroid.Tuner
 {
@@ -147,6 +148,9 @@ namespace MonoDroid.Tuner
 			case "System.Core":
 				ProcessSystemCore (type);
 				break;
+			case "System.Data":
+				ProcessSystemData (type);
+				break;
 			}
 
 			if (type.HasMethods && type.HasInterfaces && type.Implements (ICustomMarshalerName)) {
@@ -211,6 +215,39 @@ namespace MonoDroid.Tuner
 				switch (type.Name) {
 				case "LambdaCompiler":
 					MarkNamedMethod (type.Module.GetType ("System.Runtime.CompilerServices.RuntimeOps"), "Quote");
+					break;
+				}
+				break;
+			}
+		}
+
+		protected AssemblyDefinition GetAssembly (string assemblyName)
+		{
+			AssemblyDefinition ad;
+			_context.TryGetLinkedAssembly (assemblyName, out ad);
+			return ad;
+		}
+
+		protected TypeDefinition GetType (string assemblyName, string typeName)
+		{
+			AssemblyDefinition ad = GetAssembly (assemblyName);
+			return ad == null ? null : GetType (ad, typeName);
+		}
+
+		protected TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
+		{
+			return assembly.MainModule.GetType (typeName);
+		}
+
+		void ProcessSystemData (TypeDefinition type)
+		{
+			switch (type.Namespace) {
+			case "System.Data.SqlTypes":
+				switch (type.Name) {
+				case "SqlXml":
+					// TODO: Needed only if CreateSqlReaderDelegate is used
+					TypeDefinition xml_reader = GetType ("System.Xml", "System.Xml.XmlReader");
+					MarkNamedMethod (xml_reader, "CreateSqlReader");
 					break;
 				}
 				break;
