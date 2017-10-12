@@ -116,6 +116,17 @@ to hold file locks on output assemblies containing MSBuild tasks. Until there is
 for this, it might be more advisable to use an editor like Visual Studio Code and build via
 the command-line.
 
+Windows also requires `xabuild.exe` in place of the `tools/scripts/xabuild` script used
+on other platforms.
+
+So a command on macOS such as:
+
+	$ tools/scripts/xabuild /t:SignAndroidPackage tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+
+Would be run on Windows as:
+
+	> bin\Debug\bin\xabuild.exe /t:SignAndroidPackage tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj
+
 # Unit Tests
 
 The `xamarin-android` repo contains several unit tests:
