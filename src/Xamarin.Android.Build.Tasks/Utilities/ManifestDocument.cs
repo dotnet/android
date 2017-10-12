@@ -99,12 +99,13 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		public string GetMinimumSdk () {
+			int defaultMinSdkVersion = MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel;
 			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
 			if (minAttr == null) {
 				int minSdkVersion;
 				if (!int.TryParse (SdkVersionName, out minSdkVersion))
-					minSdkVersion = 11;
-				return Math.Min (minSdkVersion, 11).ToString ();
+					minSdkVersion = defaultMinSdkVersion;
+				return Math.Min (minSdkVersion, defaultMinSdkVersion).ToString ();
 			}
 			return minAttr.Value;
 		}
