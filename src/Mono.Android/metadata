@@ -1373,4 +1373,14 @@
   <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']" name="argsType">MediaCasEventArgs</attr>
   <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']/method[@name='onEvent']/parameter[@name='MediaCas']" name="managedName">mediaCas</attr>
 
+  <!-- detected field-property conflicts (e.g. see bug #60069)
+
+  Some people think it's easy to implement "check and skip property generation" without trying to do,
+  but in reality it is not easy. That will change order of processing and
+  results in changes in generated code,
+  resulting in further unexpected breakages. That is not acceptable.
+  Fixing conflicts in metadata without changing the order of processing
+  is the only way to go. For further changes we should completely rewrite everything.
+   -->
+  <attr path="/api/package[@name='android.os']/class[@name='Build']/method[@name='getSerial']" name="propertyName"></attr>
 </metadata>
