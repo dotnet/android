@@ -2444,6 +2444,7 @@ because xbuild doesn't support framework reference assemblies.
 		TimestampAuthorityCertificateAlias="$(JarsignerTimestampAuthorityCertificateAlias)"
 		SigningAlgorithm="$(AndroidApkSigningAlgorithm)"
 	/>
+	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		Source="%(ApkAbiFilesIntermediate.FullPath)"
 		DestinationDirectory="$(OutDir)"
