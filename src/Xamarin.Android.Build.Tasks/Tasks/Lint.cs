@@ -168,6 +168,10 @@ namespace Xamarin.Android.Tasks
 			// for the MonoPackageManager.java since we have to use a static to keep track of the
 			// application instance.
 			{ "StaticFieldLeak", new Version(26, 0, 2) },
+			// We need to hard code this test as disabled because Lint will issue a error
+			// for our generated code not calling super.OnCreate. This however is by design
+			// so we need to ignore this error.
+			{ "MissingSuperCall", new Version (26, 1, 1) },
 		};
 
 		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
