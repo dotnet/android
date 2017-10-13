@@ -43,6 +43,9 @@
     <type fullname="System.Runtime.InteropServices.DllImportAttribute">
       <method name=".ctor"/>
     </type>
+    <type fullname="System.Runtime.Remoting.Activation.ActivationServices">
+      <method name="CreateProxyForType"/>
+    </type>
     <type fullname="System.ConsoleKey"/>
     <type fullname="System.ConsoleKeyInfo"/>
   </assembly>
