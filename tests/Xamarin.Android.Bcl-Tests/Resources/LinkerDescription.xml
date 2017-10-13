@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<linker>
+  <assembly fullname="mscorlib">
+    <type fullname="System.Security.Permissions.UIPermission">
+      <method name="System.Security.Permissions.IBuiltInPermission.GetTokenIndex"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyProductAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyCopyrightAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyTrademarkAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyVersionAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyFileVersionAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyInformationalVersionAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyCultureAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyAlgorithmIdAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyFlagsAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyDelaySignAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Reflection.AssemblyKeyNameAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Runtime.CompilerServices.MethodImplAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.Runtime.InteropServices.DllImportAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.ConsoleKey"/>
+    <type fullname="System.ConsoleKeyInfo"/>
+  </assembly>
+</linker>
