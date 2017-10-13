@@ -43,7 +43,7 @@ if [ -z "$MSBUILD" ] ; then
 fi
 
 if [ -z "$CONFIGURATION" ]; then
-	for p in "$*"; do
+	for p in "$@"; do
 		case $p in
 			/property:Configuration=*|                                                   \
 			/p:Configuration=*|                                                          \
@@ -80,6 +80,11 @@ elif [[ "$prefix" == */bin ]] ; then
 else
 	(>&2 echo "$name: Could not determine Xamarin.Android prefix.")
 	exit 1
+fi
+
+if [[ "$MSBUILD" == "msbuild" ]] ; then
+	exec mono "$prefix/bin/xabuild.exe" "$@"
+	exit $?
 fi
 
 for t in "$TARGETS_DIR" "$prefix/lib/mono/xbuild" "$xa_prefix/xbuild" ; do
