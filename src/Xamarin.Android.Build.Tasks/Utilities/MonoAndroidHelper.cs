@@ -507,5 +507,28 @@ namespace Xamarin.Android.Tasks
 				// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
+
+		public static string GetExecutablePath (string dir, string exe)
+		{
+			if (string.IsNullOrEmpty (dir))
+				return exe;
+			foreach (var e in Executables (exe))
+				if (File.Exists (Path.Combine (dir, e)))
+					return e;
+			return exe;
+		}
+
+		public static IEnumerable<string> Executables (string executable)
+		{
+			yield return executable;
+			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
+			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+
+			if (pathExts == null)
+				yield break;
+
+			foreach (var ext in pathExts)
+				yield return Path.ChangeExtension (executable, ext);
+		}
 	}
 }

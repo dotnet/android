@@ -490,6 +490,7 @@
     <Compile Include="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="Utilities\GdbPaths.cs" />
     <Compile Include="Utilities\SatelliteAssembly.cs" />
+    <Compile Include="Tasks\AndroidApkSigner.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
