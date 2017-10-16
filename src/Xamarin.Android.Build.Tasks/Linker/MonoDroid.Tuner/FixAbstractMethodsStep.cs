@@ -95,8 +95,23 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
+		bool IsInOverrides (MethodDefinition iMethod, MethodDefinition tMethod)
+		{
+			if (!tMethod.HasOverrides)
+				return false;
+
+			foreach (var o in tMethod.Overrides)
+				if (o != null && iMethod == o.Resolve ())
+					return true;
+
+			return false;
+		}
+
 		bool HaveSameSignature (TypeReference iface, MethodDefinition iMethod, MethodDefinition tMethod)
 		{
+			if (IsInOverrides (iMethod, tMethod))
+				return true;
+
 			if (iMethod.Name != tMethod.Name && (iMethod.DeclaringType == null || (iMethod.DeclaringType.DeclaringType == null ? (string.Format ("{0}.{1}", iface.FullName, iMethod.Name) != tMethod.Name) : (string.Format ("{0}.{1}.{2}", iMethod.DeclaringType.DeclaringType, iface.Name, iMethod.Name) != tMethod.Name))))
 				return false;
 
