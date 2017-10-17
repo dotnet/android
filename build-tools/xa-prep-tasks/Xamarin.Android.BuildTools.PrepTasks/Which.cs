@@ -138,7 +138,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return curVersion > maxVersion;
 		}
 
-		static  readonly    Regex           VersionMatch    = new Regex (@"(?<version>\d+\.\d+(\.\d+(\.\d+)?)?)");
+		static  readonly    Regex           VersionMatch    = new Regex (@"(?<version>\d+(\.\d+(\.\d+(\.\d+)?)?)?)");
 
 		Version GetCurrentVersion ()
 		{
@@ -167,6 +167,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					if (!m.Success)
 						return;
 					curVersion = m.Groups ["version"].Value;
+                                        if (!curVersion.Contains (".")) {
+                                                curVersion      += ".0";
+                                        }
 				};
 				p.Start ();
 				p.BeginOutputReadLine ();
