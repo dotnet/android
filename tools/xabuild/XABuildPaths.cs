@@ -114,10 +114,11 @@ namespace Xamarin.Android.Build
 				SearchPathsOS            = "windows";
 			} else {
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
+				string monoExternal      = IsMacOS ? "/Library/Frameworks/Mono.framework/External/" : "/usr/lib/mono";
 				MSBuildPath              = Path.Combine (mono, "msbuild");
 				MSBuildBin               = Path.Combine (MSBuildPath, "15.0", "bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
-				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild") };
+				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
 				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
 				XABuildConfig            = Path.Combine (XABuildDirectory, "MSBuild.dll.config");
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";

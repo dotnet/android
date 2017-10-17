@@ -16,15 +16,21 @@ namespace Xamarin.Android.Build
 					if (!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory | SymbolLinkFlag.AllowUnprivilegedCreate) &&
 						!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
 						var error = new Win32Exception ().Message;
-						Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {error}");
-						return false;
+						var result = Directory.Exists (source);
+						if (!result)
+							Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {error}");
+						return result;
 					}
 				} else {
 					try {
+						var sourceInfo = new UnixFileInfo (source);
 						var fileInfo = new UnixFileInfo (target);
 						fileInfo.CreateSymbolicLink (source);
-					} catch (Exception exc) {
-						Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {exc.Message}");
+					} catch (UnixIOException exc) {
+						if (exc.ErrorCode == Mono.Unix.Native.Errno.EEXIST) {
+							return true;
+						}
+						Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {exc}");
 						return false;
 					}
 				}
