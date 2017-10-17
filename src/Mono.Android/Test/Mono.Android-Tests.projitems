@@ -6,13 +6,15 @@
     <_MonoAndroidTestPackage>Mono.Android_Tests</_MonoAndroidTestPackage>
     <_MonoAndroidTestApkFile>$(OutputPath)Mono.Android_Tests-Signed.apk</_MonoAndroidTestApkFile>
     <_MonoAndroidTestApkSizesInput>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(_AotName).txt</_MonoAndroidTestApkSizesInput>
+    <_MonoAndroidApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-values.csv</_MonoAndroidApkSizesResultsFilename>
   </PropertyGroup>
   <ItemGroup>
     <TestApk Include="$(_MonoAndroidTestApkFile)">
       <Package>$(_MonoAndroidTestPackage)</Package>
       <InstrumentationType>xamarin.android.runtimetests.TestInstrumentation</InstrumentationType>
       <ResultsPath>$(_MonoAndroidTestResultsPath)</ResultsPath>
-      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)timing-definitions-$(Configuration)$(_AotName).txt</TimingDefinitionsFilename>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
     </TestApk>
   </ItemGroup>
   <Target Name="_RecordApkSizes" AfterTargets="DeployTestApks">
@@ -28,9 +30,10 @@
     <ProcessPlotInput
         InputFilename="$(OutputPath)$(_MonoAndroidTestApkSizesInput)"
         ApplicationPackageName="$(_MonoAndroidTestPackage)"
-        ResultsFilename="$(_MonoAndroidTestResultsPath)"
-        DefinitionsFilename="$(MSBuildThisFileDirectory)apk-sizes-definitions-$(Configuration)$(_AotName).txt"
+        ResultsFilename="$(_MonoAndroidApkSizesResultsFilename)"
+        DefinitionsFilename="$(MSBuildThisFileDirectory)apk-sizes-definitions.txt"
         AddResults="True"
+	LabelSuffix="-$(Configuration)$(_AotName)"
     />
   </Target>
 </Project>

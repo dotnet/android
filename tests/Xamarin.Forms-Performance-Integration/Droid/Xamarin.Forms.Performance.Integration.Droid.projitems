@@ -6,6 +6,7 @@
       <Activity>Xamarin.Forms_Performance_Integration/md52b709e14dec302485bbcaeac0bd817ce.MainActivity</Activity>
       <ResultsPath></ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)timing-definitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Forms_Test-times.csv</TimingResultsFilename>
     </TestApk>
   </ItemGroup>
 </Project>

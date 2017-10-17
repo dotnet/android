@@ -1,0 +1,4 @@
+apk=^stat: (?<value>\d+)\s+(?<message>.*)$
+Mono.Android.dll=^\s*(?<value>\d+)\s+.*(?<message>Mono.Android.dll)$
+mscorlib.dll=^\s*(?<value>\d+)\s+.*(?<message>mscorlib.dll)$
+monosgen-armeabi-v7a=^\s*(?<value>\d+)\s+.*(?<message>armeabi-v7a/libmonosgen-2.0.so)$

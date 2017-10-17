@@ -6,6 +6,7 @@
       <InstrumentationType>xamarin.android.jcwgentests.TestInstrumentation</InstrumentationType>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.JcwGen_Tests-times.csv</TimingResultsFilename>
     </TestApk>
   </ItemGroup>
 </Project>
