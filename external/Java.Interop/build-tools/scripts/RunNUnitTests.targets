@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="RunTests" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
+    <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
+    <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono</_Runtime>
+    <_NUnit>$(_Runtime) packages\NUnit.Runners.2.6.3\tools\nunit-console.exe</_NUnit>
+    <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
+  </PropertyGroup>
+  <ItemGroup>
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\*-*Tests.dll" Condition=" '$(TestAssembly)' == '' " />
+    <_TestAssembly Include="$(TestAssembly)" Condition=" '$(TestAssembly)' != '' " />
+  </ItemGroup>
+  <Target Name="RunTests">
+    <Exec
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        WorkingDirectory="$(_TopDir)"
+        ContinueOnError="True"
+    />
+  </Target>
+</Project>

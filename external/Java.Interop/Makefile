@@ -139,11 +139,7 @@ shell:
 define RUN_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	JAVA_INTEROP_GREF_LOG=g-$(basename $(notdir $(1))).txt $(if $(2),JAVA_INTEROP_LREF_LOG=l-$(basename $(notdir $(1))).txt,) \
-	$(RUNTIME) $$MONO_OPTIONS --runtime=v4.0.0 \
-		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
-		$(if $(RUN),-run:$(RUN)) \
-		-xml=TestResult-$(basename $(notdir $(1))).xml \
-		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ;
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/RunNUnitTests.targets /p:TestAssembly=$(1) ;
 endef
 
 run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
