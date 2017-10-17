@@ -29,6 +29,7 @@ namespace Xamarin.ProjectTools
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
+		public bool RequiresMSBuild { get; set; }
 
 		string GetVisualStudio2017Directory ()
 		{
@@ -55,7 +56,7 @@ namespace Xamarin.ProjectTools
 				if (IsUnix) {
 					RunningMSBuild = true;
 					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
-					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0") {
+					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0" && !RequiresMSBuild) {
 						RunningMSBuild = false;
 					}
 					#if DEBUG
@@ -118,6 +119,29 @@ namespace Xamarin.ProjectTools
 					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
 				}
+			}
+		}
+
+		public string MicrosoftNetSdkDirectory {
+			get {
+				string path;
+				if (IsUnix) {
+					path = Path.Combine ("/usr", "local", "share", "dotnet", "sdk", "2.0.0", "Sdks", "Microsoft.NET.Sdk");
+					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
+						return path;
+					return string.Empty;
+				}
+				var visualStudioDirectory = GetVisualStudio2017Directory ();
+				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
+					path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
+					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
+						return path;
+				}
+				var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+				path = Path.Combine (x86, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
+				if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
+					return path;
+				return string.Empty;
 			}
 		}
 
