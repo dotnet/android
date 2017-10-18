@@ -305,7 +305,7 @@
         Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)"
     />
     <Exec
-        Command="make $(MakeConcurrency) -i test # %(_MonoRuntime.Identity)"
+        Command="make $(MakeConcurrency) test # %(_MonoRuntime.Identity)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\runtime"
     />
