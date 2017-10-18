@@ -45,6 +45,13 @@ namespace Xamarin.ProjectTools
 					if (string.IsNullOrEmpty (useMSBuild) || useMSBuild == "0") {
 						RunningMSBuild = false;
 					}
+					#if DEBUG
+					var xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild"));
+					#else
+					var xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild"));
+					#endif
+					if (File.Exists (xabuild))
+						return xabuild;
 					return Path.GetFullPath (Path.Combine (Root, "..", "..", "tools", "scripts", "xabuild"));
 				}
 
