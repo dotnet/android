@@ -58,7 +58,7 @@
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">5.9.0</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
     <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).22</MonoRequiredDarwinMinimumVersion>
-    <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\linker</LinkerSourceDirectory>
+    <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\external\linker</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>
     <LibZipSharpSourceDirectory Condition=" '$(LibZipSharpSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\LibZipSharp</LibZipSharpSourceDirectory>
