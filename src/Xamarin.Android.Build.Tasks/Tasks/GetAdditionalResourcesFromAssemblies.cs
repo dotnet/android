@@ -397,10 +397,17 @@ namespace Xamarin.Android.Tasks {
 				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 					foreach (var assemblyItem in Assemblies) {
 						string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
+						if (DesignTimeBuild && !File.Exists (fullPath)) {
+							LogWarning ("Failed to load '{0}'. Check the file exists or the project has been built.", fullPath);
+							continue;
+						}
 						if (assemblies.Contains (fullPath)) {
 							LogDebugMessage ("  Skip assembly: {0}, it was already processed", fullPath);
 							continue;
 						}
+						// don't try to even load mscorlib it will fail.
+						if (string.Compare (Path.GetFileNameWithoutExtension (fullPath), "mscorlib", StringComparison.OrdinalIgnoreCase) == 0)
+							continue;
 						assemblies.Add (fullPath);
 						resolver.Load (fullPath);
 						// Append source file name (without the Xamarin. prefix or extension) to the base folder

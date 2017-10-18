@@ -40,8 +40,10 @@ namespace Xamarin.ProjectTools
 		public string XABuildExe {
 			get {
 				if (IsUnix) {
-					if (!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("USE_MSBUILD"))) {
-						RunningMSBuild = true;
+					RunningMSBuild = true;
+					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
+					if (string.IsNullOrEmpty (useMSBuild) || useMSBuild == "0") {
+						RunningMSBuild = false;
 					}
 					return Path.GetFullPath (Path.Combine (Root, "..", "..", "tools", "scripts", "xabuild"));
 				}
@@ -167,9 +169,12 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} {2} /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true",
+			args.AppendFormat ("{0} /t:{1} {2}",
 				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, logger);
-
+			if (RunningMSBuild)
+				args.Append (" /p:BuildingOutOfProcess=true");
+			else
+				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
 			if (parameters != null) {
 				foreach (var param in parameters) {
 					args.AppendFormat (" /p:{0}", param);

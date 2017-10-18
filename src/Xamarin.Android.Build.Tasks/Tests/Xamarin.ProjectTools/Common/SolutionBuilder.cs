@@ -24,31 +24,43 @@ namespace Xamarin.ProjectTools
 			foreach (var p in Projects) {
 				using (var pb = new ProjectBuilder (Path.Combine (SolutionPath, p.ProjectName))) {
 					pb.Save (p);
+					p.NuGetRestore (Path.Combine (SolutionPath, p.ProjectName), Path.Combine (SolutionPath, "packages"));
 				}
 			}
 			// write a sln.
 			var sb = new StringBuilder ();
-			sb.AppendFormat ("Microsoft Visual Studio Solution File, Format Version {0}\n", "12.00");
-			sb.AppendFormat ("# Visual Studio {0}\n", "2012");
+			sb.AppendFormat ("Microsoft Visual Studio Solution File, Format Version {0}\r\n", "12.00");
+			sb.AppendFormat ("# Visual Studio {0}\r\n", "2012");
 			foreach (var p in Projects) {
-				sb.AppendFormat ("Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\n", p.ProjectTypeGuid, p.ProjectName, 
+				sb.AppendFormat ("Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\r\n", p.ProjectTypeGuid, p.ProjectName, 
 					Path.Combine(p.ProjectName,p.ProjectFilePath), p.ProjectGuid);
-				sb.Append ("EndProject\n");
+				sb.Append ("EndProject\r\n");
 			}
-			sb.Append ("Global\n");
-			sb.Append ("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n");
-			sb.Append ("\t\tDebug|AnyCPU = Debug|AnyCPU\n");
-			sb.Append ("\t\tRelease|AnyCPU = Release|AnyCPU\n");
-			sb.Append ("\tEndGlobalSection\n");
-			sb.Append ("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n");
+			sb.Append ("Global\r\n");
+			sb.Append ("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n");
+			sb.Append ("\t\tDebug|AnyCPU = Debug|AnyCPU\r\n");
+			sb.Append ("\t\tRelease|AnyCPU = Release|AnyCPU\r\n");
+			sb.Append ("\tEndGlobalSection\r\n");
+			sb.Append ("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n");
 			foreach (var p in Projects) {
-				sb.AppendFormat ("{{{0}}}.Debug|AnyCPU.ActiveCfg = Debug|AnyCPU\n", p.ProjectGuid);
-				sb.AppendFormat ("{{{0}}}.Debug|AnyCPU.Build.0 = Debug|AnyCPU\n", p.ProjectGuid);
-				sb.AppendFormat ("{{{0}}}.Release|AnyCPU.ActiveCfg = Release|AnyCPU\n", p.ProjectGuid);
-				sb.AppendFormat ("{{{0}}}.Release|AnyCPU.Build.0 = Release|AnyCPU\n", p.ProjectGuid);
+				sb.AppendFormat ("\t\t{{{0}}}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat ("\t\t{{{0}}}.Debug|AnyCPU.Build.0 = Debug|Any CPU\r\n", p.ProjectGuid);
+				if (p is XamarinAndroidApplicationProject)
+					sb.AppendFormat ("\t\t{{{0}}}.Debug|AnyCPU.Deploy.0 = Debug|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat ("\t\t{{{0}}}.Release|AnyCPU.ActiveCfg = Release|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat ("\t\t{{{0}}}.Release|AnyCPU.Build.0 = Release|Any CPU\r\n", p.ProjectGuid);
+				if (p is XamarinAndroidApplicationProject)
+					sb.AppendFormat ("\t\t{{{0}}}.Release|AnyCPU.Deploy.0 = Release|Any CPU\r\n", p.ProjectGuid);
+
 			}
-			sb.Append ("\tEndGlobalSection\n");
-			sb.Append ("EndGlobal\n");
+			sb.Append ("\tEndGlobalSection\r\n");
+			sb.Append ("\tGlobalSection (SolutionProperties) = preSolution\r\n");
+			sb.Append ("\t\tHideSolutionNode = FALSE\r\n");
+			sb.Append ("\tEndGlobalSection\r\n");
+			sb.Append ("\tGlobalSection (ExtensibilityGlobals) = postSolution\r\n");
+			sb.Append ("\t\tSolutionGuid = { BA9651E4 - A332 - 4729 - 9FB4 - 24520221DC3C}\r\n");
+			sb.Append ("\tEndGlobalSection\r\n");
+			sb.Append ("EndGlobal\r\n");
 			File.WriteAllText (Path.Combine (SolutionPath, SolutionName), sb.ToString ());
 		}
 

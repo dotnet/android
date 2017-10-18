@@ -41,6 +41,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool UseManagedResourceGenerator { get; set; }
 
+		[Required]
+		public bool DesignTimeBuild { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool Execute ()
@@ -121,7 +124,13 @@ namespace Xamarin.Android.Tasks
 						var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
 						string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 						string fileName = assemblyName.ItemSpec + suffix;
-						resolver.Load (Path.GetFullPath (assemblyName.ItemSpec));
+						string fullPath = Path.GetFullPath (assemblyName.ItemSpec);
+						// Skip non existing files in DesignTimeBuild
+						if (!File.Exists (fullPath) && DesignTimeBuild) {
+							Log.LogDebugMessage ("Skipping non existant dependancy '{0}' due to design time build.", fullPath);
+							continue;
+						}
+						resolver.Load (fullPath);
 						if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath)) // ignore invalid HintPath
 							hintPath = null;
 						string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;

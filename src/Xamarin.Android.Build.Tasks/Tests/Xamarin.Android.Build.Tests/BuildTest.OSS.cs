@@ -133,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */        "",
 				/* optimize */         true ,
 				/* embedassebmlies */  true ,
-				/* expectedResult */   "debug",
+				/* expectedResult */   "release",
 			},
 			new object[] {
 				/* supportedAbi */     new string[] { "armeabi-v7a"},
@@ -141,7 +141,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */        "",
 				/* optimize */         true ,
 				/* embedassebmlies */  false ,
-				/* expectedResult */   "debug",
+				/* expectedResult */   "release",
 			},
 			new object[] {
 				/* supportedAbi */     new string[] { "armeabi-v7a"},

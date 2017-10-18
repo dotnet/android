@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { "", true, false, },
 			new object[] { "", false, true, },
 			new object[] { "None", true, false, },
-			new object[] { "None", false, false, },
+			new object[] { "None", false, true, },
 			new object[] { "PdbOnly", true, false, },
 			new object[] { "PdbOnly", false, true, },
 			new object[] { "Full", true, false, },
