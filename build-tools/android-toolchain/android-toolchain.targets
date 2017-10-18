@@ -4,6 +4,7 @@
   <Import Project="android-toolchain.projitems" />
   <Import Project="..\scripts\RequiredPrograms.targets" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.AcceptAndroidSdkLicenses" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
@@ -135,14 +136,24 @@
       Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"
       Inputs="..\..\external\mxe\Makefile"
       Outputs="@(_AndroidMxeOutput)">
+    <GitCommitHash
+        WorkingDirectory="..\..\external\mxe"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="AbbreviatedCommitHash" PropertyName="_MxeHash" />
+    </GitCommitHash>
+    <Error
+        Condition=" !$(AndroidMxeFullPath.EndsWith ($(_MxeHash))) "
+        Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
+    />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot;"
+        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Touch Files="@(_AndroidMxeOutput)" />

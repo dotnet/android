@@ -7,7 +7,7 @@
     <_HostUnixCFlags>$(_CommonCFlags) -Wa,--noexecstack</_HostUnixCFlags>
     <_HostUnixLdFlags>-Wall -lstdc++ -lz -shared -fpic</_HostUnixLdFlags>
     <_HostCommonWinCFlags>$(_CommonCFlags) -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer</_HostCommonWinCFlags>
-    <_HostCommonWinLdFlags>-Wall -lstdc++ -lz -shared -fpic -ldl -lmman -pthread -lwsock32 -lole32 -luuid -lshlwapi</_HostCommonWinLdFlags>
+    <_HostCommonWinLdFlags>-Wall -lstdc++ -lz -shared -fpic -ldl -lmman -pthread -lwsock32 -lole32 -luuid -lshlwapi -lpsapi</_HostCommonWinLdFlags>
     <_UnixAdditionalSourceFiles>$(MonoSourceFullPath)\support\nl.c jni\debug.c jni\monodroid-networkinfo.c jni\xamarin_getifaddrs.c</_UnixAdditionalSourceFiles>
     <_LinuxFlatPakBuild Condition="Exists('/.flatpak-info')" >-DLINUX_FLATPAK</_LinuxFlatPakBuild>
   </PropertyGroup>
