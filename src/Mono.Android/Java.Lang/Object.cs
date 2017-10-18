@@ -484,6 +484,12 @@ namespace Java.Lang {
 			return new Java.Lang.Boolean (value);
 		}
 
+		[Obsolete ("Use `(Java.Lang.Byte)(sbyte) value`", error: true)]
+		public static implicit operator Java.Lang.Object (byte value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
+		}
+
 		public static implicit operator Java.Lang.Object (sbyte value)
 		{
 			return new Java.Lang.Byte (value);
@@ -494,9 +500,21 @@ namespace Java.Lang {
 			return new Java.Lang.Character (value);
 		}
 
+		[Obsolete ("Use `(Java.Lang.Integer)(int) value`", error: true)]
+		public static implicit operator Java.Lang.Object (uint value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
+		}
+
 		public static implicit operator Java.Lang.Object (int value)
 		{
 			return new Java.Lang.Integer (value);
+		}
+
+		[Obsolete ("Use `(Java.Lang.Long)(long) value`", error: true)]
+		public static implicit operator Java.Lang.Object (ulong value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
 		}
 
 		public static implicit operator Java.Lang.Object (long value)
@@ -526,6 +544,12 @@ namespace Java.Lang {
 			return Convert.ToBoolean (value);
 		}
 
+		[Obsolete ("Use `(byte)(sbyte) value`", error: true)]
+		public static explicit operator byte (Java.Lang.Object value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
+		}
+
 		public static explicit operator sbyte (Java.Lang.Object value)
 		{
 			return Convert.ToSByte (value);
@@ -536,9 +560,21 @@ namespace Java.Lang {
 			return Convert.ToChar (value);
 		}
 
+		[Obsolete ("Use `(uint)(int) value`", error: true)]
+		public static explicit operator uint (Java.Lang.Object value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
+		}
+
 		public static explicit operator int (Java.Lang.Object value)
 		{
 			return Convert.ToInt32 (value);
+		}
+
+		[Obsolete ("Use `(ulong)(long) value`", error: true)]
+		public static explicit operator ulong (Java.Lang.Object value)
+		{
+			throw new InvalidOperationException ("Should not be reached");
 		}
 
 		public static explicit operator long (Java.Lang.Object value)
