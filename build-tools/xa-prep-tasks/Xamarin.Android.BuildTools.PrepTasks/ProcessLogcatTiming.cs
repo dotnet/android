@@ -64,7 +64,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogMessage (MessageImportance.Normal, " -- Performance summary --");
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 
-					WriteResults ("times");
+					WriteResults ();
 				} else
 					Log.LogWarning ("Wasn't able to collect the performance data");
 

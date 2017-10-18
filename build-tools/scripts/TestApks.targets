@@ -179,9 +179,10 @@
         Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' "
         InputFilename="$(_LogcatFilename)"
         ApplicationPackageName="%(TestApk.Package)"
-        ResultsFilename="%(TestApk.ResultsPath)"
+        ResultsFilename="%(TestApk.TimingResultsFilename)"
         DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
         AddResults="true"
+        LabelSuffix="-$(Configuration)$(_AotName)"
         Activity="%(TestApk.Activity)" />
   </Target>
   <Target Name="RenameTestCases">

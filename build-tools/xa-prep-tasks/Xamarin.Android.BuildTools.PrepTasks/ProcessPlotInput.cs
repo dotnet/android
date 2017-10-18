@@ -23,6 +23,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public bool AddResults { get; set; }
 
+		public string LabelSuffix { get; set; }
+
 		protected Dictionary<string, Regex> definedRegexs = new Dictionary<string, Regex> ();
 		protected Dictionary<string, string> results = new Dictionary<string, string> ();
 
@@ -77,7 +79,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					}
 				}
 
-				WriteResults ("values");
+				WriteResults ();
 
 				reader.Close ();
 			}
@@ -85,30 +87,29 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return true;
 		}
 
-		protected void WriteResults (string filenameEnd)
+		protected void WriteResults ()
 		{
 			if (ResultsFilename != null) {
-				string filename = Path.Combine (Path.GetDirectoryName (ResultsFilename), $"{Path.GetFileNameWithoutExtension (ResultsFilename)}-{filenameEnd}.csv");
 				string line1 = null, line2 = null;
-				if (AddResults && File.Exists (filename))
-					using (var reader = new StreamReader (filename)) {
+				if (AddResults && File.Exists (ResultsFilename))
+					using (var reader = new StreamReader (ResultsFilename)) {
 						try {
 							line1 = reader.ReadLine ();
 							line2 = reader.ReadLine ();
 						} catch (Exception e) {
-							Log.LogWarning ($"unable to read previous results from {filename}\n{e}");
+							Log.LogWarning ($"unable to read previous results from {ResultsFilename}\n{e}");
 							line1 = line2 = null;
 						}
 					}
-				using (var resultsFile = new StreamWriter (filename)) {
-					WriteValues (resultsFile, results.Keys, line1);
+				using (var resultsFile = new StreamWriter (ResultsFilename)) {
+					WriteValues (resultsFile, results.Keys, line1, LabelSuffix);
 					WriteValues (resultsFile, results.Values, line2);
 					resultsFile.Close ();
 				}
 			}
 		}
 
-		void WriteValues (StreamWriter writer, ICollection<string> values, string line)
+		void WriteValues (StreamWriter writer, ICollection<string> values, string line, string suffix = null)
 		{
 			bool first;
 			if (string.IsNullOrEmpty (line))
@@ -121,6 +122,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				if (!first)
 					writer.Write (',');
 				writer.Write (key);
+				if (!string.IsNullOrEmpty (suffix))
+					writer.Write (suffix);
 				first = false;
 			}
 			writer.WriteLine ();
