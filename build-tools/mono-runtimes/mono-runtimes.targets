@@ -31,7 +31,7 @@
   </ItemGroup>
   <PropertyGroup>
     <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
-    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\net_4_x</_MonoOutputDir>
+    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid_tools</_MonoOutputDir>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
