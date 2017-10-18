@@ -18,12 +18,12 @@
       <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
     </JdkInfo>
     <Copy
-        SourceFiles="Configuration.Java.Interop.Override.props"
+        SourceFiles="$(MSBuildThisFileDirectory)Configuration.Java.Interop.Override.props"
         DestinationFiles="$(_TopDir)\external\Java.Interop\Configuration.Override.props"
         SkipUnchangedFiles="True"
     />
     <ReplaceFileContents
-        SourceFile="Windows-Configuration.OperatingSystem.props.in"
+        SourceFile="$(MSBuildThisFileDirectory)Windows-Configuration.OperatingSystem.props.in"
         DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
         Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
     />
