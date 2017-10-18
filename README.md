@@ -53,7 +53,7 @@ Building Xamarin.Android requires:
 * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
 * [The Android SDK and NDK](#ndk)
 
-The `make prepare` build step (or `PrepareWindows.targets` on Windows) will
+The `make prepare` build step (or `/t:Prepare` on Windows) will
 check that all required dependencies are present.
 If you would like `make prepare` to automatically install
 required dependencies, set the `$(AutoProvision)` MSBuild property to True
@@ -246,7 +246,7 @@ Unit tests are built in a separate target:
 
 To build Xamarin.Android, ensure you are using MSBuild version 15+ and run:
 
-    msbuild build-tools\scripts\PrepareWindows.targets
+    msbuild Xamarin.Android.sln /t:Prepare
     msbuild Xamarin.Android.sln
 
 These are roughly the same as how `make prepare` and `make` are used on other platforms.
