@@ -52,6 +52,9 @@ namespace Xamarin.ProjectTools
 					#endif
 					if (File.Exists (xabuild))
 						return xabuild;
+					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out", "bin", "xabuild"));
+					if (File.Exists (xabuild))
+						return xabuild;
 					return Path.GetFullPath (Path.Combine (Root, "..", "..", "tools", "scripts", "xabuild"));
 				}
 
