@@ -97,6 +97,7 @@ done
 
 if [ ! -d "$TARGETS_DIR" ]; then
 	(>&2 echo "$name: Could not determine Xamarin.Android targets path.")
+	exit 1
 fi
 export TARGETS_DIR
 export MONO_ANDROID_PATH="$prefix"
