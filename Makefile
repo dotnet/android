@@ -149,7 +149,7 @@ define RUN_NUNIT_TEST
 endef
 
 run-nunit-tests: $(NUNIT_TESTS)
-ifneq ($(SKIP_NUNIT_TESTS),)
+ifeq ($(SKIP_NUNIT_TESTS),)
 	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))
 endif # $(SKIP_NUNIT_TESTS) == ''
 
