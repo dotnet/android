@@ -45,6 +45,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\HashFileContents.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\JdkInfo.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PathToolTask.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SetEnvironmentVariable.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\SystemUnzip.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Which.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBlame.cs" />

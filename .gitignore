@@ -16,3 +16,5 @@ TestResult-*.csv
 Resource.designer.cs
 logcat-*.txt
 apk-sizes-*.txt
+*.rawproto
+src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props

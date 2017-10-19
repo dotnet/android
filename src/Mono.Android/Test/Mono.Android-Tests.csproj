@@ -102,12 +102,6 @@
   <Import Project="..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-Tests.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\build-tools\android-toolchain\android-toolchain.mdproj">
-      <Name>android-toolchain</Name>
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Private>False</Private>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.Build.Tasks</Name>
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
