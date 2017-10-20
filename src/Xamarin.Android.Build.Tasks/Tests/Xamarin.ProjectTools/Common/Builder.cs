@@ -42,7 +42,7 @@ namespace Xamarin.ProjectTools
 				if (IsUnix) {
 					RunningMSBuild = true;
 					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
-					if (string.IsNullOrEmpty (useMSBuild) || useMSBuild == "0") {
+					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0") {
 						RunningMSBuild = false;
 					}
 					#if DEBUG
@@ -145,6 +145,8 @@ namespace Xamarin.ProjectTools
 		{
 			IsUnix = Environment.OSVersion.Platform != PlatformID.Win32NT;
 			BuildLogFile = "build.log";
+			Console.WriteLine ($"Using {XABuildExe}");
+			Console.WriteLine ($"Using {(RunningMSBuild ? "msbuild" : "xbuild")}");
 		}
 
 		public void Dispose ()
