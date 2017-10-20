@@ -168,7 +168,10 @@ namespace Xamarin.ProjectTools
 			return null;
 		}
 
-		Regex timeElapsedRegEx = new Regex (@"Time Elapsed([\s])(?<TimeSpan>(\d+):(\d\d):(\d\d)\.(\d+))", RegexOptions.Compiled);
+		Regex timeElapsedRegEx = new Regex (
+			@"^Time Elapsed([\s])(?<TimeSpan>(\d+):(\d\d):(\d\d)\.(\d+))$",
+			RegexOptions.Multiline | RegexOptions.Compiled
+		);
 
 		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
