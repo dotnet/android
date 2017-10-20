@@ -300,6 +300,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
       YieldDuringToolExecution="$(YieldDuringToolExecution)"
       DesignTimeBuild="$(DesignTimeBuild)"
+      Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
     />
   </Target>
 

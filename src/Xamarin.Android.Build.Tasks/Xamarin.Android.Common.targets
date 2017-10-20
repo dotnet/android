@@ -400,6 +400,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    CacheFile="$(_AndroidResourcePathsCache)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    DesignTimeBuild="$(DesignTimeBuild)"
+   Condition=" '$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '' "
   />
 </Target>
 
