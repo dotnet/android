@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Text;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.ProjectTools
 {
@@ -167,6 +168,8 @@ namespace Xamarin.ProjectTools
 			return null;
 		}
 
+		Regex timeElapsedRegEx = new Regex (@"Time Elapsed([\s])(?<TimeSpan>(\d+):(\d\d):(\d\d)\.(\d+))", RegexOptions.Compiled);
+
 		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			string buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
@@ -221,6 +224,11 @@ namespace Xamarin.ProjectTools
 				LastBuildOutput += File.ReadAllText (buildLogFullPath);
 			LastBuildOutput += string.Format ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
 			LastBuildOutput += string.Format ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
+
+			var match = timeElapsedRegEx.Match (LastBuildOutput);
+			if (match.Success) {
+				LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+			}
 
 			if (buildLogFullPath != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
