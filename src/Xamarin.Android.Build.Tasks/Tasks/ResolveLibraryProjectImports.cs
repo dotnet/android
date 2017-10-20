@@ -310,7 +310,7 @@ namespace Xamarin.Android.Tasks
 						stamp.Create ().Close ();
 				}
 			}
-			foreach (var f in outdir.GetFiles ("*.jar", SearchOption.AllDirectories)
+			foreach (var f in outdir.EnumerateFiles ("*.jar", SearchOption.AllDirectories)
 					.Select (fi => fi.FullName)) {
 				if (jars.Contains (f))
 					continue;
