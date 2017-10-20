@@ -7,6 +7,8 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -2077,6 +2079,23 @@ namespace UnnamedProject {
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
 				StringAssert.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
 			}
+		}
+
+		[Test]
+		public void RunXABuildInParallel ()
+		{
+			var xabuild = new ProjectBuilder ("temp/RunXABuildInParallel").XABuildExe;
+
+			Parallel.For (0, 10, i => {
+				using (var p = Process.Start (new ProcessStartInfo (xabuild, "/version") {
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					UseShellExecute = false,
+				})) {
+					p.WaitForExit ();
+					Assert.AreEqual (0, p.ExitCode);
+				}
+			});
 		}
 	}
 }
