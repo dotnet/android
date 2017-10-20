@@ -186,6 +186,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
+			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (lintToolVersion >= issue.Value) {
 					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
