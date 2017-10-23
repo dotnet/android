@@ -984,6 +984,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
 			int maxBuildTimeMs = 8000;
@@ -1028,12 +1029,12 @@ namespace Lib1 {
 					appBuilder.ThrowOnBuildFailure = false;
 					libBuilder.Target = "Compile";
 					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Library project should have built");
-					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
 					appBuilder.Target = "Compile";
 					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Application project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
 					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
@@ -1053,7 +1054,7 @@ namespace Lib1 {
 						"Target '_ManagedUpdateAndroidResgen' should not have run.");
 					appBuilder.Target = "Compile";
 					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "App project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, "DesingTime build should be less than 5 seconds.");
+					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
