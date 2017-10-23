@@ -42,7 +42,11 @@
     <Content Include='expected\CSharpKeywords\CSharpKeywords.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs'>
+    <Content Include='expected\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs' Condition=" '$(OS)' != 'Windows_NT' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\CSharpKeywords\Xamarin.Test.CSharpKeywords-windows.cs' Condition=" '$(OS)' == 'Windows_NT' ">
+      <Link>Xamarin.Test.CSharpKeywords.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\EnumerationFixup\EnumerationFixupMap.xml'>
@@ -210,7 +214,11 @@
     <Content Include='expected.ji\CSharpKeywords\Mono.Android.projitems'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include='expected.ji\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs'>
+    <Content Include='expected.ji\CSharpKeywords\Xamarin.Test.CSharpKeywords.cs' Condition=" '$(OS)' != 'Windows_NT' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\CSharpKeywords\Xamarin.Test.CSharpKeywords-windows.cs' Condition=" '$(OS)' == 'Windows_NT' ">
+      <Link>Xamarin.Test.CSharpKeywords.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\java.lang.Enum\enumlist'>

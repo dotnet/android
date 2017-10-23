@@ -14,7 +14,7 @@
   </ItemGroup>
   <Target Name="RunTests">
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --noshadow --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
         WorkingDirectory="$(_TopDir)"
         ContinueOnError="True"
     />

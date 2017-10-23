@@ -334,7 +334,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var settings = new XmlWriterSettings () {
 				Indent              = true,
 				OmitXmlDeclaration  = true,
-				NewLineChars        = "\n",
 				NewLineOnAttributes = true,
 			};
 			var contents    = ToXElement ();

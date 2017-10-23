@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -112,7 +113,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Class(nameIndex={0} Name=\"{1}\")", nameIndex, Name.Value);
+			return string.Format (CultureInfo.InvariantCulture, "Class(nameIndex={0} Name=\"{1}\")", nameIndex, Name.Value);
 		}
 	}
 
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("{0}(classIndex={1} nameAndTypeIndex={2} Class='{3}' Name='{4}' Descriptor='{5}')",
+			return string.Format (CultureInfo.InvariantCulture, "{0}(classIndex={1} nameAndTypeIndex={2} Class='{3}' Name='{4}' Descriptor='{5}')",
 					Type, classIndex, nameAndTypeIndex, Class.Name, NameAndType.Name.Value, NameAndType.Descriptor.Value);
 		}
 	}
@@ -201,7 +202,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("String(stringIndex={0} Utf8=\"{1}\")",
+			return string.Format (CultureInfo.InvariantCulture, "String(stringIndex={0} Utf8=\"{1}\")",
 					stringIndex, StringData.Value);
 		}
 	}
@@ -227,7 +228,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Integer({0})", Value);
+			return string.Format (CultureInfo.InvariantCulture, "Integer({0})", Value);
 		}
 	}
 
@@ -259,7 +260,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Float({0})", Value);
+			return string.Format (CultureInfo.InvariantCulture, "Float({0})", Value);
 		}
 	}
 
@@ -288,7 +289,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Long({0})", Value);
+			return string.Format (CultureInfo.InvariantCulture, "Long({0})", Value);
 		}
 	}
 
@@ -328,7 +329,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Double({0})", Value);
+			return string.Format (CultureInfo.InvariantCulture, "Double({0})", Value);
 		}
 	}
 
@@ -359,7 +360,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("NameAndType(nameIndex={0} descriptorIndex={1} Name=\"{2}\" Descriptor=\"{3}\")",
+			return string.Format (CultureInfo.InvariantCulture, "NameAndType(nameIndex={0} descriptorIndex={1} Name=\"{2}\" Descriptor=\"{3}\")",
 					nameIndex, descriptorIndex, Name.Value, Descriptor.Value);
 		}
 	}
@@ -414,7 +415,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("Utf8(\"{0}\")", Value);
+			return string.Format (CultureInfo.InvariantCulture, "Utf8(\"{0}\")", Value);
 		}
 	}
 
@@ -457,7 +458,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("MethodType(descriptorIndex={0} Descriptor=\"{1}\")",
+			return string.Format (CultureInfo.InvariantCulture, "MethodType(descriptorIndex={0} Descriptor=\"{1}\")",
 					descriptorIndex, Descriptor.Value);
 		}
 	}
