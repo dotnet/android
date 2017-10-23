@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Xml;
+using System.Threading;
 
 namespace Xamarin.Android.Build
 {
@@ -30,57 +31,65 @@ namespace Xamarin.Android.Build
 			return MSBuildApp.Main ();
 		}
 
+		static EventWaitHandle waitHandle = new EventWaitHandle (true, EventResetMode.AutoReset, "XABUILD_SHARED_BY_ALL_PROCESSES");
+
 		static void CreateConfig (XABuildPaths paths)
 		{
 			if (File.Exists (paths.XABuildConfig))
 				return;
-			var xml = new XmlDocument ();
-			xml.Load (paths.MSBuildConfig);
+			
+			waitHandle.WaitOne ();
+			try {
+				var xml = new XmlDocument ();
+				xml.Load (paths.MSBuildConfig);
 
-			var toolsets = xml.SelectSingleNode ("configuration/msbuildToolsets/toolset");
-			SetProperty (toolsets, "VsInstallRoot", paths.VsInstallRoot);
-			SetProperty (toolsets, "MSBuildToolsPath", paths.MSBuildBin);
-			SetProperty (toolsets, "MSBuildToolsPath32", paths.MSBuildBin);
-			SetProperty (toolsets, "MSBuildToolsPath64", paths.MSBuildBin);
-			SetProperty (toolsets, "MSBuildExtensionsPath", paths.MSBuildExtensionsPath);
-			SetProperty (toolsets, "MSBuildExtensionsPath32", paths.MSBuildExtensionsPath);
-			SetProperty (toolsets, "RoslynTargetsPath", Path.Combine (paths.MSBuildBin, "Roslyn"));
-			SetProperty (toolsets, "AndroidSdkDirectory", paths.AndroidSdkDirectory);
-			SetProperty (toolsets, "AndroidNdkDirectory", paths.AndroidNdkDirectory);
-			SetProperty (toolsets, "MonoAndroidToolsDirectory", paths.MonoAndroidToolsDirectory);
-			SetProperty (toolsets, "TargetFrameworkRootPath", paths.FrameworksDirectory + Path.DirectorySeparatorChar); //NOTE: Must include trailing \
+				var toolsets = xml.SelectSingleNode ("configuration/msbuildToolsets/toolset");
+				SetProperty (toolsets, "VsInstallRoot", paths.VsInstallRoot);
+				SetProperty (toolsets, "MSBuildToolsPath", paths.MSBuildBin);
+				SetProperty (toolsets, "MSBuildToolsPath32", paths.MSBuildBin);
+				SetProperty (toolsets, "MSBuildToolsPath64", paths.MSBuildBin);
+				SetProperty (toolsets, "MSBuildExtensionsPath", paths.MSBuildExtensionsPath);
+				SetProperty (toolsets, "MSBuildExtensionsPath32", paths.MSBuildExtensionsPath);
+				SetProperty (toolsets, "RoslynTargetsPath", Path.Combine (paths.MSBuildBin, "Roslyn"));
+				SetProperty (toolsets, "AndroidSdkDirectory", paths.AndroidSdkDirectory);
+				SetProperty (toolsets, "AndroidNdkDirectory", paths.AndroidNdkDirectory);
+				SetProperty (toolsets, "MonoAndroidToolsDirectory", paths.MonoAndroidToolsDirectory);
+				SetProperty (toolsets, "TargetFrameworkRootPath", paths.FrameworksDirectory + Path.DirectorySeparatorChar); //NOTE: Must include trailing \
 
-			var projectImportSearchPaths = toolsets.SelectSingleNode ("projectImportSearchPaths");
-			var searchPaths = projectImportSearchPaths.SelectSingleNode ($"searchPaths[@os='{paths.SearchPathsOS}']") as XmlElement;
+				var projectImportSearchPaths = toolsets.SelectSingleNode ("projectImportSearchPaths");
+				var searchPaths = projectImportSearchPaths.SelectSingleNode ($"searchPaths[@os='{paths.SearchPathsOS}']") as XmlElement;
 
-			//NOTE: on Linux, the searchPaths XML element does not exist, so we have to create it
-			if (searchPaths == null) {
-				searchPaths = xml.CreateElement ("searchPaths");
-				searchPaths.SetAttribute ("os", paths.SearchPathsOS);
+				//NOTE: on Linux, the searchPaths XML element does not exist, so we have to create it
+				if (searchPaths == null) {
+					searchPaths = xml.CreateElement ("searchPaths");
+					searchPaths.SetAttribute ("os", paths.SearchPathsOS);
 
-				var property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
+					var property = xml.CreateElement ("property");
+					property.SetAttribute ("name", "MSBuildExtensionsPath");
+					property.SetAttribute ("value", "");
+					searchPaths.AppendChild (property);
 
-				property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath32");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
+					property = xml.CreateElement ("property");
+					property.SetAttribute ("name", "MSBuildExtensionsPath32");
+					property.SetAttribute ("value", "");
+					searchPaths.AppendChild (property);
 
-				property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath64");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
+					property = xml.CreateElement ("property");
+					property.SetAttribute ("name", "MSBuildExtensionsPath64");
+					property.SetAttribute ("value", "");
+					searchPaths.AppendChild (property);
 
-				projectImportSearchPaths.AppendChild (searchPaths);
+					projectImportSearchPaths.AppendChild (searchPaths);
+				}
+
+				foreach (XmlNode property in searchPaths.SelectNodes ("property[starts-with(@name, 'MSBuildExtensionsPath')]/@value")) {
+					property.Value = string.Join (";", paths.ProjectImportSearchPaths);
+				}
+
+				xml.Save (paths.XABuildConfig);
+			} finally {
+				waitHandle.Set ();
 			}
-
-			foreach (XmlNode property in searchPaths.SelectNodes ("property[starts-with(@name, 'MSBuildExtensionsPath')]/@value")) {
-				property.Value = string.Join (";", paths.ProjectImportSearchPaths);
-			}
-
-			xml.Save (paths.XABuildConfig);
 		}
 
 		/// <summary>
