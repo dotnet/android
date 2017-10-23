@@ -56,6 +56,7 @@
     </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
       <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
+      <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>
       <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
       <DarwinMinimumUrl>https://bosstoragemirror.blob.core.windows.net/wrench/mono-2017-06/28/28a417c2c0d1a2d1231d8b0a5beea3201208b57d/$(_DarwinMonoFramework)</DarwinMinimumUrl>
