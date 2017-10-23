@@ -35,11 +35,11 @@ namespace Xamarin.Android.Build
 
 		static void CreateConfig (XABuildPaths paths)
 		{
-			if (File.Exists (paths.XABuildConfig))
-				return;
-			
 			waitHandle.WaitOne ();
 			try {
+				if (File.Exists (paths.XABuildConfig))
+					return;
+
 				var xml = new XmlDocument ();
 				xml.Load (paths.MSBuildConfig);
 
