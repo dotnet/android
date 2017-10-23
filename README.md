@@ -185,6 +185,12 @@ Overridable MSBuild properties include:
     `$(HOME)\android-toolchain`.
 * `$(HostCc)`, `$(HostCxx)`: The C and C++ compilers to use to generate
     host-native binaries.
+* `$(IgnoreMaxMonoVersion)`: Skip the enforcement of the `$(MonoRequiredMaximumVersion)`
+    property. This is so that developers can run against the latest
+    and greatest. But the build system can enforce the min and max 
+    versions. The default is `true` however on jenkins we pass 
+         /p:IgnoreMaxMonoVersion=False
+    by default.
 * `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
     build and reference projects from. By default, this is
     `external/Java.Interop` directory, maintained by `git submodule update`.
@@ -196,7 +202,10 @@ Overridable MSBuild properties include:
     system mono which corresponds vaguely to the [`external/mono`](external)
     version. This is not strictly required; older mono versions *may* work, they
     just are not tested, and thus not guaranteed or supported.  
-    By default this is `4.9.3`.
+    By default this is `5.4.0`.
+* `$(MonoRequiredMaximumVersion)`: The max *system* mono version that is
+    required. This is so that we can ensure a stable build environment by
+    making sure we dont install unstable versions.
 * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
 
