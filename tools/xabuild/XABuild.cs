@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build
 				}
 
 				//Create a custom xabuild.exe.config
-				CreateConfig (paths);
+				var xml = CreateConfig (paths);
 
 				//Create link to .NETFramework and .NETPortable directory
 				foreach (var dir in Directory.GetDirectories (paths.SystemProfiles)) {
@@ -28,7 +28,19 @@ namespace Xamarin.Android.Build
 					}
 				}
 
-				return MSBuildApp.Main ();
+				int exitCode = MSBuildApp.Main ();
+				if (exitCode != 0) {
+					Console.WriteLine ($"MSBuildApp.Main exited with {exitCode}, xabuild configuration is:");
+
+					var settings = new XmlWriterSettings {
+						Indent = true,
+						NewLineOnAttributes = true,
+					};
+					using (var writer = XmlTextWriter.Create (Console.Out, settings)) {
+						xml.WriteTo (writer);
+					}
+				}
+				return exitCode;
 			} finally {
 				//NOTE: these are temporary files
 				foreach (var file in new [] { paths.MSBuildExeTempPath, paths.XABuildConfig }) {
@@ -39,7 +51,7 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		static void CreateConfig (XABuildPaths paths)
+		static XmlDocument CreateConfig (XABuildPaths paths)
 		{
 			var xml = new XmlDocument ();
 			xml.Load (paths.MSBuildConfig);
@@ -90,6 +102,7 @@ namespace Xamarin.Android.Build
 			xml.Save (paths.XABuildConfig);
 
 			Environment.SetEnvironmentVariable ("MSBUILD_EXE_PATH", paths.MSBuildExeTempPath, EnvironmentVariableTarget.Process);
+			return xml;
 		}
 
 		/// <summary>
