@@ -41,6 +41,8 @@ namespace Xamarin.Android.Build
 
 		static void CreateConfig (XABuildPaths paths)
 		{
+			if (!paths.IsWindows && File.Exists (paths.XABuildConfig))
+				return;
 			var xml = new XmlDocument ();
 			xml.Load (paths.MSBuildConfig);
 

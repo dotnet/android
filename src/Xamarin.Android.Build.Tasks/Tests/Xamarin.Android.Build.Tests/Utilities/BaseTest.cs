@@ -7,6 +7,7 @@ using NUnit.Framework;
 using System.Linq;
 using System.Threading;
 using System.Text;
+using System.Diagnostics;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -180,6 +181,19 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void FixtureSetup ()
 		{
+			var builder = new Builder ();
+			var configPath = Path.Combine (Path.GetDirectoryName (builder.XABuildExe), IsWindows ? "xabuild.exe.config" : "MSBuild.dll.config");
+			// Hack around the Config issue.
+			if (!File.Exists (configPath) && builder.RunningMSBuild) {
+				var psi = new ProcessStartInfo (builder.XABuildExe) {
+					Arguments = "/version",
+					UseShellExecute = false,
+					CreateNoWindow = true,
+				};
+				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+				var p = Process.Start (psi);
+				p.WaitForExit ();
+			}
 			// Clean the Resource Cache.
 			if (string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("BUILD_HOST")))
 				return;
