@@ -182,11 +182,14 @@ namespace Xamarin.Android.Build.Tests
 		public void FixtureSetup ()
 		{
 			var builder = new Builder ();
+			var configPath = Path.Combine (Path.GetDirectoryName (builder.XABuildExe), IsWindows ? "xabuild.exe.config" : "MSBuild.dll.config");
 			// Hack around the Config issue.
-			if (builder.RunningMSBuild) {
-				var psi = new ProcessStartInfo (builder.XABuildExe);
-				psi.UseShellExecute = false;
-				psi.CreateNoWindow = true;
+			if (!File.Exists (configPath) && builder.RunningMSBuild) {
+				var psi = new ProcessStartInfo (builder.XABuildExe) {
+					Arguments = "/version",
+					UseShellExecute = false,
+					CreateNoWindow = true,
+				};
 				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
 				var p = Process.Start (psi);
 				p.WaitForExit ();
