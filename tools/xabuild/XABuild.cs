@@ -1,6 +1,8 @@
 ﻿using Microsoft.Build.CommandLine;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Xml;
 
 namespace Xamarin.Android.Build
@@ -78,7 +80,30 @@ namespace Xamarin.Android.Build
 				property.Value = string.Join (";", paths.ProjectImportSearchPaths);
 			}
 
-			xml.Save (paths.XABuildConfig);
+			//NOTE: Since many xabuild.exe's could be running in parallel,
+			//	some care should be taken when writing the config file.
+			//	We need to open the file, and retry on IOException.
+			//	We also need MSBuildApp's static ctor to run while the file is locked.
+			FileStream stream = null;
+			try {
+				while (true) {
+					try {
+						stream = File.Create (paths.XABuildConfig);
+						break;
+					} catch (IOException) {
+						Thread.Sleep (10);
+					}
+				}
+
+				xml.Save (stream);
+				stream.Flush ();
+
+				//Run MSBuildApp's static ctor while the file is still opened
+				RuntimeHelpers.RunClassConstructor(typeof (MSBuildApp).TypeHandle);
+			} finally {
+				if (stream != null)
+					stream.Dispose ();
+			}
 		}
 
 		/// <summary>
