@@ -214,7 +214,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (useApkSigner) {
 				proj.SetProperty ("AndroidUseApkSigner", "true");
-				proj.SetProperty ("AndroidBuildToolsVersion", "26.0.1");
+				proj.SetProperty ("AndroidSdkBuildToolsVersion", "26.0.1");
 			} else {
 				proj.RemoveProperty ("AndroidUseApkSigner");
 			}
