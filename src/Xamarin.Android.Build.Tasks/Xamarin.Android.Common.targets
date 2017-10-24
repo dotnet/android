@@ -1149,7 +1149,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 </Target>
 
-<Target Name="_ResolveLibraryProjectImports"
+<Target Name="_ResolveLibraryProjectImports" Condition="'$(DesignTimeBuild)' != 'true'"
 		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryProjectImportsCache)">
 	<ResolveLibraryProjectImports
