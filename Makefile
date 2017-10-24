@@ -12,6 +12,8 @@ NUNIT_TESTS = \
 
 NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 
+NUNIT_WORKERS ?= --workers=1
+
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
 endif
@@ -138,7 +140,7 @@ define RUN_NUNIT_TEST
 	MONO_TRACE_LISTENER=Console.Out \
 	USE_MSBUILD=$(if $(USE_MSBUILD),$(USE_MSBUILD),0) \
 	$(RUNTIME) --runtime=v4.0.0 \
-		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
+		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(NUNIT_WORKERS) $(1) \
 		$(if $(TEST),--test=$(TEST)) \
 		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
