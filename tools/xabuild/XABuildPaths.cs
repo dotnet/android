@@ -21,7 +21,7 @@ namespace Xamarin.Android.Build
 		public string XABuildDirectory { get; private set; }
 
 		/// <summary>
-		/// Path to xabuild.exe.config, on Unix it seems to use MSBuild.dll.config instead
+		/// Path to xabuild.exe's config file, this is now a temporary file based on MSBuildExeTempPath
 		/// </summary>
 		public string XABuildConfig { get; private set; }
 
@@ -44,6 +44,11 @@ namespace Xamarin.Android.Build
 		/// Path to directory of MSBuild.exe
 		/// </summary>
 		public string MSBuildBin { get; private set; }
+
+		/// <summary>
+		/// Temporary file used for MSBUILD_EXE_PATH
+		/// </summary>
+		public string MSBuildExeTempPath { get; private set; }
 
 		/// <summary>
 		/// Path to MSBuild's App.config file
@@ -110,7 +115,6 @@ namespace Xamarin.Android.Build
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				ProjectImportSearchPaths = new [] { MSBuildPath, "$(MSBuildProgramFiles32)\\MSBuild" };
 				SystemProfiles           = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
-				XABuildConfig            = Path.Combine (XABuildDirectory, "xabuild.exe.config");
 				SearchPathsOS            = "windows";
 			} else {
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
@@ -120,7 +124,6 @@ namespace Xamarin.Android.Build
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
 				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
 				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
-				XABuildConfig            = Path.Combine (XABuildDirectory, "MSBuild.dll.config");
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
 			}
 
@@ -129,6 +132,8 @@ namespace Xamarin.Android.Build
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
 			AndroidSdkDirectory       = Path.Combine (userProfile, "android-toolchain", "sdk");
 			AndroidNdkDirectory       = Path.Combine (userProfile, "android-toolchain", "ndk");
+			MSBuildExeTempPath        = Path.GetTempFileName ();
+			XABuildConfig             = MSBuildExeTempPath + ".config";
 		}
 
 		[DllImport ("libc")]

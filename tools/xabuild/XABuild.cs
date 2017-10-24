@@ -11,23 +11,32 @@ namespace Xamarin.Android.Build
 		static int Main ()
 		{
 			var paths = new XABuildPaths ();
-			if (!Directory.Exists (paths.XamarinAndroidBuildOutput)) {
-				Console.WriteLine ($"Unable to find Xamarin.Android build output at {paths.XamarinAndroidBuildOutput}");
-				return 1;
-			}
-
-			//Create a custom xabuild.exe.config
-			CreateConfig (paths);
-
-			//Create link to .NETFramework and .NETPortable directory
-			foreach (var dir in Directory.GetDirectories(paths.SystemProfiles)) {
-				var name = Path.GetFileName(dir);
-				if (!SymbolicLink.Create(Path.Combine(paths.FrameworksDirectory, name), dir)) {
+			try {
+				if (!Directory.Exists (paths.XamarinAndroidBuildOutput)) {
+					Console.WriteLine ($"Unable to find Xamarin.Android build output at {paths.XamarinAndroidBuildOutput}");
 					return 1;
 				}
-			}
 
-			return MSBuildApp.Main ();
+				//Create a custom xabuild.exe.config
+				CreateConfig (paths);
+
+				//Create link to .NETFramework and .NETPortable directory
+				foreach (var dir in Directory.GetDirectories (paths.SystemProfiles)) {
+					var name = Path.GetFileName (dir);
+					if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
+						return 1;
+					}
+				}
+
+				return MSBuildApp.Main ();
+			} finally {
+				//NOTE: these are temporary files
+				foreach (var file in new [] { paths.MSBuildExeTempPath, paths.XABuildConfig }) {
+					if (File.Exists (file)) {
+						File.Delete (file);
+					}
+				}
+			}
 		}
 
 		static void CreateConfig (XABuildPaths paths)
@@ -79,6 +88,8 @@ namespace Xamarin.Android.Build
 			}
 
 			xml.Save (paths.XABuildConfig);
+
+			Environment.SetEnvironmentVariable ("MSBUILD_EXE_PATH", paths.MSBuildExeTempPath, EnvironmentVariableTarget.Process);
 		}
 
 		/// <summary>

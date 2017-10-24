@@ -1,8 +1,10 @@
 ﻿﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -2077,6 +2079,26 @@ namespace UnnamedProject {
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
 				StringAssert.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
 			}
+		}
+
+		[Test]
+		public void RunXABuildInParallel ()
+		{
+			var xabuild = new ProjectBuilder ("temp/RunXABuildInParallel").XABuildExe;
+			var psi     = new ProcessStartInfo (xabuild, "/version") {
+				CreateNoWindow         = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError  = true,
+				WindowStyle            = ProcessWindowStyle.Hidden,
+				UseShellExecute        = false,
+			};
+
+			Parallel.For (0, 10, i => {
+				using (var p = Process.Start (psi)) {
+					p.WaitForExit ();
+					Assert.AreEqual (0, p.ExitCode);
+				}
+			});
 		}
 	}
 }
