@@ -136,6 +136,7 @@ distclean:
 # $(call RUN_NUNIT_TEST,filename,log-lref?)
 define RUN_NUNIT_TEST
 	MONO_TRACE_LISTENER=Console.Out \
+	USE_MSBUILD=$(if $(USE_MSBUILD),$(USE_MSBUILD),0) \
 	$(RUNTIME) --runtime=v4.0.0 \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(TEST),--test=$(TEST)) \
