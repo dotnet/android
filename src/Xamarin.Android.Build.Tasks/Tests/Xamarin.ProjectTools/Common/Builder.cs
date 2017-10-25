@@ -235,6 +235,7 @@ namespace Xamarin.ProjectTools
 								if (match.Success) {
 									LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
 									Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
+								}
 							}
 						}
 					}
