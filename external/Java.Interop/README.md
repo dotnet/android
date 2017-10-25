@@ -32,39 +32,7 @@ The `JNIEnv` API is also huge, unwieldy, and terrible.
 
 ## Build Requirements
 
-The current Oracle JDK7 installer only provides 64-bit binaries, while
-Mono for OS X is currently a 32-bit binary. These don't work together. :-(
-
-To quickly get a JDK that is usable with the OS X `JavaVM.framework`, run:
-
-    $ make osx-setup
-
-If you're instead a glutton for punishment, or you need to check for
-an updated `.pkg` for some future `JavaVM.framework` version:
-
- 1. Go to the [Downloads page](https://developer.apple.com/downloads/index.action).  
-    Note: This may require you to login first.
- 2. In the "Search" panel (above the "tree" on the left), enter "Java". Hit `[RETURN]`.
- 3. Look for the **Java for OS X ... Developer Package** entry.  
-    To the right, under the Release Date column, is the installer. Click it.
-
-At the time of this writing, this links to
-[Java for OS X 2013-005 Developer Package][osx-jdk6], released October 15, 2013.
-
-[osx-jdk6]: http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
-
-Unfortunately, you can't *install* it on El Capitan. It'll install...but it
-won't *do* anything, probably because of [System Integrity Protection][sip].
-
-[sip]: https://en.wikipedia.org/wiki/System_Integrity_Protection
-
-To develop on El Capitan, download the above
-`java_for_os_x_2013005_dp__11m4609.dmg` file, open it within Finder,
-copy the contained `JavaDeveloper.pkg` file into this directory,
-then run the `osx-setup` target:
-
-    $ make osx-setup JDK=JavaDeveloper.pkg
-
+Latest Mono from http://www.mono-project.com/
 
 ## Build Configuration
 
