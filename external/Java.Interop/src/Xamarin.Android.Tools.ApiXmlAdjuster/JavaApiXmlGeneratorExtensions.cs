@@ -21,7 +21,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static void Save (this JavaApi api, XmlWriter writer)
 		{
 			writer.WriteStartElement ("api");
-			
+			if (api.Platform != null)
+				writer.WriteAttributeString ("platform", api.Platform);
+
 			foreach (var pkg in api.Packages) {
 				if (!pkg.Types.Any (t => !t.IsReferenceOnly))
 					continue;

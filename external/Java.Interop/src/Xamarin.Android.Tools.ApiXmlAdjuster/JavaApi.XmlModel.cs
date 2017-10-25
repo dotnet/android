@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		}
 
 		public string ExtendedApiSource { get; set; }
+		public string Platform { get; set; }
 		public IList<JavaPackage> Packages { get; set; }
 	}
 

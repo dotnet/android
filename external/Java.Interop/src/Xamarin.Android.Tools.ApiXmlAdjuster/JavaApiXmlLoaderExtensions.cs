@@ -20,7 +20,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			if (reader.LocalName != "api")
 				throw XmlUtil.UnexpectedElementOrContent (null, reader, "api");
 			api.ExtendedApiSource = reader.GetAttribute ("api-source");
-			XmlUtil.CheckExtraneousAttributes ("api", reader, "api-source");
+			api.Platform = reader.GetAttribute ("platform");
+			XmlUtil.CheckExtraneousAttributes ("api", reader, "api-source", "platform");
 			if (reader.IsEmptyElement)
 				reader.Read ();
 			else {

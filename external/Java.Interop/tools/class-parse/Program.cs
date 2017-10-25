@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tools {
 			int  verbosity  = 0;
 			bool autorename = false;
 			var  outputFile = (string) null;
+			string platform = null;
 			var  docsPaths  = new List<string> ();
 			var p = new OptionSet () {
 				"usage: class-dump [-dump] FILES",
@@ -48,6 +49,9 @@ namespace Xamarin.Android.Tools {
 				{ "autorename",
 				  "Renames parameter names in the interfaces by derived classes.",
 				  v => autorename = v != null },
+				{ "platform=",
+				  "(Internal use only) specify Android framework platform ID",
+				  v => platform = v },
 				{ "h|?|help",
 				  "Show this message and exit.",
 				  v => help = v != null },
@@ -65,6 +69,7 @@ namespace Xamarin.Android.Tools {
 			};
 			var classPath = new ClassPath () {
 				ApiSource         = "class-parse",
+				AndroidFrameworkPlatform = platform,
 				DocumentationPaths  = docsPaths.Count == 0 ? null : docsPaths,
 				DocletType = docsType,
 				AutoRename = autorename

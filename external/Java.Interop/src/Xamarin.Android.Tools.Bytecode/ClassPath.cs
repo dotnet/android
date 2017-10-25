@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public IEnumerable<string> DocumentationPaths { get; set; }
 
+		public string AndroidFrameworkPlatform { get; set; }
+
 		public bool AutoRename { get; set; }
 
 		public ClassPath (string path = null)
@@ -107,6 +109,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (string.IsNullOrEmpty (ApiSource))
 				return null;
 			return new XAttribute ("api-source", ApiSource);
+		}
+
+		XAttribute GetPlatform ()
+		{
+			if (string.IsNullOrEmpty (AndroidFrameworkPlatform))
+				return null;
+			return new XAttribute ("platform", AndroidFrameworkPlatform);
 		}
 
 		bool IsGeneratedName (string parameterName)
@@ -311,6 +320,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var packagesDictionary = GetPackages ();
 			var api = new XElement ("api",
 					GetApiSource (),
+					GetPlatform (),
 					packagesDictionary.Keys.OrderBy (p => p, StringComparer.OrdinalIgnoreCase)
 					.Select (p => new XElement ("package",
 						new XAttribute ("name", p),
