@@ -1073,8 +1073,6 @@ namespace App1
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
-				if (debugSymbols && optimize.HasValue && optimize.Value && debugType == "" && !b.RunningMSBuild)
-					expectedRuntime = "debug";
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in supportedAbi) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
