@@ -185,6 +185,19 @@ namespace Xamarin.ProjectTools
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
 			var start = DateTime.UtcNow;
+			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+ 			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
+ 			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+ 			if (String.IsNullOrEmpty (sdkPath))
+ 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
+ 			if (String.IsNullOrEmpty (sdkPath))
+ 				sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
+ 			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+ 			if (String.IsNullOrEmpty (ndkPath))
+ 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
+ 			if (String.IsNullOrEmpty (ndkPath))
+ 				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
 			args.AppendFormat ("{0} /t:{1} {2}",
@@ -193,6 +206,12 @@ namespace Xamarin.ProjectTools
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
 				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
+			if (Directory.Exists (sdkPath)) {
+				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+			}
+			if (Directory.Exists (ndkPath)) {
+				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
+			}
 			if (parameters != null) {
 				foreach (var param in parameters) {
 					args.AppendFormat (" /p:{0}", param);
