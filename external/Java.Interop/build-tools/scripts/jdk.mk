@@ -64,7 +64,7 @@ JI_JDK_INCLUDE_PATHS  = \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_OS_INCLUDE_DIR)
 
 ifeq ($(_MONO_BITNESS),64-bit)
-JI_JVM_PATH	= $(_DARWIN_JDK_ROOT)/Contents/Home/jre/lib/server/libjvm.dylib
+JI_JVM_PATH	= $(_DARWIN_JDK_ROOT)/Contents/Home/jre/lib/jli/libjli.dylib
 endif # 64-bit
 
 else    # (1) failed; try Xcode.app's copy?
