@@ -8,3 +8,4 @@ TestResult-*.xml
 xa-gendarme.html
 packages
 .vs/
+*.userprefs

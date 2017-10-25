@@ -8,11 +8,16 @@
     <_NUnit>$(_Runtime) packages\NUnit.Runners.2.6.3\tools\nunit-console.exe</_NUnit>
     <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
   </PropertyGroup>
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.SetEnvironmentVariable" />
   <ItemGroup>
     <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\*-*Tests.dll" Condition=" '$(TestAssembly)' == '' " />
     <_TestAssembly Include="$(TestAssembly)" Condition=" '$(TestAssembly)' != '' " />
   </ItemGroup>
-  <Target Name="RunTests">
+  <Target Name="RunTests"
+      Outputs="$(_TopDir)\TestResult-%(_TestAssembly.Filename).xml">
+    <SetEnvironmentVariable Name="MONO_TRACE_LISTENER" Value="Console.Out" />
+    <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="g-%(_TestAssembly.Filename).txt" />
+    <SetEnvironmentVariable Name="JAVA_INTEROP_LREF_LOG" Value="l-%(_TestAssembly.Filename).txt" />
     <Exec
         Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --noshadow --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
         WorkingDirectory="$(_TopDir)"

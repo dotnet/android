@@ -137,8 +137,6 @@ shell:
 
 # $(call RUN_TEST,filename,log-lref?)
 define RUN_TEST
-	MONO_TRACE_LISTENER=Console.Out \
-	JAVA_INTEROP_GREF_LOG=g-$(basename $(notdir $(1))).txt $(if $(2),JAVA_INTEROP_LREF_LOG=l-$(basename $(notdir $(1))).txt,) \
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/RunNUnitTests.targets /p:TestAssembly=$(1) ;
 endef
 

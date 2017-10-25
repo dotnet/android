@@ -260,18 +260,18 @@ namespace Java.Interop.PerformanceTests {
 
 				var ct = TimeSpan.FromMilliseconds (jniTimes [jniTimeIndex++]);
 				Console.WriteLine ("\t  C/JNI: {0} ms               | average: {1} ms",
-						FormatFraction (ct.TotalMilliseconds, 10, 5),
+						FormatFraction (ct.TotalMilliseconds, 12, 5),
 						FormatFraction (ct.TotalMilliseconds / count, 12, 5));
 				Console.WriteLine ("\t    JNI: {0} ms; {1,3}x C/JNI   | average: {2} ms",
-						FormatFraction (jw.Elapsed.TotalMilliseconds, 10, 5),
+						FormatFraction (jw.Elapsed.TotalMilliseconds, 12, 5),
 						ToString (jw.Elapsed, ct),
 						FormatFraction (jw.Elapsed.TotalMilliseconds / count, 12, 5));
 				Console.WriteLine ("\tManaged: {0} ms               | average: {1} ms",
-						FormatFraction (mw.Elapsed.TotalMilliseconds, 10, 5),
+						FormatFraction (mw.Elapsed.TotalMilliseconds, 12, 5),
 						FormatFraction (mw.Elapsed.TotalMilliseconds / count, 12, 5));
 				if (pw != null)
 					Console.WriteLine ("\tPinvoke: {0} ms; {1,3}x managed | average: {2} ms",
-							FormatFraction (pw.Elapsed.TotalMilliseconds, 10, 5),
+							FormatFraction (pw.Elapsed.TotalMilliseconds, 12, 5),
 							ToString (pw.Elapsed, mw.Elapsed),
 							FormatFraction (pw.Elapsed.TotalMilliseconds / count, 12, 5));
 			}

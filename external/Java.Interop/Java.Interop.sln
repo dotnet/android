@@ -97,6 +97,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.GenericMarshaler", "src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj", "{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.BootstrapTasks", "src\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj", "{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -339,6 +341,14 @@ Global
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.XAIntegrationDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.XAIntegrationDebug|Any CPU.Build.0 = Debug|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.XAIntegrationRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}.XAIntegrationRelease|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C001D50-4176-45AE-BDC8-BA626508B0CC} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
@@ -381,5 +391,6 @@ Global
 		{15945D4B-FF56-4BCC-B598-2718D199DD08} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 		{C0487169-8F81-497F-919E-EB42B1D0243F} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF} = {4C173212-371D-45D8-BA83-9226194F48DC}
+		{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A} = {172B608B-E6F3-41CC-9949-203A76BA247C}
 	EndGlobalSection
 EndGlobal
