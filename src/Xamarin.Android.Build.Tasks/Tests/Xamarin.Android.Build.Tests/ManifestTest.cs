@@ -480,8 +480,6 @@ namespace Bug12935
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
-				if (!isRelease && debugType == "None" && !builder.RunningMSBuild)
-					expected = false;
 				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
 			}
 		}
