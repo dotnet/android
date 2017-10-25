@@ -239,18 +239,31 @@ namespace Xamarin.ProjectTools
 
 			LastBuildTime = DateTime.UtcNow - start;
 
-			LastBuildOutput = psi.FileName + " " + args.ToString () + Environment.NewLine;
+			var sb = new StringBuilder ();
+			sb.AppendLine ( psi.FileName + " " + args.ToString () + Environment.NewLine);
 			if (!ranToCompletion)
-				LastBuildOutput += "Build Timed Out!";
-			if (buildLogFullPath != null && File.Exists (buildLogFullPath))
-				LastBuildOutput += File.ReadAllText (buildLogFullPath);
-			LastBuildOutput += string.Format ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
-			LastBuildOutput += string.Format ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
-
-			var match = timeElapsedRegEx.Match (LastBuildOutput);
-			if (match.Success) {
-				LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+				sb.AppendLine ("Build Timed Out!");
+			if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
+				using (var fs = File.OpenRead (buildLogFullPath)) {
+					using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
+						string line;
+						while ((line = sr.ReadLine ()) != null) {
+							sb.AppendLine (line);
+							if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
+								var match = timeElapsedRegEx.Match (line);
+								if (match.Success) {
+									LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+									Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
+								}
+							}
+						}
+					}
+				}
 			}
+			sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
+			sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
+
+			LastBuildOutput = sb.ToString ();
 
 			if (buildLogFullPath != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
