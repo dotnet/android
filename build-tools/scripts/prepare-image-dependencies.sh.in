@@ -1,0 +1,72 @@
+#!/bin/bash -e
+set -o xtrace
+
+ARCHIVE_PATH="$HOME/android-archives"
+TOOLCHAIN_PATH="$HOME/android-toolchain"
+
+TOOLCHAIN_DIRS="
+@TOOLCHAIN_DIRS@
+"
+
+# format: URL path/under/$TOOLCHAIN_PATH
+PACKAGES="
+@PACKAGES@
+"
+
+BREW_PACKAGES="
+@BREWS@
+"
+
+function Download ()
+{
+	local url="$1"
+	local archive="$ARCHIVE_PATH/`basename "$url"`"
+	if [ -f "$archive" ]; then
+		return
+	fi
+	curl -o "$archive" "$url"
+}
+
+function Install ()
+{
+	local url="$1"
+	local subdir="$2"
+
+	local file=`basename "$url"`
+	local archive="$ARCHIVE_PATH/$file"
+	local targetdir="$TOOLCHAIN_PATH/$subdir"
+
+	local flagdir="$TOOLCHAIN_PATH/$(echo $subdir | sed 's#/.*$##g')"
+	local flagfile="$flagdir/.$file"
+
+	mkdir -p "$targetdir"
+	if [ ! -f "$flagfile" ]; then
+		local extractdir=`mktemp -d`
+		unzip -d "$extractdir" "$ARCHIVE_PATH/$file"
+		mv "$extractdir"/*/* "$targetdir"
+		touch "$flagfile"
+		rm -Rf "$extractdir"
+	fi
+}
+
+echo "$TOOLCHAIN_DIRS" | while read line ; do
+	if [ -z "$line" ]; then
+		continue
+	fi
+	rm -Rf "$TOOLCHAIN_PATH/$line"
+done
+
+echo "$PACKAGES" | while read line ; do
+	if [ -z "$line" ]; then
+		continue
+	fi
+	Download $line
+	Install $line
+done
+
+echo "$BREW_PACKAGES" | while read line ; do
+	if [ -z "$line" ]; then
+		continue
+	fi
+	brew install $line
+done

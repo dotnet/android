@@ -1,0 +1,49 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+  </PropertyGroup>
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\android-toolchain\android-toolchain.projitems" />
+  <Import Project="..\dependencies\dependencies.projitems" />
+  <Target Name="PrepareImageDependencies">
+    <ItemGroup>
+      <_Dir Include="sdk" />
+      <_Dir Include="ndk" />
+      <_Dir Include="ant" />
+    </ItemGroup>
+    <ItemGroup>
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity) sdk/%(DestDir)')"
+      />
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity) ndk/%(DestDir)')"
+      />
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AntItem->'$(AntUri)/%(RelUrl)%(Identity) ant/%(DestDir)')"
+      />
+    </ItemGroup>
+    <ItemGroup>
+      <_Brew
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Homebrew)' != '' "
+        Include="@(RequiredProgram->'%(Homebrew)')"
+      />
+    </ItemGroup>
+    <PropertyGroup>
+      <_Packages>@(_Package->'%(Identity)', '
+')</_Packages>
+      <_Dirs>@(_Dir->'%(Identity)', '
+')</_Dirs>
+      <_Brews>@(_Brew->'%(Identity)', '
+')</_Brews>
+    </PropertyGroup>
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)prepare-image-dependencies.sh.in"
+        DestinationFile="$(MSBuildThisFileDirectory)\..\..\prepare-image-dependencies.sh"
+        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews)">
+    </ReplaceFileContents>
+  </Target>
+</Project>
