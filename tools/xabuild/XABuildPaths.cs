@@ -83,10 +83,6 @@ namespace Xamarin.Android.Build
 
 		public string MonoAndroidToolsDirectory { get; private set; }
 
-		public string AndroidSdkDirectory { get; private set; }
-
-		public string AndroidNdkDirectory { get; private set; }
-
 		public XABuildPaths ()
 		{
 			IsWindows                 = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -96,7 +92,6 @@ namespace Xamarin.Android.Build
 			XamarinAndroidBuildOutput = Path.GetFullPath (Path.Combine (XABuildDirectory, ".."));
 
 			string programFiles       = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-			string userProfile        = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
 			if (IsWindows) {
@@ -130,8 +125,6 @@ namespace Xamarin.Android.Build
 			FrameworksDirectory       = Path.Combine (prefix, "xbuild-frameworks");
 			MSBuildExtensionsPath     = Path.Combine (prefix, "xbuild");
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
-			AndroidSdkDirectory       = Path.Combine (userProfile, "android-toolchain", "sdk");
-			AndroidNdkDirectory       = Path.Combine (userProfile, "android-toolchain", "ndk");
 			MSBuildExeTempPath        = Path.GetTempFileName ();
 			XABuildConfig             = MSBuildExeTempPath + ".config";
 		}
