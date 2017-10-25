@@ -174,7 +174,7 @@ namespace Xamarin.Android.Tasks
 			{ "MissingSuperCall", new Version (26, 1, 1) },
 		};
 
-		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
+		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
 
 		public override bool Execute ()
 		{
@@ -204,6 +204,26 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ClassDirectories:", ClassDirectories);
 			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
 			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
+
+			foreach (var issue in DisabledIssuesByVersion) {
+				if (lintToolVersion < issue.Value) {
+					Regex issueReplaceRegex = new Regex ($"{issue.Key}(,)?");
+					if (!string.IsNullOrEmpty (DisabledIssues) && DisabledIssues.Contains (issue.Key)) {
+						var match = issueReplaceRegex.Match (DisabledIssues);
+						if (match.Success) {
+							DisabledIssues = DisabledIssues.Replace (match.Value, string.Empty);
+							Log.LogWarning ($"Removing {issue.Key} from DisabledIssues. Lint {lintToolVersion} does not support this check.");
+						}
+					}
+					if (!string.IsNullOrEmpty (EnabledIssues) && EnabledIssues.Contains (issue.Key)) {
+						var match = issueReplaceRegex.Match (EnabledIssues);
+						if (match.Success) {
+							EnabledIssues = EnabledIssues.Replace (match.Value, string.Empty);
+							Log.LogWarning ($"Removing {issue.Key} from EnabledIssues. Lint {lintToolVersion} does not support this check.");
+						}
+					}
+				}
+			}
 
 			base.Execute ();
 
