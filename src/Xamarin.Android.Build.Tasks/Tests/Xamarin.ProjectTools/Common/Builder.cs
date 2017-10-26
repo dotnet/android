@@ -77,7 +77,11 @@ namespace Xamarin.ProjectTools
 			get {
 				if (IsUnix) {
 					var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
+					#if DEBUG
 					var configuraton = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Debug";
+					#else
+					var configuraton = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Release";
+					#endif
 					var libmonodroidPath = Path.Combine ("lib", "xamarin.android", "xbuild", "Xamarin", "Android", "lib", "armeabi-v7a", "libmono-android.release.so");
 					if (String.IsNullOrEmpty(outdir))
 						outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
