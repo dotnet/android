@@ -418,7 +418,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    DesignTimeBuild="$(DesignTimeBuild)"
    ContinueOnError="$(DesignTimeBuild)"
+   Condition=" '$(DesignTimeBuild)' == '' Or '$(DesignTimeBuild)' == 'false' "
   />
+  <Message Text="Skipping GetAdditionalResourcesFromAssemblies in DesignTime build" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
 <Target Name="_ValidateResourceCache">
