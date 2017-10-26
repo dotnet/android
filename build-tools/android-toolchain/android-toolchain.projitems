@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl-ssl.google.com/android/repository</AndroidUri>
-    <AntUri Condition=" '$(AntUri)' == '' ">http://archive.apache.org/dist/ant/binaries</AntUri>
+    <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl.google.com/android/repository</AndroidUri>
+    <AntUri Condition=" '$(AntUri)' == '' ">https://archive.apache.org/dist/ant/binaries</AntUri>
   </PropertyGroup>
   <ItemGroup>
     <AndroidNdkItem Include="android-ndk-r14b-linux-x86_64.zip">
