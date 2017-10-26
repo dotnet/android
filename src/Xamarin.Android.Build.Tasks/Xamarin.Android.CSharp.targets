@@ -35,6 +35,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
         <_AndroidResourceDesigner>Resource.Designer.cs</_AndroidResourceDesigner>
     </PropertyGroup>
+    <!-- Force Xbuild to behave like msbuild -->
+    <PropertyGroup>
+        <DebugSymbols Condition=" '$(DebugType)' == 'None' ">true</DebugSymbols>
+        <DebugType Condition=" '$(DebugType)' == 'None' Or '$(DebugType)' == '' ">portable</DebugType>
+    </PropertyGroup>
     <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
     <Import Project="Xamarin.Android.Common.targets" />
     <!--

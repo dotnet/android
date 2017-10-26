@@ -277,12 +277,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 </PropertyGroup>
 
-<!-- Force Xbuild to behave like msbuild -->
-<PropertyGroup>
-	<DebugSymbols Condition=" '$(DebugType)' == 'None' ">false</DebugSymbols>
-	<DebugType Condition=" '$(DebugType)' == 'None' ">portable</DebugType>
-</PropertyGroup>
-
 <Choose>
 	<When Condition=" '$(DebugSymbols)' == 'True' And '$(DebugType)' != '' And ('$(EmbedAssembliesIntoApk)' == 'False' Or '$(Optimize)' != 'True') ">
 		<PropertyGroup>

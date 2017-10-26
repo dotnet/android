@@ -33,7 +33,11 @@ Copyright (C) 2012 Xamarin. All rights reserved.
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
         <_AndroidResourceDesigner>Resource.Designer.fs</_AndroidResourceDesigner>
     </PropertyGroup>
-
+    <!-- Force Xbuild to behave like msbuild -->
+    <PropertyGroup>
+        <DebugSymbols Condition=" '$(DebugType)' == 'None' ">true</DebugSymbols>
+        <DebugType Condition=" '$(DebugType)' == 'None' Or '$(DebugType)' == '' ">portable</DebugType>
+    </PropertyGroup>
     <!-- xbuild searches multiple MSBuildExtensionsPath32, but only in the Import element, so we can't determine this with a variable -->
     <Import
       Condition="'$(Language)' != 'F#' And Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')"
