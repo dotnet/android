@@ -414,16 +414,12 @@ namespace Java.Interop
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
+#if XA_INTEGRATION
 			if (pendingException == null)
 				throw new ArgumentNullException (nameof (pendingException));
-#if XA_INTEGRATION
 			throw new NotSupportedException ("Do not know how to marshal System.Exception instances.");
-#else   // XA_INTEGRATION
-			var je  = pendingException as JavaException;
-			if (je == null) {
-				je  = new JavaProxyThrowable (pendingException);
-			}
-			JniEnvironment.Exceptions.Throw (je.PeerReference);
+#else   // !XA_INTEGRATION
+			JniEnvironment.Exceptions.Throw (pendingException);
 #endif  // !XA_INTEGRATION
 		}
 	}

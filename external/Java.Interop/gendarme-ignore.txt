@@ -532,6 +532,8 @@ M: Java.Interop.JniObjectReferenceType Java.Interop.JniEnvironment/References::G
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Reflection::ToReflectedMethod(Java.Interop.JniObjectReference,Java.Interop.JniMethodInfo,System.Boolean)
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Reflection::ToReflectedField(Java.Interop.JniObjectReference,Java.Interop.JniFieldInfo,System.Boolean)
 M: Java.Interop.JniObjectReferenceFlags Java.Interop.JniObjectReference::get_Flags()
+# This method is used in Java.Interop.GenericMarshaler.dll, the internals are visible to this assembly. Looks like gendarme doesn't know InternalsVisibleTo attribute.
+M: Java.Interop.JniObjectReference Java.Interop.JniPeerMembers/JniInstanceMethods::AllocObject(System.Type)
 
 # I think Gendarme is buggy here; `JavaArray<T>.CheckLength(IList<T>)` *is* used.
 M: System.Int32 Java.Interop.JavaArray`1::CheckLength(System.Collections.Generic.IList`1<T>)
@@ -557,3 +559,12 @@ R: Gendarme.Rules.Performance.UseTypeEmptyTypesRule
 # The PCL profile we're using doen't *have* Type.EmptyTypes!
 M: System.Void Java.Interop.JniRuntime/JniTypeManager::.cctor()
 
+R: Gendarme.Rules.BadPractice.CheckNewExceptionWithoutThrowingRule
+# This method constructs JavaException and calls ToString () on it. We only care about Java stack trace here, so we don't need to throw the exception to get managed StackTrace.
+M: System.Exception Java.Interop.ManagedPeer::CreateJniLocationException()
+# This method uses a JavaException and passes its PeerReference property along. We don't want to throw that property.
+M: System.Void Java.Interop.JniEnvironment/Exceptions::Throw(System.Exception)
+
+R: Gendarme.Rules.Correctness.DisposableFieldsShouldBeDisposedRule
+# We call Dispose on marshalMemberBuilder field in the JniRuntime::Dispose method. Looks like gendarme bug, it doesn't handle well the `?.` operator.
+T: Java.Interop.JniRuntime

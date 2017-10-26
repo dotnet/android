@@ -32,7 +32,7 @@ namespace Java.Interop {
 			public static void Throw (Exception e)
 			{
 				if (e == null)
-					throw new ArgumentNullException ("e");
+					throw new ArgumentNullException (nameof (e));
 				var je = e as JavaException;
 				if (je == null) {
 					je  = new JavaProxyThrowable (e);
