@@ -84,7 +84,7 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.Clean(proj), "App should have cleaned successfully");
 					Assert.IsTrue (b.UpdateAndroidResources (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping download of "),
+					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping GetAdditionalResourcesFromAssemblies"),
 						"failed to skip the downloading of files.");
 					var items = new List<string> ();
 					string first = null;
