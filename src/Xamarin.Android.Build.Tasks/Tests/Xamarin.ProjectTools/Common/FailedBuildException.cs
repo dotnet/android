@@ -26,11 +26,6 @@ namespace Xamarin.ProjectTools
 
 		public string BuildLog { get; set; }
 
-		public override string ToString ()
-		{
-			return string.Format ("[FailedBuildException: BuildLog={0}]", BuildLog);
-		}
-
 		public override string StackTrace {
 			get {
 				return $"{base.StackTrace}\nBuildLog: {BuildLog}";
