@@ -133,5 +133,11 @@
       <Id>26</Id>
       <Stable>True</Stable>
     </AndroidApiInfo>
+    <AndroidApiInfo Include="v8.1">
+      <Name>Oreo</Name>
+      <Level>27</Level>
+      <Id>27</Id>
+      <Stable>False</Stable>
+    </AndroidApiInfo>
   </ItemGroup>
 </Project>

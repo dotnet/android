@@ -1381,6 +1381,25 @@
   <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']" name="argsType">MediaCasEventArgs</attr>
   <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']/method[@name='onEvent']/parameter[@name='MediaCas']" name="managedName">mediaCas</attr>
 
+  <!-- Until API Level 26, android.graphics.Color was static. In API Level 26,
+  it became instantiable and got instance members.
+
+  Xamarin.Android had wrong premise that android.graphics.Color can be totally
+  different thing and thus introduced completely different API with the same
+  type name. Wrong wrong wrong. It was wrong decision made back in 2010.
+
+  We will have to enable this line and bring back some sanity.
+  -->
+  <!-- attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">AndroidColor</attr -->
+
+  <!-- API Level 27 -->
+
+  <!-- android.graphics.Color started to be in actual use and that uncovered
+  Xamarin.Android design mistake above! We have to remove WallpaperColors API
+  until Xamarin.Android fixes their bogus API design. -->
+  <remove-node path="/api/package[@name='android.app']/class[@name='WallpaperColors']" />
+
+
   <!-- detected field-property conflicts (e.g. see bug #60069)
 
   Some people think it's easy to implement "check and skip property generation" without trying to do,
@@ -1391,4 +1410,5 @@
   is the only way to go. For further changes we should completely rewrite everything.
    -->
   <attr path="/api/package[@name='android.os']/class[@name='Build']/method[@name='getSerial']" name="propertyName"></attr>
+
 </metadata>
