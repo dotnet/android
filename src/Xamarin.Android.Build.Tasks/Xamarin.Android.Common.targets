@@ -396,7 +396,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">True</ManagedDesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
+		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsCache>
+		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsCache>
+		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
 	</PropertyGroup>
+	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
 <PropertyGroup>
