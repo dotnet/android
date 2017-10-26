@@ -207,27 +207,27 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (lintToolVersion < issue.Value) {
-					Regex issueReplaceRegex = new Regex ($"{issue.Key}(,)?");
-					if (!string.IsNullOrEmpty (DisabledIssues) && DisabledIssues.Contains (issue.Key)) {
-						var match = issueReplaceRegex.Match (DisabledIssues);
-						if (match.Success) {
-							DisabledIssues = DisabledIssues.Replace (match.Value, string.Empty);
-							Log.LogWarning ($"Removing {issue.Key} from DisabledIssues. Lint {lintToolVersion} does not support this check.");
-						}
-					}
-					if (!string.IsNullOrEmpty (EnabledIssues) && EnabledIssues.Contains (issue.Key)) {
-						var match = issueReplaceRegex.Match (EnabledIssues);
-						if (match.Success) {
-							EnabledIssues = EnabledIssues.Replace (match.Value, string.Empty);
-							Log.LogWarning ($"Removing {issue.Key} from EnabledIssues. Lint {lintToolVersion} does not support this check.");
-						}
-					}
+					DisabledIssues = CleanIssues (issue.Key, lintToolVersion, DisabledIssues, nameof (DisabledIssues));
+					EnabledIssues = CleanIssues (issue.Key, lintToolVersion, EnabledIssues, nameof (EnabledIssues) );
 				}
 			}
 
 			base.Execute ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		string CleanIssues (string issueToRemove, Version lintToolVersion, string issues, string issuePropertyName)
+		{
+			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
+			if (!string.IsNullOrEmpty (issues) && issues.Contains (issueToRemove)) {
+				var match = issueReplaceRegex.Match (DisabledIssues);
+				if (match.Success) {
+					issues = issues.Replace (match.Value, string.Empty);
+					Log.LogWarning ($"Removing {issueToRemove} from {issuePropertyName}. Lint {lintToolVersion} does not support this check.");
+				}
+			}
+			return issues;
 		}
 
 		protected override string GenerateCommandLineCommands ()
