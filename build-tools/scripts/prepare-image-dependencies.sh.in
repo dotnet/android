@@ -17,6 +17,10 @@ BREW_PACKAGES="
 @BREWS@
 "
 
+PKG_URLS="
+@PKG_URLS@
+"
+
 function Download ()
 {
 	local url="$1"
@@ -68,5 +72,14 @@ echo "$BREW_PACKAGES" | while read line ; do
 	if [ -z "$line" ]; then
 		continue
 	fi
-	brew install $line
+	brew install $line || true
+done
+
+echo "$PKG_URLS" | while read line ; do
+	if [ -z "$line" ]; then
+		continue
+	fi
+	Download $line
+	pkg=`basename "$line"`
+	sudo installer -pkg "$ARCHIVE_PATH/$pkg" -target /
 done
