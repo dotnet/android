@@ -113,6 +113,10 @@ ifeq ($(USE_MSBUILD),1)
 	done
 endif	# msbuild
 
+prepare-image-dependencies:
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
+		/p:AndroidSupportedHostJitAbis=mxe-Win32:mxe-Win64
+
 include build-tools/scripts/BuildEverything.mk
 include tests/api-compatibility/api-compatibility.mk
 
