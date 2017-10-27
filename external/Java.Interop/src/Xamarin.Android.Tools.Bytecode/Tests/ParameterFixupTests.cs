@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using Xamarin.Android.Tools.Bytecode;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
@@ -30,27 +31,17 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
-		public void XmlDeclaration_FixedUpFromApiXmlDocumentation()
+		public void XmlDeclaration_FixedUpFromApiXmlDocumentation ()
 		{
 			string tempFile = null;
 
-			try
-			{
-				tempFile = Path.GetTempFileName();
-				File.WriteAllText(tempFile, LoadString("ParameterFixupApiXmlDocs.xml"));
+			try {
+				tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
 
-				AssertXmlDeclaration("Collection.class", "ParameterFixupFromDocs.xml", tempFile, Bytecode.JavaDocletType._ApiXml);
-			}
-			catch (Exception ex)
-			{
-				try
-				{
-					if (File.Exists(tempFile))
-						File.Delete(tempFile);
-				}
-				catch { }
-
-				Assert.Fail("An unexpected exception was thrown : {0}", ex);
+				AssertXmlDeclaration ("Collection.class", "ParameterFixupFromDocs.xml", tempFile);
+			} finally {
+				if (File.Exists (tempFile))
+					File.Delete (tempFile);
 			}
 		}
 
@@ -62,6 +53,39 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			} catch (Exception ex) {
 				Assert.Fail ("An unexpected exception was thrown : {0}", ex);
 			}
+		}
+
+		[Test]
+		public void DocletType_ShouldDetectApiXml ()
+		{
+			string tempFile = null;
+
+			try {
+				tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
+
+				Assert.AreEqual (JavaDocletType._ApiXml, AndroidDocScraper.GetDocletType (tempFile));
+			} finally {
+				if (File.Exists (tempFile))
+					File.Delete (tempFile);
+			}
+		}
+
+		[Test]
+		public void DocletType_ShouldDetectDroidDocs ()
+		{
+			var androidSdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			if (string.IsNullOrEmpty (androidSdkPath)) {
+				Assert.Ignore("The `ANDROID_SDK_PATH` environment variable isn't set; " +
+						"cannot test importing parameter names from HTML. Skipping...");
+				return;
+			}
+
+			var droidDocsPath = Path.Combine (androidSdkPath, "docs", "reference");
+
+			if (!Directory.Exists (droidDocsPath))
+				Assert.Fail("The Android SDK Documentation path `{0}` was not found.", droidDocsPath);
+				
+			Assert.AreEqual(JavaDocletType.DroidDoc2, AndroidDocScraper.GetDocletType(droidDocsPath));
 		}
 	}
 }

@@ -15,10 +15,9 @@ namespace Xamarin.Android.Tools {
 
 		public static void Main (string[] args)
 		{
-			JavaDocletType docsType = 0;
-
 			bool dump       = false;
 			bool help       = false;
+			bool docsType   = false;
 			int  verbosity  = 0;
 			bool autorename = false;
 			var  outputFile = (string) null;
@@ -40,9 +39,8 @@ namespace Xamarin.Android.Tools {
 				  "Documentation {PATH} for parameter fixup",
 				  doc => docsPaths.Add (doc) },
 				{ "docstype=",
-				  "{TYPE} of the docs within --docspath. Values:\n  " +
-				  string.Join ("\n  ", JavaDocletTypeMapping.Keys.OrderBy (s => s)),
-				  t => docsType = GetJavaDocletType (t) },
+				  "OBSOLETE: Previously used to specify a doc type (now auto detected).",
+				  t => docsType = t != null },
 				{ "v|verbose:",
 				  "See stack traces on error.",
 				  (int? v) => verbosity = v.HasValue ? v.Value : verbosity + 1 },
@@ -61,6 +59,8 @@ namespace Xamarin.Android.Tools {
 				p.WriteOptionDescriptions (Console.Out);
 				return;
 			}
+			if (docsType)
+				Console.WriteLine ("class-parse: --docstype is obsolete and no longer a valid option.");
 			var output = outputFile == null
 				? Console.Out
 				: (TextWriter) new StreamWriter (outputFile, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
@@ -71,7 +71,6 @@ namespace Xamarin.Android.Tools {
 				ApiSource         = "class-parse",
 				AndroidFrameworkPlatform = platform,
 				DocumentationPaths  = docsPaths.Count == 0 ? null : docsPaths,
-				DocletType = docsType,
 				AutoRename = autorename
 			};
 			foreach (var file in files) {
@@ -91,23 +90,6 @@ namespace Xamarin.Android.Tools {
 				classPath.SaveXmlDescription (output);
 			if (outputFile != null)
 				output.Close ();
-		}
-
-		static  Dictionary<string, JavaDocletType>  JavaDocletTypeMapping   = new Dictionary<string, JavaDocletType> {
-			{ "droiddoc",   JavaDocletType.DroidDoc },
-			{ "droiddoc2",   JavaDocletType.DroidDoc2 },
-			{ "java6",      JavaDocletType.Java6 },
-			{ "java7",      JavaDocletType.Java7 },
-			{ "java8",      JavaDocletType.Java8 },
-			{ "apixml",     JavaDocletType._ApiXml },
-		};
-
-		static JavaDocletType GetJavaDocletType (string value)
-		{
-			JavaDocletType type;
-			if (value != null && JavaDocletTypeMapping.TryGetValue (value.ToLowerInvariant (), out type))
-				return type;
-			return JavaDocletType.DroidDoc;
 		}
 
 		static void DumpFileToXml (ClassPath jar, string file)

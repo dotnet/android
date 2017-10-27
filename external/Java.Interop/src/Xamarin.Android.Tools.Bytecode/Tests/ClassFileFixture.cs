@@ -25,7 +25,18 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				return r.ReadToEnd ();
 		}
 
-		protected static void AssertXmlDeclaration (string classResource, string xmlResource, string documentationPath = null, JavaDocletType? javaDocletType = null)
+		protected static string LoadToTempFile (string resource)
+		{
+			var tempFilePath = Path.GetTempFileName ();
+
+			using (var w = File.Create (tempFilePath))
+			using (var s = Assembly.GetExecutingAssembly ().GetManifestResourceStream (resource))
+				s.CopyTo (w);
+
+			return tempFilePath;
+		}
+
+		protected static void AssertXmlDeclaration (string classResource, string xmlResource, string documentationPath = null)
 		{
 			var classPathBuilder    = new ClassPath () {
 				ApiSource           = "class-parse",
@@ -33,14 +44,10 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 					documentationPath,
 				},
 			};
-			if (javaDocletType.HasValue)
-				classPathBuilder.DocletType = javaDocletType.Value;
 			classPathBuilder.Add (LoadClassFile (classResource));
 
 			var actual  = new StringWriter ();
 			classPathBuilder.ApiSource  = "class-parse";
-			if (javaDocletType.HasValue)
-				classPathBuilder.DocletType = javaDocletType.Value;
 			classPathBuilder.SaveXmlDescription (actual);
 
 			var expected    = LoadString (xmlResource);
