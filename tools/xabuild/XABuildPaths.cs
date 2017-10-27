@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -83,6 +84,10 @@ namespace Xamarin.Android.Build
 
 		public string MonoAndroidToolsDirectory { get; private set; }
 
+		public string AndroidSdkDirectory { get; private set; }
+
+		public string AndroidNdkDirectory { get; private set; }
+
 		public XABuildPaths ()
 		{
 			IsWindows                 = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -127,6 +132,22 @@ namespace Xamarin.Android.Build
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
 			MSBuildExeTempPath        = Path.GetTempFileName ();
 			XABuildConfig             = MSBuildExeTempPath + ".config";
+
+			//Android SDK and NDK
+			var pathsTargets = Path.Combine (XABuildDirectory, "..", "..", "..", "build-tools", "scripts", "Paths.targets");
+			if (File.Exists (pathsTargets)) {
+				var androidSdkPath  = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+				if (string.IsNullOrEmpty (androidSdkPath)) {
+					androidSdkPath  = RunPathsTargets (pathsTargets, "GetAndroidSdkFullPath");
+				}
+				AndroidSdkDirectory = androidSdkPath;
+
+				var androidNdkPath  = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+				if (string.IsNullOrEmpty (androidNdkPath)) {
+					androidNdkPath  = RunPathsTargets (pathsTargets, "GetAndroidNdkFullPath");
+				}
+				AndroidNdkDirectory = androidNdkPath;
+			}
 		}
 
 		[DllImport ("libc")]
@@ -147,6 +168,27 @@ namespace Xamarin.Android.Build
 					Marshal.FreeHGlobal (buf);
 			}
 			return false;
+		}
+
+		string RunPathsTargets (string pathsTargets, string target)
+		{
+			var path = IsWindows ? Path.Combine(MSBuildBin, "MSBuild.exe") : "mono";
+			var args = $"/nologo /v:minimal /t:{target} \"{pathsTargets}\"";
+			if (!IsWindows) {
+				args = $"\"{Path.Combine (MSBuildBin, "MSBuild.dll")}\" {args}";
+			}
+
+			var psi = new ProcessStartInfo (path, args) {
+				CreateNoWindow         = true,
+				RedirectStandardOutput = true,
+				WindowStyle            = ProcessWindowStyle.Hidden,
+				UseShellExecute        = false,
+			};
+
+			using (var p = Process.Start (psi)) {
+				p.WaitForExit ();
+				return p.StandardOutput.ReadToEnd ().Trim ();
+			}
 		}
 	}
 }

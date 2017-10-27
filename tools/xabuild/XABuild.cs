@@ -66,6 +66,10 @@ namespace Xamarin.Android.Build
 			SetProperty (toolsets, "RoslynTargetsPath", Path.Combine (paths.MSBuildBin, "Roslyn"));
 			SetProperty (toolsets, "MonoAndroidToolsDirectory", paths.MonoAndroidToolsDirectory);
 			SetProperty (toolsets, "TargetFrameworkRootPath", paths.FrameworksDirectory + Path.DirectorySeparatorChar); //NOTE: Must include trailing \
+			if (!string.IsNullOrEmpty (paths.AndroidSdkDirectory))
+				SetProperty (toolsets, "AndroidSdkDirectory", paths.AndroidSdkDirectory);
+			if (!string.IsNullOrEmpty (paths.AndroidNdkDirectory))
+				SetProperty (toolsets, "AndroidNdkDirectory", paths.AndroidNdkDirectory);
 
 			var projectImportSearchPaths = toolsets.SelectSingleNode ("projectImportSearchPaths");
 			var searchPaths = projectImportSearchPaths.SelectSingleNode ($"searchPaths[@os='{paths.SearchPathsOS}']") as XmlElement;
