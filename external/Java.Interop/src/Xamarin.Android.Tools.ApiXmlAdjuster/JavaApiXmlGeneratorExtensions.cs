@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		static void Save (this JavaConstructor ctor, XmlWriter writer)
 		{
-			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, null, ctor.Parameters, ctor.Exceptions);
+			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions);
 		}
 		
 		static void Save (this JavaMethod method, XmlWriter writer)

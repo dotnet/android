@@ -57,6 +57,41 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			var m = t.Members.OfType<JavaMethod> ().First (_ => _.Name == "addContentView");
 			Assert.IsNotNull (m.BaseMethod, "base method not found");
 		}
+
+		[Test]
+		public void GenericConstructors ()
+		{
+			string xml = @"<api>
+  <package name='XXX'>
+    <class abstract='true' deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public'>
+      <constructor deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public'>
+        <typeParameters>
+          <typeParameter name='E' interfaceBounds='' jni-interfaceBounds='' />
+        </typeParameters>
+        <parameter name = 'e' type='E' jni-type='TE;'>
+        </parameter>
+      </constructor>
+    </class>
+  </package>
+</api>";
+			var xapi = new JavaApi ();
+			using (var xr = XmlReader.Create (new StringReader (xml)))
+				xapi.Load (xr, false);
+			xapi.StripNonBindables ();
+			xapi.Resolve ();
+			xapi.CreateGenericInheritanceMapping ();
+			xapi.MarkOverrides ();
+			xapi.FindDefects ();
+			var sw = new StringWriter ();
+			using (var xw = XmlWriter.Create (sw))
+				xapi.Save (xw);
+			xapi = new JavaApi ();
+			using (var xr = XmlReader.Create (new StringReader (sw.ToString ())))
+				xapi.Load (xr, true);
+			var t = xapi.Packages.First (_ => _.Name == "XXX").Types.First (_ => _.Name == "GenericConstructors");
+			var m = t.Members.OfType<JavaConstructor> ().FirstOrDefault ();
+			Assert.IsNotNull (m.TypeParameters, "constructor not found");
+		}
 	}
 }
 
