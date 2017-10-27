@@ -90,7 +90,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class Jni<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>> {
+	sealed class Jni<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>> {
 
 		internal    static  readonly    Jni<#= type.Type #>ValueMarshaler   Instance    = new Jni<#= type.Type #>ValueMarshaler ();
 
@@ -158,7 +158,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullable<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>?> {
+	sealed class JniNullable<#= type.Type #>ValueMarshaler : JniValueMarshaler<<#= type.Type #>?> {
 
 		internal    static  readonly    JniNullable<#= type.Type #>ValueMarshaler   Instance    = new JniNullable<#= type.Type #>ValueMarshaler ();
 

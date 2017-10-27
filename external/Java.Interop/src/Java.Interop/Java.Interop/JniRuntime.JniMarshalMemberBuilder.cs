@@ -143,7 +143,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
+	sealed class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
 		internal    static  IntPtrValueMarshaler Instance = new IntPtrValueMarshaler ();
 
 		public override Expression CreateParameterFromManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)

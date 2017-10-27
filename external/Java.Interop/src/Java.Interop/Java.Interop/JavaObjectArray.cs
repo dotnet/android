@@ -134,7 +134,7 @@ namespace Java.Interop
 				targetType == typeof (JavaObjectArray<T>);
 		}
 
-		internal class ValueMarshaler : JniValueMarshaler<IList<T>> {
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<T>> {
 
 			public override IList<T> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 			{

@@ -3,7 +3,7 @@
 namespace Java.Interop {
 
 	[JniTypeSignature (JniTypeName)]
-	class JavaProxyThrowable : JavaException
+	sealed class JavaProxyThrowable : JavaException
 	{
 		new internal    const   string  JniTypeName = "com/xamarin/java_interop/internal/JavaProxyThrowable";
 

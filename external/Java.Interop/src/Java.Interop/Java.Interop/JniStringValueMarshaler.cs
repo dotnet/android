@@ -7,7 +7,7 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop {
 
-	class JniStringValueMarshaler : JniValueMarshaler<string> {
+	sealed class JniStringValueMarshaler : JniValueMarshaler<string> {
 
 		internal    static  readonly    JniStringValueMarshaler     Instance    = new JniStringValueMarshaler ();
 

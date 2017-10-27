@@ -14,7 +14,7 @@ namespace Java.Interop
 
 		// Value was created via CreateMarshalCollection, and thus can
 		// be disposed of with impunity when no longer needed.
-		protected bool forMarshalCollection;
+		internal bool forMarshalCollection;
 
 		internal JavaArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)

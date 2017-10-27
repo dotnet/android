@@ -441,9 +441,8 @@ namespace Java.Interop
 					return r;
 				lock (Marshalers) {
 					JniValueMarshaler d;
-					if (Marshalers.TryGetValue (typeof (T), out d))
-						return (JniValueMarshaler<T>) d;
-					Marshalers.Add (typeof (T), d = new DelegatingValueMarshaler<T> (m));
+					if (!Marshalers.TryGetValue (typeof (T), out d))
+						Marshalers.Add (typeof (T), d = new DelegatingValueMarshaler<T> (m));
 					return (JniValueMarshaler<T>) d;
 				}
 			}
@@ -503,7 +502,7 @@ namespace Java.Interop
 		}
 	}
 
-	class VoidValueMarshaler : JniValueMarshaler {
+	sealed class VoidValueMarshaler : JniValueMarshaler {
 
 		internal    static  VoidValueMarshaler              Instance    = new VoidValueMarshaler ();
 
@@ -527,7 +526,7 @@ namespace Java.Interop
 		}
 	}
 
-	class JavaPeerableValueMarshaler : JniValueMarshaler<IJavaPeerable> {
+	sealed class JavaPeerableValueMarshaler : JniValueMarshaler<IJavaPeerable> {
 
 		internal    static  JavaPeerableValueMarshaler      Instance    = new JavaPeerableValueMarshaler ();
 
@@ -594,7 +593,7 @@ namespace Java.Interop
 		}
 	}
 
-	class DelegatingValueMarshaler<T> : JniValueMarshaler<T> {
+	sealed class DelegatingValueMarshaler<T> : JniValueMarshaler<T> {
 
 		JniValueMarshaler   ValueMarshaler;
 
@@ -634,7 +633,7 @@ namespace Java.Interop
 		}
 	}
 
-	class ProxyValueMarshaler : JniValueMarshaler<object> {
+	sealed class ProxyValueMarshaler : JniValueMarshaler<object> {
 
 		internal    static  ProxyValueMarshaler     Instance    = new ProxyValueMarshaler ();
 

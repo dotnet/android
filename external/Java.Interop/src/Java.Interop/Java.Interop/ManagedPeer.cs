@@ -10,7 +10,7 @@ using System.Text;
 namespace Java.Interop {
 
 	[JniTypeSignature (JniTypeName)]
-	/* static */ class ManagedPeer : JavaObject {
+	/* static */ sealed class ManagedPeer : JavaObject {
 
 		internal const string JniTypeName = "com/xamarin/java_interop/ManagedPeer";
 
@@ -209,7 +209,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniLocationException : Exception {
+	sealed class JniLocationException : Exception {
 
 		string stackTrace;
 

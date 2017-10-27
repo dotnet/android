@@ -86,7 +86,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniBooleanValueMarshaler : JniValueMarshaler<Boolean> {
+	sealed class JniBooleanValueMarshaler : JniValueMarshaler<Boolean> {
 
 		internal    static  readonly    JniBooleanValueMarshaler   Instance    = new JniBooleanValueMarshaler ();
 
@@ -154,7 +154,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableBooleanValueMarshaler : JniValueMarshaler<Boolean?> {
+	sealed class JniNullableBooleanValueMarshaler : JniValueMarshaler<Boolean?> {
 
 		internal    static  readonly    JniNullableBooleanValueMarshaler   Instance    = new JniNullableBooleanValueMarshaler ();
 
@@ -213,7 +213,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniSByteValueMarshaler : JniValueMarshaler<SByte> {
+	sealed class JniSByteValueMarshaler : JniValueMarshaler<SByte> {
 
 		internal    static  readonly    JniSByteValueMarshaler   Instance    = new JniSByteValueMarshaler ();
 
@@ -281,7 +281,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableSByteValueMarshaler : JniValueMarshaler<SByte?> {
+	sealed class JniNullableSByteValueMarshaler : JniValueMarshaler<SByte?> {
 
 		internal    static  readonly    JniNullableSByteValueMarshaler   Instance    = new JniNullableSByteValueMarshaler ();
 
@@ -340,7 +340,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniCharValueMarshaler : JniValueMarshaler<Char> {
+	sealed class JniCharValueMarshaler : JniValueMarshaler<Char> {
 
 		internal    static  readonly    JniCharValueMarshaler   Instance    = new JniCharValueMarshaler ();
 
@@ -408,7 +408,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableCharValueMarshaler : JniValueMarshaler<Char?> {
+	sealed class JniNullableCharValueMarshaler : JniValueMarshaler<Char?> {
 
 		internal    static  readonly    JniNullableCharValueMarshaler   Instance    = new JniNullableCharValueMarshaler ();
 
@@ -467,7 +467,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniInt16ValueMarshaler : JniValueMarshaler<Int16> {
+	sealed class JniInt16ValueMarshaler : JniValueMarshaler<Int16> {
 
 		internal    static  readonly    JniInt16ValueMarshaler   Instance    = new JniInt16ValueMarshaler ();
 
@@ -535,7 +535,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableInt16ValueMarshaler : JniValueMarshaler<Int16?> {
+	sealed class JniNullableInt16ValueMarshaler : JniValueMarshaler<Int16?> {
 
 		internal    static  readonly    JniNullableInt16ValueMarshaler   Instance    = new JniNullableInt16ValueMarshaler ();
 
@@ -594,7 +594,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniInt32ValueMarshaler : JniValueMarshaler<Int32> {
+	sealed class JniInt32ValueMarshaler : JniValueMarshaler<Int32> {
 
 		internal    static  readonly    JniInt32ValueMarshaler   Instance    = new JniInt32ValueMarshaler ();
 
@@ -662,7 +662,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableInt32ValueMarshaler : JniValueMarshaler<Int32?> {
+	sealed class JniNullableInt32ValueMarshaler : JniValueMarshaler<Int32?> {
 
 		internal    static  readonly    JniNullableInt32ValueMarshaler   Instance    = new JniNullableInt32ValueMarshaler ();
 
@@ -721,7 +721,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniInt64ValueMarshaler : JniValueMarshaler<Int64> {
+	sealed class JniInt64ValueMarshaler : JniValueMarshaler<Int64> {
 
 		internal    static  readonly    JniInt64ValueMarshaler   Instance    = new JniInt64ValueMarshaler ();
 
@@ -789,7 +789,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableInt64ValueMarshaler : JniValueMarshaler<Int64?> {
+	sealed class JniNullableInt64ValueMarshaler : JniValueMarshaler<Int64?> {
 
 		internal    static  readonly    JniNullableInt64ValueMarshaler   Instance    = new JniNullableInt64ValueMarshaler ();
 
@@ -848,7 +848,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniSingleValueMarshaler : JniValueMarshaler<Single> {
+	sealed class JniSingleValueMarshaler : JniValueMarshaler<Single> {
 
 		internal    static  readonly    JniSingleValueMarshaler   Instance    = new JniSingleValueMarshaler ();
 
@@ -916,7 +916,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableSingleValueMarshaler : JniValueMarshaler<Single?> {
+	sealed class JniNullableSingleValueMarshaler : JniValueMarshaler<Single?> {
 
 		internal    static  readonly    JniNullableSingleValueMarshaler   Instance    = new JniNullableSingleValueMarshaler ();
 
@@ -975,7 +975,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniDoubleValueMarshaler : JniValueMarshaler<Double> {
+	sealed class JniDoubleValueMarshaler : JniValueMarshaler<Double> {
 
 		internal    static  readonly    JniDoubleValueMarshaler   Instance    = new JniDoubleValueMarshaler ();
 
@@ -1043,7 +1043,7 @@ namespace Java.Interop {
 		}
 	}
 
-	class JniNullableDoubleValueMarshaler : JniValueMarshaler<Double?> {
+	sealed class JniNullableDoubleValueMarshaler : JniValueMarshaler<Double?> {
 
 		internal    static  readonly    JniNullableDoubleValueMarshaler   Instance    = new JniNullableDoubleValueMarshaler ();
 

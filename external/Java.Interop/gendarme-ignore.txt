@@ -198,6 +198,8 @@ M: System.Linq.Expressions.Expression`1<System.Func`4<System.Reflection.Construc
 
 R: Gendarme.Rules.Exceptions.DoNotSwallowErrorsCatchingNonSpecificExceptionsRule
 M: System.Reflection.Assembly Java.Interop.JniRuntime/JniTypeManager::TryLoadAssembly(System.Reflection.AssemblyName)
+# The exception is transitioned to Jni
+M:System.Void Java.Interop.ManagedPeer::Construct(System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)
 
 R: Gendarme.Rules.Exceptions.ExceptionShouldBeVisibleRule
 T: Java.Interop.JniLocationException
@@ -525,7 +527,6 @@ R: Gendarme.Rules.Performance.AvoidRepetitiveCastsRule
 # The "repetitive" cast is in a Debug.Assert() call, which should be "stand-alone"
 M: Java.Interop.JniObjectReference Java.Interop.JniEnvironment/Strings::NewString(System.Object)
 
-
 R: Gendarme.Rules.Performance.AvoidUncalledPrivateCodeRule
 # These are `public` for "completeness" reasons.
 M: Java.Interop.JniObjectReferenceType Java.Interop.JniEnvironment/References::GetObjectRefType(Java.Interop.JniObjectReference)
@@ -554,7 +555,6 @@ R: Gendarme.Rules.Performance.AvoidUnusedParametersRule
 # This method is virtual; *overrides* need the parameter, not the default implementation.
 M: System.Collections.Generic.IEnumerable`1<System.Type> Java.Interop.JniRuntime/JniTypeManager::CreateGetTypesForSimpleReferenceEnumerator(System.String)
 
-
 R: Gendarme.Rules.Performance.UseTypeEmptyTypesRule
 # The PCL profile we're using doen't *have* Type.EmptyTypes!
 M: System.Void Java.Interop.JniRuntime/JniTypeManager::.cctor()
@@ -568,3 +568,12 @@ M: System.Void Java.Interop.JniEnvironment/Exceptions::Throw(System.Exception)
 R: Gendarme.Rules.Correctness.DisposableFieldsShouldBeDisposedRule
 # We call Dispose on marshalMemberBuilder field in the JniRuntime::Dispose method. Looks like gendarme bug, it doesn't handle well the `?.` operator.
 T: Java.Interop.JniRuntime
+
+R: Gendarme.Rules.Performance.AvoidUnusedPrivateFieldsRule
+# The weak_handle and refs_added fields are used from C code, in java-interop-gc-bridge-mono.c, and thus invisible to Gendarme
+T: Java.Interop.JavaException
+T: Java.Interop.JavaObject
+
+R: Gendarme.Rules.Design.Generic.DoNotExposeGenericListsRule
+# We don't care here as we don't hold the list and create it on request. So to avoid performace penalty, we keep the list as return type
+M: System.Collections.Generic.List`1<Java.Interop.JniSurfacedPeerInfo> Java.Interop.JniRuntime/JniValueManager::GetSurfacedPeers()

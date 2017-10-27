@@ -8,7 +8,7 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop.Expressions {
 
-	class VariableCollection : KeyedCollection<string, ParameterExpression> {
+	sealed class VariableCollection : KeyedCollection<string, ParameterExpression> {
 
 		protected override string GetKeyForItem (ParameterExpression item)
 		{
@@ -162,6 +162,8 @@ namespace Java.Interop {
 		{
 			Func<JniObjectReference, IntPtr>    m = JniEnvironment.References.NewReturnToJniRef;
 			var r   = Expression.Variable (MarshalType, namePrefix + "_rtn");
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
 			context.LocalVariables.Add (r);
 			context.CreationStatements.Add (
 				Expression.Assign (r,
