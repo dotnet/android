@@ -5,14 +5,15 @@
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_NuGet>.nuget\NuGet.exe</_NuGet>
   </PropertyGroup>
+  <Import Project="$(_TopDir)\Configuration.props" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <JdkInfo
-        AndroidSdkPath="$(AndroidSdkPath)"
-        AndroidNdkPath="$(AndroidNdkPath)"
+        AndroidSdkPath="$(AndroidSdkDirectory)"
+        AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
         Output="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props">
       <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
