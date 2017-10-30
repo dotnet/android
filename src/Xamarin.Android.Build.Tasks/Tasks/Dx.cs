@@ -18,6 +18,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string DxJarPath { get; set; }
 
+		public string DxExtraArguments { get; set; }
+
 		[Required]
 		public string OutputDexDirectory { get; set; }
 
@@ -76,8 +78,9 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-jar ", DxJarPath);
 
 			//cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
-			
-			cmd.AppendSwitch ("--dex");
+
+			if (!string.IsNullOrEmpty (DxExtraArguments))
+				cmd.AppendSwitch (DxExtraArguments); // it should contain "--dex".
 			cmd.AppendSwitch ("--verbose");
 
 			cmd.AppendSwitchIfNotNull ("--output=", context_dex);
