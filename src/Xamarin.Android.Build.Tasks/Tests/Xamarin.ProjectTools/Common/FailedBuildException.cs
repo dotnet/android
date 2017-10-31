@@ -25,6 +25,12 @@ namespace Xamarin.ProjectTools
 		}
 
 		public string BuildLog { get; set; }
+
+		public override string StackTrace {
+			get {
+				return $"{base.StackTrace}\nBuildLog: {BuildLog}";
+			}
+		}
 	}
 }
 

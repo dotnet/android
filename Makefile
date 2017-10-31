@@ -116,6 +116,7 @@ endif	# msbuild
 prepare-image-dependencies:
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
 		/p:AndroidSupportedHostJitAbis=mxe-Win32:mxe-Win64
+	cat bin/Build$(CONFIGURATION)/prepare-image-dependencies.sh | tr -d '\r' > prepare-image-dependencies.sh
 
 include build-tools/scripts/BuildEverything.mk
 include tests/api-compatibility/api-compatibility.mk

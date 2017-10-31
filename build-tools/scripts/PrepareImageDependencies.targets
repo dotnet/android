@@ -32,6 +32,12 @@
         Include="@(RequiredProgram->'%(Homebrew)')"
       />
     </ItemGroup>
+    <ItemGroup>
+      <_DarwinPkg
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Identity)' == 'mono' "
+        Include="%(RequiredProgram.DarwinMinimumUrl)"
+      />
+    </ItemGroup>
     <PropertyGroup>
       <_Packages>@(_Package->'%(Identity)', '
 ')</_Packages>
@@ -39,11 +45,13 @@
 ')</_Dirs>
       <_Brews>@(_Brew->'%(Identity)', '
 ')</_Brews>
+      <_DarwinPkgs>@(_DarwinPkg->'%(Identity)', '
+')</_DarwinPkgs>
     </PropertyGroup>
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)prepare-image-dependencies.sh.in"
-        DestinationFile="$(MSBuildThisFileDirectory)\..\..\prepare-image-dependencies.sh"
-        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews)">
+        DestinationFile="$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\prepare-image-dependencies.sh"
+        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews);@PKG_URLS@=$(_DarwinPkgs)">
     </ReplaceFileContents>
   </Target>
 </Project>

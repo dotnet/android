@@ -609,6 +609,8 @@ namespace App1
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + ".apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
+						if (data == null)
+							data = File.ReadAllBytes (assetsPdb);
 						var filedata = File.ReadAllBytes (linkSrc);
 						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", linkSrc);
 					}
