@@ -269,7 +269,7 @@ namespace Xamarin.ProjectTools
 										Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
 									}
 								}
-								if (line.StartsWith ("at (wrapper managed-to-native", StringComparison.OrdinalIgnoreCase)) {
+								if (line.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
 									nativeCrashDetected = true;
 									break;
 								}
