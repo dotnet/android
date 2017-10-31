@@ -68,6 +68,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   
   <!-- Get our Build Actions to show up in VS -->
   <ItemGroup>
+    <AvailableItemName Include="AndroidDocumentationPath" />
     <AvailableItemName Include="EmbeddedJar" />
     <AvailableItemName Include="EmbeddedNativeLibrary" />
     <AvailableItemName Include="EmbeddedReferenceJar" />
