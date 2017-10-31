@@ -241,37 +241,52 @@ namespace Xamarin.ProjectTools
 			psi.RedirectStandardError = true;
 			psi.StandardErrorEncoding = Encoding.UTF8;
 			psi.StandardOutputEncoding = Encoding.UTF8;
-			var p = Process.Start (psi);
-			var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0,10,0).TotalMilliseconds);
-			var result = ranToCompletion && p.ExitCode == 0;
 
-			LastBuildTime = DateTime.UtcNow - start;
+			bool nativeCrashDetected = false;
+			bool result = false;
+			int attempts = 1;
+			for (int attempt = 0; attempt < attempts; attempt++) {
+				var p = Process.Start (psi);
+				var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
+				result = ranToCompletion && p.ExitCode == 0;
 
-			var sb = new StringBuilder ();
-			sb.AppendLine ( psi.FileName + " " + args.ToString () + Environment.NewLine);
-			if (!ranToCompletion)
-				sb.AppendLine ("Build Timed Out!");
-			if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
-				using (var fs = File.OpenRead (buildLogFullPath)) {
-					using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
-						string line;
-						while ((line = sr.ReadLine ()) != null) {
-							sb.AppendLine (line);
-							if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
-								var match = timeElapsedRegEx.Match (line);
-								if (match.Success) {
-									LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
-									Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
+				LastBuildTime = DateTime.UtcNow - start;
+
+				var sb = new StringBuilder ();
+				sb.AppendLine (psi.FileName + " " + args.ToString () + Environment.NewLine);
+				if (!ranToCompletion)
+					sb.AppendLine ("Build Timed Out!");
+				if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
+					using (var fs = File.OpenRead (buildLogFullPath)) {
+						using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
+							string line;
+							while ((line = sr.ReadLine ()) != null) {
+								sb.AppendLine (line);
+								if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
+									var match = timeElapsedRegEx.Match (line);
+									if (match.Success) {
+										LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+										Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
+									}
+								}
+								if (line.StartsWith ("at (wrapper managed-to-native", StringComparison.OrdinalIgnoreCase)) {
+									nativeCrashDetected = true;
+									break;
 								}
 							}
 						}
 					}
 				}
-			}
-			sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
-			sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
+				sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
+				sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
 
-			LastBuildOutput = sb.ToString ();
+				LastBuildOutput = sb.ToString ();
+				if (!nativeCrashDetected) {
+					Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
+					continue;
+				}
+			}
+
 
 			if (buildLogFullPath != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
