@@ -1150,8 +1150,8 @@ namespace App1
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
 						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
+						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
+						Assert.AreNotEqual (default (ProjectBuilder.RuntimeInfo), inApkRuntime, "Could not find the actual runtime used.");
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
 					}
 				}
