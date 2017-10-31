@@ -28,7 +28,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			string _;
 			var path = Which.GetProgramLocation ("sdkmanager", out _, new [] { Path.Combine (AndroidSdkDirectory, "tools", "bin") });
-			var psi = new ProcessStartInfo (path, "--licenses") { UseShellExecute = false, RedirectStandardInput = true };
+			var psi = new ProcessStartInfo (path, "--update") { UseShellExecute = false, RedirectStandardInput = true };
 			var proc = Process.Start (psi);
 			for (int i = 0; i < 10; i++)
 				proc.StandardInput.WriteLine ('y');

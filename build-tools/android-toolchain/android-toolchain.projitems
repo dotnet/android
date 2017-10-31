@@ -19,7 +19,7 @@
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-linux-3952940.zip">
+    <AndroidSdkItem Include="tools_r25.2.5-linux.zip">
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
@@ -38,7 +38,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-darwin-3952940.zip">
+    <AndroidSdkItem Include="tools_r25.2.5-macosx.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
@@ -57,7 +57,7 @@
       <HostOS>Windows</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-windows-3952940.zip">
+    <AndroidSdkItem Include="tools_r25.2.5-windows.zip">
       <HostOS>Windows</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
