@@ -68,13 +68,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Ensure that the user has the platform they are targeting installed
-			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
-			var jarpath = Path.Combine (platformPath ?? MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (AndroidApiLevel), "android.jar");
-
-			if (!File.Exists (jarpath)) {
-				Log.LogError ("Could not find android.jar for API Level {0}.  This means the Android SDK platform for API Level {0} is not installed.  Either install it in the Android SDK Manager, or change your Android Bindings project to target an API version that is installed. ({1} missing.)", AndroidApiLevel, jarpath);
-				return false;
-			}
+			var jarpath = MonoAndroidHelper.TryGetAndroidJarPath (Log, AndroidApiLevel);
+			if (jarpath == null)
+				return !Log.HasLoggedErrors;
 
 			// Ensure that all requested jars exist
 			foreach (var jar in SourceJars)

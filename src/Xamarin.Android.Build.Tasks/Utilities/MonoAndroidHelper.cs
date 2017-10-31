@@ -530,5 +530,21 @@ namespace Xamarin.Android.Tasks
 			foreach (var ext in pathExts)
 				yield return Path.ChangeExtension (executable, ext);
 		}
+
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform)
+		{
+			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
+			if (platformPath == null) {
+				var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
+				log.LogError ("XA1234", "Could not find android.jar for API Level {0}. " +
+						"This means the Android SDK platform for API Level {0} is not installed. " +
+						"Either install it in the Android SDK Manager (Tools > Open Android SDK Manager...), " +
+						"or change your Xamarin.Android project to target an API version that is installed. " +
+						"({1} missing.)",
+						platform, Path.Combine (expectedPath, "android.jar"));
+				return null;
+			}
+			return Path.Combine (platformPath, "android.jar");
+		}
 	}
 }
