@@ -27,17 +27,13 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] JavaLibrariesToCompile { get; set; }
 
-		public string OptionalObfuscatedJarFile { get; set; }
+		public ITaskItem [] AlternativeJarFiles { get; set; }
 
 		public bool UseDx { get; set; }
 
 		public bool MultiDexEnabled { get; set; }
 		
 		public string MultiDexMainDexListFile { get; set; }
-
-		public string JavaOptions { get; set; }
-
-		public string JavaMaximumHeapSize { get; set; }
 
 		[Output]
 		public string [] DexOutputs { get; set; }
@@ -65,7 +61,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  MultiDexEnabled: {0}", MultiDexEnabled);
 			Log.LogDebugMessage ("  MultiDexMainDexListFile: {0}", MultiDexMainDexListFile);
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
-			
+			Log.LogDebugTaskItems ("  AlternativeJarFiles:", AlternativeJarFiles);
+
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
 
@@ -117,9 +114,11 @@ namespace Xamarin.Android.Tasks
 
 
 			// .jar files
-			if (File.Exists (OptionalObfuscatedJarFile))
-				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
-			else {
+			if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
+				Log.LogDebugMessage ("  processing AlternativeJarFiles...");
+				cmd.AppendFileNamesIfNotNull (AlternativeJarFiles, " ");
+			} else {
+				Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
 				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "classes.zip"));
 				if (!File.Exists (zip)) {
 					throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");

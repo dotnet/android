@@ -61,6 +61,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.Desugar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -251,6 +252,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
 	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
+	<AndroidEnableDesugar Condition="'$(AndroidEnableDesugar)'==''">False</AndroidEnableDesugar>
 
 	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == ''">
 		{sdk.dir}tools\proguard\proguard-android.txt;
@@ -821,6 +823,12 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(AndroidSdkBuildToolsPath)\lib\dx.jar">
 		<Output TaskParameter="Value" PropertyName="DxJarPath"
 				Condition="'$(DxJarPath)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\desugar_deploy.jar">
+		<Output TaskParameter="Value" PropertyName="DesugarJarPath"
+				Condition="'$(DesugarJarPath)' == ''"
 		/>
 	</CreateProperty>
 
@@ -2091,6 +2099,33 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(IntermediateOutputPath)_dex_stamp">
 
+  <!-- Desugar if exists -->
+  <Error
+    Condition="'$(AndroidEnableDesugar)' == 'True' And !Exists('$(DesugarJarPath)')"
+    Text="'desugar' tool is not found. The specified DesugarJarPath '$(DesugarJarPath)' does not exist." />
+  <Desugar
+    Condition="'$(AndroidEnableDesugar)' == 'True'"
+    DesugarExtraArguments="$(DesugarExtraArguments)"
+    JavaPlatformJarPath="$(JavaPlatformJarPath)"
+    DesugarJarPath="$(DesugarJarPath)"
+    ToolPath="$(JavaToolPath)"
+    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+    JavaOptions="$(JavaOptions)"
+    InputClassesDirectory="$(IntermediateOutputPath)android\bin\classes"
+    InputJars="@(_JavaLibrariesToCompileForAppDx)"
+    OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
+    <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
+  </Desugar>
+
+  <CreateItem Include="@(_DesugaredJars)"
+    Condition="'$(AndroidEnableDesugar)' == 'True'">
+    <Output TaskParameter="Include" ItemName="_JarsToProguard" />
+  </CreateItem>
+  <CreateItem Include="@(_JavaLibrariesToCompile)"
+    Condition="'$(AndroidEnableDesugar)' != 'True'">
+    <Output TaskParameter="Include" ItemName="_JarsToProguard" />
+  </CreateItem>
+  
   <MakeDir Directories="$(IntermediateOutputPath)proguard" />
 
   <Proguard
@@ -2108,7 +2143,7 @@ because xbuild doesn't support framework reference assemblies.
     ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
     ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
     ProguardConfigurationFiles="$(ProguardConfigFiles)"
-    JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
+    JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
     ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
     DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
     ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
@@ -2119,6 +2154,17 @@ because xbuild doesn't support framework reference assemblies.
     PrintMappingOutput="$(IntermediateOutputPath)proguard\mapping.txt"
      />
 
+  <CreateItem 
+    Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
+    Condition="'$(AndroidEnableProguard)' == 'True' and '$(_ProguardProjectConfiguration)' != ''">
+    <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
+  </CreateItem>
+  <CreateItem
+    Include="@(_DesugaredJars)"
+    Condition="('$(AndroidEnableProguard)' != 'True' or '$(_ProguardProjectConfiguration)' == '') and '$(AndroidEnableDesugar)' == 'True'">
+    <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
+  </CreateItem>
+
   <CreateMultiDexMainDexClassList
     Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
     ToolPath="$(JavaToolPath)"
@@ -2126,7 +2172,7 @@ because xbuild doesn't support framework reference assemblies.
     ProguardJarPath="$(ProguardJarPath)"
     AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
-    JavaLibraries="@(_JavaLibrariesToCompile)"
+    JavaLibraries="@(_JarsToProguard)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     CustomMainDexListFiles="@(MultiDexMainDexList)"
     >
@@ -2149,7 +2195,7 @@ because xbuild doesn't support framework reference assemblies.
     MultiDexEnabled="$(AndroidEnableMultiDex)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     JavaLibrariesToCompile="@(_JavaLibrariesToCompileForAppDx)"
-    OptionalObfuscatedJarFile="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
+    AlternativeJarFiles="@(_AlternativeJarForAppDx)"
   />
   <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
 

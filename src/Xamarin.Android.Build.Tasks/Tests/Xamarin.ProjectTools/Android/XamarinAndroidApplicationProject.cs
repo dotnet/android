@@ -80,6 +80,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.EnableProguard, value.ToString ()); }
 		}
 
+		public bool EnableDesugar {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
+		}
+
 		public string AndroidFastDeploymentType {
 			get { return GetProperty (KnownProperties.AndroidFastDeploymentType); }
 			set { SetProperty (KnownProperties.AndroidFastDeploymentType, value); }

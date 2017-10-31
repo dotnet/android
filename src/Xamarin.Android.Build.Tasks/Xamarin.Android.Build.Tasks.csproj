@@ -491,6 +491,11 @@
     <Compile Include="Utilities\GdbPaths.cs" />
     <Compile Include="Utilities\SatelliteAssembly.cs" />
     <Compile Include="Tasks\AndroidApkSigner.cs" />
+    <Compile Include="Tasks\Desugar.cs" />
+    <None Include="Resources\desugar_deploy.jar">
+      <Link>desugar_deploy.jar</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />

@@ -74,6 +74,10 @@ namespace Xamarin.Android.Tasks
 		string file;
 		int line, column;
 
+		public string JavaOptions { get; set; }
+
+		public string JavaMaximumHeapSize { get; set; }
+
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
