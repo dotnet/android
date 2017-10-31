@@ -368,7 +368,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </CreateItem>
 
     <ItemGroup>
-      <_AndroidDocumentationPath Include="$(AndroidDocumentationPath)" />
+      <_AndroidDocumentationPath Include="@(AndroidDocumentationPath)" />
       <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
       <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
       <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
