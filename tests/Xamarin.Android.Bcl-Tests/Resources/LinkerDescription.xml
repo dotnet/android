@@ -37,6 +37,20 @@
     <type fullname="System.Reflection.AssemblyKeyNameAttribute">
       <method name=".ctor"/>
     </type>
+    <type fullname="System.Reflection.AssemblyKeyFileAttribute">
+      <method name=".ctor"/>
+    </type>
+    <type fullname="System.AttributeUsageAttribute">
+      <method name=".ctor"/>
+      <method name="get_AllowMultiple"/>
+      <method name="set_AllowMultiple"/>
+    </type>
+    <type fullname="System.Runtime.InteropServices.MarshalAsAttribute">
+      <method name=".ctor"/>
+      <field signature="System.Int32 SizeConst"/>
+      <field signature="System.Type MarshalTypeRef"/>
+      <field signature="System.String MarshalCookie"/>
+    </type>
     <type fullname="System.Runtime.CompilerServices.MethodImplAttribute">
       <method name=".ctor"/>
     </type>

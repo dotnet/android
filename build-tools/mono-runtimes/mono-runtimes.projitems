@@ -211,7 +211,7 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile4_x=no --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>dylib</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
@@ -232,7 +232,7 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile2=no --with-profile4=no --with-profile4_5=yes --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
+      <ConfigureFlags>--enable-dynamic-btls --enable-maintainer-mode --without-ikvm-native --with-monodroid --with-mcs-docs=no --disable-mono-debugger --with-profile4_x=no --disable-boehm --enable-nls=no --disable-iconv</ConfigureFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>

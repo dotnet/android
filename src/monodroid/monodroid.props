@@ -3,7 +3,7 @@
   <PropertyGroup>
     <_DebugCFlags>-ggdb3 -O0 -fno-omit-frame-pointer</_DebugCFlags>
     <_ReleaseCFlags>-g -O2</_ReleaseCFlags>
-    <_CommonCFlags>-Ijni -Ijni/zip "-I$(MonoSourceFullPath)\eglib\src" -std=c99 -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) -D_REENTRANT -DHAVE_CONFIG_H -DMONO_DLL_EXPORT -DJI_DLL_EXPORT -fno-strict-aliasing -ffunction-sections -fvisibility=hidden -Wformat -Werror=format-security</_CommonCFlags>
+    <_CommonCFlags>-Ijni -Ijni/zip "-I$(MonoSourceFullPath)\mono\eglib" -std=c99 -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) -D_REENTRANT -DHAVE_CONFIG_H -DMONO_DLL_EXPORT -DJI_DLL_EXPORT -fno-strict-aliasing -ffunction-sections -fvisibility=hidden -Wformat -Werror=format-security</_CommonCFlags>
     <_HostUnixCFlags>$(_CommonCFlags) -Wa,--noexecstack</_HostUnixCFlags>
     <_HostUnixLdFlags>-Wall -lstdc++ -lz -shared -fpic</_HostUnixLdFlags>
     <_HostCommonWinCFlags>$(_CommonCFlags) -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer</_HostCommonWinCFlags>

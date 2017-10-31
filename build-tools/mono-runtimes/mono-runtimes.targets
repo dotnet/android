@@ -31,7 +31,7 @@
   </ItemGroup>
   <PropertyGroup>
     <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
-    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\net_4_x</_MonoOutputDir>
+    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid_tools</_MonoOutputDir>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -274,11 +274,11 @@
       />
       <_RuntimeEglibHeaderSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\eglib\config.h');@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\eglib\src\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\eglib\eglib-config.h')"
       />
       <_RuntimeEglibHeaderOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
-          Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\config.h');@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
@@ -305,7 +305,7 @@
         Files="@(_RuntimeSource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_BclProfileItems);@(_MonoBtlsSource)"
     />
     <Exec
-        Command="make $(MakeConcurrency) -i test # %(_MonoRuntime.Identity)"
+        Command="make $(MakeConcurrency) test # %(_MonoRuntime.Identity)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\runtime"
     />
