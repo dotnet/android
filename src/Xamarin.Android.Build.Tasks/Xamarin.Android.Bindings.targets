@@ -366,17 +366,20 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       <Output TaskParameter="Include" ItemName="ReferenceJar" />
     </CreateItem>
 
+    <ItemGroup>
+      <_AndroidDocumentationPath Include="$(AndroidDocumentationPath)" />
+      <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
+      <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
+      <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
+      <_AndroidDocumentationPath Include="$(DroidDocPaths)" />
+      <_AndroidDocumentationPath Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
+    </ItemGroup>
+    
     <!-- Extract the API from the .jar file and store as .xml, using either class-parse or jar2xml -->
-	
     <ClassParse Condition="'$(AndroidClassParser)' == 'class-parse'"
       OutputFile="$(ApiOutputFile).class-parse"
       SourceJars="@(EmbeddedJar);@(InputJar)"
-      JavaDocPaths="$(JavaDocPaths)"
-      Java7DocPaths="$(Java7DocPaths)"
-      Java8DocPaths="$(Java8DocPaths)"
-      DroidDocPaths="$(DroidDocPaths)"
-      ApiXmlDocPaths="$(ApiXmlDocPaths)"
-      JavaDocs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
+      DocumentationPaths="@(_AndroidDocumentationPath)"
     />
 
     <BindingsGenerator Condition="'$(AndroidClassParser)' == 'class-parse'"
