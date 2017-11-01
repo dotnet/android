@@ -326,11 +326,11 @@ namespace Xamarin.Android.Tasks
 					sb.AppendLine (e.Data);
 			}
 			);
-			if (result != 0) {
+			var versionInfo = sb.ToString ();
+			if (result != 0 || versionInfo.Contains ("unknown")) {
 				Log.LogWarning ($"Could not get version from '{tool}'");
 				return new Version ();
 			}
-			var versionInfo = sb.ToString ();
 			// lint: version 26.0.2
 			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
 			Version versionNumber;
