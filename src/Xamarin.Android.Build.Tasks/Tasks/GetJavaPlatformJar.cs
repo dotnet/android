@@ -69,24 +69,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			platform            = GetTargetSdkVersion (platform, target_sdk);
-			JavaPlatformJarPath = Path.Combine (MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions), "android.jar");
-
-			if (!File.Exists (JavaPlatformJarPath)) {
-				Log.LogError ("Could not find android.jar for API Level {0}. " +
-						"This means the Android SDK platform for API Level {0} is not installed. " +
-						"Either install it in the Android SDK Manager (Tools > Open Android SDK Manager...), " +
-						"or change your Xamarin.Android project to target an API version that is installed. " +
-						"({1} missing.)",
-						platform, JavaPlatformJarPath);
-				return false;
-			}
+			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform);
+			if (JavaPlatformJarPath == null)
+				return !Log.HasLoggedErrors;
 
 			TargetSdkVersion = platform;
 
 			Log.LogDebugMessage ("  [Output] JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  [Output] TargetSdkVersion: {0}", TargetSdkVersion);
 
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 
 		string GetTargetSdkVersion (string target, XAttribute target_sdk)
