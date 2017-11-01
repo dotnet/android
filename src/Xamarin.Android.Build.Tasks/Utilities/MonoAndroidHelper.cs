@@ -362,11 +362,13 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			var dirInfo = new DirectoryInfo (directory);
-			dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+			if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 
 			foreach (var dir in Directory.EnumerateDirectories (directory, "*", SearchOption.AllDirectories)) {
 				dirInfo = new DirectoryInfo (dir);
-				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+				if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 			}
 
 			foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
