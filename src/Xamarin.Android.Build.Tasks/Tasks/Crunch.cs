@@ -80,9 +80,14 @@ namespace Xamarin.Android.Tasks
 			if (!imageFiles.Any ())
 				return true;
 
+			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
+				CancellationToken = Token,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Current,
+			};
+
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
 
-			ThreadingTasks.Parallel.ForEach (imageGroups, () => 0, DoExecute, (obj) => { Complete (); });
+			ThreadingTasks.Parallel.ForEach (imageGroups, options, () => 0, DoExecute, (obj) => { Complete (); });
 
 			return !Log.HasLoggedErrors;
 		}
