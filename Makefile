@@ -11,6 +11,7 @@ NUNIT_TESTS = \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Build.Tests.dll
 
 NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
+XABUILD       = bin/$(CONFIGURATION)/bin/xabuild
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -25,14 +26,14 @@ include build-tools/scripts/msbuild.mk
 ifeq ($(USE_MSBUILD),1)
 _SLN_BUILD  = $(MSBUILD)
 else    # $(MSBUILD) != 1
-_SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
+_SLN_BUILD  = MSBUILD="$(MSBUILD)" $(XABUILD)
 endif   # $(USE_MSBUILD) == 1
 
 all::
 	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" $(XABUILD) $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
@@ -130,7 +131,7 @@ rename-test-cases:
 
 clean:
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
-	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
+	$(XABUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
 
 distclean:
 	# It may fail if we're cleaning a half-built tree, no harm done if we ignore it
@@ -181,7 +182,7 @@ TEST_APK_PROJECTS_AOT = \
 # Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
 define BUILD_TEST_APK
 	# Must use xabuild to ensure correct assemblies are resolved
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(2) $(1)
+	MSBUILD="$(MSBUILD)" $(XABUILD) $(MSBUILD_FLAGS) /t:SignAndroidPackage $(2) $(1)
 endef	# BUILD_TEST_APK
 
 # Syntax: $(call RUN_APK_TESTS,projects,additional_msbuild_flags)
