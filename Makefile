@@ -12,6 +12,9 @@ NUNIT_TESTS = \
 
 NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 XABUILD       = bin/$(CONFIGURATION)/bin/xabuild
+ifeq ($(wildcard $(XABUILD)),)
+	XABUILD   = tools/scripts/xabuild
+endif
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
