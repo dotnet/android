@@ -281,7 +281,7 @@ namespace Xamarin.ProjectTools
 				sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
 
 				LastBuildOutput = sb.ToString ();
-				if (!nativeCrashDetected) {
+				if (nativeCrashDetected) {
 					Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
 					continue;
 				}
