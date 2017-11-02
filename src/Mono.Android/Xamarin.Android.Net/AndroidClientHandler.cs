@@ -207,9 +207,6 @@ namespace Xamarin.Android.Net
 			if (url == null)
 				return String.Empty;
 
-			if (String.IsNullOrEmpty (url.Query))
-				return Uri.EscapeUriString (url.ToString ());
-
 			// UriBuilder takes care of encoding everything properly
 			var bldr = new UriBuilder (url);
 			if (url.IsDefaultPort)
