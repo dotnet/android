@@ -14,10 +14,11 @@ namespace Xamarin.ProjectTools
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
 		public LoggerVerbosity Verbosity { get; set; }
-		public string LastBuildOutput { get; set; }
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
+
+		public List<Assertion> Assertions { get; set; } = new List<Assertion> ();
 
 		string GetVisualStudio2017Directory ()
 		{
@@ -187,11 +188,6 @@ namespace Xamarin.ProjectTools
 				? Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
 				: null;
 
-			var logger = buildLogFullPath == null
-				? string.Empty
-				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
-					buildLogFullPath, Verbosity.ToString ().ToLower ());
-
 			var start = DateTime.UtcNow;
 			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
  			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
@@ -208,8 +204,8 @@ namespace Xamarin.ProjectTools
 
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} {2}",
-				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, logger);
+			args.AppendFormat ("{0} /t:{1} /v:{2}",
+				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, Verbosity);
 			if (RunningMSBuild)
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
@@ -246,47 +242,59 @@ namespace Xamarin.ProjectTools
 			bool result = false;
 			int attempts = 1;
 			for (int attempt = 0; attempt < attempts; attempt++) {
-				var p = Process.Start (psi);
-				var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
-				result = ranToCompletion && p.ExitCode == 0;
+				using (var p = new Process { StartInfo = psi }) {
 
-				LastBuildTime = DateTime.UtcNow - start;
+					p.OutputDataReceived += (sender, e) => {
 
-				var sb = new StringBuilder ();
-				sb.AppendLine (psi.FileName + " " + args.ToString () + Environment.NewLine);
-				if (!ranToCompletion)
-					sb.AppendLine ("Build Timed Out!");
-				if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
-					using (var fs = File.OpenRead (buildLogFullPath)) {
-						using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
-							string line;
-							while ((line = sr.ReadLine ()) != null) {
-								sb.AppendLine (line);
-								if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
-									var match = timeElapsedRegEx.Match (line);
-									if (match.Success) {
-										LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
-										Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
-									}
-								}
-								if (line.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
-									nativeCrashDetected = true;
-									break;
-								}
+						if (e.Data.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
+							var match = timeElapsedRegEx.Match (e.Data);
+							if (match.Success) {
+								LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+								Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
+							}
+						}
+
+						if (e.Data.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
+							nativeCrashDetected = true;
+						}
+
+						foreach (var assertion in Assertions) {
+							assertion.Assert (e.Data);
+						}
+					};
+
+					p.BeginOutputReadLine ();
+					p.BeginErrorReadLine ();
+
+					var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
+					result = ranToCompletion && p.ExitCode == 0;
+
+					LastBuildTime = DateTime.UtcNow - start;
+
+					var sb = new StringBuilder ();
+					sb.AppendLine (psi.FileName + " " + args.ToString () + Environment.NewLine);
+					if (!ranToCompletion)
+						sb.AppendLine ("Build Timed Out!");
+					if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
+						using (var fs = File.OpenRead (buildLogFullPath)) {
+							using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
+								string line;
+								while ((line = sr.ReadLine ()) != null) {
+									sb.AppendLine (line);
+									
 							}
 						}
 					}
-				}
-				sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
-				sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
+					sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
+					sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
 
-				LastBuildOutput = sb.ToString ();
-				if (nativeCrashDetected) {
-					Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
-					continue;
+					LastBuildOutput = sb.ToString ();
+					if (nativeCrashDetected) {
+						Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
+						continue;
+					}
 				}
 			}
-
 
 			if (buildLogFullPath != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
