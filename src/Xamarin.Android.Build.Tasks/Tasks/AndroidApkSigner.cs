@@ -56,6 +56,7 @@ namespace Xamarin.Android.Tasks
 			if (manifest.TargetSdkVersion.HasValue)
 				maxSdk = manifest.TargetSdkVersion.Value;
 
+			minSdk = Math.Min (minSdk, maxSdk);
 			cmd.AppendSwitch ("sign");
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("--ks-pass pass:", StorePass);
