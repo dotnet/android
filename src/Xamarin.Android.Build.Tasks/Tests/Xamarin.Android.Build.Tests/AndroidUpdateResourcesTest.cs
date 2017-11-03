@@ -1083,5 +1083,22 @@ namespace Lib1 {
 				}
 			}
 		}
+
+		[Test]
+		public void CheckDefaultTranslationWarnings ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem.Folder ("Resources\\values-fr\\") {
+					},
+				},
+			};
+			using (var builder = CreateApkBuilder (path, false, false)) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				StringAssert.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
+			}
+		}
 	}
 }

@@ -15,5 +15,6 @@ namespace Xamarin.ProjectTools
 		public const string Compile = "Compile";
 		public const string EmbeddedResource = "EmbeddedResource";
 		public const string Content = "Content";
+		public const string Folder = "Folder";
 	}
 }

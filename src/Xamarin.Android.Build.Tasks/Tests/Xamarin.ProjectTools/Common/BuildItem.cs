@@ -34,6 +34,18 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public class Folder : BuildItem
+		{
+			public Folder (string include)
+				: this (() => include)
+			{
+			}
+			public Folder (Func<string> include)
+				: base (BuildActions.Folder, include)
+			{
+			}
+		}
+
 		public class Content : BuildItem
 		{
 			public Content (string include)
