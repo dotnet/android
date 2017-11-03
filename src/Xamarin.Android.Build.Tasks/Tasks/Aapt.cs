@@ -365,7 +365,7 @@ namespace Xamarin.Android.Tasks
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
 					line = int.Parse (match.Groups["line"].Value) + 1;
 				var error = match.Groups["message"].Value;
-				if (error.Contains ("warning")) {
+				if (error.Contains ("warning") || singleLine.Contains ("warning")) {
 					LogWarning (singleLine);
 					return;
 				}
