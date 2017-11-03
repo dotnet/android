@@ -500,21 +500,21 @@ namespace UnnamedProject
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.AssertTargetIsBuilt ("_GenerateJavaDesignerForComponent");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
+				AssertBuild (b);
+				b.AssertAllTargetsSkipped ("_GenerateJavaDesignerForComponent");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should have been skipped");
+				AssertBuild (b);
 				var files = Directory.EnumerateFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcecache")
 					, "abc_fade_in.xml", SearchOption.AllDirectories);
 				Assert.AreEqual (1, files.Count (), "There should only be one abc_fade_in.xml in the resourcecache");
 				var resFile = files.First ();
 				Assert.IsTrue (File.Exists (resFile), "{0} should exist", resFile);
 				File.SetLastWriteTime (resFile, DateTime.UtcNow);
+				b.AssertTargetIsBuilt ("_GenerateJavaDesignerForComponent");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
+				AssertBuild (b);
 			}
 		}
 
