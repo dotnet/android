@@ -177,6 +177,15 @@ namespace Xamarin.Android.Build.Tests
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
+		protected void AssertBuild(ProjectBuilder builder)
+		{
+			foreach (var assertion in builder.Assertions) {
+				if (!assertion.Passed) {
+					Assert.Fail (assertion.ToString ());
+				}
+			}
+		}
+
 		[OneTimeSetUp]
 		public void FixtureSetup ()
 		{

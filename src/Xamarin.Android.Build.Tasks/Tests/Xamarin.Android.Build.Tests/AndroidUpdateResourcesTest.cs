@@ -27,11 +27,15 @@ namespace Xamarin.Android.Build.Tests
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
+
+				b.AssertTargetSkipped ("_Sign");
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
+				AssertBuild (b);
+
+				b.AssertTargetIsBuilt ("_Sign");
 				proj.AndroidResources.First ().Timestamp = null; // means "always build"
 				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
+				AssertBuild (b);
 			}
 		}
 
@@ -85,10 +89,13 @@ using System.Runtime.CompilerServices;
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
+					if (useManagedParser)
+						b.Assertions.Add (new Assertion (o => o.Contains ("Skipping GetAdditionalResourcesFromAssemblies"), "failed to skip the downloading of files."));
+					else
+						b.Assertions.Add (new Assertion (o => !o.Contains ("Skipping GetAdditionalResourcesFromAssemblies"), "failed to skip the downloading of files."));
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping GetAdditionalResourcesFromAssemblies"),
-						"failed to skip the downloading of files.");
+					AssertBuild (b);
 					var items = new List<string> ();
 					string first = null;
 					if (!useManagedParser) {
@@ -539,9 +546,10 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
+				b.Assertions.Add (new Assertion (o => o.Contains ("APT0000: ")));
+				b.Assertions.Add (new Assertion (o => o.Contains ("2 Error(s)")));
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
+				AssertBuild (b);
 			}
 		}
 
@@ -558,9 +566,10 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
+				b.Assertions.Add (new Assertion (o => o.Contains ("APT0000: ")));
+				b.Assertions.Add (new Assertion (o => o.Contains ("1 Error(s)")));
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				AssertBuild (b);
 			}
 		}
 
@@ -575,9 +584,10 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
+				b.Assertions.Add (new Assertion (o => o.Contains ("Invalid file name:")));
+				b.Assertions.Add (new Assertion (o => o.Contains ("1 Error(s)")));
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				AssertBuild (b);
 			}
 		}
 
@@ -597,9 +607,11 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
+
+				b.Assertions.Add (new Assertion (o => o.Contains ("APT0000: ")));
+				b.Assertions.Add (new Assertion (o => o.Contains ("2 Error(s)")));
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
+				AssertBuild (b);
 			}
 		}
 
@@ -916,25 +928,30 @@ namespace Lib1 {
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
 					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					appBuilder.AssertTargetIsBuilt ("_UpdateAndroidResgen");
 					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
+					AssertBuild (appBuilder);
 					foo.Timestamp = DateTime.UtcNow;
+					libBuilder.AssertTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject");
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should be skipped.");
+					AssertBuild (libBuilder);
+					appBuilder.AssertTargetSkipped ("_UpdateAndroidResgen");
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					AssertBuild (appBuilder);
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<color name=""theme_devicedefault_background"">#00000000</color>
 	<color name=""theme_devicedefault_background2"">#ffffffff</color>
 </resources>";
 					theme.Timestamp = DateTime.UtcNow;
+					libBuilder.AssertTargetIsBuilt ("_AddLibraryProjectsEmbeddedResourceToProject");
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_AddLibraryProjectsEmbeddedResourceToProject"), "_AddLibraryProjectsEmbeddedResourceToProject should not be skipped.");
+					AssertBuild (libBuilder);
+					appBuilder.AssertTargetIsBuilt ("_UpdateAndroidResgen");
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					AssertBuild (appBuilder);
 					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
 					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
 					theme.Deleted = true;
 					theme.Timestamp = DateTime.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
@@ -958,10 +975,10 @@ namespace Lib1 {
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
 				appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 				appBuilder.Target = "Compile";
+				appBuilder.AssertTargetIsBuilt ("_ManagedUpdateAndroidResgen");
 				Assert.IsTrue (appBuilder.Build (appProj, parameters: new string[] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" } ),
 					"DesignTime Application Build should have succeeded.");
-				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-					"Target '_ManagedUpdateAndroidResgen' should have run.");
+				AssertBuild (appBuilder);
 				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
 				FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
@@ -972,14 +989,13 @@ namespace Lib1 {
 				StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
 				StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
 				appBuilder.Target = "SignAndroidPackage";
+				appBuilder.AssertTargetSkipped ("_ManagedUpdateAndroidResgen");
 				Assert.IsTrue (appBuilder.Build (appProj),
 					"Normal Application Build should have succeeded.");
-				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-					"Target '_ManagedUpdateAndroidResgen' should not have run.");
+				AssertBuild (appBuilder);
 
 				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
 				Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
-
 			}
 		}
 

@@ -40,8 +40,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\Assertion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Common\Assertion.cs" />
     <Compile Include="Common\BuildActions.cs" />
     <Compile Include="Common\BuildItem.cs" />
     <Compile Include="Common\Package.cs" />

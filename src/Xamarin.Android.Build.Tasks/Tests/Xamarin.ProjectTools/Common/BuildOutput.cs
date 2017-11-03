@@ -44,30 +44,10 @@ namespace Xamarin.ProjectTools
 			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
-		public bool IsTargetSkipped (string target)
+		//TODO: remove
+		public bool IsTargetSkipped (string a)
 		{
-			if (!Builder.LastBuildOutput.Contains (target))
-				throw new ArgumentException (string.Format ("Target '{0}' is not even in the build output.", target));
-			return Builder.LastBuildOutput.Contains (string.Format ("Target {0} skipped due to ", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Skipping target \"{0}\" because it has no outputs.", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Target \"{0}\" skipped, due to", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Skipping target \"{0}\" because its outputs are up-to-date", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("target {0}, skipping", target))
-					|| Builder.LastBuildOutput.Contains ($"Skipping target \"{target}\" because all output files are up-to-date");
-		}
-
-		public bool IsApkInstalled {
-			get { return Builder.LastBuildOutput.Contains (" pm install "); }
-		}
-
-		public bool AreTargetsAllSkipped (params string [] targets)
-		{
-			return targets.All (t => IsTargetSkipped (t));
-		}
-
-		public bool AreTargetsAllBuilt (params string [] targets)
-		{
-			return targets.All (t => !IsTargetSkipped (t));
+			throw new NotImplementedException ();
 		}
 	}
 	
