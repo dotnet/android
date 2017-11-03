@@ -204,27 +204,18 @@ using System.Runtime.CompilerServices;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
 				var firstBuildTime = b.LastBuildTime;
+				b.AssertTargetSkipped ("_GenerateAndroidResourceDir");
+				b.AssertTargetSkipped ("_CompileJava");
 				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
+				AssertBuild (b);
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
-					"The Target _GenerateAndroidResourceDir should have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"The Target _CompileJava should have been skipped");
 				image1.Timestamp = DateTime.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTime.UtcNow;
+				b.AssertTargetIsBuilt ("_GenerateAndroidResourceDir");
+				b.AssertTargetSkipped ("_CompileJava");
+				b.AssertTargetIsBuilt ("_CreateBaseApk");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
-					"The Target _GenerateAndroidResourceDir should not have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"The Target _CompileJava (2) should have been skipped");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_CreateBaseApk"),
-					"The Target _CreateBaseApk should not have been skipped");
 			}
 		}
 
