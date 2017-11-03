@@ -102,9 +102,11 @@ namespace Xamarin.ProjectTools
 			if (!last_build_result)
 				return;
 			built_before = false;
-			if (Directory.Exists (ProjectDirectory)) {
-				FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
-				Directory.Delete (ProjectDirectory, true);
+
+			var projectDirectory = Path.Combine (Root, ProjectDirectory);
+			if (Directory.Exists (projectDirectory)) {
+				FileSystemUtils.SetDirectoryWriteable (projectDirectory);
+				Directory.Delete (projectDirectory, true);
 			}
 		}
 
