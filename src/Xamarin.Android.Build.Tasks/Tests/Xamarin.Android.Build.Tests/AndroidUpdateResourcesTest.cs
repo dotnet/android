@@ -165,9 +165,10 @@ using System.Runtime.CompilerServices;
 				var oldpath = image.Include ().Replace ('\\', Path.DirectorySeparatorChar);
 				image.Include = () => "Resources/drawable/NewImage.png";
 				image.Timestamp = DateTimeOffset.UtcNow.AddMinutes (1);
+				b.AssertTargetIsBuilt ("_Sign");
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+				AssertBuild (b);
 				Assert.IsFalse (File.Exists (Path.Combine (b.ProjectDirectory, oldpath)), "XamarinProject.UpdateProjectFiles() failed to delete file");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
 		}
 
@@ -178,8 +179,9 @@ using System.Runtime.CompilerServices;
 			proj.LayoutMain = @"<root/>\n" + proj.LayoutMain;
 			using (var b = CreateApkBuilder ("temp/ErroneousResource")) {
 				b.ThrowOnBuildFailure = false;
+				b.Assertions.Add (new Assertion (o => o.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && o.Contains (": error "), "error with expected file name is not found"));
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				Assert.IsTrue (b.LastBuildOutput.Split ('\n').Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
+				AssertBuild (b);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
