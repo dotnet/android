@@ -353,7 +353,9 @@ namespace UnnamedProject
 			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.Assertions.Add (new Assertion (o => o.Contains ("AndroidResgen: Warning while updating Resource XML"), "Warning while processing resources should not have been raised."));
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				AssertBuildDidNotPass (b);
 				var preferencesPath = Path.Combine (Root, projectPath, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
 				var doc = XDocument.Load (preferencesPath);
@@ -375,8 +377,6 @@ namespace UnnamedProject
 					.FirstOrDefault (x => x.Attribute("name").Value == "colorAccent");
 				Assert.IsNotNull (item, "The Style should contain an Item");
 				Assert.AreEqual ("@color/deep_purple_A200", item.Value, "item value should be @color/deep_purple_A200");
-				StringAssert.DoesNotContain ("AndroidResgen: Warning while updating Resource XML", b.LastBuildOutput,
-					"Warning while processing resources should not have been raised.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1044,15 +1044,15 @@ namespace Lib1 {
 					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 					appBuilder.ThrowOnBuildFailure = false;
 					libBuilder.Target = "Compile";
+					libBuilder.AssertTargetIsBuilt ("_ManagedUpdateAndroidResgen");
 					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Library project should have built");
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-						"Target '_ManagedUpdateAndroidResgen' should have run.");
+					AssertBuild (libBuilder);
 					appBuilder.Target = "Compile";
-					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Application project should have built");
+					appBuilder.AssertTargetIsBuilt ("_ManagedUpdateAndroidResgen");
+					Assert.IsTrue(appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Application project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-						"Target '_ManagedUpdateAndroidResgen' should have run.");
+					AssertBuild (appBuilder);
 					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
@@ -1065,14 +1065,14 @@ namespace Lib1 {
 					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
 					StringAssert.DoesNotContain ("theme_devicedefault_background", designerContents, $"{designerFile} should not contain Resources.Color.theme_devicedefault_background");
 					libBuilder.Target = "Build";
+					libBuilder.AssertTargetSkipped ("_ManagedUpdateAndroidResgen");
 					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
-					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-						"Target '_ManagedUpdateAndroidResgen' should not have run.");
+					AssertBuild (libBuilder);
 					appBuilder.Target = "Compile";
+					appBuilder.AssertTargetIsBuilt ("_ManagedUpdateAndroidResgen");
 					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "App project should have built");
+					AssertBuild (appBuilder);
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
-					"Target '_ManagedUpdateAndroidResgen' should have run.");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 					designerContents = File.ReadAllText (designerFile);
@@ -1094,8 +1094,6 @@ namespace Lib1 {
 					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
 					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
 					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
-
-
 				}
 			}
 		}

@@ -186,6 +186,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		protected void AssertBuildDidNotPass (ProjectBuilder builder)
+		{
+			foreach (var assertion in builder.Assertions) {
+				if (assertion.Passed) {
+					Assert.Fail (assertion.ToString ());
+				}
+			}
+		}
+
 		[OneTimeSetUp]
 		public void FixtureSetup ()
 		{
