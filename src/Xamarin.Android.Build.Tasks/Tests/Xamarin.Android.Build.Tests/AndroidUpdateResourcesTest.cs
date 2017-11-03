@@ -89,13 +89,13 @@ using System.Runtime.CompilerServices;
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
-					if (useManagedParser)
-						b.Assertions.Add (new Assertion (o => o.Contains ("Skipping GetAdditionalResourcesFromAssemblies"), "failed to skip the downloading of files."));
-					else
-						b.Assertions.Add (new Assertion (o => !o.Contains ("Skipping GetAdditionalResourcesFromAssemblies"), "failed to skip the downloading of files."));
+					b.Assertions.Add (new Assertion (o => o.Contains ("Skipping GetAdditionalResourcesFromAssemblies"), "failed to skip the downloading of files."));
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					AssertBuild (b);
+					if (useManagedParser)
+						AssertBuildDidNotPass (b);
+					else
+						AssertBuild (b);
 					var items = new List<string> ();
 					string first = null;
 					if (!useManagedParser) {
@@ -108,9 +108,10 @@ using System.Runtime.CompilerServices;
 					}
 					WaitFor (1000);
 					b.Target = "Build";
+					b.AssertTargetIsBuilt ("_BuildAdditionalResourcesCache");
+					b.Assertions.Add (new Assertion (o => o.Contains ($"Downloading {url}") || o.Contains ($"reusing existing archive: {zipPath}")));
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
-					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.Contains ($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
+					AssertBuild (b);
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
 					items.Clear ();
 					if (!useManagedParser) {

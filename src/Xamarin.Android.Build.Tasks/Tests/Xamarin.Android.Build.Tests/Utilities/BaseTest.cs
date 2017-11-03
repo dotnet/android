@@ -184,6 +184,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.Fail (assertion.ToString ());
 				}
 			}
+			builder.Assertions.Clear ();
 		}
 
 		protected void AssertBuildDidNotPass (ProjectBuilder builder)
@@ -193,6 +194,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.Fail (assertion.ToString ());
 				}
 			}
+			builder.Assertions.Clear ();
 		}
 
 		[OneTimeSetUp]
