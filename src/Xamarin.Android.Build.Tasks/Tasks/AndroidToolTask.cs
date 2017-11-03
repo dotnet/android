@@ -83,7 +83,29 @@ namespace Xamarin.Android.Tasks
 		internal static Regex AndroidErrorRegex {
 			get {
 				if (androidErrorRegex == null)
-					androidErrorRegex = new Regex (@"^(?<file>.+?)([:(](?<line>\d+)[:)])?:+\s*((error)\s*(?<level>\w*(?=:)):?)?(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+					androidErrorRegex = new Regex (@"
+^
+( # start optional path followed by `:`
+ (?<path>
+  (?<file>.+[\\/][^:\(]+)
+  (
+   ([:](?<line>\d+))
+   |
+   (\((?<line>\d+)\))
+  )?
+ )
+ \s*
+ :
+)?
+( # optional warning|error:
+ \s*
+ (?<level>(warning|error)[^:]*)\s*
+ :
+)?
+\s*
+(?<message>.*)
+$
+", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace);
 				return androidErrorRegex;
 			}
 		}

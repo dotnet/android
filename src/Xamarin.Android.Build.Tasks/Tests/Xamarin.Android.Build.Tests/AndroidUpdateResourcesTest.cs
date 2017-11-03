@@ -1095,6 +1095,13 @@ namespace Lib1 {
 					},
 				},
 			};
+
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-fr\\Strings.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+  <string name=""test"" >Test</string>
+</resources>",
+			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				StringAssert.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
