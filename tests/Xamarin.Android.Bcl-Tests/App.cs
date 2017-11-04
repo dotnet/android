@@ -62,14 +62,6 @@ namespace Xamarin.Android.BclTests
 		}
 
 		static string[] ExcludeTestNames = new string[]{
-                        // https://jenkins.mono-project.com/job/xamarin-android-pr-builder/1720/testReport/(root)/AssemblyTest/GetReferencedAssemblies/
-                        // https://bugzilla.xamarin.com/show_bug.cgi?id=59908
-                        // AssemblyName.Flags == AssemblyNameFlags.PublicKey; expected AssemblyNameFlags.None
-			"MonoTests.System.Reflection.AssemblyTest.GetReferencedAssemblies",
-                        // https://jenkins.mono-project.com/job/xamarin-android-pr-builder/1720/testReport/(root)/WebInvokeAttributeTest/RejectTwoParametersWhenNotWrapped/
-                        // https://bugzilla.xamarin.com/show_bug.cgi?id=59909
-                        // InvalidOperationException wasn't thrown when it was expected
-			"MonoTests.System.ServiceModel.Description.WebInvokeAttributeTest.RejectTwoParametersWhenNotWrapped",
 		};
 
 		internal static ITestFilter UpdateFilter (ITestFilter filter)
