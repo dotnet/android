@@ -890,9 +890,26 @@ namespace App1
 			}
 		}
 
+		/// <summary>
+		/// Works around a bug in lint.bat on Windows: https://issuetracker.google.com/issues/68753324
+		/// - We may want to remove this if a future Android SDK tools, no longer has this issue
+		/// </summary>
+		void FixLintOnWindows ()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+				var userProfile = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+				var androidSdkTools = Path.Combine (userProfile, "android-toolchain", "sdk", "tools");
+				if (Directory.Exists (androidSdkTools)) {
+					Environment.SetEnvironmentVariable ("JAVA_OPTS", $"\"-Dcom.android.tools.lint.bindir={androidSdkTools}\"", EnvironmentVariableTarget.Process);
+				}
+			}
+		}
+
 		[Test]
 		public void CheckLintErrorsAndWarnings ()
 		{
+			FixLintOnWindows ();
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.UseLatestPlatformSdk = true;
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
@@ -917,6 +934,8 @@ namespace App1
 		[Test]
 		public void CheckLintConfigMerging ()
 		{
+			FixLintOnWindows ();
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint1.xml") {
