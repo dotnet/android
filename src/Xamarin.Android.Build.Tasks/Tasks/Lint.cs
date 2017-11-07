@@ -174,7 +174,7 @@ namespace Xamarin.Android.Tasks
 			{ "MissingSuperCall", new Version (26, 1, 1) },
 		};
 
-		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)");
+		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
 
 		public override bool Execute ()
 		{
@@ -205,9 +205,29 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
 			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
 
+			foreach (var issue in DisabledIssuesByVersion) {
+				if (lintToolVersion < issue.Value) {
+					DisabledIssues = CleanIssues (issue.Key, lintToolVersion, DisabledIssues, nameof (DisabledIssues));
+					EnabledIssues = CleanIssues (issue.Key, lintToolVersion, EnabledIssues, nameof (EnabledIssues) );
+				}
+			}
+
 			base.Execute ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		string CleanIssues (string issueToRemove, Version lintToolVersion, string issues, string issuePropertyName)
+		{
+			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
+			if (!string.IsNullOrEmpty (issues) && issues.Contains (issueToRemove)) {
+				var match = issueReplaceRegex.Match (DisabledIssues);
+				if (match.Success) {
+					issues = issues.Replace (match.Value, string.Empty);
+					Log.LogWarning ($"Removing {issueToRemove} from {issuePropertyName}. Lint {lintToolVersion} does not support this check.");
+				}
+			}
+			return issues;
 		}
 
 		protected override string GenerateCommandLineCommands ()
