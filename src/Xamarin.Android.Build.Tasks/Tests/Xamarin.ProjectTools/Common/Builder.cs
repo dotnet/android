@@ -61,9 +61,9 @@ namespace Xamarin.ProjectTools
 				}
 
 				#if DEBUG
-				xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug", "bin", "xabuild.exe"));
+				xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild.exe"));
 				#else
-				xabuild =  Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release", "bin", "xabuild.exe"));
+				xabuild =  Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild.exe"));
 				#endif
 				if (File.Exists (xabuild))
 					return xabuild;
