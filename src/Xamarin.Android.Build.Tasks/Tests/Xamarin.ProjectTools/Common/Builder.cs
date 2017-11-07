@@ -40,6 +40,7 @@ namespace Xamarin.ProjectTools
 
 		public string XABuildExe {
 			get {
+				string xabuild;
 				if (IsUnix) {
 					RunningMSBuild = true;
 					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
@@ -47,23 +48,26 @@ namespace Xamarin.ProjectTools
 						RunningMSBuild = false;
 					}
 					#if DEBUG
-					var xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild"));
+					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild"));
 					#else
-					var xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild"));
+					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild"));
 					#endif
 					if (File.Exists (xabuild))
 						return xabuild;
 					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out", "bin", "xabuild"));
 					if (File.Exists (xabuild))
 						return xabuild;
-					return Path.GetFullPath (Path.Combine (Root, "..", "..", "tools", "scripts", "xabuild"));
+					return RunningMSBuild ? "msbuild" : "xbuild";
 				}
 
 				#if DEBUG
-				return Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug", "bin", "xabuild.exe"));
+				xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild.exe"));
 				#else
-				return Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release", "bin", "xabuild.exe"));
+				xabuild =  Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild.exe"));
 				#endif
+				if (File.Exists (xabuild))
+					return xabuild;
+				return "msbuild";
 			}
 		}
 
