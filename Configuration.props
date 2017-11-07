@@ -45,8 +45,8 @@
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe-a926b16</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
-    <AndroidSdkDirectory>$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
-    <AndroidNdkDirectory>$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
+    <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
+    <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <AntDirectory>$(AndroidToolchainDirectory)\ant</AntDirectory>
     <AntToolPath>$(AntDirectory)\bin</AntToolPath>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
