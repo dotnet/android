@@ -360,12 +360,6 @@ namespace Xamarin.Android.Tasks
 			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
 			if (match.Success) {
-				Console.WriteLine ($"\t   path: '{match.Groups ["path"].Value}'");
-				Console.WriteLine ($"\t   file: '{match.Groups ["file"].Value}'");
-				Console.WriteLine ($"\t   line: '{match.Groups ["line"].Value}'");
-				Console.WriteLine ($"\t  level: '{match.Groups ["level"].Value}'");
-				Console.WriteLine ($"\tmessage: '{match.Groups ["message"].Value}'");
-
 				var file = match.Groups["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
