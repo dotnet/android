@@ -67,6 +67,11 @@ namespace Xamarin.Android.Build
 		public string MSBuildExtensionsPath { get; private set; }
 
 		/// <summary>
+		/// Used as the MSBuildSDKsPath environment variable, required for .NET standard projects to build
+		/// </summary>
+		public string MSBuildSdksPath { get; private set; }
+
+		/// <summary>
 		/// Array of search paths for MSBuildExtensionsPath
 		/// </summary>
 		public string [] ProjectImportSearchPaths { get; private set; }
@@ -113,6 +118,7 @@ namespace Xamarin.Android.Build
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
 				MSBuildBin               = Path.Combine (MSBuildPath, "15.0", "Bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
+				MSBuildSdksPath          = Path.Combine (MSBuildPath, "Sdks");
 				ProjectImportSearchPaths = new [] { MSBuildPath, "$(MSBuildProgramFiles32)\\MSBuild" };
 				SystemProfiles           = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
 				SearchPathsOS            = "windows";
@@ -122,6 +128,7 @@ namespace Xamarin.Android.Build
 				MSBuildPath              = Path.Combine (mono, "msbuild");
 				MSBuildBin               = Path.Combine (MSBuildPath, "15.0", "bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
+				MSBuildSdksPath          = "/usr/local/share/dotnet/sdk/2.0.0/Sdks";
 				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
 				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
