@@ -15,7 +15,7 @@
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
-        Output="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props">
+        Output="$(_TopDir)\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props">
       <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
     </JdkInfo>
     <Copy

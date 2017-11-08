@@ -6,11 +6,7 @@ prefix				= /usr/local
 CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
-
-NUNIT_TESTS = \
-	bin/Test$(CONFIGURATION)/Xamarin.Android.Build.Tests.dll
-
-NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
+TEST_TARGETS  = build-tools/scripts/RunTests.targets
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -121,12 +117,9 @@ prepare-image-dependencies:
 include build-tools/scripts/BuildEverything.mk
 include tests/api-compatibility/api-compatibility.mk
 
-run-all-tests: run-nunit-tests run-ji-tests run-apk-tests run-api-compatibility-tests
-
-rename-test-cases:
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/TestApks.targets \
-		/t:RenameTestCases /p:RenameTestCasesGlob="$(if $(RENAME_GLOB),$(RENAME_GLOB),`pwd`/TestResult-\*.xml)" \
-		$(if $(KEEP_TEST_SOURCES),/p:DeleteTestCaseSourceFiles=False)
+run-all-tests:
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunAllTests
+	$(MAKE) run-api-compatibility-tests
 
 clean:
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
@@ -138,60 +131,13 @@ distclean:
 	git clean -xdff
 	git submodule foreach git clean -xdff
 
-# $(call RUN_NUNIT_TEST,filename,log-lref?)
-define RUN_NUNIT_TEST
-	MONO_TRACE_LISTENER=Console.Out \
-	USE_MSBUILD=$(if $(USE_MSBUILD),$(USE_MSBUILD),0) \
-	$(RUNTIME) --runtime=v4.0.0 \
-		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
-		$(if $(TEST),--test=$(TEST)) \
-		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
-		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
-	|| true ; \
-	if [ -f "bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt" ] ; then \
-		cat bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt ; \
-	fi
-	$(MAKE) rename-test-cases RENAME_GLOB="`pwd`/TestResult-$(basename $(notdir $(1))).xml"
-endef
-
-run-nunit-tests: $(NUNIT_TESTS)
+run-nunit-tests:
 ifeq ($(SKIP_NUNIT_TESTS),)
-	$(foreach t,$(NUNIT_TESTS), $(call RUN_NUNIT_TEST,$(t),1))
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunNUnitTests
 endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
-	$(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) all
-	ANDROID_SDK_PATH="$(call GetPath,AndroidSdk)" $(MAKE) -C "$(call GetPath,JavaInterop)" CONFIGURATION=$(CONFIGURATION) run-all-tests || true
-	$(MAKE) rename-test-cases RENAME_GLOB='"$(call GetPath,JavaInterop)"/TestResult-*Tests.xml'
-	cp "$(call GetPath,JavaInterop)"/TestResult-*.xml .
-
-# .apk files to test on-device need to:
-# (1) Have their .csproj files listed here
-# (2) Add a `@(UnitTestApk)` entry to `tests/RunApkTests.targets`
-TEST_APK_PROJECTS = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj \
-	tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj \
-	tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj \
-	tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj \
-	tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-
-TEST_APK_PROJECTS_AOT = \
-	src/Mono.Android/Test/Mono.Android-Tests.csproj \
-
-# Syntax: $(call BUILD_TEST_APK,path/to/project.csproj,additional_msbuild_flags)
-define BUILD_TEST_APK
-	# Must use xabuild to ensure correct assemblies are resolved
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) /t:SignAndroidPackage $(2) $(1)
-endef	# BUILD_TEST_APK
-
-# Syntax: $(call RUN_APK_TESTS,projects,additional_msbuild_flags)
-define RUN_APK_TESTS
-	$(foreach p, $(1), $(call BUILD_TEST_APK, $(p),$(2)))
-	$(MSBUILD) $(MSBUILD_FLAGS) $(2) tests/RunApkTests.targets
-endef
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunJavaInteropTests
 
 run-apk-tests:
-	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS), )
-ifeq ($(CONFIGURATION),Release)
-	$(call RUN_APK_TESTS, $(TEST_APK_PROJECTS_AOT), /p:AotAssemblies=true)
-endif
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunApkTests

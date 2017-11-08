@@ -195,6 +195,7 @@
         Text="Please set `%24(Configuration)`."
     />
     <PropertyGroup>
+      <_DeleteSource Condition=" '$(KEEP_TEST_SOURCES)' != '' ">False</_DeleteSource>
       <_DeleteSource Condition=" '$(DeleteTestCaseSourceFiles)' != '' ">$(DeleteTestCaseSourceFiles)</_DeleteSource>
       <_DeleteSource Condition=" '$(_DeleteSource)' == '' ">True</_DeleteSource>
     </PropertyGroup>
