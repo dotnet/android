@@ -49,6 +49,10 @@
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj">
+      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
+      <Name>Xamarin.Android.Build.Tasks</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
