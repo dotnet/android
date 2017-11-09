@@ -216,7 +216,12 @@ namespace Xamarin.Android.Tasks
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
 
-			ThreadingTasks.Parallel.ForEach (ManifestFiles, () => 0, DoExecute, (obj) => { Complete (); });
+			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
+				CancellationToken = Token,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Current,
+			};
+
+			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, () => 0, DoExecute, (obj) => { Complete (); });
 
 			base.Execute ();
 

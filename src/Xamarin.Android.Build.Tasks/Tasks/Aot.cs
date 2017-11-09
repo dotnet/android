@@ -239,11 +239,11 @@ namespace Xamarin.Android.Tasks
 
 			var task = ThreadingTasks.Task.Run ( () => {
 				return RunParallelAotCompiler (nativeLibs);
-			});
+			}, Token);
 
 			task.ContinueWith ( (t) => {
 				Complete ();
-			});
+			}).ConfigureAwait (false);
 
 			base.Execute ();
 
@@ -267,6 +267,7 @@ namespace Xamarin.Android.Tasks
 
 				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
 					CancellationToken = cts.Token,
+					TaskScheduler = ThreadingTasks.TaskScheduler.Current,
 				};
 
 				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
