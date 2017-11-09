@@ -70,7 +70,7 @@
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>26.0.1</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.1</XABuildToolsFolder>
-    <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">True</XAIntegratedTests>
+    <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
   </PropertyGroup>
   <PropertyGroup>

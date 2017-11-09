@@ -99,7 +99,7 @@
     <AndroidResource Include="Resources\drawable\android_button.xml" />
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
   </ItemGroup>
-  <Import Project="..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-Tests.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
