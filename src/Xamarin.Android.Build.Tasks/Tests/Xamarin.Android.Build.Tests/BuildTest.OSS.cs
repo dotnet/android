@@ -243,6 +243,49 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedRuntime */    "release",
 			},
 		};
+
+		static object [] DesugarChecks = new object [] {
+			new Object [] {
+				/* isRelease */ true,
+				/* enableDesugar */ false,
+				/* enableProguard */ true,
+			},
+			new Object [] {
+				/* isRelease */ true,
+				/* enableDesugar */ false,
+				/* enableProguard */ false,
+			},
+			new Object [] {
+				/* isRelease */ true,
+				/* enableDesugar */ true,
+				/* enableProguard */ true,
+			},
+			new Object [] {
+				/* isRelease */ true,
+				/* enableDesugar */ true,
+				/* enableProguard */ false,
+			},
+			new Object [] {
+				/* isRelease */ false,
+				/* enableDesugar */ false,
+				/* enableProguard */ true,
+			},
+			new Object [] {
+				/* isRelease */ false,
+				/* enableDesugar */ false,
+				/* enableProguard */ false,
+			},
+			new Object [] {
+				/* isRelease */ false,
+				/* enableDesugar */ true,
+				/* enableProguard */ true,
+			},
+			new Object [] {
+				/* isRelease */ false,
+				/* enableDesugar */ true,
+				/* enableProguard */ false,
+			},
+		};
 #pragma warning restore 414
 	}
 }
