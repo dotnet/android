@@ -38,9 +38,11 @@
     <Reference Include="nunit.framework">
       <HintPath>..\..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Xamarin.Android.Build.Tasks">
+    <!-- Because Xamarin.Android.Build.Tasks.csproj doesn't build in VsForMac :(
+    <Reference Include="Xamarin.Android.Build.Tasks" Condition="Exists('$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll')">
       <HintPath>$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
     </Reference>
+    -->
     <Reference Include="Microsoft.Build.Engine" />
     <Reference Include="Microsoft.Build.Tasks.v4.0" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
@@ -54,6 +56,10 @@
     <ProjectReference Include="..\..\..\..\external\LibZipSharp\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj">
+      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
+      <Name>Xamarin.Android.Build.Tasks</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
