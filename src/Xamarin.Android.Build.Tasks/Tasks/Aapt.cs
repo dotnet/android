@@ -364,8 +364,9 @@ namespace Xamarin.Android.Tasks
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
 					line = int.Parse (match.Groups["line"].Value) + 1;
-				var error = match.Groups["message"].Value;
-				if (error.Contains ("warning")) {
+				var level = match.Groups["level"].Value;
+				var message = match.Groups ["message"].Value;
+				if (level.Contains ("warning")) {
 					LogWarning (singleLine);
 					return;
 				}
@@ -379,10 +380,10 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Strip any "Error:" text from aapt's output
-				if (error.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
-					error = error.Substring ("error: ".Length);
+				if (message.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
+					message = message.Substring ("error: ".Length);
 
-				LogError ("APT0000", error, file, line);
+				LogError ("APT0000", message, file, line);
 				return;
 			}
 

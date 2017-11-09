@@ -80,10 +80,32 @@ namespace Xamarin.Android.Tasks
 		//   res/drawable/foo-bar.jpg: Invalid file name: must contain only [a-z0-9_.]
 		// Look for them and convert them to MSBuild compatible errors.
 		static Regex androidErrorRegex;
-		internal static Regex AndroidErrorRegex {
+		public static Regex AndroidErrorRegex {
 			get {
 				if (androidErrorRegex == null)
-					androidErrorRegex = new Regex (@"^(?<file>.+?)([:(](?<line>\d+)[:)])?:+\s*((error)\s*(?<level>\w*(?=:)):?)?(?<message>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+					androidErrorRegex = new Regex (@"
+^
+( # start optional path followed by `:`
+ (?<path>
+  (?<file>.+[\\/][^:\(]+)
+  (
+   ([:](?<line>\d+))
+   |
+   (\((?<line>\d+)\))
+  )?
+ )
+ \s*
+ :
+)?
+( # optional warning|error:
+ \s*
+ (?<level>(warning|error)[^:]*)\s*
+ :
+)?
+\s*
+(?<message>.*)
+$
+", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace);
 				return androidErrorRegex;
 			}
 		}
