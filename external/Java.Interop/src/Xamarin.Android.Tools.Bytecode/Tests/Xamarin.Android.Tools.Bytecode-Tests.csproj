@@ -162,7 +162,9 @@
     <EmbeddedResource Include="ParameterFixupApiXmlDocs.xml">
       <LogicalName>ParameterFixupApiXmlDocs.xml</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>
+    <EmbeddedResource Include="ParameterDescription.txt">
+      <LogicalName>ParameterDescription.txt</LogicalName>
+    </EmbeddedResource>  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

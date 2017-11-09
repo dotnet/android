@@ -49,6 +49,7 @@
     <Compile Include="JavaDocumentScraper.cs" />
     <Compile Include="ClassPath.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="JavaParameterNamesLoader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

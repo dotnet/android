@@ -129,7 +129,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 	}
 
-	public abstract class AndroidDocScraper : IAndroidDocScraper
+	public abstract class AndroidDocScraper : IJavaMethodParameterNameProvider
 	{
 		readonly String pattern_head;
 		readonly String reset_pattern_head;
@@ -290,6 +290,14 @@ namespace Xamarin.Android.Tools.Bytecode
 				Log.Error ("Annotations parser error: " + ex);
 			}
 		}
+	}
+
+	public interface IJavaMethodParameterNameProvider
+	{
+		String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
+	}
+
+	public static class JavaMethodParameterNameProvider {
 
 		public static JavaDocletType GetDocletType (string path)
 		{
@@ -322,18 +330,17 @@ namespace Xamarin.Android.Tools.Bytecode
 				}
 				if (rawXML.Contains ("<api>") && rawXML.Contains ("<package"))
 					kind = JavaDocletType._ApiXml;
+				else if (rawXML.StartsWith ("package", StringComparison.Ordinal) ||
+						rawXML.StartsWith (";", StringComparison.Ordinal)) {
+					kind = JavaDocletType.JavaApiParameterNamesXml;
+				}
 			}
 
 			return kind;
 		}
 	}
 
-	public interface IAndroidDocScraper
-	{
-		String[] GetParameterNames (string package, string type, string method, string[] ptypes, bool isVarArgs);
-	}
-
-	public class ApiXmlDocScraper : IAndroidDocScraper
+	public class ApiXmlDocScraper : IJavaMethodParameterNameProvider
 	{
 		public ApiXmlDocScraper (string apiXmlFile)
 		{

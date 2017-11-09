@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			try {
 				tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
 
-				Assert.AreEqual (JavaDocletType._ApiXml, AndroidDocScraper.GetDocletType (tempFile));
+				Assert.AreEqual (JavaDocletType._ApiXml, JavaMethodParameterNameProvider.GetDocletType (tempFile));
 			} finally {
 				if (File.Exists (tempFile))
 					File.Delete (tempFile);
@@ -85,7 +85,23 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			if (!Directory.Exists (droidDocsPath))
 				Assert.Fail("The Android SDK Documentation path `{0}` was not found.", droidDocsPath);
 				
-			Assert.AreEqual(JavaDocletType.DroidDoc2, AndroidDocScraper.GetDocletType(droidDocsPath));
+			Assert.AreEqual(JavaDocletType.DroidDoc2, JavaMethodParameterNameProvider.GetDocletType(droidDocsPath));
+		}
+
+		[Test]
+		public void XmlDeclaration_FixedUpFromParameterDescription ()
+		{
+			string tempFile = null;
+
+			try {
+				tempFile = LoadToTempFile ("ParameterDescription.txt");
+
+				AssertXmlDeclaration (new string [] { "Collection.class" }, "ParameterFixupFromDocs.xml", tempFile);
+			}
+			finally {
+				if (File.Exists (tempFile))
+					File.Delete (tempFile);
+			}
 		}
 	}
 }
