@@ -17,7 +17,9 @@
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
     </TestApk>
   </ItemGroup>
-  <Target Name="_RecordApkSizes" AfterTargets="DeployTestApks">
+  <Target Name="_RecordApkSizes"
+      AfterTargets="DeployTestApks"
+      Condition=" '$(HostOS)' != 'Windows' ">
     <Exec
         Condition=" '$(HostOS)' == 'Darwin' "
         Command="stat -f &quot;stat: %z %N&quot; &quot;$(_MonoAndroidTestApkFile)&quot; > &quot;$(OutputPath)$(_MonoAndroidTestApkSizesInput)&quot;"
@@ -33,7 +35,7 @@
         ResultsFilename="$(_MonoAndroidApkSizesResultsFilename)"
         DefinitionsFilename="$(MSBuildThisFileDirectory)apk-sizes-definitions.txt"
         AddResults="True"
-	LabelSuffix="-$(Configuration)$(_AotName)"
+        LabelSuffix="-$(Configuration)$(_AotName)"
     />
   </Target>
 </Project>
