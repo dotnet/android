@@ -15,6 +15,14 @@
   </ItemGroup>
   <Target Name="RunTests"
       Outputs="$(_TopDir)\TestResult-%(_TestAssembly.Filename).xml">
+    <ItemGroup>
+      <_JavaInteropNativeLibrary Include="$(_TopDir)\bin\$(Configuration)\libjava-interop.*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_JavaInteropNativeLibrary)"
+        DestinationFolder="$(_TopDir)\bin\Test$(Configuration)"
+        SkipUnchangedFiles="True"
+    />
     <SetEnvironmentVariable Name="MONO_TRACE_LISTENER" Value="Console.Out" />
     <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="g-%(_TestAssembly.Filename).txt" />
     <SetEnvironmentVariable Name="JAVA_INTEROP_LREF_LOG" Value="l-%(_TestAssembly.Filename).txt" />
