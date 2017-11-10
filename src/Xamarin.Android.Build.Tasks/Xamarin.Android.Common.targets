@@ -233,8 +233,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">23.0.0</AndroidSdkBuildToolsVersion>
 
-	<!-- Chooses the native Android debug server, valid values are: gdbserver, llgs and ds2 -->
-	<AndroidGdbDebugServer Condition="'$(AndroidGdbDebugServer)' == ''">Gdb</AndroidGdbDebugServer>
+	<!-- Obsolete -->
+	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
 	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">jl</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">nl</_NativeLibraryImportsDirectoryName>
@@ -2322,7 +2322,6 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     LibraryProjectJars="@(ExtractedJarImports)"
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
-    AndroidGdbDebugServer="$(AndroidGdbDebugServer)"
     HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
