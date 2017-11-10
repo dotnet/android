@@ -488,7 +488,6 @@
     <Compile Include="Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Include="Tasks\Unzip.cs" />
     <Compile Include="Utilities\AssemblyIdentityMap.cs" />
-    <Compile Include="Utilities\GdbPaths.cs" />
     <Compile Include="Utilities\SatelliteAssembly.cs" />
     <Compile Include="Tasks\AndroidApkSigner.cs" />
     <Compile Include="Tasks\Desugar.cs" />

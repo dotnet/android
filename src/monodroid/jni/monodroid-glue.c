@@ -82,8 +82,6 @@ static struct timespec wait_ts;
 static char *runtime_libdir;
 static int register_debug_symbols;
 static MonoMethod* registerType;
-/* If set, monodroid will start a gdbserver process and attaches it to itself */
-static int attach_gdb;
 /*
  * If set, monodroid will spin in a loop until the debugger breaks the wait by
  * clearing monodroid_gdb_wait.
@@ -438,21 +436,6 @@ file_exists (const char *file)
 {
 	monodroid_stat_t s;
 	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
-		return 1;
-	return 0;
-}
-
-static int
-file_executable (const char *file)
-{
-#ifndef WINDOWS
-	const int s_ixugo = S_IXUSR | S_IXGRP | S_IXOTH;
-#else
-	const int s_ixugo = S_IXUSR;
-#endif
-
-	monodroid_stat_t s;
-	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG && (s.st_mode & s_ixugo) != 0)
 		return 1;
 	return 0;
 }
@@ -2274,8 +2257,6 @@ parse_gdb_options (void)
 		}
 
 		wait_for_gdb = do_wait;
-	} else {
-		attach_gdb = TRUE;
 	}
 
 	free (val);
@@ -2500,176 +2481,6 @@ copy_file_to_internal_location(char *to, char *from, char* file)
 	free (from_file);
 	free (to_file);
 }
-
-static char*
-get_ds2_path ()
-{
-	char *file;
-	int i;
-
-	static const char* gdbservers [] = {
-		"libds2.so",
-	};
-
-	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
-		file = monodroid_strdup_printf ("%s", gdbservers [i]);
-		copy_file_to_internal_location (primary_override_dir, external_override_dir, file);
-		copy_file_to_internal_location (primary_override_dir, external_legacy_override_dir, file);
-		free (file);
-	}
-
-	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
-		int oi = 0;
-		for ( ; oi < MAX_OVERRIDES; ++oi) {
-			char *p;
-			if (!directory_exists (override_dirs [oi]))
-				continue;
-			p = path_combine (override_dirs [oi], gdbservers [i]);
-			if (file_executable (p))
-				return p;
-			free (p);
-		}
-	}
-
-	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
-		char *p = path_combine (app_libdir, gdbservers [i]);
-		if (file_executable (p))
-			return p;
-		free (p);
-	}
-
-	return NULL;
-}
-
-static int
-start_ds2_server (void)
-{
-	char *gdbserver = get_ds2_path ();
-	if (!gdbserver) {
-		log_warn (LOG_DEBUGGER, "Unable to find ds2 debug server!");
-		return FALSE;
-	}
-	pid_t parent_pid = getpid ();
-	log_warn (LOG_DEBUGGER, "waiting for lldb to attach to pid %d...\n", parent_pid);
-	if (fork () == 0) {
-		char *pid = monodroid_strdup_printf ("%d", parent_pid);
-		char *port;
-
-		char *portNum;
-		if (monodroid_get_namespaced_system_property (DEBUG_MONO_GDBPORT_PROPERTY, &portNum) > 0) {
-			port = monodroid_strdup_printf ("localhost:%s", portNum);
-			free (portNum);
-		} else {
-			port = monodroid_strdup_printf ("9999");
-		}
-
-		log_warn (LOG_DEBUGGER, "Trying: %s gdbserver --attach %s %s", gdbserver, pid, port);
-
-		execl (gdbserver, gdbserver, "gdbserver", "--attach", pid, port, NULL);
-		log_error (LOG_DEFAULT, "Start of ds2 debug server failed");
-		close (0);
-		close (1);
-		close (2);
-		exit (FATAL_EXIT_FORK_FAILED);
-	}
-	sleep (2);
-	return TRUE;
-}
-
-static char*
-get_gdbserver_path (void)
-{
-	int i;
-	static const char* gdbservers [] = {
-		"gdbserver",
-		"libgdbserver.so",
-	};
-	static const char system_gdbserver[] = "/system/bin/gdbserver";
-
-	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
-		int oi = 0;
-		for ( ; oi < MAX_OVERRIDES; ++oi) {
-			char *p;
-			if (!directory_exists (override_dirs [oi]))
-				continue;
-			p = path_combine (override_dirs [oi], gdbservers [i]);
-			if (file_executable (p))
-				return p;
-			free (p);
-		}
-	}
-
-	for (i = 0; i < sizeof (gdbservers)/sizeof (gdbservers [0]); ++i) {
-		char *p = path_combine (app_libdir, gdbservers [i]);
-		if (file_executable (p))
-			return p;
-		free (p);
-	}
-
-	if (file_executable (system_gdbserver))
-		return monodroid_strdup_printf (system_gdbserver);
-
-	return NULL;
-}
-
-static void
-start_gdbserver (void)
-{
-	char *gdbserver = get_gdbserver_path ();
-	if (!gdbserver) {
-		log_warn (LOG_DEBUGGER, "Unable to find gdbserver!");
-		log_warn (LOG_DEBUGGER, "Please create e.g. %s/libgdbserver.so%s%s%s.",
-				app_libdir,
-				override_dirs [0] == NULL ? "" : " or ",
-				override_dirs [0] == NULL ? "" : override_dirs [0],
-				override_dirs [0] == NULL ? "" : "/gdbserver");
-		log_warn (LOG_DEBUGGER, "Ignoring debug.mono.gdb system property setting.");
-		return;
-	}
-	pid_t parent_pid = getpid ();
-	log_warn (LOG_DEBUGGER, "waiting for gdb to attach...\n");
-	if (fork () == 0) {
-		char *pid = monodroid_strdup_printf ("%d", parent_pid);
-		char *port;
-
-		char *portNum;
-		if (monodroid_get_namespaced_system_property (DEBUG_MONO_GDBPORT_PROPERTY, &portNum) > 0) {
-			port = monodroid_strdup_printf (":%s", portNum);
-			free (portNum);
-		} else {
-			port = monodroid_strdup_printf (":9999");
-		}
-
-		log_warn (LOG_DEBUGGER, "Trying: %s --remote --attach %s %s", gdbserver, port, pid);
-		execl (gdbserver, "--remote", "--attach", port, pid, NULL);
-		log_error (LOG_DEFAULT, "Start of gdbserver failed");
-		close (0);
-		close (1);
-		close (2);
-		exit (FATAL_EXIT_FORK_FAILED);
-	}
-	sleep (2);
-}
-
-static int
-should_attach_gdb (void)
-{
-	int i;
-	if (!attach_gdb)
-		return 0;
-	for (i = 0; i < MAX_OVERRIDES; ++i) {
-		char *p = path_combine (override_dirs [i], "gdb");
-		int  e  = p != NULL && file_exists (p);
-		log_debug (LOG_DEBUGGER, "looking for %s: %s.\n", p, e ? "found" : "not found");
-		if (e) {
-			unlink (p);
-			free (p);
-			return 1;
-		}
-		free (p);
-	}
-	return 0;
-}
 #else
 static int
 enable_soft_breakpoints (void)
@@ -2680,23 +2491,6 @@ enable_soft_breakpoints (void)
 void
 set_world_accessable (const char *path)
 {
-}
-
-static int
-start_ds2_server (void)
-{
-	return FALSE;
-}
-
-static void
-start_gdbserver (void)
-{
-}
-
-static int
-should_attach_gdb (void)
-{
-	return 0;
 }
 #endif
 
@@ -2807,13 +2601,6 @@ mono_runtime_init (char *runtime_args)
 		mono.mono_profiler_install_jit_end (jit_end);
 
 	parse_gdb_options ();
-
-	if (!should_attach_gdb ()) {
-		log_debug (LOG_DEBUGGER, "not attaching the debug server.\n");
-	} else {
-		if (!start_ds2_server ())
-			start_gdbserver ();
-	}
 
 	if (wait_for_gdb) {
 		log_warn (LOG_DEFAULT, "Waiting for gdb to attach...");

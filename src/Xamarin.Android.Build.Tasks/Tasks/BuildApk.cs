@@ -84,7 +84,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnableSGenConcurrent { get; set; }
 
 		public string StubApplicationDataFile { get; set; }
-		public string AndroidGdbDebugServer { get; set; }
 		public string AndroidEmbedProfilers { get; set; }
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
@@ -106,7 +105,6 @@ namespace Xamarin.Android.Tasks
 
 		SequencePointsMode sequencePointsMode = SequencePointsMode.None;
 
-		AndroidDebugServer debugServer = AndroidDebugServer.Gdb;
 		Guid buildId = Guid.NewGuid ();
 		
 		public ITaskItem[] LibraryProjectJars { get; set; }
@@ -155,8 +153,6 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
-				if (_Debug)
-					AddGdbservers (apk, files, supportedAbis, debugServer);
 
 				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
 				if (jarFiles != null && JavaLibraries != null)
@@ -227,13 +223,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
 
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
-
-			var androidDebugServer = GdbPaths.GetAndroidDebugServer (AndroidGdbDebugServer);
-			if (!androidDebugServer.HasValue) {
-				Log.LogError ("Unable to determine debug server variant: {0}", AndroidGdbDebugServer);
-				return false;
-			}
-			debugServer = androidDebugServer.Value;
 
 			if (string.IsNullOrEmpty (AndroidEmbedProfilers) && _Debug) {
 				AndroidEmbedProfilers = "log";
@@ -614,36 +603,6 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogMessage (MessageImportance.Low, "\tAdding {0}", path);
 			files.Add (new Tuple<string, string> (path, string.Format ("lib/{0}", abi)));
-		}
-
-		private void AddGdbservers (ZipArchiveEx apk, ArchiveFileList files, string supportedAbis, AndroidDebugServer debugServer)
-		{
-			if (string.IsNullOrEmpty (AndroidNdkDirectory))
-				return;
-
-			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
-			int count = 0;
-			foreach (var sabi in supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
-				var arch = GdbPaths.GetArchFromAbi (sabi);
-				var abi  = GdbPaths.GetAbiFromArch (arch);
-				if (abi == null)
-					continue;
-				var debugServerFile = GdbPaths.GetDebugServerFileName (debugServer);
-				if (files.Any (f => string.Equals (Path.GetFileName (f.Item1), debugServerFile, StringComparison.Ordinal) &&
-							string.Equals (f.Item2, "lib/" + sabi, StringComparison.Ordinal)))
-					continue;
-				var entryName = string.Format ("lib/{0}/{1}", sabi, debugServerFile);
-				var debugServerPath = GdbPaths.GetDebugServerPath (debugServer, arch, AndroidNdkDirectory, sdkBinDirectory);
-				if (!File.Exists (debugServerPath))
-					continue;
-				Log.LogDebugMessage ("Adding {0} debug server '{1}' to the APK as '{2}'", sabi, debugServerPath, entryName);
-				apk.Archive.AddEntry (entryName, File.OpenRead (debugServerPath));
-				count++;
-				if (count == ZipArchiveEx.ZipFlushLimit) {
-					apk.Flush();
-					count = 0;
-				}
-			}
 		}
 	}
 }
