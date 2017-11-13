@@ -146,12 +146,22 @@ namespace Xamarin.Android.NUnitLite {
 
 		protected virtual IEnumerable <string> GetIncludedCategories ()
 		{
-			return null;
+			string include = arguments?.GetString ("include");
+			if (!string.IsNullOrEmpty (include)) {
+				foreach (var category in include.Split (':')) {
+					yield return category;
+				}
+			}
 		}
 
 		protected virtual IEnumerable <string> GetExcludedCategories ()
 		{
-			return null;
+			string exclude = arguments?.GetString ("exclude");
+			if (!string.IsNullOrEmpty (exclude)) {
+				foreach (var category in exclude.Split (':')) {
+					yield return category;
+				}
+			}
 		}
 
 		protected virtual void UpdateFilter ()

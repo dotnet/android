@@ -29,7 +29,12 @@ namespace Xamarin.Android.BclTests {
 
 		protected override IEnumerable<string> GetExcludedCategories ()
 		{
-			return App.GetExcludedCategories ();
+			foreach (var category in base.GetExcludedCategories ()) {
+				yield return category;
+			}
+			foreach (var category in App.GetExcludedCategories ()) {
+				yield return category;
+			}
 		}
 
 		protected override void UpdateFilter ()

@@ -178,6 +178,20 @@ For example:
 	$ tools/scripts/xabuild /t:DeployTestApks tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 	$ tools/scripts/xabuild /t:RunTestApks    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
 
+## Running `.apk` Projects with Include/Exclude
+
+For example, to exclude tests that use the internet (`InetAccess` category):
+
+	$ make run-apk-tests EXCLUDECATEGORIES=InetAccess
+
+On Windows:
+
+	$ msbuild Xamarin.Android.sln /t:RunApkTests /p:ExcludeCategories=InetAccess
+
+`INCLUDECATEGORIES` and `IncludeCategories` function in the same fashion.
+
+To specify multiple categories, delimit each category with a `:` character. The `:` delimiter works well with both `MSBuild` properties and `make` variables.
+
 ### Running A Single Test Fixture
 
 A single NUnit *Test Fixture* -- a class with the `[TestFixture]`

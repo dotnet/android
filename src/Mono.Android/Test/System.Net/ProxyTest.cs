@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace System.NetTests {
 
-	[TestFixture]
+	[TestFixture, Category ("InetAccess")]
 	public class ProxyTest {
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=14968

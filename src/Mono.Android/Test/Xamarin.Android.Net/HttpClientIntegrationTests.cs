@@ -38,7 +38,7 @@ using System.Linq;
 using System.IO;
 
 namespace Xamarin.Android.NetTests {
-
+	[Category ("InetAccess")]
 	public abstract class HttpClientIntegrationTestBase
 	{
     protected abstract HttpClientHandler CreateHandler ();

@@ -152,12 +152,17 @@
 
   <Target Name="RunTestApks"
       Condition=" '@(TestApk)' != '' ">
+    <PropertyGroup>
+      <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
+      <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
+    </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApk.InstrumentationType)' != ''"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         Component="%(TestApk.Package)/%(TestApk.InstrumentationType)"
         NUnit2TestResultsFile="%(TestApk.ResultsPath)"
+        InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
