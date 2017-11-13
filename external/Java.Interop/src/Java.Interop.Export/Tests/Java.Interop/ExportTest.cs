@@ -1,7 +1,7 @@
 using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Collections.Generic;
 
 using Java.Interop;
 using Java.Interop.Expressions;
@@ -11,11 +11,10 @@ namespace Java.InteropTests
 	[JniTypeSignature ("com/xamarin/interop/export/ExportType")]
 	public class ExportTest : JavaObject
 	{
-		static void __RegisterNativeMembers (JniType type, string members)
+		[JniAddNativeMethodRegistrationAttribute]
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
 		{
-			var methods = JniEnvironment.Runtime.MarshalMemberBuilder
-				.GetExportedMemberRegistrations (typeof (ExportTest));
-			type.RegisterNativeMethods (methods.ToArray ());
+			args.AddRegistrations (JniEnvironment.Runtime.MarshalMemberBuilder.GetExportedMemberRegistrations (typeof (ExportTest)));
 		}
 
 		public ExportTest (ref JniObjectReference reference, JniObjectReferenceOptions transfer)

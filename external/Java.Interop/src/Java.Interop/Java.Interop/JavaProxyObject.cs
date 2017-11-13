@@ -11,12 +11,12 @@ namespace Java.Interop {
 		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 
-		static void __RegisterNativeMembers (JniType type, string members)
+		[JniAddNativeMethodRegistrationAttribute]
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
 		{
-			_members.JniPeerType.RegisterNativeMethods (
-					new JniNativeMethodRegistration ("equals",      "(Ljava/lang/Object;)Z",    (Func<IntPtr, IntPtr, IntPtr, bool>)    _Equals),
-					new JniNativeMethodRegistration ("hashCode",    "()I",                      (Func<IntPtr, IntPtr, int>)             _GetHashCode),
-					new JniNativeMethodRegistration ("toString",    "()Ljava/lang/String;",     (Func<IntPtr, IntPtr, IntPtr>)          _ToString));
+			args.Registrations.Add (new JniNativeMethodRegistration ("equals",   "(Ljava/lang/Object;)Z", (Func<IntPtr, IntPtr, IntPtr, bool>)_Equals));
+			args.Registrations.Add (new JniNativeMethodRegistration ("hashCode", "()I",                   (Func<IntPtr, IntPtr, int>)_GetHashCode));
+			args.Registrations.Add (new JniNativeMethodRegistration ("toString", "()Ljava/lang/String;",  (Func<IntPtr, IntPtr, IntPtr>)_ToString));
 		}
 
 		public override JniPeerMembers JniPeerMembers {

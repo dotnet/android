@@ -577,3 +577,7 @@ T: Java.Interop.JavaObject
 R: Gendarme.Rules.Design.Generic.DoNotExposeGenericListsRule
 # We don't care here as we don't hold the list and create it on request. So to avoid performace penalty, we keep the list as return type
 M: System.Collections.Generic.List`1<Java.Interop.JniSurfacedPeerInfo> Java.Interop.JniRuntime/JniValueManager::GetSurfacedPeers()
+
+R: Gendarme.Rules.Concurrency.DoNotUseLockedRegionOutsideMethodRule
+# Looks like Gendarme issue, as there are both Monitor.TryEnter and Monitor.Exit used in this method
+M: System.Boolean Java.Interop.JniRuntime/JniTypeManager::TryRegisterNativeMembers(Java.Interop.JniType,System.Type,System.String)

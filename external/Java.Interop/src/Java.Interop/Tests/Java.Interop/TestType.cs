@@ -14,13 +14,18 @@ namespace Java.InteropTests
 		internal    const    string         JniTypeName = "com/xamarin/interop/TestType";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (TestType));
 
-		static void __RegisterNativeMembers (JniType type, string members)
+		[JniAddNativeMethodRegistrationAttribute]
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
 		{
-			_members.JniPeerType.RegisterNativeMethods (
-					new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()),
-					new JniNativeMethodRegistration ("getInt32Value", "()I", GetInt32ValueHandler ()),
-					new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", _GetStringValueHandler ()),
-					new JniNativeMethodRegistration ("methodThrows", "()V", GetMethodThrowsHandler ()));
+			args.Registrations.Add (new JniNativeMethodRegistration ("equalsThis", "(Ljava/lang/Object;)Z", GetEqualsThisHandler ()));
+			args.Registrations.Add (new JniNativeMethodRegistration ("getInt32Value", "()I", GetInt32ValueHandler ()));
+		}
+
+		[JniAddNativeMethodRegistrationAttribute]
+		static void RegisterNativeMembers2 (JniNativeMethodRegistrationArguments args)
+		{
+			args.Registrations.Add (new JniNativeMethodRegistration ("getStringValue", "(I)Ljava/lang/String;", _GetStringValueHandler ()));
+			args.Registrations.Add (new JniNativeMethodRegistration ("methodThrows", "()V", GetMethodThrowsHandler ()));
 		}
 
 		public override JniPeerMembers JniPeerMembers {

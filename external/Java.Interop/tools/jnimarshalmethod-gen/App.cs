@@ -105,8 +105,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			typeof (string),
 			typeof (Delegate),
 		});
-		static  readonly    MethodInfo          JniType_RegisterNativeMethods       = typeof (JniType).GetMethod ("RegisterNativeMethods", new[] {
-			typeof (JniNativeMethodRegistration[]),
+		static  readonly    MethodInfo          JniNativeMethodRegistrationArguments_AddRegistrations = typeof (JniNativeMethodRegistrationArguments).GetMethod ("AddRegistrations", new[] {
+			typeof (IEnumerable<JniNativeMethodRegistration>),
 		});
 		static  readonly    MethodInfo          Type_GetType                        = typeof (Type).GetMethod ("GetType", new[] {
 			typeof (string),
@@ -123,21 +123,18 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		static void AddRegisterNativeMembers (TypeBuilder dt, ParameterExpression targetType, List<Expression> registrationElements)
 		{
-			var type    = Expression.Parameter (typeof (JniType),   "type");
-			var members = Expression.Parameter (typeof (string),    "members");
-
-			var methods = Expression.Variable (typeof (JniNativeMethodRegistration[]),  "methods");
+			var args    = Expression.Parameter (typeof (JniNativeMethodRegistrationArguments),   "args");
 
 			var body = Expression.Block (
-					new[]{targetType, methods},
+					new[]{targetType},
 					Expression.Assign (targetType, Expression.Call (Type_GetType, Expression.Constant (dt.FullName))),
-					Expression.Assign (methods, Expression.NewArrayInit (typeof(JniNativeMethodRegistration), registrationElements.ToArray ())),
-					Expression.Call (type, JniType_RegisterNativeMethods, methods));
+					Expression.Call (args, JniNativeMethodRegistrationArguments_AddRegistrations, Expression.NewArrayInit (typeof (JniNativeMethodRegistration), registrationElements.ToArray ())));
 
-			var lambda  = Expression.Lambda<Action<JniType, string>> (body, new[]{ type, members });
+			var lambda  = Expression.Lambda<Action<JniNativeMethodRegistrationArguments>> (body, new[]{ args });
 
 			var rb = dt.DefineMethod ("__RegisterNativeMembers",
 					MethodAttributes.Public | MethodAttributes.Static);
+			rb.SetCustomAttribute (new CustomAttributeBuilder (typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes), new object[0]));
 			lambda.CompileToMethod (rb);
 		}
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -243,15 +244,41 @@ namespace Java.Interop {
 				}
 			}
 
+			static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
+
 			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods)
 			{
-				var registerMethod  = marshalType.GetTypeInfo ().GetDeclaredMethod ("__RegisterNativeMembers");
-				if (registerMethod == null) {
-					return false;
+				bool lockTaken = false;
+
+				try {
+					Monitor.TryEnter (sharedRegistrations, ref lockTaken);
+					List<JniNativeMethodRegistration> registrations;
+					if (lockTaken) {
+						sharedRegistrations.Clear ();
+						registrations = sharedRegistrations;
+					} else {
+						registrations = new List<JniNativeMethodRegistration> ();
+					}
+					JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
+					foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
+						if (methodInfo.GetCustomAttribute (typeof (JniAddNativeMethodRegistrationAttribute)) == null) {
+							continue;
+						}
+
+						if ((methodInfo.Attributes & MethodAttributes.Static) != MethodAttributes.Static) {
+							throw new InvalidOperationException ($"The method {methodInfo} marked with {nameof (JniAddNativeMethodRegistrationAttribute)} must be static");
+						}
+
+						var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));
+						register (arguments);
+					}
+					nativeClass.RegisterNativeMethods (registrations.ToArray ());
+				} finally {
+					if (lockTaken) {
+						Monitor.Exit (sharedRegistrations);
+					}
 				}
 
-				var register    = (Action<JniType, string>) registerMethod.CreateDelegate (typeof(Action<JniType, string>));
-				register (nativeClass, methods);
 				return true;
 			}
 		}

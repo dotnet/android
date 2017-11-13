@@ -135,7 +135,7 @@ namespace Java.Interop {
 		JniNativeMethodRegistration[] methods;
 #pragma warning restore 0414
 
-		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
+		internal void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();
 
