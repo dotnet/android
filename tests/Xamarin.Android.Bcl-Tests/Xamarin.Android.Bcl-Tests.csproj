@@ -89,9 +89,6 @@
     <AndroidResource Include="Resources\mipmap-xxhdpi\Icon.png" />
     <AndroidResource Include="Resources\mipmap-xxxhdpi\Icon.png" />
   </ItemGroup>
-  <ItemGroup>
-    <LinkDescription Include="Resources\LinkerDescription.xml" />
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Xamarin.Android.Bcl-Tests.targets" />
   <PropertyGroup>
