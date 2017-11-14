@@ -103,12 +103,12 @@ namespace Xamarin.Android.NUnitLite
 
 		protected virtual IEnumerable <string> GetIncludedCategories ()
 		{
-			return null;
+			yield break;
 		}
 
 		protected virtual IEnumerable <string> GetExcludedCategories ()
 		{
-			return null;
+			yield break;
 		}
 
 		// Subclasses can override this method to update the test filtering that the runner will use.

@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace System.NetTests {
 
-	[TestFixture]
+	[TestFixture, Category ("InetAccess")]
 	public class SslTest {
 
 		// https://xamarin.desk.com/agent/case/35534

@@ -389,7 +389,8 @@ namespace Xamarin.Android.NUnitLite
 					gotCategories = true;
 				}
 
-				chain = new AndFilter (chain, negate ? (TestFilter)new NotFilter (filter) : (TestFilter)filter);
+				if (gotCategories)
+					chain = new AndFilter (chain, negate ? (TestFilter)new NotFilter (filter) : (TestFilter)filter);
 			}
 
 			if (!gotCategories)

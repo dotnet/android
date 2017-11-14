@@ -39,10 +39,10 @@ using NUnit.Framework;
 using Android.OS;
 
 namespace Xamarin.Android.NetTests {
-
+	[Category("InetAccess")]
 	public abstract class HttpClientHandlerTestBase
 	{
-    protected abstract HttpClientHandler CreateHandler ();
+		protected abstract HttpClientHandler CreateHandler ();
 
 		class Proxy : IWebProxy
 		{
