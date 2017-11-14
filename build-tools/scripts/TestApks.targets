@@ -10,6 +10,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessPlotInput" />
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidTestRunner</_TestImageName>
@@ -177,7 +178,7 @@
         ToolPath="$(AdbToolPath)">
     </RunUITests>
     <PropertyGroup>
-      <_LogcatFilename>logcat-$(Configuration)$(_AotName).txt</_LogcatFilename>
+      <_LogcatFilename>logcat-$(Configuration)$(TestsAotName).txt</_LogcatFilename>
     </PropertyGroup>
     <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_LogcatFilename)" />
     <ProcessLogcatTiming
@@ -187,7 +188,7 @@
         ResultsFilename="%(TestApk.TimingResultsFilename)"
         DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
         AddResults="true"
-        LabelSuffix="-$(Configuration)$(_AotName)"
+        LabelSuffix="-$(Configuration)$(TestsAotName)"
         Activity="%(TestApk.Activity)" />
   </Target>
   <Target Name="RenameTestCases">
@@ -223,10 +224,33 @@
       Condition=" '@(TestApk)' != '' ">
     <RenameTestCases
         Condition=" '%(TestApk.ResultsPath)' != '' "
-        Configuration="$(Configuration)$(_AotName)"
+        Configuration="$(Configuration)$(TestsAotName)"
         DeleteSourceFiles="True"
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApk.ResultsPath)"
+    />
+  </Target>
+  <Target Name="RecordApkSizes"
+      Condition=" '$(HostOS)' != 'Windows' ">
+    <Exec
+        Condition=" '$(HostOS)' == 'Darwin' And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
+        Command="stat -f &quot;stat: %z %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+    />
+    <Exec
+        Condition=" '$(HostOS)' == 'Linux'  And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
+        Command="stat -c &quot;stat: %s %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+    />
+    <Exec
+        Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
+        Command="unzip -l &quot;%(TestApk.Identity)&quot; >> &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;" />
+    <ProcessPlotInput
+        Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
+        InputFilename="$(OutputPath)%(TestApk.ApkSizesInputFilename)"
+        ApplicationPackageName="%(TestApk.Package)"
+        ResultsFilename="%(TestApk.ApkSizesResultsFilename)"
+        DefinitionsFilename="%(TestApk.ApkSizesDefinitionFilename)"
+        AddResults="True"
+        LabelSuffix="-$(Configuration)$(TestsAotName)"
     />
   </Target>
 </Project>
