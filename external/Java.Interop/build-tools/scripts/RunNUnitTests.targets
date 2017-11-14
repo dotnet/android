@@ -23,7 +23,8 @@
         DestinationFolder="$(_TopDir)\bin\Test$(Configuration)"
         SkipUnchangedFiles="True"
     />
-    <SetEnvironmentVariable Name="MONO_TRACE_LISTENER" Value="Console.Out" />
+    <SetEnvironmentVariable Name="ANDROID_SDK_PATH"      Value="$(AndroidSdkDirectory)" Condition=" '$(AndroidSdkDirectory)' != '' " />
+    <SetEnvironmentVariable Name="MONO_TRACE_LISTENER"   Value="Console.Out" />
     <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="g-%(_TestAssembly.Filename).txt" />
     <SetEnvironmentVariable Name="JAVA_INTEROP_LREF_LOG" Value="l-%(_TestAssembly.Filename).txt" />
     <Exec
