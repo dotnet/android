@@ -80,12 +80,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
  * The Text Format is:
  * 
  * package {packagename}
- * #---------------------------------------
+ * ;---------------------------------------
  *   interface {interfacename}{optional_type_parameters} -or-
  *   class {classname}{optional_type_parameters}
  *     {optional_type_parameters}{methodname}({parameters})
  * 
- * Anything after # is treated as comment.
+ * Anything after ; is treated as comment.
  * 
  * optional_type_parameters: "" -or- "<A,B,C>" (no constraints allowed)
  * parameters: type1 p0, type2 p1 (pairs of {type} {name}, joined by ", ")
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			foreach (var package in api.Packages) {
 				writer.WriteLine ();
 				writer.WriteLine ($"package {package.Name}");
-				writer.WriteLine ("#---------------------------------------");
+				writer.WriteLine (";---------------------------------------");
 
 				foreach (var type in package.Types) {
 					if (!type.Members.OfType<JavaMethodBase> ().Any (m => m.Parameters.Any ()))

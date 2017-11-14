@@ -1,3 +1,6 @@
-﻿package java.util
+﻿
+; This is a comment line.
+package java.util ; Anything after semicolon is comment.
   class Collection<E>
     add(E e)
+    #ctor()

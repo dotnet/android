@@ -45,12 +45,12 @@ namespace Xamarin.Android.Tools.Bytecode
 		 * The Text Format is:
 		 * 
 		 * package {packagename}
-		 * #---------------------------------------
+		 * ;---------------------------------------
 		 *   interface {interfacename}{optional_type_parameters} -or-
 		 *   class {classname}{optional_type_parameters}
 		 *     {optional_type_parameters}{methodname}({parameters})
 		 * 
-		 * Anything after # is treated as comment.
+		 * Anything after ; is treated as comment.
 		 * 
 		 * optional_type_parameters: "" -or- "<A,B,C>" (no constraints allowed)
 		 * parameters: type1 p0, type2 p1 (pairs of {type} {name}, joined by ", ")
@@ -74,8 +74,10 @@ namespace Xamarin.Android.Tools.Bytecode
 			var types = new List<Type> ();
 			string type = null;
 			var methods = new List<Method> ();
+			int currentLine = 0;
 			foreach (var l in File.ReadAllLines (path)) {
-				var line = l.IndexOf ('#') >= 0 ? l.Substring (0, l.IndexOf ('#')) : l;
+				currentLine++;
+				var line = l.IndexOf (';') >= 0 ? l.Substring (0, l.IndexOf (';')).TrimEnd (' ', '\t') : l;
 				if (line.Trim ().Length == 0)
 					continue;
 				if (line.StartsWith ("package ", StringComparison.Ordinal)) {
@@ -85,6 +87,8 @@ namespace Xamarin.Android.Tools.Bytecode
 					continue;
 				} else if (line.StartsWith ("    ", StringComparison.Ordinal)) {
 					int open = line.IndexOf ('(');
+					if (open < 0)
+						throw new ArgumentException ($"Unexpected line in {path} line {currentLine}: {line}");
 					string parameters = line.Substring (open + 1).TrimEnd (')');
 					string name = line.Substring (4, open - 4);
 					if (name.FirstOrDefault () == '<') // generic method can begin with type parameters.
