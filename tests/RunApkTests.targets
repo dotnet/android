@@ -5,9 +5,6 @@
     <OutputPath>$(MSBuildThisFileDirectory)..\bin\Test$(Configuration)\</OutputPath>
   </PropertyGroup>
   <Import Project="..\Configuration.props" />
-  <PropertyGroup>
-    <_AotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_AotName>
-  </PropertyGroup>
   <!--
     Note that the `.csproj` for each `@(TestApk)` entry *must* be added to
     `$(TEST_APK_PROJECTS)` and/or `$(TEST_APK_PROJECTS_RELEASE)`
@@ -29,6 +26,7 @@
       AcquireAndroidTarget;
       UndeployTestApks;
       DeployTestApks;
+      RecordApkSizes;
       RunTestApks;
       ReleaseAndroidTarget;
       RenameApkTestCases;

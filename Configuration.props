@@ -72,6 +72,7 @@
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">26.0.1</XABuildToolsFolder>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
+    <TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</TestsAotName>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>
