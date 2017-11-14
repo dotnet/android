@@ -326,7 +326,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				string rawXML = null;
 				using (var reader = File.OpenText (path)) {
 					int len = reader.ReadBlock (buf, 0, buf.Length);
-					rawXML = new string (buf, 0, len);
+					rawXML = new string (buf, 0, len).Trim ();
 				}
 				if (rawXML.Contains ("<api>") && rawXML.Contains ("<package"))
 					kind = JavaDocletType._ApiXml;
