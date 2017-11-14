@@ -15,7 +15,6 @@
   </PropertyGroup>
   <ItemGroup>
     <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.Build.Tests.dll" />
-    <_JavaInteropTestResults Include="$(JavaInteropSourceDirectory)\TestResult-*.xml" />
     <_ApkTestProject Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj" />
@@ -61,7 +60,11 @@
         Targets="RenameTestCases"
         Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
     />
+    <ItemGroup>
+      <_JavaInteropTestResults Include="$(JavaInteropSourceDirectory)\TestResult-*.xml" />
+    </ItemGroup>
     <Copy SourceFiles="@(_JavaInteropTestResults)" DestinationFolder="$(_TopDir)" />
+    <Delete Files="@(_JavaInteropTestResults)" />
   </Target>
   <Target Name="RunApkTests">
     <Exec Command="$(_XABuild) %(_ApkTestProject.Identity) /t:SignAndroidPackage $(_XABuildProperties)" />
