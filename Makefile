@@ -141,3 +141,5 @@ run-ji-tests:
 
 run-apk-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunApkTests
+
+include build-tools/scripts/runtime-helpers.mk

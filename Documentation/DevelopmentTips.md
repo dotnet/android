@@ -4,6 +4,50 @@ Tips and tricks while developing Xamarin.Android.
 
 # How do I rebuild the Mono Runtime and Native Binaries?
 
+## The short way
+
+From the top of the Xamarin Android source tree you can run make for the following
+targets, which implement the steps to rebuild the runtime and BCL described further
+down in the document:
+
+    # Show help on all the rebuild targets
+    make rebuild-help
+
+    # Rebuild Mono runtime for all configured architectures regardless
+    # of whether a cached copy was used.
+    rebuild-mono
+
+    # Rebuild and install Mono runtime for the armeabi architecture only regardless
+    # of whether a cached copy was used.
+    rebuild-armeabi-mono
+
+    # Rebuild and install Mono runtime for the armeabi-v7a architecture only regardless
+    # of whether a cached copy was used.
+    rebuild-armeabi-v7a-mono
+
+    # Rebuild and install Mono runtime for the arm64-v8a architecture only regardless
+    # of whether a cached copy was used.
+    rebuild-arm64-v8a-mono
+
+    # Rebuild and install Mono runtime for the x86 architecture only regardless
+    # of whether a cached copy was used.
+    rebuild-x86-mono
+
+    # Rebuild and install Mono runtime for the x86_64 architecture only regardless
+    # of whether a cached copy was used.
+    rebuild-x86_64-mono
+
+    # Rebuild and install a specific BCL assembly. Assembly name must be passed in the ASSEMBLY Make variable
+    rebuild-bcl-assembly ASSEMBLY=bcl_assembly_name
+
+    # Rebuild and install all the BCL assemblies
+    rebuild-all-bcl
+
+Note that rebuilding Mono using the targets above will modify the commit at the git HEAD by resetting
+its date to the current one (see below for more info) - do *NOT* commit the change to Mono as it rewrites
+history.
+
+## The long way
 The various Mono runtimes -- over *20* of them (!) -- all store object code
 within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
 
