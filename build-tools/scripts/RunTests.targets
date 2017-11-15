@@ -76,6 +76,7 @@
     <MSBuild 
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Condition=" '$(Configuration)' == 'Release' "
+        Properties="AotAssemblies=True"
     />
   </Target>
   <Target Name="RunAllTests" DependsOnTargets="RunNUnitTests;RunJavaInteropTests;RunApkTests" />
