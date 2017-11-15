@@ -177,6 +177,26 @@ namespace Xamarin.Android.Build.Tests
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
+		protected void AssertBuild(ProjectBuilder builder)
+		{
+			foreach (var assertion in builder.Assertions) {
+				if (!assertion.Passed) {
+					Assert.Fail (assertion.ToString ());
+				}
+			}
+			builder.Assertions.Clear ();
+		}
+
+		protected void AssertBuildDidNotPass (ProjectBuilder builder)
+		{
+			foreach (var assertion in builder.Assertions) {
+				if (assertion.Passed) {
+					Assert.Fail (assertion.ToString ());
+				}
+			}
+			builder.Assertions.Clear ();
+		}
+
 		[OneTimeSetUp]
 		public void FixtureSetup ()
 		{
@@ -215,8 +235,17 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
 			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
-				FileSystemUtils.SetDirectoryWriteable (output);
-				Directory.Delete (output, recursive: true);
+
+				do {
+					try {
+						FileSystemUtils.SetDirectoryWriteable (output);
+						Directory.Delete (output, recursive: true);
+						break;
+					} catch (IOException) {
+						//NOTE: seems to happen quite a bit on Windows
+						Thread.Sleep (25);
+					}
+				} while (true);
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
 					TestContext.Out.WriteLine ("*************************************************************************");

@@ -14,10 +14,59 @@ namespace Xamarin.ProjectTools
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
 		public LoggerVerbosity Verbosity { get; set; }
-		public string LastBuildOutput { get; set; }
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
+
+		//TODO: remove
+		public string LastBuildOutput {
+			get { throw new NotImplementedException (); }
+		}
+
+		public List<Assertion> Assertions { get; set; } = new List<Assertion> ();
+
+		public void AssertTargetSkipped (string target)
+		{
+			Assertions.Add (new Assertion (o => o.Contains (target), $"Target '{target}' is not even in the build output."));
+
+			Assertions.Add (new Assertion (o => o.Contains ($"Target {target} skipped due to ") ||
+				o.Contains ($"Skipping target \"{target}\" because it has no outputs.") ||
+				o.Contains ($"Target \"{target}\" skipped, due to") ||
+				o.Contains ($"Skipping target \"{target}\" because its outputs are up-to-date") ||
+				o.Contains ($"target {target}, skipping") ||
+				o.Contains ($"Skipping target \"{target}\" because all output files are up-to-date"), $"Target {target} was not skipped."));
+		}
+
+		public void AssertApkInstalled ()
+		{
+			Assertions.Add (new Assertion (o => o.Contains (" pm install ")));
+		}
+
+		public void AssertAllTargetsSkipped (params string [] targets)
+		{
+			foreach (var t in targets) {
+				AssertTargetSkipped (t);
+			}
+		}
+
+		public void AssertTargetIsBuilt (string target)
+		{
+			Assertions.Add (new Assertion (o => o.Contains (target), $"Target '{target}' is not even in the build output."));
+
+			Assertions.Add (new Assertion (o => !o.Contains ($"Target {target} skipped due to ") &&
+				!o.Contains ($"Skipping target \"{target}\" because it has no outputs.") &&
+				!o.Contains ($"Target \"{target}\" skipped, due to") &&
+				!o.Contains ($"Skipping target \"{target}\" because its outputs are up-to-date") &&
+				!o.Contains ($"target {target}, skipping") &&
+				!o.Contains ($"Skipping target \"{target}\" because all output files are up-to-date"), $"Target {target} was not built."));
+		}
+
+		public void AssertAllTargetsBuilt (params string [] targets)
+		{
+			foreach (var t in targets) {
+				AssertTargetIsBuilt (t);
+			}
+		}
 
 		string GetVisualStudio2017Directory ()
 		{
@@ -191,11 +240,6 @@ namespace Xamarin.ProjectTools
 				? Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
 				: null;
 
-			var logger = buildLogFullPath == null
-				? string.Empty
-				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
-					buildLogFullPath, Verbosity.ToString ().ToLower ());
-
 			var start = DateTime.UtcNow;
 			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
  			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
@@ -212,8 +256,8 @@ namespace Xamarin.ProjectTools
 
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} {2}",
-				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, logger);
+			args.AppendFormat ("{0} /t:{1} /v:{2}",
+				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, Verbosity);
 			if (RunningMSBuild)
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
@@ -248,57 +292,75 @@ namespace Xamarin.ProjectTools
 
 			bool nativeCrashDetected = false;
 			bool result = false;
+			bool lastBuildTimeSet = false;
 			int attempts = 1;
 			for (int attempt = 0; attempt < attempts; attempt++) {
-				var p = Process.Start (psi);
-				var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
-				result = ranToCompletion && p.ExitCode == 0;
+				using (var p = new Process { StartInfo = psi }) {
+					StreamWriter file = null;
+					if (buildLogFullPath != null) {
+						Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
+						file = File.CreateText (buildLogFullPath);
+					}
+					try {
+						var standardError = new StringBuilder ();
+						file?.WriteLine ("#stdout begin");
 
-				LastBuildTime = DateTime.UtcNow - start;
-
-				var sb = new StringBuilder ();
-				sb.AppendLine (psi.FileName + " " + args.ToString () + Environment.NewLine);
-				if (!ranToCompletion)
-					sb.AppendLine ("Build Timed Out!");
-				if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
-					using (var fs = File.OpenRead (buildLogFullPath)) {
-						using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
-							string line;
-							while ((line = sr.ReadLine ()) != null) {
-								sb.AppendLine (line);
-								if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
-									var match = timeElapsedRegEx.Match (line);
-									if (match.Success) {
-										LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
-										Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
-									}
-								}
-								if (line.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
-									nativeCrashDetected = true;
-									break;
+						p.OutputDataReceived += (sender, e) => {
+							if (e.Data == null)
+								return;
+							if (e.Data.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
+								var match = timeElapsedRegEx.Match (e.Data);
+								if (match.Success) {
+									LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
+									lastBuildTimeSet = true;
+									Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
 								}
 							}
+
+							if (e.Data.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
+								nativeCrashDetected = true;
+							}
+
+							foreach (var assertion in Assertions) {
+								assertion.Assert (e.Data);
+							}
+
+							file?.WriteLine (e.Data);
+						};
+						p.ErrorDataReceived += (sender, e) => standardError.AppendLine (e.Data);
+
+						p.Start ();
+						p.BeginOutputReadLine ();
+						p.BeginErrorReadLine ();
+
+						var ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
+						if (nativeCrashDetected) {
+							Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
+							continue;
 						}
+						result = ranToCompletion && p.ExitCode == 0;
+						if (!lastBuildTimeSet)
+							LastBuildTime = DateTime.UtcNow - start;
+
+						if (file != null) {
+							file.WriteLine ();
+							file.WriteLine ("#stdout end");
+							file.WriteLine ();
+							file.WriteLine ("#stderr begin");
+							file.WriteLine (standardError.ToString ());
+							file.WriteLine ("#stderr end");
+						}
+					} finally {
+						file?.Dispose ();
 					}
 				}
-				sb.AppendFormat ("\n#stdout begin\n{0}\n#stdout end\n", p.StandardOutput.ReadToEnd ());
-				sb.AppendFormat ("\n#stderr begin\n{0}\n#stderr end\n", p.StandardError.ReadToEnd ());
-
-				LastBuildOutput = sb.ToString ();
-				if (nativeCrashDetected) {
-					Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
-					continue;
-				}
 			}
 
-
-			if (buildLogFullPath != null) {
-				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
-				File.WriteAllText (buildLogFullPath, LastBuildOutput);
-			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				throw new FailedBuildException (message, null, LastBuildOutput);
+
+				//TODO: do we really need the full build log here? It seems to lock up my VS test runner
+				throw new FailedBuildException (message, null);
 			}
 
 			return result;
