@@ -146,14 +146,18 @@
         Condition=" !$(AndroidMxeFullPath.EndsWith ($(_MxeHash))) "
         Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
     />
+    <PropertyGroup>
+      <_AutopointPath Condition=" '$(HostOS)' == 'Darwin' ">:%24(dirname %24(brew list gettext | grep autopoint%24))</_AutopointPath>
+      <_Path>$PATH$(_AutopointPath)</_Path>
+    </PropertyGroup>
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
+        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Exec
         Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
+        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
         WorkingDirectory="..\..\external\mxe"
     />
     <Touch Files="@(_AndroidMxeOutput)" />
