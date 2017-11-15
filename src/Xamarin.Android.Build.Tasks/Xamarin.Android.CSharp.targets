@@ -27,7 +27,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
     <PropertyGroup>
         <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-        <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
+        <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.0.3</TargetFrameworkVersion>
         <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
         <!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
              our mscorlib.dll isn't properly signed, as far as its concerned.
