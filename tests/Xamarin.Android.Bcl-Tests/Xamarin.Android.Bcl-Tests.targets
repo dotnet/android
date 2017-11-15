@@ -21,7 +21,8 @@
       <_Source  Include="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
     </ItemGroup>
     <PropertyGroup>
-      <_NUnit>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Xamarin.Android.NUnitLite.dll</_NUnit>
+      <_XAFrameworksDir Condition=" '$(_XAFrameworksDir)' == '' ">$(XAInstallPrefix)xbuild-frameworks</_XAFrameworksDir>
+      <_NUnit>$(_XAFrameworksDir)\MonoAndroid\v1.0\Xamarin.Android.NUnitLite.dll</_NUnit>
     </PropertyGroup>
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
