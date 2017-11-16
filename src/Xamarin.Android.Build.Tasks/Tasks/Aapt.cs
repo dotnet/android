@@ -371,7 +371,7 @@ namespace Xamarin.Android.Tasks
 					line = int.Parse (match.Groups["line"].Value) + 1;
 				var level = match.Groups["level"].Value;
 				var message = match.Groups ["message"].Value;
-				if (level.Contains ("warning")) {
+				if (message.Contains ("fakeLogOpen") || level.Contains ("warning")) {
 					LogWarning (singleLine);
 					return;
 				}
