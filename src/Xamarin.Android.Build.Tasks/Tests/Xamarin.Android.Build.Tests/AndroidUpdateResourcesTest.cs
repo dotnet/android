@@ -87,7 +87,7 @@ using System.Runtime.CompilerServices;
 					b.Target = "Compile";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.Contains ("Skipping GetAdditionalResourcesFromAssemblies"),
+					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.ContainsText ("Skipping GetAdditionalResourcesFromAssemblies"),
 						"failed to skip the downloading of files.");
 					var items = new List<string> ();
 					string first = null;
@@ -103,7 +103,7 @@ using System.Runtime.CompilerServices;
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.Contains ($"Downloading {url}") || b.LastBuildOutput.Contains ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
 					items.Clear ();
 					if (!useManagedParser) {
@@ -171,7 +171,7 @@ using System.Runtime.CompilerServices;
 			using (var b = CreateApkBuilder ("temp/ErroneousResource")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				Assert.IsTrue (b.LastBuildOutput.Split ('\n').Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
+				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -368,7 +368,7 @@ namespace UnnamedProject
 					.FirstOrDefault (x => x.Attribute("name").Value == "colorAccent");
 				Assert.IsNotNull (item, "The Style should contain an Item");
 				Assert.AreEqual ("@color/deep_purple_A200", item.Value, "item value should be @color/deep_purple_A200");
-				StringAssert.DoesNotContain ("AndroidResgen: Warning while updating Resource XML", b.LastBuildOutput,
+				StringAssertEx.DoesNotContain ("AndroidResgen: Warning while updating Resource XML", b.LastBuildOutput,
 					"Warning while processing resources should not have been raised.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
@@ -500,10 +500,10 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
+				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
 					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
+				StringAssertEx.Contains ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
 					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should have been skipped");
 				var files = Directory.EnumerateFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcecache")
 					, "abc_fade_in.xml", SearchOption.AllDirectories);
@@ -512,7 +512,7 @@ namespace UnnamedProject
 				Assert.IsTrue (File.Exists (resFile), "{0} should exist", resFile);
 				File.SetLastWriteTime (resFile, DateTime.UtcNow);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
+				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
 					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
 			}
 		}
@@ -540,8 +540,8 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -559,8 +559,8 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -576,8 +576,8 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssert.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
+				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -598,8 +598,8 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssert.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssert.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -656,7 +656,7 @@ namespace UnnamedProject
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded");
-					StringAssert.Contains ("XA5215: Duplicate Resource found for", b.LastBuildOutput);
+					StringAssertEx.Contains ("XA5215: Duplicate Resource found for", b.LastBuildOutput);
 					var stylesXml = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "styles.xml");
 					Assert.IsTrue (File.Exists (stylesXml), "{0} should exist", stylesXml);
 					var doc = XDocument.Load (stylesXml);
@@ -794,7 +794,7 @@ namespace UnnamedProject
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded");
-					StringAssert.Contains ("XA5215: Duplicate Resource found for", b.LastBuildOutput);
+					StringAssertEx.Contains ("XA5215: Duplicate Resource found for", b.LastBuildOutput);
 					var colorsXml = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "colors.xml");
 					Assert.IsTrue (File.Exists (colorsXml), "{0} should exist", colorsXml);
 					var doc = XDocument.Load (colorsXml);
@@ -1104,7 +1104,7 @@ namespace Lib1 {
 			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
+				StringAssertEx.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
 			}
 		}
 	}

@@ -44,20 +44,31 @@ namespace Xamarin.ProjectTools
 			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
+
 		public bool IsTargetSkipped (string target)
 		{
-			if (!Builder.LastBuildOutput.Contains (target))
-				throw new ArgumentException (string.Format ("Target '{0}' is not even in the build output.", target));
-			return Builder.LastBuildOutput.Contains (string.Format ("Target {0} skipped due to ", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Skipping target \"{0}\" because it has no outputs.", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Target \"{0}\" skipped, due to", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("Skipping target \"{0}\" because its outputs are up-to-date", target))
-					|| Builder.LastBuildOutput.Contains (string.Format ("target {0}, skipping", target))
-					|| Builder.LastBuildOutput.Contains ($"Skipping target \"{target}\" because all output files are up-to-date");
+			bool found = false;
+			foreach (var line in Builder.LastBuildOutput) {
+					found = line.Contains (string.Format ("Target {0} skipped due to ", target))
+					            || line.Contains (string.Format ("Skipping target \"{0}\" because it has no outputs.", target))
+					            || line.Contains (string.Format ("Target \"{0}\" skipped, due to", target))
+					            || line.Contains (string.Format ("Skipping target \"{0}\" because its outputs are up-to-date", target))
+					            || line.Contains (string.Format ("target {0}, skipping", target))
+					            || line.Contains ($"Skipping target \"{target}\" because all output files are up-to-date");
+					if (found)
+						return true;
+			}
+			return false;
 		}
 
 		public bool IsApkInstalled {
-			get { return Builder.LastBuildOutput.Contains (" pm install "); }
+			get {
+				foreach (var line in Builder.LastBuildOutput) {
+					if (line.Contains (" pm install "))
+						return true;
+				}
+				return false;
+			}
 		}
 
 		public bool AreTargetsAllSkipped (params string [] targets)
