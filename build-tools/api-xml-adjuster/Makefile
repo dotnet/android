@@ -9,12 +9,12 @@ ANDROID_SDK_PATH=$(shell find ~/ -maxdepth 1 -name android-sdk-*)
 
 DOCS_DIR=~/android-toolchain/docs
 
-MANDROID = ../../bin/$(CONFIGURATION)/lib/xamarin.anroid/xbuild/Xamarin/Android
+MANDROID = ../../bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/Xamarin/Android
 BUILDBIN = ../../bin/Build$(CONFIGURATION)
 
 CLASS_PARSE = $(MANDROID)/class-parse.exe
 API_XML_TOOL = $(BUILDBIN)/api-xml-adjuster.exe
-RUNTIME = mono
+RUNTIME = mono --debug
 RUN_CLASS_PARSE = $(RUNTIME) $(CLASS_PARSE)
 RUN_API_XML_TOOL = $(RUNTIME) $(API_XML_TOOL)
 API_LEVELS = 10 15 16 17 18 19 20 21 22 23 24 25 26
@@ -50,15 +50,9 @@ clean-api-xml:
 	rm -f $(CLASS_PARSE_XML) $(ANALYZED_XML)
 	$(XBUILD) /t:Clean
 
-$(CLASS_PARSE_XML): $(CLASS_PARSE) $(ANDROID_JAR) $(DOCS_DIR_CUR_LEVEL)
+$(CLASS_PARSE_XML): $(CLASS_PARSE) $(ANDROID_JAR) # $(DOCS_DIR_CUR_LEVEL)
 	mkdir -p $(CLASS_PARSE_XML_DIR)
-	if [ '$(LEVEL)' -eq 'O' ]; then \
-		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc2 > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
-	elif [ $(LEVEL) -le 25 ]; then \
-		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
-	else \
-		$(RUN_CLASS_PARSE) $(ANDROID_JAR) -docspath=$(DOCS_DIR_CUR_LEVEL)/reference --docstype=droiddoc2 > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML) ;\
-	fi
+	$(RUN_CLASS_PARSE) $(ANDROID_JAR) -platform=$(LEVEL) -parameter-names=../../src/Mono.Android/Profiles/api-$(LEVEL).params.txt > $(CLASS_PARSE_XML) || rm -f $(CLASS_PARSE_XML)
 
 $(ANALYZED_XML): $(API_XML_TOOL) $(CLASS_PARSE_XML)
 	mkdir -p $(ANALYZED_XML_DIR)
