@@ -102,6 +102,15 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				if (File.Exists (tempFile))
 					File.Delete (tempFile);
 			}
+
+			try {
+				tempFile = LoadToTempFile ("ParameterDescription.txt");
+
+				AssertXmlDeclaration (new string [] { "NestedInterface$DnsSdTxtRecordListener.class" }, "ParameterFixupFromDescriptionText.xml", tempFile);
+			} finally {
+				if (File.Exists (tempFile))
+					File.Delete (tempFile);
+			}
 		}
 	}
 }

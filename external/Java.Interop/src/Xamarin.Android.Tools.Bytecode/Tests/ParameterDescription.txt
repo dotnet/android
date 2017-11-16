@@ -4,3 +4,7 @@ package java.util ; Anything after semicolon is comment.
   class Collection<E>
     add(E e)
     #ctor()
+
+package com.xamarin
+  interface NestedInterface.DnsSdTxtRecordListener
+    onDnsSdTxtRecordAvailable(java.lang.String fullDomainName, java.util.Map<java.lang.String,java.lang.String> txtRecordMap, java.lang.String srcDevice)

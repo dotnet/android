@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tools.Bytecode
 						Name = name,
 						Parameters = parameters.Replace (", ", "\0").Split ('\0')
 								       .Select (s => s.Split (' '))
-						                       .Select (a => new Parameter { Type = string.Join (" ", a.Take (a.Length - 1)), Name = a.Last () }).ToList ()
+						                       .Select (a => new Parameter { Type = string.Join (" ", a.Take (a.Length - 1)).Replace (",", ", "), Name = a.Last () }).ToList ()
 					});
 				} else {
 					type = line.Substring (line.IndexOf (' ', 2) + 1);

@@ -1,0 +1,43 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <interface
+      abstract="true"
+      deprecated="not deprecated"
+      final="false"
+      name="NestedInterface.DnsSdTxtRecordListener"
+      jni-signature="Lcom/xamarin/NestedInterface$DnsSdTxtRecordListener;"
+      static="true"
+      visibility="public">
+      <method
+        abstract="true"
+        deprecated="not deprecated"
+        final="false"
+        name="onDnsSdTxtRecordAvailable"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)V">
+        <parameter
+          name="fullDomainName"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="txtRecordMap"
+          type="java.util.Map&lt;java.lang.String, java.lang.String&gt;"
+          jni-type="Ljava/util/Map&lt;Ljava/lang/String;Ljava/lang/String;&gt;;" />
+        <parameter
+          name="srcDevice"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+      </method>
+    </interface>
+  </package>
+</api>
