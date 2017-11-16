@@ -20,10 +20,11 @@
     <ItemGroup>
       <_Source  Include="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
     </ItemGroup>
-    <PropertyGroup>
-      <_XAFrameworksDir Condition=" '$(_XAFrameworksDir)' == '' ">$(XAInstallPrefix)xbuild-frameworks</_XAFrameworksDir>
-      <_NUnit>$(_XAFrameworksDir)\MonoAndroid\v1.0\Xamarin.Android.NUnitLite.dll</_NUnit>
-    </PropertyGroup>
+    <ResolveAssemblyReference
+        Assemblies="Xamarin.Android.NUnitLite"
+        SearchPaths="$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0;$(FrameworkPathOverride)">
+      <Output TaskParameter="ResolvedFiles"   PropertyName="_Nunit" />
+    </ResolveAssemblyReference>
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
