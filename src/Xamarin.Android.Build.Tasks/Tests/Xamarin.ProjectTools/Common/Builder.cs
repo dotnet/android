@@ -19,13 +19,8 @@ namespace Xamarin.ProjectTools
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
-					using (var fs = File.OpenRead (buildLogFullPath)) {
-						using (var sr = new StreamReader (fs, Encoding.UTF8, true, 65536)) {
-							string line;
-							while ((line = sr.ReadLine ()) != null) {
-								yield return line;
-							}
-						}
+					foreach (var line in File.ReadLines (buildLogFullPath, Encoding.UTF8)) {
+						yield return line;
 					}
 				}
 				yield return String.Empty;
@@ -61,7 +56,7 @@ namespace Xamarin.ProjectTools
 					RunningMSBuild = true;
 					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
 					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0") {
-						//RunningMSBuild = false;
+						RunningMSBuild = false;
 					}
 					#if DEBUG
 					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild"));
@@ -277,8 +272,12 @@ namespace Xamarin.ProjectTools
 					File.AppendAllText (processLog, psi.FileName + " " + args.ToString () + Environment.NewLine);
 				using (var p = new Process ()) {
 					p.ErrorDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog))
+						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
 							File.AppendAllText (processLog, e.Data + Environment.NewLine);
+							if (e.Data.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
+								nativeCrashDetected = true;
+							}
+						}
 						if (e.Data == null)
 							err.Set ();
 					};
@@ -312,10 +311,6 @@ namespace Xamarin.ProjectTools
 								LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value);
 								Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
 							}
-						}
-						if (line.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
-							nativeCrashDetected = true;
-							break;
 						}
 					}
 				}
