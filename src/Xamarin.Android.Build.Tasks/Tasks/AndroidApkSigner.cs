@@ -64,10 +64,11 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--key-pass pass:", KeyPass);
 			cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
 			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
-			cmd.AppendSwitchIfNotNull ("--in ", ApkToSign);
 		
 			if (!string.IsNullOrEmpty (AdditionalArguments))
 				cmd.AppendSwitch (AdditionalArguments);
+
+			cmd.AppendSwitchIfNotNull (" ", ApkToSign);
 
 			return cmd.ToString ();
 		}
