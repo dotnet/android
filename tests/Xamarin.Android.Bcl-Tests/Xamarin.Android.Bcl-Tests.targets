@@ -23,7 +23,7 @@
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
         SearchPaths="$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0;$(FrameworkPathOverride)">
-      <Output TaskParameter="ResolvedFiles"   PropertyName="_Nunit" />
+      <Output TaskParameter="ResolvedFiles"   PropertyName="_NUnit" />
     </ResolveAssemblyReference>
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
