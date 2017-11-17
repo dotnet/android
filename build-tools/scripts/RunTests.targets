@@ -48,7 +48,10 @@
         Condition=" '$(HostOS)' != 'Windows' "
     />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH" Value="$(AndroidSdkFullPath)" />
-    <MSBuild Projects="$(JavaInteropSourceDirectory)\build-tools\scripts\RunNUnitTests.targets" />
+    <MSBuild 
+        Projects="$(JavaInteropSourceDirectory)\build-tools\scripts\RunNUnitTests.targets"
+        Properties="AndroidSdkDirectory=$(AndroidSdkDirectory)"
+    />
     <ItemGroup>
       <_RenameTestCasesGlob Include="$(JavaInteropSourceDirectory)\TestResult-*Tests.xml" />
     </ItemGroup>
