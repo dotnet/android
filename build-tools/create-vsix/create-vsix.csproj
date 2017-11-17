@@ -21,7 +21,7 @@
     <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">True</IsProductComponent>
     <_BuildVsix Condition=" '$(CreateVsixContainer)' == 'True' And Exists ('$(VsSDKInstall)') ">True</_BuildVsix>
     <_BuildVsix Condition=" '$(_BuildVsix)' == '' ">False</_BuildVsix>
-    <ExtensionInstallationFolder>Xamarin.Android.Sdk</ExtensionInstallationFolder>
+    <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
     <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
