@@ -62,7 +62,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return;
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
-			var arguments = $"-avd {ImageName}{port}";
+			var arguments = $"-verbose -avd {ImageName}{port}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,
@@ -78,6 +78,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var p = new Process () {
 				StartInfo = psi,
 			};
+			if (!string.IsNullOrEmpty (AndroidSdkHome)) {
+				psi.EnvironmentVariables ["ANDROID_HOME"] = AndroidSdkHome;
+				Log.LogMessage (MessageImportance.Low, $"\tANDROID_HOME=\"{AndroidSdkHome}\"");
+			}
 
 			var sawError        = new AutoResetEvent (false);
 
