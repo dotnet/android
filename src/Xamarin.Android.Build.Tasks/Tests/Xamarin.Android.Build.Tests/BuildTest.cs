@@ -241,7 +241,7 @@ printf ""%d"" x
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
 					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-9.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
-					var m           = rightLibc.Match (b.LastBuildOutput);
+					var m           = rightLibc.Match (string.Join ("\n",b.LastBuildOutput));
 					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
@@ -390,7 +390,7 @@ printf ""%d"" x
 				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep");
 				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
 				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
-				Assert.IsTrue (b.LastBuildOutput.Contains (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 			}
 		}
 
@@ -769,7 +769,7 @@ namespace App1
 
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should fail with an aapt error about duplicated string res entries");
-				StringAssert.Contains ("Resource entry Common.None is already defined", b.LastBuildOutput);
+				StringAssertEx.Contains ("Resource entry Common.None is already defined", b.LastBuildOutput);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
 			}
 		}
@@ -795,10 +795,10 @@ namespace App1
 					var text = "TestMe.java(1,8):  javacerror :  error: class, interface, or enum expected";
 					if (b.RunningMSBuild)
 						text = "TestMe.java(1,8): javac error :  error: class, interface, or enum expected";
-					StringAssert.Contains (text, b.LastBuildOutput);
+					StringAssertEx.Contains (text, b.LastBuildOutput);
 				} else
-					StringAssert.Contains ("TestMe.java(1,8): javac.exe error :  error: class, interface, or enum expected", b.LastBuildOutput);
-				StringAssert.Contains ("TestMe2.java(1,41): error :  error: ';' expected", b.LastBuildOutput);
+					StringAssertEx.Contains ("TestMe.java(1,8): javac.exe error :  error: class, interface, or enum expected", b.LastBuildOutput);
+				StringAssertEx.Contains ("TestMe2.java(1,41): error :  error: ';' expected", b.LastBuildOutput);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -858,7 +858,7 @@ namespace App1
 			using (var b = CreateApkBuilder ("temp/XA5213IsRaisedWhenOutOfMemoryErrorIsThrown")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				StringAssert.Contains ("XA5213", b.LastBuildOutput);
+				StringAssertEx.Contains ("XA5213", b.LastBuildOutput);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -926,7 +926,7 @@ namespace App1
 			");
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.DoesNotContain ("XA0102", b.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1026,7 +1026,7 @@ namespace App1
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains (expected, b.LastBuildOutput,
+				StringAssertEx.Contains (expected, b.LastBuildOutput,
 					"The Wrong keystore was used to sign the apk");
 			}
 		}
@@ -1066,9 +1066,9 @@ namespace App1
 					b.ThrowOnBuildFailure = false;
 					Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}", expectedResult ? "succeeded" : "failed");
 					if (expectedResult)
-						StringAssert.DoesNotContain ("XA9002", b.LastBuildOutput, "XA9002 should not have been raised");
+						StringAssertEx.DoesNotContain ("XA9002", b.LastBuildOutput, "XA9002 should not have been raised");
 					else
-						StringAssert.Contains ("XA9002", b.LastBuildOutput, "XA9002 should have been raised");
+						StringAssertEx.Contains ("XA9002", b.LastBuildOutput, "XA9002 should have been raised");
 					Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				}
 			} finally {
@@ -1299,7 +1299,7 @@ namespace App1
 						Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 						var apk = Path.Combine (Root, builder.ProjectDirectory,
 							proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-						StringAssert.Contains ("XA4301", builder.LastBuildOutput, "warning about skipping libRSSupport.so should have been raised");
+						StringAssertEx.Contains ("XA4301", builder.LastBuildOutput, "warning about skipping libRSSupport.so should have been raised");
 						using (var zipFile = ZipHelper.OpenZip (apk)) {
 							var data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libtest.so");
 							Assert.IsNotNull (data, "libtest.so for x86 should exist in the apk.");
@@ -1375,8 +1375,8 @@ namespace App1
 
 			using (var builder = CreateApkBuilder (string.Format ("temp/CheckItemMetadata_{0}", isRelease))) {
 				builder.Build (proj);
-				StringAssert.Contains ("AssetMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidAsset");
-				StringAssert.Contains ("ResourceMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidResource");
+				StringAssertEx.Contains ("AssetMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidAsset");
+				StringAssertEx.Contains ("ResourceMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidResource");
 			}
 		}
 
@@ -1478,9 +1478,9 @@ namespace App1
 			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
+				StringAssertEx.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				StringAssert.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+				StringAssertEx.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
 
 			}
 		}
@@ -1542,7 +1542,7 @@ public class Test
 				bool result = false;
 				try {
 					result = builder.Build (proj);
-					Assert.AreEqual (warningExpected, builder.LastBuildOutput.Contains ("warning BG8504"), "warning BG8504 is expected: " + warningExpected);
+					Assert.AreEqual (warningExpected, builder.LastBuildOutput.ContainsText ("warning BG8504"), "warning BG8504 is expected: " + warningExpected);
 				} catch (FailedBuildException) {
 					if (!failureExpected)
 						throw;
@@ -1606,9 +1606,9 @@ public class Test
 					if (failureExpected)
 						Assert.Fail ("Build should fail.");
 					if (expectedWarning == null)
-						Assert.IsFalse (builder.LastBuildOutput.Contains ("warning BG850"), "warning BG850* is NOT expected");
+						Assert.IsFalse (builder.LastBuildOutput.ContainsText ("warning BG850"), "warning BG850* is NOT expected");
 					else
-						Assert.IsTrue (builder.LastBuildOutput.Contains ("warning " + expectedWarning), "warning " + expectedWarning + " is expected.");
+						Assert.IsTrue (builder.LastBuildOutput.ContainsText ("warning " + expectedWarning), "warning " + expectedWarning + " is expected.");
 				} catch (FailedBuildException) {
 					if (!failureExpected)
 						throw;
@@ -1730,9 +1730,9 @@ public class Test
 			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssert.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
+				StringAssertEx.Contains ($"TargetFrameworkVersion: v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				StringAssert.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+				StringAssertEx.Contains ($"TargetFrameworkVersion: v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
 			}
 		}
 
@@ -1740,6 +1740,7 @@ public class Test
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			proj.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
 			proj.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
@@ -1798,6 +1799,7 @@ public class Test
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
+				b.BuildLogFile = "build2.log";
 				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
@@ -1986,6 +1988,7 @@ public class Test
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildAMassiveApp()
 		{
 			var testPath = Path.Combine("temp", "BuildAMassiveApp");
@@ -2103,10 +2106,10 @@ namespace UnnamedProject {
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4212.");
-				StringAssert.Contains ($"error XA4", builder.LastBuildOutput, "Error should be XA4212");
-				StringAssert.Contains ($"Type `UnnamedProject.MyBadJavaObject` implements `Android.Runtime.IJavaObject`", builder.LastBuildOutput, "Error should mention MyBadJavaObject");
+				StringAssertEx.Contains ($"error XA4", builder.LastBuildOutput, "Error should be XA4212");
+				StringAssertEx.Contains ($"Type `UnnamedProject.MyBadJavaObject` implements `Android.Runtime.IJavaObject`", builder.LastBuildOutput, "Error should mention MyBadJavaObject");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
-				StringAssert.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
+				StringAssertEx.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
 			}
 		}
 
