@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 
 using Android.Content;
 using Android.OS;
@@ -300,18 +301,25 @@ namespace Xamarin.Android.NUnitLite
 				TestSuite ts = Runner.LoadAssembly (assembly, null);
 				if (ts != null) {
 					AssemblyLevel.Add (ts);
-					AddTest (ts);
+					AddTest (ts, assembly.GetName ());
 				}
 			}
 		}
 
-		void AddTest (TestSuite suite)
+		void AddTest (TestSuite suite, AssemblyName assemblyName)
 		{
-			Suites.Add (suite.FullName ?? suite.Name, suite);
+			string name = suite.FullName ?? suite.Name;
+			if (Suites.ContainsKey (name)) {
+				string newname = $"{assemblyName.Name}!{name}";
+				Log.Warn (TAG, $"Duplicate test suite '{name}', assigning new name '{newname}'");
+				name = newname;
+			}
+
+			Suites.Add (name, suite);
 			foreach (ITest test in suite.Tests) {
 				TestSuite ts = (test as TestSuite);
 				if (ts != null) {
-					AddTest (ts);
+					AddTest (ts, assemblyName);
 				}
 			}
 		}
