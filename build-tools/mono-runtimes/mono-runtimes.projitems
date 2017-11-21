@@ -15,20 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoRuntime Include="armeabi" Condition=" '$(_ArmeabiRuntimeConfigure)' == 'true' ">
-      <Ar>$(_ArmAr)</Ar>
-      <As>$(_ArmAs)</As>
-      <Cc>$(_ArmCc)</Cc>
-      <Cpp>$(_ArmCpp) $(_ArmCppFlags)</Cpp>
-      <CFlags>$(_ArmCFlags) -march=armv5te $(_TargetCFlags)</CFlags>
-      <Cxx>$(_ArmCxx)</Cxx>
-      <CxxFlags>$(_ArmCxxFlags) -march=armv5te $(_TargetCxxFlags)</CxxFlags>
-      <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
-      <Ld>$(_ArmLd)</Ld>
-      <LdFlags>$(_ArmLdFlags)</LdFlags>
-      <Objdump>$(_ArmObjdump)</Objdump>
-      <RanLib>$(_ArmRanLib)</RanLib>
-      <Strip>$(_ArmStrip)</Strip>
-      <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
+      <MonoSdks>true</MonoSdks>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
@@ -41,20 +28,7 @@
   <!-- Cross compiler doesn't need this one, it uses the 'armeabi' build above. Thus no PropertyGroup here. -->
   <ItemGroup>
     <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
-      <Ar>$(_ArmAr)</Ar>
-      <As>$(_ArmAs)</As>
-      <Cc>$(_ArmCc)</Cc>
-      <Cpp>$(_ArmCpp) $(_ArmCppFlags)</Cpp>
-      <CFlags>$(_ArmCFlags) -mtune=cortex-a8 -march=armv7-a -mfpu=vfp -mfloat-abi=softfp $(_TargetCFlags)</CFlags>
-      <Cxx>$(_ArmCxx)</Cxx>
-      <CxxFlags>$(_ArmCxxFlags) -mtune=cortex-a8 -march=armv7-a -mfpu=vfp -mfloat-abi=softfp $(_TargetCxxFlags) </CxxFlags>
-      <CxxCpp>$(_ArmCxxCpp) $(_ArmCppFlags)</CxxCpp>
-      <Ld>$(_ArmLd)</Ld>
-      <LdFlags>$(_ArmLdFlags)</LdFlags>
-      <Objdump>$(_ArmObjdump)</Objdump>
-      <RanLib>$(_ArmRanLib)</RanLib>
-      <Strip>$(_ArmStrip)</Strip>
-      <ConfigureFlags>--host=armv5-linux-androideabi $(_TargetConfigureFlags)</ConfigureFlags>
+      <MonoSdks>true</MonoSdks>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
@@ -70,20 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoRuntime Include="arm64-v8a" Condition=" '$(_Arm64RuntimeConfigure)' == 'true' ">
-      <Ar>$(_Arm64Ar)</Ar>
-      <As>$(_Arm64As)</As>
-      <Cc>$(_Arm64Cc)</Cc>
-      <Cpp>$(_Arm64Cpp) $(_Arm64CppFlags)</Cpp>
-      <CFlags>$(_Arm64CFlags) $(_TargetCFlags)</CFlags>
-      <Cxx>$(_Arm64Cxx)</Cxx>
-      <CxxFlags>$(_Arm64CxxFlags) $(_TargetCxxFlags) </CxxFlags>
-      <CxxCpp>$(_Arm64CxxCpp) $(_Arm64CppFlags)</CxxCpp>
-      <Ld>$(_Arm64Ld)</Ld>
-      <LdFlags>$(_Arm64LdFlags)</LdFlags>
-      <Objdump>$(_Arm64Objdump)</Objdump>
-      <RanLib>$(_Arm64RanLib)</RanLib>
-      <Strip>$(_Arm64Strip)</Strip>
-      <ConfigureFlags>--host=aarch64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
+      <MonoSdks>true</MonoSdks>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
@@ -99,20 +60,7 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoRuntime Include="x86" Condition=" '$(_X86RuntimeConfigure)' == 'true' ">
-      <Ar>$(_X86Ar)</Ar>
-      <As>$(_X86As)</As>
-      <Cc>$(_X86Cc)</Cc>
-      <Cpp>$(_X86Cpp) $(_X86CppFlags)</Cpp>
-      <CFlags>$(_X86CFlags) $(_TargetCFlags)</CFlags>
-      <Cxx>$(_X86Cxx)</Cxx>
-      <CxxFlags>$(_X86CxxFlags) $(_TargetCxxFlags) </CxxFlags>
-      <CxxCpp>$(_X86CxxCpp) $(_X86CppFlags)</CxxCpp>
-      <Ld>$(_X86Ld)</Ld>
-      <LdFlags>$(_X86LdFlags)</LdFlags>
-      <Objdump>$(_X86Objdump)</Objdump>
-      <RanLib>$(_X86RanLib)</RanLib>
-      <Strip>$(_X86Strip)</Strip>
-      <ConfigureFlags>--host=i686-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
+      <MonoSdks>true</MonoSdks>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
@@ -128,20 +76,7 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoRuntime Include="x86_64" Condition=" '$(_X8664RuntimeConfigure)' == 'true' ">
-      <Ar>$(_X86_64Ar)</Ar>
-      <As>$(_X86_64As)</As>
-      <Cc>$(_X86_64Cc)</Cc>
-      <Cpp>$(_X86_64Cpp) $(_X86_64CppFlags)</Cpp>
-      <CFlags>$(_X86_64CFlags) $(_TargetCFlags)</CFlags>
-      <Cxx>$(_X86_64Cxx)</Cxx>
-      <CxxFlags>$(_X86_64CxxFlags) $(_TargetCxxFlags) </CxxFlags>
-      <CxxCpp>$(_X86_64CxxCpp) $(_X86_64CppFlags)</CxxCpp>
-      <Ld>$(_X86_64Ld)</Ld>
-      <LdFlags>$(_X86_64LdFlags)</LdFlags>
-      <RanLib>$(_X86_64RanLib)</RanLib>
-      <Objdump>$(_X86_64Objdump)</Objdump>
-      <Strip>$(_X86_64Strip)</Strip>
-      <ConfigureFlags>--host=x86_64-linux-android $(_TargetConfigureFlags)</ConfigureFlags>
+      <MonoSdks>true</MonoSdks>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
