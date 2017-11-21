@@ -645,11 +645,7 @@
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="GESTURE_" enum-name="AccessibilityGesture" api-level="16" />
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="GLOBAL_ACTION_" enum-name="GlobalAction" api-level="16" />
   <map package='android.app' class='Notification' fields='' prefix='PRIORITY_' enum-name="NotificationPriority" api-level="16" />
-  <!--
-  This had to be explicitly removed from auto-generation. see map.csv for the reason.
-  -->
-  <!--
-  map package="android.content.pm" class="PackageInfo" fields="" prefix="REQUESTED_PERMISSION_" enum-name="RequestedPermission" api-level="16" / -->
+  <map package="android.content.pm" class="PackageInfo" fields="" prefix="REQUESTED_PERMISSION_" enum-name="RequestedPermission" api-level="16" />
   <map package='android.media' class='MediaCodecInfo$CodecCapabilities' fields='' prefix='COLOR_' enum-name="MediaCodecCapabilities" api-level="16" />
   <!-- for those constants category, see http://tools.oesf.biz/android-4.1.1_r1.0/xref/frameworks/base/media/java/android/media/MediaCodecInfo.java -->
   <map package='android.media' class='MediaCodecInfo$CodecProfileLevel' fields='.*Level.*' enum-name="MediaCodecProfileLevel" api-level="16" />
@@ -940,7 +936,6 @@
   -->
   <map package='android.provider' class='Browser' prefix='HISTORY_PROJECTION_' enum-name='HistoryProjection' is-transient='false' />
   <map package='android.provider' class='Browser' prefix='SEARCHES_PROJECTION_' enum-name='SearchesProjection' is-transient='false' />
-  <map package='android.provider' class='Browser' prefix='SEARCHES_PROJECTION_' enum-name='HistoryProjection' is-transient='false' />
   <map package='android.provider' class='ContactsContract.ProviderStatus' prefix='STATUS_' enum-name='ContactsProviderStatus' is-transient='false' />
 
   <!-- New in API Level 24 -->

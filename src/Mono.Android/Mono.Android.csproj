@@ -147,7 +147,6 @@
     <Compile Include="Android.Content\CursorLoader.cs" />
     <Compile Include="Android.Content\GrantUriPermissionAttribute.cs" />
     <Compile Include="Android.Content\Intent.cs" />
-    <Compile Include="Android.Content.PM\PackageInfo.cs" />
     <Compile Include="Android.Content.Res\IXmlResourceParser.cs" />
     <Compile Include="Android.Graphics\AndroidBitmapInfo.cs" />
     <Compile Include="Android.Graphics\Bitmap.cs" />

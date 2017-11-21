@@ -1,12 +1,11 @@
 topdir = ../..
 
-API_LEVEL = 26
-API_LEVEL_NAME = 26
+API_LEVEL = 27
+API_LEVEL_NAME = 27
 
 CSCOMPILE = csc -debug:portable
 
 CONFIGURATION = Debug
-DOCS_DIR=~/android-toolchain/docs/docs-api-$(API_LEVEL_NAME)
 
 CONST_MAPPER_SOURCES = \
 	generate-const-mapping.cs \
@@ -15,20 +14,11 @@ CONST_MAPPER_SOURCES = \
 
 all:: map.ext.csv remaining-int-consts.txt remaining-int-methods-filtered.txt
 
-#enum mappings
+generate-const-list-2.exe: generate-const-list-2.cs
+	$(CSCOMPILE) generate-const-list-2.cs
 
-generate-const-list.exe: generate-const-list.cs
-	$(CSCOMPILE) generate-const-list.cs
-
-const-list-$(API_LEVEL).xml: generate-const-list.exe
-	mono --debug generate-const-list.exe $(DOCS_DIR)/reference/ -v > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
-
-generate-intermediary-enum-candidates.exe : generate-intermediary-enum-candidates.cs
-	$(CSCOMPILE) generate-intermediary-enum-candidates.cs
-
-#it is obsolete
-intermediary-enum-candidates.xml: generate-intermediary-enum-candidates.exe
-	mono --debug generate-intermediary-enum-candidates.exe $(topdir)/src/Mono.Android/api-$(API_LEVEL).xml.in > intermediary-enum-candidates.xml || rm intermediary-enum-candidates.xml
+const-list-$(API_LEVEL).xml: generate-const-list-2.exe ../../src/Mono.Android/Profiles/*.xml.in
+	mono --debug generate-const-list-2.exe ../../src/Mono.Android/Profiles > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
 
 generate-const-mapping.exe: $(CONST_MAPPER_SOURCES)
 	$(CSCOMPILE) $(CONST_MAPPER_SOURCES)
@@ -47,28 +37,6 @@ remaining-int-consts.txt: ../../src/Mono.Android/obj/$(CONFIGURATION)/android-$(
 		| sed -e 's/android-[0-9]*/android-XXX/' \
 		> remaining-int-consts.txt
 
-# method mappings
-generate-intermediary-doc-enum-mapping.exe: generate-intermediary-doc-enum-mapping.cs
-	$(CSCOMPILE) generate-intermediary-doc-enum-mapping.cs
-
-generate-enumlist-to-query.exe : generate-enumlist-to-query.cs
-	$(CSCOMPILE) generate-enumlist-to-query.cs
-
-generate-intermediary-method-mapping.exe: generate-intermediary-method-mapping.cs
-	$(CSCOMPILE) generate-intermediary-method-mapping.cs
-
-intermediary-enum-list.txt: generate-enumlist-to-query.exe
-	mono --debug generate-enumlist-to-query.exe const-list-$(API_LEVEL).xml > intermediary-enum-list.txt || rm intermediary-enum-list.txt
-
-intermediary-doc-enum-mapping.tsv: generate-intermediary-doc-enum-mapping.exe intermediary-enum-list.txt
-	mono --debug generate-intermediary-doc-enum-mapping.exe $(DOCS_DIR)/reference intermediary-enum-list.txt > intermediary-doc-enum-mapping.tsv || rm intermediary-doc-enum-mapping.tsv
-
-intermediary-method-mapping.txt: generate-intermediary-method-mapping.exe
-	mono --debug generate-intermediary-method-mapping.exe intermediary-doc-enum-mapping.tsv const-list-$(API_LEVEL).xml $(DOCS_DIR)/reference > intermediary-method-mapping.txt || rm intermediary-method-mapping.txt
-
-intermediary-field-candidates.txt: intermediary-method-mapping.txt
-	grep "#[a-z]" intermediary-method-mapping.txt  | grep -v '('  > intermediary-field-candidates.txt
-
 remaining-int-methods-filtered.txt: remaining-int-methods.txt reduction_rules.txt
 	vi remaining-int-methods.txt -s reduction_rules.txt
 	grep "int[\[ ]" remaining-int-methods.txt > remaining-int-methods-filtered.txt
@@ -78,8 +46,6 @@ remaining-int-methods.txt: $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/andro
 
 clean::
 	-rm -rf tmp.xml const-list-$(API_LEVEL).xml \
-		generate-const-list.exe generate-const-list.exe.mdb \
-		generate-intermediary-enum-candidates.exe generate-intermediary-enum-candidates.exe.mdb \
+		generate-const-list-2.exe generate-const-list-2.exe.mdb \
 		generate-const-mapping.exe generate-const-mapping.exe.mdb \
 		map.ext.csv intermediate-enum-candidates.xml remaining-int-consts.txt \
-		generate-intermediary-doc-enum-mapping.exe generate-intermediary-doc-enum-mapping.exe.mdb
