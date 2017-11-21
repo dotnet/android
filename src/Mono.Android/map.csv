@@ -51,23 +51,6 @@
 
 
 
-// FIXME: They had better be converted to enums, they are missed ones. But cannot simply add without API changes.
-
-//18,Android.Util.DisplayMetricsDensity,None,android/graphics/Bitmap.DENSITY_NONE,0
-//14,Android.Views.GravityFlags, Start, android/view/Gravity.START, 14
-//1,Android.Views.WindowManagerTypes, FirstApplicationWindow, android/view/WindowManager$LayoutParams.FIRST_APPLICATION_WINDOW, 1
-//1,Android.Views.WindowManagerTypes, FirstSubWindow, android/view/WindowManager$LayoutParams.FIRST_SUB_WINDOW, 1000
-//1,Android.Views.WindowManagerTypes, FirstSystemWindow, android/view/WindowManager$LayoutParams.FIRST_SYSTEM_WINDOW, 2000
-//1,Android.Views.WindowManagerTypes, LastApplicationWindow, android/view/WindowManager$LayoutParams.LAST_APPLICATION_WINDOW, 99
-//1,Android.Views.WindowManagerTypes, LastSubWindow, android/view/WindowManager$LayoutParams.LAST_SUB_WINDOW, 1999
-//1,Android.Views.WindowManagerTypes, LastSystemWindow, android/view/WindowManager$LayoutParams.LAST_SYSTEM_WINDOW, 2999
-//11,Android.Views.KeyEventFlags, Fallback, android/view/KeyEvent.FLAG_FALLBACK, 1024
-
-
-
-
-
-
 
 
 
@@ -2977,6 +2960,10 @@
 26,Android.Webkit.ClientError,UnsafeResource,android/webkit/WebViewClient.ERROR_UNSAFE_RESOURCE,-16
 10,Android.Webkit.ClientError,UnsupportedAuthScheme,android/webkit/WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME,-3
 10,Android.Webkit.ClientError,UnsupportedScheme,android/webkit/WebViewClient.ERROR_UNSUPPORTED_SCHEME,-10
+27,Android.Webkit.SafeBrowsingThreat,Malware,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_MALWARE,1
+27,Android.Webkit.SafeBrowsingThreat,Phishing,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_PHISHING,2
+27,Android.Webkit.SafeBrowsingThreat,Unknown,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_UNKNOWN,0
+27,Android.Webkit.SafeBrowsingThreat,UnwantedSoftware,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_UNWANTED_SOFTWARE,3
 15,Android.Widget.ChoiceMode,Multiple,android/widget/AbsListView.CHOICE_MODE_MULTIPLE,2
 15,Android.Widget.ChoiceMode,MultipleModal,android/widget/AbsListView.CHOICE_MODE_MULTIPLE_MODAL,3
 15,Android.Widget.ChoiceMode,None,android/widget/AbsListView.CHOICE_MODE_NONE,0
@@ -4595,6 +4582,7 @@
 19,Android.Views.Accessibility.RangeType,Float,android/view/accessibility/AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT,1
 19,Android.Views.Accessibility.RangeType,Int,android/view/accessibility/AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_INT,0
 19,Android.Views.Accessibility.RangeType,Percent,android/view/accessibility/AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_PERCENT,2
+27,Android.Views.Accessibility.AccessibilityRequestTypes,ExtraData,android/view/accessibility/AccessibilityRequestPreparer.REQUEST_TYPE_EXTRA_DATA,1
 22,Android.Views.Accessibility.AccessibilityWindowType,AccessibilityOverlay,android/view/accessibility/AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY,4
 21,Android.Views.Accessibility.AccessibilityWindowType,Application,android/view/accessibility/AccessibilityWindowInfo.TYPE_APPLICATION,1
 21,Android.Views.Accessibility.AccessibilityWindowType,InputMethod,android/view/accessibility/AccessibilityWindowInfo.TYPE_INPUT_METHOD,2
@@ -5095,9 +5083,13 @@
 17,Android.Views.TextDirection,Rtl,android/view/View.TEXT_DIRECTION_RTL,4
 21,Android.Views.FeedbackConstants,ClockTick,android/view/HapticFeedbackConstants.CLOCK_TICK,4
 23,Android.Views.FeedbackConstants,ContextClick,android/view/HapticFeedbackConstants.CONTEXT_CLICK,6
+27,Android.Views.FeedbackConstants,KeyboardPress,android/view/HapticFeedbackConstants.KEYBOARD_PRESS,3
+27,Android.Views.FeedbackConstants,KeyboardRelease,android/view/HapticFeedbackConstants.KEYBOARD_RELEASE,7
 10,Android.Views.FeedbackConstants,KeyboardTap,android/view/HapticFeedbackConstants.KEYBOARD_TAP,3
 10,Android.Views.FeedbackConstants,LongPress,android/view/HapticFeedbackConstants.LONG_PRESS,0
 10,Android.Views.FeedbackConstants,VirtualKey,android/view/HapticFeedbackConstants.VIRTUAL_KEY,1
+27,Android.Views.FeedbackConstants,TextHandleMove,android/view/HapticFeedbackConstants.TEXT_HANDLE_MOVE,9
+27,Android.Views.FeedbackConstants,VirtualKeyRelease,android/view/HapticFeedbackConstants.VIRTUAL_KEY_RELEASE,8
 10,Android.Views.FeedbackFlags,IgnoreGlobalSetting,android/view/HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,2
 10,Android.Views.FeedbackFlags,IgnoreViewSetting,android/view/HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING,1
 24,Android.AccessibilityServices.AccessibilityServiceShowMode,Auto,android/accessibilityservice/AccessibilityService.SHOW_MODE_AUTO,0
