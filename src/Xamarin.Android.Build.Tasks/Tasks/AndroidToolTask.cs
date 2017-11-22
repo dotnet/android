@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks
 )?
 ( # optional warning|error:
  \s*
- (?<level>(warning|error)[^:]*)\s*
+ (?<level>(warning|error|Error|ERROR)[^:]*)\s*
  :
 )?
 \s*
