@@ -282,8 +282,12 @@ namespace Xamarin.ProjectTools
 							err.Set ();
 					};
 					p.OutputDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog))
+						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
 							File.AppendAllText (processLog, e.Data + Environment.NewLine);
+							if (e.Data.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
+								nativeCrashDetected = true;
+							}
+						}
 						if (e.Data == null)
 							stdout.Set ();
 					};
