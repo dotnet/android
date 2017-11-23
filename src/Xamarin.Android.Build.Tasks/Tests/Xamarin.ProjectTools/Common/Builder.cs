@@ -341,6 +341,8 @@ namespace Xamarin.ProjectTools
 
 				if (nativeCrashDetected) {
 					Console.WriteLine ($"Native crash detected! Running the build for {projectOrSolution} again.");
+					File.Move(processLog, processLog + ".bak");
+					File.Delete(processLog);
 					continue;
 				} else {
 					break;
