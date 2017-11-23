@@ -408,6 +408,10 @@ namespace XamFormsSample
 				"System.Dynamic.Runtime.dll",
 				"System.Text.RegularExpressions.dll",
 				"System.Diagnostics.Tools.dll",
+				"Newtonsoft.Json.dll",
+				"Microsoft.CSharp.dll",
+				"System.Numerics.dll",
+				"System.Xml.Linq.dll",
 			};
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			using (var builder = CreateDllBuilder (Path.Combine (path, netStandardProject.ProjectName), cleanupOnDispose: false)) {
