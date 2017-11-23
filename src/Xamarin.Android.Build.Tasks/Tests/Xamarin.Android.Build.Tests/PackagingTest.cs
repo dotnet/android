@@ -241,11 +241,10 @@ namespace Xamarin.Android.Build.Tests
 						Id = "System.IO.Packaging",
 						Version = "4.4.0",
 					},
-// Uncomment when https://bugzilla.xamarin.com/show_bug.cgi?id=59313 gets fixed
-//					new Package () {
-//						Id = "Newtonsoft.Json",
-//						Version = "10.0.3"
-//					},
+					new Package () {
+						Id = "Newtonsoft.Json",
+						Version = "10.0.3"
+					},
 				},
 				OtherBuildItems = {
 					new BuildItem ("None") {
@@ -267,7 +266,7 @@ namespace Xamarin.Android.Build.Tests
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-//using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 using Xamarin.Forms;
 
@@ -277,8 +276,7 @@ namespace XamFormsSample
     {
         public App()
         {
-// Uncomment when https://bugzilla.xamarin.com/show_bug.cgi?id=59313 gets fixed
-//            JsonConvert.DeserializeObject<string>(""test"");
+            JsonConvert.DeserializeObject<string>(""test"");
             InitializeComponent();
         }
 
