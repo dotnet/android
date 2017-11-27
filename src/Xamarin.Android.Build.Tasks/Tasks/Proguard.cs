@@ -69,6 +69,7 @@ namespace Xamarin.Android.Tasks
 		public string PrintSeedsOutput { get; set; }
 		public string PrintUsageOutput { get; set; }
 		public string PrintMappingOutput { get; set; }
+		public string ProguardInputJarFilter { get; set; }
 
 		protected override string ToolName {
 			get {
@@ -98,6 +99,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  DumpOutput: {0}", DumpOutput);
 			Log.LogDebugMessage ("  PrintSeedsOutput: {0}", PrintSeedsOutput);
 			Log.LogDebugMessage ("  PrintMappingOutput: {0}", PrintMappingOutput);
+			Log.LogDebugMessage ("  ProguardInputJarFilter: {0}", ProguardInputJarFilter);
 
 			EnvironmentVariables = MonoAndroidHelper.GetProguardEnvironmentVaribles (ProguardHome);
 
@@ -170,7 +172,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
-			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", injars.Distinct ()) + $"'{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"{ProguardInputJarFilter}'{Path.PathSeparator}'", injars.Distinct ()) + $"{ProguardInputJarFilter}'{enclosingChar}");
 
 			cmd.AppendSwitchUnquotedIfNotNull ("-libraryjars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", libjars.Distinct ()) + $"'{enclosingChar}");
 			

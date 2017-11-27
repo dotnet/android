@@ -248,6 +248,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'True' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
 	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
 	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
+	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 		
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -2153,6 +2154,7 @@ because xbuild doesn't support framework reference assemblies.
     PrintSeedsOutput="$(IntermediateOutputPath)proguard\seeds.txt"
     PrintUsageOutput="$(IntermediateOutputPath)proguard\usage.txt"
     PrintMappingOutput="$(IntermediateOutputPath)proguard\mapping.txt"
+    ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
      />
 
   <CreateItem 
@@ -2176,6 +2178,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaLibraries="@(_JarsToProguard)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     CustomMainDexListFiles="@(MultiDexMainDexList)"
+    ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
     >
   </CreateMultiDexMainDexClassList>
 

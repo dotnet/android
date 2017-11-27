@@ -252,6 +252,9 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
 				}
 			}
+			//NOTE: fix for Jenkins, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
+			psi.EnvironmentVariables ["ghprbPullLongDescription"] = "";
+
 			psi.Arguments = args.ToString ();
 			
 			psi.CreateNoWindow = true;
