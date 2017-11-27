@@ -7,7 +7,7 @@ using Microsoft.Build.Construction;
 
 namespace Xamarin.ProjectTools
 {
-	public abstract class XamarinAndroidProject : XamarinProject
+	public abstract class XamarinAndroidProject : DotNetXamarinProject
 	{
 		protected XamarinAndroidProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)

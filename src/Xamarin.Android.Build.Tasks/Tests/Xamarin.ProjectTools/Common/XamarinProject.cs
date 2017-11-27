@@ -9,37 +9,43 @@ using System.Text;
 
 namespace Xamarin.ProjectTools
 {
-
-	// no need to be Xamarin specific, but I want to not name Project to avoid local name conflict :/
-	public abstract class XamarinProject
+	public abstract class XamarinProject 
 	{
-		public string ProjectName { get; set; }
-		public string ProjectGuid { get; set; }
-		public string AssemblyName { get; set; }
-
-		public virtual ProjectLanguage Language { get; set; }
-
 		string debugConfigurationName;
 		string releaseConfigurationName;
 
-		protected XamarinProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
-		{
-			ProjectName = "UnnamedProject";
+		public virtual ProjectLanguage Language { get; set; }
 
+		public string ProjectName { get; set; }
+		public string ProjectGuid { get; set; }
+		public string AssemblyName { get; set; }
+		public abstract string ProjectTypeGuid { get; }
+
+		public IList<Property> DebugProperties { get; private set; }
+		public IList<Property> ReleaseProperties { get; private set; }
+		public IList<Property> CommonProperties { get; private set; }
+		public IList<IList<BuildItem>> ItemGroupList { get; private set; }
+		public IList<PropertyGroup> PropertyGroups { get; private set; }
+		public IList<Package> Packages { get; private set; }
+		public IList<BuildItem> References { get; private set; }
+		public IList<Package> PackageReferences { get; private set; }
+		public IList<Import> Imports { get; private set; }
+		PropertyGroup common, debug, release;
+
+		public bool IsRelease {
+			get { return GetProperty (KnownProperties.Configuration) == releaseConfigurationName; }
+			set { SetProperty ("Configuration", value ? releaseConfigurationName : debugConfigurationName); }
+		}
+
+		public XamarinProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
+		{
 			this.debugConfigurationName = debugConfigurationName;
 			this.releaseConfigurationName = releaseConfigurationName;
 
-			Sources = new List<BuildItem> ();
 			References = new List<BuildItem> ();
-			OtherBuildItems = new List<BuildItem> ();
-
+			PackageReferences = new List<Package> ();
 			ItemGroupList = new List<IList<BuildItem>> ();
-			ItemGroupList.Add (References);
-			ItemGroupList.Add (OtherBuildItems);
-			ItemGroupList.Add (Sources);
-
-			AddReferences ("System"); // default
-
+			PropertyGroups = new List<PropertyGroup> ();
 			CommonProperties = new List<Property> ();
 			common = new PropertyGroup (null, CommonProperties);
 			DebugProperties = new List<Property> ();
@@ -47,88 +53,13 @@ namespace Xamarin.ProjectTools
 			ReleaseProperties = new List<Property> ();
 			release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
 
-			PropertyGroups = new List<PropertyGroup> ();
 			PropertyGroups.Add (common);
 			PropertyGroups.Add (debug);
 			PropertyGroups.Add (release);
 
 			Packages = new List<Package> ();
-
-			SetProperty (KnownProperties.Configuration, debugConfigurationName, "'$(Configuration)' == ''");
-			SetProperty ("Platform", "AnyCPU", "'$(Platform)' == ''");
-			SetProperty ("ErrorReport", "prompt");
-			SetProperty ("WarningLevel", "4");
-			SetProperty ("ConsolePause", "false");
-			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
-			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
-			SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
-
-			SetProperty (DebugProperties, "DebugSymbols", "true");
-			SetProperty (DebugProperties, "DebugType", "full");
-			SetProperty (DebugProperties, "Optimize", "false");
-			SetProperty (DebugProperties, KnownProperties.OutputPath, Path.Combine ("bin", debugConfigurationName));
-			SetProperty (DebugProperties, "DefineConstants", "DEBUG;");
-			SetProperty (DebugProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", debugConfigurationName));
-
-			SetProperty (ReleaseProperties, "Optimize", "true");
-			SetProperty (ReleaseProperties, "ErrorReport", "prompt");
-			SetProperty (ReleaseProperties, "WarningLevel", "4");
-			SetProperty (ReleaseProperties, "ConsolePause", "false");
-			SetProperty (ReleaseProperties, KnownProperties.OutputPath, Path.Combine ("bin", releaseConfigurationName));
-			SetProperty (ReleaseProperties, KnownProperties.IntermediateOutputPath, Path.Combine ("obj", releaseConfigurationName));
-
-			Sources.Add (new BuildItem.Source (() => "Properties\\AssemblyInfo" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (AssemblyInfo ?? Language.DefaultAssemblyInfo) });
-
 			Imports = new List<Import> ();
-		}
 
-		public virtual BuildOutput CreateBuildOutput (ProjectBuilder builder)
-		{
-			return new BuildOutput (this) { Builder = builder };
-		}
-
-		void AddProperties (IList<Property> list, string condition, KeyValuePair<string, string> [] props)
-		{
-			foreach (var p in props)
-				list.Add (new Property (condition, p.Key, p.Value));
-		}
-
-		PropertyGroup common, debug, release;
-		public IList<IList<BuildItem>> ItemGroupList { get; private set; }
-		public IList<PropertyGroup> PropertyGroups { get; private set; }
-		public IList<Property> CommonProperties { get; private set; }
-		public IList<Property> DebugProperties { get; private set; }
-		public IList<Property> ReleaseProperties { get; private set; }
-		public IList<BuildItem> OtherBuildItems { get; private set; }
-		public IList<BuildItem> Sources { get; private set; }
-		public IList<BuildItem> References { get; private set; }
-		public IList<Package> Packages { get; private set; }
-		public IList<Import> Imports { get; private set; }
-
-		public abstract string ProjectTypeGuid { get; }
-
-		public bool IsRelease {
-			get { return GetProperty (KnownProperties.Configuration) == releaseConfigurationName; }
-			set { SetProperty ("Configuration", value ? releaseConfigurationName : debugConfigurationName); }
-		}
-
-		public IList<Property> ActiveConfigurationProperties {
-			get { return IsRelease ? ReleaseProperties : DebugProperties; }
-		}
-
-		public string OutputPath {
-			get { return GetProperty (ActiveConfigurationProperties, KnownProperties.OutputPath); }
-			set { SetProperty (ActiveConfigurationProperties, KnownProperties.OutputPath, value); }
-		}
-
-		public string IntermediateOutputPath {
-			get { return GetProperty (ActiveConfigurationProperties, KnownProperties.IntermediateOutputPath); }
-			set { SetProperty (ActiveConfigurationProperties, KnownProperties.IntermediateOutputPath, value); }
-		}
-
-		public BuildItem GetItem (string include)
-		{
-			return ItemGroupList.SelectMany (g => g).First (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public string GetProperty (string name)
@@ -187,50 +118,6 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public void AddReferences (params string [] references)
-		{
-			foreach (var s in references)
-				References.Add (new BuildItem.Reference (s));
-		}
-
-		public void AddSources (params string [] sources)
-		{
-			foreach (var s in sources)
-				Sources.Add (new BuildItem.Source (s));
-		}
-
-		public void Touch (params string [] itemPaths)
-		{
-			foreach (var item in itemPaths)
-				GetItem (item).Timestamp = DateTimeOffset.Now;
-		}
-
-		public virtual ProjectRootElement Construct ()
-		{
-			var root = ProjectRootElement.Create ();
-			if (Packages.Any ())
-				root.AddItemGroup ().AddItem (BuildActions.None, "packages.config");
-			foreach (var pkg in Packages.Where (p => p.AutoAddReferences))
-				foreach (var reference in pkg.References)
-					if (!References.Any (r => r.Include == reference.Include))
-						References.Add (reference);
-			foreach (var pg in PropertyGroups)
-				pg.AddElement (root);
-
-			foreach (var ig in ItemGroupList) {
-				var ige = root.AddItemGroup ();
-				foreach (var i in ig) {
-					if (i.Deleted)
-						continue;
-					ige.AddItem (i.BuildAction, i.Include (), i.Metadata);
-				}
-			}
-
-			root.FullPath = ProjectName + Language.DefaultProjectExtension;
-
-			return root;
-		}
-
 		string project_file_path;
 		public string ProjectFilePath {
 			get { return project_file_path ?? ProjectName + Language.DefaultProjectExtension; }
@@ -240,12 +127,14 @@ namespace Xamarin.ProjectTools
 		public string AssemblyInfo { get; set; }
 		public string RootNamespace { get; set; }
 
-		public string SaveProject ()
+		public virtual string SaveProject ()
 		{
-			var root = Construct ();
-			var sw = new StringWriter ();
-			root.Save (sw);
-			return sw.ToString ();
+			return string.Empty;
+		}
+
+		public virtual BuildOutput CreateBuildOutput (ProjectBuilder builder)
+		{
+			return new BuildOutput (this) { Builder = builder };
 		}
 
 		public virtual List<ProjectResource> Save (bool saveProject = true)
@@ -356,8 +245,7 @@ namespace Xamarin.ProjectTools
 					File.SetLastWriteTimeUtc (path, p.Timestamp != null ? p.Timestamp.Value.UtcDateTime : DateTime.UtcNow);
 					File.SetAttributes (path, p.Attributes);
 					p.Timestamp = new DateTimeOffset (new FileInfo (path).LastWriteTimeUtc);
-				}
-				else if (p.BinaryContent != null && needsUpdate) {
+				} else if (p.BinaryContent != null && needsUpdate) {
 					using (var f = File.Create (path))
 						f.Write (p.BinaryContent, 0, p.BinaryContent.Length);
 					File.SetLastWriteTimeUtc (path, p.Timestamp != null ? p.Timestamp.Value.UtcDateTime : DateTime.UtcNow);
@@ -381,7 +269,7 @@ namespace Xamarin.ProjectTools
 
 		}
 
-		public void NuGetRestore (string directory, string packagesDirectory = null)
+		public virtual void NuGetRestore (string directory, string packagesDirectory = null)
 		{
 			if (!Packages.Any ())
 				return;
@@ -401,6 +289,5 @@ namespace Xamarin.ProjectTools
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
 		}
-
 	}
 }

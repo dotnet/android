@@ -60,7 +60,7 @@ namespace Xamarin.ProjectTools
 
 			Output = project.CreateBuildOutput (this);
 
-			project.NuGetRestore (ProjectDirectory, PackagesDirectory);
+			project.NuGetRestore (Path.Combine (Root, ProjectDirectory), PackagesDirectory);
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables);
 			built_before = true;

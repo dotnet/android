@@ -223,5 +223,230 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "build failed");
 			}
 		}
+
+		[Test]
+		public void NetStandardReferenceTest ()
+		{
+			var netStandardProject = new DotNetStandard () {
+				Language = XamarinAndroidProjectLanguage.CSharp,
+				ProjectName = "XamFormsSample",
+				ProjectGuid = Guid.NewGuid ().ToString (),
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard1.4",
+				IsRelease = true,
+				PackageTargetFallback = "portable-net45+win8+wpa81+wp8",
+				PackageReferences = {
+					KnownPackages.XamarinFormsPCL_2_3_4_231,
+					new Package () {
+						Id = "System.IO.Packaging",
+						Version = "4.4.0",
+					},
+					new Package () {
+						Id = "Newtonsoft.Json",
+						Version = "10.0.3"
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem ("None") {
+						Remove = () => "**\\*.xaml",
+					},
+					new BuildItem ("Compile") {
+						Update = () => "**\\*.xaml.cs",
+						DependentUpon = () => "%(Filename)"
+					},
+					new BuildItem ("EmbeddedResource") {
+						Include = () => "**\\*.xaml",
+						SubType = () => "Designer",
+						Generator = () => "MSBuild:UpdateDesignTimeXaml",
+					},
+				},
+				Sources = {
+					new BuildItem.Source ("App.xaml.cs") {
+						TextContent = () => @"using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Newtonsoft.Json;
+
+using Xamarin.Forms;
+
+namespace XamFormsSample
+{
+    public partial class App : Application
+    {
+        public App()
+        {
+            JsonConvert.DeserializeObject<string>(""test"");
+            InitializeComponent();
+        }
+
+        protected override void OnStart()
+        {
+            // Handle when your app starts
+        }
+
+        protected override void OnSleep()
+        {
+            // Handle when your app sleeps
+        }
+
+        protected override void OnResume()
+        {
+            // Handle when your app resumes
+        }
+    }
+}",
+					},
+					new BuildItem.Source ("App.xaml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<Application xmlns=""http://xamarin.com/schemas/2014/forms""
+             xmlns:x=""http://schemas.microsoft.com/winfx/2009/xaml""
+             x:Class=""XamFormsSample.App"">
+  <Application.Resources>
+    <!-- Application resource dictionary -->
+  </Application.Resources>
+</Application>",
+					},
+				},
+			};
+
+			var app = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+				UseLatestPlatformSdk = true,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+					new BuildItem.ProjectReference ($"..\\{netStandardProject.ProjectName}\\{netStandardProject.ProjectName}.csproj",
+						netStandardProject.ProjectName, netStandardProject.ProjectGuid),
+				},
+				PackageReferences = {
+					KnownPackages.SupportDesign_25_4_0_1,
+					KnownPackages.SupportV7CardView_24_2_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.XamarinForms_2_3_4_231,
+				}
+			};
+			app.SetProperty (KnownProperties.AndroidSupportedAbis, "x86;armeabi-v7a");
+			var expectedFiles = new string [] {
+				"Java.Interop.dll",
+				"Mono.Android.dll",
+				"mscorlib.dll",
+				"mscorlib.dll.mdb",
+				"System.Collections.Concurrent.dll",
+				"System.Collections.dll",
+				"System.Core.dll",
+				"System.Diagnostics.Debug.dll",
+				"System.dll",
+				"System.Linq.dll",
+				"System.Reflection.dll",
+				"System.Reflection.Extensions.dll",
+				"System.Runtime.dll",
+				"System.Runtime.Extensions.dll",
+				"System.Runtime.InteropServices.dll",
+				"System.Runtime.Serialization.dll",
+				"System.Threading.dll",
+				"System.IO.Packaging.dll",
+				"System.IO.Compression.dll",
+				"System.IO.Compression.pdb",
+				"Mono.Android.Export.dll",
+				"Mono.Android.Export.pdb",
+				"App1.dll",
+				"App1.pdb",
+				"FormsViewGroup.dll",
+				"FormsViewGroup.dll.mdb",
+				"Xamarin.Android.Support.Compat.dll",
+				"Xamarin.Android.Support.Core.UI.dll",
+				"Xamarin.Android.Support.Core.Utils.dll",
+				"Xamarin.Android.Support.Design.dll",
+				"Xamarin.Android.Support.Fragment.dll",
+				"Xamarin.Android.Support.Media.Compat.dll",
+				"Xamarin.Android.Support.v4.dll",
+				"Xamarin.Android.Support.v7.AppCompat.dll",
+				"Xamarin.Android.Support.Animated.Vector.Drawable.dll",
+				"Xamarin.Android.Support.Vector.Drawable.dll",
+				"Xamarin.Android.Support.Transition.dll",
+				"Xamarin.Android.Support.v7.MediaRouter.dll",
+				"Xamarin.Android.Support.v7.RecyclerView.dll",
+				"Xamarin.Android.Support.Annotations.dll",
+				"Xamarin.Android.Support.v7.CardView.dll",
+				"Xamarin.Forms.Core.dll",
+				"Xamarin.Forms.Core.dll.mdb",
+				"Xamarin.Forms.Platform.Android.dll",
+				"Xamarin.Forms.Platform.Android.dll.mdb",
+				"Xamarin.Forms.Platform.dll",
+				"Xamarin.Forms.Xaml.dll",
+				"Xamarin.Forms.Xaml.dll.mdb",
+				"XamFormsSample.dll",
+				"XamFormsSample.pdb",
+				"Mono.Android.pdb",
+				"System.Core.pdb",
+				"System.pdb",
+				"Mono.Security.dll",
+				"Mono.Security.pdb",
+				"System.Xml.dll",
+				"System.Xml.pdb",
+				"System.ComponentModel.Composition.dll",
+				"System.ComponentModel.Composition.pdb",
+				"System.Net.Http.dll",
+				"System.Net.Http.pdb",
+				"System.Runtime.Serialization.pdb",
+				"System.ServiceModel.Internals.dll",
+				"System.ServiceModel.Internals.pdb",
+				"System.Threading.Tasks.dll",
+				"System.ObjectModel.dll",
+				"System.Globalization.dll",
+				"System.ComponentModel.dll",
+				"System.Xml.ReaderWriter.dll",
+				"System.Linq.Expressions.dll",
+				"System.IO.dll",
+				"System.Dynamic.Runtime.dll",
+				"System.Text.RegularExpressions.dll",
+				"System.Diagnostics.Tools.dll",
+				"Newtonsoft.Json.dll",
+				"Microsoft.CSharp.dll",
+				"System.Numerics.dll",
+				"System.Xml.Linq.dll",
+			};
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			using (var builder = CreateDllBuilder (Path.Combine (path, netStandardProject.ProjectName), cleanupOnDispose: false)) {
+				if (!Directory.Exists (builder.MicrosoftNetSdkDirectory))
+					Assert.Ignore ("Microsoft.NET.Sdk not found.");
+				builder.RequiresMSBuild = true;
+				builder.Target = "Restore";
+				Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample Nuget packages should have been restored.");
+				builder.Target = "Build";
+				Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
+				using (var ab = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: false)) {
+					ab.RequiresMSBuild = true;
+					ab.Target = "Restore";
+					Assert.IsTrue (ab.Build (app), "App should have built.");
+					ab.Target = "SignAndroidPackage";
+					Assert.IsTrue (ab.Build (app), "App should have built.");
+					var apk = Path.Combine (Root, ab.ProjectDirectory,
+						app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					using (var zip = ZipHelper.OpenZip (apk)) {
+						var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
+						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assmelbies/" + Path.GetFileName (x)));
+						Assert.IsTrue (missingFiles.Any (),
+						string.Format ("The following Expected files are missing. {0}",
+							string.Join (Environment.NewLine, missingFiles)));
+						var additionalFiles = existingFiles.Where (x => !expectedFiles.Contains (Path.GetFileName (x.FullName)));
+						Assert.IsTrue (!additionalFiles.Any (),
+							string.Format ("Unexpected Files found! {0}",
+							string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
+					}
+					if (!HasDevices)
+						Assert.Ignore ("Skipping Installation. No devices available.");
+					ab.Target = "Install";
+					Assert.IsTrue (ab.Build (app), "App should have installed.");
+				}
+			}
+		}
 	}
 }

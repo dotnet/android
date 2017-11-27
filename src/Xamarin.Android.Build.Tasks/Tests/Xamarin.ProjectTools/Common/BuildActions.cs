@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 	{
 		public const string None = "None";
 		public const string ProjectReference = "ProjectReference";
+		public const string PackageReference = "PackageReference";
 		public const string Reference = "Reference";
 		public const string Compile = "Compile";
 		public const string EmbeddedResource = "EmbeddedResource";

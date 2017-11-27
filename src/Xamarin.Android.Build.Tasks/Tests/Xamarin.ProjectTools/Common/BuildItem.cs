@@ -90,7 +90,7 @@ namespace Xamarin.ProjectTools
 		{
 		}
 
-		public BuildItem (string buildAction, Func<string> include)
+		public BuildItem (string buildAction, Func<string> include = null)
 		{
 			BuildAction = buildAction;
 			Include = include;
@@ -98,11 +98,23 @@ namespace Xamarin.ProjectTools
 			Timestamp = DateTimeOffset.UtcNow;
 			Encoding = Encoding.UTF8;
 			Attributes = FileAttributes.Normal;
+			Generator = null;
+			Remove = null;
+			SubType = null;
+			Update = null;
+			DependentUpon = null;
+			Version = null;
 		}
 
 		public DateTimeOffset? Timestamp { get; set; }
 		public string BuildAction { get; set; }
 		public Func<string> Include { get; set; }
+		public Func<string> Remove { get; set; }
+		public Func<string> Update { get; set; }
+		public Func<string> SubType { get; set; }
+		public Func<string> Generator { get; set; }
+		public Func<string> DependentUpon { get; set; }
+		public Func<string> Version { get; set; }
 		public IDictionary<string,string> Metadata { get; private set; }
 		public Func<string> TextContent { get; set; }
 		public Func<byte[]> BinaryContent { get; set; }

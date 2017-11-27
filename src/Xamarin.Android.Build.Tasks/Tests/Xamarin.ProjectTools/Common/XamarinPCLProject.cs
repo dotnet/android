@@ -2,7 +2,7 @@
 
 namespace Xamarin.ProjectTools
 {
-	public class XamarinPCLProject : XamarinProject
+	public class XamarinPCLProject : DotNetXamarinProject
 	{
 		public XamarinPCLProject ()
 		{
