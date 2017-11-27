@@ -12,6 +12,7 @@ namespace Xamarin.ProjectTools
 {
 	public class Builder : IDisposable
 	{
+		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
@@ -274,7 +275,7 @@ namespace Xamarin.ProjectTools
 					p.ErrorDataReceived += (sender, e) => {
 						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
 							File.AppendAllText (processLog, e.Data + Environment.NewLine);
-							if (e.Data.StartsWith ("Got a SIGSEGV while executing native code", StringComparison.OrdinalIgnoreCase)) {
+							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
 								nativeCrashDetected = true;
 							}
 						}
@@ -282,8 +283,12 @@ namespace Xamarin.ProjectTools
 							err.Set ();
 					};
 					p.OutputDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog))
+						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
 							File.AppendAllText (processLog, e.Data + Environment.NewLine);
+							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
+								nativeCrashDetected = true;
+							}
+						}
 						if (e.Data == null)
 							stdout.Set ();
 					};
