@@ -99,13 +99,13 @@ namespace Xamarin.Android.Tasks
 )?
 ( # optional warning|error:
  \s*
- (?<level>(warning|error|Error|ERROR)[^:]*)\s*
+ (?<level>(warning|error)[^:]*)\s*
  :
 )?
 \s*
 (?<message>.*)
 $
-", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace);
+", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace, RegexOptions.IgnoreCase);
 				return androidErrorRegex;
 			}
 		}
