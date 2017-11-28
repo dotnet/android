@@ -87,7 +87,7 @@ using System.Runtime.CompilerServices;
 					b.Target = "Compile";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.AreEqual (!useManagedParser, b.LastBuildOutput.ContainsText ("Skipping GetAdditionalResourcesFromAssemblies"),
+					Assert.IsTrue(b.LastBuildOutput.ContainsText ("Skipping GetAdditionalResourcesFromAssemblies"),
 						"failed to skip the downloading of files.");
 					var items = new List<string> ();
 					string first = null;
