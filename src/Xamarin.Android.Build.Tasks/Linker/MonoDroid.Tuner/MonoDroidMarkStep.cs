@@ -151,6 +151,9 @@ namespace MonoDroid.Tuner
 			case "System.Data":
 				ProcessSystemData (type);
 				break;
+			case "System":
+				ProcessSystem (type);
+				break;
 			}
 
 			if (type.HasMethods && type.HasInterfaces && type.Implements (ICustomMarshalerName)) {
@@ -248,6 +251,65 @@ namespace MonoDroid.Tuner
 					// TODO: Needed only if CreateSqlReaderDelegate is used
 					TypeDefinition xml_reader = GetType ("System.Xml", "System.Xml.XmlReader");
 					MarkNamedMethod (xml_reader, "CreateSqlReader");
+					break;
+				}
+				break;
+			}
+		}
+
+		void ProcessSystem (TypeDefinition type)
+		{
+			switch (type.Namespace) {
+			case "System.Diagnostics":
+				switch (type.Name) {
+				// see mono/metadata/process.c
+				case "FileVersionInfo":
+				case "ProcessModule":
+					// fields are initialized by the runtime, if the type is here then all (instance) fields must be present
+					MarkFields (type, false);
+					break;
+				}
+				break;
+			case "System.Net.Sockets":
+				switch (type.Name) {
+				case "IPAddress":
+					// mono/metadata/socket-io.c directly access 'm_Address' and 'm_Numbers'
+					MarkFields (type, false);
+					break;
+				case "IPv6MulticastOption":
+					// mono/metadata/socket-io.c directly access 'group' and 'ifIndex' private instance fields
+					MarkFields (type, false);
+					break;
+				case "LingerOption":
+					// mono/metadata/socket-io.c directly access 'enabled' and 'seconds' private instance fields
+					MarkFields (type, false);
+					break;
+				case "MulticastOption":
+					// mono/metadata/socket-io.c directly access 'group' and 'local' private instance fields
+					MarkFields (type, false);
+					break;
+				case "Socket":
+					// mono/metadata/socket-io.c directly access 'ipv4Supported', 'ipv6Supported' (static) and 'socket' (instance)
+					MarkFields (type, true);
+					break;
+				case "SocketAddress":
+					// mono/metadata/socket-io.c directly access 'data'
+					MarkFields (type, false);
+					break;
+				}
+				break;
+			case "":
+				if (!type.IsNested)
+					break;
+
+				switch (type.Name) {
+				case "SocketAsyncResult":
+					// mono/metadata/socket-io.h defines this structure (MonoSocketAsyncResult) for the runtime usage
+					MarkFields (type, false);
+					break;
+				case "ProcessAsyncReader":
+					// mono/metadata/socket-io.h defines this structure (MonoSocketAsyncResult) for the runtime usage
+					MarkFields (type, false);
 					break;
 				}
 				break;
