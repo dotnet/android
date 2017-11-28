@@ -1079,7 +1079,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
 		Inputs="@(AndroidResource);@(ReferencePath)"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
-		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports">
+		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_CreateAdditionalResourceCache">
 	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
@@ -1090,7 +1090,7 @@ because xbuild doesn't support framework reference assemblies.
 		ProjectDir="$(ProjectDir)"
 		Resources="@(AndroidResource)"
 		ResourceDirectory="$(MonoAndroidResourcePrefix)"
-		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+		AdditionalResourceDirectories="@(LibraryResourceDirectories);@(_AdditionalAndroidResourcePaths->'%(Identity)\res')"
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
 		UseManagedResourceGenerator="True"
