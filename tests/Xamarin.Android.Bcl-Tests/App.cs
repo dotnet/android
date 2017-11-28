@@ -66,7 +66,7 @@ namespace Xamarin.Android.BclTests
 
 		internal static ITestFilter UpdateFilter (ITestFilter filter)
 		{
-			if (ExcludeTestNames?.Length == 0)
+			if (ExcludeTestNames == null || ExcludeTestNames.Length == 0)
 				return filter;
 			var excludeTestNamesFilter  = new SimpleNameFilter (ExcludeTestNames);
 			return new AndFilter (filter, new NotFilter (excludeTestNamesFilter));
