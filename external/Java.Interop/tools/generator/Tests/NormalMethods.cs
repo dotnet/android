@@ -9,6 +9,7 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
+			AllowWarnings = true;
 			RunAllTargets (
 					outputRelativePath:     "NormalMethods",
 					apiDescriptionFile:     "expected/NormalMethods/NormalMethods.xml",

@@ -28,7 +28,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return typeof (IExoMediaDrmOnEventListenerInvoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static IExoMediaDrmOnEventListener GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
@@ -200,7 +200,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return typeof (IExoMediaDrmInvoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static IExoMediaDrm GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

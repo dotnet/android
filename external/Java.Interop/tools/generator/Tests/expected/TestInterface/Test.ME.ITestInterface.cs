@@ -90,7 +90,7 @@ namespace Test.ME {
 			get { return typeof (ITestInterfaceInvoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static ITestInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

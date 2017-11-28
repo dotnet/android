@@ -30,6 +30,7 @@ namespace generatortests
 		protected CodeGeneratorOptions Options = null;
 		protected Assembly BuiltAssembly = null;
 		protected List<string> AdditionalSourceDirectories;
+		protected bool AllowWarnings;
 
 		public void Execute ()
 		{
@@ -41,7 +42,7 @@ namespace generatortests
 			bool    hasErrors;
 			string  compilerOutput;
 			BuiltAssembly = Compiler.Compile (Options, "Mono.Android", AdditionalSourceDirectories,
-				out hasErrors, out compilerOutput);
+				out hasErrors, out compilerOutput, AllowWarnings);
 			Assert.AreEqual (false, hasErrors, compilerOutput);
 			Assert.IsNotNull (BuiltAssembly);
 		}
