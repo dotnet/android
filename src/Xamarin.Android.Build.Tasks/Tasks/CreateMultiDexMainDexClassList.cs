@@ -28,6 +28,7 @@ namespace Xamarin.Android.Tasks
 		
 		public string MultiDexMainDexListFile { get; set; }
 		public ITaskItem[] CustomMainDexListFiles { get; set; }
+		public string ProguardInputJarFilter { get; set; }
 
 		Action<CommandLineBuilder> commandlineAction;
 		string tempJar;
@@ -43,6 +44,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  ToolExe: {0}", ToolExe);
 			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
 			Log.LogDebugMessage ("  ProguardJarPath: {0}", ProguardJarPath);
+			Log.LogDebugMessage ("  ProguardInputJarFilter: {0}", ProguardInputJarFilter);
 
 			if (CustomMainDexListFiles != null && CustomMainDexListFiles.Any ()) {
 				var content = string.Concat (CustomMainDexListFiles.Select (i => File.ReadAllText (i.ItemSpec)));
@@ -76,7 +78,7 @@ namespace Xamarin.Android.Tasks
 			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-jar ", ProguardJarPath);
-			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", jars) + $"'{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"{ProguardInputJarFilter}'{Path.PathSeparator}'", jars) + $"{ProguardInputJarFilter}'{enclosingChar}");
 			cmd.AppendSwitch ("-dontwarn");
 			cmd.AppendSwitch ("-forceprocessing");
 			cmd.AppendSwitchIfNotNull ("-outjars ", tempJar);

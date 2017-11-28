@@ -391,6 +391,7 @@ printf ""%d"" x
 				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
 				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
+				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 
@@ -437,6 +438,7 @@ namespace UnnamedProject {
 }" });
 			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 
