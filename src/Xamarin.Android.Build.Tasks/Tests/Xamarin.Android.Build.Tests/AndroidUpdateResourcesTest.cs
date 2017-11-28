@@ -99,12 +99,19 @@ using System.Runtime.CompilerServices;
 						first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
+					var designTimeDesigner = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+					if (useManagedParser) {
+						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should have been created.");
+					}
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+					if (useManagedParser) {
+						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should not have been deleted.");
+					}
 					items.Clear ();
 					if (!useManagedParser) {
 						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
