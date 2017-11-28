@@ -1004,7 +1004,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
-	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
+	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >False</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
 	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
