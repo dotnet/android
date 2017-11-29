@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 	class ManagedResourceParser : ResourceParser
 	{
 		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animation, attrib, boolean, ints, styleable, style, arrays;
+		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animation, attrib, boolean, ints, interpolators, styleable, style, arrays;
 		Dictionary<string, string> map;
 
 		void SortMembers (CodeTypeDeclaration decl)
@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tasks
 			layout = CreateClass ("Layout");
 			ids = CreateClass ("Id");
 			ints = CreateClass ("Integer");
+			interpolators = CreateClass ("Interpolator");
 			drawable = CreateClass ("Drawable");
 			strings = CreateClass ("String");
 			colors = CreateClass ("Color");
@@ -45,15 +46,27 @@ namespace Xamarin.Android.Tasks
 			styleable = CreateClass ("Styleable");
 			style = CreateClass ("Style");
 
-			foreach (var dir in Directory.GetDirectories (resourceDirectory, "*", SearchOption.TopDirectoryOnly)) {
-				foreach (var file in Directory.GetFiles (dir, "*.*", SearchOption.AllDirectories)) {
-					ProcessResourceFile (file);
-				}
-			}
-			if (additionalResourceDirectories != null) {
-				foreach (var dir in additionalResourceDirectories) {
-					foreach (var file in Directory.GetFiles (dir, "*.*", SearchOption.AllDirectories)) {
+			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
+			// the final build.
+			var rTxt = Path.Combine(resourceDirectory, "..", "R.txt");
+			if (File.Exists (rTxt)) {
+				ProcessRtxtFile (rTxt);
+			} else {
+				foreach (var dir in Directory.EnumerateDirectories (resourceDirectory, "*", SearchOption.TopDirectoryOnly)) {
+					foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
 						ProcessResourceFile (file);
+					}
+				}
+				if (additionalResourceDirectories != null) {
+					foreach (var dir in additionalResourceDirectories) {
+						rTxt = Path.Combine (dir, "..", "R.txt");
+						if (File.Exists (rTxt)) {
+							ProcessRtxtFile (rTxt);
+						} else {
+							foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
+								ProcessResourceFile (file);
+							}
+						}
 					}
 				}
 			}
@@ -67,6 +80,7 @@ namespace Xamarin.Android.Tasks
 			SortMembers (dimension);
 			SortMembers (drawable);
 			SortMembers (ints);
+			SortMembers (interpolators);
 			SortMembers (layout);
 			SortMembers (raw);
 			SortMembers (strings);
@@ -92,6 +106,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (ids);
 			if (ints.Members.Count > 1)
 				resources.Members.Add (ints);
+			if (interpolators.Members.Count > 1)
+				resources.Members.Add (interpolators);
 			if (layout.Members.Count > 1)
 				resources.Members.Add (layout);
 			if (raw.Members.Count > 1)
@@ -104,6 +120,68 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (styleable);
 
 			return resources;
+		}
+
+		void ProcessRtxtFile (string file)
+		{
+			var lines = System.IO.File.ReadLines (file);
+			foreach (var line in lines) {
+				var items = line.Split (new char [] { ' ' }, 4);
+				int value = items[0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
+				string itemName = items [2];
+				switch (items [1]) {
+				case "anim":
+					CreateIntField (animation, itemName, value);
+					break;
+				case "attr":
+					CreateIntField (attrib, itemName, value);
+					break;
+				case "bool":
+					CreateIntField (boolean, itemName, value);
+					break;
+				case "color":
+					CreateIntField (colors, itemName, value);
+					break;
+				case "dimen":
+					CreateIntField (dimension, itemName, value);
+					break;
+				case "drawable":
+					CreateIntField (drawable, itemName, value);
+					break;
+				case "id":
+					CreateIntField (ids, itemName, value);
+					break;
+				case "integer":
+					CreateIntField (ints, itemName, value);
+					break;
+				case "interpolator":
+					CreateIntField (interpolators, itemName, value);
+					break;
+				case "layout":
+					CreateIntField (layout, itemName, value);
+					break;
+				case "string":
+					CreateIntField (strings, itemName, value);
+					break;
+				case "style":
+					CreateIntField (style, itemName, value);
+					break;
+				case "styleable":
+					switch (items [0]) {
+					case "int":
+						CreateIntField (styleable, itemName, value);
+						break;
+					case "int[]":
+						var arrayValues = items [3].Trim (new char [] { '{', '}' })
+							.Replace (" ", "")
+							.Split (new char [] { ',' });
+						CreateIntArrayField (styleable, itemName, arrayValues.Length,
+							arrayValues.Select (x => string.IsNullOrEmpty (x) ? 0 : Convert.ToInt32 (x, 16)).ToArray ());
+						break;
+					}
+					break;
+				}
+			}
 		}
 
 		void ProcessResourceFile (string file)
@@ -166,7 +244,7 @@ namespace Xamarin.Android.Tasks
 			parentType.Members.Add (f);
 		}
 
-		void CreateIntField (CodeTypeDeclaration parentType, string name)
+		void CreateIntField (CodeTypeDeclaration parentType, string name, int value = 0)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
 			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.OrdinalIgnoreCase) == 0))
@@ -174,15 +252,15 @@ namespace Xamarin.Android.Tasks
 			var f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
 				Attributes = MemberAttributes.Static | MemberAttributes.Public,
-				InitExpression = new CodePrimitiveExpression (0),
+				InitExpression = new CodePrimitiveExpression (value),
 				Comments = {
-						new CodeCommentStatement ("aapt resource value: 0"),
+						new CodeCommentStatement ($"aapt resource value: {value}"),
 					},
 			};
 			parentType.Members.Add (f);
 		}
 
-		void CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count)
+		void CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count, params int[] values)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
 			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.OrdinalIgnoreCase) == 0))
@@ -195,8 +273,12 @@ namespace Xamarin.Android.Tasks
 			if (c == null) {
 				f.InitExpression = c = new CodeArrayCreateExpression (typeof (int []));
 			}
-			for (int i = 0; i < count; i++)
-				c.Initializers.Add (new CodePrimitiveExpression (0));
+			for (int i = 0; i < count; i++) {
+				int value = 0;
+				if (i < values.Length)
+					value = values[i];
+				c.Initializers.Add (new CodePrimitiveExpression (value));
+			}
 
 			parentType.Members.Add (f);
 		}
@@ -229,6 +311,9 @@ namespace Xamarin.Android.Tasks
 				break;
 			case "integer":
 				CreateIntField (ints, fieldName);
+				break;
+			case "interpolator":
+				CreateIntField (interpolators, fieldName);
 				break;
 			case "anim":
 				CreateIntField (animation, fieldName);
