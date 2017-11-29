@@ -1079,7 +1079,7 @@ because xbuild doesn't support framework reference assemblies.
 	<WriteLinesToFile
 		Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')"
 		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="$(_AndroidManagedResourceDesignerFile)"
+		Lines="$([System.IO.Path]::GetFullPath('$(_AndroidManagedResourceDesignerFile)'))"
 		Overwrite="false" />
 </Target>
 	
