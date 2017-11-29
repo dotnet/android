@@ -3,9 +3,7 @@
 	<assembly fullname="System">
 		<type fullname="System.Configuration.DefaultConfig" />
 		<type fullname="System.Diagnostics.DefaultTraceListener" />
-		<type fullname="System.Diagnostics.FileVersionInfo" />
 		<type fullname="System.Diagnostics.Process" />
-		<type fullname="System.Diagnostics.ProcessModule" />
 		<type fullname="System.IO.FAMWatcher" />
 		<type fullname="System.IO.FileSystemWatcher" />
 		<type fullname="System.IO.InotifyWatcher" />
@@ -19,11 +17,6 @@
 		<type fullname="System.Net.HttpRequestCreator">
 			<method signature="System.Void .ctor()" />
 		</type>
-		<type fullname="System.Net.SocketAddress" />
-		<type fullname="System.Net.Sockets.LingerOption" />
-		<type fullname="System.Net.Sockets.Socket" />
-		<type fullname="System.Net.Sockets.MulticastOption" preserve="fields" />
-		<type fullname="System.Net.Sockets.Socket/SocketAsyncResult" preserve="fields" />
 		<type fullname="System.Net.Sockets.SocketException" />
 	</assembly>
 </linker>
