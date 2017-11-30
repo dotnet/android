@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (sender, e) => {
 					if (e.Data != null)
-						LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+						LogMessage (e.Data, MessageImportance.Normal);
 					else
 						stdout_completed.Set ();
 				};
@@ -369,7 +369,7 @@ namespace Xamarin.Android.Tasks
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
 					line = int.Parse (match.Groups["line"].Value) + 1;
-				var level = match.Groups["level"].Value;
+				var level = match.Groups["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 				if (message.Contains ("fakeLogOpen") || level.Contains ("warning")) {
 					LogWarning (singleLine);
@@ -388,17 +388,13 @@ namespace Xamarin.Android.Tasks
 				if (message.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
 					message = message.Substring ("error: ".Length);
 
-				LogError ("APT0000", message, file, line);
-				return;
+				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
+					LogError ("APT0000", message, file, line);
+					return;
+				}
 			}
 
-			// Handle additional error that doesn't match the regex
-			if (singleLine.Trim ().StartsWith ("invalid resource directory name:")) {
-				LogError ("APT0000", string.Format ("Invalid resource directory name: \"{0}\".", singleLine.Substring (singleLine.LastIndexOfAny (new char[] { '\\', '/' }) + 1)), ToolName);
-				return;
-			}
-
-			LogMessage (singleLine, messageImportance);
+			LogError ("APT0000", string.Format("{0} \"{1}\".", singleLine.Trim(), singleLine.Substring(singleLine.LastIndexOfAny(new char[] { '\\', '/' }) + 1)), ToolName);
 		}
 	}
 }

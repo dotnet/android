@@ -58,7 +58,70 @@ namespace Xamarin.Android.Build.Tests
 					/*expectedLevel*/	"",
 					/*expectedMessage*/	"Invalid file name: must contain only [a-z0-9_.]"
 				};
-
+				yield return new object [] {
+					/*message*/		"max res 10, skipping values-sw600dp",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"max res 10, skipping values-sw600dp"
+				};
+				yield return new object [] {
+					/*message*/		"max res 10, skipping values-sw600dp-land",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"max res 10, skipping values-sw600dp-land"
+				};
+				yield return new object [] {
+					/*message*/		"Error: unable to generate entry for resource data",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"Error",
+					/*expectedMessage*/	"unable to generate entry for resource data"
+				};
+				yield return new object [] {
+					/*message*/		"Error: malformed resource filename",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"Error",
+					/*expectedMessage*/	"malformed resource filename"
+				};
+				yield return new object [] {
+					/*message*/		"warning: Multiple AndroidManifest.xml files found, using foo\\AndroidManifest.xml",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"warning",
+					/*expectedMessage*/	"Multiple AndroidManifest.xml files found, using foo\\AndroidManifest.xml"
+				};
+				yield return new object [] {
+					/*message*/		"Resources/values/theme.xml:55: No start tag found",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"Resources/values/theme.xml",
+					/*expectedLine*/	"55",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"No start tag found"
+				};
+				yield return new object [] {
+					/*message*/		"package name is required with --rename-manifest-package.",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"package name is required with --rename-manifest-package."
+				};
+				yield return new object [] {
+					/*message*/		"invalid resource directory name: bar-55",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"invalid resource directory name: bar-55"
+				};
 			}
 		}
 

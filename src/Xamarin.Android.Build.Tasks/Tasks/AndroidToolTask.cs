@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks
 \s*
 (?<message>.*)
 $
-", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace);
+", RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase);
 				return androidErrorRegex;
 			}
 		}
