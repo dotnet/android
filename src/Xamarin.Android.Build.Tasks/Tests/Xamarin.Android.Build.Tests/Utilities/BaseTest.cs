@@ -86,14 +86,14 @@ namespace Xamarin.Android.Build.Tests
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			proc.WaitForExit ();
+			proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds);
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
 			return result;
 		}
 
 		protected string RunProcess (string exe, string args) {
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (exe, args) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			proc.WaitForExit ();
+			proc.WaitForExit ((int)TimeSpan.FromSeconds(30).TotalMilliseconds);
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
 			return result;
 		}
