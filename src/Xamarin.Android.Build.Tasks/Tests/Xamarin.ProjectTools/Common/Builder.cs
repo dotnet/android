@@ -53,9 +53,9 @@ namespace Xamarin.ProjectTools
 
 		public string XABuildExe {
 			get {
+				RunningMSBuild = true;
 				string xabuild;
 				if (IsUnix) {
-					RunningMSBuild = true;
 					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
 					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0" && !RequiresMSBuild) {
 						RunningMSBuild = false;
