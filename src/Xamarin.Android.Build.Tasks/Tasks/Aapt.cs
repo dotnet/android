@@ -394,7 +394,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			LogError("APT0000", string.Format("{0} \"{1}\".", singleLine.Trim(), singleLine.Substring(singleLine.LastIndexOfAny(new char[] { '\\', '/' }) + 1)), ToolName);
+			LogError ("APT0000", string.Format("{0} \"{1}\".", singleLine.Trim(), singleLine.Substring(singleLine.LastIndexOfAny(new char[] { '\\', '/' }) + 1)), ToolName);
 		}
 	}
 }
