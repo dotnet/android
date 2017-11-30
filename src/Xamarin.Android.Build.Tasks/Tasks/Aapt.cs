@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (sender, e) => {
 					if (e.Data != null)
-						LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+						LogMessage (e.Data, MessageImportance.Normal);
 					else
 						stdout_completed.Set ();
 				};
@@ -394,22 +394,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// Handle additional errors that doesn't match the regex
-			foreach (var knownInvalidError in KnownInvalidErrorMessages) {
-				if (singleLine.Trim ().StartsWith (knownInvalidError, StringComparison.OrdinalIgnoreCase)) {
-					LogError ("APT0000", string.Format ("{0} \"{1}\".", knownInvalidError, singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1)), ToolName);
-					return;
-				}
-			}
-
-			LogMessage (singleLine, messageImportance);
+			LogError("APT0000", string.Format("{0} \"{1}\".", singleLine.Trim(), singleLine.Substring(singleLine.LastIndexOfAny(new char[] { '\\', '/' }) + 1)), ToolName);
 		}
-
-		static readonly string [] KnownInvalidErrorMessages = {
-			"invalid resource directory name:",
-			"invalid file name:",
-			"package name is required with",
-			"No <manifest> tag.",
-		};
 	}
 }
