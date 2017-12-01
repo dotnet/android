@@ -72,11 +72,11 @@ linux-prepare::
 	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
 	fi; \
-	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
-		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
-	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
+	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
 		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh; \
-	fi; \
+	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
+		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
+	fi
 
 # $(call GetPath,path)
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
