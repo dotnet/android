@@ -86,14 +86,20 @@ namespace Xamarin.Android.Build.Tests
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds);
+			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
+				proc.Kill ();
+				proc.WaitForExit ();
+			}
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
 			return result;
 		}
 
 		protected string RunProcess (string exe, string args) {
 			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (exe, args) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			proc.WaitForExit ((int)TimeSpan.FromSeconds(30).TotalMilliseconds);
+			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds(30).TotalMilliseconds)) {
+				proc.Kill ();
+				proc.WaitForExit ();
+			}
 			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
 			return result;
 		}
@@ -197,9 +203,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[SetUp]
+		public void TestSetup ()
+		{
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
+		}
+
 		[TearDown]
 		protected virtual void CleanupTest ()
 		{
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
 			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
 			// find the "root" directory just below "temp" and clean from there because
