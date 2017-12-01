@@ -1,4 +1,70 @@
 
+# Enumification
+
+This directory contains a couple of "helper" tools for API int-to-enum 
+conversion. You need these tools only when you are going to make changes
+to existing enum mappings in Mono.Android.dll.
+
+This work is partly done by both parsing API XML definition (`api-*.xml.in`) and by human.
+
+The outcomes here are saved as "map.ext.csv" and "methodmap.ext.csv"
+that are to be appended to "map.csv" and "methodmap.csv" in Mono.Android source.
+
+Historically this enumification work was done by scraping Android API
+References (DroidDocs) until 2017, but things get simplified nowadays.
+
+
+## Const lookup
+
+Const lookup is simpler and easier to deal with (it still needs manual work). Here are the steps to generate new mappings:
+
+- Run "make" here.
+  - It generates a list of consts as `const-list-*.xml` from `api-*.xml.in` using `generate-const-list-2.exe`.
+- Read `const-list-*.xml` changes from the local git repo and find "better
+  to be enumified" consts, then manually add new entries in
+  `enum-conversion-mappings.xml`.
+- Run "make" here (again)
+  - it runs `generate-const-mapping.exe` which generates `map.ext.csv` from
+  `enum-conversion-mappings.xml`.
+- Replace "generated" part of entries in `map.csv` with the entire contents
+  of `map.ext.csv`.
+- Run "make" at top level, or something that triggers Mono.Android.dll builds 
+  - Actually dll doesn't matter, we only need the
+  updated `api-*.xml.in`.
+- come back to this directory and iterate from the top of this list.
+  - Run "make" and it will result in the updated `remaining-int-consts.txt`,
+    which helps you finding remaining int consts that are possible to be mapped.
+    - `git diff remaining-int-consts.txt` is helpful.
+
+
+## Method/constructor int arguments lookup
+
+As of 2017 we basically rely on git history diff on `remaining-int-methods-filtered.txt` from the past results.
+
+After running "make" here, methods that takes one or more int arguments
+are listed on `remaining-int-methods.txt`, and `remaining-int-methods-filtered.txt` for "saner" results with some filtering.
+Filtering is done for argument names e.g. "x", "y", "width" and "height"
+are most unlikely enums, and they are based on `reduction-rules.txt`
+which are just list of `sed` replacements.
+
+When a new API has arrived, this `remaining-int-methods-filtered.txt`
+come up with a lot of additions to the existing file. So, pick up them
+and add more `methodmap.ext.txt` for further filtering, and add it
+`methodmap.txt`.
+
+(It was done historically to distinguish those new lines from the
+ancient ages, but we most unlikely need to maintain two lists anymore...)
+
+
+
+
+## Obsoleted
+
+but sometimes contain useful hints so we still keep this...
+
+
+<pre>
+
 This directory contains a couple of "helper" tools for API int-to-enum conversion.
 
 This is partly done by scraping Android API reference, but it's mostly done by human.
@@ -273,3 +339,5 @@ The results are to be saved as "map.ext.csv" and "methodmap.ext.csv" that are to
 
 	intermediary-enum-candidates.txt is not in use. Not useful for the
 	same reason as intermediary-enum-list.txt.
+
+</pre>
