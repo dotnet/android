@@ -37,6 +37,11 @@ function getInfo_Linux()
       OS_RELEASE="`lsb_release -rs`"
     fi
 
+    case "$OS_NAME" in
+      Ubuntu|Debian) HOST_OS_FLAVOR=Debian ;;
+      *) OS_FLAVOR=Generic ;;
+    esac
+
     HOST_CPUS="`nproc`"
 
     if echo $compiler_version | grep -i "Free Software Foundation" > /dev/null 2>&1; then
@@ -89,6 +94,7 @@ function getInfo_Darwin()
     HOST_CXX32="clang++ -m32"
     HOST_CC64=clang
     HOST_CXX64=clang++
+    HOST_OS_FLAVOR=macOS
 }
 
 if [ -z "$1" ]; then
@@ -108,6 +114,7 @@ cat <<EOF > "$1"
     <PropertyGroup>
         <HostOS Condition=" '\$(HostOS)' == '' ">$OS_TYPE</HostOS>
         <HostOsName Condition=" '\$(HostOsName)' == '' ">$OS_NAME</HostOsName>
+        <HostOsFlavor Condition=" '\$(HostOsFlavor)' == '' ">$HOST_OS_FLAVOR</HostOsFlavor>
         <HostOsRelease Condition=" '\$(HostOsRelease)' == '' ">$OS_RELEASE</HostOsRelease>
         <HostTriplet Condition=" '\$(HostTriplet)' == '' ">$HOST_TRIPLET</HostTriplet>
         <HostTriplet32 Condition=" '\$(HostTriplet32)' == '' ">$HOST_TRIPLET32</HostTriplet32>
