@@ -573,6 +573,7 @@
   <map package='android.view.accessibility' class='AccessibilityNodeInfo' fields='' prefix='MOVEMENT_GRANULARITY_' enum-name="MovementGranularity" api-level='16' />
   <map package='android.view.accessibility' class='AccessibilityNodeInfo.CollectionInfo' fields='' prefix='SELECTION_MODE_' enum-name="SelectionMode" api-level='21' />
   <map package='android.view.accessibility' class='AccessibilityNodeInfo.RangeInfo' fields='' prefix='RANGE_TYPE_' enum-name="RangeType" />
+  <map package='android.view.accessibility' class='AccessibilityRequestPreparer' prefix='REQUEST_TYPE_' enum-name="AccessibilityRequestTypes" api-level="27" />
   <map package='android.view.accessibility' class='AccessibilityWindowInfo' fields='' prefix='TYPE_' enum-name="AccessibilityWindowType" api-level="21" />
   <map package='android.view.accessibility' class='CaptioningManager.CaptionStyle' fields='' prefix='EDGE_TYPE_' enum-name="CaptionStyles" />
   <map package='android.view' class='Gravity' fields='*' prefix='' enum-name="GravityFlags" is-transient="false" />
@@ -645,11 +646,7 @@
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="GESTURE_" enum-name="AccessibilityGesture" api-level="16" />
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="GLOBAL_ACTION_" enum-name="GlobalAction" api-level="16" />
   <map package='android.app' class='Notification' fields='' prefix='PRIORITY_' enum-name="NotificationPriority" api-level="16" />
-  <!--
-  This had to be explicitly removed from auto-generation. see map.csv for the reason.
-  -->
-  <!--
-  map package="android.content.pm" class="PackageInfo" fields="" prefix="REQUESTED_PERMISSION_" enum-name="RequestedPermission" api-level="16" / -->
+  <map package="android.content.pm" class="PackageInfo" fields="" prefix="REQUESTED_PERMISSION_" enum-name="RequestedPermission" api-level="16" />
   <map package='android.media' class='MediaCodecInfo$CodecCapabilities' fields='' prefix='COLOR_' enum-name="MediaCodecCapabilities" api-level="16" />
   <!-- for those constants category, see http://tools.oesf.biz/android-4.1.1_r1.0/xref/frameworks/base/media/java/android/media/MediaCodecInfo.java -->
   <map package='android.media' class='MediaCodecInfo$CodecProfileLevel' fields='.*Level.*' enum-name="MediaCodecProfileLevel" api-level="16" />
@@ -803,7 +800,7 @@
     <field java='ACTION_DROP' managed='Drop' />
   </map>
   <map package='android.view' class='DragEvent' prefix='ACTION_DRAG_' enum-name='DragAction' is-transient='false' />
-  <map package='android.view' class='HapticFeedbackConstants' fields='CLOCK_TICK CONTEXT_CLICK KEYBOARD_TAP LONG_PRESS VIRTUAL_KEY' enum-name='FeedbackConstants' is-transient='true' />
+  <map package='android.view' class='HapticFeedbackConstants' fields='CLOCK_TICK CONTEXT_CLICK KEYBOARD_PRESS KEYBOARD_RELEASE KEYBOARD_TAP LONG_PRESS VIRTUAL_KEY TEXT_HANDLE_MOVE VIRTUAL_KEY_RELEASE' enum-name='FeedbackConstants' is-transient='true' />
   <map package='android.view' class='HapticFeedbackConstants' prefix='FLAG_' enum-name='FeedbackFlags' is-transient='true' />
   <map package='android.view' class='KeyCharacterMap' fields='ALPHA BUILT_IN_KEYBOARD FULL NUMERIC PREDICTIVE SPECIAL_FUNCTION VIRTUAL_KEYBOARD' enum-name='KeyboardType' is-transient='false' />
   <map package='android.view' class='KeyCharacterMap' prefix='MODIFIER_BEHAVIOR_' enum-name='KeyModifierBehavior' is-transient='false' />
@@ -844,6 +841,7 @@
   <map package='android.webkit' class='WebView' prefix='RENDERER_PRIORITY_' enum-name='RendererPriority' is-transient='false' />
   <map package='android.webkit' class='WebView.HitTestResult' fields='*' enum-name='HitTestResult' is-transient='false' />
   <map package='android.webkit' class='WebViewClient' prefix='ERROR_' enum-name='ClientError' is-transient='false' />
+  <map package='android.webkit' class='WebViewClient' prefix='SAFE_BROWSING_THREAT_' enum-name='SafeBrowsingThreat' is-transient='false' />
   <map package='android.widget' class='AbsListView' prefix='CHOICE_MODE_' enum-name='ChoiceMode' is-transient='false' />
   <map package='android.widget' class='AbsListView' prefix='TRANSCRIPT_MODE_' enum-name='TranscriptMode' is-transient='false' />
   <map package='android.widget' class='AdapterView' prefix='ITEM_VIEW_TYPE_' enum-name='ItemViewType' is-transient='false' />
@@ -940,7 +938,6 @@
   -->
   <map package='android.provider' class='Browser' prefix='HISTORY_PROJECTION_' enum-name='HistoryProjection' is-transient='false' />
   <map package='android.provider' class='Browser' prefix='SEARCHES_PROJECTION_' enum-name='SearchesProjection' is-transient='false' />
-  <map package='android.provider' class='Browser' prefix='SEARCHES_PROJECTION_' enum-name='HistoryProjection' is-transient='false' />
   <map package='android.provider' class='ContactsContract.ProviderStatus' prefix='STATUS_' enum-name='ContactsProviderStatus' is-transient='false' />
 
   <!-- New in API Level 24 -->

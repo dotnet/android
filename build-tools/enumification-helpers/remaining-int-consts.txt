@@ -1430,7 +1430,6 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Animations.Animation.cs:		public const int StartOnFirstFrame = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Display.cs:		public const int DefaultDisplay = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Display.cs:		public const int InvalidDisplay = (int) -1;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.Display.cs:		public const int StateDozing = (int) 3;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int First = (int) 1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int None = (int) 0;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IMenu.cs:		public const int SupportedModifiersMask = (int) 69647;
@@ -1440,7 +1439,6 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int LastApplicationWindow = (int) 99;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int LastSubWindow = (int) 1999;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int LastSystemWindow = (int) 2999;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.IWindowManager.cs:		public const int TypeKeyguard = (int) 2004;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.KeyCharacterMap.cs:		public const int CombiningAccent = (int) -2147483648;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.KeyCharacterMap.cs:		public const int CombiningAccentMask = (int) 2147483647;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.KeyCharacterMap.cs:			public const int MetaLength = (int) 4;
@@ -1464,7 +1462,6 @@
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.View.cs:		public const int MeasuredStateMask = (int) -16777216;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.View.cs:		public const int MeasuredStateTooSmall = (int) 16777216;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.View.cs:		public const int NoId = (int) -1;
-../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.View.cs:		public const int TextAlignmentResolvedDefault = (int) 131072;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.ViewGroup.cs:		protected const int ClipToPaddingMask = (int) 34;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.ViewGroup.cs:			public const int FillParent = (int) -1;
 ../../src/Mono.Android/obj/Debug/android-XXX/mcw/Android.Views.ViewGroup.cs:			public const int MatchParent = (int) -1;

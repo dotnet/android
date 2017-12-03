@@ -1756,3 +1756,25 @@
 26, android.widget, VideoView, setAudioFocusRequest, focusGain, Android.Media.AudioFocus
 
 26, java.util, Calendar.Builder, set, field, Java.Util.CalendarField
+
+27, android.content.pm, PackageInstaller.SessionInfo, getInstallLocation, return, Android.Content.PM.PackageInstallLocation
+27, android.content.pm, PackageInstaller.SessionParams, setInstallLocation, installLocation, Android.Content.PM.PackageInstallLocation
+27, android.content.pm, PackageInstaller.SessionInfo, getMode, return, Android.Content.PM.PackageInstallMode
+27, android.content.pm, PackageInstaller.SessionParams, ctor, mode, Android.Content.PM.PackageInstallMode
+// It was a bit too late to notice this method, or it was added after our final enumification effort for API Level 26.
+// 26, android.content.pm, PackageManager, setApplicationCategory, categoryHint, Android.Content.PM.ApplicationCategories
+// There is AssetInt property (of int) which was removed at API Level 21. We don't/can't enumify it.
+
+27, android.database.sqlite, SQLiteDatabase.OpenParams.Builder, addOpenFlags, openFlags, Android.Database.Sqlite.DatabaseOpenFlags
+27, android.database.sqlite, SQLiteDatabase.OpenParams.Builder, removeOpenFlags, openFlags, Android.Database.Sqlite.DatabaseOpenFlags
+27, android.database.sqlite, SQLiteDatabase.OpenParams.Builder, setOpenFlags, openFlags, Android.Database.Sqlite.DatabaseOpenFlags
+27, android.database.sqlite, SQLiteDatabase.OpenParams, getOpenFlags, return, Android.Database.Sqlite.DatabaseOpenFlags
+
+// Android reference doc says it was added at 24 but I'm 100% sure it wasn't. They just add members and docs, and claims that they were part of 24.
+24, android.icu.util, TimeZone, getTimeZone, type, Android.Icu.Util.TimeZoneType
+
+27, android.media, MediaMetadataRetriever, getScaledFrameAtTime, option, Android.Media.Option
+// 27, android.os, SharedMemory, map, prot, ... is part of OsConstants.
+27, android.view.accessibility, AccessibilityRequestPreparer, ctor, requestTypes, Android.Views.Accessibility.AccessibilityRequestTypes
+// android.view.ViewStructure.setInputType never appeared before - it seems Google keeps breaking API on the docs, which is rather likely they are filling doc bits by fixing their tools.
+27, android.webkit.WebViewClient, onSafeBrowsingHit, threatType, Android.Webkit.SafeBrowsingThreat
