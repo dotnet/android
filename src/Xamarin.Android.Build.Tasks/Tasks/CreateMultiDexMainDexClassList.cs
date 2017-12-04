@@ -75,31 +75,28 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateProguardCommands (CommandLineBuilder cmd)
 		{
-			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
+			var enclosingChar = OS.IsWindows ? "\"" : "'";
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-jar ", ProguardJarPath);
-			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"{ProguardInputJarFilter}'{Path.PathSeparator}'", jars) + $"{ProguardInputJarFilter}'{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}" + string.Join ($"{ProguardInputJarFilter}{enclosingChar}{Path.PathSeparator}{enclosingChar}", jars) + $"{ProguardInputJarFilter}{enclosingChar}");
 			cmd.AppendSwitch ("-dontwarn");
 			cmd.AppendSwitch ("-forceprocessing");
 			cmd.AppendSwitchIfNotNull ("-outjars ", tempJar);
-			cmd.AppendSwitchIfNotNull ("-libraryjars ", $"'{Path.Combine (AndroidSdkBuildToolsPath, "lib", "shrinkedAndroid.jar")}'");
+			cmd.AppendSwitchIfNotNull ("-libraryjars ", $"{enclosingChar}{Path.Combine (AndroidSdkBuildToolsPath, "lib", "shrinkedAndroid.jar")}{enclosingChar}");
 			cmd.AppendSwitch ("-dontoptimize");
 			cmd.AppendSwitch ("-dontobfuscate");
 			cmd.AppendSwitch ("-dontpreverify");
-			cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules")}'{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}{Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules")}{enclosingChar}");
 		}
 
 		void GenerateMainDexListBuilderCommands(CommandLineBuilder cmd)
 		{
-			var enclosingDoubleQuote = OS.IsWindows ? "\"" : string.Empty;
-			var enclosingQuote = OS.IsWindows ? string.Empty : "'";
+			var enclosingChar = OS.IsWindows ? "\"" : "'";
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-Djava.ext.dirs=", Path.Combine (AndroidSdkBuildToolsPath, "lib"));
 			cmd.AppendSwitch ("com.android.multidex.MainDexListBuilder");
-			cmd.AppendSwitch ($"{enclosingDoubleQuote}{tempJar}{enclosingDoubleQuote}");
-			cmd.AppendSwitchUnquotedIfNotNull ("", $"{enclosingDoubleQuote}{enclosingQuote}" +
-				string.Join ($"{enclosingQuote}{Path.PathSeparator}{enclosingQuote}", jars) + 
-				$"{enclosingQuote}{enclosingDoubleQuote}");
+			cmd.AppendSwitchUnquotedIfNotNull ("", $"{enclosingChar}{tempJar}{enclosingChar}");
+			cmd.AppendSwitchUnquotedIfNotNull ("", enclosingChar + string.Join ($"{enclosingChar}{Path.PathSeparator}{enclosingChar}", jars) + enclosingChar);
 			writeOutputToKeepFile = true;
 		}
 

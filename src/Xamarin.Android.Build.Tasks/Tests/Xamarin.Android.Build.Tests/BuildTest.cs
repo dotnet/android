@@ -1656,25 +1656,31 @@ public class Test
 		}
 
 		[Test]
-		public void BuildReleaseApplicationWithSpacesInPath ()
+		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool isRelease, [Values (true, false)] bool enableProguard, [Values (true, false)] bool enableMultiDex)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AotAssemblies = true,
+				IsRelease = isRelease,
+				AotAssemblies = isRelease,
+				EnableProguard = enableProguard,
 			};
-			proj.Imports.Add (new Import ("foo.targets") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+			if (enableMultiDex)
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
+
+			if (isRelease) {
+				proj.Imports.Add (new Import ("foo.targets") {
+					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
 <Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
 	<PropertyGroup>
-		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)"+ Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
+		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)" + Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
 	</PropertyGroup>
 	<Message Text=""$(AotAssemblies)"" />
 </Target>
 </Project>
 ",
-			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "BuildReleaseAppWithA InIt(1)"))) {
+				});
+			}
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InIt({isRelease}{enableProguard}{enableMultiDex})"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -2209,6 +2215,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.AreEqual (enableDesugar, builder.Build (proj), "Unexpected build result");
+				Assert.IsFalse (builder.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 	}
