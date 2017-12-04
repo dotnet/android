@@ -77,6 +77,32 @@ printf ""%d"" x
 		}
 
 		[Test]
+		public void DesignTimeBuildHasAndrodDefine ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+
+			};
+			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.cs") {
+				TextContent = () => @"
+namespace Xamarin.Android.Tests
+{
+	public class Foo {
+		public void FooMethod () {
+#if !__ANDROID__ || !__MOBILE__
+			Compile Error please :)
+#endif
+		}
+	}
+}
+",
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName ))) {
+				b.Target = "Compile";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {

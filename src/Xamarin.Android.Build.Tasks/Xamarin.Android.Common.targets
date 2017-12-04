@@ -522,6 +522,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
  <PropertyGroup>
    <CompileDependsOn>
      _SetupDesignTimeBuildForCompile;
+     _AddAndroidDefines;
      $(CompileDependsOn);
    </CompileDependsOn>
  </PropertyGroup>
