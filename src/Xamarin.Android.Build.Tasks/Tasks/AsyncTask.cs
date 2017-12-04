@@ -12,9 +12,11 @@ namespace Xamarin.Android.Tasks
 		Queue logMessageQueue =new Queue ();
 		Queue warningMessageQueue = new Queue ();
 		Queue errorMessageQueue = new Queue ();
+		Queue customMessageQueue = new Queue ();
 		ManualResetEvent logDataAvailable = new ManualResetEvent (false);
 		ManualResetEvent errorDataAvailable = new ManualResetEvent (false);
 		ManualResetEvent warningDataAvailable = new ManualResetEvent (false);
+		ManualResetEvent customDataAvailable = new ManualResetEvent (false);
 		ManualResetEvent taskCancelled = new ManualResetEvent (false);
 		ManualResetEvent completed = new ManualResetEvent (false);
 		bool isRunning = true;
@@ -26,6 +28,7 @@ namespace Xamarin.Android.Tasks
 			LogDataAvailable,
 			ErrorDataAvailable,
 			WarningDataAvailable,
+			CustomDataAvailable,
 			TaskCancelled,
 			Completed,
 		}
@@ -214,6 +217,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public void LogCustomBuildEvent (CustomBuildEventArgs e)
+		{
+			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
+#pragma warning disable 618
+				BuildEngine.LogCustomEvent (e);
+				return;
+#pragma warning restore 618
+			}
+
+			lock (customMessageQueue.SyncRoot) {
+				customMessageQueue.Enqueue (e);
+				lock (_eventlock) {
+					if (isRunning)
+						customDataAvailable.Set ();
+				}
+			}
+		}
+
 		public override bool Execute ()
 		{
 			WaitForCompletion ();
@@ -261,12 +282,26 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		private void LogCustomData ()
+		{
+			lock (customMessageQueue.SyncRoot) {
+				while (customMessageQueue.Count > 0) {
+					var args = (CustomBuildEventArgs)customMessageQueue.Dequeue ();
+#pragma warning disable 618
+					BuildEngine.LogCustomEvent (args);
+#pragma warning restore 618
+				}
+				customDataAvailable.Reset ();
+			}
+		}
+
 		protected void WaitForCompletion ()
 		{
 			WaitHandle[] handles = new WaitHandle[] {
 				logDataAvailable,
 				errorDataAvailable,
 				warningDataAvailable,
+				customDataAvailable,
 				taskCancelled,
 				completed,
 			};
@@ -284,6 +319,9 @@ namespace Xamarin.Android.Tasks
 						break;
 					case WaitHandleIndex.WarningDataAvailable:
 						LogWarnings ();
+						break;
+					case WaitHandleIndex.CustomDataAvailable:
+						LogCustomData ();
 						break;
 					case WaitHandleIndex.TaskCancelled:
 						tcs.Cancel ();
