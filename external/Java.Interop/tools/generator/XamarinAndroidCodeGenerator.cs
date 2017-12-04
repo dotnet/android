@@ -29,7 +29,7 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteClassHandle (InterfaceGen type, StreamWriter sw, string indent, CodeGenerationOptions opt, string declaringType)
 		{
-			sw.WriteLine ("{0}static IntPtr class_ref = JNIEnv.FindClass (\"{1}\");", indent, type.RawJniName);
+			sw.WriteLine ("{0}new static IntPtr class_ref = JNIEnv.FindClass (\"{1}\");", indent, type.RawJniName);
 		}
 
 		internal override void WriteClassInvokerHandle (ClassGen type, StreamWriter sw, string indent, CodeGenerationOptions opt, string declaringType)

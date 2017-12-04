@@ -491,10 +491,19 @@
     <Content Include='expected.ji\TestInterface\Test.ME.GenericImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.GenericObjectPropertyImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\TestInterface\Test.ME.GenericStringImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.GenericStringPropertyImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected.ji\TestInterface\Test.ME.IGenericInterface.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\TestInterface\Test.ME.IGenericPropertyInterface.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\TestInterface\Test.ME.ITestInterface.cs'>
@@ -617,10 +626,19 @@
     <Content Include='expected\TestInterface\Test.ME.GenericImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected\TestInterface\Test.ME.GenericObjectPropertyImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\TestInterface\Test.ME.GenericStringImplementation.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include='expected\TestInterface\Test.ME.GenericStringPropertyImplementation.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\TestInterface\Test.ME.IGenericInterface.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\TestInterface\Test.ME.IGenericPropertyInterface.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\TestInterface\Test.ME.ITestInterface.cs'>

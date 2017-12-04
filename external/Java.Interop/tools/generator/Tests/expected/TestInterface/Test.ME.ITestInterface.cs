@@ -28,7 +28,7 @@ namespace Test.ME {
 			}
 		}
 
-		static IntPtr class_ref = JNIEnv.FindClass ("test/me/TestInterface");
+		new static IntPtr class_ref = JNIEnv.FindClass ("test/me/TestInterface");
 	}
 
 	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]

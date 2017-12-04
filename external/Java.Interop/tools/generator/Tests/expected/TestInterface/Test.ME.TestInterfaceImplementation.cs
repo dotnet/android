@@ -218,16 +218,6 @@ namespace Test.ME {
 				JNIEnv.DeleteLocalRef (native_value);
 			}
 		}
-
-		public string Identity (string value)
-		{
-			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
-			global::Java.Lang.ICharSequence __result = IdentityFormatted (jls_value);
-			var __rsval = __result?.ToString ();
-			jls_value?.Dispose ();
-			return __rsval;
-		}
-
 	}
 
 }

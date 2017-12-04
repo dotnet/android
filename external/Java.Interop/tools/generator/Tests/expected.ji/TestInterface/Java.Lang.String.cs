@@ -7,7 +7,7 @@ namespace Java.Lang {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.lang']/class[@name='String']"
 	[global::Android.Runtime.Register ("java/lang/String", DoNotGenerateAcw=true)]
-	public partial class String : global::Java.Lang.Object {
+	public sealed partial class String : global::Java.Lang.Object {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/String", typeof (String));
 		internal static new IntPtr class_ref {
@@ -28,7 +28,7 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected String (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		internal String (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
 
 	}
 }

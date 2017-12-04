@@ -28,7 +28,7 @@ namespace Test.ME {
 			}
 		}
 
-		static JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
+		new static JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
 	}
 
 	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]

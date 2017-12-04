@@ -471,9 +471,26 @@ namespace MonoDroid.Generation {
 					GenericSymbol gs = isym as GenericSymbol;
 					if (gs.IsConcrete) {
 						// FIXME: not sure if excluding default methods is a valid idea...
-						foreach (Method m in gs.Gen.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic))
+						foreach (Method m in gs.Gen.Methods) {
+							if (m.IsInterfaceDefaultMethod || m.IsStatic)
+								continue;
 							if (m.IsGeneric)
 								m.GenerateExplicitIface (sw, indent + "\t", opt, gs);
+						}
+
+						var adapter = gs.Gen.AssemblyQualifiedName + "Invoker";
+						foreach (Property p in gs.Gen.Properties) {
+							if (p.Getter != null) {
+								if (p.Getter.IsInterfaceDefaultMethod || p.Getter.IsStatic)
+									continue;
+							}
+							if (p.Setter != null) {
+								if (p.Setter.IsInterfaceDefaultMethod || p.Setter.IsStatic)
+									continue;
+							}
+							if (p.IsGeneric)
+								p.GenerateExplicitIface (sw, indent + "\t", opt, gs, adapter);
+						}
 					}
 				} else if (isym.FullName == "Java.Lang.ICharSequence")
 					is_char_seq = true;

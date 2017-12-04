@@ -55,6 +55,11 @@ namespace MonoDroid.Generation {
 			get { return sym.GetGenericType (null) ?? Type; }
 		}
 
+		public string GetGenericType (Dictionary<string, string> mappings)
+		{
+			return sym.GetGenericType (mappings) ?? Type;
+		}
+
 		public bool IsArray {
 			get { return sym.IsArray; }
 		}

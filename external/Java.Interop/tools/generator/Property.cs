@@ -140,6 +140,42 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ();
 		}
 
+		public void GenerateExplicitIface (StreamWriter sw, string indent, CodeGenerationOptions opt, GenericSymbol gen, string adapter)
+		{
+			Dictionary<string, string> mappings = new Dictionary<string, string> ();
+			for (int i = 0; i < gen.TypeParams.Length; i++)
+				mappings [gen.Gen.TypeParameters [i].Name] = gen.TypeParams [i].FullName;
+
+			//If the property type is Java.Lang.Object, we don't need to generate an explicit implementation
+			if (Getter?.RetVal.GetGenericType (mappings) == "Java.Lang.Object")
+				return;
+			if (Setter?.Parameters[0].GetGenericType (mappings) == "Java.Lang.Object")
+				return;
+
+			sw.WriteLine ("{0}// This method is explicitly implemented as a member of an instantiated {1}", indent, gen.FullName);
+			sw.WriteLine ("{0}{1} {2}.{3} {{", indent, opt.GetOutputName (Type), opt.GetOutputName (gen.Gen.FullName), AdjustedName);
+			if (Getter != null) {
+				if (gen.Gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.Gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
+				if (Getter.GenericArguments != null && Getter.GenericArguments.Any ())
+					sw.WriteLine ("{0}{1}", indent, Getter.GenericArguments.ToGeneratedAttributeString ());
+				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})] get {{", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.GetAdapterName (opt, adapter), Getter.AdditionalAttributeString ());
+				sw.WriteLine ("{0}\t\treturn {1};", indent, Name);
+				sw.WriteLine ("{0}\t}}", indent);
+			}
+			if (Setter != null) {
+				if (gen.Gen.IsGeneratable)
+					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.Gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
+				if (Setter.GenericArguments != null && Setter.GenericArguments.Any ())
+					sw.WriteLine ("{0}{1}", indent, Setter.GenericArguments.ToGeneratedAttributeString ());
+				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})] set {{", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.GetAdapterName (opt, adapter), Setter.AdditionalAttributeString ());
+				sw.WriteLine ("{0}\t\t{1} = {2};", indent, Name, Setter.Parameters.GetGenericCall (opt, mappings));
+				sw.WriteLine ("{0}\t}}", indent);
+			}
+			sw.WriteLine ("{0}}}", indent);
+			sw.WriteLine ();
+		}
+
 		void GenerateStringVariant (StreamWriter sw, string indent)
 		{
 			bool is_array = Getter.RetVal.IsArray;

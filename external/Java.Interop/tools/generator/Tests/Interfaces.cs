@@ -9,7 +9,6 @@ namespace generatortests
 		[Test]
 		public void Generated_OK ()
 		{
-			AllowWarnings = true;
 			RunAllTargets (
 					outputRelativePath:     "TestInterface",
 					apiDescriptionFile:     "expected/TestInterface/TestInterface.xml",

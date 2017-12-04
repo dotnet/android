@@ -817,7 +817,8 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ("{0}}}", indent);
 			sw.WriteLine ();
 
-			if (gen_string_overload || gen_as_formatted)
+			//NOTE: Invokers are the only place false is passed for generate_callbacks, they do not need string overloads
+			if (generate_callbacks && (gen_string_overload || gen_as_formatted))
 				GenerateStringOverload (sw, indent, opt);
 
 			GenerateAsyncWrapper (sw, indent, opt);
