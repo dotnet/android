@@ -43,6 +43,12 @@ Copyright (C) 2012 Xamarin. All rights reserved.
       Condition="'$(Language)' != 'F#' And Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')"
       Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets" />
     <Import
+      Condition="'$(Language)' != 'F#' And Exists('$(FSharpInstallDir)Microsoft.FSharp.Targets')"
+      Project="$(FSharpInstallDir)Microsoft.FSharp.Targets" />
+    <Import
+      Condition="'$(Language)' != 'F#' And Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.1\Framework\v4.0\Microsoft.FSharp.Targets')"
+      Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.1\Framework\v4.0\Microsoft.FSharp.Targets" />
+    <Import
       Condition="'$(Language)' != 'F#' And Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets')"
       Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
     <Import
