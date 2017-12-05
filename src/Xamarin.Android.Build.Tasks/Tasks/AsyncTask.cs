@@ -110,18 +110,13 @@ namespace Xamarin.Android.Tasks
 				#pragma warning restore 618
 			}
 
-			lock (logMessageQueue.SyncRoot) {
-				logMessageQueue.Enqueue (new BuildMessageEventArgs (
+			var data = new BuildMessageEventArgs (
 					message: message,
-					helpKeyword : null,
+					helpKeyword: null,
 					senderName: null,
 					importance: importance
-				));
-				lock (_eventlock) {
-					if (isRunning)
-						logDataAvailable.Set ();
-				}
-			}
+			);
+			EnqueueMessage (logMessageQueue, data, logDataAvailable);
 		}
 
 		public void LogError (string message)
@@ -163,8 +158,7 @@ namespace Xamarin.Android.Tasks
 				#pragma warning restore 618
 			}
 
-			lock (errorMessageQueue.SyncRoot) {
-				errorMessageQueue.Enqueue (new BuildErrorEventArgs (
+			var data = new BuildErrorEventArgs (
 					subcategory: null,
 					code: code,
 					file: file,
@@ -175,12 +169,8 @@ namespace Xamarin.Android.Tasks
 					message: message,
 					helpKeyword: null,
 					senderName: null
-				));
-				lock (_eventlock) {
-					if (isRunning)
-						errorDataAvailable.Set ();
-				}
-			}
+			);
+			EnqueueMessage (errorMessageQueue, data, errorDataAvailable);
 		}
 
 		public void LogWarning (string message, params object[] messageArgs)
@@ -196,9 +186,7 @@ namespace Xamarin.Android.Tasks
 				return;
 				#pragma warning restore 618
 			}
-			
-			lock (warningMessageQueue.SyncRoot) {
-				warningMessageQueue.Enqueue (new BuildWarningEventArgs (
+			var data = new BuildWarningEventArgs (
 					subcategory: null,
 					code: null,
 					file: null,
@@ -209,30 +197,19 @@ namespace Xamarin.Android.Tasks
 					message: message,
 					helpKeyword: null,
 					senderName: null
-				));
-				lock (_eventlock) {
-					if (isRunning)
-						warningDataAvailable.Set ();
-				}
-			}
+			);
+			EnqueueMessage (warningMessageQueue, data, warningDataAvailable);
 		}
 
 		public void LogCustomBuildEvent (CustomBuildEventArgs e)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
-#pragma warning disable 618
+				#pragma warning disable 618
 				BuildEngine.LogCustomEvent (e);
 				return;
-#pragma warning restore 618
+				#pragma warning restore 618
 			}
-
-			lock (customMessageQueue.SyncRoot) {
-				customMessageQueue.Enqueue (e);
-				lock (_eventlock) {
-					if (isRunning)
-						customDataAvailable.Set ();
-				}
-			}
+			EnqueueMessage (customMessageQueue, e, customDataAvailable);
 		}
 
 		public override bool Execute ()
@@ -241,6 +218,17 @@ namespace Xamarin.Android.Tasks
 			#pragma warning disable 618
 			return !Log.HasLoggedErrors;
 			#pragma warning restore 618
+		}
+
+		private void EnqueueMessage (Queue queue, object item, ManualResetEvent resetEvent)
+		{
+			lock (queue.SyncRoot) {
+				queue.Enqueue (item);
+				lock (_eventlock) {
+					if (isRunning)
+						resetEvent.Set ();
+				}
+			}
 		}
 
 		private void LogMessages ()
@@ -287,9 +275,9 @@ namespace Xamarin.Android.Tasks
 			lock (customMessageQueue.SyncRoot) {
 				while (customMessageQueue.Count > 0) {
 					var args = (CustomBuildEventArgs)customMessageQueue.Dequeue ();
-#pragma warning disable 618
+					#pragma warning disable 618
 					BuildEngine.LogCustomEvent (args);
-#pragma warning restore 618
+					#pragma warning restore 618
 				}
 				customDataAvailable.Reset ();
 			}
