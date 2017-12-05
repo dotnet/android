@@ -11,6 +11,8 @@ using Android.App;
 using Android.Content;
 using Android.Runtime;
 
+using RegisterAttribute = Android.Runtime.RegisterAttribute;
+
 namespace Android.App {
 
 	[Register ("android/app/Application", DoNotGenerateAcw = true)]

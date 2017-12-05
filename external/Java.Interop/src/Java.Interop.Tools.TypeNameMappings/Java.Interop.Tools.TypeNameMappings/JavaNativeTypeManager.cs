@@ -4,12 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using Java.Interop;
+using Android.Runtime;
 
 #if HAVE_CECIL
 using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
-using Android.Runtime;
 using Java.Interop.Tools.JavaCallableWrappers;
 #endif  // HAVE_CECIL
 
@@ -262,35 +261,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
 		public static string ToJniNameFromAttributes (Type type)
 		{
-			var ras = (Android.Runtime.RegisterAttribute[]) type.GetCustomAttributes (typeof (Android.Runtime.RegisterAttribute), false);
-			if (ras.Length > 0 && !string.IsNullOrEmpty (ras [0].Name))
-				return ras [0].Name.Replace ('.', '/');
-
-			var aas = (Android.App.ActivityAttribute[]) type.GetCustomAttributes (typeof (Android.App.ActivityAttribute), false);
-			if (aas.Length > 0 && !string.IsNullOrEmpty (aas [0].Name))
-				return aas [0].Name.Replace ('.', '/');
-
-			var apps = (Android.App.ApplicationAttribute[]) type.GetCustomAttributes (typeof (Android.App.ApplicationAttribute), false);
-			if (apps.Length > 0 && !string.IsNullOrEmpty (apps [0].Name))
-				return apps [0].Name.Replace ('.', '/');
-
-			var sas = (Android.App.ServiceAttribute[]) type.GetCustomAttributes (typeof (Android.App.ServiceAttribute), false);
-			if (sas.Length > 0 && !string.IsNullOrEmpty (sas [0].Name))
-				return sas [0].Name.Replace ('.', '/');
-
-			var bras = (Android.Content.BroadcastReceiverAttribute[]) type.GetCustomAttributes (typeof (Android.Content.BroadcastReceiverAttribute), false);
-			if (bras.Length > 0 && !string.IsNullOrEmpty (bras [0].Name))
-				return bras [0].Name.Replace ('.', '/');
-
-			var cpas = (Android.Content.ContentProviderAttribute[]) type.GetCustomAttributes (typeof (Android.Content.ContentProviderAttribute), false);
-			if (cpas.Length > 0 && !string.IsNullOrEmpty (cpas [0].Name))
-				return cpas [0].Name.Replace ('.', '/');
-
-			var ias = (Android.App.InstrumentationAttribute[])type.GetCustomAttributes (typeof (Android.App.InstrumentationAttribute), false);
-			if (ias.Length > 0 && !string.IsNullOrEmpty (ias [0].Name))
-				return ias [0].Name.Replace ('.', '/');
-
-			return null;
+			var a = type.GetCustomAttributes ().OfType<IJniNameProviderAttribute> ().FirstOrDefault (j => !string.IsNullOrEmpty (j.Name));
+			return a == null ? null : a.Name.Replace ('.', '/');
 		}
 
 		/*
@@ -478,41 +450,25 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		static string ToJniNameFromAttributes (TypeDefinition type)
 		{
-#region CustomAttribute alternate name support
-			// ToJniName(Type) doesn't do this, as it's instead done in
-			// JNIEnv.FindClass(Type) for perf reasons.
-			var attr = type.GetCustomAttributes ("Android.Runtime.RegisterAttribute").SingleOrDefault ();
-			if (attr != null) {
-				string name = (string) attr.ConstructorArguments [0].Value;
+			#region CustomAttribute alternate name support
+			var attrs = type.CustomAttributes.Where (a => a.AttributeType.Resolve ().Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));
+			return attrs.Select (attr => {
+				var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
+				string name = null;
+				if (ap.Name == null) {
+					var ca = attr.ConstructorArguments.FirstOrDefault ();
+					if (ca.Type == null || ca.Type.FullName != "System.String")
+						return null;
+					name = (string) ca.Value;
+				} else
+					name = (string) ap.Argument.Value;
 				if (!string.IsNullOrEmpty (name))
 					return name.Replace ('.', '/');
-			}
-			foreach (var attributeType in new []{
-					"Android.App.ActivityAttribute",
-					"Android.App.ApplicationAttribute",
-					"Android.App.InstrumentationAttribute",
-					"Android.App.ServiceAttribute",
-					"Android.Content.BroadcastReceiverAttribute",
-					"Android.Content.ContentProviderAttribute",
-					}) {
-				attr = type.GetCustomAttributes (attributeType).SingleOrDefault ();
-				if (attr != null) {
-					var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
-					string name = null;
-					if (ap.Name == null) {
-						var ca = attr.ConstructorArguments.FirstOrDefault ();
-						if (ca.Type == null || ca.Type.FullName != "System.String")
-							continue;
-						name = (string) ca.Value;
-					}
-					else
-						name = (string) ap.Argument.Value;
-					if (!string.IsNullOrEmpty (name))
-						return name.Replace ('.', '/');
-				}
-			}
-#endregion
-			return null;
+				else
+					return null;
+				})
+				.FirstOrDefault (s => s != null);
+			#endregion
 		}
 
 		public static int GetArrayInfo (Mono.Cecil.TypeReference type, out Mono.Cecil.TypeReference elementType)

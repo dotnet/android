@@ -9,9 +9,7 @@ using System.Text.RegularExpressions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-using Android.App;
 using Android.Runtime;
-using Java.Interop;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
