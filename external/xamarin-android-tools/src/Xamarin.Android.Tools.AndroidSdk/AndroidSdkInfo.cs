@@ -116,5 +116,20 @@ namespace Xamarin.Android.Tools
 		public string AndroidNdkHostPlatform {
 			get { return sdk.NdkHostPlatform; }
 		}
+
+		public void SetPreferredAndroidNdkPath (string path)
+		{
+			sdk.SetPreferredAndroidNdkPath(path);
+		}
+
+		public void SetPreferredAndroidSdkPath (string path)
+		{
+			sdk.SetPreferredAndroidSdkPath (path);
+		}
+
+		public void SetPreferredJavaSdkPath (string path)
+		{
+			sdk.SetPreferredJavaSdkPath (path);
+		}
 	}
 }

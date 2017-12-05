@@ -18,6 +18,11 @@ namespace Xamarin.Android.Tools
 		static readonly XNamespace aNS = "http://schemas.android.com/apk/res/android";
 		static readonly XName aName = aNS + "name";
 
+		public  static  XNamespace          AndroidXNamespace       => aNS;
+		public  static  XName               NameXName               => aName;
+
+		public  XDocument           Document            => doc;
+
 		AndroidAppManifest (AndroidVersions versions, XDocument doc)
 		{
 			if (versions == null)
