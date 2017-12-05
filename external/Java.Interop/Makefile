@@ -14,7 +14,7 @@ endif
 
 XA_CONFIGURATION  = XAIntegrationDebug
 
-GENDARME_URL = https://cloud.github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
+GENDARME_URL = https://github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
 
 PACKAGES = \
 	packages/NUnit.2.6.3/NUnit.2.6.3.nupkg \
@@ -82,7 +82,7 @@ fxcop: lib/gendarme-2.10/gendarme.exe bin/$(CONFIGURATION)/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`
-	curl -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
+	curl -L -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
 	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
 
 JAVA_INTEROP_LIB    = libjava-interop$(NATIVE_EXT)
