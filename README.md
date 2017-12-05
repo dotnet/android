@@ -421,7 +421,14 @@ We use [Mono's Coding Guidelines](http://www.mono-project.com/community/contribu
 
 ## Reporting Bugs
 
-We use [Bugzilla](https://bugzilla.xamarin.com/enter_bug.cgi?product=Android) to track issues.
+We use [Github Issues](https://github.com/xamarin/xamarin-android/issues)
+to track issues within this repository. 
+
+For general Xamarin.Android experience issues within Visual Studio 2017 or
+Visual Studio for Mac, please use the
+[Report a Problem](https://docs.microsoft.com/en-us/visualstudio/ide/how-to-report-a-problem-with-visual-studio-2017)
+feature inside the IDE. You can find this by going to
+**Help** > **Report a Problem** within your IDE.
 
 # Maintainer FAQ
 
