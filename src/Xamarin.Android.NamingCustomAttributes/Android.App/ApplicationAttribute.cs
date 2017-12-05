@@ -9,7 +9,7 @@ namespace Android.App {
 	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Class, 
 			AllowMultiple=false, 
 			Inherited=false)]
-	public sealed partial class ApplicationAttribute : Attribute {
+	public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		public ApplicationAttribute ()
 		{

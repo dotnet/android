@@ -6,7 +6,7 @@ namespace Android.Runtime {
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
-	sealed class RegisterAttribute : Attribute {
+	sealed class RegisterAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		string connector;
 		string name;

@@ -6,7 +6,7 @@ namespace Android.Content {
 	[AttributeUsage (AttributeTargets.Class, 
 			AllowMultiple=false, 
 			Inherited=false)]
-	public partial class ContentProviderAttribute : Attribute {
+	public partial class ContentProviderAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		public ContentProviderAttribute (string[] authorities)
 		{
