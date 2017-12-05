@@ -360,7 +360,8 @@ namespace Xamarin.ProjectTools
 
 			if (buildLogFullPath != null && processLog != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (buildLogFullPath));
-				File.AppendAllText (buildLogFullPath, File.ReadAllText (processLog));
+				if (File.Exists (processLog))
+					File.AppendAllText (buildLogFullPath, File.ReadAllText (processLog));
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
