@@ -231,55 +231,14 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		private void LogMessages ()
+		private void LogInternal<T> (Queue queue, Action<T> action, ManualResetEvent resetEvent)
 		{
-			lock (logMessageQueue.SyncRoot) {
-				while (logMessageQueue.Count > 0) {
-					var args = (BuildMessageEventArgs)logMessageQueue.Dequeue ();
-					#pragma warning disable 618
-					Log.LogMessage (args.Importance, args.Message);
-					#pragma warning restore 618
+			lock (queue.SyncRoot) {
+				while (queue.Count > 0) {
+					var args = (T)queue.Dequeue ();
+					action (args);
 				}
-				logDataAvailable.Reset ();
-			}
-		}
-
-		private void LogErrors ()
-		{
-			lock (errorMessageQueue.SyncRoot) {
-				while (errorMessageQueue.Count > 0) {
-					var args = (BuildErrorEventArgs)errorMessageQueue.Dequeue ();
-					#pragma warning disable 618
-					Log.LogCodedError (args.Code, file: args.File, lineNumber: args.LineNumber, message: args.Message);
-					#pragma warning restore 618
-				}
-				errorDataAvailable.Reset ();
-			}
-		}
-
-		private void LogWarnings ()
-		{
-			lock (warningMessageQueue.SyncRoot) {
-				while (warningMessageQueue.Count > 0) {
-					var args = (BuildWarningEventArgs)warningMessageQueue.Dequeue ();
-					#pragma warning disable 618
-					Log.LogWarning (args.Message);
-					#pragma warning restore 618
-				}
-				warningDataAvailable.Reset ();
-			}
-		}
-
-		private void LogCustomData ()
-		{
-			lock (customMessageQueue.SyncRoot) {
-				while (customMessageQueue.Count > 0) {
-					var args = (CustomBuildEventArgs)customMessageQueue.Dequeue ();
-					#pragma warning disable 618
-					BuildEngine.LogCustomEvent (args);
-					#pragma warning restore 618
-				}
-				customDataAvailable.Reset ();
+				resetEvent.Reset ();
 			}
 		}
 
@@ -300,16 +259,30 @@ namespace Xamarin.Android.Tasks
 					var index = (WaitHandleIndex)System.Threading.WaitHandle.WaitAny (handles, TimeSpan.FromMilliseconds (10));
 					switch (index) {
 					case WaitHandleIndex.LogDataAvailable:
-						LogMessages ();
+						LogInternal<BuildMessageEventArgs> (logMessageQueue, (e) => {
+							#pragma warning disable 618
+							Log.LogMessage (e.Importance, e.Message);
+							#pragma warning restore 618
+						}, logDataAvailable);
 						break;
-					case WaitHandleIndex.ErrorDataAvailable: 
-						LogErrors ();
+					case WaitHandleIndex.ErrorDataAvailable:
+						LogInternal<BuildErrorEventArgs> (errorMessageQueue, (e) => {
+							#pragma warning disable 618
+							Log.LogCodedError (e.Code, file: e.File, lineNumber: e.LineNumber, message: e.Message);
+							#pragma warning restore 618
+						}, errorDataAvailable); 
 						break;
 					case WaitHandleIndex.WarningDataAvailable:
-						LogWarnings ();
+						LogInternal<BuildWarningEventArgs> (warningMessageQueue, (e) => {
+							#pragma warning disable 618
+							Log.LogWarning (e.Message);
+							#pragma warning restore 618
+						}, warningDataAvailable);
 						break;
 					case WaitHandleIndex.CustomDataAvailable:
-						LogCustomData ();
+						LogInternal<CustomBuildEventArgs> (customMessageQueue, (e) => {
+							BuildEngine.LogCustomEvent (e);
+						}, customDataAvailable);
 						break;
 					case WaitHandleIndex.TaskCancelled:
 						tcs.Cancel ();
