@@ -1,0 +1,2 @@
+URL: https://github.com/xunit/xunit/blob/b592a1a475d1542b8e6598c6c704dd1da5fa2ffa/src/xunit.console/NUnitXml.xslt
+License: Apache 2.0 (https://github.com/xunit/xunit/blob/b592a1a475d1542b8e6598c6c704dd1da5fa2ffa/license.txt)

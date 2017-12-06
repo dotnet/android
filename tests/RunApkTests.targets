@@ -16,7 +16,7 @@
     `$(TEST_APK_PROJECTS_RELEASE)` within the toplevel `Makefile`.
     -->
   <Import Project="..\src\Mono.Android\Test\Mono.Android-Tests.projitems" />
-  <Import Project="..\tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.projitems" Condition=" '$(AotAssemblies)' != 'True' " />
+  <Import Project="..\tests\BCL-Tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.projitems" Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.projitems" Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.projitems"  Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.projitems"  Condition=" '$(Configuration)' == 'Release' And '$(AotAssemblies)' != 'true' " />

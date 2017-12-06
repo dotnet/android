@@ -1,0 +1,7 @@
+﻿# Lines starting with a hash preceeded by any amount of whitespace are comments
+#
+# Each line should contain a full name of the test case to ignore - not including assembly name
+#
+
+# Fails in Release build
+MonoTests.System.Reflection.Emit.SaveTest
