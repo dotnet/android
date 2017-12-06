@@ -149,6 +149,43 @@ namespace MonoDroid.Tuner {
 			}
 		}
 
+		string TypeNameWithoutKey (string name)
+		{
+			var idx = name.IndexOf (", PublicKeyToken=");
+			if (idx > 0)
+				name = name.Substring (0, idx);
+
+			return name;
+		}
+
+		bool CheckInvokerType (TypeDefinition type, string name)
+		{
+			return TypeNameWithoutKey (name) == TypeNameWithoutKey ($"{ type.FullName}, { type.Module.Assembly.FullName}");
+		}
+
+		void PreserveInterfaceMethods (TypeDefinition type, TypeDefinition invoker)
+		{
+			foreach (var m in type.GetMethods ()) {
+				string methodAndType;
+				if (!m.TryGetRegisterMember (out methodAndType))
+					continue;
+
+				if (!methodAndType.Contains (":"))
+					continue;
+
+				var values = methodAndType.Split (new char [] { ':' }, 2);
+				if (!CheckInvokerType (invoker, values [1]))
+					continue;
+
+				foreach (var invokerMethod in invoker.GetMethods ()) {
+					if (invokerMethod.Name == values [0]) {
+						PreserveMethod (invoker, invokerMethod);
+						break;
+					}
+				}
+			}
+		}
+
 		void PreserveInvoker (TypeDefinition type)
 		{
 			var invoker = PreserveHelperType (type, "Invoker");
@@ -156,6 +193,7 @@ namespace MonoDroid.Tuner {
 				return;
 
 			PreserveIntPtrConstructor (invoker);
+			PreserveInterfaceMethods (type, invoker);
 		}
 
 		TypeDefinition PreserveHelperType (TypeDefinition type, string suffix)

@@ -98,5 +98,60 @@ namespace MonoDroid.Tuner {
 			}
 			return false;
 		}
+
+		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
+
+		private static bool IsRegisterAttribute (CustomAttribute attribute)
+		{
+			var constructor = attribute.Constructor;
+
+			if (constructor.DeclaringType.FullName != RegisterAttribute)
+				return false;
+
+			if (!constructor.HasParameters)
+				return false;
+
+			if (constructor.Parameters.Count != 3)
+				return false;
+
+			return true;
+		}
+
+		public static bool TryGetRegisterAttribute (this MethodDefinition method, out CustomAttribute register)
+		{
+			register = null;
+
+			if (!method.HasCustomAttributes)
+				return false;
+
+			foreach (CustomAttribute attribute in method.CustomAttributes) {
+				if (!IsRegisterAttribute (attribute))
+					continue;
+
+				register = attribute;
+				return true;
+			}
+
+			return false;
+		}
+
+		public static bool TryGetRegisterMember (this MethodDefinition md, out string method)
+		{
+			CustomAttribute register;
+			method = null;
+
+			if (!md.TryGetRegisterAttribute (out register))
+				return false;
+
+			if (register.ConstructorArguments.Count != 3)
+				return false;
+
+			method = (string)register.ConstructorArguments [2].Value;
+
+			if (string.IsNullOrEmpty (method))
+				return false;
+
+			return true;
+		}
 	}
 }
