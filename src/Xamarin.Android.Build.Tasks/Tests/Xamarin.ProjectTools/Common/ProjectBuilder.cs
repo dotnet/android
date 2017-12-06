@@ -122,7 +122,10 @@ namespace Xamarin.ProjectTools
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
 			var outdir = FrameworkLibDirectory;
-			var path = Path.Combine (outdir, IsUnix ? Path.Combine ("xbuild", "Xamarin", "Android", "lib") : "");
+			var path = Path.Combine (outdir, "xbuild", "Xamarin", "Android", "lib");
+			if (!Directory.Exists (path)) {
+				path = outdir;
+			}
 			foreach (var file in Directory.EnumerateFiles (path, "libmono-android.*.so", SearchOption.AllDirectories)) {
 				string fullFilePath = Path.GetFullPath (file);
 				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
