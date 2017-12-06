@@ -1862,8 +1862,10 @@ public class Test
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been skipped.");
 				Assert.IsTrue (builder.Clean (proj), "Clean Should have succeeded");
+				builder.Target = "_CleanDesignTimeIntermediateDir";
+				Assert.IsTrue (builder.Build (proj), "_CleanDesignTimeIntermediateDir should have succeeded");
 				librarycache = Path.Combine (Root, path, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
-				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should exist.");
+				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should not exist.");
 			}
 		}
 
