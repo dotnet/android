@@ -51,6 +51,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string IntermediateOutputPath { get; set; }
 
+		[Required]
+		public string JavaSdkPath { get; set; }
+
 		/// <summary>
 		/// Location of an xml config files used to 
 		/// determine whether issues are enabled or disabled 
@@ -195,6 +198,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
+			Log.LogDebugMessage ("  JavaSdkPath: {0}", JavaSdkPath);
 			Log.LogDebugMessage ("  EnabledChecks: {0}", EnabledIssues);
 			Log.LogDebugMessage ("  DisabledChecks: {0}", DisabledIssues);
 			Log.LogDebugMessage ("  CheckIssues: {0}", CheckIssues);
@@ -211,6 +215,8 @@ namespace Xamarin.Android.Tasks
 					EnabledIssues = CleanIssues (issue.Key, lintToolVersion, EnabledIssues, nameof (EnabledIssues) );
 				}
 			}
+
+			EnvironmentVariables = new [] { "JAVA_HOME=" + JavaSdkPath };
 
 			base.Execute ();
 
@@ -344,8 +350,10 @@ namespace Xamarin.Android.Tasks
 			}, (s, e) => {
 				if (!string.IsNullOrEmpty (e.Data))
 					sb.AppendLine (e.Data);
-			}
-			);
+			},
+			new Dictionary<string, string> {
+				{ "JAVA_HOME", JavaSdkPath }
+			});
 			var versionInfo = sb.ToString ();
 			if (result != 0 || versionInfo.Contains ("unknown")) {
 				Log.LogWarning ($"Could not get version from '{tool}'");

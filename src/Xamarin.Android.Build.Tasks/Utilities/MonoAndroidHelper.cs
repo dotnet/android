@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 
 		readonly static byte[] Utf8Preamble = System.Text.Encoding.UTF8.GetPreamble ();
 
-		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError)
+		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
 			var psi = new ProcessStartInfo (name, args) {
 				UseShellExecute = false,
@@ -40,6 +40,11 @@ namespace Xamarin.Android.Tasks
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
+			if (environmentVariables != null) {
+				foreach (var pair in environmentVariables) {
+					psi.EnvironmentVariables [pair.Key] = pair.Value;
+				}
+			}
 			Process p = new Process ();
 			p.StartInfo = psi;
 			
