@@ -16,8 +16,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			try {
 				var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-				HasDevices = string.Compare (RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk"),
-						"error: no devices/emulators found" , StringComparison.InvariantCultureIgnoreCase) != 0;
+				int sdkVersion = -1;
+				HasDevices = int.TryParse (RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk").Trim(), out sdkVersion) && sdkVersion != -1;
 			} catch (Exception ex) {
 				Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not" + ex);
 			}
