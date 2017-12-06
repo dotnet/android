@@ -942,6 +942,7 @@ because xbuild doesn't support framework reference assemblies.
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
+		JavaSdkPath="$(JavaSdkDirectory)"
 	/>
 </Target>
 
