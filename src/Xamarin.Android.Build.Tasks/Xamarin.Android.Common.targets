@@ -2611,6 +2611,10 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(_AndroidPackage)' != '' And Exists ('$(OutDir)$(_AndroidPackage).apk.mSYM')" />
 </Target>
 
+<Target Name="_CleanDesignTimeIntermediateDir">
+	<RemoveDirFixed Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition="Exists ('$(_AndroidDesignTimeResDirIntermediate)')" />
+</Target>
+
 <Target Name="_CleanGeneratedDeploymentFiles">
 	<CreateItem Include="$(IntermediateOutputPath)*.deployment">
 		<Output TaskParameter="Include" ItemName="_OutputDeploymentFiles" />
@@ -2636,7 +2640,6 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)proguard" Condition="Exists ('$(MonoAndroidIntermediate)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
-	<RemoveDirFixed Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition="Exists ('$(_AndroidDesignTimeResDirIntermediate)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
