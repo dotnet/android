@@ -15,6 +15,7 @@ namespace Android.Content {
 		public bool                   DirectBootAware         {get; set;}
 		public bool                   Enabled                 {get; set;}
 		public bool                   Exported                {get; set;}
+		public string                 Description             {get; set;}
 		public string                 Icon                    {get; set;}
 		public string                 Label                   {get; set;}
 		public string                 Name                    {get; set;}
