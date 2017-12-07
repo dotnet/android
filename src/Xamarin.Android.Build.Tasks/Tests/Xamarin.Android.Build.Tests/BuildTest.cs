@@ -262,7 +262,8 @@ namespace Xamarin.Android.Tests
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
-				if (checkMinLlvmPath) {
+				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
+				if (checkMinLlvmPath && !IsWindows) {
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
