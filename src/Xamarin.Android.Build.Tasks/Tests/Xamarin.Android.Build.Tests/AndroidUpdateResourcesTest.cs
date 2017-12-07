@@ -392,6 +392,12 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
+			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
+			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
+			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
+				Assert.Ignore ("Skipping this F# test on Windows.");
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
@@ -413,6 +419,12 @@ namespace UnnamedProject
 		[TestCaseSource("ReleaseLanguage")]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
+			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
+			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
+			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
+				Assert.Ignore ("Skipping this F# test on Windows.");
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
@@ -994,8 +1006,8 @@ namespace Lib1 {
 		[NonParallelizable]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
-			int maxBuildTimeMs = 8000;
-			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParserAndLibraries");
+			int maxBuildTimeMs = 10000;
+			var path = Path.Combine ("temp", "BuildAppWithMRPAL");
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>

@@ -139,5 +139,10 @@ namespace Xamarin.ProjectTools
 					Metadata.Add (p.Key, p.Value);
 			}
 		}
+
+		public override string ToString ()
+		{
+			return Include ();
+		}
 	}
 }
