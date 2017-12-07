@@ -140,10 +140,10 @@ namespace Xamarin.Android.Tasks
 
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
-			injars.Add (classesZip);
+			injars.Add (classesZip + ProguardInputJarFilter);
 			if (JavaLibrariesToEmbed != null)
 				foreach (var jarfile in JavaLibrariesToEmbed)
-					injars.Add (jarfile.ItemSpec);
+					injars.Add (jarfile.ItemSpec + ProguardInputJarFilter);
 
 			using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
 				GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
@@ -158,11 +158,11 @@ namespace Xamarin.Android.Tasks
 				.Select (s => s.Trim ())
 				.Where (s => !string.IsNullOrWhiteSpace (s));
 
-			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
+			var enclosingChar = OS.IsWindows ? "\"" : "'";
 
 			foreach (var file in configs) {
 				if (File.Exists (file))
-					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{file}'{enclosingChar}");
+					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}{file}{enclosingChar}");
 				else
 					Log.LogWarning ("Proguard configuration file '{0}' was not found.", file);
 			}
@@ -172,10 +172,9 @@ namespace Xamarin.Android.Tasks
 				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
-			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", $"{enclosingChar}'" + string.Join ($"{ProguardInputJarFilter}'{Path.PathSeparator}'", injars.Distinct ()) + $"{ProguardInputJarFilter}'{enclosingChar}");
-
-			cmd.AppendSwitchUnquotedIfNotNull ("-libraryjars ", $"{enclosingChar}'" + string.Join ($"'{Path.PathSeparator}'", libjars.Distinct ()) + $"'{enclosingChar}");
-			
+			string delimiter = $"{enclosingChar}{Path.PathSeparator}{enclosingChar}";
+			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", enclosingChar + string.Join (delimiter, injars.Distinct ()) + enclosingChar);
+			cmd.AppendSwitchUnquotedIfNotNull ("-libraryjars ", enclosingChar + string.Join (delimiter, libjars.Distinct ()) + enclosingChar);
 			cmd.AppendSwitchIfNotNull ("-outjars ", ProguardJarOutput);
 
 			if (EnableLogging) {
