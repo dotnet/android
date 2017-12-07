@@ -4535,7 +4535,6 @@
 23,Android.Util.DisplayMetricsDensity,D420,android/util/DisplayMetrics.DENSITY_420,420
 21,Android.Util.DisplayMetricsDensity,D560,android/util/DisplayMetrics.DENSITY_560,560
 10,Android.Util.DisplayMetricsDensity,Default,android/util/DisplayMetrics.DENSITY_DEFAULT,160
-24,Android.Util.DisplayMetricsDensity,DeviceStable,android/util/DisplayMetrics.DENSITY_DEVICE_STABLE,
 10,Android.Util.DisplayMetricsDensity,High,android/util/DisplayMetrics.DENSITY_HIGH,240
 10,Android.Util.DisplayMetricsDensity,Low,android/util/DisplayMetrics.DENSITY_LOW,120
 10,Android.Util.DisplayMetricsDensity,Medium,android/util/DisplayMetrics.DENSITY_MEDIUM,160
