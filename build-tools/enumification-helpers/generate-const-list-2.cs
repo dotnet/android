@@ -8,9 +8,9 @@ using System.Xml.Linq;
 
 public class Driver
 {
-	class Constant {
+	class ConstantCandidate {
 		public string Package, ParentType, Level, FieldType, Name, Value;
-		public bool IsTypeInterface;
+		public bool IsTypeInterface, IsFinal;
 	}
 	
 	static string GetApiLevel (string file)
@@ -30,15 +30,16 @@ public class Driver
 			.SelectMany (p => p.Elements ())
 			.SelectMany (t => t.Elements ("field"))
 			.Where (f => f.Attribute ("type")?.Value == "int")
-			.Where (f => f.Attribute ("final")?.Value == "true" && f.Attribute ("value") != null)
+			//.Where (f => f.Attribute ("final")?.Value == "true" && f.Attribute ("value") != null)
 			.ToArray ();
-		var consts = results.Select (f => new Constant {
+		var consts = results.Select (f => new ConstantCandidate {
 			Package = f.Parent.Parent.Attribute ("name").Value,
 			ParentType = f.Parent.Attribute ("name").Value,
+			IsFinal = f.Attribute ("final")?.Value == "true",
 			IsTypeInterface = f.Parent.Name.LocalName == "interface",
 			Name = f.Attribute ("name").Value,
 			FieldType = f.Attribute ("type").Value,
-			Value = f.Attribute ("value").Value,
+			Value = f.Attribute ("value")?.Value,
 			Level = levels [f.Document.BaseUri] 
 			})
 			.OrderBy (c => c.Package)
@@ -52,9 +53,14 @@ public class Driver
 			while (consts [i - x].Name == consts [i].Name && consts [i - x].ParentType == consts [i].ParentType && consts [i - x].Package == consts [i].Package && consts [i - x].Value != consts [i].Value) {
 				Console.Error.WriteLine ("Overwrite field value: {0}.{1}.{2}: {3} (at {4}) -> {5} (at {6})", consts [i - x].Package, consts [i - x].ParentType, consts [i - x].Name, consts [i - x].Value, consts [i - x].Level, consts [i].Value, consts [i].Level);
 				consts [i - x].Value = consts [i].Value;
+				if (!consts [i - x].IsFinal)
+					Console.Error.WriteLine ("Field {0}.{1}.{2} was not constant at API Level {3}", consts [i - x].Package, consts [i - x].ParentType, consts [i - x].Name, consts [i - x].Level);
+				consts [i - x].IsFinal = consts [i].IsFinal;
 				x++;
 			}
 		}
+		
+		consts = consts.Where (f => f.IsFinal).ToArray ();
 
 		var fields = new List<string> ();
 		string package = null, type = null;
