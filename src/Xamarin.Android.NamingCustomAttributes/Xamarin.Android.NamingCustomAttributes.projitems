@@ -21,5 +21,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ServiceAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\InstrumentationAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\LayoutAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\IJniNameProviderAttribute.cs" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ namespace Android.Content {
 	[AttributeUsage (AttributeTargets.Class, 
 			AllowMultiple=false, 
 			Inherited=false)]
-	public partial class BroadcastReceiverAttribute : Attribute {
+	public partial class BroadcastReceiverAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		public BroadcastReceiverAttribute ()
 		{

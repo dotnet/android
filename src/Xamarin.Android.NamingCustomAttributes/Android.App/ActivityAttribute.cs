@@ -10,7 +10,7 @@ namespace Android.App
 	[AttributeUsage (AttributeTargets.Class, 
 			AllowMultiple=false, 
 			Inherited=false)]
-	public sealed partial class ActivityAttribute : Attribute {
+	public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		public ActivityAttribute ()
 		{

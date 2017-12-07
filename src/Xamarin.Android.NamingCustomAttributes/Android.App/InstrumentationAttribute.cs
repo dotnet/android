@@ -6,7 +6,7 @@ namespace Android.App {
 	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Class, 
 			AllowMultiple=true, 
 			Inherited=false)]
-	public sealed partial class InstrumentationAttribute : Attribute {
+	public sealed partial class InstrumentationAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
 		public InstrumentationAttribute ()
 		{
