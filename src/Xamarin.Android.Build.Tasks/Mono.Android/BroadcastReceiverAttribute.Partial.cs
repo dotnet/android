@@ -16,6 +16,11 @@ namespace Android.Content {
 
 		static ManifestDocumentElement<BroadcastReceiverAttribute> mapping = new ManifestDocumentElement<BroadcastReceiverAttribute> ("receiver") {
 			{
+			  "Description",
+			  "description",
+			  self          => self.Description,
+			  (self, value) => self.Description = (string) value
+			}, {
 			  "DirectBootAware",
 			  "directBootAware",
 			  self          => self.DirectBootAware,
