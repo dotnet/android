@@ -618,6 +618,11 @@ namespace App1
 					},
 				},
 			};
+			//DebugType=Full produces mdbs on Windows
+			if (IsWindows) {
+				lib.DebugProperties.Add (new Property ("", "DebugType", "portable"));
+				proj.DebugProperties.Add (new Property ("", "DebugType", "portable"));
+			}
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
@@ -1351,7 +1356,7 @@ namespace App1
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
-			string multidex_jar = @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android\android-support-multidex.jar";
+			string multidex_jar = @"$(MSBuildExtensionsPath)\Xamarin\Android\android-support-multidex.jar";
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
@@ -1749,10 +1754,14 @@ public class Test
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				proj.Packages.Add (KnownPackages.SupportV7CardView_24_2_1);
+				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
+					reference.Timestamp = DateTimeOffset.Now;
+					proj.References.Add (reference);
+				}
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				var doc = File.ReadAllText (Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcepaths.cache"));
-				Assert.IsTrue (doc.Contains ("Xamarin.Android.Support.v7.CardView/24.2.1"), "CardView should be resolved as a reference.");
+				Assert.IsTrue (doc.Contains (Path.Combine ("Xamarin.Android.Support.v7.CardView", "24.2.1")), "CardView should be resolved as a reference.");
 			}
 		}
 
@@ -1899,9 +1908,16 @@ public class Test
 					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 						"The __library_projects__ directory should exist.");
 					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
+					//HACK: forces project to re-save on Windows, is there a *better* way?
+					proj.Sources.First ().Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-						"The __library_projects__ directory should exist.");
+					if (IsWindows && useShortFileNames) {
+						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+							"The __library_projects__ directory should not exist, due to IncrementalClean.");
+					} else {
+						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+							"The __library_projects__ directory should exist.");
+					}
 					Assert.IsTrue (libb.Clean (libproj), "Clean should have succeeded.");
 					Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");

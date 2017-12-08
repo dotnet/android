@@ -370,7 +370,7 @@ namespace Xamarin.ProjectTools
 			Version = "1.0.0.13",
 			TargetFramework = "monoandroid71",
 			References = {
-				new BuildItem.Reference ("FSharp.Core") {
+				new BuildItem.Reference ("Xamarin.Android.FSharp.ResourceProvider.Runtime") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.FSharp.ResourceProvider.1.0.0.13\\lib\\Xamarin.Android.FSharp.ResourceProvider.Runtime.dll"
 				},
 			}
