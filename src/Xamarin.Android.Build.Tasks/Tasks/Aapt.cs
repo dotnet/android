@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSdkPlatform { get; set; }
 
-		public string ResourceSymbolsTextFile { get; set; }
+		public string ResourceSymbolsTextFileDirectory { get; set; }
 
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
@@ -323,8 +323,8 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitch ("--auto-add-overlay");
 
-			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
-				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
+			if (!string.IsNullOrEmpty (ResourceSymbolsTextFileDirectory))
+				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFileDirectory);
 
 			var extraArgsExpanded = ExpandString (ExtraArgs);
 			if (extraArgsExpanded != ExtraArgs)
