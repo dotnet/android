@@ -1398,6 +1398,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
+		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	
