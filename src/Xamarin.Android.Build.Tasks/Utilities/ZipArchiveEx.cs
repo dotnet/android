@@ -34,8 +34,6 @@ namespace Xamarin.Android.Tasks
 				zip.Dispose ();
 				zip = null;
 			}
-			// Requied to ensure that all the FileStream handles are disposed of. 
-			GC.Collect ();
 			zip = ZipArchive.Open (archive, FileMode.Open);
 		}
 
