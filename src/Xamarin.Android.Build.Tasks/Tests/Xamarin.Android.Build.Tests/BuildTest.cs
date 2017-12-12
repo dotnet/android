@@ -1356,13 +1356,15 @@ namespace App1
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
-			string multidex_jar = @"$(MSBuildExtensionsPath)\Xamarin\Android\android-support-multidex.jar";
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
-				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
+				string multidex_path = bbuilder.RunningMSBuild ? @"$(MSBuildExtensionsPath)" : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild";
+				string multidex_jar = $@"{multidex_path}\Xamarin\Android\android-support-multidex.jar";
+				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
+
 				Assert.IsTrue (bbuilder.Build (binding));
 				var proj = new XamarinAndroidApplicationProject () {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
@@ -1908,10 +1910,10 @@ public class Test
 					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 						"The __library_projects__ directory should exist.");
 					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
-					//HACK: forces project to re-save on Windows, is there a *better* way?
+					//HACK: forces project to re-save, is there a *better* way?
 					proj.Sources.First ().Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					if (IsWindows && useShortFileNames) {
+					if (useShortFileNames) {
 						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 							"The __library_projects__ directory should not exist, due to IncrementalClean.");
 					} else {
