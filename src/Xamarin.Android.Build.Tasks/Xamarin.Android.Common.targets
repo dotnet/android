@@ -2681,6 +2681,9 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateItem Include="$(_AndroidResgenFlagFile)">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
+	<CreateItem Include="$(IntermediateOutputPath)R.txt">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
 	<CreateItem Include="$(ApkFileSigned)">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
