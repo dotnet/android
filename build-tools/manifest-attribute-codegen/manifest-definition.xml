@@ -1,0 +1,461 @@
+<!-- TODO: `compatible-screens` is not defined -->
+<m>
+    <e name='manifest'>
+        <a name='versionCode' />
+        <a name='versionName' />
+        <a name='sharedUserId' />
+        <a name='sharedUserLabel' />
+        <a name='installLocation' />
+        <a name='revisionCode' api-level='22' />
+        <a name='isolatedSplits' api-level='26' />
+        <a name='isFeatureSplit' api-level='26' />
+        <a name='targetSandboxVersion' api-level='26' />
+    </e>
+    <e name='application'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='theme' />
+        <a name='label' />
+        <a name='icon' />
+        <a name='description' />
+        <a name='permission' />
+        <a name='process' />
+        <a name='taskAffinity' />
+        <a name='allowTaskReparenting' />
+        <a name='hasCode' format='boolean' />
+        <a name='persistent' />
+        <a name='enabled' />
+        <a name='debuggable' />
+        <a name='vmSafeMode' />
+        <a name='manageSpaceActivity' />
+        <a name='allowClearUserData' />
+        <a name='testOnly' />
+        <a name='backupAgent' />
+        <a name='allowBackup' />
+        <a name='killAfterRestore' />
+        <a name='restoreNeedsApplication' />
+        <a name='restoreAnyVersion' />
+        <a name='neverEncrypt' />
+        <a name='cantSaveState' format='boolean' />
+        <a name='logo' api-level='15' />
+        <a name='hardwareAccelerated' api-level='15' />
+        <a name='largeHeap' format='boolean' api-level='15' />
+        <a name='uiOptions' api-level='15' />
+        <a name='supportsRtl' format='boolean' api-level='16' />
+        <a name='requiredForAllUsers' api-level='18' />
+        <a name='restrictedAccountType' format='string' api-level='18' />
+        <a name='requiredAccountType' format='string' api-level='18' />
+        <a name='banner' api-level='20' />
+        <a name='isGame' api-level='20' />
+        <a name='fullBackupOnly' api-level='21' />
+        <a name='multiArch' api-level='21' />
+        <a name='fullBackupContent' api-level='23' />
+        <a name='usesCleartextTraffic' api-level='23' />
+        <a name='extractNativeLibs' api-level='23' />
+        <a name='backupInForeground' api-level='24' />
+        <a name='defaultToDeviceProtectedStorage' format='boolean' api-level='24' />
+        <a name='directBootAware' api-level='24' />
+        <a name='resizeableActivity' api-level='24' />
+        <a name='networkSecurityConfig' api-level='24' />
+        <a name='roundIcon' api-level='25' />
+        <a name='persistentWhenFeatureAvailable' api-level='26' />
+        <a name='maxAspectRatio' api-level='26' />
+        <a name='appCategory' api-level='26' />
+        <a name='classLoader' api-level='27' />
+    </e>
+    <e name='permission'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='icon' />
+        <a name='permissionGroup' />
+        <a name='description' />
+        <a name='protectionLevel' />
+        <a name='logo' api-level='15' />
+        <a name='permissionFlags' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='permission-group'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='icon' />
+        <a name='description' />
+        <a name='logo' api-level='15' />
+        <a name='priority' api-level='16' />
+        <a name='permissionGroupFlags' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='permission-tree'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='icon' />
+        <a name='logo' api-level='15' />
+        <a name='banner' api-level='20' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='uses-permission'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='maxSdkVersion' format='integer' api-level='19' />
+        <a name='requiredFeature' format='string' api-level='26' />
+        <a name='requiredNotFeature' format='string' api-level='26' />
+    </e>
+    <e name='uses-configuration'>
+        <parent>manifest</parent>
+        <a name='reqTouchScreen' />
+        <a name='reqKeyboardType' />
+        <a name='reqHardKeyboard' />
+        <a name='reqNavigation' />
+        <a name='reqFiveWayNav' />
+    </e>
+    <e name='uses-feature'>
+        <parent>manifest</parent>
+        <a name='glEsVersion' format='integer' />
+        <a name='name' />
+        <a name='required' format='boolean' />
+        <a name='version' format='integer' api-level='24' />
+    </e>
+    <e name='uses-sdk'>
+        <parent>manifest</parent>
+        <a name='minSdkVersion' format='integer|string' />
+        <a name='targetSdkVersion' format='integer|string' />
+        <a name='maxSdkVersion' format='integer' />
+    </e>
+    <e name='uses-library'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='required' />
+    </e>
+    <e name='supports-screens'>
+        <parent>manifest</parent>
+        <a name='smallScreens' format='boolean' />
+        <a name='normalScreens' format='boolean' />
+        <a name='largeScreens' format='boolean' />
+        <a name='xlargeScreens' format='boolean' />
+        <a name='resizeable' format='boolean' />
+        <a name='anyDensity' format='boolean' />
+        <a name='requiresSmallestWidthDp' format='integer' api-level='15' />
+        <a name='compatibleWidthLimitDp' format='integer' api-level='15' />
+        <a name='largestWidthLimitDp' format='integer' api-level='15' />
+    </e>
+    <e name='protected-broadcast'>
+        <parent>manifest</parent>
+        <a name='name' />
+    </e>
+    <e name='original-package'>
+        <parent>manifest</parent>
+        <a name='name' />
+    </e>
+    <e name='provider'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='description' />
+        <a name='icon' />
+        <a name='process' />
+        <a name='authorities' />
+        <a name='syncable' />
+        <a name='readPermission' />
+        <a name='writePermission' />
+        <a name='grantUriPermissions' />
+        <a name='permission' />
+        <a name='multiprocess' />
+        <a name='initOrder' />
+        <a name='enabled' />
+        <a name='exported' />
+        <a name='logo' api-level='15' />
+        <a name='singleUser' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='directBootAware' api-level='24' />
+        <a name='roundIcon' api-level='25' />
+        <a name='visibleToInstantApps' api-level='26' />
+        <a name='splitName' api-level='26' />
+    </e>
+    <e name='grant-uri-permission'>
+        <parent>provider</parent>
+        <a name='path' format='string' />
+        <a name='pathPrefix' format='string' />
+        <a name='pathPattern' format='string' />
+    </e>
+    <e name='path-permission'>
+        <parent>provider</parent>
+        <a name='path' />
+        <a name='pathPrefix' />
+        <a name='pathPattern' />
+        <a name='permission' />
+        <a name='readPermission' />
+        <a name='writePermission' />
+        <a name='pathAdvancedPattern' api-level='26' />
+    </e>
+    <e name='service'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='description' />
+        <a name='icon' />
+        <a name='permission' />
+        <a name='process' />
+        <a name='enabled' />
+        <a name='exported' />
+        <a name='logo' api-level='15' />
+        <a name='stopWithTask' format='boolean' api-level='15' />
+        <a name='isolatedProcess' format='boolean' api-level='16' />
+        <a name='singleUser' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='directBootAware' api-level='24' />
+        <a name='externalService' format='boolean' api-level='24' />
+        <a name='roundIcon' api-level='25' />
+        <a name='visibleToInstantApps' api-level='26' />
+        <a name='splitName' api-level='26' />
+    </e>
+    <e name='receiver'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='label' />
+        <a name='description' />
+        <a name='icon' />
+        <a name='permission' />
+        <a name='process' />
+        <a name='enabled' />
+        <a name='exported' />
+        <a name='logo' api-level='15' />
+        <a name='singleUser' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='directBootAware' api-level='24' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='activity'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='theme' />
+        <a name='label' />
+        <a name='description' />
+        <a name='icon' />
+        <a name='launchMode' />
+        <a name='screenOrientation' />
+        <a name='configChanges' />
+        <a name='permission' />
+        <a name='multiprocess' />
+        <a name='process' />
+        <a name='taskAffinity' />
+        <a name='allowTaskReparenting' />
+        <a name='finishOnTaskLaunch' />
+        <a name='finishOnCloseSystemDialogs' />
+        <a name='clearTaskOnLaunch' />
+        <a name='noHistory' />
+        <a name='alwaysRetainTaskState' />
+        <a name='stateNotNeeded' />
+        <a name='excludeFromRecents' />
+        <a name='enabled' />
+        <a name='exported' />
+        <a name='windowSoftInputMode' />
+        <a name='logo' api-level='15' />
+        <a name='immersive' api-level='15' />
+        <a name='hardwareAccelerated' api-level='15' />
+        <a name='uiOptions' api-level='15' />
+        <a name='parentActivityName' api-level='16' />
+        <a name='showOnLockScreen' api-level='17' />
+        <a name='singleUser' api-level='17' />
+        <a name='primaryUserOnly' format='boolean' api-level='17' />
+        <a name='banner' api-level='20' />
+        <a name='allowEmbedded' api-level='20' />
+        <a name='persistableMode' api-level='21' />
+        <a name='documentLaunchMode' api-level='21' />
+        <a name='maxRecents' api-level='21' />
+        <a name='autoRemoveFromRecents' api-level='21' />
+        <a name='relinquishTaskIdentity' api-level='21' />
+        <a name='resumeWhilePausing' api-level='21' />
+        <a name='resizeableActivity' api-level='23' />
+        <a name='lockTaskMode' api-level='23' />
+        <a name='showForAllUsers' api-level='23' />
+        <a name='systemUserOnly' format='boolean' api-level='24' />
+        <a name='supportsPictureInPicture' api-level='24' />
+        <a name='directBootAware' api-level='24' />
+        <a name='alwaysFocusable' format='boolean' api-level='24' />
+        <a name='enableVrMode' api-level='24' />
+        <a name='roundIcon' api-level='25' />
+        <a name='recreateOnConfigChanges' api-level='26' />
+        <a name='maxAspectRatio' api-level='26' />
+        <a name='rotationAnimation' api-level='26' />
+        <a name='visibleToInstantApps' api-level='26' />
+        <a name='splitName' api-level='26' />
+        <a name='colorMode' api-level='26' />
+        <a name='showWhenLocked' api-level='27' />
+        <a name='turnScreenOn' api-level='27' />
+    </e>
+    <e name='activity-alias'>
+        <parent>application</parent>
+        <a name='name' />
+        <a name='targetActivity' format='string' />
+        <a name='label' />
+        <a name='description' />
+        <a name='icon' />
+        <a name='permission' />
+        <a name='enabled' />
+        <a name='exported' />
+        <a name='logo' api-level='15' />
+        <a name='parentActivityName' api-level='16' />
+        <a name='banner' api-level='20' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='meta-data'>
+        <parent>application</parent>
+        <parent>activity</parent>
+        <parent>receiver</parent>
+        <parent>provider</parent>
+        <parent>service</parent>
+        <parent>permission</parent>
+        <parent>permission-group</parent>
+        <parent>instrumentation</parent>
+        <a name='name' />
+        <a name='value' format='string|integer|color|float|boolean' />
+        <a name='resource' format='reference' />
+    </e>
+    <e name='intent-filter'>
+        <parent>activity</parent>
+        <parent>receiver</parent>
+        <parent>service</parent>
+        <a name='label' />
+        <a name='icon' />
+        <a name='priority' />
+        <a name='logo' api-level='15' />
+        <a name='banner' api-level='20' />
+        <a name='autoVerify' api-level='23' />
+        <a name='roundIcon' api-level='25' />
+    </e>
+    <e name='action'>
+        <parent>intent-filter</parent>
+        <a name='name' />
+    </e>
+    <e name='data'>
+        <parent>intent-filter</parent>
+        <a name='mimeType' format='string' />
+        <a name='scheme' format='string' />
+        <a name='host' format='string' />
+        <a name='port' format='string' />
+        <a name='path' />
+        <a name='pathPrefix' />
+        <a name='pathPattern' />
+        <a name='ssp' format='string' api-level='19' />
+        <a name='sspPrefix' format='string' api-level='19' />
+        <a name='sspPattern' format='string' api-level='19' />
+        <a name='pathAdvancedPattern' api-level='26' />
+    </e>
+    <e name='category'>
+        <parent>intent-filter</parent>
+        <a name='name' />
+    </e>
+    <e name='instrumentation'>
+        <parent>manifest</parent>
+        <a name='name' />
+        <a name='targetPackage' />
+        <a name='label' />
+        <a name='icon' />
+        <a name='handleProfiling' />
+        <a name='functionalTest' />
+        <a name='logo' api-level='15' />
+        <a name='banner' api-level='20' />
+        <a name='roundIcon' api-level='25' />
+        <a name='targetProcesses' api-level='26' />
+    </e>
+    <e name='compatible-screens-screen'>
+        <parent>compatible-screens</parent>
+        <a name='screenSize' />
+        <a name='screenDensity' format='integer' />
+    </e>
+    <e name='intent'>
+        <a name='action' format='string' />
+        <a name='data' format='string' />
+        <a name='mimeType' />
+        <a name='targetPackage' />
+        <a name='targetClass' format='string' />
+    </e>
+    <e name='intent-category'>
+        <parent>intent</parent>
+        <a name='name' />
+    </e>
+    <e name='extra'>
+        <parent>intent</parent>
+        <a name='name' />
+        <a name='value' />
+    </e>
+    <e name='package-verifier' api-level='15'>
+        <parent>manifest</parent>
+        <a name='name' api-level='15' />
+        <a name='publicKey' api-level='15' />
+    </e>
+    <e name='library' api-level='18'>
+        <parent>manifest</parent>
+        <a name='name' api-level='18' />
+    </e>
+    <e name='supports-input-input-type' api-level='19'>
+        <parent>supports-input</parent>
+        <a name='name' api-level='19' />
+    </e>
+    <e name='public-key' api-level='19'>
+        <a name='value' api-level='19' />
+    </e>
+    <e name='key-set' api-level='19'>
+        <a name='name' api-level='19' />
+    </e>
+    <e name='feature-group' api-level='21'>
+        <a name='label' api-level='21' />
+    </e>
+    <e name='resource-overlay' api-level='21'>
+        <parent>manifest</parent>
+        <a name='targetPackage' api-level='21' />
+        <a name='priority' api-level='21' />
+        <a name='isStatic' format='boolean' api-level='26' />
+        <a name='requiredSystemPropertyName' format='string' api-level='26' />
+        <a name='requiredSystemPropertyValue' format='string' api-level='26' />
+    </e>
+    <e name='public-key' api-level='21'>
+        <a name='name' api-level='21' />
+        <a name='value' api-level='21' />
+    </e>
+    <e name='key-set' api-level='21'>
+        <a name='name' api-level='21' />
+    </e>
+    <e name='upgrade-key-set' api-level='21'>
+        <parent>manifest</parent>
+        <a name='name' api-level='21' />
+    </e>
+    <e name='layout' api-level='24'>
+        <parent>activity</parent>
+        <a name='defaultWidth' format='dimension|fraction' api-level='24' />
+        <a name='defaultHeight' format='dimension|fraction' api-level='24' />
+        <a name='gravity' api-level='24' />
+        <a name='minWidth' api-level='24' />
+        <a name='minimalWidth' format='dimension' api-level='24' />
+        <a name='minHeight' api-level='24' />
+        <a name='minimalHeight' format='dimension' api-level='24' />
+    </e>
+    <e name='restrict-update' api-level='24'>
+        <parent>manifest</parent>
+        <a name='hash' format='string' api-level='24' />
+    </e>
+    <e name='static-library' api-level='26'>
+        <parent>application</parent>
+        <a name='name' api-level='26' />
+        <a name='version' api-level='26' />
+    </e>
+    <e name='uses-static-library' api-level='26'>
+        <parent>application</parent>
+        <a name='name' api-level='26' />
+        <a name='version' api-level='26' />
+        <a name='certDigest' format='string' api-level='26' />
+    </e>
+    <e name='uses-split' api-level='26'>
+        <parent>manifest</parent>
+        <a name='name' format='string' api-level='26' />
+    </e>
+    <e name='additional-certificate' api-level='27'>
+        <parent>uses-static-library</parent>
+        <a name='certDigest' api-level='27' />
+    </e>
+</m>
+
