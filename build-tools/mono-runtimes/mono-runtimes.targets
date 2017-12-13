@@ -57,10 +57,14 @@
     <_BclAssembly Include="@(MonoProfileAssembly)" />
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
-    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Identity)')" />
-    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Filename).pdb')" />
+    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Identity)')" />
+    <_BclTestAssemblySource       Include="@(MonoTestAssembly->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Filename).pdb')" />
+    <_BclTestAssemblySource       Include="@(MonoTestRunner->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Identity)')" />
+    <_BclTestAssemblySource       Include="@(MonoTestRunner->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')" />
     <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')" />
+    <_BclTestAssemblyDestination  Include="@(MonoTestRunner->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
+    <_BclTestAssemblyDestination  Include="@(MonoTestRunner->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')" />
   </ItemGroup>
   <ItemGroup>
     <_BclTestOutput Include="@(_BclTestAssemblyDestination)" />

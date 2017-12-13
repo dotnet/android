@@ -252,8 +252,6 @@
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
       <SourcePath>System.Xml.Linq</SourcePath>
     </MonoTestAssembly>
-    <MonoTestAssembly Include="nunitlite.dll">
-      <SourcePath>lib/monodroid</SourcePath>
-    </MonoTestAssembly>
+    <MonoTestRunner Include="nunitlite.dll" />
   </ItemGroup>
 </Project>
