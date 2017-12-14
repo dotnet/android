@@ -28,7 +28,7 @@ namespace Java.Lang {
 			get { return typeof (IComparableInvoker); }
 		}
 
-		new IntPtr class_ref;
+		IntPtr class_ref;
 
 		public static IComparable GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

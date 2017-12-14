@@ -224,7 +224,7 @@ namespace MonoDroid.Generation {
 			sw.WriteLine ("{0}internal class {1}Invoker : global::Java.Lang.Object, {1} {{", indent, Name);
 			sw.WriteLine ();
 			opt.CodeGenerator.WriteInterfaceInvokerHandle (this, sw, indent + "\t", opt, Name + "Invoker");
-			sw.WriteLine ("{0}\tnew IntPtr class_ref;", indent);
+			sw.WriteLine ("{0}\tIntPtr class_ref;", indent);
 			sw.WriteLine ();
 			sw.WriteLine ("{0}\tpublic static {1} GetObject (IntPtr handle, JniHandleOwnership transfer)", indent, Name);
 			sw.WriteLine ("{0}\t{{", indent);

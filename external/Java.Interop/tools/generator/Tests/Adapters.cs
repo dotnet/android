@@ -9,6 +9,8 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
+			//hides inherited member `Java.Lang.Object.class_ref'
+			AllowWarnings = true;
 			RunAllTargets (
 					outputRelativePath:     "Adapters",
 					apiDescriptionFile:     "expected/Adapters/Adapters.xml",

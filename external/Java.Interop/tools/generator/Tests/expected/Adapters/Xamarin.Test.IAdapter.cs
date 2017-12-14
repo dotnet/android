@@ -23,7 +23,7 @@ namespace Xamarin.Test {
 			get { return typeof (IAdapterInvoker); }
 		}
 
-		new IntPtr class_ref;
+		IntPtr class_ref;
 
 		public static IAdapter GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

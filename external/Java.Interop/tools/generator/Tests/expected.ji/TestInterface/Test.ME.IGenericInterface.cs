@@ -37,7 +37,7 @@ namespace Test.ME {
 			get { return _members.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		IntPtr class_ref;
 
 		public static IGenericInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

@@ -37,7 +37,7 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		IntPtr class_ref;
 
 		public static IComparable GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

@@ -31,7 +31,7 @@ namespace Test.ME {
 			get { return typeof (IGenericPropertyInterfaceInvoker); }
 		}
 
-		new IntPtr class_ref;
+		IntPtr class_ref;
 
 		public static IGenericPropertyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
