@@ -63,11 +63,7 @@ namespace Java.Interop {
 				return (TResult) CastClass (instance, resultType);
 			}
 			else if (resultType.IsInterface) {
-				Type invokerType = GetHelperType (resultType, "Invoker");
-				if (invokerType == null)
-					throw new ArgumentException ("Unable to get Invoker for interface '" + resultType.FullName + "'.", "TResult");
-				Func<IntPtr, JniHandleOwnership, TResult> getObject = (Func<IntPtr, JniHandleOwnership, TResult>) Delegate.CreateDelegate (typeof (Func<IntPtr, JniHandleOwnership, TResult>), invokerType, "GetObject");
-				return getObject (instance.Handle, JniHandleOwnership.DoNotTransfer);
+				return (TResult) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
 				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",
@@ -113,11 +109,7 @@ namespace Java.Interop {
 				return CastClass (instance, resultType);
 			}
 			else if (resultType.IsInterface) {
-				Type invokerType = GetHelperType (resultType, "Invoker");
-				if (invokerType == null)
-					throw new ArgumentException ("Unable to get Invoker for interface '" + resultType.FullName + "'.", "resultType");
-				var getObject = invokerType.GetMethod ("GetObject", new[]{typeof (IntPtr), typeof (JniHandleOwnership)});
-				return (IJavaObject) getObject.Invoke (null, new object[]{instance.Handle, JniHandleOwnership.DoNotTransfer});
+				return Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
 				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",
