@@ -7,8 +7,8 @@
       <ResultsPath>$(OutputPath)TestResult-Mono.Android_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsAotName).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)apk-sizes-definitions.txt</ApkSizesDefinitionFilename>
+      <ApkSizesInputFilename>apk-sizes-$(Package)-$(Configuration)$(TestsAotName).txt</ApkSizesInputFilename>
+      <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Mono.Android_Tests-values.csv</ApkSizesResultsFilename>
     </TestApk>
   </ItemGroup>
