@@ -1056,7 +1056,9 @@
   <map package='java.util' class='Spliterator' fields='*' prefix='' enum-name="SpliteratorCharacteristics" api-level="24" />
 
   <map package='android.content.pm' class='LauncherApps.ShortcutQuery' prefix='FLAG_' enum-name="LauncherAppsShortcutQueryFlags" extra-default="None" api-level="25" />
-  <map package='android.telecom' class='Connection' prefix='PROPERTY_' enum-name="ConnectionProperties" extra-default="None" api-level="25" />
+  <!-- This API Level specification is FAKE. It started since API Level 25, but the method that uses this value existed since API Level 24.
+  Therefore it comes with `force-api-level` attribute to indicate that it should generate overriden value. -->
+  <map package='android.telecom' class='Connection' prefix='PROPERTY_' enum-name="ConnectionProperties" extra-default="None" api-level="25" force-api-level="24" />
   <map package='android.view.inputmethod' class='InputConnection' prefix='INPUT_CONTENT_' enum-name="InputContentFlags" extra-default="None" api-level="25" />
   <map package='android.view.inputmethod' class='VoicemailContract.Status' prefix='CONFIGURATION_STATE_' enum-name="VoicemailContractConfigurationState" api-level="25" />
 

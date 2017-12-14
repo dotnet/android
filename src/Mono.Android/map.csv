@@ -5611,9 +5611,9 @@
 25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchDynamic,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC,1
 25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchManifest,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST,8
 25,Android.Content.PM.LauncherAppsShortcutQueryFlags,MatchPinned,android/content/pm/LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,2
-0,Android.Telecom.ConnectionProperties,None,,0
-25,Android.Telecom.ConnectionProperties,HasCdmaVoicePrivacy,android/telecom/Connection.PROPERTY_HAS_CDMA_VOICE_PRIVACY,32
-25,Android.Telecom.ConnectionProperties,IsExternalCall,android/telecom/Connection.PROPERTY_IS_EXTERNAL_CALL,16
-26,Android.Telecom.ConnectionProperties,SelfManaged,android/telecom/Connection.PROPERTY_SELF_MANAGED,128
+24,Android.Telecom.ConnectionProperties,None,,0
+24,Android.Telecom.ConnectionProperties,HasCdmaVoicePrivacy,android/telecom/Connection.PROPERTY_HAS_CDMA_VOICE_PRIVACY,32
+24,Android.Telecom.ConnectionProperties,IsExternalCall,android/telecom/Connection.PROPERTY_IS_EXTERNAL_CALL,16
+24,Android.Telecom.ConnectionProperties,SelfManaged,android/telecom/Connection.PROPERTY_SELF_MANAGED,128
 0,Android.Views.InputMethods.InputContentFlags,None,,0
 25,Android.Views.InputMethods.InputContentFlags,GrantReadUriPermission,I:android/view/inputmethod/InputConnection.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,1
