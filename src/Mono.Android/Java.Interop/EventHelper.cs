@@ -33,7 +33,6 @@ namespace Java.Interop {
 			remove (impl);
 			if (empty (impl)) {
 				unsetListener (impl);
-				impl.Dispose ();
 				impl = null;
 				implementor.Target = null;
 				implementor = null;
