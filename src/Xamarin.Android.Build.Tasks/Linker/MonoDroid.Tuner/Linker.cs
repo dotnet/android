@@ -46,6 +46,7 @@ namespace MonoDroid.Tuner
 			context.LogInternalExceptions = true;
 			context.Logger = logger;
 			context.CoreAction = AssemblyAction.Link;
+			context.UserAction = AssemblyAction.Link;
 			context.LinkSymbols = true;
 			context.SymbolReaderProvider = new DefaultSymbolReaderProvider (true);
 			context.SymbolWriterProvider = new DefaultSymbolWriterProvider ();
