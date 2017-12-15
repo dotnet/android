@@ -30,6 +30,7 @@ ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    
 ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0  v8.1
 API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26  27
 STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26
+PKG_API_LEVELS    =                                         15      16    17    18    19    20        21    22    23    24    25    26  27
 
 ## The preceding values *must* use SPACE, **not** TAB, to separate values.
 
@@ -99,7 +100,7 @@ leeroy-all:
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
-	$(foreach a, $(API_LEVELS), \
+	$(foreach a, $(PKG_API_LEVELS), \
 		CUR_VERSION=`echo "$(ALL_FRAMEWORKS)"|tr -s " "|cut -d " " -s -f $(a)`; \
 		$(foreach conf, $(CONFIGURATIONS), \
 			REDIST_FILE=bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
@@ -114,19 +115,19 @@ framework-assemblies:
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+			/p:AndroidApiLevel=$(firstword $(PKG_API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_FRAMEWORKS))); )
 	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); ) \
+			/p:AndroidApiLevel=$(firstword $(PKG_API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_FRAMEWORKS)) ; ) \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+			/p:AndroidApiLevel=$(firstword $(PKG_API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(firstword $(PKG_API_LEVELS)), $(ALL_FRAMEWORKS)) ; )
 
 opentk-jcw:
-	$(foreach a, $(API_LEVELS), \
+	$(foreach a, $(PKG_API_LEVELS), \
 		$(foreach conf, $(CONFIGURATIONS), \
 			touch bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
 			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
