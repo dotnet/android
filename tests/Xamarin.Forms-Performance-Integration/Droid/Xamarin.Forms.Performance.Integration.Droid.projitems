@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_XamarinFormsIntergationPackage>Xamarin.Forms_Performance_Integration</_XamarinFormsIntergationPackage>
+  </PropertyGroup>
   <ItemGroup>
     <TestApk Include="$(OutputPath)Xamarin.Forms_Performance_Integration-Signed.apk">
-      <Package>Xamarin.Forms_Performance_Integration</Package>
+      <Package>$(_XamarinFormsIntergationPackage)</Package>
       <Activity>Xamarin.Forms_Performance_Integration/md52b709e14dec302485bbcaeac0bd817ce.MainActivity</Activity>
       <ResultsPath></ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)timing-definitions.txt</TimingDefinitionsFilename>
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Forms_Test-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(Package)-$(Configuration)$(TestsAotName).txt</ApkSizesInputFilename>
+      <ApkSizesInputFilename>apk-sizes-$(_XamarinFormsIntergationPackage)-$(Configuration)$(TestsAotName).txt</ApkSizesInputFilename>
       <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Forms_Tests-values.csv</ApkSizesResultsFilename>
     </TestApk>
