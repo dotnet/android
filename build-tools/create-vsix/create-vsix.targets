@@ -52,7 +52,6 @@
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
       <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\MonoAndroid\v2.3\**\*.*" />
       <ReferenceAssemblies Remove="**\*.dylib" />
       <ReferenceAssemblies Remove="**\libZipSharp*.*" />
       <ReferenceAssemblies>
