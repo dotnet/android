@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -171,6 +172,33 @@ namespace Xamarin.Android.Tests
 						.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i))).Count ();
 					Assert.AreEqual (0, fileCount, "{0} should be Empty", proj.OutputPath);
 				}
+			}
+		}
+
+		[Test]
+		public void BuildIncrementingAssemblyVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") { 
+				TextContent = () => "[assembly: System.Reflection.AssemblyVersion (\"1.0.0.*\")]" 
+			});
+
+			using (var b = CreateApkBuilder ("temp/BuildIncrementingAssemblyVersion")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var acwmapPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "acw-map.txt");
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+				var firstAssemblyVersion = AssemblyName.GetAssemblyName (assemblyPath).Version;
+				var expectedAcwMap = File.ReadAllText (acwmapPath);
+
+				b.Target = "Rebuild";
+				b.BuildLogFile = "rebuild.log";
+				Assert.IsTrue (b.Build (proj), "Rebuild should have succeeded.");
+
+				var secondAssemblyVersion = AssemblyName.GetAssemblyName (assemblyPath).Version;
+				Assert.AreNotEqual (firstAssemblyVersion, secondAssemblyVersion);
+				var actualAcwMap = File.ReadAllText (acwmapPath);
+				Assert.AreEqual (expectedAcwMap, actualAcwMap);
 			}
 		}
 

@@ -163,7 +163,6 @@ namespace Xamarin.Android.Tasks
 				string javaKey    = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 
 				acw_map.WriteLine ("{0};{1}", type.GetPartialAssemblyQualifiedName (), javaKey);
-				acw_map.WriteLine ("{0};{1}", type.GetAssemblyQualifiedName (), javaKey);
 
 				TypeDefinition conflict;
 				if (managed.TryGetValue (managedKey, out conflict)) {
