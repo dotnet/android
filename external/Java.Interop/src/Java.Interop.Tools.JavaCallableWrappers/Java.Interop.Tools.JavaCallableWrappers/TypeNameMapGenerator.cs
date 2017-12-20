@@ -141,7 +141,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var typeMap = GetTypeMapping (
 					t => t.IsInterface || t.HasGenericParameters,
 					JavaNativeTypeManager.ToJniName,
-					t => t.GetAssemblyQualifiedName ());
+					t => t.GetPartialAssemblyQualifiedName ());
 
 			WriteBinaryMapping (output, typeMap);
 		}
@@ -234,7 +234,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			var typeMap = GetTypeMapping (
 					t => false,
-					t => t.GetAssemblyQualifiedName (),
+					t => t.GetPartialAssemblyQualifiedName (),
 					JavaNativeTypeManager.ToJniName);
 
 			WriteBinaryMapping (output, typeMap);

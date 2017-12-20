@@ -187,15 +187,16 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static string GetPackageName (Type type)
 		{
-			if (IsPackageNamePreservedForAssembly (type.Assembly.GetName ().Name))
+			string assemblyName = type.Assembly.GetName ().Name;
+			if (IsPackageNamePreservedForAssembly (assemblyName))
 				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (type.Assembly.GetName ().Name.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			default:
-				return "md5" + ToMd5 (type.Namespace + ":" + type.Assembly.FullName);
+				return "md5" + ToMd5 (type.Namespace + ":" + assemblyName);
 			}
 		}
 
@@ -515,7 +516,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (type.Module.Assembly.Name.Name.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			default:
-				return "md5" + ToMd5 (type.Namespace + ":" + type.Module.Assembly.Name.FullName);
+				return "md5" + ToMd5 (type.Namespace + ":" + type.Module.Assembly.Name.Name);
 			}
 		}
 #endif

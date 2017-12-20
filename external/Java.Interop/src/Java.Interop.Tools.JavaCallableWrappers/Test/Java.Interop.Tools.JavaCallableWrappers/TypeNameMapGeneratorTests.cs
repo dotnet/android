@@ -49,7 +49,7 @@ namespace Xamarin.Android.ToolsTests
 			v.WriteJavaToManaged (o);
 			var a = ToArray (o);
 			Save (a, "__j2m");
-			var length = 259;
+			var length = 204;
 			var offset = 90;
 			var e =
 				"version=1\u0000" +
@@ -59,12 +59,12 @@ namespace Xamarin.Android.ToolsTests
 				GetJ2MEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
 				GetJ2MEntryLine (typeof (InstrumentationName),                      "instrumentation/Name",                                                                         offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName),                              "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName",                                              offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.A),                            "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_A",                                            offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.A.B),                          "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_A_B",                                          offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.C.D),                          "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_C_D",                                          offset, length) +
-				GetJ2MEntryLine (typeof (ExampleOuterClass),                        "md5fef72cac46d04ae5bdc90af5bb6221ad/ExampleOuterClass",                                        offset, length) +
-				GetJ2MEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5fef72cac46d04ae5bdc90af5bb6221ad/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName),                              "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName",                                              offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.A),                            "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_A",                                            offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.A.B),                          "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_A_B",                                          offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.C.D),                          "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_C_D",                                          offset, length) +
+				GetJ2MEntryLine (typeof (ExampleOuterClass),                        "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass",                                        offset, length) +
+				GetJ2MEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
 				GetJ2MEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
 				GetJ2MEntryLine (typeof (ProviderName),                             "provider/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ReceiverName),                             "receiver/Name",                                                                                offset, length) +
@@ -97,7 +97,7 @@ namespace Xamarin.Android.ToolsTests
 
 		static string GetJ2MEntryLine (Type type, string jniName, int offset, int length)
 		{
-			return GetEntryPart (jniName, offset) + GetEntryPart (type.AssemblyQualifiedName, length - offset);
+			return GetEntryPart (jniName, offset) + GetEntryPart (GetTypeName (type), length - offset);
 		}
 
 		static string GetEntryPart (string value, int length)
@@ -113,8 +113,8 @@ namespace Xamarin.Android.ToolsTests
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);
 			Save (a, "__m2j");
-			var length = 259;
-			var offset = 169;
+			var length = 204;
+			var offset = 114;
 			var e =
 				"version=1\u0000" +
 				"entry-count=19\u0000" +
@@ -124,12 +124,12 @@ namespace Xamarin.Android.ToolsTests
 				GetM2JEntryLine (typeof (AbstractClassInvoker),                     "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetM2JEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.A.B),                          "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_A_B",                                          offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.A),                            "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_A",                                            offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.C.D),                          "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName_C_D",                                          offset, length) +
-				GetM2JEntryLine (typeof (DefaultName),                              "md5fef72cac46d04ae5bdc90af5bb6221ad/DefaultName",                                              offset, length) +
-				GetM2JEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5fef72cac46d04ae5bdc90af5bb6221ad/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
-				GetM2JEntryLine (typeof (ExampleOuterClass),                        "md5fef72cac46d04ae5bdc90af5bb6221ad/ExampleOuterClass",                                        offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.A.B),                          "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_A_B",                                          offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.A),                            "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_A",                                            offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.C.D),                          "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_C_D",                                          offset, length) +
+				GetM2JEntryLine (typeof (DefaultName),                              "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName",                                              offset, length) +
+				GetM2JEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
+				GetM2JEntryLine (typeof (ExampleOuterClass),                        "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass",                                        offset, length) +
 				GetM2JEntryLine (typeof (InstrumentationName),                      "instrumentation/Name",                                                                         offset, length) +
 				GetM2JEntryLine (typeof (NonStaticOuterClass.NonStaticInnerClass),  "register/NonStaticOuterClass$NonStaticInnerClass",                                             offset, length) +
 				GetM2JEntryLine (typeof (NonStaticOuterClass),                      "register/NonStaticOuterClass",                                                                 offset, length) +
@@ -147,7 +147,12 @@ namespace Xamarin.Android.ToolsTests
 
 		static string GetM2JEntryLine (Type type, string jniName, int offset, int length)
 		{
-			return GetEntryPart (type.AssemblyQualifiedName, offset) + GetEntryPart (jniName, length - offset);
+			return GetEntryPart (GetTypeName (type), offset) + GetEntryPart (jniName, length - offset);
+		}
+
+		static string GetTypeName (Type type)
+		{
+			return type.FullName + ", " + type.Assembly.GetName ().Name;
 		}
 	}
 }

@@ -64,7 +64,11 @@ namespace Java.Interop.Tools.Cecil {
 		public static string GetPartialAssemblyQualifiedName (this TypeReference type)
 		{
 			TypeDefinition def = type.Resolve ();
-			return string.Format ("{0}, {1}", type.FullName, (def ?? type).Module.Assembly.Name.Name);
+			return string.Format ("{0}, {1}",
+					// Cecil likes to use '/' as the nested type separator, while
+					// Reflection uses '+' as the nested type separator. Use Reflection.
+					type.FullName.Replace ('/', '+'),
+					(def ?? type).Module.Assembly.Name.Name);
 		}
 
 		public static string GetAssemblyQualifiedName (this TypeReference type)

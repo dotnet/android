@@ -385,9 +385,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (sb.Length > 0)
 					sb.Append (':');
 				if (outerType != null && sb.Length == 0)
-					sb.Append (type.DeclaringType.GetAssemblyQualifiedName ());
+					sb.Append (type.DeclaringType.GetPartialAssemblyQualifiedName ());
 				else
-					sb.Append (pdef.ParameterType.GetAssemblyQualifiedName ());
+					sb.Append (pdef.ParameterType.GetPartialAssemblyQualifiedName ());
 			}
 			return sb.ToString ();
 		}
@@ -567,12 +567,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsApplication (type) && !methods.Any (m => m.Name == "onCreate"))
 				WriteApplicationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetAssemblyQualifiedName (), name);
+						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (), name);
 						w.WriteLine ("\t\tsuper.onCreate ();");
 				});
 			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsInstrumentation (type) && !methods.Any (m => m.Name == "onCreate"))
 				WriteInstrumentationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetAssemblyQualifiedName (), name);
+						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (), name);
 						w.WriteLine ("\t\tsuper.onCreate (arguments);");
 				});
 
@@ -600,7 +600,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t\t\t\"\";");
 			if (!CannotRegisterInStaticConstructor (self.type))
 				sw.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {2});",
-						self.type.GetAssemblyQualifiedName (), self.name, field);
+						self.type.GetPartialAssemblyQualifiedName (), self.name, field);
 		}
 
 		void GenerateFooter (TextWriter sw)
@@ -767,7 +767,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 #endif
 			if (!CannotRegisterInStaticConstructor (type)) {
 				sw.WriteLine ("\t\tif (getClass () == {0}.class)", name);
-				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetAssemblyQualifiedName (), ctor.ManagedParameters, ctor.ActivateCall);
+				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetPartialAssemblyQualifiedName (), ctor.ManagedParameters, ctor.ActivateCall);
 			}
 			sw.WriteLine ("\t}");
 		}
