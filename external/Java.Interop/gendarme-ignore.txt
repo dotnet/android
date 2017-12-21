@@ -315,9 +315,20 @@ R: Gendarme.Rules.Maintainability.VariableNamesShouldNotMatchFieldNamesRule
 # > Do use the same name for constructor parameters and a property, if the
 # > constructor parameters are used to simply set the property. The only
 # > difference between such parameters and the properties should be casing.
+T: Java.Interop.JavaException
+T: Java.Interop.JniArrayElements
+T: Java.Interop.JniBooleanArrayElements
+T: Java.Interop.JniCharArrayElements
+T: Java.Interop.JniDoubleArrayElements
 T: Java.Interop.JniEnvironmentInfo
 T: Java.Interop.JniFieldInfo
+T: Java.Interop.JniInt16ArrayElements
+T: Java.Interop.JniInt32ArrayElements
+T: Java.Interop.JniInt64ArrayElements
+T: Java.Interop.JniLocationException
 T: Java.Interop.JniMethodInfo
+T: Java.Interop.JniSByteArrayElements
+T: Java.Interop.JniSingleArrayElements
 T: Java.Interop.JniType
 
 
