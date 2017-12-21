@@ -77,8 +77,9 @@ src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runti
 xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
 	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(CONFIGURATION)/Java.Interop.dll
-	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/$(CONFIGURATION)/Java.Interop.dll
+fxcop: lib/gendarme-2.10/gendarme.exe bin/GendarmeDebug/Java.Interop.dll
+	cp src/Java.Interop/obj/Gendarme/Java.Interop.dll.mdb bin/GendarmeDebug/
+	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/GendarmeDebug/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`
@@ -122,6 +123,9 @@ bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Inter
 
 bin/$(XA_CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(XA_CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
+
+bin/GendarmeDebug/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
+	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` src/Java.Interop/Java.Interop.csproj
 
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \

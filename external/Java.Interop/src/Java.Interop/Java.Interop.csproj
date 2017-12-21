@@ -29,6 +29,19 @@
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Gendarme|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\GendarmeDebug</OutputPath>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
+    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
