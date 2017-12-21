@@ -388,13 +388,18 @@ namespace Java.InteropTests
 		[DllImport ("__Internal")]
 		static extern IntPtr monodroid_typemap_managed_to_java (string java);
 
+		string GetTypeName (Type type)
+		{
+			return type.FullName + ", " + type.Assembly.GetName ().Name;
+		}
+
 		[Test]
 		public void ManagedToJavaTypeMapping ()
 		{
-			var m = monodroid_typemap_managed_to_java (typeof (Activity).AssemblyQualifiedName);
-			Assert.AreNotEqual (IntPtr.Zero, m);
-			m = monodroid_typemap_managed_to_java (typeof (JnienvTest).AssemblyQualifiedName);
-			Assert.AreEqual (IntPtr.Zero, m);
+			var m = monodroid_typemap_managed_to_java (GetTypeName (typeof (Activity)));
+			Assert.AreNotEqual (IntPtr.Zero, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
+			m = monodroid_typemap_managed_to_java (GetTypeName (typeof (JnienvTest)));
+			Assert.AreEqual (IntPtr.Zero, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
 		[Test]
