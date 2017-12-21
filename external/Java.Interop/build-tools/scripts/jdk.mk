@@ -6,6 +6,9 @@
 #   $(OS): Optional; **uname**(1) value of the host operating system
 #   $(CONFIGURATION): Build configuration name, e.g. Debug or Release
 #   $(RUNTIME): `mono` executable for the host operating system
+#   $(JI_MAX_JDK):
+#       Maximum allowed JDK version, blank by default.
+#       `xamarin-android` will need to specify 8 here
 #
 # Outputs:
 #
@@ -21,6 +24,19 @@
 #       Location of the Java native library that contains e.g. JNI_CreateJavaVM().
 
 OS           ?= $(shell uname)
+JI_JAVAC_PATH = javac
+JI_JAR_PATH   = jar
+
+
+# Filter on <= JI_MAX_JDK
+ifneq ($(JI_MAX_JDK),)
+_VERSION_MAX  := | awk '$$1 <= $(JI_MAX_JDK)'
+endif #JI_MAX_JDK
+
+# Sort numerically on version numbers with `sort -n`, filtering on $(JI_MAX_JDK) if needed
+# Replace each line so it starts with a number (sed 's/...'\1 &/), sort on the leading number, then remove the leading number.
+# Grab the last path name printed.
+_VERSION_SORT := sed 's/[^0-9]*\([0-9.]*\)/\1 &/' $(_VERSION_MAX) | sort -n | sed 's/^[0-9.]* //g' | tail -1
 
 ifeq ($(OS),Darwin)
 
@@ -58,7 +74,9 @@ _LOCAL_JDK_HEADERS                = LocalJDK/System/Library/Frameworks/JavaVM.fr
 _APPLE_JDK6_URL                   = http://adcdownload.apple.com/Developer_Tools/java_for_os_x_2013005_developer_package/java_for_os_x_2013005_dp__11m4609.dmg
 
 ifneq ($(_DARWIN_JDK_FALLBACK_DIRS),)
-_DARWIN_JDK_ROOT      := $(shell ls -dtr $(_DARWIN_JDK_FALLBACK_DIRS) | sort | tail -1)
+_DARWIN_JDK_ROOT      := $(shell ls -dtr $(_DARWIN_JDK_FALLBACK_DIRS) | $(_VERSION_SORT))
+JI_JAVAC_PATH         = $(_DARWIN_JDK_ROOT)/Contents/Home/bin/javac
+JI_JAR_PATH           = $(_DARWIN_JDK_ROOT)/Contents/Home/bin/jar
 JI_JDK_INCLUDE_PATHS  = \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_INCLUDE_DIR) \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_OS_INCLUDE_DIR)
@@ -108,7 +126,7 @@ _LINUX_JAVA_ROOT            = $(JAVA_HOME)
 endif # No default Java location, $JAVA_HOME check
 
 ifeq ($(wildcard $(_DESKTOP_JAVA_INCLUDE_DIRS)),)
-LATEST_JDK            := $(shell ls -dtr $(_LINUX_JAVA_FALLBACK_DIRS) | sort | tail -1)
+LATEST_JDK                  := $(shell ls -dtr $(_LINUX_JAVA_FALLBACK_DIRS) | $(_VERSION_SORT))
 _DESKTOP_JAVA_INCLUDE_DIRS  = $(LATEST_JDK)/$(_LINUX_JAVA_JNI_INCLUDE_DIR)
 _LINUX_JAVA_ROOT            = $(LATEST_JDK)
 endif # No $JAVA_HOME, find the latest version
@@ -124,6 +142,9 @@ ifneq ($(wildcard $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_32)/server/libj
 JI_JVM_PATH                 = $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_32)/server/libjvm.so
 endif # (2)
 endif # (1)
+
+JI_JAVAC_PATH               = $(_LINUX_JAVA_ROOT)/bin/javac
+JI_JAR_PATH                 = $(_LINUX_JAVA_ROOT)/bin/jar
 
 endif   # Linux
 
@@ -148,7 +169,7 @@ bin/Build$(CONFIGURATION)/JdkInfo.props: $(JI_JDK_INCLUDE_PATHS) $(JI_JVM_PATH)
 	echo '    </When>' >> "$@"
 	echo '  </Choose>' >> "$@"
 	echo '  <PropertyGroup>' >> "$@"
-	echo "    <JavaCPath Condition=\" '\$$(JavaCPath)' == '' \">javac</JavaCPath>" >> "$@"
-	echo "    <JarPath Condition=\" '\$$(JarPath)' == '' \">jar</JarPath>" >> "$@"
+	echo "    <JavaCPath Condition=\" '\$$(JavaCPath)' == '' \">$(JI_JAVAC_PATH)</JavaCPath>" >> "$@"
+	echo "    <JarPath Condition=\" '\$$(JarPath)' == '' \">$(JI_JAR_PATH)</JarPath>" >> "$@"
 	echo '  </PropertyGroup>' >> "$@"
 	echo '</Project>' >> "$@"
