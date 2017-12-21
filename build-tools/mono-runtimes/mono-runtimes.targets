@@ -93,9 +93,9 @@
     />
   </ItemGroup>
   <ItemGroup>
+    <_MonoUtility  Include="linkeranalyzer.exe" />
     <_MonoUtility  Include="mono-symbolicate.exe" />
     <_MonoUtility  Include="mkbundle.exe" />
-    <_MonoUtility  Include="linkeranalyzer.exe" />
   </ItemGroup>
   <ItemGroup>
     <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity)')" />
