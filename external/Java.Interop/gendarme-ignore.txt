@@ -577,9 +577,8 @@ M: Java.Interop.JniObjectReference Java.Interop.JniPeerMembers/JniInstanceMethod
 # I think Gendarme is buggy here; `JavaArray<T>.CheckLength(IList<T>)` *is* used.
 M: System.Int32 Java.Interop.JavaArray`1::CheckLength(System.Collections.Generic.IList`1<T>)
 
-# `__RegisterNativeMembers()` is invoked via Reflection
-M: System.Void Java.Interop.JavaProxyObject::__RegisterNativeMembers(Java.Interop.JniType,System.String)
-M: System.Void Java.Interop.JavaProxyThrowable::__RegisterNativeMembers(Java.Interop.JniType,System.String)
+# `RegisterNativeMembers()` is invoked via Reflection from JniRuntime/JniTypeManager::TryRegisterNativeMembers
+M: System.Void Java.Interop.JavaProxyObject::RegisterNativeMembers(Java.Interop.JniNativeMethodRegistrationArguments)
 
 # We need JNIEnv::FindClass() to be *bound* so that the JavaInterop_FindClass() wrapper is emitted.
 # We don't want to actually *use* it, so it's `internal` and unused. Ignore
