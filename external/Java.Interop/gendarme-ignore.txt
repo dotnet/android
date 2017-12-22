@@ -224,6 +224,8 @@ R: Gendarme.Rules.Design.Generic.DoNotExposeNestedGenericSignaturesRule
 M: System.Linq.Expressions.Expression`1<System.Func`4<System.Reflection.ConstructorInfo,Java.Interop.JniObjectReference,System.Object[],System.Object>> Java.Interop.JniRuntime/JniMarshalMemberBuilder::CreateConstructActivationPeerExpression(System.Reflection.ConstructorInfo)
 
 R: Gendarme.Rules.Exceptions.DoNotSwallowErrorsCatchingNonSpecificExceptionsRule
+# the *.Export assemblies are optional, so we don't care when they cannot be loaded (they are presumably missing)
+M: System.Void Java.Interop.JniRuntime::SetMarshalMemberBuilder(Java.Interop.JniRuntime/CreationOptions)
 M: System.Reflection.Assembly Java.Interop.JniRuntime/JniTypeManager::TryLoadAssembly(System.Reflection.AssemblyName)
 # The exception is transitioned to Jni
 M:System.Void Java.Interop.ManagedPeer::Construct(System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)

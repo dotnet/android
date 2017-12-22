@@ -32,7 +32,8 @@ namespace Java.Interop {
 			Assembly jie;
 			try {
 				jie = Assembly.Load (new AssemblyName ("Java.Interop.Export"));
-			} catch (Exception) {
+			} catch (Exception e) {
+				System.Diagnostics.Debug.WriteLine ($"Java.Interop.Export assembly was not loaded: {e}");
 				return;
 			}
 			var t   = jie.GetType ("Java.Interop.MarshalMemberBuilder");
