@@ -75,6 +75,14 @@ namespace Xamarin.Android.Build.Tests
 					/*expectedMessage*/	"max res 10, skipping values-sw600dp-land"
 				};
 				yield return new object [] {
+					/*message*/		"max res 10, skipping values-sw720dp-land-v13",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"max res 10, skipping values-sw720dp-land-v13"
+				};
+				yield return new object [] {
 					/*message*/		"Error: unable to generate entry for resource data",
 					/*expectedToMatch*/	true,
 					/*expectedFile*/	"",
