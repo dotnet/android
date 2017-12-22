@@ -154,8 +154,10 @@ T: Java.Interop.JniPeerMembers/JniStaticMethods
 T: Java.Interop.JniPeerMembers/JniInstanceFields
 T: Java.Interop.JniPeerMembers/JniStaticFields
 T: Java.Interop.JniRuntime/CreationOptions
+T: Java.Interop.JniRuntime/JniMarshalMemberBuilder
 T: Java.Interop.JniRuntime/JniObjectReferenceManager
 T: Java.Interop.JniRuntime/JniTypeManager
+T: Java.Interop.JniRuntime/JniValueManager
 
 
 R: Gendarme.Rules.Design.DisposableTypesShouldHaveFinalizerRule
