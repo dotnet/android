@@ -95,6 +95,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogError ("Emulator failed to start: ram_size is 0MB! Please re-install HAXM.");
 					sawError.Set ();
 				}
+				if (e.Data.IndexOf ("ERROR:", StringComparison.Ordinal) >= 0) {
+					Log.LogError ($"Emulator failed to start: {e.Data}");
+					sawError.Set ();
+				}
 			};
 			DataReceivedEventHandler error = null;
 			error = (o, e) => {

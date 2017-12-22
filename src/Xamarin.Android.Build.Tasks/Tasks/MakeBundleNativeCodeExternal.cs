@@ -169,12 +169,24 @@ namespace Xamarin.Android.Tasks
 
 				clb = new CommandLineBuilder ();
 				clb.AppendSwitch ("-c");
+
+				// This is necessary only when unified headers are in use but it won't hurt to have it
+				// defined even if we don't use them
+				clb.AppendSwitch ($"-D__ANDROID_API__={level}");
+
 				clb.AppendSwitch ("-o");
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.o"));
 				if (!string.IsNullOrWhiteSpace (IncludePath)) {
 					clb.AppendSwitch ("-I");
 					clb.AppendFileNameIfNotNull (IncludePath);
 				}
+
+				string asmIncludePath = NdkUtil.GetNdkAsmIncludePath (AndroidNdkDirectory, arch, level);
+				if (!String.IsNullOrEmpty (asmIncludePath)) {
+					clb.AppendSwitch ("-I");
+					clb.AppendFileNameIfNotNull (asmIncludePath);
+				}
+
 				clb.AppendSwitch ("-I");
 				clb.AppendFileNameIfNotNull (NdkUtil.GetNdkPlatformIncludePath (AndroidNdkDirectory, arch, level));
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.c"));

@@ -95,11 +95,69 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
+		static string GetUnifiedHeadersPath (string androidNdkPath)
+		{
+			return Path.Combine (androidNdkPath, "sysroot", "usr", "include");
+		}
+
+		static string GetPerPlatformHeadersPath (string androidNdkPath, AndroidTargetArch arch, int level)
+		{
+			return Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", "include");
+		}
+
+		public static string GetNdkAsmIncludePath (string androidNdkPath, AndroidTargetArch arch, int level)
+		{
+			string path = GetPerPlatformHeadersPath (androidNdkPath, arch, level);
+			if (Directory.Exists (path))
+				return null;
+
+			path = GetUnifiedHeadersPath (androidNdkPath);
+			if (!Directory.Exists (path))
+				return null;
+
+			string archDir = null;
+			switch (arch) {
+				case AndroidTargetArch.Arm:
+					archDir = "arm-linux-androideabi";
+					break;
+
+				case AndroidTargetArch.Arm64:
+					archDir = "aarch64-linux-android";
+					break;
+
+				case AndroidTargetArch.Mips:
+					archDir = "mipsel-linux-android";
+					break;
+
+				case AndroidTargetArch.X86:
+					archDir = "i686-linux-android";
+					break;
+
+				case AndroidTargetArch.X86_64:
+					archDir = "x86_64-linux-android";
+					break;
+			}
+
+			if (archDir == null)
+				return null;
+
+			return Path.Combine (path, archDir);
+		}
+
 		public static string GetNdkPlatformIncludePath (string androidNdkPath, AndroidTargetArch arch, int level)
 		{
-			string path = Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", "include");
-			if (!Directory.Exists (path))
+			// This is for NDK older than r16 which isn't configured to use unified headers. We
+			string path = GetPerPlatformHeadersPath (androidNdkPath, arch, level);
+			if (!Directory.Exists (path)) {
+				// This is for NDK r15 (if configured to use unified headers) or NDK r16+ (which doesn't have
+				// the per-platform includes anymore)
+				path = GetUnifiedHeadersPath (androidNdkPath);
+				if (Directory.Exists (path))
+					return path;
+
 				throw new InvalidOperationException (String.Format ("Platform header files for target {0} and API Level {1} was not found. Expected path is \"{2}\"", arch, level, path));
+			}
+
 			return path;
 		}
 
@@ -257,7 +315,7 @@ namespace Xamarin.Android.Tasks
 
 		public static int GetMinimumApiLevelFor (AndroidTargetArch arch, string androidNdkPath)
 		{
-			var minValue = NdkUtil.IsNdk64BitArch (arch) ? 21 : arch == AndroidTargetArch.Arm ? 4 : 9;
+			var minValue = NdkUtil.IsNdk64BitArch (arch) ? 21 : 14;
 			var platforms = GetSupportedPlatforms (androidNdkPath).OrderBy (x => x).Where (x => x >= minValue);
 			return platforms.First (x => Directory.Exists (Path.Combine (androidNdkPath, "platforms", $"android-{x}", $"arch-{archPathMap[arch]}")));
 		}

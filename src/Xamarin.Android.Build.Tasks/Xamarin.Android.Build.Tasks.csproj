@@ -545,9 +545,6 @@
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\System.xml">
-      <LogicalName>System.xml</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\System.Data.Services.Client.xml">
       <LogicalName>System.Data.Services.Client.xml</LogicalName>
     </EmbeddedResource>

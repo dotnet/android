@@ -88,6 +88,7 @@ namespace MonoDroid.Tools
 				var enn = map.GetAttribute ("enum-name");
 				var extdef = map.GetAttribute ("extra-default");
 				var overrides = new Dictionary<string,string> ();
+				var forceApiLevel = map.GetAttribute ("force-api-level");
 				foreach (XmlElement field in map.SelectNodes ("field"))
 					overrides.Add (field.GetAttribute ("java"), field.GetAttribute ("managed"));
 				try {
@@ -117,7 +118,7 @@ namespace MonoDroid.Tools
 						fieldName != extdef && fld.IsInterface ? "I:" : "",
 						fieldName == extdef ? "" : pkg.Replace ('.', '/') + '/' + type + '.' + fld.Constant,
 						val,
-						api);
+						string.IsNullOrEmpty (forceApiLevel) ? api : forceApiLevel);
 				}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Error in {0} / {1} / {2}", pkg, type, enn);

@@ -96,6 +96,10 @@ namespace Xamarin.Android.Build
 
 		public string DotNetSdkPath { get; private set; }
 
+		public string NuGetTargets { get; private set; }
+
+		public string NuGetProps { get; private set; }
+
 		public string NuGetRestoreTargets { get; private set; }
 
 		public XABuildPaths ()
@@ -106,6 +110,7 @@ namespace Xamarin.Android.Build
 			XABuildDirectory          = Path.GetDirectoryName (GetType ().Assembly.Location);
 			XamarinAndroidBuildOutput = Path.GetFullPath (Path.Combine (XABuildDirectory, ".."));
 
+			const string vsVersion    = "15.0";
 			string programFiles       = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
@@ -121,19 +126,22 @@ namespace Xamarin.Android.Build
 					VsInstallRoot = programFiles;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, "15.0", "Bin");
+				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "Bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
 				ProjectImportSearchPaths = new [] { MSBuildPath, "$(MSBuildProgramFiles32)\\MSBuild" };
 				SystemProfiles           = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
 				SearchPathsOS            = "windows";
+				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", vsVersion);
+				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
+				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
 				NuGetRestoreTargets      = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet", "NuGet.targets");
 			} else {
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
 				string monoExternal      = IsMacOS ? "/Library/Frameworks/Mono.framework/External/" : "/usr/lib/mono";
 				MSBuildPath              = Path.Combine (mono, "msbuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, "15.0", "bin");
+				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
 				DotNetSdkPath            =
 					MSBuildSdksPath      = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");

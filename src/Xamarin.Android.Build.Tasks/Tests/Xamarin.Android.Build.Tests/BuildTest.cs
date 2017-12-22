@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -171,6 +172,33 @@ namespace Xamarin.Android.Tests
 						.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i))).Count ();
 					Assert.AreEqual (0, fileCount, "{0} should be Empty", proj.OutputPath);
 				}
+			}
+		}
+
+		[Test]
+		public void BuildIncrementingAssemblyVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") { 
+				TextContent = () => "[assembly: System.Reflection.AssemblyVersion (\"1.0.0.*\")]" 
+			});
+
+			using (var b = CreateApkBuilder ("temp/BuildIncrementingAssemblyVersion")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var acwmapPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "acw-map.txt");
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+				var firstAssemblyVersion = AssemblyName.GetAssemblyName (assemblyPath).Version;
+				var expectedAcwMap = File.ReadAllText (acwmapPath);
+
+				b.Target = "Rebuild";
+				b.BuildLogFile = "rebuild.log";
+				Assert.IsTrue (b.Build (proj), "Rebuild should have succeeded.");
+
+				var secondAssemblyVersion = AssemblyName.GetAssemblyName (assemblyPath).Version;
+				Assert.AreNotEqual (firstAssemblyVersion, secondAssemblyVersion);
+				var actualAcwMap = File.ReadAllText (acwmapPath);
+				Assert.AreEqual (expectedAcwMap, actualAcwMap);
 			}
 		}
 
@@ -1356,13 +1384,15 @@ namespace App1
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
-			string multidex_jar = @"$(MSBuildExtensionsPath)\Xamarin\Android\android-support-multidex.jar";
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
-				Jars = { new AndroidItem.InputJar (() => multidex_jar), },
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
+				string multidex_path = bbuilder.RunningMSBuild ? @"$(MSBuildExtensionsPath)" : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild";
+				string multidex_jar = $@"{multidex_path}\Xamarin\Android\android-support-multidex.jar";
+				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
+
 				Assert.IsTrue (bbuilder.Build (binding));
 				var proj = new XamarinAndroidApplicationProject () {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
@@ -1669,6 +1699,19 @@ public class Test
 				AotAssemblies = isRelease,
 				EnableProguard = enableProguard,
 			};
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
+UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
+AAAAFBLAwQUAAgICADJfJVLAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0
+xLLS7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnEG5oaKWj4FyUm56QqOOcXFeQXJZYA1Wv
+ycvFyAQBQSwcIbrokAkQAAABFAAAAUEsDBBQACAgIAIJ8lUsAAAAAAAAAAAAAAAASAAAAc2FtcGxl
+L0hlbGxvLmNsYXNzO/Vv1z4GBgYTBkEuBhYGXg4GPnYGfnYGAUYGNpvMvMwSO0YGZg3NMEYGFuf8l
+FRGBn6fzLxUv9LcpNSikMSkHKAIa3l+UU4KI4OIhqZPVmJZon5OYl66fnBJUWZeujUjA1dwfmlRcq
+pbJkgtl0dqTk6+HkgZDwMrAxvQFrCIIiMDT3FibkFOqj6Yz8gggDDKPykrNbmEQZGBGehCEGBiYAR
+pBpLsQJ4skGYE0qxa2xkYNwIZjAwcQJINIggkORm4oEqloUqZhZg2oClkB5LcYLN5AFBLBwjQMrpO
+0wAAABMBAABQSwECFAAUAAgICADJfJVLAAAAAAIAAAAAAAAACQAEAAAAAAAAAAAAAAAAAAAATUVUQ
+S1JTkYv/soAAFBLAQIUABQACAgIAMl8lUtuuiQCRAAAAEUAAAAUAAAAAAAAAAAAAAAAAD0AAABNRV
+RBLUlORi9NQU5JRkVTVC5NRlBLAQIUABQACAgIAIJ8lUvQMrpO0wAAABMBAAASAAAAAAAAAAAAAAA
+AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 
@@ -1688,6 +1731,7 @@ public class Test
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InIt({isRelease}{enableProguard}{enableMultiDex})"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 
@@ -1908,10 +1952,10 @@ public class Test
 					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 						"The __library_projects__ directory should exist.");
 					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
-					//HACK: forces project to re-save on Windows, is there a *better* way?
+					//HACK: forces project to re-save, is there a *better* way?
 					proj.Sources.First ().Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					if (IsWindows && useShortFileNames) {
+					if (useShortFileNames) {
 						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 							"The __library_projects__ directory should not exist, due to IncrementalClean.");
 					} else {
@@ -2059,6 +2103,9 @@ public class Test
 					KnownPackages.GooglePlayServices_22_0_0_2,
 				},
 			};
+			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
+			app1.SetProperty ("BuildingInsideVisualStudio", "False");
+			app1.SetProperty ("JavaMaximumHeapSize", "1G");
 			app1.Imports.Add (new Import ("foo.targets") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">

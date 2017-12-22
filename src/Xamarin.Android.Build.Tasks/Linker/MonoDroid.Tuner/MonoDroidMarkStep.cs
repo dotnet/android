@@ -11,7 +11,6 @@ namespace MonoDroid.Tuner
 {
 	class MonoDroidMarkStep : MarkStep
 	{
-		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
 		const string ICustomMarshalerName = "System.Runtime.InteropServices.ICustomMarshaler";
 
 		// If this is one of our infrastructure methods that has [Register], like:
@@ -21,7 +20,7 @@ namespace MonoDroid.Tuner
 		{
 			string member;
 
-			if (!TryGetRegisterMember (method, out member))
+			if (!method.TryGetRegisterMember (out member))
 				return;
 
 			PreserveRegisteredMethod (method.DeclaringType, member);
@@ -40,28 +39,6 @@ namespace MonoDroid.Tuner
 
 			foreach (MethodReference method in type.Methods)
 				MarkMethod (method);
-
-			// We also need to preserve the interface adapter
-			string adapter;
-
-			if (!TryGetRegisterMember (type, out adapter))
-				return;
-
-			// This is a fast path for finding the adapter type
-			var adapter_type = type.DeclaringType.GetNestedType (adapter);
-
-			// It wasn't in the same containing type, look through the whole assembly
-			if (adapter_type == null)
-				adapter_type = type.Module.FindType (adapter);
-
-			if (adapter_type == null)
-				return;
-
-			MarkType (adapter_type);
-
-			// We also need to preserve every member on the interface adapter
-			foreach (MethodReference m in adapter_type.Methods)
-				MarkMethod (m);
 		}
 		
 		private void PreserveRegisteredMethod (TypeDefinition type, string member)
@@ -80,59 +57,6 @@ namespace MonoDroid.Tuner
 
 			while (MarkNamedMethod (type, member) == 0 && type.BaseType != null)
 				type = type.BaseType.Resolve ();
-		}
-
-		private static bool TryGetRegisterMember (ICustomAttributeProvider provider, out string method)
-		{
-			CustomAttribute register;
-			method = null;
-
-			if (!TryGetRegisterAttribute (provider, out register))
-				return false;
-
-			if (register.ConstructorArguments.Count != 3)
-				return false;
-
-			method = (string) register.ConstructorArguments [2].Value;
-
-			if (string.IsNullOrEmpty (method))
-				return false;
-
-			return true;
-		}
-
-		private static bool TryGetRegisterAttribute (ICustomAttributeProvider provider, out CustomAttribute register)
-		{
-			register = null;
-
-			if (!provider.HasCustomAttributes)
-				return false;
-
-			foreach (CustomAttribute attribute in provider.CustomAttributes) {
-				if (!IsRegisterAttribute (attribute))
-					continue;
-
-				register = attribute;
-				return true;
-			}
-
-			return false;
-		}
-
-		private static bool IsRegisterAttribute (CustomAttribute attribute)
-		{
-			var constructor = attribute.Constructor;
-
-			if (constructor.DeclaringType.FullName != RegisterAttribute)
-				return false;
-
-			if (!constructor.HasParameters)
-				return false;
-
-			if (constructor.Parameters.Count != 3)
-				return false;
-
-			return true;
 		}
 
 		protected override TypeDefinition MarkType (TypeReference reference)

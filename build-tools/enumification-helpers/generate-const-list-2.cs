@@ -60,7 +60,7 @@ public class Driver
 			}
 		}
 		
-		consts = consts.Where (f => f.IsFinal).ToArray ();
+		consts = consts.Where (f => f.IsFinal && !string.IsNullOrEmpty (f.Value)).ToArray ();
 
 		var fields = new List<string> ();
 		string package = null, type = null;
