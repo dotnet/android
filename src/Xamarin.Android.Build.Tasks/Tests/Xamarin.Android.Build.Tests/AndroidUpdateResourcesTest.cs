@@ -73,6 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
+			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			if (useManagedParser)
 				proj.SetProperty ("BuildingInsideVisualStudio", "True");
@@ -92,29 +93,30 @@ using System.Runtime.CompilerServices;
 					var items = new List<string> ();
 					string first = null;
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
 						first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
-					var designTimeDesigner = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
-						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should have been created.");
+						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					}
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
-					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
 					if (useManagedParser) {
-						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should not have been deleted.");
+						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
 					items.Clear ();
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}

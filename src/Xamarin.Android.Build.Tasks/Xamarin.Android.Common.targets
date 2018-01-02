@@ -1398,6 +1398,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
+		ResourceSymbolsTextFileDirectory="$(IntermediateOutputPath)"
 		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	
@@ -2663,6 +2664,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
+	<Delete Files="$(IntermediateOutputPath)R.txt" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
@@ -2677,6 +2679,9 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(_AndroidResgenFlagFile)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(IntermediateOutputPath)R.txt">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(ApkFileSigned)">
