@@ -2494,13 +2494,13 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(_ApkDebugKeyStore)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyStore"/>
 	</CreateProperty>
-	<CreateProperty Value="android" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="$(_ApkDebugKeyPassword)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkStorePass"/>
 	</CreateProperty>
-	<CreateProperty Value="androiddebugkey" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="$(_ApkDebugKeyAlias)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyAlias"/>
 	</CreateProperty>
-	<CreateProperty Value="android" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="$(_ApkDebugKeyStorePassword)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyPass"/>
 	</CreateProperty>
 	
