@@ -37,7 +37,7 @@ namespace Java.Interop
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
-			javaStackTrace    = _GetJavaStack (PeerReference);
+			javaStackTrace    = GetJavaStack (PeerReference);
 		}
 
 		public unsafe JavaException (string message)
@@ -54,7 +54,7 @@ namespace Java.Interop
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
-			javaStackTrace    = _GetJavaStack (PeerReference);
+			javaStackTrace    = GetJavaStack (PeerReference);
 		}
 
 		public unsafe JavaException (string message, Exception innerException)
@@ -71,15 +71,15 @@ namespace Java.Interop
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
-			javaStackTrace    = _GetJavaStack (PeerReference);
+			javaStackTrace    = GetJavaStack (PeerReference);
 		}
 
 		public JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
-			: base (_GetMessage (ref reference, transfer), _GetCause (ref reference, transfer))
+			: base (GetMessage (ref reference, transfer), GetCause (ref reference, transfer))
 		{
 			Construct (ref reference, transfer);
 			if (PeerReference.IsValid)
-				javaStackTrace    = _GetJavaStack (PeerReference);
+				javaStackTrace    = GetJavaStack (PeerReference);
 		}
 
 		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)
@@ -186,7 +186,7 @@ namespace Java.Interop
 			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 		}
 
-		static string _GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		static string GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
@@ -196,7 +196,7 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		static Exception _GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		static Exception GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
@@ -206,7 +206,7 @@ namespace Java.Interop
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		unsafe string _GetJavaStack (JniObjectReference handle)
+		unsafe string GetJavaStack (JniObjectReference handle)
 		{
 			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {

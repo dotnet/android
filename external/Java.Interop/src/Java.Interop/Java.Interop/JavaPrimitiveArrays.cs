@@ -102,11 +102,11 @@ namespace Java.Interop {
 		public JavaBooleanArray (System.Collections.Generic.IList<Boolean> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaBooleanArray (System.Collections.Generic.IEnumerable<Boolean> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -249,11 +249,11 @@ namespace Java.Interop {
 		public JavaSByteArray (System.Collections.Generic.IList<SByte> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaSByteArray (System.Collections.Generic.IEnumerable<SByte> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -396,11 +396,11 @@ namespace Java.Interop {
 		public JavaCharArray (System.Collections.Generic.IList<Char> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaCharArray (System.Collections.Generic.IEnumerable<Char> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -543,11 +543,11 @@ namespace Java.Interop {
 		public JavaInt16Array (System.Collections.Generic.IList<Int16> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaInt16Array (System.Collections.Generic.IEnumerable<Int16> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -690,11 +690,11 @@ namespace Java.Interop {
 		public JavaInt32Array (System.Collections.Generic.IList<Int32> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaInt32Array (System.Collections.Generic.IEnumerable<Int32> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -837,11 +837,11 @@ namespace Java.Interop {
 		public JavaInt64Array (System.Collections.Generic.IList<Int64> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaInt64Array (System.Collections.Generic.IEnumerable<Int64> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -984,11 +984,11 @@ namespace Java.Interop {
 		public JavaSingleArray (System.Collections.Generic.IList<Single> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaSingleArray (System.Collections.Generic.IEnumerable<Single> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
@@ -1131,11 +1131,11 @@ namespace Java.Interop {
 		public JavaDoubleArray (System.Collections.Generic.IList<Double> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public JavaDoubleArray (System.Collections.Generic.IEnumerable<Double> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 

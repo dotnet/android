@@ -11,7 +11,7 @@ namespace Java.Interop
 		{
 		}
 
-		static JniObjectReference _NewArray (int length)
+		static JniObjectReference NewArray (int length)
 		{
 			var info = JniEnvironment.Runtime.TypeManager.GetTypeSignature (typeof (T));
 			if (info.SimpleReference == null)
@@ -27,7 +27,7 @@ namespace Java.Interop
 		public unsafe JavaObjectArray (int length)
 			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-			var peer    = _NewArray (CheckLength (length));
+			var peer    = NewArray (CheckLength (length));
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -39,7 +39,7 @@ namespace Java.Interop
 		}
 
 		public JavaObjectArray (IEnumerable<T> value)
-			: this (_ToList (value))
+			: this (ToList (value))
 		{
 		}
 

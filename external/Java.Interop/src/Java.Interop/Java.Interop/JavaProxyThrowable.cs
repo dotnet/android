@@ -10,12 +10,12 @@ namespace Java.Interop {
 		public  Exception   Exception {get; private set;}
 
 		public JavaProxyThrowable (Exception exception)
-			: base (_GetMessage (exception))
+			: base (GetMessage (exception))
 		{
 			Exception   = exception;
 		}
 
-		static string _GetMessage (Exception exception)
+		static string GetMessage (Exception exception)
 		{
 			if (exception == null)
 				throw new ArgumentNullException ("exception");

@@ -89,7 +89,7 @@ namespace Java.Interop
 			return value.Count;
 		}
 
-		internal static IList<T> _ToList (IEnumerable<T> value)
+		internal static IList<T> ToList (IEnumerable<T> value)
 		{
 			if (value == null)
 				throw new ArgumentNullException ("value");
@@ -376,7 +376,7 @@ namespace Java.Interop
 			CopyTo (0, array, arrayIndex, Length);
 		}
 
-		internal static T[] _ToArray (IEnumerable<T> value)
+		internal static T[] ToArray (IEnumerable<T> value)
 		{
 			var array = value as T[];
 			if (array != null)
