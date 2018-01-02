@@ -730,6 +730,24 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"/>
 	</CreateProperty>
 
+	<CreateProperty Value="android">
+		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStorePassword"
+			Condition="'$(_ApkDebugKeyStorePassword)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="android">
+		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyPassword"
+			Condition="'$(_ApkDebugKeyPassword)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="androiddebugkey">
+		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyAlias"
+			Condition="'$(_ApkDebugKeyAlias)' == ''"
+		/>
+	</CreateProperty>
+
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)">
 		<Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"/>
 	</CreateProperty>
@@ -2455,9 +2473,23 @@ because xbuild doesn't support framework reference assemblies.
 
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
 </Target>
-  
 
-<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
+<Target Name="_CreateAndroidDebugSigningKey"
+		Condition="!Exists ('$(_ApkDebugKeyStore)')"
+		DependsOnTargets="$(_OnResolveMonoAndroidSdks)"
+	>
+	<AndroidCreateDebugKey
+		KeyStore="$(_ApkDebugKeyStore)"
+		KeyAlias="$(_ApkDebugKeyAlias)"
+		KeyPass="$(_ApkDebugKeyPassword)"
+		StorePass="$(_ApkDebugKeyStorePassword)"
+		ToolPath="$(KeytoolToolPath)"
+		ToolExe="$(KeytoolToolExe)"
+		Command="-genkeypair"
+	 />
+</Target>
+
+<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks);_CreateAndroidDebugSigningKey">
 	<!-- would use a PropertyGroup here but xbuild doesn't support it -->
 	<CreateProperty Value="$(_ApkDebugKeyStore)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyStore"/>
@@ -2484,16 +2516,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(AndroidSigningKeyPass)" Condition="'$(AndroidKeyStore)'=='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyPass"/>
 	</CreateProperty>
-	
-	<AndroidCreateDebugKey
-		KeyStore="$(_ApkKeyStore)"
-		KeyAlias="$(_ApkKeyAlias)"
-		KeyPass="$(_ApkKeyPass)"
-		StorePass="$(_ApkStorePass)"
-		ToolPath="$(KeytoolToolPath)"
-		ToolExe="$(KeytoolToolExe)"
-		Command="-genkeypair"
-		Condition="'$(AndroidKeyStore)'=='' and !Exists ('$(_ApkKeyStore)')" />
 
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" Condition="'$(AndroidKeyStore)'=='True'" />
 	<Touch Files="$(_AndroidDebugKeyStoreFlag)" AlwaysCreate="True" Condition="'$(AndroidKeyStore)'!='True'" />
