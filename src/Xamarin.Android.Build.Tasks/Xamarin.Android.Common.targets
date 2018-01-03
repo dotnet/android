@@ -727,7 +727,9 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 
 	<CreateProperty Value="$(_AppSettingsDirectory)debug.keystore">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"/>
+		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"
+			Condition="'$(_ApkDebugKeyStore)' == ''"
+		/>
 	</CreateProperty>
 
 	<CreateProperty Value="android">

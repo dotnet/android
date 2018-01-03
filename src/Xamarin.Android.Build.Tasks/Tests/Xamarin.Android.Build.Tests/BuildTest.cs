@@ -55,6 +55,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckKeystoreIsCreated ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder ("temp/CheckKeystoreIsCreated", false, false)) {
+				var file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "debug.keystore");
+				var p = new string [] {
+					$"_ApkDebugKeyStore={file}",
+				};
+				Assert.IsTrue (b.Build (proj, parameters: p), "Build should have succeeded.");
+				FileAssert.Exists (file, $"{file} should have been created.");
+			}
+		}
+
+		[Test]
 		public void FSharpAppHasAndroidDefine ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
