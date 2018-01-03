@@ -43,7 +43,9 @@ namespace Android.Runtime {
 			mono_unhandled_exception (ex);
 			if (AppDomain_DoUnhandledException != null) {
 				try {
-					var args  = new UnhandledExceptionEventArgs (ex, isTerminating: true);
+					var jltp = ex as JavaProxyThrowable;
+					Exception innerException = jltp?.InnerException;
+					var args  = new UnhandledExceptionEventArgs (innerException ?? ex, isTerminating: true);
 					AppDomain_DoUnhandledException (AppDomain.CurrentDomain, args);
 				}
 				catch (Exception e) {
