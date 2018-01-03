@@ -62,17 +62,17 @@ namespace Java.Interop
 
 			public abstract void WaitForGCBridgeProcessing ();
 
-			public abstract void Collect ();
+			public abstract void CollectPeers ();
 
-			public abstract void Add (IJavaPeerable value);
+			public abstract void AddPeer (IJavaPeerable value);
 
-			public abstract void Remove (IJavaPeerable value);
+			public abstract void RemovePeer (IJavaPeerable value);
 
-			public abstract void Finalize (IJavaPeerable value);
+			public abstract void FinalizePeer (IJavaPeerable value);
 
 			public abstract List<JniSurfacedPeerInfo>   GetSurfacedPeers ();
 
-			public void Construct (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
+			public void ConstructPeer (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
 				if (peer == null)
 					throw new ArgumentNullException (nameof (peer));
@@ -112,7 +112,7 @@ namespace Java.Interop
 				}
 
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
-					Add (peer);
+					AddPeer (peer);
 				}
 			}
 
@@ -121,7 +121,7 @@ namespace Java.Interop
 				return JniSystem.IdentityHashCode (reference);
 			}
 
-			public virtual void Dispose (IJavaPeerable value)
+			public virtual void DisposePeer (IJavaPeerable value)
 			{
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
@@ -130,13 +130,13 @@ namespace Java.Interop
 				if (!h.IsValid)
 					return;
 
-				Dispose (h, value);
+				DisposePeer (h, value);
 			}
 
-			void Dispose (JniObjectReference h, IJavaPeerable value)
+			void DisposePeer (JniObjectReference h, IJavaPeerable value)
 			{
 				value.Disposed ();
-				Remove (value);
+				RemovePeer (value);
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",
@@ -160,7 +160,7 @@ namespace Java.Interop
 				GC.SuppressFinalize (value);
 			}
 
-			public virtual void DisposeUnlessReferenced (IJavaPeerable value)
+			public virtual void DisposePeerUnlessReferenced (IJavaPeerable value)
 			{
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
@@ -173,7 +173,7 @@ namespace Java.Interop
 				if (o != null && object.ReferenceEquals (o, value))
 					return;
 
-				Dispose (h, value);
+				DisposePeer (h, value);
 			}
 
 			public abstract IJavaPeerable PeekPeer (JniObjectReference reference);
@@ -188,12 +188,12 @@ namespace Java.Interop
 					return t;
 
 				object r;
-				return TryUnboxObject (t, out r)
+				return TryUnboxPeerObject (t, out r)
 					? r
 					: t;
 			}
 
-			protected virtual bool TryUnboxObject (IJavaPeerable value, out object result)
+			protected virtual bool TryUnboxPeerObject (IJavaPeerable value, out object result)
 			{
 				result  = null;
 				var p   = value as JavaProxyObject;
@@ -215,7 +215,7 @@ namespace Java.Interop
 				if (t == null)
 					return null;
 				object r;
-				return TryUnboxObject (t, out r)
+				return TryUnboxPeerObject (t, out r)
 					? r
 					: null;
 			}

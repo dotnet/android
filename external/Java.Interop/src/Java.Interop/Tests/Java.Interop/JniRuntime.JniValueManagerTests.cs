@@ -34,19 +34,19 @@ namespace Java.InteropTests {
 			{
 			}
 
-			public override void Collect ()
+			public override void CollectPeers ()
 			{
 			}
 
-			public override void Add (IJavaPeerable reference)
+			public override void AddPeer (IJavaPeerable reference)
 			{
 			}
 
-			public override void Remove (IJavaPeerable reference)
+			public override void RemovePeer (IJavaPeerable reference)
 			{
 			}
 
-			public override void Finalize (IJavaPeerable reference)
+			public override void FinalizePeer (IJavaPeerable reference)
 			{
 			}
 

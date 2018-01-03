@@ -28,7 +28,7 @@ namespace Java.Interop
 
 		~JavaObject ()
 		{
-			JniEnvironment.Runtime.ValueManager.Finalize (this);
+			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
 		public          JniObjectReference          PeerReference {
@@ -75,7 +75,7 @@ namespace Java.Interop
 
 		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			JniEnvironment.Runtime.ValueManager.Construct (this, ref reference, options);
+			JniEnvironment.Runtime.ValueManager.ConstructPeer (this, ref reference, options);
 		}
 
 		protected void SetPeerReference (ref JniObjectReference reference, JniObjectReferenceOptions options)
@@ -100,17 +100,17 @@ namespace Java.Interop
 		{
 			if (!PeerReference.IsValid)
 				throw new ObjectDisposedException (GetType ().FullName);
-			JniEnvironment.Runtime.ValueManager.Remove (this);
+			JniEnvironment.Runtime.ValueManager.RemovePeer (this);
 		}
 
 		public void Dispose ()
 		{
-			JniEnvironment.Runtime.ValueManager.Dispose (this);
+			JniEnvironment.Runtime.ValueManager.DisposePeer (this);
 		}
 
 		public void DisposeUnlessReferenced ()
 		{
-			JniEnvironment.Runtime.ValueManager.DisposeUnlessReferenced (this);
+			JniEnvironment.Runtime.ValueManager.DisposePeerUnlessReferenced (this);
 		}
 
 		protected virtual void Dispose (bool disposing)

@@ -129,15 +129,15 @@ namespace Java.InteropTests
 
 		class ProxyValueManager : JniValueManager {
 
-			public override void Add (IJavaPeerable peer)
+			public override void AddPeer (IJavaPeerable peer)
 			{
 			}
 
-			public override void Collect ()
+			public override void CollectPeers ()
 			{
 			}
 
-			public override void Finalize (IJavaPeerable peer)
+			public override void FinalizePeer (IJavaPeerable peer)
 			{
 			}
 
@@ -151,7 +151,7 @@ namespace Java.InteropTests
 				return null;
 			}
 
-			public override void Remove (IJavaPeerable peer)
+			public override void RemovePeer (IJavaPeerable peer)
 			{
 			}
 

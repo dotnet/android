@@ -24,7 +24,7 @@ namespace Java.InteropTests
 				});
 				w.Start ();
 				w.Join ();
-				JniEnvironment.Runtime.ValueManager.Collect ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 				GC.WaitForPendingFinalizers ();
 				GC.WaitForPendingFinalizers ();
 				var first = array [0];
@@ -84,7 +84,7 @@ namespace Java.InteropTests
 			});
 			t.Start ();
 			t.Join ();
-			JniEnvironment.Runtime.ValueManager.Collect ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			GC.WaitForPendingFinalizers ();
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (r.IsAlive);
@@ -115,9 +115,9 @@ namespace Java.InteropTests
 			});
 			t.Start ();
 			t.Join ();
-			JniEnvironment.Runtime.ValueManager.Collect ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			GC.WaitForPendingFinalizers ();
-			JniEnvironment.Runtime.ValueManager.Collect ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			GC.WaitForPendingFinalizers ();
 			Assert.IsFalse (d);
 			Assert.IsTrue (f);

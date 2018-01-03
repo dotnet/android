@@ -59,7 +59,7 @@ namespace Java.Interop {
 			NativeMethods.java_interop_gc_bridge_wait_for_bridge_processing (bridge);
 		}
 
-		public override void Collect ()
+		public override void CollectPeers ()
 		{
 			GC.Collect ();
 		}
@@ -101,7 +101,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public override void Add (IJavaPeerable value)
+		public override void AddPeer (IJavaPeerable value)
 		{
 			var r = value.PeerReference;
 			if (!r.IsValid)
@@ -169,7 +169,7 @@ namespace Java.Interop {
 			return (peer.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
 
-		public override void Remove (IJavaPeerable value)
+		public override void RemovePeer (IJavaPeerable value)
 		{
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
@@ -226,7 +226,7 @@ namespace Java.Interop {
 			return null;
 		}
 
-		public override void Finalize (IJavaPeerable value)
+		public override void FinalizePeer (IJavaPeerable value)
 		{
 			var h = value.PeerReference;
 			var o = Runtime.ObjectReferenceManager;
@@ -242,7 +242,7 @@ namespace Java.Interop {
 							RuntimeHelpers.GetHashCode (value).ToString ("x"),
 							value.GetType ().ToString ());
 				}
-				Remove (value);
+				RemovePeer (value);
 				value.SetPeerReference (new JniObjectReference ());
 				value.Finalized ();
 				return;
@@ -251,7 +251,7 @@ namespace Java.Interop {
 			try {
 				bool collected  = TryGC (value, ref h);
 				if (collected) {
-					Remove (value);
+					RemovePeer (value);
 					value.SetPeerReference (new JniObjectReference ());
 					if (o.LogGlobalReferenceMessages) {
 						o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
