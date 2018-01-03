@@ -543,7 +543,7 @@ namespace Xamarin.Android.Tasks
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
 				var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
-				log.LogError ("XA5207", "Could not find android.jar for API Level {0}. " +
+				log.LogError (null, "XA5207", null, null, 0, 0, 0, 0, "Could not find android.jar for API Level {0}. " +
 						"This means the Android SDK platform for API Level {0} is not installed. " +
 						"Either install it in the Android SDK Manager (Tools > Open Android SDK Manager...), " +
 						"or change your Xamarin.Android project to target an API version that is installed. " +
