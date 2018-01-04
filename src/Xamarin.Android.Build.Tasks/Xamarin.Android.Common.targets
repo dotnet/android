@@ -732,24 +732,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="android">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStorePassword"
-			Condition="'$(_ApkDebugKeyStorePassword)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="android">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyPassword"
-			Condition="'$(_ApkDebugKeyPassword)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="androiddebugkey">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyAlias"
-			Condition="'$(_ApkDebugKeyAlias)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)">
 		<Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"/>
 	</CreateProperty>
@@ -2482,9 +2464,9 @@ because xbuild doesn't support framework reference assemblies.
 	>
 	<AndroidCreateDebugKey
 		KeyStore="$(_ApkDebugKeyStore)"
-		KeyAlias="$(_ApkDebugKeyAlias)"
-		KeyPass="$(_ApkDebugKeyPassword)"
-		StorePass="$(_ApkDebugKeyStorePassword)"
+		KeyAlias="androiddebugkey"
+		KeyPass="android"
+		StorePass="android"
 		ToolPath="$(KeytoolToolPath)"
 		ToolExe="$(KeytoolToolExe)"
 		Command="-genkeypair"
@@ -2496,13 +2478,13 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(_ApkDebugKeyStore)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyStore"/>
 	</CreateProperty>
-	<CreateProperty Value="$(_ApkDebugKeyStorePassword)" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="android" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkStorePass"/>
 	</CreateProperty>
-	<CreateProperty Value="$(_ApkDebugKeyAlias)" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="androiddebugkey" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyAlias"/>
 	</CreateProperty>
-	<CreateProperty Value="$(_ApkDebugKeyPassword)" Condition="'$(AndroidKeyStore)'!='True'">
+	<CreateProperty Value="android" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyPass"/>
 	</CreateProperty>
 	
