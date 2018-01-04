@@ -2105,6 +2105,33 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void IfAndroidJarDoesNotExistThrowXA5207 ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", minApiLevel: 10, maxApiLevel: 26);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.1",
+				UseLatestPlatformSdk = false,
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v8.1")))
+					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
+				builder.ThrowOnBuildFailure = false;
+				builder.Verbosity = LoggerVerbosity.Diagnostic;
+				builder.Target = "AndroidPrepareForBuild";
+				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
+					$"AndroidSdkBuildToolsVersion=24.0.1",
+					$"AndroidSdkDirectory={AndroidSdkDirectory}",
+					$"_AndroidApiLevel=27",
+				}), "Build should have failed");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API Level 27"), "XA5207 should have had a good error message.");
+			}
+			Directory.Delete (AndroidSdkDirectory, recursive: true);
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void BuildAMassiveApp()
 		{
