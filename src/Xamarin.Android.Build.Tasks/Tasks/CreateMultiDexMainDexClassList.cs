@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 		void GenerateProguardCommands (CommandLineBuilder cmd)
 		{
 			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
-			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "classes.zip") });
+			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "..", "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-jar ", ProguardJarPath);
 			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", "\"'" + string.Join ($"'{ProguardInputJarFilter}{Path.PathSeparator}'", jars) + $"'{ProguardInputJarFilter}\"");
 			cmd.AppendSwitch ("-dontwarn");
@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var enclosingDoubleQuote = OS.IsWindows ? "\"" : string.Empty;
 			var enclosingQuote = OS.IsWindows ? string.Empty : "'";
-			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "classes.zip") });
+			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "..", "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-Djava.ext.dirs=", Path.Combine (AndroidSdkBuildToolsPath, "lib"));
 			cmd.AppendSwitch ("com.android.multidex.MainDexListBuilder");
 			cmd.AppendSwitch ($"{enclosingDoubleQuote}{tempJar}{enclosingDoubleQuote}");
