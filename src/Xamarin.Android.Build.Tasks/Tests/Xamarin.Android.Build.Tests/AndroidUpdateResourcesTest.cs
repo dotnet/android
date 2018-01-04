@@ -184,6 +184,23 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		public void ReportAaptWarningsForBlankLevel ()
+		{
+			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
+			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
+			});
+			using (var b = CreateApkBuilder ("temp/ReportAaptWarningsForBlankLevel")) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void RepetiviteBuildUpdateSingleResource ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
