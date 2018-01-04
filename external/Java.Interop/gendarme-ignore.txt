@@ -264,6 +264,7 @@ M: Java.Interop.JniType Java.Interop.JniType::GetSuperclass()
 M: System.Boolean Java.Interop.JniType::IsAssignableFrom(Java.Interop.JniType)
 M: System.Boolean Java.Interop.JniType::IsInstanceOfType(Java.Interop.JniObjectReference)
 M: System.Void Java.Interop.JniType::RegisterNativeMethods(Java.Interop.JniNativeMethodRegistration[])
+M: System.Void Java.Interop.JniType::RegisterWithRuntime()
 M: System.Void Java.Interop.JniType::UnregisterNativeMethods()
 M: Java.Interop.JniMethodInfo Java.Interop.JniType::GetConstructor(System.String)
 M: Java.Interop.JniMethodInfo Java.Interop.JniType::GetCachedConstructor(Java.Interop.JniMethodInfo&,System.String)
@@ -278,6 +279,13 @@ M: Java.Interop.JniMethodInfo Java.Interop.JniType::GetCachedInstanceMethod(Java
 M: Java.Interop.JniMethodInfo Java.Interop.JniType::GetStaticMethod(System.String,System.String)
 M: Java.Interop.JniMethodInfo Java.Interop.JniType::GetCachedStaticMethod(Java.Interop.JniMethodInfo&,System.String,System.String)
 
+# do not check here to improve performance
+M: System.Void Java.Interop.JniArrayElements::CopyToJava()
+M: System.Int32 Java.Interop.JavaObjectArray`1::IndexOf(T)
+M: Java.Interop.JniArrayElements Java.Interop.JavaPrimitiveArray`1::GetElements()
+
+# it doesn't make sense to check the disposed state here, as the JavaObject::Dispose(bool) doesn't do anything and neither the JavaArray nor JavaObjectArray override it
+M: System.Void Java.Interop.JavaObjectArray`1::set_Item(System.Int32,T)
 
 R: Gendarme.Rules.Interoperability.MarshalBooleansInPInvokeDeclarationsRule
 # These aren't `bool`, they're `bool*`, which is a *huge* difference!
