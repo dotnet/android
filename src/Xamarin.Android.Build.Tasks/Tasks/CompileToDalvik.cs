@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendFileNamesIfNotNull (AlternativeJarFiles, " ");
 			} else {
 				Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
-				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "classes.zip"));
+				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
 				if (!File.Exists (zip)) {
 					throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");
 				}
