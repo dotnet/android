@@ -2098,13 +2098,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v8.1")))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
+				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				builder.Target = "AndroidPrepareForBuild";
 				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
 					$"AndroidSdkBuildToolsVersion=24.0.1",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
 					$"_AndroidApiLevel=27",
 				}), "Build should have failed");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error : XA5207"), "XA5207 should have been raised.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API Level 27"), "XA5207 should have had a good error message.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
