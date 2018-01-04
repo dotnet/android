@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tasks
 			if (!result)
 				return result;
 			// compress all the class files
-			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "classes.zip"), FileMode.OpenOrCreate))
+			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"), FileMode.OpenOrCreate))
 				zip.AddDirectory (ClassesOutputDirectory, "");
 			return result;
 		}
