@@ -44,9 +44,13 @@ namespace Java.Interop
 		public abstract partial class JniValueManager : ISetRuntime, IDisposable {
 
 			public      JniRuntime  Runtime { get; private set; }
+			bool                    disposed;
 
 			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				Runtime = runtime;
 			}
 
@@ -58,6 +62,7 @@ namespace Java.Interop
 
 			protected virtual void Dispose (bool disposing)
 			{
+				disposed = true;
 			}
 
 			public abstract void WaitForGCBridgeProcessing ();
@@ -123,6 +128,9 @@ namespace Java.Interop
 
 			public virtual void DisposePeer (IJavaPeerable value)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
 
@@ -135,6 +143,9 @@ namespace Java.Interop
 
 			void DisposePeer (JniObjectReference h, IJavaPeerable value)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				value.Disposed ();
 				RemovePeer (value);
 				var o = Runtime.ObjectReferenceManager;
@@ -162,6 +173,9 @@ namespace Java.Interop
 
 			public virtual void DisposePeerUnlessReferenced (IJavaPeerable value)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
 
@@ -180,6 +194,9 @@ namespace Java.Interop
 
 			public object PeekValue (JniObjectReference reference)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (!reference.IsValid)
 					return null;
 
@@ -237,6 +254,9 @@ namespace Java.Interop
 
 			public virtual IJavaPeerable CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				targetType  = targetType ?? typeof (JavaObject);
 				targetType  = GetPeerType (targetType);
 
@@ -311,6 +331,9 @@ namespace Java.Interop
 
 			public object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (!reference.IsValid)
 					return null;
 
@@ -337,6 +360,9 @@ namespace Java.Interop
 
 			public T CreateValue<T> (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (!reference.IsValid)
 					return default (T);
 
@@ -374,6 +400,9 @@ namespace Java.Interop
 
 			public object GetValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (!reference.IsValid)
 					return null;
 
@@ -435,6 +464,9 @@ namespace Java.Interop
 
 			public JniValueMarshaler<T> GetValueMarshaler<T>()
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				var m   = GetValueMarshaler (typeof (T));
 				var r   = m as JniValueMarshaler<T>;
 				if (r != null)
@@ -449,6 +481,9 @@ namespace Java.Interop
 
 			public JniValueMarshaler GetValueMarshaler (Type type)
 			{
+				if (disposed)
+					throw new ObjectDisposedException (GetType ().Name);
+
 				if (type == null)
 					throw new ArgumentNullException ("type");
 				var info = type.GetTypeInfo ();

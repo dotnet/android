@@ -66,6 +66,8 @@ namespace Java.Interop {
 
 		protected override void Dispose (bool disposing)
 		{
+			base.Dispose (disposing);
+
 			if (!disposing)
 				return;
 
@@ -82,6 +84,7 @@ namespace Java.Interop {
 					}
 				}
 				RegisteredInstances.Clear ();
+				RegisteredInstances = null;
 			}
 		}
 
