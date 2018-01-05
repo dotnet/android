@@ -62,39 +62,38 @@ namespace Java.Interop
 		internal static void CheckArrayCopy (int sourceIndex, int sourceLength, int destinationIndex, int destinationLength, int length)
 		{
 			if (sourceIndex < 0)
-				throw new ArgumentOutOfRangeException ("sourceIndex", $"source index must be >= 0; was {sourceIndex}.");
+				throw new ArgumentOutOfRangeException (nameof (sourceIndex), $"source index must be >= 0; was {sourceIndex}.");
 			if (sourceIndex != 0 && sourceIndex >= sourceLength)
-				throw new ArgumentException ("source index is > source length.", "sourceIndex");
+				throw new ArgumentException ("source index is > source length.", nameof (sourceIndex));
 			if (checked(sourceIndex + length) > sourceLength)
-				throw new ArgumentException ("source index + length >= source length", "length");
+				throw new ArgumentException ("source index + length >= source length", nameof (length));
 			if (destinationIndex < 0)
-				throw new ArgumentOutOfRangeException ("destinationIndex", $"destination index must be >= 0; was {destinationIndex}.");
+				throw new ArgumentOutOfRangeException (nameof (destinationIndex), $"destination index must be >= 0; was {destinationIndex}.");
 			if (destinationIndex != 0 && destinationIndex >= destinationLength)
-				throw new ArgumentException ("destination index is > destination length.", "destinationIndex");
+				throw new ArgumentException ("destination index is > destination length.", nameof (destinationIndex));
 			if (checked (destinationIndex + length) > destinationLength)
-				throw new ArgumentException ("destination index + length >= destination length", "length");
+				throw new ArgumentException ("destination index + length >= destination length", nameof (length));
 		}
 
 		internal static int CheckLength (int length)
 		{
 			if (length < 0)
-				throw new ArgumentException ("'length' cannot be negative.", "length");
+				throw new ArgumentException ("'length' cannot be negative.", nameof (length));
 			return length;
 		}
 
 		internal static int CheckLength (IList<T> value)
 		{
 			if (value == null)
-				throw new ArgumentNullException ("value");
+				throw new ArgumentNullException (nameof (value));
 			return value.Count;
 		}
 
 		internal static IList<T> ToList (IEnumerable<T> value)
 		{
 			if (value == null)
-				throw new ArgumentNullException ("value");
-			IList<T> list = value as IList<T>;
-			if (list != null)
+				throw new ArgumentNullException (nameof (value));
+			if (value is IList<T> list)
 				return list;
 			return value.ToList ();
 		}
@@ -138,8 +137,7 @@ namespace Java.Interop
 		{
 			if (value == null)
 				return new JniValueMarshalerState ();
-			var v = value as TArray;
-			if (v != null) {
+			if (value is TArray v) {
 				return new JniValueMarshalerState (v);
 			}
 			var list = value as IList<T>;
@@ -227,7 +225,7 @@ namespace Java.Interop
 		void ICollection.CopyTo (Array array, int index)
 		{
 			if (array == null)
-				throw new ArgumentNullException ("array");
+				throw new ArgumentNullException (nameof (array));
 			CheckArrayCopy (0, Length, index, array.Length, Length);
 			int len = Length;
 			for (int i = 0; i < len; i++)
@@ -301,7 +299,7 @@ namespace Java.Interop
 		internal JniArrayElements (IntPtr elements)
 		{
 			if (elements == IntPtr.Zero)
-				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", "elements");
+				throw new ArgumentException ("'elements' must not be IntPtr.Zero.", nameof (elements));
 			this.elements = elements;
 		}
 
@@ -327,7 +325,7 @@ namespace Java.Interop
 		public void Release (JniReleaseArrayElementsMode releaseMode)
 		{
 			if (IsDisposed)
-				throw new ObjectDisposedException (GetType ().FullName);;
+				throw new ObjectDisposedException (GetType ().FullName);
 			Synchronize (releaseMode);
 			elements = IntPtr.Zero;
 		}
@@ -360,7 +358,7 @@ namespace Java.Interop
 			}
 			set {
 				if (index >= Length)
-					throw new ArgumentOutOfRangeException ("index", "index >= Length");
+					throw new ArgumentOutOfRangeException (nameof (index), "index >= Length");
 				var buf = new T []{ value };
 				CopyFrom (buf, 0, index, buf.Length);
 			}
@@ -378,8 +376,7 @@ namespace Java.Interop
 
 		internal static T[] ToArray (IEnumerable<T> value)
 		{
-			var array = value as T[];
-			if (array != null)
+			if (value is T [] array)
 				return array;
 			return value.ToArray ();
 		}
