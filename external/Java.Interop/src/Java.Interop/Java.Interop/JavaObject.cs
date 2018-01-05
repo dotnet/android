@@ -7,9 +7,8 @@ namespace Java.Interop
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
-		int     keyHandle;
-
-		JniManagedPeerStates     state;
+		public int                  JniIdentityHashCode { get; private set; }
+		public JniManagedPeerStates JniManagedPeerState { get; private set; }
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		JniObjectReference  reference;
@@ -40,14 +39,6 @@ namespace Java.Interop
 				return new JniObjectReference (handle, handle_type);
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
-		}
-
-		public int JniIdentityHashCode {
-			get {return keyHandle;}
-		}
-
-		public JniManagedPeerStates JniManagedPeerState {
-			get {return state;}
 		}
 
 		// Note: JniPeerMembers is invoked virtually from the constructor;
@@ -143,10 +134,6 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		JniManagedPeerStates IJavaPeerable.JniManagedPeerState {
-			get {return state;}
-		}
-
 		void IJavaPeerable.Disposed ()
 		{
 			Dispose (disposing: true);
@@ -159,12 +146,12 @@ namespace Java.Interop
 
 		void IJavaPeerable.SetJniIdentityHashCode (int value)
 		{
-			keyHandle   = value;
+			JniIdentityHashCode = value;
 		}
 
 		void IJavaPeerable.SetJniManagedPeerState (JniManagedPeerStates value)
 		{
-			state   = value;
+			JniManagedPeerState = value;
 		}
 
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
