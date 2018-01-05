@@ -536,7 +536,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CoreResolveReferencesDependsOn>
 	<ResolveReferencesDependsOn>
 		$(CoreResolveReferencesDependsOn);
-		UpdateAndroidAssets;
 		UpdateAndroidInterfaceProxies;
 		UpdateAndroidResources;
 		$(ApplicationResolveReferencesDependsOn);
@@ -1907,6 +1906,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
+		UpdateAndroidAssets;
 		$(_AfterCreateBaseApkDependsOnTargets);
 	</_CreateBaseApkDependsOnTargets>
 	<_CreateBaseApkInputs>
