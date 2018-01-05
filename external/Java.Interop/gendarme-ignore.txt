@@ -603,8 +603,9 @@ R: Gendarme.Rules.Performance.AvoidUnusedParametersRule
 M: System.Collections.Generic.IEnumerable`1<System.Type> Java.Interop.JniRuntime/JniTypeManager::CreateGetTypesForSimpleReferenceEnumerator(System.String)
 
 R: Gendarme.Rules.Performance.UseTypeEmptyTypesRule
-# The PCL profile we're using doen't *have* Type.EmptyTypes!
+# The PCL profile we're using doesn't *have* Type.EmptyTypes!
 M: System.Void Java.Interop.JniRuntime/JniTypeManager::.cctor()
+M: System.Type[] Java.Interop.ManagedPeer::GetParameterTypes(System.String)
 
 R: Gendarme.Rules.BadPractice.CheckNewExceptionWithoutThrowingRule
 # This method constructs JavaException and calls ToString () on it. We only care about Java stack trace here, so we don't need to throw the exception to get managed StackTrace.
