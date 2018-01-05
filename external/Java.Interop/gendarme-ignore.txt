@@ -569,6 +569,8 @@ R: Gendarme.Rules.Performance.AvoidLargeStructureRule
 T: Java.Interop.JniArgumentValue
 # This we can't make smaller; it *must* match the corresponding native struct!
 T: Java.Interop.JniNativeInterfaceStruct
+# I think we cannot make this one smaller. Also the reported size is wrong as it contains Java.Interop.JniArgumentValue, which is a union (see above)
+T: Java.Interop.JniValueMarshalerState
 
 
 R: Gendarme.Rules.Performance.AvoidRepetitiveCastsRule
