@@ -268,6 +268,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
+using System.IO.Packaging;
 
 using Xamarin.Forms;
 
@@ -275,9 +276,12 @@ namespace XamFormsSample
 {
     public partial class App : Application
     {
+        Package package;
+
         public App()
         {
             JsonConvert.DeserializeObject<string>(""test"");
+            var package = Package.Open ("""");
             InitializeComponent();
         }
 
@@ -338,29 +342,13 @@ namespace XamFormsSample
 				"Java.Interop.dll",
 				"Mono.Android.dll",
 				"mscorlib.dll",
-				"mscorlib.dll.mdb",
-				"System.Collections.Concurrent.dll",
-				"System.Collections.dll",
 				"System.Core.dll",
-				"System.Diagnostics.Debug.dll",
 				"System.dll",
-				"System.Linq.dll",
-				"System.Reflection.dll",
-				"System.Reflection.Extensions.dll",
-				"System.Runtime.dll",
-				"System.Runtime.Extensions.dll",
-				"System.Runtime.InteropServices.dll",
 				"System.Runtime.Serialization.dll",
-				"System.Threading.dll",
 				"System.IO.Packaging.dll",
-				"System.IO.Compression.dll",
-				"System.IO.Compression.pdb",
 				"Mono.Android.Export.dll",
-				"Mono.Android.Export.pdb",
 				"App1.dll",
-				"App1.pdb",
 				"FormsViewGroup.dll",
-				"FormsViewGroup.dll.mdb",
 				"Xamarin.Android.Support.Compat.dll",
 				"Xamarin.Android.Support.Core.UI.dll",
 				"Xamarin.Android.Support.Core.Utils.dll",
@@ -377,38 +365,14 @@ namespace XamFormsSample
 				"Xamarin.Android.Support.Annotations.dll",
 				"Xamarin.Android.Support.v7.CardView.dll",
 				"Xamarin.Forms.Core.dll",
-				"Xamarin.Forms.Core.dll.mdb",
 				"Xamarin.Forms.Platform.Android.dll",
-				"Xamarin.Forms.Platform.Android.dll.mdb",
 				"Xamarin.Forms.Platform.dll",
 				"Xamarin.Forms.Xaml.dll",
-				"Xamarin.Forms.Xaml.dll.mdb",
 				"XamFormsSample.dll",
-				"XamFormsSample.pdb",
-				"Mono.Android.pdb",
-				"System.Core.pdb",
-				"System.pdb",
 				"Mono.Security.dll",
-				"Mono.Security.pdb",
 				"System.Xml.dll",
-				"System.Xml.pdb",
-				"System.ComponentModel.Composition.dll",
-				"System.ComponentModel.Composition.pdb",
 				"System.Net.Http.dll",
-				"System.Net.Http.pdb",
-				"System.Runtime.Serialization.pdb",
 				"System.ServiceModel.Internals.dll",
-				"System.ServiceModel.Internals.pdb",
-				"System.Threading.Tasks.dll",
-				"System.ObjectModel.dll",
-				"System.Globalization.dll",
-				"System.ComponentModel.dll",
-				"System.Xml.ReaderWriter.dll",
-				"System.Linq.Expressions.dll",
-				"System.IO.dll",
-				"System.Dynamic.Runtime.dll",
-				"System.Text.RegularExpressions.dll",
-				"System.Diagnostics.Tools.dll",
 				"Newtonsoft.Json.dll",
 				"Microsoft.CSharp.dll",
 				"System.Numerics.dll",
@@ -418,12 +382,12 @@ namespace XamFormsSample
 			using (var builder = CreateDllBuilder (Path.Combine (path, netStandardProject.ProjectName), cleanupOnDispose: false)) {
 				if (!Directory.Exists (builder.MicrosoftNetSdkDirectory))
 					Assert.Ignore ("Microsoft.NET.Sdk not found.");
-				builder.RequiresMSBuild = true;
-				builder.Target = "Restore";
-				Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample Nuget packages should have been restored.");
-				builder.Target = "Build";
-				Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 				using (var ab = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: false)) {
+					builder.RequiresMSBuild = true;
+					builder.Target = "Restore";
+					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample Nuget packages should have been restored.");
+					builder.Target = "Build";
+					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 					ab.RequiresMSBuild = true;
 					ab.Target = "Restore";
 					Assert.IsTrue (ab.Build (app), "App should have built.");
@@ -433,8 +397,8 @@ namespace XamFormsSample
 						app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
-						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assmelbies/" + Path.GetFileName (x)));
-						Assert.IsTrue (missingFiles.Any (),
+						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
+						Assert.IsFalse (missingFiles.Any (),
 						string.Format ("The following Expected files are missing. {0}",
 							string.Join (Environment.NewLine, missingFiles)));
 						var additionalFiles = existingFiles.Where (x => !expectedFiles.Contains (Path.GetFileName (x.FullName)));

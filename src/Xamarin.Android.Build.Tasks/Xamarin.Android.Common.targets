@@ -1567,6 +1567,10 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_CopyPackage" />
 	
 <Target Name="_ResolveAssemblies">
+	<Message Text="------------ ReferenceCopyLocalPaths ---------------" />
+	<Message Text="%(ReferenceCopyLocalPaths.Identity) = %(ReferenceCopyLocalPaths.ResolvedFrom)" />
+	<Message Text="------------ ReferencePath ---------------" />
+	<Message Text="%(ReferencePath.Identity) = %(ReferencePath.ResolvedFrom)" />
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
 	<ItemGroup>
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"

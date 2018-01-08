@@ -2,6 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<!-- PCL Support -->
 	<PropertyGroup>
+		<IsXBuild Condition="'$(MSBuildRuntimeVersion)' == ''">true</IsXBuild>
 		<CheckForSystemRuntimeDependency>true</CheckForSystemRuntimeDependency>
 		<ImplicitlyExpandDesignTimeFacades>true</ImplicitlyExpandDesignTimeFacades>
 		<ResolveReferencesDependsOn>
@@ -14,32 +15,42 @@
 			GetReferenceAssemblyPaths
 		</ImplicitlyExpandDesignTimeFacadesDependsOn>
 	</PropertyGroup>
+
+	<UsingTask
+		TaskName="GetDependsOnNETStandard"
+		Condition="'$(IsXBuild)' != 'true'"
+		AssemblyFile="$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll" />
 	
 	<Target Name="ImplicitlyExpandDesignTimeFacades" Condition="'$(ImplicitlyExpandDesignTimeFacades)' == 'true'" DependsOnTargets="$(ImplicitlyExpandDesignTimeFacadesDependsOn)">
-	
+
+		<ItemGroup>
+			<_XACandidateNETStandardReferences Include="@(Reference);@(_ResolvedProjectReferencePaths)" />
+			<_XAInboxNETStandardFolders Include="$(TargetFrameworkDirectory)" />
+		</ItemGroup>
+		
 		<PropertyGroup>
 			<_HasReferenceToSystemRuntime Condition="'$(DependsOnSystemRuntime)' == 'true' or '%(_ResolvedProjectReferencePaths.TargetPlatformIdentifier)' == 'Portable' 
 								or '%(ReferenceDependencyPaths.Filename)' == 'System.Runtime'">true</_HasReferenceToSystemRuntime>
+			<_XANETStandardInbox Condition="'$(XI_NETStandardInbox)' == '' and Exists('%(XI_InboxNETStandardFolders.Identity)\netstandard.dll')">true</_XANETStandardInbox>
 		</PropertyGroup>
 
-		<ItemGroup Condition="'$(_HasReferenceToSystemRuntime)' == 'true'">
+		<!--
+			Facades are expanded if we have a reference that depends on System.Runtime .
+			XI projects have `$(TargetFrameworkIdentifier) != .NETFramework`, so Microsoft.NET.Build.Extensions (which provides support for ns 2.0 projects) doesn't get
+			imported. And netstandard.dll reference, even if required, doesn't get added.
+			So, we need to check if any references depend on `netstandard`. And if so, expand the facades, which include netstandard.dll .
+			If $(_HasReferenceToSystemRuntime) is true, then the facades are going to be expanded anyway, so don't run this.
+		-->
+		<GetDependsOnNETStandard
+				Condition="'$(_HasReferenceToSystemRuntime)' != 'true' and '$(IsXBuild)' != 'true' and '$(DependsOnNETStandard)' == '' and '@(_XACandidateNETStandardReferences)' != ''"
+				References="@(_XACandidateNETStandardReferences)">
+			<Output TaskParameter="DependsOnNETStandard" PropertyName="_XADependsOnNETStandard" />
+		</GetDependsOnNETStandard>
+
+		<ItemGroup Condition="'$(_HasReferenceToSystemRuntime)' == 'true' or ('$(_XANETStandardInbox)' == 'true' and '$(_XADependsOnNETStandard)' == 'true')">
 			<_DesignTimeFacadeAssemblies Include="%(DesignTimeFacadeDirectories.Identity)*.dll"/>
-		</ItemGroup>
-
-		<CreateItem Include="%(_DesignTimeFacadeAssemblies.FileName)"
-				AdditionalMetadata="OriginalIdentity=%(_DesignTimeFacadeAssemblies.Identity)">
-			<Output TaskParameter="Include" ItemName="_DesignTimeFacadeAssemblies_Names" />
-		</CreateItem>
-
-		<CreateItem Include="%(ReferencePath.FileName)"
-				AdditionalMetadata="OriginalIdentity=%(ReferencePath.Identity)">
-			<Output TaskParameter="Include" ItemName="_ReferencePath_Names" />
-		</CreateItem>
-
-		<ItemGroup>
-			<_DesignTimeFacadeAssemblies_Names Remove="@(_ReferencePath_Names)"/>
-
-			<ReferencePath Include="@(_DesignTimeFacadeAssemblies_Names->'%(OriginalIdentity)')">
+			<ReferencePath Remove="@(_DesignTimeFacadeAssemblies)"/>
+			<ReferencePath Include="%(_DesignTimeFacadeAssemblies.Identity)">
 				<WinMDFile>false</WinMDFile>
 				<CopyLocal>false</CopyLocal>
 				<ResolvedFrom>ImplicitlyExpandDesignTimeFacades</ResolvedFrom>

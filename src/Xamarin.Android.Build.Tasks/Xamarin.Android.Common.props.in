@@ -3,6 +3,7 @@
 		<XamarinAndroidVersion>@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
+		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
 		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">1.8.0</LatestSupportedJavaVersion>
