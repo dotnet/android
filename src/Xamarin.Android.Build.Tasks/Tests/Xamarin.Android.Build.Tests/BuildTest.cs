@@ -1039,7 +1039,7 @@ namespace App1
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.UseLatestPlatformSdk = true;
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
-			proj.SetProperty ("AndroidLintDisabledIssues", "StaticFieldLeak,ObsoleteSdkInt");
+			proj.SetProperty ("AndroidLintDisabledIssues", "StaticFieldLeak,ObsoleteSdkInt,AllowBackup");
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
 			proj.SetProperty ("AndroidLintCheckIssues", "");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", @"

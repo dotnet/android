@@ -120,6 +120,29 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void TargetSdkInManifestWhenUseLateatPlatformIsSet ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				UseLatestPlatformSdk = true,
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				XDocument doc = XDocument.Load (manifestFile);
+				var ns = doc.Root.GetNamespaceOfPrefix ("android");
+				var targetSdkXName = XName.Get ("targetSdkVersion", ns.NamespaceName);
+				var usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
+				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
+				var targetSdk = usesSdk.Attribute (targetSdkXName);
+				var version = b.LatestTargetFrameworkVersion ();
+				var level = b.GetAndroidApiLevelForFramework (version);
+				Assert.AreEqual (level, targetSdk?.Value, $"targetSdkVersion should have been {level}");
+			}
+		}
+
+		[Test]
 		public void CheckElementReOrdering ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {

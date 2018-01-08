@@ -7,6 +7,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
@@ -193,6 +194,17 @@ namespace Xamarin.ProjectTools
 					latest = version;
 			}
 			return "v" + latest.ToString (2);
+		}
+
+		public string GetAndroidApiLevelForFramework (string frameworkVersion)
+		{
+			var outdir = FrameworkLibDirectory;
+			var path = Path.Combine (outdir, "xbuild-frameworks", "MonoAndroid", frameworkVersion, "AndroidApiInfo.xml");
+			if (!File.Exists (path)) {
+				return "0";
+			}
+			var doc = XDocument.Load (path);
+			return doc.Element ("AndroidApiInfo")?.Element ("Level")?.Value ?? "0";
 		}
 
 
