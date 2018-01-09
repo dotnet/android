@@ -13,6 +13,13 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
+		readonly string MinAndTargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
+	<uses-sdk android:minSdkVersion=""{0}"" android:targetSdkVersion=""{1}""/>
+	<application android:label=""foo"">
+	</application>
+</manifest>";
+		
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
 	<uses-sdk android:targetSdkVersion=""{0}""/>
@@ -116,6 +123,38 @@ namespace Bug12935
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
 				StringAssertEx.Contains ("APT0000: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("1 Error(s)", builder.LastBuildOutput);
+			}
+		}
+
+		[Test]
+		public void TargetSdkInManifestWhenUseLateatPlatformIsSet ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				UseLatestPlatformSdk = true,
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				XDocument doc = XDocument.Load (manifestFile);
+				var ns = doc.Root.GetNamespaceOfPrefix ("android");
+				var targetSdkXName = XName.Get ("targetSdkVersion", ns.NamespaceName);
+				var usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
+				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
+				var targetSdk = usesSdk.Attribute (targetSdkXName);
+				var version = b.LatestTargetFrameworkVersion ();
+				var level = b.GetAndroidApiLevelForFramework (version);
+				Assert.AreEqual (level, targetSdk?.Value, $"targetSdkVersion should have been {level}");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+				proj.AndroidManifest = string.Format (MinAndTargetSdkManifest, 11, 25);
+				Assert.IsTrue (b.Build (proj), "build failed");
+				doc = XDocument.Load (manifestFile);
+				usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
+				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
+				targetSdk = usesSdk.Attribute (targetSdkXName);
+				Assert.AreEqual ("25", targetSdk?.Value, $"targetSdkVersion should have been 25");
+
 			}
 		}
 

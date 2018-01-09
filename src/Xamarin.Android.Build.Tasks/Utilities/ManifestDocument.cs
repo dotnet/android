@@ -263,6 +263,7 @@ namespace Xamarin.Android.Tasks {
 				targetSdkVersion = tsv.Value;
 			else {
 				targetSdkVersion = SdkVersionName;
+				uses.Add (new XAttribute (androidNs + "targetSdkVersion", SdkVersionName));
 				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
 			}
 
