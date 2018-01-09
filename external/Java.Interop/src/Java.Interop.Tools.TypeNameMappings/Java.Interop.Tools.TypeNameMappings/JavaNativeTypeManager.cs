@@ -262,8 +262,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
 		public static string ToJniNameFromAttributes (Type type)
 		{
-			var a = type.GetCustomAttributes ().OfType<IJniNameProviderAttribute> ().FirstOrDefault (j => !string.IsNullOrEmpty (j.Name));
-			return a == null ? null : a.Name.Replace ('.', '/');
+			var aa = (IJniNameProviderAttribute []) type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
+			return aa.Length > 0 && !string.IsNullOrEmpty (aa [0].Name) ? aa [0].Name.Replace ('.', '/') : null;
 		}
 
 		/*
