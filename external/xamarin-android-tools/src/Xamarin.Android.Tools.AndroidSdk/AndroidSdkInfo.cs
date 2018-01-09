@@ -70,6 +70,14 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
+		public IEnumerable<AndroidVersion> GetInstalledPlatformVersions (AndroidVersions versions)
+		{
+			if (versions == null)
+				throw new ArgumentNullException (nameof (versions));
+			return versions.InstalledBindingVersions
+				.Where (p => TryGetPlatformDirectoryFromApiLevel (p.Id, versions) != null) ;
+		}
+
 		public string GetPlatformDirectory (int apiLevel)
 		{
 			return GetPlatformDirectoryFromId (apiLevel.ToString ());

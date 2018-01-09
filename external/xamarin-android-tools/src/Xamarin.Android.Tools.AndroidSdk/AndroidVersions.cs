@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tools
 		public  AndroidVersion              MaxStableVersion                { get; private set; }
 		public  AndroidVersion              MinStableVersion                { get; private set; }
 
+		public  IReadOnlyList<AndroidVersion>       InstalledBindingVersions    { get; private set; }
+
 		public AndroidVersions (IEnumerable<string> frameworkDirectories)
 		{
 			if (frameworkDirectories == null)
@@ -67,6 +69,8 @@ namespace Xamarin.Android.Tools
 					MinStableVersion = version;
 				}
 			}
+
+			InstalledBindingVersions    = new ReadOnlyCollection<AndroidVersion>(installedVersions);
 		}
 
 		public int? GetApiLevelFromFrameworkVersion (string frameworkVersion)
