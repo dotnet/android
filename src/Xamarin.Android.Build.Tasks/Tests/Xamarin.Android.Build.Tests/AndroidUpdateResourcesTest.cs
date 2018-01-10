@@ -1123,6 +1123,34 @@ namespace Lib1 {
 		}
 
 		[Test]
+		public void CheckMaxResWarningIsEmittedAsAWarning()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem.Folder ("Resources\\values-v27\\") {
+					},
+				},
+			};
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+  <string name=""test"" >Test</string>
+</resources>",
+			});
+			using (var builder = CreateApkBuilder (path)) {
+				if (!builder.TargetFrameworkExists (proj.TargetFrameworkVersion)) {
+					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
+				}
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				StringAssertEx.Contains ("warning : max res 26, skipping values-v27", builder.LastBuildOutput, "Build output should contain a warning about 'max res 26, skipping values-v27'");
+			}
+		}
+
+		[Test]
 		public void CheckDefaultTranslationWarnings ()
 		{
 			var path = Path.Combine ("temp", TestName);
