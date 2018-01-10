@@ -120,7 +120,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (OptionalObfuscatedJarFile))
 				cmd.AppendFileNameIfNotNull (OptionalObfuscatedJarFile);
 			else {
-				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "classes.zip"));
+				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
 				if (!File.Exists (zip)) {
 					throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");
 				}
