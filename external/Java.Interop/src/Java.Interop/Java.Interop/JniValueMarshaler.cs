@@ -94,6 +94,9 @@ namespace Java.Interop {
 				object.ReferenceEquals (Extra, value.Extra);
 		}
 
+		public static bool operator == (JniValueMarshalerState a, JniValueMarshalerState b) => a.Equals (b);
+		public static bool operator != (JniValueMarshalerState a, JniValueMarshalerState b) => !a.Equals (b);
+
 		public override string ToString ()
 		{
 			return string.Format ("JniValueMarshalerState({0}, ReferenceValue={1}, PeerableValue=0x{2}, Extra={3})",
