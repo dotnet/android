@@ -162,7 +162,9 @@ namespace Xamarin.Android.Tasks
 		{
 			var output = new List<OutputLine> ();
 			var ret = RunAapt (cmd, output);
-			var success = File.Exists (Path.Combine (JavaDesignerOutputDirectory, "R.java"));
+			var success = !string.IsNullOrEmpty (currentResourceOutputFile)
+				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
+				: ret;
 			foreach (var line in output) {
 				if (line.StdError) {
 					LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success);
