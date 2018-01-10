@@ -5,20 +5,29 @@
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\build-tools\scripts\TestApks.targets" />
   <Import Project="..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
+  <Target Name="_GetNUnitAssemblies">
+    <ItemGroup>
+      <_NUnitAssembly
+          Condition=" '%(MonoTestAssembly.TestType)' != 'xunit' "
+          Include="@(MonoTestAssembly)"
+      />
+    </ItemGroup>
+  </Target>
   <Target Name="_AddTestAssemblies"
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')" />
+      <Reference Include="@(_NUnitAssembly->'$(IntermediateOutputPath)%(Identity)')" />
       <Reference Remove="$(IntermediateOutputPath)nunitlite.dll" />
     </ItemGroup>
   </Target>
   <Target Name="_RemapAssemblies"
-      Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
-      Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
+      DependsOnTargets="_GetNUnitAssemblies"
+      Inputs="@(_NUnitAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
+      Outputs="@(_NUnitAssembly->'$(IntermediateOutputPath)%(Identity)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
+      <_Source  Include="@(_NUnitAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
     </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
@@ -67,11 +76,12 @@
     <Touch Files="@(_TestResource)" />
   </Target>
   <Target Name="_GenerateApp_cs"
-      Inputs="@(MonoTestAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
+      DependsOnTargets="_GetNUnitAssemblies"
+      Inputs="@(_NUnitAssembly->'..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
       Outputs="$(IntermediateOutputPath)\App.cs">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <PropertyGroup>
-      <_Assemblies>@(MonoTestAssembly->'"%(Identity)"', ',  ')</_Assemblies>
+      <_Assemblies>@(_NUnitAssembly->'"%(Identity)"', ',  ')</_Assemblies>
     </PropertyGroup>
     <ReplaceFileContents
         SourceFile="App.cs.in"
