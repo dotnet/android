@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Java.Interop {
 
 	[JniTypeSignature (JniTypeName)]
-	sealed class JavaProxyObject : JavaObject
+	sealed class JavaProxyObject : JavaObject, IEquatable<JavaProxyObject>
 	{
 		internal const string JniTypeName = "com/xamarin/java_interop/internal/JavaProxyObject";
 
@@ -41,11 +41,12 @@ namespace Java.Interop {
 
 		public override bool Equals (object obj)
 		{
-			var other = obj as JavaProxyObject;
-			if (other != null)
+			if (obj is JavaProxyObject other)
 				return object.Equals (Value, other.Value);
 			return object.Equals (Value, obj);
 		}
+
+		public bool Equals (JavaProxyObject other) => object.Equals (Value, other.Value);
 
 		public override string ToString ()
 		{
