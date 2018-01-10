@@ -555,11 +555,14 @@ M: Java.Interop.JniObjectReferenceType Java.Interop.NativeMethods::java_interop_
 
 
 R: Gendarme.Rules.Naming.UseCorrectSuffixRule
-T: Java.Interop.DestroyJavaVMDelegate
-T: Java.Interop.GetEnvDelegate
-T: Java.Interop.AttachCurrentThreadDelegate
-T: Java.Interop.DetachCurrentThreadDelegate
 T: Java.Interop.AttachCurrentThreadAsDaemonDelegate
+T: Java.Interop.AttachCurrentThreadDelegate
+T: Java.Interop.DestroyJavaVMDelegate
+T: Java.Interop.DetachCurrentThreadDelegate
+T: Java.Interop.Expressions.VariableCollection
+T: Java.Interop.GetEnvDelegate
+T: Java.Interop.JavaArray`1
+T: Java.Interop.JavaProxyThrowable
 T: Java.Interop.JniObjectReferenceFlags
 
 
