@@ -171,6 +171,12 @@ R: Gendarme.Rules.Design.DisposableTypesShouldHaveFinalizerRule
 T: Java.Interop.JniArrayElements
 T: Java.Interop.JniEnvironmentInfo
 
+
+R: Gendarme.Rules.Design.UseCorrectDisposeSignaturesRule
+# we don't need virtual Dispose(bool) method here. we also fully control the type, as it has only internal constructor
+T: Java.Interop.JniArrayElements
+
+
 R: Gendarme.Rules.Design.EnumsShouldUseInt32Rule
 # It's a `uint` because I'm using bitwise operators and want to keep things sane.
 T: Java.Interop.JniObjectReferenceFlags
