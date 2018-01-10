@@ -661,6 +661,12 @@ R: Gendarme.Rules.Design.Generic.AvoidMethodWithUnusedGenericTypeRule
 # looks like Gendarme bug, the TArray is used in the cast
 M: System.Void Java.Interop.JavaArray`1::DestroyArgumentState(System.Collections.Generic.IList`1<T>,Java.Interop.JniValueMarshalerState&,System.Reflection.ParameterAttributes)
 
+R: Gendarme.Rules.Performance.PreferLiteralOverInitOnlyFieldsRule
+# Warning is about e.g. JavaObject.InvalidJniObjectReference
+# InvalidJniObjectReference *must* be a field, not a literal, so that we can use `ref *InvalidJniObjectReference`.
+T: Java.Interop.JavaException
+T: Java.Interop.JavaObject
+
 R: Gendarme.Rules.Performance.UseStringEmptyRule
 # these are compiler generated
 M: System.String <>__AnonType0`2::ToString()
