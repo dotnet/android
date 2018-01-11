@@ -842,7 +842,8 @@
   <map package='android.webkit' class='WebView.HitTestResult' fields='*' enum-name='HitTestResult' is-transient='false' />
   <map package='android.webkit' class='WebViewClient' prefix='ERROR_' enum-name='ClientError' is-transient='false' />
   <map package='android.webkit' class='WebViewClient' prefix='SAFE_BROWSING_THREAT_' enum-name='SafeBrowsingThreat' is-transient='false' />
-  <map package='android.widget' class='AbsListView' prefix='CHOICE_MODE_' enum-name='ChoiceMode' is-transient='false' />
+  <map package='android.widget' class='ListView' prefix='CHOICE_MODE_' enum-name='ChoiceMode' is-transient='true' />
+  <map package='android.widget' class='AbsListView' prefix='CHOICE_MODE_' fields='CHOICE_MODE_MULTIPLE_MODAL' enum-name='ChoiceMode' is-transient='true' />
   <map package='android.widget' class='AbsListView' prefix='TRANSCRIPT_MODE_' enum-name='TranscriptMode' is-transient='false' />
   <map package='android.widget' class='AdapterView' prefix='ITEM_VIEW_TYPE_' enum-name='ItemViewType' is-transient='false' />
   <map package='android.widget' class='CursorAdapter' prefix='FLAG_' enum-name='CursorAdapterFlags' extra-default='None' is-transient='false' />
