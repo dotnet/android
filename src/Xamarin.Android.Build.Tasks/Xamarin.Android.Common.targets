@@ -2120,6 +2120,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaOptions="$(JavaOptions)"
     InputClassesDirectory="$(IntermediateOutputPath)android\bin\classes"
     InputJars="@(_JavaLibrariesToCompileForAppDx)"
+	ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
     <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
   </Desugar>
