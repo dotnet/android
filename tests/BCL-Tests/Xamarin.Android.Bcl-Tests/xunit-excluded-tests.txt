@@ -1,0 +1,55 @@
+﻿# Lines starting with a hash preceeded by any amount of whitespace are comments
+#
+# Each line should contain a full name of the test case to ignore - not including assembly name
+#
+
+#
+# All of these throw a NotImplementedException
+#
+System.Data.SqlClient.Tests.TcpDefaultForAzureTest.NonAzureNoProtocolConnectionTest
+System.Data.SqlClient.Tests.SqlDataRecordTest.SqlRecordFillTest
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_UnexpectedKeysNotInDictionary_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_IsSynchronized_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_IsSynchronized_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_CopyTo_ObjectArray_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_GetEnumerator_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_SyncRoot_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Contains_NullKey_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_IEnumerable_GetEnumerator_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_ExistingKey_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_GetEnumerator_ModifyCollection_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_IsReadOnly_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_CopyTo_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_NullKey_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_Success(key: 100, value: "Value")
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_Success(key: "Foo", value: 100)
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_Success(key: "Blah", value: "Blah")
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_Success(key: "Foo", value: null)
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_CopyTo_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Remove_NonExistentKey_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_CopyTo_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_CopyTo_ObjectArray_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Add_NullKey_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_ExpectedKeysInDictionary_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Clear_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_CopyTo_StringArray_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Remove_ExistingKey_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_IsFixedSize_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_IsSynchronized_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_GetEnumerator_ModifyCollection_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_SyncRoot_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_CopyTo_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_CopyTo_Int64Array_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_GetEnumerator_ModifyCollection_Throws
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Values_SyncRoot_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_ExistingKey_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_Success(key: "Foo", value: null)
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_Success(key: 100, value: "Value")
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_Success(key: "Blah", value: "Blah")
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Setter_Success(key: "Foo", value: 100)
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Keys_GetEnumerator_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_IDictionary_GetEnumerator_Success
+System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Remove_NullKey_Throws

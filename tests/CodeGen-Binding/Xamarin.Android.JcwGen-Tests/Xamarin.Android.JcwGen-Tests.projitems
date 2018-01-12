@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PackageName>Xamarin.Android.JcwGen_Tests</_PackageName>
+  </PropertyGroup>
+
   <ItemGroup>
     <TestApk Include="$(OutputPath)Xamarin.Android.JcwGen_Tests-Signed.apk">
       <Package>Xamarin.Android.JcwGen_Tests</Package>
-      <InstrumentationType>xamarin.android.jcwgentests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.JcwGen_Tests-times.csv</TimingResultsFilename>
     </TestApk>
+  </ItemGroup>
+
+  <ItemGroup>
+    <TestApkInstrumentation Include="xamarin.android.jcwgentests.TestInstrumentation">
+      <Package>Xamarin.Android.JcwGen_Tests</Package>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
+    </TestApkInstrumentation>
   </ItemGroup>
 </Project>

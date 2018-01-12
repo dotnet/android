@@ -90,8 +90,21 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSdkPlatform { get; set; }
 
+		public string ResourceSymbolsTextFileDirectory { get; set; }
+
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
+
+		struct OutputLine {
+			public string Line;
+			public bool StdError;
+
+			public OutputLine (string line, bool stdError)
+			{
+				Line = line;
+				StdError = stdError;
+			}
+		}
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
@@ -100,7 +113,7 @@ namespace Xamarin.Android.Tasks
 				File.GetLastWriteTime (AndroidComponentResgenFlagFile) > File.GetLastWriteTime (manifestFile);
 		}
 
-		bool RunAapt (string commandLine)
+		bool RunAapt (string commandLine, IList<OutputLine> output)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
@@ -117,13 +130,13 @@ namespace Xamarin.Android.Tasks
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (sender, e) => {
 					if (e.Data != null)
-						LogMessage (e.Data, MessageImportance.Normal);
+						output.Add (new OutputLine (e.Data, stdError: false));
 					else
 						stdout_completed.Set ();
 				};
 				proc.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null)
-						LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
+						output.Add (new OutputLine (e.Data, stdError: true));
 					else
 						stderr_completed.Set ();
 				};
@@ -149,7 +162,18 @@ namespace Xamarin.Android.Tasks
 
 		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
 		{
-			var ret = RunAapt (cmd);
+			var output = new List<OutputLine> ();
+			var ret = RunAapt (cmd, output);
+			var success = !string.IsNullOrEmpty (currentResourceOutputFile)
+				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
+				: ret;
+			foreach (var line in output) {
+				if (line.StdError) {
+					LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success);
+				} else {
+					LogMessage (line.Line, MessageImportance.Normal);
+				}
+			}
 			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";
 				MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
@@ -321,6 +345,9 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitch ("--auto-add-overlay");
 
+			if (!string.IsNullOrEmpty (ResourceSymbolsTextFileDirectory))
+				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFileDirectory);
+
 			var extraArgsExpanded = ExpandString (ExtraArgs);
 			if (extraArgsExpanded != ExtraArgs)
 				Log.LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
@@ -357,7 +384,7 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (ToolPath, string.IsNullOrEmpty (ToolExe) ? ToolName : ToolExe);
 		}
 
-		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
 			if (string.IsNullOrEmpty (singleLine)) 
 				return;
@@ -394,7 +421,11 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			LogError ("APT0000", string.Format("{0} \"{1}\".", singleLine.Trim(), singleLine.Substring(singleLine.LastIndexOfAny(new char[] { '\\', '/' }) + 1)), ToolName);
+			if (!apptResult) {
+				LogError ("APT0000", string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1)), ToolName);
+			} else {
+				LogWarning (singleLine);
+			}
 		}
 	}
 }

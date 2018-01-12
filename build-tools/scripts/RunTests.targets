@@ -19,7 +19,7 @@
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj" />
-    <_ApkTestProject Include="$(_TopDir)\tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.csproj" />
+    <_ApkTestProject Include="$(_TopDir)\tests\BCL-Tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
   </ItemGroup>

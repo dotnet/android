@@ -73,6 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
+			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			if (useManagedParser)
 				proj.SetProperty ("BuildingInsideVisualStudio", "True");
@@ -92,29 +93,30 @@ using System.Runtime.CompilerServices;
 					var items = new List<string> ();
 					string first = null;
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
 						first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
-					var designTimeDesigner = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
-						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should have been created.");
+						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					}
 					WaitFor (1000);
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
 					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
-					Assert.IsTrue (File.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt")), $"Files should have been extracted to {extractedDir}");
+					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
 					if (useManagedParser) {
-						Assert.IsTrue (File.Exists (designTimeDesigner), $"{designTimeDesigner} should not have been deleted.");
+						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
 					items.Clear ();
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
@@ -179,6 +181,23 @@ using System.Runtime.CompilerServices;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void ReportAaptWarningsForBlankLevel ()
+		{
+			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
+			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
+			});
+			using (var b = CreateApkBuilder ("temp/ReportAaptWarningsForBlankLevel")) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1100,6 +1119,34 @@ namespace Lib1 {
 
 
 				}
+			}
+		}
+
+		[Test]
+		public void CheckMaxResWarningIsEmittedAsAWarning()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem.Folder ("Resources\\values-v27\\") {
+					},
+				},
+			};
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+  <string name=""test"" >Test</string>
+</resources>",
+			});
+			using (var builder = CreateApkBuilder (path)) {
+				if (!builder.TargetFrameworkExists (proj.TargetFrameworkVersion)) {
+					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
+				}
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				StringAssertEx.Contains ("warning : max res 26, skipping values-v27", builder.LastBuildOutput, "Build output should contain a warning about 'max res 26, skipping values-v27'");
 			}
 		}
 

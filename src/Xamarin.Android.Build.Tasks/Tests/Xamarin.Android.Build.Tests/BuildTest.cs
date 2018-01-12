@@ -55,6 +55,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckKeystoreIsCreated ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder ("temp/CheckKeystoreIsCreated", false, false)) {
+				var file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "debug.keystore");
+				var p = new string [] {
+					$"_ApkDebugKeyStore={file}",
+				};
+				Assert.IsTrue (b.Build (proj, parameters: p), "Build should have succeeded.");
+				FileAssert.Exists (file, $"{file} should have been created.");
+			}
+		}
+
+		[Test]
 		public void FSharpAppHasAndroidDefine ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -199,6 +215,54 @@ namespace Xamarin.Android.Tests
 				Assert.AreNotEqual (firstAssemblyVersion, secondAssemblyVersion);
 				var actualAcwMap = File.ReadAllText (acwmapPath);
 				Assert.AreEqual (expectedAcwMap, actualAcwMap);
+			}
+		}
+
+		[Test]
+		public void BuildIncrementingClassName ()
+		{
+			int count = 0;
+			var source = new BuildItem ("Compile", "World.cs") {
+				TextContent = () => {
+					int current = ++count;
+					return $"namespace Hello{current} {{ public class World{current} : Java.Lang.Object {{ }} }}";
+				}
+			};
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (source);
+
+			using (var b = CreateApkBuilder ("temp/BuildIncrementingClassName")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
+				FileAssert.Exists (classesZipPath);
+				var expectedBuilder = new StringBuilder ();
+				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
+					foreach (var file in zip) {
+						expectedBuilder.AppendLine (file.FullName);
+					}
+				}
+				var expectedZip = expectedBuilder.ToString ();
+
+				source.Timestamp = null; //Force the file to re-save w/ new Timestamp
+				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+
+				var actualBuilder = new StringBuilder ();
+				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
+					foreach (var file in zip) {
+						actualBuilder.AppendLine (file.FullName);
+					}
+				}
+				var actualZip = actualBuilder.ToString ();
+				Assert.AreNotEqual (expectedZip, actualZip);
+
+				//Build with no changes
+				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
+				FileAssert.Exists (classesZipPath);
+
+				//Clean
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+				FileAssert.DoesNotExist (classesZipPath);
 			}
 		}
 
@@ -2081,6 +2145,33 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
 			Directory.Delete (javaPath, recursive: true);
+			Directory.Delete (AndroidSdkDirectory, recursive: true);
+		}
+
+		[Test]
+		public void IfAndroidJarDoesNotExistThrowXA5207 ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", minApiLevel: 10, maxApiLevel: 26);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.1",
+				UseLatestPlatformSdk = false,
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v8.1")))
+					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
+				builder.ThrowOnBuildFailure = false;
+				builder.Verbosity = LoggerVerbosity.Diagnostic;
+				builder.Target = "AndroidPrepareForBuild";
+				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
+					$"AndroidSdkBuildToolsVersion=24.0.1",
+					$"AndroidSdkDirectory={AndroidSdkDirectory}",
+					$"_AndroidApiLevel=27",
+				}), "Build should have failed");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API Level 27"), "XA5207 should have had a good error message.");
+			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
 

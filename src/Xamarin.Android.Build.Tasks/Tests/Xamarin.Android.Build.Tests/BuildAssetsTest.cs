@@ -13,6 +13,51 @@ namespace Xamarin.Android.Build.Tests
 	public class BuildAssetsTest : BaseTest
 	{
 		[Test]
+		public void CheckPostCompileAssetsIncludedInAPK ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
+						TextContent = () => "PlaceHolder",
+						Encoding = Encoding.ASCII,
+					},
+					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset4.txt") {
+						TextContent = () => "Asset4",
+						Encoding = Encoding.ASCII,
+					},
+				},
+				Imports = {
+					new Import (() => "My.Test.target") {
+						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+	<Target Name=""CustomTarget"" AfterTargets=""Compile"" >
+		<WriteLinesToFile
+			File=""Assets\\asset3.txt""
+			Lines=""Asset3""
+			Overwrite=""true""/>
+	</Target>
+</Project>"
+					},
+				},
+
+			};
+			using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				Assert.IsTrue (b.Build (proj), "{0} should have built successfully.", proj.ProjectName);
+				using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "packaged_resources"))) {
+					var item = "assets/asset3.txt";
+					var data = ZipHelper.ReadFileFromZip (apk, item);
+					Assert.IsNotNull (data, "{0} should be in the apk.", item);
+					var text = Encoding.ASCII.GetString (data);
+					Assert.AreEqual ("Asset3\n", text, $"The Contents of {item} should be \"Asset3\" but was {text}");
+				}
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+
+		}
+
+		[Test]
 		public void CheckAssetsAreIncludedInAPK ()
 		{
 			var projectPath = string.Format ("temp/CheckAssetsAreIncludedInAPK");

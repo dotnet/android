@@ -175,6 +175,10 @@ namespace Xamarin.Android.Tasks
 			// for our generated code not calling super.OnCreate. This however is by design
 			// so we need to ignore this error.
 			{ "MissingSuperCall", new Version (26, 1, 1) },
+			// We need to disble this test since the code in
+			// MonoPackageManager.java causes this warning to be emitted.
+			// This is by design so we can safely ignore this.
+			{ "ObsoleteSdkInt", new Version (26, 1, 1) },
 		};
 
 		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);

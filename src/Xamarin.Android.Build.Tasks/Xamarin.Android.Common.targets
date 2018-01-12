@@ -536,7 +536,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CoreResolveReferencesDependsOn>
 	<ResolveReferencesDependsOn>
 		$(CoreResolveReferencesDependsOn);
-		UpdateAndroidAssets;
 		UpdateAndroidInterfaceProxies;
 		UpdateAndroidResources;
 		$(ApplicationResolveReferencesDependsOn);
@@ -727,7 +726,9 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 
 	<CreateProperty Value="$(_AppSettingsDirectory)debug.keystore">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"/>
+		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"
+			Condition="'$(_ApkDebugKeyStore)' == ''"
+		/>
 	</CreateProperty>
 
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)">
@@ -1398,6 +1399,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		SupportedAbis="$(_BuildTargetAbis)"
+		ResourceSymbolsTextFileDirectory="$(IntermediateOutputPath)"
 		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	
@@ -1904,6 +1906,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
+		UpdateAndroidAssets;
 		$(_AfterCreateBaseApkDependsOnTargets);
 	</_CreateBaseApkDependsOnTargets>
 	<_CreateBaseApkInputs>
@@ -2117,6 +2120,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaOptions="$(JavaOptions)"
     InputClassesDirectory="$(IntermediateOutputPath)android\bin\classes"
     InputJars="@(_JavaLibrariesToCompileForAppDx)"
+    ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
     <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
   </Desugar>
@@ -2454,9 +2458,23 @@ because xbuild doesn't support framework reference assemblies.
 
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
 </Target>
-  
 
-<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
+<Target Name="_CreateAndroidDebugSigningKey"
+		Condition="!Exists ('$(_ApkDebugKeyStore)')"
+		DependsOnTargets="$(_OnResolveMonoAndroidSdks)"
+	>
+	<AndroidCreateDebugKey
+		KeyStore="$(_ApkDebugKeyStore)"
+		KeyAlias="androiddebugkey"
+		KeyPass="android"
+		StorePass="android"
+		ToolPath="$(KeytoolToolPath)"
+		ToolExe="$(KeytoolToolExe)"
+		Command="-genkeypair"
+	 />
+</Target>
+
+<Target Name="_ResolveAndroidSigningKey" DependsOnTargets="$(_OnResolveMonoAndroidSdks);_CreateAndroidDebugSigningKey">
 	<!-- would use a PropertyGroup here but xbuild doesn't support it -->
 	<CreateProperty Value="$(_ApkDebugKeyStore)" Condition="'$(AndroidKeyStore)'!='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyStore"/>
@@ -2483,16 +2501,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(AndroidSigningKeyPass)" Condition="'$(AndroidKeyStore)'=='True'">
 		<Output TaskParameter="Value" PropertyName="_ApkKeyPass"/>
 	</CreateProperty>
-	
-	<AndroidCreateDebugKey
-		KeyStore="$(_ApkKeyStore)"
-		KeyAlias="$(_ApkKeyAlias)"
-		KeyPass="$(_ApkKeyPass)"
-		StorePass="$(_ApkStorePass)"
-		ToolPath="$(KeytoolToolPath)"
-		ToolExe="$(KeytoolToolExe)"
-		Command="-genkeypair"
-		Condition="'$(AndroidKeyStore)'=='' and !Exists ('$(_ApkKeyStore)')" />
 
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" Condition="'$(AndroidKeyStore)'=='True'" />
 	<Touch Files="$(_AndroidDebugKeyStoreFlag)" AlwaysCreate="True" Condition="'$(AndroidKeyStore)'!='True'" />
@@ -2663,6 +2671,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
+	<Delete Files="$(IntermediateOutputPath)R.txt" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
@@ -2677,6 +2686,9 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(_AndroidResgenFlagFile)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(IntermediateOutputPath)R.txt">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(ApkFileSigned)">

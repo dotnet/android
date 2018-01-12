@@ -127,7 +127,7 @@ namespace Xamarin.Android.Tasks
 			if (!ClassesOutputDirectory.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.OrdinalIgnoreCase))
 				ClassesOutputDirectory += Path.DirectorySeparatorChar;
 
-			var classesZip = Path.Combine (ClassesOutputDirectory, "classes.zip");
+			var classesZip = Path.Combine (ClassesOutputDirectory, "..", "classes.zip");
 			var acwLines = File.ReadAllLines (AcwMapFile);
 			using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration))
 				for (int i = 0; i + 3 < acwLines.Length; i += 4)

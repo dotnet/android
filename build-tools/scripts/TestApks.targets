@@ -153,16 +153,22 @@
 
   <Target Name="RunTestApks"
       Condition=" '@(TestApk)' != '' ">
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
+        Condition=" '@(TestApkPermission)' != '' "
+        Arguments="$(_AdbTarget) $(AdbOptions) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+    />
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
     </PropertyGroup>
     <RunInstrumentationTests
-        Condition=" '%(TestApk.InstrumentationType)' != ''"
+        Condition=" '%(TestApkInstrumentation.Identity)' != ''"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
-        Component="%(TestApk.Package)/%(TestApk.InstrumentationType)"
-        NUnit2TestResultsFile="%(TestApk.ResultsPath)"
+        Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
+        NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
         InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
@@ -223,11 +229,11 @@
   <Target Name="RenameApkTestCases"
       Condition=" '@(TestApk)' != '' ">
     <RenameTestCases
-        Condition=" '%(TestApk.ResultsPath)' != '' "
+        Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
         Configuration="$(Configuration)$(TestsAotName)"
         DeleteSourceFiles="True"
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
-        SourceFile="%(TestApk.ResultsPath)"
+        SourceFile="%(TestApkInstrumentation.ResultsPath)"
     />
   </Target>
   <Target Name="RecordApkSizes"

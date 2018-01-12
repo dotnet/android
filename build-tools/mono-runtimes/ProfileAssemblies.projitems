@@ -192,6 +192,10 @@
     <MonoTestAssembly Include="monodroid_corlib_test.dll">
       <SourcePath>corlib</SourcePath>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_corlib_xunit-test.dll">
+      <SourcePath>corlib</SourcePath>
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.CJK_test.dll">
       <SourcePath>I18N/CJK</SourcePath>
     </MonoTestAssembly>
@@ -236,6 +240,10 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Numerics_test.dll">
       <SourcePath>System.Numerics</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Numerics_xunit-test.dll">
+      <SourcePath>System.Numerics</SourcePath>
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_test.dll">
       <SourcePath>System.Runtime.Serialization</SourcePath>

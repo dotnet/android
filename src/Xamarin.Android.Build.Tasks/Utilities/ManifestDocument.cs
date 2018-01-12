@@ -12,6 +12,7 @@ using Android.App;
 using Android.Content;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 using MonoDroid.Utils;
 using Monodroid;
@@ -295,9 +296,26 @@ namespace Xamarin.Android.Tasks {
 						if (fromCode == null)
 							continue;
 
-						if (!t.Methods.Where (m => m.IsConstructor).Cast<MethodDefinition> ().Any (c => !c.HasParameters && c.IsPublic))
-							throw new InvalidOperationException (string.Format ("The type '{0}' needs to have a public default constructor.",
-										t.FullName));
+						IEnumerable <MethodDefinition> constructors = t.Methods.Where (m => m.IsConstructor).Cast<MethodDefinition> ();
+						if (!constructors.Any (c => !c.HasParameters && c.IsPublic)) {
+							string message = $"The type '{t.FullName}' must provide a public default constructor";
+							SequencePoint sourceLocation = FindSource (constructors);
+
+							if (sourceLocation != null && sourceLocation.Document?.Url != null) {
+								log.LogError (
+									subcategory:      String.Empty,
+									errorCode:        "XA4213",
+									helpKeyword:      String.Empty,
+									file:             sourceLocation.Document.Url,
+									lineNumber:       sourceLocation.StartLine,
+									columnNumber:     sourceLocation.StartColumn,
+									endLineNumber:    sourceLocation.EndLine,
+									endColumnNumber:  sourceLocation.EndColumn,
+									message:          message);
+							} else
+								log.LogCodedError ("XA4213", message);
+							continue;
+						}
 						app.Add (fromCode);
 					}
 					foreach (var d in app.Descendants ().Where (a => ((string) a.Attribute (attName)) == compatName)) {
@@ -378,6 +396,27 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			return providerNames;
+
+			SequencePoint FindSource (IEnumerable<MethodDefinition> methods)
+			{
+				if (methods == null)
+					return null;
+
+				SequencePoint ret = null;
+				foreach (MethodDefinition method in methods.Where (m => m != null && m.HasBody && m.DebugInformation != null)) {
+					foreach (Instruction ins in method.Body.Instructions) {
+						SequencePoint seq = method.DebugInformation.GetSequencePoint (ins);
+						if (seq == null)
+							continue;
+
+						if (ret == null || seq.StartLine < ret.StartLine)
+							ret = seq;
+						break;
+					}
+				}
+
+				return ret;
+			}
 		}
 
 		// FIXME: our manifest merger is hacky.

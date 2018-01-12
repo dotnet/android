@@ -24,6 +24,9 @@ namespace Xamarin.Android.Tasks
 		public string DesugarExtraArguments { get; set; }
 
 		[Required]
+		public string ManifestFile { get; set; }
+
+		[Required]
 		public string OutputDirectory { get; set; }
 
 		public string InputClassesDirectory { get; set; }
@@ -39,6 +42,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  JavaPlatformJarPath: ", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  DesugarJarPath: ", DesugarJarPath);
 			Log.LogDebugMessage ("  DesugarExtraArguments: ", DesugarExtraArguments);
+			Log.LogDebugMessage ("  ManifestFile: ", ManifestFile);
 			Log.LogDebugMessage ("  OutputDirectory: ", OutputDirectory);
 			Log.LogDebugMessage ("  InputClassesDirectory: ", InputClassesDirectory);
 			Log.LogDebugTaskItems ("  InputJars: ", InputJars);
@@ -59,6 +63,9 @@ namespace Xamarin.Android.Tasks
 
 			//var android_dir = MonoDroid.MonoDroidSdk.GetAndroidProfileDirectory (TargetFrameworkDirectory);
 
+			var doc = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int)doc.MinSdkVersion;
+
 			var cmd = new CommandLineBuilder ();
 
 			// Add the JavaOptions if they are not null
@@ -75,6 +82,9 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitch ("--bootclasspath_entry ");
 			cmd.AppendFileNameIfNotNull (JavaPlatformJarPath);
+
+			cmd.AppendSwitch ("--min_sdk_version ");
+			cmd.AppendSwitch (minApiVersion.ToString ());
 
 			//cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 

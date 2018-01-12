@@ -195,6 +195,15 @@ namespace Xamarin.ProjectTools
 			return "v" + latest.ToString (2);
 		}
 
+		public bool TargetFrameworkExists (string targetFramework)
+		{
+			var path = Path.Combine (FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFramework);
+			if (!Directory.Exists (path)) {
+				return false;
+			}
+			return true;
+		}
+
 
 		public string Root {
 			get {

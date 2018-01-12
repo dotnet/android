@@ -314,6 +314,11 @@
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoRuntime.Identity)\runtime"
     />
+    <Exec
+        Condition=" '%(MonoTestAssembly.TestType)' == 'xunit' "
+        Command="make -C $(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath) xunit-test-local"
+        WorkingDirectory="$(MonoSourceFullPath)"
+    />
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
         DestinationFiles="@(_BclTestAssemblyDestination)"
