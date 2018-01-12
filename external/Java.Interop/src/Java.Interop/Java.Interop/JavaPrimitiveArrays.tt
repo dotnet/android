@@ -92,11 +92,11 @@ namespace Java.Interop {
 		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IList<<#= info.ManagedType #>> value)
 			: this (CheckLength (value))
 		{
-			CopyFrom (_ToArray (value), 0, 0, value.Count);
+			CopyFrom (ToArray (value), 0, 0, value.Count);
 		}
 
 		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IEnumerable<<#= info.ManagedType #>> value)
-			: this (_ToArray (value))
+			: this (ToArray (value))
 		{
 		}
 
