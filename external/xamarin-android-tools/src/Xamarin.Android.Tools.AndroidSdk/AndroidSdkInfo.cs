@@ -15,9 +15,7 @@ namespace Xamarin.Android.Tools
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
 
-			sdk = OS.IsWindows
-				? (AndroidSdkBase) new AndroidSdkWindows (logger)
-				: (AndroidSdkBase) new AndroidSdkUnix (logger);
+			sdk = CreateSdk (logger);
 			sdk.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
 
 			// shouldn't happen, in that sdk.Initialize() should throw instead
@@ -25,6 +23,13 @@ namespace Xamarin.Android.Tools
 				throw new InvalidOperationException ($"Could not determine Android SDK location. Please provide `{nameof (androidSdkPath)}`.");
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				throw new InvalidOperationException ($"Could not determine Java SDK location. Please provide `{nameof (javaSdkPath)}`.");
+		}
+
+		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger)
+		{
+			return OS.IsWindows
+				? (AndroidSdkBase) new AndroidSdkWindows (logger)
+				: (AndroidSdkBase) new AndroidSdkUnix (logger);
 		}
 
 		public IEnumerable<string> GetBuildToolsPaths (string preferredBuildToolsVersion)
@@ -125,18 +130,39 @@ namespace Xamarin.Android.Tools
 			get { return sdk.NdkHostPlatform; }
 		}
 
-		public void SetPreferredAndroidNdkPath (string path)
+		public static void SetPreferredAndroidNdkPath (string path, Action<TraceLevel, string> logger = null)
 		{
+			logger  = logger ?? DefaultConsoleLogger;
+
+			var sdk = CreateSdk (logger);
 			sdk.SetPreferredAndroidNdkPath(path);
 		}
 
-		public void SetPreferredAndroidSdkPath (string path)
+		static void DefaultConsoleLogger (TraceLevel level, string message)
 		{
+			switch (level) {
+			case TraceLevel.Error:
+				Console.Error.WriteLine (message);
+				break;
+			default:
+				Console.WriteLine (message);
+				break;
+			}
+		}
+
+		public static void SetPreferredAndroidSdkPath (string path, Action<TraceLevel, string> logger = null)
+		{
+			logger  = logger ?? DefaultConsoleLogger;
+
+			var sdk = CreateSdk (logger);
 			sdk.SetPreferredAndroidSdkPath (path);
 		}
 
-		public void SetPreferredJavaSdkPath (string path)
+		public static void SetPreferredJavaSdkPath (string path, Action<TraceLevel, string> logger = null)
 		{
+			logger  = logger ?? DefaultConsoleLogger;
+
+			var sdk = CreateSdk (logger);
 			sdk.SetPreferredJavaSdkPath (path);
 		}
 	}
