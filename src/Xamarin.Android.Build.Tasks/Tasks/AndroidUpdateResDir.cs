@@ -49,6 +49,9 @@ namespace Xamarin.Android.Tasks
 		
 		[Output]
 		public ITaskItem[] IntermediateFiles { get; set; }
+
+		[Output]
+		public ITaskItem [] ResolvedResourceFiles { get; set; }
 		
 		[Output]
 		public string ResourceNameCaseMap { get; set; }
@@ -61,7 +64,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LowercaseFilenames: {0}", LowercaseFilenames);
 			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles);
 
-			IntermediateFiles = new ITaskItem[ResourceFiles.Length];
+			var intermediateFiles = new List<ITaskItem> ();
+			var resolvedFiles = new List<ITaskItem> ();
 			
 			string[] prefixes = Prefixes != null ? Prefixes.Split (';') : null;
 			if (prefixes != null) {
@@ -77,7 +81,9 @@ namespace Xamarin.Android.Tasks
 
 			for (int i = 0; i < ResourceFiles.Length; i++) {
 				var item = ResourceFiles [i];
-				
+
+				if (Directory.Exists (item.ItemSpec))
+					continue;
 				//compute the target path
 				string rel;
 				var logicalName = item.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
@@ -114,11 +120,15 @@ namespace Xamarin.Android.Tasks
 				var newItem = new TaskItem (dest);
 				newItem.SetMetadata ("LogicalName", rel);
 				item.CopyMetadataTo (newItem);
-				IntermediateFiles [i] = newItem;
+				intermediateFiles.Add (newItem);
+				resolvedFiles.Add (item);
 			}
 
+			IntermediateFiles = intermediateFiles.ToArray ();
+			ResolvedResourceFiles = resolvedFiles.ToArray ();
 			ResourceNameCaseMap = nameCaseMap.ToString ().Replace (nameCaseMap.NewLine, ";");
 			Log.LogDebugTaskItems ("  IntermediateFiles:", IntermediateFiles);
+			Log.LogDebugTaskItems ("  ResolvedResourceFiles:", ResolvedResourceFiles);
 			Log.LogDebugTaskItems ("  ResourceNameCaseMap:", ResourceNameCaseMap);
 			return true;
 		}

@@ -69,6 +69,9 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "Asset1",
 						Encoding = Encoding.ASCII,
 					},
+					new AndroidItem.AndroidAsset ("Assets\\subfolder\\") {
+
+					},
 					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset2.txt") {
 						TextContent = () => "Asset2",
 						Encoding = Encoding.ASCII,
@@ -82,6 +85,9 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 						TextContent = () => "Asset3",
 						Encoding = Encoding.ASCII,
+					},
+					new AndroidItem.AndroidAsset ("Assets\\subfolder\\") {
+						
 					},
 					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset4.txt") {
 						TextContent = () => "Asset4",
@@ -97,12 +103,16 @@ namespace Xamarin.Android.Build.Tests
 					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "packaged_resources"))) {
 						foreach (var a in libproj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
+							if (item.EndsWith ("/"))
+								continue;
 							var data = ZipHelper.ReadFileFromZip (apk, item);
 							Assert.IsNotNull (data, "{0} should be in the apk.", item);
 							Assert.AreEqual (a.TextContent (), Encoding.ASCII.GetString (data), "The Contents of {0} should be \"{1}\"", item, a.TextContent ());
 						}
 						foreach (var a in proj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
+							if (item.EndsWith ("/"))
+								continue;
 							var data = ZipHelper.ReadFileFromZip (apk, item);
 							Assert.IsNotNull (data, "{0} should be in the apk.", item);
 							Assert.AreEqual (a.TextContent (), Encoding.ASCII.GetString (data), "The Contents of {0} should be \"{1}\"", item, a.TextContent ());
