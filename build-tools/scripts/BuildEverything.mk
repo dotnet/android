@@ -16,7 +16,7 @@ else
 ZIP_EXTENSION         = zip
 endif
 
-ZIP_OUTPUT_BASENAME   = oss-xamarin.android_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+ZIP_OUTPUT_BASENAME   = xamarin.android-oss_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
 ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 
 
@@ -182,8 +182,8 @@ package-deb: $(ZIP_OUTPUT)
 	rm -fr $(ZIP_OUTPUT_BASENAME)
 	tar xf $(ZIP_OUTPUT)
 	cp -a build-tools/debian-metadata $(ZIP_OUTPUT_BASENAME)/debian
-	sed "s/%CONFIG%/$(CONFIGURATION)/" $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in > $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install && rm -f $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android.install.in
+	sed "s/%CONFIG%/$(CONFIGURATION)/" $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install.in > $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install && rm -f $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install.in
 	cp LICENSE $(ZIP_OUTPUT_BASENAME)/debian/copyright
-	ln -sf $(ZIP_OUTPUT) oss-xamarin.android_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
-	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package oss-xamarin.android --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
+	ln -sf $(ZIP_OUTPUT) xamarin.android-oss_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
+	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
