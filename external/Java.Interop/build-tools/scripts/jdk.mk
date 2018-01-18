@@ -22,10 +22,14 @@
 #       It DOES NOT contain the -I itself; use $(JI_JDK_INCLUDE_PATHS:%=-I%) for that.
 #   $(JI_JVM_PATH):
 #       Location of the Java native library that contains e.g. JNI_CreateJavaVM().
+#   $(JI_JDK_BIN_PATH):
+#       Location of the JDK `/bin` directory, which contains `java/`javac`/etc.
 
 OS           ?= $(shell uname)
 JI_JAVAC_PATH = javac
 JI_JAR_PATH   = jar
+
+JI_JDK_BIN_PATH = $(dir $(shell which java))
 
 
 # Filter on <= JI_MAX_JDK
@@ -75,6 +79,7 @@ _APPLE_JDK6_URL                   = http://adcdownload.apple.com/Developer_Tools
 
 ifneq ($(_DARWIN_JDK_FALLBACK_DIRS),)
 _DARWIN_JDK_ROOT      := $(shell ls -dtr $(_DARWIN_JDK_FALLBACK_DIRS) | $(_VERSION_SORT))
+JI_JDK_BIN_PATH       = $(_DARWIN_JDK_ROOT)/Contents/Home/bin
 JI_JAVAC_PATH         = $(_DARWIN_JDK_ROOT)/Contents/Home/bin/javac
 JI_JAR_PATH           = $(_DARWIN_JDK_ROOT)/Contents/Home/bin/jar
 JI_JDK_INCLUDE_PATHS  = \
@@ -82,7 +87,7 @@ JI_JDK_INCLUDE_PATHS  = \
 	$(_DARWIN_JDK_ROOT)/$(_DARWIN_JDK_JNI_OS_INCLUDE_DIR)
 
 ifeq ($(_MONO_BITNESS),64-bit)
-JI_JVM_PATH	= $(_DARWIN_JDK_ROOT)/Contents/Home/jre/lib/jli/libjli.dylib
+JI_JVM_PATH	= $(shell find $(_DARWIN_JDK_ROOT)/Contents/Home -name libjli.dylib)
 endif # 64-bit
 
 else    # (1) failed; try Xcode.app's copy?
@@ -143,6 +148,7 @@ JI_JVM_PATH                 = $(_LINUX_JAVA_ROOT)/jre/lib/$(_LINUX_JAVA_ARCH_32)
 endif # (2)
 endif # (1)
 
+JI_JDK_BIN_PATH             = $(_LINUX_JAVA_ROOT)/bin
 JI_JAVAC_PATH               = $(_LINUX_JAVA_ROOT)/bin/javac
 JI_JAR_PATH                 = $(_LINUX_JAVA_ROOT)/bin/jar
 
@@ -169,6 +175,7 @@ bin/Build$(CONFIGURATION)/JdkInfo.props: $(JI_JDK_INCLUDE_PATHS) $(JI_JVM_PATH)
 	echo '    </When>' >> "$@"
 	echo '  </Choose>' >> "$@"
 	echo '  <PropertyGroup>' >> "$@"
+	echo "    <JdkBinPath Condition=\" '\$$(JdkBinPath)' == '' \">$(JI_JDK_BIN_PATH)</JdkBinPath>" >> "$@"
 	echo "    <JavaCPath Condition=\" '\$$(JavaCPath)' == '' \">$(JI_JAVAC_PATH)</JavaCPath>" >> "$@"
 	echo "    <JarPath Condition=\" '\$$(JarPath)' == '' \">$(JI_JAR_PATH)</JarPath>" >> "$@"
 	echo '  </PropertyGroup>' >> "$@"
