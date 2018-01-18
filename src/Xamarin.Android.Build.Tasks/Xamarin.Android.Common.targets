@@ -2731,6 +2731,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
 
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
+        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets')"/>
 <!--
 *******************************************
   Extensibility hook that allows VS to
