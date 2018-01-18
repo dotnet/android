@@ -66,14 +66,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Boolean* Elements {
 			get {return (Boolean*) base.Elements;}
+		}
+
+		public ref Boolean this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -83,7 +93,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("Z", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
+	public sealed class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -118,7 +128,7 @@ namespace Java.Interop {
 		public new unsafe JniBooleanArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
-			return elements == null ? null : new JniBooleanArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniBooleanArrayElements (PeerReference, elements, Length*sizeof (Boolean));
 		}
 
 		public override unsafe int IndexOf (Boolean item)
@@ -132,7 +142,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -144,7 +154,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Boolean);
+					e [i] = default (Boolean);
 				}
 			}
 		}
@@ -152,7 +162,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Boolean[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -164,7 +174,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -213,14 +223,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe SByte* Elements {
 			get {return (SByte*) base.Elements;}
+		}
+
+		public ref SByte this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -230,7 +250,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("B", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaSByteArray : JavaPrimitiveArray<SByte> {
+	public sealed class JavaSByteArray : JavaPrimitiveArray<SByte> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -265,7 +285,7 @@ namespace Java.Interop {
 		public new unsafe JniSByteArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
-			return elements == null ? null : new JniSByteArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniSByteArrayElements (PeerReference, elements, Length*sizeof (SByte));
 		}
 
 		public override unsafe int IndexOf (SByte item)
@@ -279,7 +299,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -291,7 +311,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (SByte);
+					e [i] = default (SByte);
 				}
 			}
 		}
@@ -299,7 +319,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, SByte[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -311,7 +331,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -360,14 +380,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Char* Elements {
 			get {return (Char*) base.Elements;}
+		}
+
+		public ref Char this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -377,7 +407,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("C", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaCharArray : JavaPrimitiveArray<Char> {
+	public sealed class JavaCharArray : JavaPrimitiveArray<Char> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -412,7 +442,7 @@ namespace Java.Interop {
 		public new unsafe JniCharArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
-			return elements == null ? null : new JniCharArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniCharArrayElements (PeerReference, elements, Length*sizeof (Char));
 		}
 
 		public override unsafe int IndexOf (Char item)
@@ -426,7 +456,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -438,7 +468,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Char);
+					e [i] = default (Char);
 				}
 			}
 		}
@@ -446,7 +476,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Char[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -458,7 +488,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -507,14 +537,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int16* Elements {
 			get {return (Int16*) base.Elements;}
+		}
+
+		public ref Int16 this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -524,7 +564,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("S", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaInt16Array : JavaPrimitiveArray<Int16> {
+	public sealed class JavaInt16Array : JavaPrimitiveArray<Int16> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -559,7 +599,7 @@ namespace Java.Interop {
 		public new unsafe JniInt16ArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
-			return elements == null ? null : new JniInt16ArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniInt16ArrayElements (PeerReference, elements, Length*sizeof (Int16));
 		}
 
 		public override unsafe int IndexOf (Int16 item)
@@ -573,7 +613,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -585,7 +625,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Int16);
+					e [i] = default (Int16);
 				}
 			}
 		}
@@ -593,7 +633,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Int16[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -605,7 +645,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -654,14 +694,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int32* Elements {
 			get {return (Int32*) base.Elements;}
+		}
+
+		public ref Int32 this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -671,7 +721,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("I", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaInt32Array : JavaPrimitiveArray<Int32> {
+	public sealed class JavaInt32Array : JavaPrimitiveArray<Int32> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -706,7 +756,7 @@ namespace Java.Interop {
 		public new unsafe JniInt32ArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
-			return elements == null ? null : new JniInt32ArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniInt32ArrayElements (PeerReference, elements, Length*sizeof (Int32));
 		}
 
 		public override unsafe int IndexOf (Int32 item)
@@ -720,7 +770,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -732,7 +782,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Int32);
+					e [i] = default (Int32);
 				}
 			}
 		}
@@ -740,7 +790,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Int32[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -752,7 +802,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -801,14 +851,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Int64* Elements {
 			get {return (Int64*) base.Elements;}
+		}
+
+		public ref Int64 this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -818,7 +878,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("J", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaInt64Array : JavaPrimitiveArray<Int64> {
+	public sealed class JavaInt64Array : JavaPrimitiveArray<Int64> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -853,7 +913,7 @@ namespace Java.Interop {
 		public new unsafe JniInt64ArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
-			return elements == null ? null : new JniInt64ArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniInt64ArrayElements (PeerReference, elements, Length*sizeof (Int64));
 		}
 
 		public override unsafe int IndexOf (Int64 item)
@@ -867,7 +927,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -879,7 +939,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Int64);
+					e [i] = default (Int64);
 				}
 			}
 		}
@@ -887,7 +947,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Int64[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -899,7 +959,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -948,14 +1008,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Single* Elements {
 			get {return (Single*) base.Elements;}
+		}
+
+		public ref Single this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -965,7 +1035,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("F", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaSingleArray : JavaPrimitiveArray<Single> {
+	public sealed class JavaSingleArray : JavaPrimitiveArray<Single> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -1000,7 +1070,7 @@ namespace Java.Interop {
 		public new unsafe JniSingleArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
-			return elements == null ? null : new JniSingleArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniSingleArrayElements (PeerReference, elements, Length*sizeof (Single));
 		}
 
 		public override unsafe int IndexOf (Single item)
@@ -1014,7 +1084,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -1026,7 +1096,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Single);
+					e [i] = default (Single);
 				}
 			}
 		}
@@ -1034,7 +1104,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Single[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -1046,7 +1116,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;
@@ -1095,14 +1165,24 @@ namespace Java.Interop {
 
 		JniObjectReference      arrayHandle;
 
-		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements)
-			: base ((IntPtr) elements)
+		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int size)
+			: base ((IntPtr) elements, size)
 		{
 			this.arrayHandle = arrayHandle;
 		}
 
 		public new unsafe Double* Elements {
 			get {return (Double*) base.Elements;}
+		}
+
+		public ref Double this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
 		}
 
 		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
@@ -1112,7 +1192,7 @@ namespace Java.Interop {
 	}
 
 	[JniTypeSignature ("D", ArrayRank=1, IsKeyword=true)]
-	public sealed partial class JavaDoubleArray : JavaPrimitiveArray<Double> {
+	public sealed class JavaDoubleArray : JavaPrimitiveArray<Double> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
 
@@ -1147,7 +1227,7 @@ namespace Java.Interop {
 		public new unsafe JniDoubleArrayElements GetElements ()
 		{
 			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
-			return elements == null ? null : new JniDoubleArrayElements (PeerReference, elements);
+			return elements == null ? null : new JniDoubleArrayElements (PeerReference, elements, Length*sizeof (Double));
 		}
 
 		public override unsafe int IndexOf (Double item)
@@ -1161,7 +1241,7 @@ namespace Java.Interop {
 					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
 
 				for (int i = 0; i < len; ++i) {
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 				}
 			}
@@ -1173,7 +1253,7 @@ namespace Java.Interop {
 			int len = Length;
 			using (var e = GetElements ()) {
 				for (int i = 0; i < len; ++i) {
-					e.Elements [i] = default (Double);
+					e [i] = default (Double);
 				}
 			}
 		}
@@ -1181,7 +1261,7 @@ namespace Java.Interop {
 		public override unsafe void CopyTo (int sourceIndex, Double[] destinationArray, int destinationIndex, int length)
 		{
 			if (destinationArray == null)
-				throw new ArgumentNullException ("destinationArray");
+				throw new ArgumentNullException (nameof (destinationArray));
 			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
 			if (destinationArray.Length == 0)
 				return;
@@ -1193,7 +1273,7 @@ namespace Java.Interop {
 		public override unsafe void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
 		{
 			if (sourceArray == null)
-				throw new ArgumentNullException ("sourceArray");
+				throw new ArgumentNullException (nameof (sourceArray));
 			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
 			if (sourceArray.Length == 0)
 				return;

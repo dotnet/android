@@ -688,3 +688,15 @@ M: System.String <>__AnonType1`2::ToString()
 R: Gendarme.Rules.Exceptions.DoNotThrowInUnexpectedLocationRule
 # throwing ArgumentOutOfRangeException is OK according to the documentation https://msdn.microsoft.com/library/system.collections.ilist.item(v=vs.110).aspx
 M: T Java.Interop.JavaObjectArray`1::get_Item(System.Int32)
+# we want these to check for disposed state, throwing ObjectDisposedException is better and not much different than suggested InvalidOperationException
+M: System.Boolean& Java.Interop.JniBooleanArrayElements::get_Item(System.Int32)
+M: System.SByte& Java.Interop.JniSByteArrayElements::get_Item(System.Int32)
+M: System.Char& Java.Interop.JniCharArrayElements::get_Item(System.Int32)
+M: System.Int16& Java.Interop.JniInt16ArrayElements::get_Item(System.Int32)
+M: System.Int32& Java.Interop.JniInt32ArrayElements::get_Item(System.Int32)
+M: System.Int64& Java.Interop.JniInt64ArrayElements::get_Item(System.Int32)
+M: System.Single& Java.Interop.JniSingleArrayElements::get_Item(System.Int32)
+M: System.Double& Java.Interop.JniDoubleArrayElements::get_Item(System.Int32)
+# we want to check for disposed state here
+M: System.IntPtr Java.Interop.JniArrayElements::get_Elements()
+M: System.Int32 Java.Interop.JniArrayElements::get_Size()

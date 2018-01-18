@@ -439,7 +439,7 @@ namespace Java.Interop.PerformanceTests {
 			using (var e = array.GetElements ()) {
 				int len = array.Length;
 				for (int i = 0; i < len; ++i)
-					if (e.Elements [i] == item)
+					if (e [i] == item)
 						return i;
 			}
 			return -1;
