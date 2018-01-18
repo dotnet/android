@@ -75,8 +75,14 @@ namespace Xamarin.Android.Tools
 
 		public int? GetApiLevelFromFrameworkVersion (string frameworkVersion)
 		{
-			return installedVersions.FirstOrDefault (v => v.FrameworkVersion == frameworkVersion)?.ApiLevel ??
-				KnownVersions.FirstOrDefault (v => v.FrameworkVersion == frameworkVersion)?.ApiLevel;
+			return installedVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.ApiLevel ??
+				KnownVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.ApiLevel;
+		}
+
+		static bool MatchesFrameworkVersion (AndroidVersion version, string frameworkVersion)
+		{
+			return version.FrameworkVersion == frameworkVersion ||
+				version.OSVersion == frameworkVersion;
 		}
 
 		public int? GetApiLevelFromId (string id)
@@ -110,8 +116,8 @@ namespace Xamarin.Android.Tools
 
 		public string GetIdFromFrameworkVersion (string frameworkVersion)
 		{
-			return installedVersions.FirstOrDefault (v => v.FrameworkVersion == frameworkVersion)?.Id ??
-				KnownVersions.FirstOrDefault (v => v.FrameworkVersion == frameworkVersion)?.Id;
+			return installedVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.Id ??
+				KnownVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.Id;
 		}
 
 		public string GetFrameworkVersionFromApiLevel (int apiLevel)

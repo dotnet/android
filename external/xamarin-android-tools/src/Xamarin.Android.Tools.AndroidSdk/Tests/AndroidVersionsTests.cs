@@ -127,13 +127,19 @@ namespace Xamarin.Android.Tools.Tests
 
 			Assert.AreEqual (null,  versions.GetApiLevelFromFrameworkVersion (null));
 			Assert.AreEqual (1,     versions.GetApiLevelFromFrameworkVersion ("v1.0"));
+			Assert.AreEqual (1,     versions.GetApiLevelFromFrameworkVersion ("1.0"));
 			Assert.AreEqual (2,     versions.GetApiLevelFromFrameworkVersion ("v1.1"));
+			Assert.AreEqual (2,     versions.GetApiLevelFromFrameworkVersion ("1.1"));
 			Assert.AreEqual (3,     versions.GetApiLevelFromFrameworkVersion ("v1.2"));
+			Assert.AreEqual (3,     versions.GetApiLevelFromFrameworkVersion ("1.2"));
 			Assert.AreEqual (null,  versions.GetApiLevelFromFrameworkVersion ("v1.3"));
+			Assert.AreEqual (null,  versions.GetApiLevelFromFrameworkVersion ("1.3"));
 			Assert.AreEqual (14,    versions.GetApiLevelFromFrameworkVersion ("v4.0"));
+			Assert.AreEqual (14,    versions.GetApiLevelFromFrameworkVersion ("4.0"));
 
 			// via KnownVersions
 			Assert.AreEqual (4,     versions.GetApiLevelFromFrameworkVersion ("v1.6"));
+			Assert.AreEqual (4,     versions.GetApiLevelFromFrameworkVersion ("1.6"));
 		}
 
 		[Test]
@@ -192,14 +198,20 @@ namespace Xamarin.Android.Tools.Tests
 
 			Assert.AreEqual (null,  versions.GetIdFromFrameworkVersion (null));
 			Assert.AreEqual ("A",   versions.GetIdFromFrameworkVersion ("v1.0"));
+			Assert.AreEqual ("A",   versions.GetIdFromFrameworkVersion ("1.0"));
 			Assert.AreEqual ("B",   versions.GetIdFromFrameworkVersion ("v1.1"));
+			Assert.AreEqual ("B",   versions.GetIdFromFrameworkVersion ("1.1"));
 			Assert.AreEqual ("C",   versions.GetIdFromFrameworkVersion ("v1.2"));
+			Assert.AreEqual ("C",   versions.GetIdFromFrameworkVersion ("1.2"));
 			Assert.AreEqual ("II",  versions.GetIdFromFrameworkVersion ("v4.0"));
+			Assert.AreEqual ("II",  versions.GetIdFromFrameworkVersion ("4.0"));
 
+			Assert.AreEqual (null,  versions.GetIdFromFrameworkVersion ("v0.99"));
 			Assert.AreEqual (null,  versions.GetIdFromFrameworkVersion ("0.99"));
 
 			// via KnownVersions
 			Assert.AreEqual ("10",  versions.GetIdFromFrameworkVersion ("v2.3"));
+			Assert.AreEqual ("10",  versions.GetIdFromFrameworkVersion ("2.3"));
 		}
 
 		[Test]
