@@ -47,6 +47,11 @@
 			<Output TaskParameter="DependsOnNETStandard" PropertyName="_XADependsOnNETStandard" />
 		</GetDependsOnNETStandard>
 
+		<Message Text="------------ DesignTimeFacadeDirectories ---------------" />
+		<Message Text="%(DesignTimeFacadeDirectories.Identity)" />
+		<Message Text="------------ _DesignTimeFacadeAssemblies ---------------" />
+		<Message Text="%(_DesignTimeFacadeAssemblies.Identity)" />
+
 		<ItemGroup Condition="'$(_HasReferenceToSystemRuntime)' == 'true' or ('$(_XANETStandardInbox)' == 'true' and '$(_XADependsOnNETStandard)' == 'true')">
 			<_DesignTimeFacadeAssemblies Include="%(DesignTimeFacadeDirectories.Identity)*.dll"/>
 			<ReferencePath Remove="@(_DesignTimeFacadeAssemblies)"/>
