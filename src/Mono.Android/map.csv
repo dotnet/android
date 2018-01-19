@@ -2967,10 +2967,6 @@
 27,Android.Webkit.SafeBrowsingThreat,Phishing,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_PHISHING,2
 27,Android.Webkit.SafeBrowsingThreat,Unknown,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_UNKNOWN,0
 27,Android.Webkit.SafeBrowsingThreat,UnwantedSoftware,android/webkit/WebViewClient.SAFE_BROWSING_THREAT_UNWANTED_SOFTWARE,3
-15,Android.Widget.ChoiceMode,Multiple,android/widget/AbsListView.CHOICE_MODE_MULTIPLE,2
-15,Android.Widget.ChoiceMode,MultipleModal,android/widget/AbsListView.CHOICE_MODE_MULTIPLE_MODAL,3
-15,Android.Widget.ChoiceMode,None,android/widget/AbsListView.CHOICE_MODE_NONE,0
-15,Android.Widget.ChoiceMode,Single,android/widget/AbsListView.CHOICE_MODE_SINGLE,1
 10,Android.Widget.TranscriptMode,AlwaysScroll,android/widget/AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL,2
 10,Android.Widget.TranscriptMode,Disabled,android/widget/AbsListView.TRANSCRIPT_MODE_DISABLED,0
 10,Android.Widget.TranscriptMode,Normal,android/widget/AbsListView.TRANSCRIPT_MODE_NORMAL,1
@@ -5095,6 +5091,10 @@
 27,Android.Views.FeedbackConstants,VirtualKeyRelease,android/view/HapticFeedbackConstants.VIRTUAL_KEY_RELEASE,8
 10,Android.Views.FeedbackFlags,IgnoreGlobalSetting,android/view/HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,2
 10,Android.Views.FeedbackFlags,IgnoreViewSetting,android/view/HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING,1
+10,Android.Widget.ChoiceMode,Multiple,android/widget/ListView.CHOICE_MODE_MULTIPLE,2
+10,Android.Widget.ChoiceMode,None,android/widget/ListView.CHOICE_MODE_NONE,0
+10,Android.Widget.ChoiceMode,Single,android/widget/ListView.CHOICE_MODE_SINGLE,1
+15,Android.Widget.ChoiceMode,MultipleModal,android/widget/AbsListView.CHOICE_MODE_MULTIPLE_MODAL,3
 24,Android.AccessibilityServices.AccessibilityServiceShowMode,Auto,android/accessibilityservice/AccessibilityService.SHOW_MODE_AUTO,0
 24,Android.AccessibilityServices.AccessibilityServiceShowMode,Hidden,android/accessibilityservice/AccessibilityService.SHOW_MODE_HIDDEN,1
 24,Android.App.Admin.BugReportFailureReason,FailedCompleting,android/app/admin/DeviceAdminReceiver.BUGREPORT_FAILURE_FAILED_COMPLETING,0

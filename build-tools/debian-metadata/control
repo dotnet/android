@@ -1,4 +1,4 @@
-Source: oss-xamarin.android
+Source: xamarin.android-oss
 Section: unknown
 Priority: optional
 Maintainer: Xamarin <hello@xamarin.com>
@@ -8,7 +8,7 @@ Homepage: https://www.xamarin.com/platform
 Vcs-Git: https://github.com/xamarin/xamarin-android.git
 Vcs-Browser: https://github.com/xamarin/xamarin-android
 
-Package: xamarin.android
+Package: xamarin.android-oss
 Architecture: amd64
 Depends: mono-xbuild (>= 5.2), java8-sdk, ${misc:Depends}, ${shlibs:Depends}
 Description: Xamarin.Android libraries and runtime (host component)

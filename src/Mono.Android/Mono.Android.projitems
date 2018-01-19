@@ -137,7 +137,7 @@
       <Name>Oreo</Name>
       <Level>27</Level>
       <Id>27</Id>
-      <Stable>False</Stable>
+      <Stable>True</Stable>
     </AndroidApiInfo>
   </ItemGroup>
 </Project>

@@ -233,6 +233,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
 
 	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">23.0.0</AndroidSdkBuildToolsVersion>
+	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">25.0.5</AndroidSdkPlatformToolsVersion>
+	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">25.2.5</AndroidSdkToolsVersion>
+	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">r14b</AndroidNdkVersion>
 
 	<!-- Obsolete -->
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
@@ -993,14 +996,15 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ComputeAndroidAssetsPaths">
 	<AndroidComputeResPaths ResourceFiles="@(AndroidAsset)" IntermediateDir="$(MonoAndroidAssetsDirIntermediate)" Prefixes="$(MonoAndroidAssetsPrefix)" ProjectDir="$(ProjectDir)">
 		<Output ItemName="_AndroidAssetsDest" TaskParameter="IntermediateFiles" />
+		<Output ItemName="_AndroidResolvedAssets" TaskParameter="ResolvedResourceFiles" />
 	</AndroidComputeResPaths>
 </Target>
 
 <Target Name="_GenerateAndroidAssetsDir"
-	Inputs="$(MSBuildAllProjects);@(AndroidAsset)"
+	Inputs="$(MSBuildAllProjects);@(_AndroidResolvedAssets)"
 	Outputs="@(_AndroidAssetsDest)">
 	<MakeDir Directories="$(MonoAndroidAssetsDirIntermediate)" />
-	<Copy SourceFiles="@(AndroidAsset)" DestinationFiles="@(_AndroidAssetsDest)" SkipUnchangedFiles="true" />
+	<Copy SourceFiles="@(_AndroidResolvedAssets)" DestinationFiles="@(_AndroidAssetsDest)" SkipUnchangedFiles="true" />
 	<RemoveUnknownFiles Files="@(_AndroidAssetsDest)" Directory="$(MonoAndroidAssetsDirIntermediate)" RemoveDirectories="true" />
 	<Touch Files="@(_AndroidAssetsDest)" />
 </Target>
@@ -1131,16 +1135,17 @@ because xbuild doesn't support framework reference assemblies.
 	<AndroidComputeResPaths ResourceFiles="@(AndroidResource)" IntermediateDir="$(MonoAndroidResDirIntermediate)" Prefixes="$(MonoAndroidResourcePrefix)" LowercaseFilenames="True" ProjectDir="$(ProjectDir)">
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output PropertyName="_AndroidResourceNameCaseMap" TaskParameter="ResourceNameCaseMap" />
+		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
 	</AndroidComputeResPaths>
   
 	<MakeDir Directories="$(MonoAndroidResDirIntermediate)" />
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects);@(AndroidResource);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
 	Outputs="@(_AndroidResourceDest)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
-	<CopyAndConvertResources SourceFiles="@(AndroidResource)"
+	<CopyAndConvertResources SourceFiles="@(_AndroidResolvedResources)"
 			DestinationFiles="@(_AndroidResourceDest)"
 			AcwMapFile="$(_AcwMapFile)"
 			CacheFile="$(_AndroidResourcesCacheFile)"
@@ -1149,7 +1154,7 @@ because xbuild doesn't support framework reference assemblies.
 	</CopyAndConvertResources>
 	<Crunch SourceFiles="@(_ModifiedResources)" ToolPath="$(AaptToolPath)" ToolExe="$(AaptToolExe)"
 			Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)" />
-	<Copy SourceFiles="@(AndroidResource)"
+	<Copy SourceFiles="@(_AndroidResolvedResources)"
 		DestinationFiles="@(_AndroidResourceDest)"
 		SkipUnchangedFiles="true"
 		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"

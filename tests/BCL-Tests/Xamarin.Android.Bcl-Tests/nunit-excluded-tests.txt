@@ -4,4 +4,3 @@
 #
 
 # Fails in Release build
-MonoTests.System.Reflection.Emit.SaveTest

@@ -59,8 +59,10 @@ namespace Xamarin.Android.Tools {
 				if (!string.IsNullOrEmpty (directory))
 					Directory.CreateDirectory (directory);
 
-				File.Copy (source, destination, true);
-				return true;
+				if (!Directory.Exists (source)) {
+					File.Copy (source, destination, true);
+					return true;
+				}
 			}/* else
 				Console.WriteLine ("Skipping copying {0}, unchanged", Path.GetFileName (destination));*/
 
