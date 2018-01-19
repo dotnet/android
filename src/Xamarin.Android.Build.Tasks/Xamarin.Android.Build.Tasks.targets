@@ -12,7 +12,7 @@
       _GenerateXACommonProps;
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
-      _BuildMonoSymbolicateScripts;
+      _BuildMonoScripts;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
@@ -167,20 +167,26 @@
     <Touch Files="$(OutputPath)MULTIDEX_JAR_LICENSE;$(OutputPath)MULTIDEX_JAR_LICENSE.txt" />
   </Target>
 
+  <PropertyGroup>
+    <_MonoScriptDestinationDirectory>$(OutputPath)$(HostOS)</_MonoScriptDestinationDirectory>
+    <_MonoScriptSourceDirectory>..\..\tools\scripts</_MonoScriptSourceDirectory>
+  </PropertyGroup>
   <ItemGroup>
-    <_MonoSymbolicateScriptSource       Include="..\..\tools\scripts\mono-symbolicate" />
-    <_MonoSymbolicateScriptDestination  Include="$(OutputPath)$(HostOS)\mono-symbolicate" />
+    <_MonoScript Include="mono-symbolicate" />
+    <_MonoScript Include="illinkanalyzer" />
+    <_MonoScriptSource Include="@(_MonoScript->'$(_MonoScriptSourceDirectory)\%(Identity)')" />
+    <_MonoScriptDestination Include="@(_MonoScript->'$(_MonoScriptDestinationDirectory)\%(Identity)')" />
   </ItemGroup>
 
-  <Target Name="_BuildMonoSymbolicateScripts"
-      Inputs="@(_MonoSymbolicateScriptSource)"
-      Outputs="@(_MonoSymbolicateScriptDestination)"
+  <Target Name="_BuildMonoScripts"
+      Inputs="@(_MonoScriptSource)"
+      Outputs="@(_MonoScriptDestination)"
       Condition=" '$(HostOS)' != 'Windows' ">
-    <MakeDir Directories="$(OutputPath)$(HostOS)" />
+    <MakeDir Directories="$(_MonoScriptDestinationDirectory)" />
     <Copy
-        SourceFiles="@(_MonoSymbolicateScriptSource)"
-        DestinationFiles="@(_MonoSymbolicateScriptDestination)"
+        SourceFiles="@(_MonoScriptSource)"
+        DestinationFiles="@(_MonoScriptDestination)"
     />
-    <Exec Command="chmod +x @(_MonoSymbolicateScriptDestination->'%(Identity)', ' ')" />
+    <Exec Command="chmod +x @(_MonoScriptDestination->'%(Identity)', ' ')" />
   </Target>
 </Project>
