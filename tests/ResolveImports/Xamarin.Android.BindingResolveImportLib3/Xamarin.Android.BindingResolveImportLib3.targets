@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_BuildLibraryProjectZips"
+      Inputs="Jars\lib3.jar"
+      Outputs="Jars\zipped\lib3.zip">
+    <MakeDir Directories="Jars\zipped;Jars\zipped\bin" />
+    <Copy
+        SourceFiles="Jars\lib3.jar;Properties\AndroidManifest.xml"
+        DestinationFiles="Jars\zipped\bin\lib3.jar;Jars\zipped\bin\AndroidManifest.xml"
+    />
+    <Exec
+        Command="&quot;$(JarPath)&quot; cf lib3.zip bin"
+        WorkingDirectory="Jars\zipped"
+    />
+    <Copy
+        SourceFiles="Jars\zipped\lib3.zip"
+        DestinationFiles="Jars\lib3.zip"
+    />
+  </Target>
+  <Target Name="_CleanLibraryProjectZips">
+    <Delete Files="Jars\zipped\lib3.zip" />
+  </Target>
+</Project>
