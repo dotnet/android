@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var item in apiLevels.Where (x => mainapiLevel < x.Value)) {
 				var itemOSVersion = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (item.Value);
 				Log.LogWarning (null, "XA0105", null, ProjectFile, 0, 0, 0, 0,
-					"The $(TargetFrameworkVersion) for {0} (v{1}) is greater than the $(TargetFrameworkVersion) for your project ({2}). " +
+					"The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for your project ({2}). " +
 					"You need to increase the $(TargetFrameworkVersion) for your project.", Path.GetFileName (item.Key.ItemSpec), itemOSVersion, TargetFrameworkVersion);
 			}
 
