@@ -51,6 +51,10 @@
       <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Collections">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Collections.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Core">
       <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
       <Private>False</Private>
