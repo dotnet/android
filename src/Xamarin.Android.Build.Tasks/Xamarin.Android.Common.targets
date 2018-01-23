@@ -662,7 +662,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
 		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
-		<Output TaskParameter="ApkSignerToolExe"          PropertyName="ApkSignerToolExe"           Condition="'$(ApkSignerToolExe)' == ''" />
+		<Output TaskParameter="ApkSignerJar"              PropertyName="ApkSignerJar"               Condition="'$(ApkSignerJar)' == ''" />
 		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
 	</ResolveSdks>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
@@ -2549,13 +2549,14 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(ZipalignToolExe)"
 	/>
 	<AndroidApkSigner Condition=" '$(AndroidUseApkSigner)' == 'true' "
+		ApkSignerJar="$(ApkSignerJar)"
 		ApkToSign="$(ApkFileSigned)"
 		KeyStore="$(_ApkKeyStore)"
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
 		StorePass="$(_ApkStorePass)"
-		ToolPath="$(AndroidSdkBuildToolsBinPath)"
-		ToolExe="$(ApkSignerToolExe)"
+		ToolPath="$(JavacToolPath)"
+		ToolExe="$(JavacToolExe)"
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
 	/>

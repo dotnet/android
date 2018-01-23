@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 		public string LintToolPath { get; set; }
 
 		[Output]
-		public string ApkSignerToolExe { get; set; }
+		public string ApkSignerJar { get; set; }
 
 		[Output]
 		public bool AndroidUseApkSigner { get; set; }
@@ -121,7 +121,7 @@ namespace Xamarin.Android.Tasks
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
 		static readonly string  Android   = IsWindows ? "android.bat" : "android";
 		static readonly string  Lint      = IsWindows ? "lint.bat" : "lint";
-		static readonly string  ApkSigner = "apksigner";
+		static readonly string  ApkSigner = "apksigner.jar";
 
 
 		public override bool Execute ()
@@ -222,8 +222,8 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			ApkSignerToolExe = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsBinPath, ApkSigner);
-			AndroidUseApkSigner = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, ApkSignerToolExe));
+			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
+			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
 			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {
 				ZipAlignPath = new[]{
