@@ -662,6 +662,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
 		<Output TaskParameter="ApkSignerToolExe"          PropertyName="ApkSignerToolExe"           Condition="'$(ApkSignerToolExe)' == ''" />
 		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
+		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
+		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
 	</ResolveSdks>
 	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
@@ -1999,12 +2001,12 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AdjustJavacVersionArguments">
 
 	<AdjustJavacVersionArguments
-		Condition="'$(JavacTargetVersion)'=='' or '$(JavacSourceVersion)' == ''"
-		ToolPath="$(JavacToolPath)"
-	    ToolExe="$(JavacToolExe)"
-	    SkipJavacVersionCheck="$(AndroidSkipJavacVersionCheck)"
-	    EnableProguard="$(AndroidEnableProguard)"
-	    EnableMultiDex="$(AndroidEnableMultiDex)">
+			Condition=" '$(JavacTargetVersion)' == '' or '$(JavacSourceVersion)' == '' "
+			JdkVersion="$(_JdkVersion)"
+			DefaultJdkVersion="$(_DefaultJdkVersion)"
+			SkipJavacVersionCheck="$(AndroidSkipJavacVersionCheck)"
+			EnableProguard="$(AndroidEnableProguard)"
+			EnableMultiDex="$(AndroidEnableMultiDex)">
 	    <Output TaskParameter="TargetVersion" PropertyName="JavacTargetVersion" />
 	    <Output TaskParameter="SourceVersion" PropertyName="JavacSourceVersion" />
 	</AdjustJavacVersionArguments>

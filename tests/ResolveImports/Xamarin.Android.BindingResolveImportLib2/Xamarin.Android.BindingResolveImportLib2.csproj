@@ -51,9 +51,10 @@
   <ItemGroup>
     <None Include="Additions\AboutAdditions.txt" />
     <None Include="Jars\AboutJars.txt" />
-    <None Include="Jars\com\xamarin\android\test\binding\resolveimport\Lib2.java">
+    <TestJarEntry Include="Jars\com\xamarin\android\test\binding\resolveimport\Lib2.java">
       <Link>Jars\com\xamarin\android\test\binding\resolveimport\Lib2.java</Link>
-    </None>
+      <OutputFile>Jars/lib2.jar</OutputFile>
+    </TestJarEntry>
   </ItemGroup>
   <ItemGroup>
     <TransformFile Include="Transforms\EnumFields.xml" />
@@ -61,39 +62,23 @@
     <TransformFile Include="Transforms\Metadata.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
+  <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
+  <Import Project="Xamarin.Android.BindingResolveImportLib2.targets" />
   <ItemGroup>
     <EmbeddedJar Include="Jars\lib2.jar" />
   </ItemGroup>
   <PropertyGroup>
     <BuildDependsOn>
-      BuildJar;
+      BuildTestJarFile;
       BuildNativeLibs;
       $(BuildDependsOn)
     </BuildDependsOn>
     <CleanDependsOn>
-      CleanJar;
+      CleanTestJarFile;
       CleanNativeLibs;
       $(CleanDependsOn)
     </CleanDependsOn>
   </PropertyGroup>
-  <Target Name="BuildJar" Inputs="Jars/com/xamarin/android/test/binding/resolveimport/Lib2.java" Outputs="Jars/lib2.jar">
-    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d Jars -sourcepath Jars Jars/com/xamarin/android/test/binding/resolveimport/Lib2.java" />
-    <Exec WorkingDirectory="Jars" Command="&quot;$(JarPath)&quot; cf lib2.jar com" />
-  </Target>
-  <Target Name="CleanJar">
-    <RemoveDir Directories="Jars/bin" />
-    <Delete Files="Jars/lib2.jar;Jars/com/xamarin/android/test/binding/resolveimport/Lib2.class" />
-  </Target>
-  <Target Name="BuildNativeLibs" DependsOnTargets="AndroidPrepareForBuild" Inputs="jni\timing.c;jni\Android.mk" Outputs="@(EmbeddedNativeLibrary)">
-    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
-    <Exec Command="&quot;$(NdkBuildPath)&quot;" />
-  </Target>
-  <Target Name="CleanNativeLibs">
-    <RemoveDir Directories="obj\local;libs" />
-  </Target>
-  <ItemGroup>
-    <Folder Include="Jars\com\" />
-  </ItemGroup>
   <ItemGroup>
     <EmbeddedNativeLibrary Include="libs\armeabi\libtiming2.so" />
     <EmbeddedNativeLibrary Include="libs\armeabi-v7a\libtiming2.so" />

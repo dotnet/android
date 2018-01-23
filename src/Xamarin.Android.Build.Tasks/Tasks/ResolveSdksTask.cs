@@ -116,6 +116,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public bool AndroidUseApkSigner { get; set; }
 
+		[Output]
+		public string JdkVersion { get; set; }
+
+		[Output]
+		public string MinimumRequiredJdkVersion { get; set; }
+
 		static bool             IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string  ZipAlign  = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
@@ -140,6 +146,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  AndroidSdkBuildToolsVersion: {0}", AndroidSdkBuildToolsVersion);
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
+			Log.LogDebugMessage ($"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
 			Log.LogDebugTaskItems ("  ReferenceAssemblyPaths: ", ReferenceAssemblyPaths);
 			Log.LogDebugMessage ("  TargetFrameworkVersion: {0}", TargetFrameworkVersion);
 			Log.LogDebugMessage ("  UseLatestAndroidPlatformSdk: {0}", UseLatestAndroidPlatformSdk);
@@ -280,6 +287,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  AndroidSdkBuildToolsBinPath: {0}", AndroidSdkBuildToolsBinPath);
 			Log.LogDebugMessage ("  AndroidSdkPath: {0}", AndroidSdkPath);
 			Log.LogDebugMessage ("  JavaSdkPath: {0}", JavaSdkPath);
+			Log.LogDebugMessage ("  JdkVersion: {0}", JdkVersion);
+			Log.LogDebugMessage ("  MinimumRequiredJdkVersion: {0}", MinimumRequiredJdkVersion);
 			Log.LogDebugMessage ("  MonoAndroidBinPath: {0}", MonoAndroidBinPath);
 			Log.LogDebugMessage ("  MonoAndroidToolsPath: {0}", MonoAndroidToolsPath);
 			Log.LogDebugMessage ("  TargetFrameworkVersion: {0}", TargetFrameworkVersion);
@@ -320,7 +329,10 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static readonly Regex javaVersionRegex = new Regex (@"""(?<version>[\d\.]+)_\d+""");
+		// `java -version` will produce values such as:
+		//  java version "9.0.4"
+		//  java version "1.8.0_77"
+		static readonly Regex javaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_\d+)?""");
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
@@ -350,6 +362,8 @@ namespace Xamarin.Android.Tasks
 			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
 
 			Version required = requiredJavaForFrameworkVersion > requiredJavaForBuildTools ? requiredJavaForFrameworkVersion : requiredJavaForBuildTools;
+
+			MinimumRequiredJdkVersion = required.ToString ();
 			
 			var sb = new StringBuilder ();
 			
@@ -372,6 +386,7 @@ namespace Xamarin.Android.Tasks
 			var versionNumberMatch = javaVersionRegex.Match (versionInfo);
 			Version versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+				JdkVersion  = versionNumberMatch.Groups ["version"].Value;
 				Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
 				if (versionNumber < requiredJavaForFrameworkVersion) {
 					Log.LogError ($"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVerison {targetFrameworkVersion}.");
@@ -379,8 +394,11 @@ namespace Xamarin.Android.Tasks
 				if (versionNumber < requiredJavaForBuildTools) {
 					Log.LogError ($"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
 				}
+				if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
+					Log.LogWarning ($"JDK Version `{versionNumber}` is later than latest suppored JDK version `{LatestSupportedJavaVersion}`.");
+				}
 			} else
-				Log.LogWarning ($"Failed to get the Java SDK version. Found {versionInfo} but this does not seem to contain a valid version number.");
+				Log.LogWarning ($"Failed to get the Java SDK version as it does not appear to contain a valid version number. `javac -version` returned: ```{versionInfo}```");
 			return !Log.HasLoggedErrors;
 		}
 
