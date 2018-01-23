@@ -7,10 +7,13 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AdjustJavacVersionArguments : ToolTask
+	public class AdjustJavacVersionArguments : Task
 	{
 		[Required]
-		public string ToolPath { get; set; }
+		public string JdkVersion { get; set; }
+
+		[Required]
+		public string DefaultJdkVersion { get; set; }
 
 		public bool EnableProguard { get; set; }
 
@@ -24,17 +27,17 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string SourceVersion { get; set; }
 
-		protected override string ToolName {
-			get { return OS.IsWindows ? "javac.exe" : "javac"; }
-		}
-
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("ToolExe: {0}", ToolExe);
+			Log.LogDebugMessage ($"{nameof (DefaultJdkVersion)}: {DefaultJdkVersion}");
 			Log.LogDebugMessage ("EnableProguard: {0}", EnableProguard);
 			Log.LogDebugMessage ("EnableMultiDex: {0}", EnableMultiDex);
+			Log.LogDebugMessage ($"{nameof (JdkVersion)}: {JdkVersion}");
 			Log.LogDebugMessage ("SkipJavacVersionCheck: {0}", SkipJavacVersionCheck);
+
+			if (JdkVersion.StartsWith ("9", StringComparison.OrdinalIgnoreCase)) {
+				TargetVersion = SourceVersion = DefaultJdkVersion;
+			}
 
 			if (SkipJavacVersionCheck)
 				return true;
@@ -43,34 +46,13 @@ namespace Xamarin.Android.Tasks
 			if (!EnableProguard && !EnableMultiDex)
 				return true;
 
-			var psi = new ProcessStartInfo (Path.Combine (ToolPath, ToolExe ?? ToolName), "-version") {
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-				};
-			var proc = Process.Start (psi);
-			proc.WaitForExit ();
-			var line = proc.StandardError.ReadLine ();
-			if (!line.StartsWith ("javac "))
-				// otherwise ignore.
-				return true;
-
-			var version = line.Substring (6);
-
-			if (version.StartsWith ("1.8")) {
+			if (JdkVersion.StartsWith ("1.8", StringComparison.OrdinalIgnoreCase)) {
 				TargetVersion = SourceVersion = "1.7";
 				Log.LogDebugMessage ("Javac TargetVersion adjusted to: {0}", TargetVersion);
 				Log.LogDebugMessage ("Javac SourceVersion adjusted to: {0}", SourceVersion);
 			}
 
-			return true;
-		}
-
-		protected override string GenerateFullPathToTool ()
-		{
-			return Path.Combine (ToolPath, ToolExe);
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

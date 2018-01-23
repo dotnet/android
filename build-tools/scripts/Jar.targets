@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_GetJavacVersions"
+      DependsOnTargets="AndroidPrepareForBuild">
+    <PropertyGroup>
+      <_JavacSourceVersion Condition="$(_JdkVersion.StartsWith ('9'))">1.8</_JavacSourceVersion>
+      <_JavacSourceVersion Condition=" '$(_JavacSourceVersion)' == '' ">1.5</_JavacSourceVersion>
+      <_JavacTargetVersion Condition="$(_JdkVersion.StartsWith ('9'))">1.8</_JavacTargetVersion>
+      <_JavacTargetVersion Condition=" '$(_JavacTargetVersion)' == '' ">1.6</_JavacTargetVersion>
+    </PropertyGroup>
+  </Target>
+  <Target Name="BuildTestJarFile"
+      DependsOnTargets="_GetJavacVersions"
+      Inputs="@(TestJarEntry)"
+      Outputs="%(TestJarEntry.OutputFile)">
+    <ItemGroup>
+      <_JavacSource
+          Include="@(TestJarEntry)"
+      />
+    </ItemGroup>
+    <PropertyGroup>
+      <_Javac>"$(JavaCPath)"</_Javac>
+      <_Jar>"$(JarPath)"</_Jar>
+      <_Targets>-source $(_JavacSourceVersion) -target $(_JavacTargetVersion)</_Targets>
+      <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
+      <_AndroidJar>-cp "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
+    </PropertyGroup>
+    <MakeDir Directories="$(_DestDir)" />
+    <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_AndroidJar) @(_JavacSource->'&quot;%(Identity)&quot;', ' ')" />
+    <Exec
+        Command="$(_Jar) cf &quot;classes.jar&quot; ."
+        WorkingDirectory="$(_DestDir)"
+    />
+    <Copy
+        SourceFiles="$(_DestDir)\classes.jar"
+        DestinationFiles="%(TestJarEntry.OutputFile)"
+    />
+    <RemoveDir Directories="$(_DestDir)" />
+  </Target>
+  <Target Name="CleanTestJarFile">
+    <Delete Files="%(TestJarEntry.OutputFile)" />
+  </Target>
+</Project>
