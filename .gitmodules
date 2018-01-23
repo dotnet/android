@@ -13,7 +13,7 @@
 [submodule "external/llvm"]
     path = external/llvm
     url = https://github.com/mono/llvm.git
-    branch = master
+    branch = d15-6
 [submodule "external/mono"]
     path = external/mono
     url = https://github.com/mono/mono.git
