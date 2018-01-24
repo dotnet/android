@@ -95,7 +95,8 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) ; )
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) && ) \
+	true
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
@@ -109,28 +110,31 @@ framework-assemblies:
 			fi; \
 			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android/Mono.Android.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
-				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION}; ) \
+				/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION} || exit 1; ) \
 		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
+			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
 	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); ) \
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
+			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; ) \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)); )
+			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
+			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
 
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
 		$(foreach conf, $(CONFIGURATIONS), \
 			touch bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
 			$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /t:GenerateJavaCallableWrappers /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)); ))
+				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)) || exit 1; ))
 
 _BUNDLE_ZIPS_INCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
@@ -150,7 +154,8 @@ create-vsix:
 			$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
 			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
 			$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
-			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") ; )
+			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") && ) \
+	true
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)

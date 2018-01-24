@@ -105,7 +105,7 @@ prepare-props: prepare-deps
 prepare-msbuild: prepare-props
 ifeq ($(USE_MSBUILD),1)
 	for proj in $(MSBUILD_PREPARE_PROJS); do \
-		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj"; \
+		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj" || exit 1; \
 	done
 endif	# msbuild
 
