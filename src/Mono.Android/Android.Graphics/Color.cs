@@ -218,27 +218,27 @@ namespace Android.Graphics
 
 		public static Color ParseColor (string colorString)
 		{
-			return new Color (_Color.ParseColor (colorString));
+			return new Color (ColorObject.ParseColor (colorString));
 		}
 
 		public static void ColorToHSV (Android.Graphics.Color color, float[] hsv)
 		{
-			_Color.ColorToHSV (color, hsv);
+			ColorObject.ColorToHSV (color, hsv);
 		}
 
 		public static Color HSVToColor (float[] hsv)
 		{
-			return new Color (_Color.HSVToColor (hsv));
+			return new Color (ColorObject.HSVToColor (hsv));
 		}
 
 		public static Color HSVToColor (int alpha, float[] hsv)
 		{
-			return new Color (_Color.HSVToColor (alpha, hsv));
+			return new Color (ColorObject.HSVToColor (alpha, hsv));
 		}
 
 		public static void RGBToHSV (int red, int green, int blue, float[] hsv)
 		{
-			_Color.RGBToHSV (red, green, blue, hsv);
+			ColorObject.RGBToHSV (red, green, blue, hsv);
 		}
 		#endregion
 
