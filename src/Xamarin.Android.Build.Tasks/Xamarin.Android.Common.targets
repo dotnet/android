@@ -2555,8 +2555,8 @@ because xbuild doesn't support framework reference assemblies.
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
 		StorePass="$(_ApkStorePass)"
-		ToolPath="$(JavacToolPath)"
-		ToolExe="$(JavacToolExe)"
+		ToolPath="$(JavaToolPath)"
+		ToolExe="$(JavaToolExe)"
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
 	/>
