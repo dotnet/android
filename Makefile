@@ -82,6 +82,7 @@ linux-prepare::
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
 
 MSBUILD_PREPARE_PROJS = \
+	build-tools/mono-runtimes/mono-runtimes.mdproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
 prepare-external:
