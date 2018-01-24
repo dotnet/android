@@ -2229,6 +2229,52 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void ValidateUseLatestAndroid ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), new ApiInfo[] {
+				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+				new ApiInfo () { Id = 27, Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = false },
+			});
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "_SetLatestTargetFrameworkVersion";
+				Assert.True (builder.Build (proj, parameters: new string [] {
+					$"TargetFrameworkRootPath={referencesPath}",
+				}), string.Format ("Build should have succeeded"));
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("_TargetFrameworkVersion=v8.0"), "_TargetFrameworkVersion should be v8.0");
+
+				proj.TargetFrameworkVersion = "v8.1";
+				Assert.True (builder.Build (proj, parameters: new string [] {
+					$"TargetFrameworkRootPath={referencesPath}",
+				}), string.Format ("Build should have succeeded"));
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("_TargetFrameworkVersion=v8.1"), "_TargetFrameworkVersion should be v8.1");
+
+				proj.UseLatestPlatformSdk = true;
+				proj.TargetFrameworkVersion = "v8.1";
+				Assert.True (builder.Build (proj, parameters: new string [] {
+					$"TargetFrameworkRootPath={referencesPath}",
+				}), string.Format ("Build should have succeeded"));
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("_TargetFrameworkVersion=v8.1"), "_TargetFrameworkVersion should be v8.1");
+
+				proj.UseLatestPlatformSdk = true;
+				proj.TargetFrameworkVersion = "v6.0";
+				Assert.True (builder.Build (proj, parameters: new string [] {
+					$"TargetFrameworkRootPath={referencesPath}",
+				}), string.Format ("Build should have succeeded"));
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("_TargetFrameworkVersion=v8.0"), "_TargetFrameworkVersion should be v8.0");
+
+
+			}
+			Directory.Delete (referencesPath, recursive: true);
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void BuildAMassiveApp()
 		{

@@ -423,12 +423,20 @@ namespace Xamarin.Android.Tasks
 
 			if (UseLatestAndroidPlatformSdk) {
 				AndroidApiLevel         = GetMaxInstalledApiLevel ().ToString ();
-				SupportedApiLevel       = GetMaxSupportedApiLevel (AndroidApiLevel);
+				SupportedApiLevel       = GetMaxStableApiLevel ().ToString ();
 				int maxInstalled, maxSupported = 0;
 				if (int.TryParse (AndroidApiLevel, out maxInstalled) && int.TryParse (SupportedApiLevel, out maxSupported) && maxInstalled > maxSupported) {
 					Log.LogDebugMessage ($"API Level {AndroidApiLevel} is greater than the maximum supported API level of {SupportedApiLevel}. " +
 						"Support for this API will be added in a future release.");
 					AndroidApiLevel = SupportedApiLevel;
+				}
+				if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
+					var userSelected = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
+					// overwrite using user version only if it is 
+					// above the maxStableApi and a valid apiLevel.
+					if (userSelected != null && userSelected > maxSupported && userSelected <= maxInstalled) {
+						SupportedApiLevel = userSelected.ToString ();
+					}
 				}
 				TargetFrameworkVersion  = GetTargetFrameworkVersionFromApiLevel ();
 				return TargetFrameworkVersion != null;
@@ -478,6 +486,11 @@ namespace Xamarin.Android.Tasks
 						"No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.",
 						platformsDir, Path.DirectorySeparatorChar, Android);
 			return maxApiLevel;
+		}
+
+		int GetMaxStableApiLevel ()
+		{
+			return MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
 		}
 
 		string GetMaxSupportedApiLevel (string apiLevel)

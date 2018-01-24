@@ -142,7 +142,6 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
 		{
-
 			string referencesDirectory = Path.Combine (Root, path);
 			Directory.CreateDirectory (referencesDirectory);
 			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0"));
