@@ -1390,15 +1390,9 @@
 
   We will have to enable this line and bring back some sanity.
   -->
-  <!-- attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">AndroidColor</attr -->
+  <attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">AndroidColor</attr>
 
   <!-- API Level 27 -->
-
-  <!-- android.graphics.Color started to be in actual use and that uncovered
-  Xamarin.Android design mistake above! We have to remove WallpaperColors API
-  until Xamarin.Android fixes their bogus API design. -->
-  <remove-node path="/api/package[@name='android.app']/class[@name='WallpaperColors']" />
-
 
   <!-- detected field-property conflicts (e.g. see bug #60069)
 
