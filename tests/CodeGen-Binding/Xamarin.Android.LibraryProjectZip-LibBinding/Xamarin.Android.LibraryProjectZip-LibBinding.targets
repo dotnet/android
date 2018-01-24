@@ -42,9 +42,12 @@
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties"
       Outputs="$(OutputPath)JavaLib.zip">
+    <PropertyGroup>
+      <_Jdk9Modules Condition="$(_JdkVersion.StartsWith ('9'))">JAVA_OPTS="--add-modules java.xml.bind"</_Jdk9Modules>
+    </PropertyGroup>
     <Exec
         EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
-        Command=".\gradlew assembleDebug --stacktrace"
+        Command="$(_Jdk9Modules) .\gradlew assembleDebug --stacktrace --no-daemon"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />

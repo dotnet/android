@@ -62,44 +62,73 @@
     <EmbeddedJar Include="$(OutputPath)xamarin-test.jar" />
   </ItemGroup>
   <ItemGroup>
-    <IgnoreJar Include="$(OutputPath)empty-1.jar">
-      <JarBaseName>empty-1</JarBaseName>
-      <Source>java\com\xamarin\android\Empty1.java</Source>
-    </IgnoreJar>
-    <IgnoreJar Include="$(OutputPath)empty-2.jar">
-      <JarBaseName>empty-2</JarBaseName>
-      <Source>java\com\xamarin\android\Empty2.java</Source>
-    </IgnoreJar>
+    <TestJarEntry Include="java\com\xamarin\android\Empty1.java">
+      <OutputFile>Jars/empty-1.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Empty2.java">
+      <OutputFile>Jars/empty-2.jar</OutputFile>
+    </TestJarEntry>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedReferenceJar Include="@(IgnoreJar)" />
   </ItemGroup>
   <ItemGroup>
-    <XamarinTestJar Include="java\com\xamarin\android\Bxc4288.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Bxc58383.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\CallMethodFromCtor.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\CallNonvirtualBase.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\CallNonvirtualDerived.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\DataHandler.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\DataListener.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Logger.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\MarkerIgnoringBase.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\MyCanvas.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Timing.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Bxc9446.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Bxc7634.java" />
-    <XamarinTestJar Include="java\com\xamarin\android\Bxc37706Throwable.java" />
+    <TestJarEntry Include="java\com\xamarin\android\Bxc4288.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Bxc58383.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\CallMethodFromCtor.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\CallNonvirtualBase.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\CallNonvirtualDerived.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\DataHandler.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\DataListener.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Logger.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\MarkerIgnoringBase.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\MyCanvas.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Timing.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Bxc9446.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Bxc7634.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Bxc37706Throwable.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
+  <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <Import Project="Xamarin.Android.McwGen-Tests.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      BuildJars;
+      BuildTestJarFile;
+      _CopyTestJarFiles;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
   <PropertyGroup>
     <CleanDependsOn>
+      CleanTestJarFile;
       $(CleanDependsOn);
       CleanLocal;
     </CleanDependsOn>

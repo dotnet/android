@@ -6,8 +6,11 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidApkSigner : AndroidToolTask
+	public class AndroidApkSigner : JavaToolTask
 	{
+		[Required]
+		public string ApkSignerJar { get; set; }
+
 		[Required]
 		public string ApkToSign { get; set; }
 
@@ -31,6 +34,7 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("AndroidApkSigner:");
+			Log.LogDebugMessage ("  ApkSignerJar: {0}", ApkSignerJar);
 			Log.LogDebugMessage ("  ApkToSign: {0}", ApkToSign);
 			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
 			Log.LogDebugMessage ("  AdditionalArguments: {0}", AdditionalArguments);
@@ -57,6 +61,8 @@ namespace Xamarin.Android.Tasks
 				maxSdk = manifest.TargetSdkVersion.Value;
 
 			minSdk = Math.Min (minSdk, maxSdk);
+
+			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("--ks-pass pass:", StorePass);
@@ -68,14 +74,9 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (AdditionalArguments))
 				cmd.AppendSwitch (AdditionalArguments);
 
-			cmd.AppendSwitchIfNotNull (" ", ApkToSign);
+			cmd.AppendSwitchIfNotNull (" ", Path.GetFullPath (ApkToSign));
 
 			return cmd.ToString ();
-		}
-
-		protected override string GenerateFullPathToTool ()
-		{
-			return Path.Combine (ToolPath, ToolExe);
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance importance)
@@ -93,9 +94,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		protected override string ToolName {
-			get {
-				return ToolExe;
-			}
+			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
 	}
 }

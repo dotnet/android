@@ -61,18 +61,22 @@
     <InputJar Include="Jars\Cursor.jar" />
   </ItemGroup>
   <ItemGroup>
-    <InputJarSource Include="java\test\bindings\Cursor.java" />
+    <TestJarEntry Include="java\test\bindings\Cursor.java">
+      <OutputFile>Jars/Cursor.jar</OutputFile>
+    </TestJarEntry>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
+  <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <Import Project="Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      BuildJars;
+      BuildTestJarFile;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
   <PropertyGroup>
     <CleanDependsOn>
+      CleanTestJarFile;
       $(CleanDependsOn);
       CleanLocal;
     </CleanDependsOn>
