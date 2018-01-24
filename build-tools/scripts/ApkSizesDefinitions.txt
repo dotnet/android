@@ -1,4 +1,6 @@
 apk=^stat: (?<value>\d+)\s+(?<message>.*)$
+Java.Interop.dll=^\s*(?<value>\d+)\s+.*(?<message>Java.Interop.dll)$
+Java.Interop.dll.so=^\s*(?<value>\d+)\s+.*(?<message>Java.Interop.dll.so)$
 Mono.Android.dll=^\s*(?<value>\d+)\s+.*(?<message>Mono.Android.dll)$
 Mono.Android.dll.so=^\s*(?<value>\d+)\s+.*(?<message>Mono.Android.dll.so)$
 mscorlib.dll=^\s*(?<value>\d+)\s+.*(?<message>mscorlib.dll)$
