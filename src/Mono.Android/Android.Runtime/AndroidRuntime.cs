@@ -66,6 +66,7 @@ namespace Android.Runtime {
 			NewObjectRequired       = !allocNewObjectSupported;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
 			TypeManager             = new AndroidTypeManager ();
+			ValueManager            = new AndroidValueManager ();
 		}
 	}
 
@@ -223,6 +224,44 @@ namespace Android.Runtime {
 				return base.GetSimpleReferences (type);
 			return base.GetSimpleReferences (type)
 				.Concat (Enumerable.Repeat (j, 1));
+		}
+	}
+
+	class AndroidValueManager : JniRuntime.JniValueManager {
+
+		public override void WaitForGCBridgeProcessing ()
+		{
+			JNIEnv.WaitForBridgeProcessing ();
+		}
+
+		public override void AddPeer (IJavaPeerable value)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void RemovePeer (IJavaPeerable value)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override IJavaPeerable PeekPeer (JniObjectReference reference)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void CollectPeers ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void FinalizePeer (IJavaPeerable value)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+		{
+			throw new NotImplementedException ();
 		}
 	}
 }

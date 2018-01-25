@@ -222,8 +222,7 @@ namespace Java.Interop {
 				set = true;
 				return value._JavaCast<T>();
 			}
-			var o = value as JavaObject;
-			if (o != null) {
+			if (value is Android.Runtime.JavaObject o) {
 				set = true;
 				if (o.Instance is T)
 					return (T) o.Instance;
@@ -255,8 +254,7 @@ namespace Java.Interop {
 				return JavaObjectExtensions.JavaCast (value, targetType);
 			}
 
-			var o = value as JavaObject;
-			if (o != null) {
+			if (value is Android.Runtime.JavaObject o) {
 				if (targetType == null)
 					return o.Instance;
 				return Convert.ChangeType (o.Instance, targetType);
@@ -306,7 +304,7 @@ namespace Java.Interop {
 			Func<object, IJavaObject> converter = GetJavaObjectConverter (typeof (T));
 			if (converter != null)
 				return converter (value);
-			return new JavaObject (value);
+			return new Android.Runtime.JavaObject (value);
 		}
 
 		static Dictionary<Type, Func<object, IntPtr>> LocalJniHandleConverters = new Dictionary<Type, Func<object, IntPtr>> {
@@ -352,8 +350,8 @@ namespace Java.Interop {
 				using (var v = new Java.Lang.String (value.ToString ()))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
-			{ typeof (JavaObject), value => {
-				return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (new JavaObject (value));
+			{ typeof (Android.Runtime.JavaObject), value => {
+				return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (new Android.Runtime.JavaObject (value));
 			} },
 		};
 
@@ -364,7 +362,7 @@ namespace Java.Interop {
 				return converter;
 			if (value != null && LocalJniHandleConverters.TryGetValue (value.GetType (), out converter))
 				return converter;
-			return LocalJniHandleConverters [typeof (JavaObject)];
+			return LocalJniHandleConverters [typeof (Android.Runtime.JavaObject)];
 		}
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
