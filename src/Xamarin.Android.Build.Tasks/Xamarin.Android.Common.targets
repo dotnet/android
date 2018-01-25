@@ -1462,12 +1462,11 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidResgenFlagFile="$(_AndroidResgenFlagFile)" />
 </Target>
 
-<Target Name="_AddLibraryProjectsEmbeddedResourceToProject"
+<Target Name="_CreateManagedLibraryResourceArchive"
 		Inputs="@(_AndroidResourceDest);@(AndroidAsset);@(AndroidJavaLibrary);@(AndroidJavaSource);@(_AndroidResourceDestRemovedFiles)"
 		Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
 		Condition=" '$(AndroidApplication)' != 'True' "
 	>
-
 	<!-- embed managed resources into dll as a zip archive, like AndroidLibraryProjectZip -->
 	<CreateManagedLibraryResourceArchive
 		OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
@@ -1480,6 +1479,12 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
 		RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
 	/>
+</Target>
+
+<Target Name="_AddLibraryProjectsEmbeddedResourceToProject"
+		DependsOnTargets="_CreateManagedLibraryResourceArchive"
+		Condition=" '$(AndroidApplication)' != 'True' "
+	>
 	<CreateItem
 		Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
         Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')"
