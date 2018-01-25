@@ -31,6 +31,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -47,6 +48,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Crunch" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateCodeBehindForLayout" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1020,6 +1022,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateAssemblyTempDir>$(IntermediateOutputPath)linkdst\</MonoAndroidIntermediateAssemblyTempDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
+	<MonoAndroidCodeBehindDir>$(MonoAndroidIntermediate)generated</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
@@ -1332,6 +1335,31 @@ because xbuild doesn't support framework reference assemblies.
  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
 
+<Target Name="_FindLayoutsWithCodeBehind">
+  <CalculateLayoutCodeBehind ResourceFiles="@(AndroidResource)" SpecificFile="$(_ExplicitCodeBehindLayout)">
+    <Output ItemName="_LayoutWithCodeBehind" TaskParameter="CodeBehindFiles" />
+  </CalculateLayoutCodeBehind>
+</Target>
+
+<Target Name="_GenerateCodeBehindForLayout"
+    Inputs="@(_LayoutWithCodeBehind)"
+    Outputs="@(_LayoutWithCodeBehind->'$(MonoAndroidCodeBehindDir)\%(CodeBehindFileName)')"
+    DependsOnTargets="_FindLayoutsWithCodeBehind">
+  <MakeDir Directories="$(MonoAndroidCodeBehindDir)" Condition="!Exists('$(MonoAndroidCodeBehindDir)')"/>
+  <GenerateCodeBehindForLayout ResourceFiles="@(_LayoutWithCodeBehind)" MonoAndroidCodeBehindDir="$(MonoAndroidCodeBehindDir)">
+	<Output ItemName="_GeneratedCodeBehindFiles" TaskParameter="GeneratedFiles"/>
+  </GenerateCodeBehindForLayout>
+</Target>
+
+<Target Name="_IncludeLayoutsCodeBehindSources" DependsOnTargets="_GenerateCodeBehindForLayout">
+	<ItemGroup>
+		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
+		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
+	</ItemGroup>
+</Target>
+
 <PropertyGroup>
 	<_UpdateAndroidResgenDependsOnTargets>
 		_CheckForDeletedResourceFile;
@@ -1341,6 +1369,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
 		_GenerateAndroidResourceDir;
+		_IncludeLayoutsCodeBehindSources;
 		_DefineBuildTargetAbis;
 	</_UpdateAndroidResgenDependsOnTargets>
 	<_UpdateAndroidResgenInputs>
