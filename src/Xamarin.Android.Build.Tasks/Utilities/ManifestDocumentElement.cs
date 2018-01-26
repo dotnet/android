@@ -218,7 +218,7 @@ namespace Xamarin.Android.Manifest {
 				values.Add ("navigation");
 			if ((value & ConfigChanges.Orientation) == ConfigChanges.Orientation)
 				values.Add ("orientation");
-			if ((value & ConfigChanges.SmallestScreenSize) == ConfigChanges.ScreenSize)
+			if ((value & ConfigChanges.SmallestScreenSize) == ConfigChanges.SmallestScreenSize)
 				values.Add ("smallestScreenSize");
 			if ((value & ConfigChanges.ScreenLayout) == ConfigChanges.ScreenLayout)
 				values.Add ("screenLayout");
