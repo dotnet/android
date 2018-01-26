@@ -241,13 +241,25 @@
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\profiler\.libs\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
+      <_ProfilerSource
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\profiler\.libs\%(OutputAotProfilerFilename).%(NativeLibraryExtension)')"
+      />
       <_InstallProfilerOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
+      <_InstallProfilerOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputAotProfilerFilename).%(NativeLibraryExtension)')"
+      />
       <_InstallUnstrippedProfilerOutput
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
+      />
+      <_InstallUnstrippedProfilerOutput
+          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputAotProfilerFilename).d.%(NativeLibraryExtension)')"
       />
       <_MonoBtlsSource
           Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
