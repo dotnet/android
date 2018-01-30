@@ -3361,13 +3361,28 @@ set_profile_options (JNIEnv *env)
 	if (!output) {
 		const char* col = strchr (value, ':');
 		char *ovalue;
+		char *extension;
 
-		output = path_combine (override_dirs [0], "profile.mlpd");
+		if ((col && !strncmp (value, "log:", 4)) || !strcmp (value, "log"))
+			extension = monodroid_strdup_printf ("mlpd");
+		else {
+			int len = col ? col - value - 1 : strlen (value);
+			extension = xmalloc (len + 1);
+			strncpy (extension, value, len);
+			extension [len] = 0;
+		}
+
+		char *filename = monodroid_strdup_printf ("profile.%s",
+					extension);
+
+		output = path_combine (override_dirs [0], filename);
 		ovalue = monodroid_strdup_printf ("%s%soutput=%s",
 				value,
 				col == NULL ? ":" : ",",
 				output);
 		free (value);
+		free (extension);
+		free (filename);
 		value = ovalue;
 	}
 
