@@ -437,6 +437,7 @@ namespace Xamarin.Android.Tasks
 		};
 
 		public static readonly string[] ValidProfilers = new[]{
+			"aot",
 			"log",
 		};
 
