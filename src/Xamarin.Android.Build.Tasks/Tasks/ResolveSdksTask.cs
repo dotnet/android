@@ -395,7 +395,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogError ($"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
 				}
 				if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-					Log.LogWarning ($"JDK Version `{versionNumber}` is later than latest suppored JDK version `{LatestSupportedJavaVersion}`.");
+					Log.LogCodedError ("XA0030", $"Building with JDK Version `{versionNumber}` is not supported. Please install JDK version `{LatestSupportedJavaVersion}`. See https://aka.ms/xamarin/jdk9-errors");
 				}
 			} else
 				Log.LogWarning ($"Failed to get the Java SDK version as it does not appear to contain a valid version number. `javac -version` returned: ```{versionInfo}```");
