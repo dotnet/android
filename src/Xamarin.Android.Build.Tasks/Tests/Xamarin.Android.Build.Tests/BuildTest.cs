@@ -2163,8 +2163,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					$"LatestSupportedJavaVersion={latestSupportedJavaVersion}",
 				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
-			//Directory.Delete (javaPath, recursive: true);
-			//Directory.Delete (AndroidSdkDirectory, recursive: true);
+			Directory.Delete (javaPath, recursive: true);
+			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
 
 		[Test]
