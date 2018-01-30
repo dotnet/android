@@ -2054,76 +2054,94 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				/*targetFrameworkVersion*/ "v7.1",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.8.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v7.1",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.7.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ false,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v7.1",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.6.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ false,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v6.0",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.8.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v6.0",
 				/*buildToolsVersion*/ "24.0.0",
 				/*JavaVersion*/ "1.7.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v6.0",
 				/*buildToolsVersion*/ "24.0.0",
 				/*JavaVersion*/ "1.6.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ false,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v5.0",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.8.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v5.0",
 				/*buildToolsVersion*/ "24.0.0",
 				/*JavaVersion*/ "1.7.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v5.0",
 				/*buildToolsVersion*/ "24.0.0",
 				/*JavaVersion*/ "1.6.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v5.0",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.6.0_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ false,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v7.1",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.6.x_101",
+				/*latestSupportedJavaVersion*/ "1.8.0",
 				/*expectedResult*/ true,
+			},
+			new object [] {
+				/*targetFrameworkVersion*/ "v8.1",
+				/*buildToolsVersion*/ "24.0.1",
+				/*JavaVersion*/ "9.0.4",
+				/*latestSupportedJavaVersion*/ "1.8.0",
+				/*expectedResult*/ false,
 			},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource ("validateJavaVersionTestCases")]
-		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, bool expectedResult) 
+		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult) 
 		{
-			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{javaVersion}");
+			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");
 			string javaExe = "java";
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "JavaSDK"), javaVersion, out javaExe);
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildToolsVersion);
@@ -2142,10 +2160,11 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					$"JavaToolExe={javaExe}",
 					$"AndroidSdkBuildToolsVersion={buildToolsVersion}",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
+					$"LatestSupportedJavaVersion={latestSupportedJavaVersion}",
 				}), string.Format ("Build should have {0}", expectedResult ? "succeeded" : "failed"));
 			}
-			Directory.Delete (javaPath, recursive: true);
-			Directory.Delete (AndroidSdkDirectory, recursive: true);
+			//Directory.Delete (javaPath, recursive: true);
+			//Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
 
 		[Test]
