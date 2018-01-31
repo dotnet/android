@@ -12,10 +12,9 @@
       Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
     <MSBuild
         Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
-        Properties="Configuration=XAIntegration$(Configuration)"
     />
     <ItemGroup>
-      <Assembly Include="$(JavaInteropFullPath)\bin\XAIntegration$(Configuration)\*.dll*" />
+      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)\*.dll*" />
     </ItemGroup>
     <Copy
         SourceFiles="@(Assembly)"

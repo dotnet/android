@@ -32,6 +32,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>$(_ArmeabiRuntimeBuild)</DoBuild>
@@ -58,6 +59,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>true</DoBuild>
@@ -87,6 +89,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>$(_Arm64RuntimeBuild)</DoBuild>
@@ -117,6 +120,7 @@
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>$(_X86RuntimeBuild)</DoBuild>
     </_MonoRuntime>
@@ -145,6 +149,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>$(_X8664RuntimeBuild)</DoBuild>
@@ -171,6 +176,7 @@
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
+      <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>True</DoBuild>
@@ -194,6 +200,7 @@
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
+      <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>True</DoBuild>
@@ -215,6 +222,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>dylib</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>True</DoBuild>
@@ -236,6 +244,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
+      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>True</DoBuild>

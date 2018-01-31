@@ -15,6 +15,7 @@ namespace Xamarin.Android.ApiMerge {
 		public static bool HackGenericTypeParameterNames = true;
 
 		XDocument Contents;
+		XAttribute contentsPlatform;
 		Dictionary<string, XElement> Types = new Dictionary<string, XElement>();
 
 		public ApiDescription (string source)
@@ -26,6 +27,8 @@ namespace Xamarin.Android.ApiMerge {
 			foreach (var package in api.Elements ("package")) {
 				AddPackage (package, platform);
 			}
+
+			contentsPlatform = api.Attributes ("platform").LastOrDefault ();
 		}
 
 		XElement GetRoot (XDocument doc, string sourcePath, out string platform)
@@ -52,6 +55,12 @@ namespace Xamarin.Android.ApiMerge {
 			var n = XDocument.Load (apiLocation);
 			string platform = null;
 			XElement api = GetRoot (n, apiLocation, out platform);
+			if (!String.IsNullOrEmpty (platform) && contentsPlatform != null) {
+				// Update the api platform to the current document's value. Documents are
+				// sorted in ascending order, so we'll end up with the latest platform in
+				// the merged document, as it should be.
+				contentsPlatform.SetValue (platform);
+			}
 
 			foreach (var npackage in api.Elements ("package")) {
 				var spackage = GetPackage ((string) npackage.Attribute ("name"));
