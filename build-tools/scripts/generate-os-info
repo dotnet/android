@@ -1,4 +1,6 @@
 #!/bin/bash -e
+SPECTRE_INDIRECT_BRANCH_CHOICE=thunk-inline
+SPECTRE_FUNCTION_RETURN_CHOICE=thunk-inline
 
 function die()
 {
@@ -21,6 +23,45 @@ function die()
 function getMingwSearchDir_Linux()
 {
     echo `$1 -print-search-dirs | grep install: | cut -d ':' -f 2 | tr -d ' '`
+}
+
+function checkCompilerSupportsFlag()
+{
+    local compiler="$1"
+    local flag="$2"
+    local tmp
+    local fail="no"
+
+    tmp="$(mktemp)"
+    $compiler -Werror $flag -c -x c /dev/null -o "$tmp" || fail="yes"
+    rm -f "$tmp"
+
+    if [ "$fail" = "yes" ]; then
+      return 1
+    fi
+
+    return 0
+}
+
+function checkSpectreFlags()
+{
+    local compiler="$1"
+    local opts
+
+    if [ -z "$compiler" -o "$compiler" = "false" ]; then
+      return 0
+    fi
+
+    opts=""
+    if checkCompilerSupportsFlag "$compiler" -mindirect-branch=$SPECTRE_INDIRECT_BRANCH_CHOICE; then
+      opts="-mindirect-branch=$SPECTRE_INDIRECT_BRANCH_CHOICE"
+    fi
+
+    if checkCompilerSupportsFlag "$compiler" -mfunction-return=$SPECTRE_FUNCTION_RETURN_CHOICE; then
+      opts="$opts -mfunction-return=$SPECTRE_FUNCTION_RETURN_CHOICE"
+    fi
+
+    echo "$opts"
 }
 
 function getInfo_Linux()
@@ -100,6 +141,7 @@ function getInfo_Darwin()
 if [ -z "$1" ]; then
     die Usage: generate-os-info OUTPUT_FILE_PATH
 fi
+
 #
 # Generic values available across all Unix systems
 #
@@ -107,6 +149,26 @@ ARCHITECTURE_BITS=`getconf LONG_BIT`
 OS_TYPE="`uname -s`"
 
 eval getInfo_$OS_TYPE || die "Your operating system is not supported."
+
+SPECTRE_FLAGS="$(checkSpectreFlags "$HOST_CC32")"
+if [ -n "$SPECTRE_FLAGS" ]; then
+    HOST_CC32="$HOST_CC32 $SPECTRE_FLAGS"
+fi
+
+SPECTRE_FLAGS="$(checkSpectreFlags "$HOST_CC64")"
+if [ -n "$SPECTRE_FLAGS" ]; then
+    HOST_CC64="$HOST_CC64 $SPECTRE_FLAGS"
+fi
+
+SPECTRE_FLAGS="$(checkSpectreFlags "$HOST_CXX32")"
+if [ -n "$SPECTRE_FLAGS" ]; then
+    HOST_CXX32="$HOST_CXX32 $SPECTRE_FLAGS"
+fi
+
+SPECTRE_FLAGS="$(checkSpectreFlags "$HOST_CXX64")"
+if [ -n "$SPECTRE_FLAGS" ]; then
+    HOST_CXX64="$HOST_CXX64 $SPECTRE_FLAGS"
+fi
 
 cat <<EOF > "$1"
 <?xml version="1.0" encoding="utf-8"?>
