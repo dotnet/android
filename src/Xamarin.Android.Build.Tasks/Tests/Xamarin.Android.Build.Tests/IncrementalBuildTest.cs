@@ -39,11 +39,13 @@ namespace Lib
 			};
 			using (var b = CreateDllBuilder (Path.Combine (testPath, "Lib"))) {
 				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip"),
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
 						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
-				class1Source.Timestamp = null;
+				class1Source.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (1));
 				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip"),
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
 						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
 			}
 		}
