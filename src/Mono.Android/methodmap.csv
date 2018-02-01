@@ -1,3 +1,18 @@
+// You are almost not supposed to directly edit this file.
+// See build-tools/enumification-helpers/README.md there for details.
+//
+// Each line represents: [API], [pkg], [type], [method], [param], [C#enum]
+//	API - Platform Name (API Level) Since
+//	pkg - Java package
+//	type - Java type (dotted for nested types)
+//  method - method name (".ctor" for constructors)
+//  param - method parameter name, or "return" for return value
+//  C#enum - C# enum type (full name, dotted)
+//
+// Lines until around 600 are traditional mappings that were not tracked with
+// enumification-helpers tools. There are some marker comment lines over there,
+// and after those lines they are copy of enumification-helpers/methodmap.ext.csv.
+
 // CharBuffer is sort of special to treat ICharSequence.
 // We need to remap it to CharSequence to have valid overrides.
 0, java.nio, CharBuffer, subSequence, return, Java.Lang.ICharSequence
