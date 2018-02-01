@@ -60,6 +60,17 @@ namespace Xamarin.Android.Build.Tests
 			}
 			return false;
 		}
+
+		public static bool ContainsOccurances (this IEnumerable<string> collection, string expected, int count)
+		{
+			int found = 0;
+			foreach (var line in collection) {
+				if (line.Contains (expected)) {
+					found++;
+				}
+			}
+			return found == count;
+		}
 	}
 }
 
