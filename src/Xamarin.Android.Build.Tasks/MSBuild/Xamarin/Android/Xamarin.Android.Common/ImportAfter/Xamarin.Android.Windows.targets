@@ -14,7 +14,7 @@ Copyright (C) 2014 Xamarin. All rights reserved.
 		<_IsRunningXBuild Condition=" '$(MSBuildRuntimeVersion)' == '' ">true</_IsRunningXBuild>
 	</PropertyGroup>
 
-	<Target Name="_RegisterAndroidFilesWithFileWrites" BeforeTargets="IncrementalClean" Condition=" '$(_IsRunningXBuild)' == 'false' ">  
+	<Target Name="_RegisterAndroidFilesWithFileWrites" BeforeTargets="IncrementalClean" Condition=" '$(_IsRunningXBuild)' != 'true' ">  
 		<CreateItem Include="$(OutDir)*.pdb;$(OutDir)*.dll;$(OutDir)*.dll.mdb;$(MonoAndroidIntermediateAssemblyDir)*.dll.mdb;$(MonoAndroidIntermediateAssemblyDir)*.pdb;$(MonoAndroidLinkerInputDir)*.dll.mdb;$(MonoAndroidLinkerInputDir)*.pdb;$(_AndroidManagedResourceDesignerFile)">  
 			<Output TaskParameter="Include" ItemName="_FilesToRegister" />
 		</CreateItem>
