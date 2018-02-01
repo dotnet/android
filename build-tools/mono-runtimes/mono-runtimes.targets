@@ -348,10 +348,10 @@
     </ItemGroup>
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
-        DestinationFiles="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).%(Extension)')"
+        DestinationFiles="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)')"
     />
     <Touch
-        Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).%(Extension)')"
+        Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)')"
     />
     <ItemGroup>
       <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" />
