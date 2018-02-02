@@ -36,6 +36,7 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 		</PropertyGroup>
 
 		<SetVsMonoAndroidRegistryKey InstallationID="$(VsInstallationID)" VisualStudioVersion="$(VisualStudioVersion)" />
+		<SetMonoAndroidPath MonoAndroidPath="$(VsInstallRoot)\MSBuild\Xamarin\Android" />
 	</Target>
 
 	<Target Name="RemoveSdksCache" Condition="Exists('$(IntermediateOutputPath)sdks.cache')">
@@ -55,6 +56,18 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 		</Task>
 	</UsingTask>
 
+	<UsingTask Condition="'$(VsInstallRoot)' != ''" TaskName="SetMonoAndroidPath" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+		<ParameterGroup>
+			<MonoAndroidPath Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Code Type="Fragment" Language="cs">
+				Environment.SetEnvironmentVariable("MONO_ANDROID_PATH", MonoAndroidPath, EnvironmentVariableTarget.Process);
+				Log.LogMessage(Environment.GetEnvironmentVariable("MONO_ANDROID_PATH"));
+			</Code>
+		</Task>
+	</UsingTask>
+	
 	<PropertyGroup>
 		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
 	</PropertyGroup>
