@@ -12,6 +12,44 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
+
+		[Test]
+		public void LibraryIncrementalBuild () {
+
+			var testPath = Path.Combine ("temp", TestName);
+			var class1Source = new BuildItem.Source ("Class1.cs") {
+				TextContent = () => @"
+using System;
+namespace Lib
+{
+	public class Class1
+	{
+		public Class1 ()
+		{
+		}
+	}
+}"
+			};
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Lib",
+				ProjectGuid = Guid.NewGuid ().ToString (),
+				Sources = {
+					class1Source,
+				},
+			};
+			using (var b = CreateDllBuilder (Path.Combine (testPath, "Lib"))) {
+				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
+						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
+				class1Source.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (1));
+				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
+						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
+			}
+		}
+
 		[Test]
 		public void AllProjectsHaveSameOutputDirectory()
 		{
