@@ -176,7 +176,6 @@
     <MonoProfileAssembly Include="System.Numerics.dll" />
     <MonoProfileAssembly Include="System.Numerics.Vectors.dll" />
     <MonoProfileAssembly Include="System.Reflection.Context.dll" />
-    <MonoProfileAssembly Include="System.Runtime.CompilerServices.Unsafe.dll" />
     <MonoProfileAssembly Include="System.Runtime.Serialization.dll" />
     <MonoProfileAssembly Include="System.Security.dll" />
     <MonoProfileAssembly Include="System.ServiceModel.dll" />
@@ -260,6 +259,11 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
       <SourcePath>System.Xml.Linq</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="System.Runtime.CompilerServices.Unsafe.dll">
+      <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
+      <SourcePath>System.Runtime.CompilerServices.Unsafe</SourcePath>
+      <TestType>reference</TestType>
     </MonoTestAssembly>
     <MonoTestRunner Include="nunitlite.dll" />
   </ItemGroup>
