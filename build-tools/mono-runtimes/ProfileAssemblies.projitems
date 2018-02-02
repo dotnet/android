@@ -176,6 +176,7 @@
     <MonoProfileAssembly Include="System.Numerics.dll" />
     <MonoProfileAssembly Include="System.Numerics.Vectors.dll" />
     <MonoProfileAssembly Include="System.Reflection.Context.dll" />
+    <MonoProfileAssembly Include="System.Runtime.CompilerServices.Unsafe.dll" />
     <MonoProfileAssembly Include="System.Runtime.Serialization.dll" />
     <MonoProfileAssembly Include="System.Security.dll" />
     <MonoProfileAssembly Include="System.ServiceModel.dll" />
