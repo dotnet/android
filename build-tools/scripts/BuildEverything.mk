@@ -10,13 +10,13 @@ GIT_COMMIT        = $(shell LANG=C git log --no-color --first-parent -n1 --prett
 # "0" when commit hash is invalid (e.g. 00000000)
 -num-commits-since-version-change = $(shell LANG=C git log $(-commit-of-last-version-change)..HEAD --oneline 2>/dev/null | wc -l | sed 's/ //g')
 
-ifeq ($(OS),Linux)
+ifeq ($(OS_NAME),Linux)
 ZIP_EXTENSION         = tar.bz2
 else
 ZIP_EXTENSION         = zip
 endif
 
-ZIP_OUTPUT_BASENAME   = xamarin.android-oss_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+ZIP_OUTPUT_BASENAME   = xamarin.android-oss_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
 ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 
 
@@ -54,7 +54,7 @@ ALL_AOT_ABIS = \
 	x86 \
 	x86_64 \
 
-ifneq ($(OS),Linux)
+ifneq ($(OS_NAME),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
@@ -67,7 +67,7 @@ ALL_AOT_ABIS += \
 	win-x86_64
 endif
 
-ifneq ($(OS),Linux)
+ifneq ($(OS_NAME),Linux)
 MONO_OPTIONS += --arch=64
 endif
 
