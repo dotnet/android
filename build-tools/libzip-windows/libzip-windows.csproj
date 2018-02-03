@@ -3,9 +3,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
     <ProjectGuid>{0DE278D6-000F-4001-BB98-187C0AF58A61}</ProjectGuid>
     <ForceBuildProjectFilePath>$(MSBuildThisFileFullPath)</ForceBuildProjectFilePath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -26,7 +26,7 @@
   <Import Project="libzip-windows.targets" />
   <Import Project="..\libzip\libzip.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj" Condition=" '$(HostOS)' != 'Windows' ">
+    <ProjectReference Include="..\android-toolchain\android-toolchain.csproj" Condition=" '$(HostOS)' != 'Windows' ">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

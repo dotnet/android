@@ -56,7 +56,7 @@ invocation may not rebuild those mono native binaries. To explicitly rebuild
 *all* Mono runtimes, you must do two things:
 
 1. Ensure that the timestamp of the HEAD commit in `external/mono` has changed.
-2. Use the `ForceBuild` target on `mono-runtimes.mdproj`.
+2. Use the `ForceBuild` target on `mono-runtimes.csproj`.
 
 Changing the timestamp of the HEAD commit can be done with `git pull`,
 `git commit` or `git commit --amend`. *How* the timestamp changes isn't
@@ -67,7 +67,7 @@ an "intermediate" commit in order to trigger a rebuild.)
 The `ForceBuild` target can be executed as:
 
 	# Build and install all runtimes
-	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.mdproj
+	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.csproj
 
 The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
@@ -90,7 +90,7 @@ For example, to rebuild Mono for armeabi-v7a:
 	$ make -C build-tools/mono-runtimes/obj/Debug/armeabi-v7a
 	
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ xbuild /t:_InstallRuntimes build-tools/mono-runtimes/mono-runtimes.mdproj
+	$ xbuild /t:_InstallRuntimes build-tools/mono-runtimes/mono-runtimes.csproj
 
 # How do I rebuild BCL assemblies?
 
@@ -110,7 +110,7 @@ Once the assemblies have been rebuilt, they can be copied into the appropriate
 Xamarin.Android SDK directory by using the `_InstallBcl` target:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
-	$ xbuild build-tools/mono-runtimes/mono-runtimes.mdproj /t:_InstallBcl
+	$ xbuild build-tools/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
 
 # Update Directory
 

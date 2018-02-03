@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
     <ProjectGuid>{53EE4C57-1C03-405A-8243-8DA539546C88}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,17 +22,17 @@
   </PropertyGroup>
   <Import Project="monodroid.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.mdproj">
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\dependencies\dependencies.mdproj">
+    <ProjectReference Include="..\..\build-tools\dependencies\dependencies.csproj">
       <Project>{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}</Project>
       <Name>dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.mdproj">
+    <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.csproj">
       <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
       <Name>mono-runtimes</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
