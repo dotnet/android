@@ -232,9 +232,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	     Disable generation to avoid "bizarre" build errors. -->
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
 
-	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">23.0.0</AndroidSdkBuildToolsVersion>
-	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">25.0.5</AndroidSdkPlatformToolsVersion>
-	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">25.2.5</AndroidSdkToolsVersion>
+	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">27.0.3</AndroidSdkBuildToolsVersion>
+	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">27.0.1</AndroidSdkPlatformToolsVersion>
+	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
 	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">r14b</AndroidNdkVersion>
 
 	<!-- Obsolete -->
