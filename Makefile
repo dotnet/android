@@ -82,7 +82,7 @@ linux-prepare::
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
 
 MSBUILD_PREPARE_PROJS = \
-	build-tools/mono-runtimes/mono-runtimes.mdproj \
+	build-tools/mono-runtimes/mono-runtimes.csproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
 prepare-external:
@@ -97,7 +97,7 @@ prepare-external:
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.mdproj
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.csproj
 
 prepare-props: prepare-deps
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props

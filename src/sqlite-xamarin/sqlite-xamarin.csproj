@@ -1,27 +1,26 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
-    <ProjectGuid>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</ProjectGuid>
+    <ProjectGuid>{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\proguard\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutputPath>..\..\bin\Debug\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\proguard\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>..\..\bin\Release\</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      ResolveReferences;
-      _BuildProGuard
+      _NdkBuild;
     </BuildDependsOn>
   </PropertyGroup>
-  <Import Project="proguard.targets" />
+  <Import Project="sqlite-xamarin.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.mdproj">
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

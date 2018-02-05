@@ -2,8 +2,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
-    <ProjectGuid>{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}</ProjectGuid>
+    <ProjectGuid>{C9FF2E4D-D927-479E-838B-647C16763F64}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -16,10 +16,10 @@
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
-      _BuildNetstandardFacade
+      _BuildSystemDrawingPrimitivesFacade
     </BuildDependsOn>
   </PropertyGroup>
-  <Import Project="netstandard.targets" />
+  <Import Project="System.Drawing.Primitives.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
       <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>

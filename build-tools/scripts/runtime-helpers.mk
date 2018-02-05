@@ -2,7 +2,7 @@
 # Various helper/shortcut targets
 #
 MONO_RUNTIMES_DIR = build-tools/mono-runtimes
-MONO_RUNTIMES_PROJECT = $(MONO_RUNTIMES_DIR)/mono-runtimes.mdproj
+MONO_RUNTIMES_PROJECT = $(MONO_RUNTIMES_DIR)/mono-runtimes.csproj
 MONO_RUNTIMES_BUILD_DIR = $(MONO_RUNTIMES_DIR)/obj/$(CONFIGURATION)
 
 # $(1) - architecture name

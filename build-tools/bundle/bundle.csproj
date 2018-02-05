@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
     <ProjectGuid>{1640725C-4DB8-4D8D-BC96-74E688A06EEF}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -27,35 +27,35 @@
       <Name>xa-prep-tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.mdproj">
+    <ProjectReference Include="..\android-toolchain\android-toolchain.csproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\mono-runtimes\mono-runtimes.mdproj">
+    <ProjectReference Include="..\mono-runtimes\mono-runtimes.csproj">
       <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
       <Name>mono-runtimes</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\libzip\libzip.mdproj" Condition=" '$(HostOS)' != 'Windows' ">
+    <ProjectReference Include="..\libzip\libzip.csproj" Condition=" '$(HostOS)' != 'Windows' ">
       <Project>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</Project>
       <Name>libzip</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="..\libzip-windows\libzip-windows.mdproj">
+    <ProjectReference Include="..\libzip-windows\libzip-windows.csproj">
       <Project>{0DE278D6-000F-4001-BB98-187C0AF58A61}</Project>
       <Name>libzip-windows</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\System.Drawing.Primitives\System.Drawing.Primitives.mdproj">
+    <ProjectReference Include="..\..\src\System.Drawing.Primitives\System.Drawing.Primitives.csproj">
       <Project>{C9FF2E4D-D927-479E-838B-647C16763F64}</Project>
       <Name>System.Drawing.Primitives</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\netstandard\netstandard.mdproj">
+    <ProjectReference Include="..\..\src\netstandard\netstandard.csproj">
       <Project>{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}</Project>
       <Name>netstandard</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

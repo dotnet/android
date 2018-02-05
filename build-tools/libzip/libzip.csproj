@@ -3,24 +3,27 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
-    <ProjectGuid>{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}</ProjectGuid>
+    <ProjectGuid>{900A0F71-BAAD-417A-8D1A-8D330297CDD0}</ProjectGuid>
+    <ForceBuildProjectFilePath>$(MSBuildThisFileFullPath)</ForceBuildProjectFilePath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <Import Project="dependencies.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>.\</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>.\</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
-      CheckForRequiredPrograms;
+      _BuildUnlessCached
     </BuildDependsOn>
   </PropertyGroup>
+  <Import Project="libzip.props" />
+  <Import Project="libzip.projitems" />
+  <Import Project="libzip.targets" />
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
