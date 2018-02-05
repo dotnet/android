@@ -48,15 +48,15 @@ rebuild-bcl-assembly:
 	$(MSBUILD) /t:_InstallBcl $(MONO_RUNTIMES_PROJECT)
 
 rebuild-all-bcl:
-	@if [ ! -d $(MONO_RUNTIMES_BUILD_DIR)/host-$(OS) ]; then \
-		echo Host Mono runtime for $(OS) has not been built ; \
+	@if [ ! -d $(MONO_RUNTIMES_BUILD_DIR)/host-$(OS_NAME) ]; then \
+		echo Host Mono runtime for $(OS_NAME) has not been built ; \
 		echo or cached Mono runtime was installed ; \
-		echo In order to build host Mono for $(OS) please enable it in Configuration.Override.props file and ; \
+		echo In order to build host Mono for $(OS_NAME) please enable it in Configuration.Override.props file and ; \
 		echo Run the following command: make rebuild-mono ; \
 		echo Unable to rebuild all BCL assemblies ; \
 		exit 1 ; \
 	fi
-	make -C $(MONO_RUNTIMES_BUILD_DIR)/host-$(OS)
+	make -C $(MONO_RUNTIMES_BUILD_DIR)/host-$(OS_NAME)
 
 .PHONY: rebuild-bcl-assembly rebuild-all-bcl
 

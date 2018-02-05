@@ -1,4 +1,4 @@
-export OS            := $(shell uname)
+export OS_NAME       := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
 export NO_SUDO ?= false
 V             ?= 0
@@ -53,11 +53,11 @@ uninstall::
 	rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
-ifeq ($(OS),Linux)
+ifeq ($(OS_NAME),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 prepare:: linux-prepare
-endif # $(OS)=Linux
+endif # $(OS_NAME)=Linux
 
 prepare:: prepare-msbuild
 
