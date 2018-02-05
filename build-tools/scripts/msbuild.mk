@@ -14,7 +14,7 @@
 #   $(CONFIGURATION): Build configuration name, e.g. Debug or Release
 #   $(MSBUILD): The MSBuild program to use.
 #   $(MSBUILD_ARGS): Extra arguments to pass to $(MSBUILD); embedded into $(MSBUILD_FLAGS)
-#   $(OS): Operating system; used to determine `pkg-config` location
+#   $(OS_NAME): Operating system; used to determine `pkg-config` location
 #   $(V): Build verbosity
 #
 # Outputs:
@@ -25,11 +25,11 @@
 MSBUILD       = xbuild
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 
-ifeq ($(OS),Darwin)
+ifeq ($(OS_NAME),Darwin)
 _PKG_CONFIG   = /Library/Frameworks/Mono.framework/Commands/pkg-config
-else    # $(OS) != Darwin
+else    # $(OS_NAME) != Darwin
 _PKG_CONFIG   = pkg-config
-endif   # $(OS) == Darwin
+endif   # $(OS_NAME) == Darwin
 
 ifneq ($(V),0)
 MSBUILD_FLAGS += /v:diag

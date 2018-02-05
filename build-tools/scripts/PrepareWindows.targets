@@ -16,7 +16,7 @@
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\LibZipSharp\libZipSharp.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\xamarin-android-tools\Xamarin.Android.Tools.sln" WorkingDirectory="$(_TopDir)" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.mdproj" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
     <JdkInfo
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"

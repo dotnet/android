@@ -1,4 +1,4 @@
-export OS            := $(shell uname)
+export OS_NAME       := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
 export NO_SUDO ?= false
 V             ?= 0
@@ -53,11 +53,11 @@ uninstall::
 	rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
-ifeq ($(OS),Linux)
+ifeq ($(OS_NAME),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
 export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 prepare:: linux-prepare
-endif # $(OS)=Linux
+endif # $(OS_NAME)=Linux
 
 prepare:: prepare-msbuild
 
@@ -82,7 +82,7 @@ linux-prepare::
 GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
 
 MSBUILD_PREPARE_PROJS = \
-	build-tools/mono-runtimes/mono-runtimes.mdproj \
+	build-tools/mono-runtimes/mono-runtimes.csproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
 prepare-external:
@@ -97,7 +97,7 @@ prepare-external:
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.mdproj
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.csproj
 
 prepare-props: prepare-deps
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props

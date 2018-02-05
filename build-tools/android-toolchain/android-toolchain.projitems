@@ -15,11 +15,11 @@
       <HostOS>Linux</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r26.0.0-linux.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-linux.zip">
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-linux-3952940.zip">
+    <AndroidSdkItem Include="sdk-tools-linux-4333796.zip">
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
@@ -34,11 +34,11 @@
       <HostOS>Darwin</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r26.0.0-darwin.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-darwin.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-darwin-3952940.zip">
+    <AndroidSdkItem Include="sdk-tools-darwin-4333796.zip">
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
@@ -53,11 +53,11 @@
       <HostOS>Windows</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r26.0.0-windows.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-windows.zip">
       <HostOS>Windows</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-windows-3952940.zip">
+    <AndroidSdkItem Include="sdk-tools-windows-4333796.zip">
       <HostOS>Windows</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
