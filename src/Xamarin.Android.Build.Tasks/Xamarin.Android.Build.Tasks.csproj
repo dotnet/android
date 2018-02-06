@@ -501,6 +501,7 @@
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Tasks\JavaDoc.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
@@ -627,9 +628,9 @@
     </ProjectReference>
     <!--
       *Logically* needs to be built first because executing the <Proguard/>
-      task will require the outputs of `proguard.mdproj`.
+      task will require the outputs of `proguard.csproj`.
       -->
-    <ProjectReference Include="..\proguard\proguard.mdproj">
+    <ProjectReference Include="..\proguard\proguard.csproj">
       <Project>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</Project>
       <Name>proguard</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

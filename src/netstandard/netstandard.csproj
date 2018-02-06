@@ -1,0 +1,30 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Facades</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\Facades</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+      _BuildNetstandardFacade
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Import Project="netstandard.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
+      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
+      <Name>Mono.Android</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

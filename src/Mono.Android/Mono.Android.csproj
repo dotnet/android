@@ -336,6 +336,11 @@
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
+      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
+      <Name>api-xml-adjuster</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
       <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>
       <Name>api-merge</Name>
@@ -356,7 +361,7 @@
       <Name>jcw-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.mdproj">
+    <ProjectReference Include="..\..\build-tools\mono-runtimes\mono-runtimes.csproj">
       <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
       <Name>mono-runtimes</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

@@ -1,15 +1,13 @@
-﻿﻿using System;
+﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Build.Tests
-{
+namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Children)]
-	public class BindingBuildTest : BaseTest
-	{
+	public class BindingBuildTest : BaseTest {
 #pragma warning disable 414
 		static object [] ClassParseOptions = new object [] {
 			new object[] {
@@ -386,6 +384,66 @@ namespace Foo {
 			binding.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+			}
+		}
+
+		[Test]
+		public void JavaSourceJar ()
+		{
+#if false // Java source with javadoc
+			package com.xamarin.android.test.msbuildtest;
+
+public class JavaSourceJarTest
+{
+    /**
+     * Returns greeting message.
+     * <p>
+     * Returns "Morning, ", "Hello, " or "Evening, " with name argument,
+     * depending on the argument hour.
+     * </p>
+     * @param name name to display.
+     * @param date time to determine the greeting message.
+     * @return the resulting message.
+     */
+    public String greet (String name, java.util.Date date)
+    {
+        String head = date.getHours () < 11 ? "Morning, " :
+            date.getHours () < 17 ? "Hello, " : "Evening, ";
+        return head + name;
+    }
+}
+#endif
+			var binding = new XamarinAndroidBindingProject () {
+				AndroidClassParser = "class-parse",
+			};
+			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
+			string sourcesJarBase64 = @"UEsDBBQACAgIAC2gP0wAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAAAAFBLAwQUAAgICAAtoD9MAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnEG5oaKmj4FyUm56QqOOcXFeQXJZYA1WvycvFyAQBQSwcIlldz8EQAAABFAAAAUEsDBBQACAgIACqgP0wAAAAAAAAAAAAAAAA7AAAAY29tL3hhbWFyaW4vYW5kcm9pZC90ZXN0L21zYnVpbGR0ZXN0L0phdmFTb3VyY2VKYXJUZXN0LmphdmF1kc1uwjAMx+99CosTsCqI0yRgG4dNQki7jL2Aaaw2Wz4qJ2WbJt59SSgfQsyq4kb+2X/babH6xJqgckZ8o0FWVqCV7JQUgXwQxm87pWX6nxdF2221qqDS6D2scYcb13FFa+T3CBS/BUSbjMfZwxjeKHRsPdRMFJStwZD3UU8cgUX7eM0OXh3byJYwiN+KtHbRg2MYvOyoj8CXCg1YNATIdWfIhvJYSFJLViY1ZyE0ZwKa2O1ZenLWXrbIaA718hEcSOVbjT/iipEYYlj1DAVioyxlnX+nXHKeLUNMvtO3qEn2/YY3gROSK8Kwv6XOSviIaxddUFo8p1ZSP6Oceth+sp5vCCU8ZELUFFZxeg/DESxgOoWny0XD7JSb7FbGfco4vcbs8jHmp+R+zix8l/s9xPbFvvgDUEsHCDlC8jY2AQAAawIAAFBLAQIUABQACAgIAC2gP0wAAAAAAgAAAAAAAAAJAAQAAAAAAAAAAAAAAAAAAABNRVRBLUlORi/+ygAAUEsBAhQAFAAICAgALaA/TJZXc/BEAAAARQAAABQAAAAAAAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAKqA/TDlC8jY2AQAAawIAADsAAAAAAAAAAAAAAAAAwwAAAGNvbS94YW1hcmluL2FuZHJvaWQvdGVzdC9tc2J1aWxkdGVzdC9KYXZhU291cmNlSmFyVGVzdC5qYXZhUEsFBgAAAAADAAMA5gAAAGICAAAAAA==";
+			string classesjarBase64 = @"
+UEsDBBQACAgIAO+EP0wAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAAAAFBLAwQUAAgIC
+ADvhD9MAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS7RDUstKs7Mz7NSMNQz4OVyLkpNLE
+lN0XWqBAlY6BnEG5oaKmj4FyUm56QqOOcXFeQXJZYA1WvycvFyAQBQSwcIlldz8EQAAABFAAAAUEsDBBQACAgIALOEP0w
+AAAAAAAAAAAAAAAA8AAAAY29tL3hhbWFyaW4vYW5kcm9pZC90ZXN0L21zYnVpbGR0ZXN0L0phdmFTb3VyY2VKYXJUZXN0
+LmNsYXNzbVHZSsNAFD1j2yStaW3rvlvX1i0g4osiuKLi8lARfHPaDCWaJiWdit/ji6/6UkHBD/CjxDupIloDucuZO+fMn
+Hn/eHkDsIpCAp3oS6AfAwYGDQwZGNYxkoCmUA2jKozpGNcxwaBtOJ4jNxki+cIFQ3THtwVD17HjidNGtSSCc15yCYlVAi
+Ekw1r++JrfcsvlXsUqysDxKustpCEd19rlUqwX2kcYkkXJyzcnvBYS6sgxJIp+IyiLfUcJ9B3RnhZwxINzUZfLisWEiaS
+OSRNTmGaIn/iBR4SLdHT9QLiur6r43q34Rvv/am83HNcWgYkZzJqYQ54uUfar1h2vclq3uGcHvmNbkiStar2kxsO67UAM
+6R/ys9K1KP+GWnoMqd9+MBgVIQ+IqR7afEiu81pNeDbD0j92ttv3dQVy0ZD+t0pP/h+fkYN6fvV1gCnvKKaoG6XMKMfmn
+8GeqKBHpqiFYIRiGpmv0SvaGqW8sthER7rzHkY28oDusMuoLvqAWDZ2+grt8hn6UhPGAv1NxB9DWcWbIk4QYxeyGEc3Rc
+BAJJXc0qmjw4eTvZ9QSwcINzBZxakBAAC1AgAAUEsBAhQAFAAICAgA74Q/TAAAAAACAAAAAAAAAAkABAAAAAAAAAAAAAA
+AAAAAAE1FVEEtSU5GL/7KAABQSwECFAAUAAgICADvhD9Mlldz8EQAAABFAAAAFAAAAAAAAAAAAAAAAAA9AAAATUVUQS1J
+TkYvTUFOSUZFU1QuTUZQSwECFAAUAAgICACzhD9MNzBZxakBAAC1AgAAPAAAAAAAAAAAAAAAAADDAAAAY29tL3hhbWFya
+W4vYW5kcm9pZC90ZXN0L21zYnVpbGR0ZXN0L0phdmFTb3VyY2VKYXJUZXN0LmNsYXNzUEsFBgAAAAADAAMA5wAAANYCAA
+AAAA==";
+			using (var bindingBuilder = CreateDllBuilder ("temp/JavaSourceJar", false, false)) {
+				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
+					BinaryContent = () => Convert.FromBase64String (classesjarBase64)
+				});
+				binding.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasourcejartest-sources.jar") {
+					BinaryContent = () => Convert.FromBase64String (sourcesJarBase64)
+				});
+				bindingBuilder.Build (binding);
+				string xml = Path.Combine (bindingBuilder.Output.GetIntermediaryAsText ("docs/Com.Xamarin.Android.Test.Msbuildtest/JavaSourceJarTest.xml"));
+				Assert.IsTrue (xml.Contains ("<param name=\"name\"> - name to display.</param>"), "missing doc");
 			}
 		}
 	}

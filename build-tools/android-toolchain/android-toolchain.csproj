@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
     <ProjectGuid>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="android-toolchain.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -31,7 +31,7 @@
       <Name>xa-prep-tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\dependencies\dependencies.mdproj">
+    <ProjectReference Include="..\dependencies\dependencies.csproj">
       <Project>{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}</Project>
       <Name>dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

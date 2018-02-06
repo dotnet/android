@@ -27,7 +27,6 @@ Makefile	eol=lf
 *.vcproj	eol=crlf
 *.vcxproj	eol=crlf
 *.csproj	eol=crlf
-*.mdproj	eol=crlf
 *.shproj	eol=crlf
 *.projitems	eol=crlf
 *.wixproj	eol=crlf
