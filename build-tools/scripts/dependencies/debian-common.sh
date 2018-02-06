@@ -14,6 +14,7 @@ DEBIAN_COMMON_DEPS="autoconf
 	openjdk-8-jdk
 	unzip
 	vim-common
+	sqlite3
 	"
 
 if [ "$OS_ARCH" = "x86_64" ]; then
