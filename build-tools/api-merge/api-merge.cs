@@ -32,7 +32,7 @@ namespace Xamarin.Android.ApiMerge {
 				  v => glob = v },
 				{ "last-description=",
 				  "Last {DESCRIPTION} to process. Any later descriptions are ignored.",
-				  v => lastDescription = v },
+				  v => lastDescription = NormalizePath (v) },
 				{ "version",
 				  "Output version information and exit.",
 				  v => show_version = v != null },
@@ -69,12 +69,20 @@ namespace Xamarin.Android.ApiMerge {
 			SortSources (sources, glob);
 			ApiDescription context = new ApiDescription (sources [0]);
 			for (int i = 1; i < sources.Count; i++) {
-				if (sources [i-1] == lastDescription)
+				if (NormalizePath (sources [i-1]) == lastDescription)
 					break;
 				context.Merge (sources [i]);
 			}
 			context.Save (dest);
 			return 0;
+		}
+
+		static string NormalizePath (string path)
+		{
+			if (String.IsNullOrEmpty (path))
+				return path;
+
+			return Path.GetFullPath (path);
 		}
 
 		static void SortSources (List<string> sources, string globPattern)
