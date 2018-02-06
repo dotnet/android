@@ -24,6 +24,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAdditionalResourcesFromAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadAdditionalResourcesFromAssemblyCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -78,6 +79,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <AvailableItemName Include="LibraryProjectZip" />
     <AvailableItemName Include="JavaDocIndex" />
     <AvailableItemName Include="JavaDocJar" />
+    <AvailableItemName Include="JavaSourceJar" />
   </ItemGroup>
 
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
@@ -238,6 +240,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
         Condition="!HasTrailingSlash('$(_JavaSdkDirectory)')" />
     </CreateProperty>
 
+	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+		<Output TaskParameter="Value" PropertyName="JavaToolPath"
+				Condition="'$(JavaToolPath)' == ''"
+		/>
+	</CreateProperty>
+
     <Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
     <Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
     <Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
@@ -342,6 +350,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		;_ExtractLibraryProjectImports
 		;_GetLibraryImports
 		;_ExtractJavaDocJars
+		;_GenerateJavaDocFromSourceJars
 	</ExportJarToXmlDependsOnTargets>
 </PropertyGroup>
 
@@ -359,6 +368,27 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		
   </Target>
 
+  <Target Name="_GenerateJavaDocFromSourceJars"
+		Inputs="@(JavaSourceJar)"
+		Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')"
+		>
+		
+    <Unzip Sources="@(JavaSourceJar)" DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')" />
+	
+    <JavaDoc
+        ToolPath="$(JavaToolPath)"
+        SourceDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
+        DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
+        />
+	
+    <Touch Files="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName).stamp')" AlwaysCreate="True" />
+		
+    <CreateItem Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')">
+      <Output TaskParameter="Include" ItemName="JavaDocIndex" />
+    </CreateItem>
+		
+  </Target>
+
   <Target Name="ExportJarToXml"
           DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
           Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects);@(_AdditionalJavaLibraryReferences)"
@@ -369,7 +399,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </CreateItem>
 
     <ItemGroup>
-      <_AndroidDocumentationPath Include="@(JavaDocIndex)" />
+      <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
       <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
       <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
       <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
@@ -553,6 +583,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" Condition="Exists ('$(IntermediateOutputPath)docs')" />
 
     <RemoveDirFixed Directories="$(IntermediateOutputPath)javadocs" Condition="Exists ('$(IntermediateOutputPath)javadocs')" />
+
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)javasources" Condition="Exists ('$(IntermediateOutputPath)javasources')" />
   </Target>
   
   <Target Name="CleanLibraryProjectIntermediaries">
