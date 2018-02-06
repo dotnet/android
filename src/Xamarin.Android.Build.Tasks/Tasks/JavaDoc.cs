@@ -15,7 +15,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public string [] SourceDirectories { get; set; }
 
-		[Output]
 		public string [] DestinationDirectories { get; set; }
 
 		protected override string ToolName {
