@@ -626,7 +626,7 @@ namespace MonoDroid.Generation {
 			if (s == "System.Void")
 				return "void";
 			if (s.StartsWith ("params "))
-				return "params " + GetOutputName (s.Substring (6));
+				return "params " + GetOutputName (s.Substring ("params ".Length));
 			if (s.StartsWith ("global::"))
 				Report.Error (Report.ErrorCodeGenerator + 0, null,  "Unexpected \"global::\" specification. This error happens if it is specified in the Metadata API fixup for example.");
 			if (!UseGlobal)

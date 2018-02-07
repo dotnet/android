@@ -349,6 +349,7 @@ namespace MonoDroid.Generation {
 			string args_name = GetArgsName (m);
 			if (m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) {
 				if (!m.IsSimpleEventHandler || m.IsEventHandlerWithHandledProperty) {
+					sw.WriteLine ("{0}// event args for {1}.{2}", indent, this.JavaName, m.JavaName);
 					sw.WriteLine ("{0}public partial class {1} : global::System.EventArgs {{", indent, args_name);
 					sw.WriteLine ();
 					var signature = m.Parameters.GetSignatureDropSender (opt);
@@ -375,9 +376,10 @@ namespace MonoDroid.Generation {
 						if (p.IsSender)
 							continue;
 						sw.WriteLine ();
-						sw.WriteLine ("{0}\t{1} {2};", indent, opt.GetOutputName (p.Type), opt.GetSafeIdentifier (p.Name));
+						var safeTypeName = p.Type.StartsWith ("params ", StringComparison.Ordinal) ? p.Type.Substring ("params ".Length) : p.Type;
+						sw.WriteLine ("{0}\t{1} {2};", indent, opt.GetOutputName (safeTypeName), opt.GetSafeIdentifier (p.Name));
 						// AbsListView.IMultiChoiceModeListener.onItemCheckedStateChanged() hit this strict name check, at parameter "@checked".
-						sw.WriteLine ("{0}\tpublic {1} {2} {{", indent, opt.GetOutputName (p.Type), p.PropertyName);
+						sw.WriteLine ("{0}\tpublic {1} {2} {{", indent, opt.GetOutputName (safeTypeName), p.PropertyName);
 						sw.WriteLine ("{0}\t\tget {{ return {1}; }}", indent, opt.GetSafeIdentifier (p.Name));
 						sw.WriteLine ("{0}\t}}", indent);
 					}

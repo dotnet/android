@@ -107,6 +107,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	}
 
+	// event args for com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener.onEvent
 	public partial class ExoMediaDrmOnEventEventArgs : global::System.EventArgs {
 
 		public ExoMediaDrmOnEventEventArgs (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
