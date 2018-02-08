@@ -1,4 +1,5 @@
 ﻿﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -1594,6 +1595,39 @@ namespace App1
 					Directory.Delete (embedded, recursive: true);
 				}
 				Assert.IsTrue (builder.Build (proj), "Second Build should have succeeded");
+			}
+		}
+
+		[Test]
+		public void AarContentExtraction ()
+		{
+			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
+				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				OtherBuildItems = {
+					aar,
+				},
+			};
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
+				Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
+				var assemblyIdentityMap = new List<string> ();
+				foreach (var s in File.ReadLines (assemblyMap)) {
+					assemblyIdentityMap.Add (s);
+				}
+				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp",
+					assemblyIdentityMap.IndexOf ("android-crop-1.0.1").ToString (), "jl", "classes.jar"),
+					"classes.jar was not extracted from the aar.");
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
+					"_ResolveLibraryProjectImports should not have run.");
+				aar.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (2));
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
+					"_ResolveLibraryProjectImports should have run.");
+
 			}
 		}
 

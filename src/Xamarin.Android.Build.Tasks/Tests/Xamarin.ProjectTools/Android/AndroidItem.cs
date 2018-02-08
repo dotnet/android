@@ -144,5 +144,15 @@ namespace Xamarin.ProjectTools
 			{
 			}
 		}
+		public class AndroidAarLibrary : BuildItem {
+			public AndroidAarLibrary (string include)
+				: this (() => include)
+			{
+			}
+			public AndroidAarLibrary (Func<string> include)
+				: base (AndroidBuildActions.AndroidAarLibrary, include)
+			{
+			}
+		}
 	}
 }
