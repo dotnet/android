@@ -297,9 +297,9 @@ namespace Java.Interop
 
 			Runtimes.TryUpdate (InvocationPointer, null, this);
 
-			JniObjectReference.Dispose (ref ClassLoader);
-
 			if (disposing) {
+				JniObjectReference.Dispose (ref ClassLoader);
+
 				ClearTrackedReferences ();
 #if !XA_INTEGRATION
 				ValueManager.Dispose ();
@@ -307,14 +307,14 @@ namespace Java.Interop
 				TypeManager.Dispose ();
 #endif  // !XA_INTEGRATION
 				ObjectReferenceManager.Dispose ();
-			}
 
-			var environments    = JniEnvironment.Info.Values;
-			for (int i = 0; i < environments.Count; ++i) {
-				var e   = environments [i];
-				if (e.Runtime != this)
-					continue;
-				environments [i].Dispose ();
+				var environments = JniEnvironment.Info.Values;
+				for (int i = 0; i < environments.Count; ++i) {
+					var e = environments [i];
+					if (e.Runtime != this)
+						continue;
+					environments [i].Dispose ();
+				}
 			}
 
 			if (DestroyRuntimeOnDispose) {
