@@ -8,5 +8,6 @@
 		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">1.8.0</LatestSupportedJavaVersion>
 		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
+		<_IsRunningXBuild Condition=" '$(MSBuildRuntimeVersion)' == '' ">true</_IsRunningXBuild>
 	</PropertyGroup>
 </Project>

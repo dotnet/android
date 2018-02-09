@@ -399,9 +399,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">True</ManagedDesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
-		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsCache>
-		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsCache>
-		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
+		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)$(Configuration)_resourcepaths.cache</_AndroidResourcePathsCache>
+		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)$(Configuration)_libraryimports.cache</_AndroidLibraryImportsCache>
+		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)$(Configuration)_libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
 	</PropertyGroup>
 	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
@@ -427,6 +427,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    ContinueOnError="$(DesignTimeBuild)"
    Condition=" '$(DesignTimeBuild)' == '' Or '$(DesignTimeBuild)' == 'false' "
   />
+  <ItemGroup>
+   <FileWrites Include="$(_AndroidResourcePathsCache)" />
+  </ItemGroup>
   <Message Text="Skipping GetAdditionalResourcesFromAssemblies in DesignTime build" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
@@ -1043,8 +1046,8 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
-	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
-	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
+	<_AndroidDesignTimeResDirIntermediate>$(BaseIntermediateOutputPath)\</_AndroidDesignTimeResDirIntermediate>
+	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(Configuration)_$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
 <ItemGroup>
@@ -1116,11 +1119,6 @@ because xbuild doesn't support framework reference assemblies.
 		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
 		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
 	</ItemGroup>
-	<WriteLinesToFile
-		Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')"
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="$([System.IO.Path]::GetFullPath('$(_AndroidManagedResourceDesignerFile)'))"
-		Overwrite="false" />
 </Target>
 	
 <!-- Resource Build -->
@@ -1188,6 +1186,9 @@ because xbuild doesn't support framework reference assemblies.
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
 		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
 	</ResolveLibraryProjectImports>
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidLibraryProjectImportsCache)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports">
@@ -1249,6 +1250,9 @@ because xbuild doesn't support framework reference assemblies.
 	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 			CacheFile="$(_AndroidLibraryImportsCache)">
 	</GetImportedLibraries>
+		<ItemGroup>
+		<FileWrites Include="$(_AndroidLibraryImportsCache)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_GetLibraryImports" DependsOnTargets="$(_GetLibraryImportsDependsOnTargets)">
@@ -2673,6 +2677,26 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Include" ItemName="_OutputDeploymentFiles" />
 	</CreateItem>
 	<Delete Files="@(_OutputDeploymentFiles)"/>
+</Target>
+
+<!-- IncrementalClean work arounds for MSBuild and xbuild -->
+<Target Name="_RegisterAndroidFilesWithFileWrites" BeforeTargets="IncrementalClean" Condition=" '$(_IsRunningXBuild)' != 'true' ">  
+	<CreateItem Include="$(OutDir)*.pdb;$(OutDir)*.dll;$(OutDir)*.dll.mdb;$(MonoAndroidIntermediateAssemblyDir)*.dll.mdb;$(MonoAndroidIntermediateAssemblyDir)*.pdb;$(MonoAndroidLinkerInputDir)*.dll.mdb;$(MonoAndroidLinkerInputDir)*.pdb;$(_AndroidManagedResourceDesignerFile)">  
+		<Output TaskParameter="Include" ItemName="_FilesToRegister" />
+	</CreateItem>
+	<CreateItem Include="$([System.IO.Path]::GetFullPath('%(_FilesToRegister.Identity)'))"
+			Condition="Exists('%(_FilesToRegister.Identity)')">  
+		<Output TaskParameter="Include" ItemName="_CleanCurrentFileWrites" />  
+	</CreateItem>
+</Target>
+
+<Target Name="_OverrideXbuildCleanFileWrites" BeforeTargets="_GetCleanFileWrites" Condition=" '$(_IsRunningXBuild)' == 'true' ">
+	<CreateItem Include="$(_AndroidDesignTimeResDirIntermediate)*.cache;$(_AndroidDesignTimeResDirIntermediate)*.cs;">
+		<Output TaskParameter="Include" ItemName="_FilesToRegister" />
+	</CreateItem>
+	<ItemGroup>
+		<PreviousFileWrites Remove="$([System.IO.Path]::GetFullPath('%(_FilesToRegister.Identity)'))" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
