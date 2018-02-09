@@ -51,7 +51,7 @@ will become
     }
 
 You then need to make sure you initialize the layout properties by calling
-`InitializeContentView ()` in the `onCreate` method of your activity.
+`InitializeContentView ()` in the `OnCreate()` method of your activity.
 
     protected override void OnCreate (Bundle bundle)
     {
@@ -69,7 +69,8 @@ your layout items via the properties.
 There is a partial method available which can be implemented to handle
 situations where the View is not found. The method is
 
-    void OnLayoutViewNotFound<T> (int resourceId, ref T type) where T : global::Android.Views.View;
+    void OnLayoutViewNotFound<T> (int resourceId, ref T type)
+        where T : global::Android.Views.View;
 
 If `FindViewById` returns `null` then the `OnLayoutViewNotFound` method
 will be called (if it is implemented). This is done BEFORE we throw the
