@@ -270,103 +270,103 @@
     <Compile Include="Utilities\XDocumentExtensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Annotations.cs">
-      <Link>Linker\Mono.Linker\Annotations.cs</Link>
+      <Link>Linker\Linker\Annotations.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyAction.cs">
-      <Link>Linker\Mono.Linker\AssemblyAction.cs</Link>
+      <Link>Linker\Linker\AssemblyAction.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyResolver.cs">
-      <Link>Linker\Mono.Linker\AssemblyResolver.cs</Link>
+      <Link>Linker\Linker\AssemblyResolver.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
-      <Link>Linker\Mono.Linker\I18nAssemblies.cs</Link>
+      <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IXApiVisitor.cs">
-      <Link>Linker\Mono.Linker\IXApiVisitor.cs</Link>
+      <Link>Linker\Linker\IXApiVisitor.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LinkContext.cs">
-      <Link>Linker\Mono.Linker\LinkContext.cs</Link>
+      <Link>Linker\Linker\LinkContext.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodAction.cs">
-      <Link>Linker\Mono.Linker\MethodAction.cs</Link>
+      <Link>Linker\Linker\MethodAction.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodReferenceExtensions.cs">
-      <Link>Linker\Mono.Linker\MethodReferenceExtensions.cs</Link>
+      <Link>Linker\Linker\MethodReferenceExtensions.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
-      <Link>Linker\Mono.Linker\Pipeline.cs</Link>
+      <Link>Linker\Linker\Pipeline.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypePreserve.cs">
-      <Link>Linker\Mono.Linker\TypePreserve.cs</Link>
+      <Link>Linker\Linker\TypePreserve.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeReferenceExtensions.cs">
-      <Link>Linker\Mono.Linker\TypeReferenceExtensions.cs</Link>
+      <Link>Linker\Linker\TypeReferenceExtensions.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\XApiReader.cs">
-      <Link>Linker\Mono.Linker\XApiReader.cs</Link>
+      <Link>Linker\Linker\XApiReader.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BlacklistStep.cs">
-      <Link>Linker\Mono.Linker.Steps\BlacklistStep.cs</Link>
+      <Link>Linker\Linker.Steps\BlacklistStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BaseStep.cs">
-      <Link>Linker\Mono.Linker.Steps\BaseStep.cs</Link>
+      <Link>Linker\Linker.Steps\BaseStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\CleanStep.cs">
-      <Link>Linker\Mono.Linker.Steps\CleanStep.cs</Link>
+      <Link>Linker\Linker.Steps\CleanStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\IStep.cs">
-      <Link>Linker\Mono.Linker.Steps\IStep.cs</Link>
+      <Link>Linker\Linker.Steps\IStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\LoadI18nAssemblies.cs">
-      <Link>Linker\Mono.Linker.Steps\LoadI18nAssemblies.cs</Link>
+      <Link>Linker\Linker.Steps\LoadI18nAssemblies.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\LoadReferencesStep.cs">
-      <Link>Linker\Mono.Linker.Steps\LoadReferencesStep.cs</Link>
+      <Link>Linker\Linker.Steps\LoadReferencesStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\OutputStep.cs">
-      <Link>Linker\Mono.Linker.Steps\OutputStep.cs</Link>
+      <Link>Linker\Linker.Steps\OutputStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\RegenerateGuidStep.cs">
-      <Link>Linker\Mono.Linker.Steps\RegenerateGuidStep.cs</Link>
+      <Link>Linker\Linker.Steps\RegenerateGuidStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromAssemblyStep.cs">
-      <Link>Linker\Mono.Linker.Steps\ResolveFromAssemblyStep.cs</Link>
+      <Link>Linker\Linker.Steps\ResolveFromAssemblyStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromXApiStep.cs">
-      <Link>Linker\Mono.Linker.Steps\ResolveFromXApiStep.cs</Link>
+      <Link>Linker\Linker.Steps\ResolveFromXApiStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromXmlStep.cs">
-      <Link>Linker\Mono.Linker.Steps\ResolveFromXmlStep.cs</Link>
+      <Link>Linker\Linker.Steps\ResolveFromXmlStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveStep.cs">
-      <Link>Linker\Mono.Linker.Steps\ResolveStep.cs</Link>
+      <Link>Linker\Linker.Steps\ResolveStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\TypeMapStep.cs">
-      <Link>Linker\Mono.Linker.Steps\TypeMapStep.cs</Link>
+      <Link>Linker\Linker.Steps\TypeMapStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\SweepStep.cs">
-      <Link>Linker\Mono.Linker.Steps\SweepStep.cs</Link>
+      <Link>Linker\Linker.Steps\SweepStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\MarkStep.cs">
-      <Link>Linker\Mono.Linker.Steps\MarkStep.cs</Link>
+      <Link>Linker\Linker.Stepsq\MarkStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
-      <Link>Linker\Mono.Linker\LoadException.cs</Link>
+      <Link>Linker\Linker\LoadException.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkException.cs">
-      <Link>Linker\Mono.Linker\MarkException.cs</Link>
+      <Link>Linker\Linker\MarkException.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\ConsoleLogger.cs">
-      <Link>Linker\Mono.Linker\ConsoleLogger.cs</Link>
+      <Link>Linker\Linker\ConsoleLogger.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\ILogger.cs">
-      <Link>Linker\Mono.Linker\ILogger.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
-      <Link>Linker\Mono.Linker\MarkingHelpers.cs</Link>
+      <Link>Linker\Linker\ILogger.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Tracer.cs">
-      <Link>Linker\Mono.Linker\Tracer.cs</Link>
+      <Link>Linker\Linker\Tracer.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
+      <Link>Linker\Linker\MarkingHelpers.cs</Link>
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
@@ -653,7 +653,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="pdb2mdb\" />
-    <Folder Include="Linker\Mono.Linker\" />
+    <Folder Include="Linker\Linker\" />
     <Folder Include="utils\" />
   </ItemGroup>
 </Project>
