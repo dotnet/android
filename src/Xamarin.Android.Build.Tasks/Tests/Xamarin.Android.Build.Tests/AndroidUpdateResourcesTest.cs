@@ -1173,5 +1173,60 @@ namespace Lib1 {
 				StringAssertEx.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
 			}
 		}
+
+		[Test]
+		public void CheckCodeBehindIsGenerated ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				LayoutMain = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android = ""http://schemas.android.com/apk/res/android""
+	xmlns:tools=""http://schemas.xamarin.com/android/tools""
+	android:orientation = ""vertical""
+	android:layout_width = ""fill_parent""
+	android:layout_height = ""fill_parent""
+	tools:class=""UnnamedProject.MainActivity""
+	>
+	<Button
+		android:id = ""@+id/myButton""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""@string/hello""
+	/>
+ </LinearLayout>",
+				MainActivity = @"using System;
+using Android.App;
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.OS;
+
+namespace UnnamedProject
+{
+	[Activity (Label = ""UnnamedProject"", MainLauncher = true, Icon = ""@drawable/icon"")]
+	public partial class MainActivity : Activity {
+			int count = 1;
+
+			protected override void OnCreate (Bundle bundle)
+			{
+				base.OnCreate (bundle);
+				InitializeContentView ();
+				myButton.Click += delegate {
+					myButton.Text = string.Format (""{0} clicks!"", count++);
+				};
+			}
+		}
+	}
+",
+			};
+			using (var builder = CreateApkBuilder (path)) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Main-UnnamedProject.MainActivity.g.cs"));
+				Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
+				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Main-UnnamedProject.MainActivity.g.cs"));
+			}
+		}
 	}
 }
