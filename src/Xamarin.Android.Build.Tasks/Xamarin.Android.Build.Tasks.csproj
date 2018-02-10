@@ -187,6 +187,7 @@
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>

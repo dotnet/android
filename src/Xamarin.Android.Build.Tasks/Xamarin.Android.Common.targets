@@ -32,6 +32,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2765,6 +2766,24 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="Install"
     Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)"
     DependsOnTargets="$(InstallDependsOnTargets)">
+</Target>
+
+
+<!-- SDK Management Targets -->
+<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
+  <PropertyGroup>
+    <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
+  </PropertyGroup>
+  <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>
+  <CalculateProjectDependencies
+    TargetFrameworkVersion="$(TargetFrameworkVersion)"
+    ManifestFile="$(_ProjectAndroidManifest)"
+    BuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+    PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
+    ToolsVersion="$(AndroidSdkToolsVersion)"
+  >
+    <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
+  </CalculateProjectDependencies>
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
