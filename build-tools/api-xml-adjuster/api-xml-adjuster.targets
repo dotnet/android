@@ -8,11 +8,10 @@
   </PropertyGroup>
 
   <Target Name="_DefineApiFiles">
-	<CreateItem Include="@(AndroidApiInfo)"
-		 AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt;ClassParseXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.in"
-		 >
-           <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
-	</CreateItem>
+    <CreateItem Include="@(AndroidApiInfo)"
+        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt;ClassParseXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.in">
+      <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
+    </CreateItem>
   </Target>
 
   <Target Name="_ClassParse"
@@ -25,8 +24,8 @@
     </PropertyGroup>
     <MakeDir Directories="$(_OutputPath)api" />
     <Exec
-		Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
-        Command="$(ManagedRuntime) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Level)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names='%(ApiFileDefinition.ParameterDescription)' -o='%(ApiFileDefinition.ClassParseXml)'"
+        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
+        Command="$(ManagedRuntime) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Level)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
     />
   </Target>
   <Target Name="_AdjustApiXml"
@@ -38,13 +37,13 @@
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
     <Exec
-		Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
+        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
         Command="$(ManagedRuntime) $(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)"
     />
   </Target>
 
   <Target Name="_CleanApiXml"
-	BeforeTargets="Clean">
+      BeforeTargets="Clean">
 
     <Delete Files="%(ApiFileDefinition.ApiAdjustedXml)" />
     <Delete Files="%(ApiFileDefinition.ClassParseXml)" />
