@@ -17,6 +17,11 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void ManifestFileDoesNotExist ()
 		{
+			var path = Path.Combine ("temp", TestName);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
+				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+			} );
+			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine
@@ -24,8 +29,8 @@ namespace Xamarin.Android.Build.Tests {
 
 			task.BuildToolsVersion = "26.0.1";
 			task.TargetFrameworkVersion = "v8.0";
-			task.ManifestFile = new TaskItem ("AndroidManifest.xml");
-			task.Execute ();
+			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
+			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
 			Assert.AreEqual (4, task.Dependencies.Length);
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tool" && x.GetMetadata ("Version") == "26.0.1"),
@@ -37,12 +42,17 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void ManifestFileExists ()
 		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
+				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+			} );
+			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine
 			};
 
-			var path = Path.Combine (Root, "temp", TestName);
+
 			Directory.CreateDirectory (path);
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			File.WriteAllText (manifestFile, @"<?xml version='1.0' ?>
