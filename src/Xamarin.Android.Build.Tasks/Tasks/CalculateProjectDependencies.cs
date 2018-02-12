@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -41,11 +42,11 @@ namespace Xamarin.Android.Tasks
 		public override bool Execute ()
 		{
 			var dependencies = new List<ITaskItem> ();
-			var targetApiLevel = MonoAndroidHelper.SupportedVersions.g (TargetFrameworkVersion);
+			var targetApiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 			var manifestApiLevel = DefaultMinSDKVersion;
 			if (File.Exists (ManifestFile.ItemSpec)) {
 				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-				var manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
+				manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
 			}
 			dependencies.Add (CreateAndroidDependency ("platform", $"{Math.Max (targetApiLevel.Value, manifestApiLevel)}"));
 			dependencies.Add (CreateAndroidDependency ("build-tool", BuildToolsVersion));
