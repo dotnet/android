@@ -36,11 +36,11 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
 			Assert.AreEqual (5, task.Dependencies.Length);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools" && x.GetMetadata ("Version") == "26.0.1"),
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools;26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms" && x.GetMetadata ("Version") == "android-26"),
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms;android-26" && x.GetMetadata ("Version") == "android-26"),
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
@@ -78,11 +78,11 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue(task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
 			Assert.AreEqual (5, task.Dependencies.Length);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools" && x.GetMetadata ("Version") == "26.0.1"),
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools;26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms" && x.GetMetadata ("Version") == "android-26"),
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms;android-26" && x.GetMetadata ("Version") == "android-26"),
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
