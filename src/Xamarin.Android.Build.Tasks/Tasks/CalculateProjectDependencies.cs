@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 				manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
 			}
 			var sdkVersion = Math.Max (targetApiLevel.Value, manifestApiLevel);
-			dependencies.Add (CreateAndroidDependency ($"platforms;android-{sdkVersion}", $"android-{sdkVersion}"));
+			dependencies.Add (CreateAndroidDependency ($"platforms;android-{sdkVersion}", $""));
 			dependencies.Add (CreateAndroidDependency ($"build-tools;{BuildToolsVersion}", BuildToolsVersion));
 			if (!string.IsNullOrEmpty (PlatformToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ("platform-tools", PlatformToolsVersion));
