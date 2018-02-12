@@ -48,13 +48,13 @@ namespace Xamarin.Android.Tasks
 				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 				manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
 			}
-			dependencies.Add (CreateAndroidDependency ("platform", $"{Math.Max (targetApiLevel.Value, manifestApiLevel)}"));
-			dependencies.Add (CreateAndroidDependency ("build-tool", BuildToolsVersion));
+			dependencies.Add (CreateAndroidDependency ("platform", $"android-{Math.Max (targetApiLevel.Value, manifestApiLevel)}"));
+			dependencies.Add (CreateAndroidDependency ("build-tools", BuildToolsVersion));
 			if (!string.IsNullOrEmpty (PlatformToolsVersion)) {
-				dependencies.Add (CreateAndroidDependency ("platform-tool", PlatformToolsVersion));
+				dependencies.Add (CreateAndroidDependency ("platform-tools", PlatformToolsVersion));
 			}
 			if (!string.IsNullOrEmpty (ToolsVersion)) {
-				dependencies.Add (CreateAndroidDependency ("tool", ToolsVersion));
+				dependencies.Add (CreateAndroidDependency ("tools", ToolsVersion));
 			}
 			if (!string.IsNullOrEmpty (NdkVersion)) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
