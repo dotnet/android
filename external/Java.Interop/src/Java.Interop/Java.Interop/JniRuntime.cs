@@ -208,10 +208,6 @@ namespace Java.Interop
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
 
-#if !XA_INTEGRATION
-			ManagedPeer.Init ();
-#endif  // !XA_INTEGRATION
-
 			ClassLoader = options.ClassLoader;
 			if (options.ClassLoader_LoadClass_id != IntPtr.Zero) {
 				ClassLoader_LoadClass   = new JniMethodInfo (options.ClassLoader_LoadClass_id, isStatic: false);
@@ -234,6 +230,10 @@ namespace Java.Interop
 					}
 				}
 			}
+
+#if !XA_INTEGRATION
+			ManagedPeer.Init ();
+#endif  // !XA_INTEGRATION
 		}
 
 		T SetRuntime<T> (T value)
