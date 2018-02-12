@@ -72,5 +72,6 @@
     <Compile Include="BuildTest.OSS.cs" />
     <Compile Include="ManifestTest.OSS.cs" />
     <Compile Include="AndroidRegExTests.cs" />
+    <Compile Include="GetDependenciesTests.cs" />
   </ItemGroup>
 </Project>
