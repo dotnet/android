@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			task.PlatformToolsVersion = "26.0.3";
 			task.ToolsVersion = "26.0.1";
-			task.NdkVersion = "r12d";
+			task.NdkVersion = "12.1";
 			task.BuildToolsVersion = "26.0.1";
 			task.TargetFrameworkVersion = "v8.0";
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
@@ -44,8 +44,8 @@ namespace Xamarin.Android.Build.Tests {
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "r12d"),
-				"Dependencies should contains a ndk-bundle version r12d");
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
+				"Dependencies should contains a ndk-bundle version 12.1");
 		}
 
 		[Test]
@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			task.PlatformToolsVersion = "26.0.3";
 			task.ToolsVersion = "26.0.1";
-			task.NdkVersion = "r12d";
+			task.NdkVersion = "12.1";
 			task.BuildToolsVersion = "26.0.1";
 			task.TargetFrameworkVersion = "v8.0";
 			task.ManifestFile = new TaskItem (manifestFile);
@@ -86,8 +86,8 @@ namespace Xamarin.Android.Build.Tests {
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "r12d"),
-				"Dependencies should contains a ndk-bundle version r12d");
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
+				"Dependencies should contains a ndk-bundle version 12.1");
 
 			Directory.Delete (path, recursive: true);
 		}
