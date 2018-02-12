@@ -2781,6 +2781,7 @@ because xbuild doesn't support framework reference assemblies.
     BuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
     PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
     ToolsVersion="$(AndroidSdkToolsVersion)"
+    NdkVersion="$(AndroidNdkVersion)"
   >
     <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
   </CalculateProjectDependencies>

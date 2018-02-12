@@ -19,6 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)PackagingTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\BaseTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\BuildHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\MockBuildEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Utilities\" />
