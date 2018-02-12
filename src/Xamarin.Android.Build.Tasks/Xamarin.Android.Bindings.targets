@@ -311,6 +311,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"

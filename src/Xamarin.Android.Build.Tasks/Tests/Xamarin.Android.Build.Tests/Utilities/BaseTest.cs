@@ -131,14 +131,29 @@ namespace Xamarin.Android.Build.Tests
 			return androidSdkDirectory;
 		}
 
-		protected string CreateFauxReferencesDirectory (string path, string[] versions)
+		public struct ApiInfo {
+			public int Id;
+			public int Level;
+			public string Name;
+			public string FrameworkVersion;
+			public bool Stable;
+		}
+
+		protected string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
 		{
+
 			string referencesDirectory = Path.Combine (Root, path);
 			Directory.CreateDirectory (referencesDirectory);
-			Directory.CreateDirectory (Path.Combine (referencesDirectory, "v1.0"));
-			File.WriteAllText (Path.Combine (referencesDirectory, "v1.0", "mscorlib.dll"), "");
-			foreach (var v in versions){
-				Directory.CreateDirectory (Path.Combine (referencesDirectory, v));
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0"));
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
+			foreach (var v in versions) {
+				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
+				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "MonoAndroid.dll"), "");
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
+					$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
+					$"<FileList Redist=\"MonoAndroid\" Name=\"Xamarin.Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
 			}
 			return referencesDirectory;
 		}

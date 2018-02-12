@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] Assemblies { get; set; }
 
+		public ITaskItem [] AarLibraries { get; set; }
+
 		[Required]
 		public bool UseShortFileNames { get; set; }
 
@@ -73,6 +75,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  OutputImportDirectory: {0}", OutputImportDirectory);
 			Log.LogDebugMessage ("  UseShortFileNames: {0}", UseShortFileNames);
 			Log.LogDebugTaskItems ("  Assemblies: ", Assemblies);
+			Log.LogDebugTaskItems ("  AarLibraries: ", AarLibraries);
 
 			var jars                          = new List<string> ();
 			var resolvedResourceDirectories   = new List<string> ();
@@ -168,6 +171,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var assembly in Assemblies)
 				res.Load (assembly.ItemSpec);
 
+			bool updated = false;
 			// FIXME: reorder references by import priority (not sure how to do that yet)
 			foreach (var assemblyPath in Assemblies
 					.Select (a => GetTargetAssembly (a))
@@ -221,7 +225,6 @@ namespace Xamarin.Android.Tasks
 
 				var assembly = res.GetAssembly (assemblyPath);
 				var assemblyLastWrite = new FileInfo (assemblyPath).LastWriteTimeUtc;
-				bool updated = false;
 
 				foreach (var mod in assembly.Modules) {
 					// android environment files
@@ -309,6 +312,50 @@ namespace Xamarin.Android.Tasks
 						Log.LogDebugMessage ("Touch {0}", stamp.FullName);
 						stamp.Create ().Close ();
 				}
+			}
+			foreach (var aarFile in AarLibraries ?? new ITaskItem[0]) {
+				if (!File.Exists (aarFile.ItemSpec))
+					continue;
+				string aarIdentityName = Path.GetFileNameWithoutExtension (aarFile.ItemSpec);
+				if (UseShortFileNames) {
+					aarIdentityName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (aarIdentityName);
+				}
+				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
+				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
+				string resDir = Path.Combine (importsDir, "res");
+				string assetsDir = Path.Combine (importsDir, "assets");
+
+				var stamp = new FileInfo (Path.Combine (outdir.FullName, Path.GetFileNameWithoutExtension (aarFile.ItemSpec) + ".stamp"));
+				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (aarFile.ItemSpec).LastWriteTimeUtc)
+					continue;
+				// temporarily extracted directory will look like:
+				// _lp_/[aarFile]
+				using (var zip = MonoAndroidHelper.ReadZipFile (aarFile.ItemSpec)) {
+					try {
+						updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
+							var entryFileName = Path.GetFileName (entryFullName);
+							var entryPath = Path.GetDirectoryName (entryFullName);
+							if (entryFileName.StartsWith ("internal_impl", StringComparison.InvariantCulture)) {
+								var hash = Files.HashString (entryFileName);
+								return Path.Combine (entryPath, $"internal_impl-{hash}.jar");
+							}
+							return entryFullName;
+						}, deleteCallback: (fileToDelete) => {
+							return !jars.Contains (fileToDelete);
+						}, forceUpdate: false);
+
+						if (Directory.Exists (importsDir) && (updated || !stamp.Exists)) {
+							Log.LogDebugMessage ("Touch {0}", stamp.FullName);
+							stamp.Create ().Close ();
+						}
+					} catch (PathTooLongException ex) {
+						Log.LogErrorFromException (new PathTooLongException ($"Error extracting resources from \"{aarFile.ItemSpec}\"", ex));
+					}
+				}
+				if (Directory.Exists (resDir))
+					resolvedResourceDirectories.Add (resDir);
+				if (Directory.Exists (assetsDir))
+					resolvedAssetDirectories.Add (assetsDir);
 			}
 			foreach (var f in outdir.EnumerateFiles ("*.jar", SearchOption.AllDirectories)
 					.Select (fi => fi.FullName)) {

@@ -897,6 +897,20 @@ Item Attribute Name
           </AndroidNativeLibrary>
         </ItemGroup>
 
+<a name="AndroidAarLibrary" class="injected"></a>
+
+## AndroidAarLibrary
+
+The Build action of `AndroidAarLibrary` should be used to directly
+reference .aar files. This build action will be most commonly used
+by Xamarin Components. Namely to include references to .aar files 
+which are required to get Google Play and other services working.
+
+Files with this Build action will be treated in a similar fashion too
+the embedded resources found in Library projects. The .aar will be 
+extracted into the intermediate directory. Then any assets, resource
+and .jar files will be included in the appropriate item groups.  
+
 ## Content
 
 The normal `Content` Build action is not supported (as we

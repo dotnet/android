@@ -31,6 +31,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -47,6 +49,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Crunch" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateCodeBehindForLayout" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -235,7 +238,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">27.0.3</AndroidSdkBuildToolsVersion>
 	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">27.0.1</AndroidSdkPlatformToolsVersion>
 	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
-	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">r14b</AndroidNdkVersion>
+	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 
 	<!-- Obsolete -->
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
@@ -1020,6 +1023,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateAssemblyTempDir>$(IntermediateOutputPath)linkdst\</MonoAndroidIntermediateAssemblyTempDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
+	<MonoAndroidCodeBehindDir>$(MonoAndroidIntermediate)generated</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
@@ -1177,6 +1181,7 @@ because xbuild doesn't support framework reference assemblies.
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
@@ -1332,6 +1337,31 @@ because xbuild doesn't support framework reference assemblies.
  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
 
+<Target Name="_FindLayoutsWithCodeBehind">
+  <CalculateLayoutCodeBehind ResourceFiles="@(AndroidResource)" SpecificFile="$(_ExplicitCodeBehindLayout)">
+    <Output ItemName="_LayoutWithCodeBehind" TaskParameter="CodeBehindFiles" />
+  </CalculateLayoutCodeBehind>
+</Target>
+
+<Target Name="_GenerateCodeBehindForLayout"
+    Inputs="@(_LayoutWithCodeBehind)"
+    Outputs="@(_LayoutWithCodeBehind->'$(MonoAndroidCodeBehindDir)\%(CodeBehindFileName)')"
+    DependsOnTargets="_FindLayoutsWithCodeBehind">
+  <MakeDir Directories="$(MonoAndroidCodeBehindDir)" Condition="!Exists('$(MonoAndroidCodeBehindDir)')"/>
+  <GenerateCodeBehindForLayout ResourceFiles="@(_LayoutWithCodeBehind)" MonoAndroidCodeBehindDir="$(MonoAndroidCodeBehindDir)">
+	<Output ItemName="_GeneratedCodeBehindFiles" TaskParameter="GeneratedFiles"/>
+  </GenerateCodeBehindForLayout>
+</Target>
+
+<Target Name="_IncludeLayoutsCodeBehindSources" DependsOnTargets="_GenerateCodeBehindForLayout">
+	<ItemGroup>
+		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
+		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
+	</ItemGroup>
+</Target>
+
 <PropertyGroup>
 	<_UpdateAndroidResgenDependsOnTargets>
 		_CheckForDeletedResourceFile;
@@ -1341,6 +1371,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
 		_GenerateAndroidResourceDir;
+		_IncludeLayoutsCodeBehindSources;
 		_DefineBuildTargetAbis;
 	</_UpdateAndroidResgenDependsOnTargets>
 	<_UpdateAndroidResgenInputs>
@@ -2735,6 +2766,25 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="Install"
     Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)"
     DependsOnTargets="$(InstallDependsOnTargets)">
+</Target>
+
+
+<!-- SDK Management Targets -->
+<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
+  <PropertyGroup>
+    <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
+  </PropertyGroup>
+  <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>
+  <CalculateProjectDependencies
+    TargetFrameworkVersion="$(TargetFrameworkVersion)"
+    ManifestFile="$(_ProjectAndroidManifest)"
+    BuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+    PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
+    ToolsVersion="$(AndroidSdkToolsVersion)"
+    NdkVersion="$(AndroidNdkVersion)"
+  >
+    <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
+  </CalculateProjectDependencies>
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"

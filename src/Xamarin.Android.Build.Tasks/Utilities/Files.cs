@@ -250,6 +250,13 @@ namespace Xamarin.Android.Tools {
 			return updated;
 		}
 
+		public static string HashString (string s)
+		{
+			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+				return HashFile (s, hashAlg);
+			}
+		}
+
 		public static string HashFile (string filename)
 		{
 			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
