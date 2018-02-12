@@ -332,7 +332,7 @@ namespace Xamarin.Android.Tasks
 		// `java -version` will produce values such as:
 		//  java version "9.0.4"
 		//  java version "1.8.0_77"
-		static readonly Regex javaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_\d+)?""");
+		static readonly Regex javaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_d+)?[^""]*""");
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
