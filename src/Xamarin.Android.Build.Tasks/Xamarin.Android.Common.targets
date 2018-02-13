@@ -1250,7 +1250,7 @@ because xbuild doesn't support framework reference assemblies.
 	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 			CacheFile="$(_AndroidLibraryImportsCache)">
 	</GetImportedLibraries>
-		<ItemGroup>
+	<ItemGroup>
 		<FileWrites Include="$(_AndroidLibraryImportsCache)" />
 	</ItemGroup>
 </Target>
