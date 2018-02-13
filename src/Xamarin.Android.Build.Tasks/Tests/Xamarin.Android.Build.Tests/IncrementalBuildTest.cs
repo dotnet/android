@@ -51,6 +51,32 @@ namespace Lib
 		}
 
 		[Test]
+		public void IncrementalCleanDuringClean ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			proj.SetProperty ("BuildingInsideVisualStudio", "True");
+			var intermediateOutputPath = Path.Combine (Root, path, "obj");
+			using (var b = CreateApkBuilder (path, false, false)) {
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
+				var designTimeDesigner = Path.Combine (intermediateOutputPath, proj.GetProperty (KnownProperties.Configuration) + "_Resource.designer.cs");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+				b.Target = "Build";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Build.");
+				b.Target = "Clean";
+				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Clean.");
+			}
+
+		}
+
+		[Test]
 		public void AllProjectsHaveSameOutputDirectory()
 		{
 			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");

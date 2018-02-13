@@ -73,6 +73,7 @@ using System.Runtime.CompilerServices;
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
+			var baseIntermediateOutputPath = Path.Combine (path, proj.ProjectName, "obj");
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			if (useManagedParser)
@@ -100,7 +101,7 @@ using System.Runtime.CompilerServices;
 						first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
-					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
+					var designTimeDesigner = Path.Combine (baseIntermediateOutputPath, proj.GetProperty (KnownProperties.Configuration) + "_Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					}
@@ -1000,7 +1001,7 @@ namespace Lib1 {
 					"DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
-				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+				var designerFile = Path.Combine (Root, path, appProj.ProjectName, "obj", appProj.GetProperty (KnownProperties.Configuration) + "_Resource.designer.cs");
 				FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 				var designerContents = File.ReadAllText (designerFile);
@@ -1016,7 +1017,7 @@ namespace Lib1 {
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 
 				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
-				Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+				Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 
 			}
 		}
@@ -1075,7 +1076,7 @@ namespace Lib1 {
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
-					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					var designerFile = Path.Combine (Root, path, appProj.ProjectName, "obj", appProj.GetProperty (KnownProperties.Configuration) + "_Resource.designer.cs");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 					var designerContents = File.ReadAllText (designerFile);
@@ -1112,10 +1113,10 @@ namespace Lib1 {
 
 
 					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
-					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
-					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
+					designerFile = Path.Combine (Root, path, libProj.ProjectName, "obj", libProj.GetProperty (KnownProperties.Configuration) + "_Resource.designer.cs");
 					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
-					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 
 
 				}
