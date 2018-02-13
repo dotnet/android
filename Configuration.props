@@ -43,7 +43,7 @@
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
-    <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe-a926b16</AndroidMxeInstallPrefix>
+    <AndroidMxeInstallPrefix Condition=" '$(AndroidMxeInstallPrefix)' == '' And '$(NeedMxe)' == 'true' ">$(AndroidToolchainDirectory)\mxe-b9cbb53</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>

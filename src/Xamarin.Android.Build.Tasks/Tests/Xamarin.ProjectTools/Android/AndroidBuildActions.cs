@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 	{
 		public const string AndroidResource = "AndroidResource";
 		public const string AndroidAsset = "AndroidAsset";
+		public const string AndroidAarLibrary = "AndroidAarLibrary";
 		public const string AndroidEnvironment = "AndroidEnvironment";
 		public const string AndroidInterfaceDescription = "AndroidInterfaceDescription";
 		public const string AndroidJavaSource = "AndroidJavaSource";
