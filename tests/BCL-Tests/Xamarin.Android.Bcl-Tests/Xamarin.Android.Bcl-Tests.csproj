@@ -134,7 +134,7 @@
   <Import Project="..\..\..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\..\..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets')" />
 
   <Target Name="_GrantPermissions">
-    <Exec Command="&quot;$(AdbToolPath)\adb&quot; -s $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />
+    <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />
   </Target>
 
   <PropertyGroup>
