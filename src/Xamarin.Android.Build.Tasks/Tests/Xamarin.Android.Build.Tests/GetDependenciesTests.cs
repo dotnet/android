@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (5, task.Dependencies.Length);
+			Assert.AreEqual (ndkRequred ? 5 : 4, task.Dependencies.Length);
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools;26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
