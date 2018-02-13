@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 
 		public string NdkVersion { get; set; }
 
+		public bool NdkRequired { get; set; }
+
 		[Output]
 		public ITaskItem [] Dependencies { get; set; }
 
@@ -57,7 +59,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (ToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ("tools", ToolsVersion));
 			}
-			if (!string.IsNullOrEmpty (NdkVersion)) {
+			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
 			}
 			Dependencies = dependencies.ToArray ();

@@ -2773,6 +2773,8 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
+    <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(AotAssemblies)' == 'True'">true</_NdkRequired>
+    <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>
   <CalculateProjectDependencies
@@ -2782,6 +2784,7 @@ because xbuild doesn't support framework reference assemblies.
     PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
     ToolsVersion="$(AndroidSdkToolsVersion)"
     NdkVersion="$(AndroidNdkVersion)"
+    NdkRequired="$(_NdkRequired)"
   >
     <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
   </CalculateProjectDependencies>
