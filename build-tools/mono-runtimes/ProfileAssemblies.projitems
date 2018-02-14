@@ -260,8 +260,11 @@
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
       <SourcePath>System.Xml.Linq</SourcePath>
     </MonoTestAssembly>
-    <MonoTestAssembly Include="nunitlite.dll">
-      <SourcePath>lib/monodroid</SourcePath>
+    <MonoTestAssembly Include="System.Runtime.CompilerServices.Unsafe.dll">
+      <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
+      <SourcePath>System.Runtime.CompilerServices.Unsafe</SourcePath>
+      <TestType>reference</TestType>
     </MonoTestAssembly>
+    <MonoTestRunner Include="nunitlite.dll" />
   </ItemGroup>
 </Project>

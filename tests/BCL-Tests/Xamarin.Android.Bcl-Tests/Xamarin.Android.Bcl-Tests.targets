@@ -28,8 +28,14 @@
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
+    <ItemGroup>
+      <_DebugSymbol
+          Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
+          Condition="Exists('..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb')"
+      />
+    </ItemGroup>
     <Copy
-        SourceFiles="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
+        SourceFiles="@(_DebugSymbol)"
         DestinationFolder="$(IntermediateOutputPath)"
     />
   </Target>
