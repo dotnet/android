@@ -97,6 +97,8 @@
     <AndroidResource Include="Resources\drawable\android_focused.png" />
     <AndroidResource Include="Resources\drawable\android_normal.png" />
     <AndroidResource Include="Resources\drawable\android_button.xml" />
+    <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
+    <AndroidResource Include="Resources\layout\Main.axml" />
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

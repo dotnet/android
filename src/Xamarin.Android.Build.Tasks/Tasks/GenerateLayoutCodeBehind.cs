@@ -46,6 +46,7 @@ namespace Xamarin.Android.Tasks {
 			public Widget Parent { get; set; }
 			public bool IsInaccessible { get; set; }
 			public bool IsRoot { get; set; }
+			public bool IsFragment { get; set; }
 
 			public void AddChild (Widget child)
 			{
@@ -121,7 +122,7 @@ namespace Xamarin.Android.Tasks {
 
 		void GetLineInfo (IXmlLineInfo linfo, out int line, out int column)
 		{
-			if (linfo == null || linfo.HasLineInfo ()) {
+			if (linfo == null || !linfo.HasLineInfo ()) {
 				line = column = 1;
 				return;
 			}
@@ -167,7 +168,6 @@ namespace Xamarin.Android.Tasks {
 										LoadWidgets (fileName, subtree, lineInfo, androidNS, root, globalIdCache);
 								}
 							}
-
 						}
 					}
 				}
@@ -194,8 +194,30 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 			while (reader.Read ()) {
-				LoadWidgets (fileName, reader, lineinfo, androidNS, root ?? widgetRoot, globalIdCache);
+				LoadWidgets (fileName, reader, lineinfo, androidNS, widgetRoot, globalIdCache);
 			}
+		}
+
+		static readonly Dictionary<string, Func<Widget, XmlReader, Widget>> WidgetCreators = new Dictionary<string, Func<Widget, XmlReader, Widget>> {
+			["fragment"] = CreateFragmentWidget,
+		};
+
+		const string AndroidXmlNamespace  = "http://schemas.android.com/apk/res/android";
+		const string AndroidXmlName       = "name";
+
+		static Widget CreateFragmentWidget (Widget w, XmlReader e)
+		{
+			var type  = e.GetAttribute (AndroidXmlName, AndroidXmlNamespace);
+			if (type == null) {
+				return null;
+			}
+
+			w.IsFragment  = true;
+
+			var c   = type.IndexOf (',');
+			w.Type  = c < 0 ? type : type.Substring (0, c);
+			w.Type  = w.Type;
+			return w;
 		}
 
 		Widget CreateWidget (string fileName, XmlReader e, IXmlLineInfo lineInfo, string id, Widget parent)
@@ -219,6 +241,11 @@ namespace Xamarin.Android.Tasks {
 				Line = line,
 				Column = column
 			};
+
+			Func<Widget, XmlReader, Widget> creator;
+			if (WidgetCreators.TryGetValue (e.LocalName, out creator)) {
+				return creator (ret, e);
+			}
 
 			return ret;
 		}
@@ -401,7 +428,7 @@ namespace Xamarin.Android.Tasks {
 
 		CodeMethodInvokeExpression CreateFindViewInvoke (Widget widget, CodeExpression parent, CodeExpression parentView)
 		{
-			var findViewRef = new CodeMethodReferenceExpression (parent, "__FindView");
+			var findViewRef = new CodeMethodReferenceExpression (parent, widget.IsFragment ? "__FindFragment" : "__FindView");
 			findViewRef.TypeArguments.Add (new CodeTypeReference (widget.Type));
 
 			return new CodeMethodInvokeExpression (findViewRef, new CodeExpression [] { parentView, new CodeSnippetExpression (widget.ID) });
@@ -416,7 +443,7 @@ namespace Xamarin.Android.Tasks {
 
 		CodeMemberField CreateBackingFuncField (Widget widget, string memberType)
 		{
-			return new CodeMemberField ($"Func<{memberType}>", $"__{widget.Name}Func");
+			return new CodeMemberField ($"global::System.Func<{memberType}>", $"__{widget.Name}Func");
 		}
 
 		bool HasUniqueId (Widget widget, Dictionary<string, int> globalIdCache)
@@ -484,7 +511,7 @@ namespace Xamarin.Android.Tasks {
 			var ns = new CodeNamespace (namespaceName);
 			compileUnit.Namespaces.Add (ns);
 			foreach (string import in StandardImports)
-				ns.Imports.Add (new CodeNamespaceImport (import));
+				ns.Imports.Add (new CodeNamespaceImport ($"global::{import}"));
 
 			CodeTypeDeclaration mainClass = AddMainClass (layoutFile, ns, className);
 			if (!GenerateLayoutMembers (mainClass, Path.GetFullPath (layoutFile.ItemSpec)))
@@ -578,7 +605,9 @@ namespace Xamarin.Android.Tasks {
 			klass.Members.Add (ImplementFindView (activityTypeRef));
 			klass.Members.Add (ImplementFindView (new CodeTypeReference ("Android.App.Fragment", CodeTypeReferenceOptions.GlobalReference), activityTypeRef, (CodeVariableReferenceExpression parentView) => new CodePropertyReferenceExpression (parentView, "Activity")));
 			klass.Members.Add (ImplementEnsureView ());
+			klass.Members.Add (ImplementFindFragment (activityTypeRef));
 			klass.Members.Add (new CodeSnippetTypeMember ("\tpartial void OnLayoutViewNotFound<T> (int resourceId, ref T type) where T : global::Android.Views.View;"));
+			klass.Members.Add (new CodeSnippetTypeMember ("\tpartial void OnLayoutFragmentNotFound<T> (int resourceId, ref T type) where T : global::Android.App.Fragment;"));
 		}
 
 		CodeMemberMethod ImplementInitializeContentView (ITaskItem layoutFile)
@@ -609,7 +638,7 @@ namespace Xamarin.Android.Tasks {
 			method.TypeParameters.Add (typeParam);
 
 			var tRef = new CodeTypeReference (typeParam);
-			var funcRef = new CodeTypeReference (typeof (Func<>));
+			var funcRef = new CodeTypeReference (typeof (Func<>), CodeTypeReferenceOptions.GlobalReference);
 			funcRef.TypeArguments.Add (tRef);
 			method.Parameters.Add (new CodeParameterDeclarationExpression (funcRef, "creator"));
 
@@ -635,7 +664,7 @@ namespace Xamarin.Android.Tasks {
 			var creatorVarRef = new CodeVariableReferenceExpression ("creator");
 			var argNullEx = new CodeThrowExceptionStatement (
 				new CodeObjectCreateExpression (
-					new CodeTypeReference (typeof (ArgumentNullException)),
+					new CodeTypeReference (typeof (ArgumentNullException), CodeTypeReferenceOptions.GlobalReference),
 					new [] { new CodeSnippetExpression ("nameof (creator)") }
 				)
 			);
@@ -650,6 +679,75 @@ namespace Xamarin.Android.Tasks {
 
 			// return field;
 			method.Statements.Add (new CodeMethodReturnStatement (fieldVarRef));
+			return method;
+		}
+
+		CodeMemberMethod ImplementFindFragment (CodeTypeReference typeForParent, CodeTypeReference typeForOverloadCall = null, Func<CodeVariableReferenceExpression, CodeExpression> constructParentViewCall = null)
+		{
+			CodeMemberMethod method = CreateMethod ("__FindFragment", MethodAccessibility.Private, MethodScope.Final);
+
+			var typeParam = new CodeTypeParameter ("T") {
+				Constraints = {
+					new CodeTypeReference ("Android.App.Fragment", CodeTypeReferenceOptions.GlobalReference),
+				},
+			};
+			method.TypeParameters.Add (typeParam);
+			method.Parameters.Add (new CodeParameterDeclarationExpression (typeForParent, "activity"));
+			method.Parameters.Add (new CodeParameterDeclarationExpression (typeof (int), "id"));
+
+			var tReference = new CodeTypeReference (typeParam);
+			method.ReturnType = tReference;
+
+			// T fragment = FragmentManager.FindFragmentById<T> (id);
+			var id = new CodeVariableReferenceExpression ("id");
+
+			var findByIdRef = new CodeMethodReferenceExpression (
+				new CodePropertyReferenceExpression (new CodeVariableReferenceExpression ("activity"), "FragmentManager"),
+				"FindFragmentById",
+				new [] { tReference }
+			);
+
+			var findByIdInvoke = new CodeMethodInvokeExpression (findByIdRef, new [] { id });
+			var viewVar = new CodeVariableDeclarationStatement (tReference, "fragment", findByIdInvoke);
+			method.Statements.Add (viewVar);
+
+			// if (view == null) {
+			//     OnLayoutFragmentNotFound (resourceId, ref view);
+			// }
+			// if (view != null)
+			//     return view;
+			// throw new System.InvalidOperationException($"Fragment not found (ID: {id})");
+
+			var viewVarRef = new CodeVariableReferenceExpression ("fragment");
+			var ifViewNotNull = new CodeConditionStatement (
+				new CodeBinaryOperatorExpression (viewVarRef, CodeBinaryOperatorType.IdentityInequality, new CodePrimitiveExpression (null)),
+				new CodeStatement [] { new CodeMethodReturnStatement (viewVarRef) }
+			);
+
+			var viewRefParam = new CodeDirectionExpression (FieldDirection.Ref, viewVarRef);
+			var viewNotFoundInvoke = new CodeMethodInvokeExpression (
+				new CodeThisReferenceExpression (),
+				"OnLayoutFragmentNotFound",
+				new CodeExpression [] { id, viewRefParam }
+			);
+
+			var ifViewNull = new CodeConditionStatement (
+				new CodeBinaryOperatorExpression (viewVarRef, CodeBinaryOperatorType.IdentityEquality, new CodePrimitiveExpression (null)),
+				new CodeStatement [] { new CodeExpressionStatement (viewNotFoundInvoke) }
+			);
+
+			method.Statements.Add (ifViewNull);
+			method.Statements.Add (ifViewNotNull);
+
+			var throwInvOp = new CodeThrowExceptionStatement (
+				new CodeObjectCreateExpression (
+					new CodeTypeReference (typeof (InvalidOperationException), CodeTypeReferenceOptions.GlobalReference),
+					new [] { new CodeSnippetExpression ("$\"Fragment not found (ID: {id})\"") }
+				)
+			);
+
+			method.Statements.Add (throwInvOp);
+
 			return method;
 		}
 
@@ -729,7 +827,7 @@ namespace Xamarin.Android.Tasks {
 
 			var throwInvOp = new CodeThrowExceptionStatement (
 				new CodeObjectCreateExpression (
-					new CodeTypeReference (typeof (InvalidOperationException)),
+					new CodeTypeReference (typeof (InvalidOperationException), CodeTypeReferenceOptions.GlobalReference),
 					new [] { new CodeSnippetExpression ("$\"View not found (ID: {resourceId})\"") }
 				)
 			);
@@ -746,7 +844,7 @@ namespace Xamarin.Android.Tasks {
 
 		CodeMemberMethod CreateMethod (string methodName, MethodAccessibility access, MethodScope scope, Type returnType)
 		{
-			return CreateMethod (methodName, access, scope, new CodeTypeReference (returnType));
+			return CreateMethod (methodName, access, scope, new CodeTypeReference (returnType, CodeTypeReferenceOptions.GlobalReference));
 		}
 
 		CodeMemberMethod CreateMethod (string methodName, MethodAccessibility access, MethodScope scope, string returnType)
@@ -813,7 +911,7 @@ namespace Xamarin.Android.Tasks {
 
 		void AddCustomAttribute (CodeAttributeDeclarationCollection attributes, Type type)
 		{
-			attributes.Add (new CodeAttributeDeclaration (new CodeTypeReference (type)));
+			attributes.Add (new CodeAttributeDeclaration (new CodeTypeReference (type, CodeTypeReferenceOptions.GlobalReference)));
 		}
 	}
 }
