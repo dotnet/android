@@ -144,8 +144,10 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string referencesDirectory = Path.Combine (Root, path);
 			Directory.CreateDirectory (referencesDirectory);
-			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0"));
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
 			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
+				$"<FileList Redist=\"MonoAndroid\" Name=\"Xamarin.Android Base Class Libraries\"></FileList>");
 			foreach (var v in versions) {
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
