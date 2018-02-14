@@ -17,8 +17,8 @@
   <Target Name="_ClassParse"
       BeforeTargets="_AdjustApiXml"
       DependsOnTargets="_DefineApiFiles"
-      Inputs="@(ApiFileDefinition -&gt; %(ApiFileDefinition.ParameterDescription))"
-      Outputs="@(ApiFileDefinition -&gt; %(ApiFileDefinition.ClassParseXml))">
+      Inputs="%(ApiFileDefinition.ParameterDescription)"
+      Outputs="%(ApiFileDefinition.ClassParseXml)">
     <PropertyGroup>
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
@@ -31,8 +31,8 @@
   <Target Name="_AdjustApiXml"
       AfterTargets="Build"
       DependsOnTargets="_DefineApiFiles"
-      Inputs="@(ApiFileDefinition -&gt; %(ApiFileDefinition.ClassParseXml))"
-      Outputs="@(ApiFileDefinition -&gt; %(ApiFileDefinition.ApiAdjustedXml)">
+      Inputs="%(ApiFileDefinition.ClassParseXml)"
+      Outputs="%(ApiFileDefinition.ApiAdjustedXml)">
     <PropertyGroup>
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
