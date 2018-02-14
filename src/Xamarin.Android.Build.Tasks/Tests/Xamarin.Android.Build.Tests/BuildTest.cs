@@ -2249,6 +2249,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				{ "XBUILD_FRAMEWORK_FOLDERS_PATH", referencesPath },
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
 				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
 					string.Format ("First Build should have succeeded"));
