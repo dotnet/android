@@ -2770,7 +2770,7 @@ because xbuild doesn't support framework reference assemblies.
 
 
 <!-- SDK Management Targets -->
-<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
+<Target Name="GetAndroidDependencies" DependsOnTargets="_SetLatestTargetFrameworkVersion;$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
     <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(AotAssemblies)' == 'True'">true</_NdkRequired>
