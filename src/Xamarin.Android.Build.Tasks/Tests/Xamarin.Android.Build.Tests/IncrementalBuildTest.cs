@@ -13,6 +13,85 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void IncrementalCleanDuringClean ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			proj.SetProperty ("BuildingInsideVisualStudio", "True");
+			using (var b = CreateApkBuilder (path)) {
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
+				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+				b.Target = "Build";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Build.");
+				b.Target = "Clean";
+				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Clean.");
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Compile.");
+				b.Target = "Build";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Build.");
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after third Build.");
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Compile.");
+				b.Target = "Clean";
+				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Clean.");
+				b.Target = "ReBuild";
+				Assert.IsTrue(b.Build (proj), "ReBuild should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after ReBuild.");
+			}
+
+		}
+
+		[Test]
+		public void LibraryIncrementalBuild () {
+
+			var testPath = Path.Combine ("temp", TestName);
+			var class1Source = new BuildItem.Source ("Class1.cs") {
+				TextContent = () => @"
+using System;
+namespace Lib
+{
+	public class Class1
+	{
+		public Class1 ()
+		{
+		}
+	}
+}"
+			};
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Lib",
+				ProjectGuid = Guid.NewGuid ().ToString (),
+				Sources = {
+					class1Source,
+				},
+			};
+			using (var b = CreateDllBuilder (Path.Combine (testPath, "Lib"))) {
+				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
+						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
+				class1Source.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (1));
+				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
+						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
+			}
+		}
+
+		[Test]
 		public void AllProjectsHaveSameOutputDirectory()
 		{
 			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");
