@@ -1014,7 +1014,7 @@ namespace Lib1 {
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 
 				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
-				Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+				Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 
 			}
 		}
@@ -1110,10 +1110,10 @@ namespace Lib1 {
 
 
 					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
-					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
 					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
-					Assert.IsFalse (File.Exists (designerFile), $"'{designerFile}' should have been cleaned.");
+					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 
 
 				}
