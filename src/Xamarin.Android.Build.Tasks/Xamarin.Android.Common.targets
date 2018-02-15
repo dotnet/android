@@ -1116,11 +1116,6 @@ because xbuild doesn't support framework reference assemblies.
 		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
 		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
 	</ItemGroup>
-	<WriteLinesToFile
-		Condition="Exists ('$(_AndroidManagedResourceDesignerFile)')"
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="$([System.IO.Path]::GetFullPath('$(_AndroidManagedResourceDesignerFile)'))"
-		Overwrite="false" />
 </Target>
 	
 <!-- Resource Build -->

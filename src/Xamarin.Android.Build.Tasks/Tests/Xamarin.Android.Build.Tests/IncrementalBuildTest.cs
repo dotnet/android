@@ -12,6 +12,47 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
+		[Test]
+		public void IncrementalCleanDuringClean ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			proj.SetProperty ("BuildingInsideVisualStudio", "True");
+			using (var b = CreateApkBuilder (path)) {
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
+				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
+				b.Target = "Build";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Build.");
+				b.Target = "Clean";
+				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Clean.");
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after Compile.");
+				b.Target = "Build";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Build.");
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after third Build.");
+				b.Target = "Compile";
+				Assert.IsTrue(b.Build (proj), "Build should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Compile.");
+				b.Target = "Clean";
+				Assert.IsTrue(b.Build (proj), "Clean should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after second Clean.");
+				b.Target = "ReBuild";
+				Assert.IsTrue(b.Build (proj), "ReBuild should have succeeded");
+				FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should still exist after ReBuild.");
+			}
+
+		}
 
 		[Test]
 		public void LibraryIncrementalBuild () {
