@@ -27,37 +27,12 @@
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
-  <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')))">
-    <GitCommitTime
-        WorkingDirectory="..\..\external\mxe"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Time" PropertyName="_MxeCommitTime" />
-    </GitCommitTime>
-    <Touch Files="..\..\external\mxe\Makefile" Time="$(_MxeCommitTime)" />
-  </Target>
-  <ItemGroup>
-    <_AndroidMxeToolchain Include="$(MingwCommandPrefix32)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))" />
-    <_AndroidMxeToolchain Include="$(MingwCommandPrefix64)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-  </ItemGroup>
-  <ItemGroup>
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-gcc')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-cmake')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\dlfcn.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\pthread.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\sys\mman.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\zlib.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
-  </ItemGroup>
   <Target Name="_AcceptAndroidSdkLicenses">
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
   </Target>
   <Target Name="_CreateMxeToolchains"
-      DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"
-      Inputs="..\..\external\mxe\Makefile"
-      Outputs="@(_AndroidMxeOutput)">
+      Outputs="$(AndroidMxeFullPath)\.stamp">
     <GitCommitHash
         WorkingDirectory="..\..\external\mxe"
         ToolPath="$(GitToolPath)"
@@ -68,20 +43,9 @@
         Condition=" !$(AndroidMxeFullPath.EndsWith ($(_MxeHash))) "
         Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
     />
-    <PropertyGroup>
-      <_AutopointPath Condition=" '$(HostOS)' == 'Darwin' ">:%24(dirname %24(brew list gettext | grep autopoint%24))</_AutopointPath>
-      <_Path>$PATH$(_AutopointPath)</_Path>
-    </PropertyGroup>
     <Exec
-        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
-        WorkingDirectory="..\..\external\mxe"
+        Command="make $(MakeConcurrency) provision-mxe MXE_SRC=&quot;$(MSBuildThisFileDirectory)\..\..\external\mxe&quot; MXE_PREFIX_DIR=&quot;$(AndroidToolchainDirectory)&quot;"
+        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
-    <Exec
-        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
-        WorkingDirectory="..\..\external\mxe"
-    />
-    <Touch Files="@(_AndroidMxeOutput)" />
   </Target>
 </Project>
