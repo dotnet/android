@@ -479,7 +479,7 @@ namespace Xamarin.Android.Tasks
 				int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
 				if (!v.HasValue)
 					continue;
-				maxApiLevel = Math.Max (maxApiLevel, v);
+				maxApiLevel = Math.Max (maxApiLevel, v.Value);
 			}
 			if (maxApiLevel < 0)
 				Log.LogCodedError ("XA5300",
