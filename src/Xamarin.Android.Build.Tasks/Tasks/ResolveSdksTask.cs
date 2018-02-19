@@ -430,6 +430,7 @@ namespace Xamarin.Android.Tasks
 						"Support for this API will be added in a future release.");
 					AndroidApiLevel = SupportedApiLevel;
 				}
+				Log.LogDebugMessage ($"1:{AndroidApiLevel} 2:{SupportedApiLevel} 3:{maxInstalled} 4:{maxSupported}");
 				if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
 					var userSelected = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 					// overwrite using user version only if it is 
