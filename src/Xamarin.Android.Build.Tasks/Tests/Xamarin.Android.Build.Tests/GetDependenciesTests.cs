@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine ("temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
-				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			});
 			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
@@ -59,7 +59,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine ("temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
-				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
 			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
-				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
 			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);

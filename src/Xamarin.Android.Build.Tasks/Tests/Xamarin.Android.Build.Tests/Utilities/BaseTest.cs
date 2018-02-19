@@ -133,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		public struct ApiInfo {
-			public int Id;
+			public string Id;
 			public int Level;
 			public string Name;
 			public string FrameworkVersion;

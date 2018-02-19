@@ -469,15 +469,15 @@ namespace Xamarin.Android.Tasks
 		int GetMaxInstalledApiLevel ()
 		{
 			string platformsDir = Path.Combine (AndroidSdkPath, "platforms");
-			var apiLevels = Directory.EnumerateDirectories (platformsDir)
+			var apiIds = Directory.EnumerateDirectories (platformsDir)
 				.Select (platformDir => Path.GetFileName (platformDir))
 				.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
 				.Select (dir => dir.Substring ("android-".Length))
 				.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
 			int maxApiLevel = int.MinValue;
-			foreach (var level in apiLevels) {
-				int v;
-				if (!int.TryParse (level, NumberStyles.Integer, CultureInfo.InvariantCulture, out v))
+			foreach (var id in apiIds) {
+				int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
+				if (!v.HasValue)
 					continue;
 				maxApiLevel = Math.Max (maxApiLevel, v);
 			}
