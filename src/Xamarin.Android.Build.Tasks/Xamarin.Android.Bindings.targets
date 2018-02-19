@@ -82,7 +82,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <AvailableItemName Include="JavaSourceJar" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 
   <!-- Do not resolve from the GAC under any circumstances in Mobile -->
   <PropertyGroup>
