@@ -478,10 +478,8 @@ namespace Xamarin.Android.Tasks
 			int maxApiLevel = int.MinValue;
 			foreach (var id in apiIds) {
 				int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
-				if (!v.HasValue) {
-					Log.LogDebugMessage ($"Skipping {id} as its not supported.");
+				if (!v.HasValue)
 					continue;
-				}
 				maxApiLevel = Math.Max (maxApiLevel, v.Value);
 			}
 			if (maxApiLevel < 0)
