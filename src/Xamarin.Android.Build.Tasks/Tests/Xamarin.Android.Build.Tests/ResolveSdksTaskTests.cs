@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -11,8 +12,126 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
 	public class ResolveSdksTaskTests : BaseTest {
+		#pragma warning disable 414
+		static object [] UseLatestAndroidSdkTestCases = new object [] {
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ new ApiInfo[] {
+					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+				},
+				/* useLatestAndroidSdk */ true,
+				/* targetFrameworkVersion */ "v8.99",
+				/* expectedTaskResult */ true,
+				/* expectedTargetFramework */ "v8.99",
+				/* expectedError */ "",
+				/* expectedErrorMessage */ "",
+			},
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ new ApiInfo[] {
+					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+				},
+				/* useLatestAndroidSdk */ true,
+				/* targetFrameworkVersion */ "v8.0",
+				/* expectedTaskResult */ true,
+				/* expectedTargetFramework */ "v8.1",
+				/* expectedError */ "",
+				/* expectedErrorMessage */ "",
+			},
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ new ApiInfo[] {
+					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+				},
+				/* useLatestAndroidSdk */ true,
+				/* targetFrameworkVersion */ null,
+				/* expectedTaskResult */ true,
+				/* expectedTargetFramework */ "v8.1",
+				/* expectedError */ "",
+				/* expectedErrorMessage */ "",
+			},
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ new ApiInfo[] {
+					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+				},
+				/* useLatestAndroidSdk */ false,
+				/* targetFrameworkVersion */ null,
+				/* expectedTaskResult */ true,
+				/* expectedTargetFramework */ "v8.1",
+				/* expectedError */ "",
+				/* expectedErrorMessage */ "",
+			},
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ new ApiInfo[] {
+					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+				},
+				/* useLatestAndroidSdk */ false,
+				/* targetFrameworkVersion */ "v6.0",
+				/* expectedTaskResult */ false,
+				/* expectedTargetFramework */ "v6.0",
+				/* expectedError */ "XA0001",
+				/* expectedErrorMessage */ "Unsupported or invalid $(TargetFrameworkVersion) value of 'v6.0'. Please update your Project Options.",
+			},
+		};
+		#pragma warning restore 414
+		[Test]
+		[TestCaseSource(nameof(UseLatestAndroidSdkTestCases))]
+		public void UseLatestAndroidSdk (string buildtools, string jdk, ApiInfo[] apis, bool useLatestAndroidSdk, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
+		{
+			var path = Path.Combine ("temp", "UseLatestAndroidSdk");
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, minApiLevel: 26, maxApiLevel: 27, alphaApiLevel: "P");
+			string javaExe = string.Empty;
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apis);
+			var errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			var task = new ResolveSdks {
+				BuildEngine = engine
+			};
+			task.AndroidSdkPath = androidSdkPath;
+			task.AndroidNdkPath = androidSdkPath;
+			task.JavaSdkPath = javaPath;
+			task.TargetFrameworkVersion = targetFrameworkVersion;
+			task.AndroidSdkBuildToolsVersion = buildtools;
+			task.BuildingInsideVisualStudio = "true";
+			task.UseLatestAndroidPlatformSdk = useLatestAndroidSdk;
+			task.AotAssemblies = false;
+			task.LatestSupportedJavaVersion = "1.8.0";
+			task.MinimumSupportedJavaVersion = "1.7.0";
+			task.ReferenceAssemblyPaths = new string [] {
+				Path.Combine (referencePath, "MonoAndroid"),
+			};
+			task.CacheFile = Path.Combine (Root, path, "sdk.xml");
+			task.SequencePointsMode = "None";
+			task.JavaToolExe = javaExe;
+			Assert.AreEqual (expectedTaskResult, task.Execute (), $"Task should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
+			Assert.AreEqual (expectedTargetFramework, task.TargetFrameworkVersion, $"TargetFrameworkVersion should be {expectedTargetFramework} but was {targetFrameworkVersion}");
+			if (!string.IsNullOrWhiteSpace (expectedError)) {
+				Assert.AreEqual (1, errors.Count (), "An error should have been raised.");
+				Assert.AreEqual (expectedError, errors [0].Code, $"Expected error code {expectedError} but found {errors [0].Code}");
+				Assert.AreEqual (expectedErrorMessage, errors [0].Message, $"Expected error code {expectedErrorMessage} but found {errors [0].Message}");
+			}
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
 		[Test]
 		public void ResolveSdkTiming ()
 		{
@@ -21,8 +140,8 @@ namespace Xamarin.Android.Build.Tests {
 			string javaExe = string.Empty;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
-				new ApiInfo () { Id = 26, Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-				new ApiInfo () { Id = 27, Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
+				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
 			});
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new ResolveSdks {
@@ -75,6 +194,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (task.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (task.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
 			Assert.AreEqual (task.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}
 }
