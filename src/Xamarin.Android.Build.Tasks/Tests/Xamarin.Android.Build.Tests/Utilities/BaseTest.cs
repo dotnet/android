@@ -122,6 +122,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
 			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
 			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.exe" : "lint"), "");
 
 			for (int i=minApiLevel; i < maxApiLevel; i++) {
 				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{i}");
