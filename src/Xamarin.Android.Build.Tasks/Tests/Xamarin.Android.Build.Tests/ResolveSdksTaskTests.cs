@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
+	[Parallelizable (ParallelScope.Self)]
 	public class ResolveSdksTaskTests : BaseTest {
 		#pragma warning disable 414
 		static object [] UseLatestAndroidSdkTestCases = new object [] {
@@ -96,7 +97,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCaseSource(nameof(UseLatestAndroidSdkTestCases))]
 		public void UseLatestAndroidSdk (string buildtools, string jdk, ApiInfo[] apis, bool useLatestAndroidSdk, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
 		{
-			var path = Path.Combine ("temp", "UseLatestAndroidSdk");
+			var path = Path.Combine ("temp", "UseLatestAndroidSdk_" + Guid.NewGuid ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, minApiLevel: 26, maxApiLevel: 27, alphaApiLevel: "P");
 			string javaExe = string.Empty;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe);
