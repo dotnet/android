@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, int minApiLevel = 10, int maxApiLevel = 26)
+		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, int minApiLevel = 10, int maxApiLevel = 26, string alphaApiLevel = "")
 		{
 			var androidSdkDirectory = Path.Combine (Root, path);
 			var androidSdkToolsPath = Path.Combine (androidSdkDirectory, "tools");
@@ -127,6 +127,11 @@ namespace Xamarin.Android.Build.Tests
 			for (int i=minApiLevel; i < maxApiLevel; i++) {
 				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{i}");
 				Directory.CreateDirectory(dir);
+				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
+			}
+			if (!string.IsNullOrEmpty (alphaApiLevel)) {
+				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{alphaApiLevel}");
+				Directory.CreateDirectory (dir);
 				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
 			}
 			return androidSdkDirectory;

@@ -2232,6 +2232,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void ValidateUseLatestAndroid ()
 		{
 			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
+				"23.0.6", minApiLevel: 10, maxApiLevel: 28, alphaApiLevel: "P");
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), new ApiInfo [] {
 				new ApiInfo () { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
@@ -2243,8 +2245,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				TargetFrameworkVersion = "v8.0",
 				UseLatestPlatformSdk = false,
 			};
-			var targetFramework = new string [] {
+			var parameters = new string [] {
 				$"TargetFrameworkRootPath={referencesPath}",
+				$"AndroidSdkDirectory={androidSdkPath}",
 			};
 			var envVar = new Dictionary<string, string>  {
 				{ "XBUILD_FRAMEWORK_FOLDERS_PATH", referencesPath },
@@ -2252,30 +2255,30 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
-				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("First Build should have succeeded"));
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v8.0", 2), "TargetFrameworkVersion should be v8.0");
 
 				proj.TargetFrameworkVersion = "v8.0";
-				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Second Build should have succeeded"));
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v8.0", 2), "TargetFrameworkVersion should be v8.0");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v8.1";
-				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Third Build should have succeeded"));
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v8.1", 2), "TargetFrameworkVersion should be v8.1");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v8.99";
-				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Third Build should have succeeded"));
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v8.99", 2), "TargetFrameworkVersion should be v8.99");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v6.0";
-				Assert.True (builder.Build (proj, parameters: targetFramework, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Forth Build should have succeeded"));
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v6.0", 1), "TargetFrameworkVersion should initially be v6.0");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("TargetFrameworkVersion: v8.1", 1), "TargetFrameworkVersion should be v8.1");
