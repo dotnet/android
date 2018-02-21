@@ -187,6 +187,7 @@
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>
@@ -369,6 +370,12 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
+      <Link>Linker\Mono.Linker\MarkingHelpers.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Tracer.cs">
+      <Link>Linker\Mono.Linker\Tracer.cs</Link>
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
