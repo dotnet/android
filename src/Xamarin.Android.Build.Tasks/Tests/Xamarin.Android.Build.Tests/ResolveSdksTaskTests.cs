@@ -14,16 +14,19 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Self)]
 	public class ResolveSdksTaskTests : BaseTest {
-		#pragma warning disable 414
+#pragma warning disable 414
+
+		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
+			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
+			new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
+			new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+		};
+
 		static object [] UseLatestAndroidSdkTestCases = new object [] {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ "v8.99",
 				/* expectedTaskResult */ true,
@@ -34,11 +37,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ "v8.0",
 				/* expectedTaskResult */ true,
@@ -49,11 +48,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ "v8.1",
 				/* expectedTaskResult */ true,
@@ -64,11 +59,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ "v6.0",
 				/* expectedTaskResult */ true,
@@ -79,11 +70,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ null,
 				/* expectedTaskResult */ true,
@@ -94,11 +81,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ false,
 				/* targetFrameworkVersion */ "v8.99",
 				/* expectedTaskResult */ true,
@@ -109,11 +92,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ false,
 				/* targetFrameworkVersion */ "v8.1",
 				/* expectedTaskResult */ true,
@@ -124,11 +103,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ false,
 				/* targetFrameworkVersion */ "v8.0",
 				/* expectedTaskResult */ true,
@@ -139,11 +114,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ false,
 				/* targetFrameworkVersion */ null,
 				/* expectedTaskResult */ true,
@@ -154,11 +125,7 @@ namespace Xamarin.Android.Build.Tests {
 			new object[] {
 				/* buildtools */   "26.0.3",
 				/* jdk */ "1.8.0",
-				/* apis*/ new ApiInfo[] {
-					new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-					new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-					new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
-				},
+				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ false,
 				/* targetFrameworkVersion */ "v6.0",
 				/* expectedTaskResult */ false,
