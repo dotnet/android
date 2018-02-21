@@ -371,9 +371,6 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
     </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
-      <Link>Linker\Mono.Linker\MarkingHelpers.cs</Link>
-    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Tracer.cs">
       <Link>Linker\Mono.Linker\Tracer.cs</Link>
     </Compile>
