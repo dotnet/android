@@ -533,6 +533,22 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    </CompileDependsOn>
  </PropertyGroup>
 
+<PropertyGroup >
+  <CoreCompileDependsOn>UpdateGeneratedFiles;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+</PropertyGroup>
+
+<PropertyGroup >
+  <CoreCompileDependsOn>UpdateGeneratedFiles;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+</PropertyGroup>
+
+<PropertyGroup >
+  <CoreCompileDependsOn>UpdateGeneratedFiles;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+</PropertyGroup>
+
+<PropertyGroup >
+  <CoreCompileDependsOn>UpdateGeneratedFiles;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+</PropertyGroup>
+
 <PropertyGroup>
     <!-- no need to add those wear resources into C#, hence this order... -->
 	<CoreResolveReferencesDependsOn>
@@ -574,12 +590,18 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateProperty>
 </Target>
 
+<Target Name="UpdateGeneratedFiles"
+		DependsOnTargets="_RemoveLegacyDesigner;UpdateAndroidResources"
+	>
+</Target>
+
 <Target Name="_RemoveLegacyDesigner" Condition="'$(AndroidUseIntermediateDesignerFile)' == 'True'">
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
 		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(AndroidResgenFile)' != '' "/>
 		<Compile Include="$(_AndroidResourceDesignerFile)" />
 	</ItemGroup>
+	<Message Importance="High" Text="$(AndroidResgenFile) is no longer required and can be safely removed." Condition=" '$(AndroidResgenFile)' != '' And Exists('$(AndroidResgenFile)') " />
 </Target>
 
 <Target Name="_ValidateAndroidPackageProperties">
