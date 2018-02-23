@@ -10,12 +10,15 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests {
 	public class MockBuildEngine : IBuildEngine, IBuildEngine2, IBuildEngine3, IBuildEngine4 {
-		public MockBuildEngine (TextWriter output)
+		public MockBuildEngine (TextWriter output, IList<BuildErrorEventArgs> errors = null)
 		{
 			this.Output = output;
+			this.Errors = errors;
 		}
 
 		private TextWriter Output { get; }
+
+		private IList<BuildErrorEventArgs> Errors { get; }
 
 		int IBuildEngine.ColumnNumberOfTaskNode => -1;
 
@@ -37,6 +40,8 @@ namespace Xamarin.Android.Build.Tests {
 		void IBuildEngine.LogErrorEvent (BuildErrorEventArgs e)
 		{
 			this.Output.WriteLine ($"Error: {e.Message}");
+			if (Errors != null)
+				Errors.Add (e);
 		}
 
 		void IBuildEngine.LogMessageEvent (BuildMessageEventArgs e)

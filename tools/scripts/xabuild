@@ -133,7 +133,11 @@ case "$MSBUILD" in
 		XABUILD_FLAGS+=(/p:TargetFrameworkRootPath="$TARGETS_DIR-frameworks/")
 		;;
 	*xbuild*)
-		export XBUILD_FRAMEWORK_FOLDERS_PATH="$TARGETS_DIR-frameworks"
+		if [ -z "$XBUILD_FRAMEWORK_FOLDERS_PATH" ]; then
+			export XBUILD_FRAMEWORK_FOLDERS_PATH="$TARGETS_DIR-frameworks"
+		else 
+			export XBUILD_FRAMEWORK_FOLDERS_PATH="$XBUILD_FRAMEWORK_FOLDERS_PATH"
+		fi
 		;;
 esac
 
