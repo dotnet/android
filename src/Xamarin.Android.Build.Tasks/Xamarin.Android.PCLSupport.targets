@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<!-- PCL Support -->
 	<PropertyGroup>
-		<IsXBuild Condition="'$(MSBuildRuntimeVersion)' == ''">true</IsXBuild>
+		<_IsXBuild Condition="'$(MSBuildRuntimeVersion)' == ''">true</_IsXBuild>
 		<CheckForSystemRuntimeDependency>true</CheckForSystemRuntimeDependency>
 		<ImplicitlyExpandDesignTimeFacades>true</ImplicitlyExpandDesignTimeFacades>
 		<ResolveReferencesDependsOn>
@@ -18,7 +18,7 @@
 
 	<UsingTask
 		TaskName="GetDependsOnNETStandard"
-		Condition="'$(IsXBuild)' != 'true'"
+		Condition="'$(_IsXBuild)' != 'true' And Exists ('$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll')"
 		AssemblyFile="$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll" />
 	
 	<Target Name="ImplicitlyExpandDesignTimeFacades" Condition="'$(ImplicitlyExpandDesignTimeFacades)' == 'true'" DependsOnTargets="$(ImplicitlyExpandDesignTimeFacadesDependsOn)">
@@ -42,7 +42,7 @@
 			If $(_HasReferenceToSystemRuntime) is true, then the facades are going to be expanded anyway, so don't run this.
 		-->
 		<GetDependsOnNETStandard
-				Condition="'$(_HasReferenceToSystemRuntime)' != 'true' and '$(IsXBuild)' != 'true' and '$(DependsOnNETStandard)' == '' and '@(_XACandidateNETStandardReferences)' != ''"
+				Condition="'$(_HasReferenceToSystemRuntime)' != 'true' and '$(_IsXBuild)' != 'true' and '$(DependsOnNETStandard)' == '' and '@(_XACandidateNETStandardReferences)' != ''"
 				References="@(_XACandidateNETStandardReferences)">
 			<Output TaskParameter="DependsOnNETStandard" PropertyName="_XADependsOnNETStandard" />
 		</GetDependsOnNETStandard>
