@@ -1,4 +1,17 @@
 <metadata>
+
+  <!-- FIXME: these members used to be `virtual` and then became `abstract`.
+  They result in API breakage (reported as inter-api-level mismatch).
+  This is ancient Google's fault. To deal with the situation nicely,
+  we are marking them just as `abstract` even at the old API Level, so
+  that app developers don't get trapped due to missing members at run time.
+  -->
+  <attr path="/api/package[@name='android.webkit']/class[@name='CookieManager' or @name='WebBackForwardList' or @name='WebHistoryItem' or @name='WebIconDatabase' or @name='WebViewDatabase']/method[@static='false']" name="abstract">true</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='WebSettings']/method[@static='false' and @name!='setTextSize']" name="abstract">true</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CookieManager' or @name='WebBackForwardList' or @name='WebHistoryItem' or @name='WebIconDatabase' or @name='WebViewDatabase' or @name='WebSettings']" name="abstract">true</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CookieManager' or @name='WebBackForwardList' or @name='WebHistoryItem' or @name='WebIconDatabase' or @name='WebViewDatabase' or @name='WebSettings']" name="static">false</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CookieManager' or @name='WebBackForwardList' or @name='WebHistoryItem' or @name='WebIconDatabase' or @name='WebViewDatabase' or @name='WebSettings']" name="final">false</attr>
+
   <!-- Manifest.permission has its last name part all in lowercase and
        regarded as obfuscated, so avoid that by explicitly marking not. -->
   <attr path="/api/package[@name='android']/class[@name='Manifest.permission']" name="obfuscated">false</attr>
