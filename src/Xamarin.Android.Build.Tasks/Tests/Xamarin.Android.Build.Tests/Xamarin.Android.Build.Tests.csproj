@@ -75,5 +75,6 @@
     <Compile Include="GetDependenciesTests.cs" />
     <Compile Include="ResolveSdksTaskTests.cs" />
     <Compile Include="AndroidResourceTests.cs" />
+    <Compile Include="ManagedResourceParserTests.cs" />
   </ItemGroup>
 </Project>
