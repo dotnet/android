@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+    <Folder Include="Content\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTest.OSS.cs" />
@@ -76,5 +77,10 @@
     <Compile Include="ResolveSdksTaskTests.cs" />
     <Compile Include="AndroidResourceTests.cs" />
     <Compile Include="ManagedResourceParserTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\GenerateDesignerFileExpected.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
