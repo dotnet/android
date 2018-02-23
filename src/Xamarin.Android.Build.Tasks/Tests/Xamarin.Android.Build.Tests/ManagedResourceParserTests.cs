@@ -93,17 +93,10 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			task.IsApplication = true;
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
-			var data = File.ReadAllText (task.NetResgenOutputFile);
-			Assert.IsTrue (data.Contains ("hello = 0;"));
-			Assert.IsTrue (data.Contains ("app_name = 0;"));
-			Assert.IsTrue (data.Contains ("foo = 0;"));
-			Assert.IsTrue (data.Contains ("num_locations_reported = 0;"));
-			Assert.IsTrue (data.Contains ("menu_settings = 0;"));
-			Assert.IsTrue (data.Contains ("ic_menu_preferences = 0;"));
-			Assert.IsTrue (data.Contains ("Options = 0;"));
-			Assert.IsTrue (data.Contains ("icon = 0;"));
-			Assert.IsTrue (data.Contains ("slide_in_bottom = 0;"));
-			Assert.IsTrue (data.Contains ("arial = 0;"));
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			var expected = Path.Combine (Root, "Content", "GenerateDesignerFileExpected.cs");
+			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected), 
+			 	$"{task.NetResgenOutputFile} and {expected} do not match.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}
