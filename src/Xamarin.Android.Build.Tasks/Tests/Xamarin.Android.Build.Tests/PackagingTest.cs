@@ -281,7 +281,7 @@ namespace XamFormsSample
         public App()
         {
             JsonConvert.DeserializeObject<string>(""test"");
-            var package = Package.Open ("""");
+            package = Package.Open ("""");
             InitializeComponent();
         }
 
