@@ -6,9 +6,7 @@ Xamarin.Android
 Xamarin.Android provides open-source bindings of the Android SDK for use with
 .NET managed languages such as C#.
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-# Build Status
+## Build Status
 
 | Platform              | Status |
 |-----------------------|--------|
@@ -23,7 +21,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [oss-windows-x86_64-icon]: https://devdiv.visualstudio.com/_apis/public/build/definitions/0bdbc590-a062-4c3f-b0f6-9383f67865ee/7212/badge
 [oss-windows-x86_64-status]: https://devdiv.visualstudio.com/DevDiv/Default/_build/index?definitionId=7212
 
-# Downloads
+## Downloads
 
 | Platform        | Status |
 |-----------------|--------|
@@ -47,7 +45,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-master-macOS-x86_64-icon]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
 [commercial-master-macOS-x86_64-status]: https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
 
-# Contributing
+## Contributing
 
 If you are interested in fixing issues and contributing directly to the code base, please see the following:
 
@@ -60,18 +58,17 @@ This project has adopted the code of conduct defined by the Contributor Covenant
 to clarify expected behavior in our community. For more information, see the
 [.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
 
-# Feedback
+## Feedback
 
-- Ask a question on [Stack Overflow](https://stackoverflow.com/questions/tagged/xamarin.android).
-- Request a new feature on [GitHub](https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests).
-- Vote for [popular feature requests](https://github.com/xamarin/xamarin-android/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc).
+- Ask a question on [Stack Overflow](https://stackoverflow.com/questions/tagged/xamarin.android) or the [Xamarin Forums](https://forums.xamarin.com/categories/android).
+- [Request a new feature](https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests) on GitHub.
+- [Vote for popular feature requests](https://github.com/xamarin/xamarin-android/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc).
 - File an issue in [GitHub Issues](https://github.com/xamarin/xamarin-android/issues/new).
 - [Tweet](https://twitter.com/xamarinhq) us with other feedback.
+- Discuss development and design on [Gitter](https://gitter.im/xamarin/xamarin-android) or email [android-devel@lists.xamarin.com](android-devel@lists.xamarin.com) 
 
-## Mailing Lists
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-To discuss this project, and participate in the design, we use the [android-devel@lists.xamarin.com](http://lists.xamarin.com/mailman/listinfo/android-devel) mailing list.   
+## License
 
-# Maintainer FAQ
-
-See [DevelopmentTips.md](Documentation/DevelopmentTips.md).
+Copyright (c) .NET Foundation Contributors. All rights reserved. Licensed under the [MIT](https://github.com/xamarin/xamarin-android/blob/master/LICENSE) License.
