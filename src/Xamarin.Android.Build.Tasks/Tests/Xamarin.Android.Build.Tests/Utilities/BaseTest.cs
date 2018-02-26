@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, int minApiLevel = 10, int maxApiLevel = 26)
+		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, int minApiLevel = 10, int maxApiLevel = 26, string alphaApiLevel = "")
 		{
 			var androidSdkDirectory = Path.Combine (Root, path);
 			var androidSdkToolsPath = Path.Combine (androidSdkDirectory, "tools");
@@ -129,11 +129,16 @@ namespace Xamarin.Android.Build.Tests
 				Directory.CreateDirectory(dir);
 				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
 			}
+			if (!string.IsNullOrEmpty (alphaApiLevel)) {
+				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{alphaApiLevel}");
+				Directory.CreateDirectory (dir);
+				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
+			}
 			return androidSdkDirectory;
 		}
 
 		public struct ApiInfo {
-			public int Id;
+			public string Id;
 			public int Level;
 			public string Name;
 			public string FrameworkVersion;
@@ -142,11 +147,12 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
 		{
-
 			string referencesDirectory = Path.Combine (Root, path);
 			Directory.CreateDirectory (referencesDirectory);
-			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0"));
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
 			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
+				$"<FileList Redist=\"MonoAndroid\" Name=\"Xamarin.Android Base Class Libraries\"></FileList>");
 			foreach (var v in versions) {
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
