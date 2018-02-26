@@ -12,6 +12,7 @@ namespace Android.App {
 	partial class UsesFeatureAttribute	{
 
 		bool _Required;
+		int _Version;
 
 		static ManifestDocumentElement<UsesFeatureAttribute> mapping = new ManifestDocumentElement<UsesFeatureAttribute> ("uses-feature") {
 			{
@@ -29,6 +30,11 @@ namespace Android.App {
 			  "glEsVersion",
 			  self          => self.GLESVesionAsString(),
 			  (self, value) => self.GLESVersion  = (int) value
+			}, {
+			  "Version",
+			  "version",
+			  self          => self._Version,
+			  (self, value) => self._Version = (int) value
 			}
 		};
 

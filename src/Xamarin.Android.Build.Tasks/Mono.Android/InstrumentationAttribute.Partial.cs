@@ -13,6 +13,7 @@ namespace Android.App {
 	partial class InstrumentationAttribute {
 		
 		string _RoundIcon;
+		string _TargetProcesses;
 
 		static ManifestDocumentElement<InstrumentationAttribute> mapping = new ManifestDocumentElement<InstrumentationAttribute> ("instrumentation") {
 			{
@@ -50,6 +51,11 @@ namespace Android.App {
 			  "targetPackage",
 			  self          => self.TargetPackage,
 			  (self, value) => self.TargetPackage = (string) value
+			}, {
+			  "TargetProcesses",
+			  "targetProcesses",
+			  self          => self._TargetProcesses,
+			  (self, value) => self._TargetProcesses = (string) value
 			},
 		};
 

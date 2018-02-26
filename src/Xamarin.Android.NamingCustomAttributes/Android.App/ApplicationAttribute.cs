@@ -23,6 +23,9 @@ namespace Android.App {
 #if ANDROID_8
 		public Type                   BackupAgent             {get; set;}
 #endif
+#if ANDROID_24
+		public bool                   BackupInForeground      {get; set;}
+#endif
 #if ANDROID_21
 		public string                 Banner                  {get; set;}
 #endif
@@ -35,6 +38,9 @@ namespace Android.App {
 #if ANDROID_23
 		public bool                   ExtractNativeLibs       {get; set;}
 		public bool                   FullBackupContent       {get; set;}
+#endif
+#if ANDROID_21
+		public bool                   FullBackupOnly          {get; set;}
 #endif
 #if ANDROID_11
 		public bool                   HardwareAccelerated     {get; set;}
@@ -50,6 +56,9 @@ namespace Android.App {
 		public string                 Logo                    {get; set;}
 #endif
 		public Type                   ManageSpaceActivity     {get; set;}
+#if ANDROID_26
+		public string                 NetworkSecurityConfig   {get; set;}
+#endif 
 		public string                 Permission              {get; set;}
 		public bool                   Persistent              {get; set;}
 		public string                 Process                 {get; set;}
@@ -70,6 +79,9 @@ namespace Android.App {
 		public string                 Theme                   {get; set;}
 #if ANDROID_14
 		public UiOptions              UiOptions               {get; set;}
+#endif
+#if ANDROID_23
+		public bool                   UsesCleartextTraffic    {get; set;}
 #endif
 #if ANDROID_10
 		public bool                   VMSafeMode              {get; set;}

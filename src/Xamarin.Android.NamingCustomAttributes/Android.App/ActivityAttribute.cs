@@ -24,6 +24,9 @@ namespace Android.App
 		public bool                   AllowTaskReparenting    {get; set;}
 		public bool                   AlwaysRetainTaskState   {get; set;}
 		public bool                   ClearTaskOnLaunch       {get; set;}
+#if ANDROID_26
+		public string                 ColorMode               {get; set;}
+#endif
 		public ConfigChanges          ConfigurationChanges    {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
@@ -44,6 +47,9 @@ namespace Android.App
 		public LayoutDirection        LayoutDirection         {get; set;}
 #endif
 		public bool                   MainLauncher            {get; set;}
+#if ANDROID_26
+		public float                  MaxAspectRatio          {get; set;}
+#endif
 		public bool                   MultiProcess            {get; set;}
 		public bool                   NoHistory               {get; set;}
 #if ANDROID_16
@@ -56,6 +62,9 @@ namespace Android.App
 #endif
 #if ANDROID_25
 		public string                 RoundIcon               {get; set;}
+#endif
+#if ANDROID_23
+                public bool                   ShowForAllUsers         {get; set;}
 #endif
 #if ANDROID_24
 		public bool                   SupportsPictureInPicture {get;set;}

@@ -499,11 +499,15 @@ namespace Xamarin.Android.Tasks {
 			var usesLibraryAttr = 
 				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
+			var usesConfigurationAttr =
+				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				.Where (attr => attr != null);
 			if (assemblyAttr.Count > 1)
 				throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
 
 			List<ApplicationAttribute> typeAttr = new List<ApplicationAttribute> ();
 			List<UsesLibraryAttribute> typeUsesLibraryAttr = new List<UsesLibraryAttribute> ();
+			List<UsesConfigurationAttribute> typeUsesConfigurationAttr = new List<UsesConfigurationAttribute> ();
 			foreach (var t in subclasses) {
 				ApplicationAttribute aa = ApplicationAttribute.FromCustomAttributeProvider (t);
 				if (aa == null)
@@ -529,6 +533,9 @@ namespace Xamarin.Android.Tasks {
 			var ull1 = usesLibraryAttr ?? new UsesLibraryAttribute [0];
 			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? new UsesLibraryAttribute [0];
 			var usesLibraryAttrs = ull1.Concat (ull2);
+			var ucl1 = usesConfigurationAttr ?? new UsesConfigurationAttribute [0];
+			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? new UsesConfigurationAttribute [0];
+			var usesConfigurationattrs = ucl1.Concat (ucl2);
 			bool needManifestAdd = true;
 
 			if (appAttr != null) {
@@ -553,7 +560,8 @@ namespace Xamarin.Android.Tasks {
 				manifest.Add (application);
 			
 			AddUsesLibraries (application, usesLibraryAttrs);
-			
+			AddUsesConfigurations (application, usesConfigurationattrs);
+
 			if (applicationClass != null && application.Attribute (androidNs + "name") == null)
 				application.Add (new XAttribute (androidNs + "name", applicationClass));
 				
@@ -817,6 +825,12 @@ namespace Xamarin.Android.Tasks {
 			foreach (var upa in assemblyAttrs.Distinct (new UsesPermissionAttribute.UsesPermissionComparer ()))
 				if (!application.Parent.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == upa.Name))
 					application.AddBeforeSelf (upa.ToElement (PackageName));
+		}
+
+		void AddUsesConfigurations (XElement application, IEnumerable<UsesConfigurationAttribute> configs)
+		{
+			foreach (var uca in configs)
+				application.Add (uca.ToElement (PackageName));
 		}
 
 		void AddUsesLibraries (XElement application, IEnumerable<UsesLibraryAttribute> libraries)
