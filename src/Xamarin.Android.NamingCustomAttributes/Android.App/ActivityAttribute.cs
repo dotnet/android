@@ -64,7 +64,7 @@ namespace Android.App
 		public string                 RoundIcon               {get; set;}
 #endif
 #if ANDROID_23
-                public bool                   ShowForAllUsers         {get; set;}
+		public bool                   ShowForAllUsers         {get; set;}
 #endif
 #if ANDROID_24
 		public bool                   SupportsPictureInPicture {get;set;}
