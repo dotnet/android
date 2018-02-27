@@ -19,9 +19,12 @@ namespace Android.App {
 	partial class ApplicationAttribute {
 
 		string _BackupAgent;
+		bool _BackupInForeground;
 		string _Banner;
+		bool _FullBackupOnly;
 		string _Logo;
 		string _ManageSpaceActivity;
+		string _NetworkSecurityConfig;
 		string _RequiredAccountType;
 		string _RestrictedAccountType;
 		bool _HardwareAccelerated;
@@ -30,6 +33,7 @@ namespace Android.App {
 		bool _LargeHeap;
 		UiOptions _UiOptions;
 		bool _SupportsRtl;
+		bool _UsesCleartextTraffic;
 		bool _VMSafeMode;
 		bool _ResizeableActivity;
 		ICustomAttributeProvider provider;
@@ -66,6 +70,11 @@ namespace Android.App {
 					return ManifestDocumentElement.ToString (typeDef);
 			  }
 			}, {
+			  "BackupInForeground",
+			  "backupInForeground",
+			  self          => self._BackupInForeground,
+			  (self, value) => self._BackupInForeground = (bool) value
+			}, {
 			  "Banner",
 			  "banner",
 			  self          => self._Banner,
@@ -100,6 +109,11 @@ namespace Android.App {
 			  "fullBackupContent",
 			  self          => self._FullBackupContent,
 			  (self, value) => self._FullBackupContent  = (bool) value
+			}, {
+			  "FullBackupOnly",
+			  "fullBackupOnly",
+			  self          => self._FullBackupOnly,
+			  (self, value) => self._FullBackupOnly = (bool) value
 			}, {
 			  "HardwareAccelerated",
 			  "hardwareAccelerated",
@@ -146,6 +160,12 @@ namespace Android.App {
 			  "name",
 			  (self, value) => self.Name  = (string) value,
 			  ToNameAttribute
+			}, {
+			  "NetworkSecurityConfig",
+			  "networkSecurityConfig",
+			  self          => self._NetworkSecurityConfig,
+			  (self, value) => self._NetworkSecurityConfig = (string) value,
+			  typeof (Type)
 			}, {
 			  "Permission",
 			  "permission",
@@ -206,6 +226,11 @@ namespace Android.App {
 			  "uiOptions",
 			  self          => self._UiOptions,
 			  (self, value) => self._UiOptions  = (UiOptions) value
+			}, {
+			  "UsesCleartextTraffic",
+			  "usesCleartextTraffic",
+			  self          => self._UsesCleartextTraffic,
+			  (self, value) => self._UsesCleartextTraffic = (bool) value
 			}, {
 			  "VMSafeMode",
 			  "vmSafeMode",
