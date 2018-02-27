@@ -10,4 +10,10 @@
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 	</PropertyGroup>
+	<ItemDefinitionGroup>
+		<AndroidResource>
+			<SubType>Designer</SubType>
+			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
+		</AndroidResource>
+	</ItemDefinitionGroup>
 </Project>
