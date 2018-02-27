@@ -30,7 +30,7 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all::
-	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
+	$(_SLN_BUILD) $(MSBUILD_FLAGS) /p:AndroidUseAapt2=false $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln

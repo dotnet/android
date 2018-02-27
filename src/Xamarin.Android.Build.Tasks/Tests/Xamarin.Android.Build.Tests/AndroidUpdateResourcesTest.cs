@@ -189,15 +189,16 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
-		public void ReportAaptWarningsForBlankLevel ()
+		public void ReportAaptWarningsForBlankLevel ([Values (false, true)] bool useAapt2)
 		{
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
 			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
-			using (var b = CreateApkBuilder ("temp/ReportAaptWarningsForBlankLevel")) {
+			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
@@ -206,10 +207,11 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
-		public void RepetiviteBuildUpdateSingleResource ()
+		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetiviteBuildUpdateSingleResource", cleanupAfterSuccessfulBuild:false)) {
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder ($"temp/{TestName}", false, false)) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				BuildItem image1, image2;
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
@@ -684,13 +686,14 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ()
+		public void CheckAaptErrorRaisedForInvalidFileName ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidFileName");
+			var projectPath = string.Format ($"temp/{TestName}");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
@@ -1245,6 +1248,7 @@ namespace Lib1 {
 			};
 
 			string name = "test";
+			proj.SetProperty ("AndroidUseAapt2", "False");
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-fr\\Strings.xml") {
 				TextContent = () => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>

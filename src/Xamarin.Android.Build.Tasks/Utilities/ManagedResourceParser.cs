@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
@@ -26,6 +27,7 @@ namespace Xamarin.Android.Tasks
 
 		public CodeTypeDeclaration Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
 		{
+			app = isApp;
 			if (!Directory.Exists (resourceDirectory))
 				throw new ArgumentException ("Specified resource directory was not found: " + resourceDirectory);
 
@@ -144,14 +146,28 @@ namespace Xamarin.Android.Tasks
 			return resources;
 		}
 
+		static Regex regex = new Regex (@"([A-Za-z\[\]]+) ([A-Za-z]+) (.+(?=0x))(\w*)",
+			RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		static Regex regexarray = new Regex (@"([A-Za-z\[\]]+) ([A-Za-z]+) (.+(?={))(\w*)",
+			RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+
 		void ProcessRtxtFile (string file)
 		{
 			var lines = System.IO.File.ReadLines (file);
 			foreach (var line in lines) {
-				var items = line.Split (new char [] { ' ' }, 4);
-				int value = items[0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
-				string itemName = items [2];
-				switch (items [1]) {
+				var match = regex.Match (line);
+				if (!match.Success)
+					continue;
+				string type = match.Groups[1].Value.Trim();
+				string item = match.Groups[2].Value.Trim();
+				string itemName = match.Groups[3].Value.Trim();
+				string strValue = match.Groups[4].Value;
+				int value = 0;
+				if (type != "int[]") {
+					value = Convert.ToInt32 (strValue.Trim(), 16);
+				}
+				switch (item) {
 				case "anim":
 					CreateIntField (animation, itemName, value);
 					break;
@@ -204,12 +220,17 @@ namespace Xamarin.Android.Tasks
 					CreateIntField (style, itemName, value);
 					break;
 				case "styleable":
-					switch (items [0]) {
+					switch (type) {
 					case "int":
 						CreateIntField (styleable, itemName, value);
 						break;
 					case "int[]":
-						var arrayValues = items [3].Trim (new char [] { '{', '}' })
+						match = regexarray.Match (line);
+						if (!match.Success)
+							continue;
+						itemName = match.Groups[3].Value.Trim();
+						strValue = match.Groups [4].Value;
+						var arrayValues = strValue.Trim (new char [] { '{', '}' })
 							.Replace (" ", "")
 							.Split (new char [] { ',' });
 						CreateIntArrayField (styleable, itemName, arrayValues.Length,

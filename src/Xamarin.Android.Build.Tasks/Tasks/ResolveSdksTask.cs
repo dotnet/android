@@ -118,6 +118,9 @@ namespace Xamarin.Android.Tasks
 		public bool AndroidUseApkSigner { get; set; }
 
 		[Output]
+		public bool AndroidUseAapt2 { get; set; }
+
+		[Output]
 		public string JdkVersion { get; set; }
 
 		[Output]
@@ -126,6 +129,7 @@ namespace Xamarin.Android.Tasks
 		static bool             IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string  ZipAlign  = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string  Aapt      = IsWindows ? "aapt.exe" : "aapt";
+		static readonly string  Aapt2      = IsWindows ? "aapt2.exe" : "aapt2";
 		static readonly string  Android   = IsWindows ? "android.bat" : "android";
 		static readonly string  Lint      = IsWindows ? "lint.bat" : "lint";
 		static readonly string  ApkSigner = "apksigner.jar";
@@ -249,6 +253,8 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
+			AndroidUseAapt2 = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+
 			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {
 				ZipAlignPath = new[]{
 					Path.Combine (AndroidSdkBuildToolsPath),
@@ -313,6 +319,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  SupportedApiLevel: {0}", SupportedApiLevel);
 			Log.LogDebugMessage ("  AndroidSequencePointMode: {0}", AndroidSequencePointsMode);
 			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
+			Log.LogDebugMessage ("  AndroidUseApkSigner: {0}", AndroidUseApkSigner);
+			Log.LogDebugMessage ("  AndroidUseAapt2: {0}", AndroidUseAapt2);
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (CacheFile));
