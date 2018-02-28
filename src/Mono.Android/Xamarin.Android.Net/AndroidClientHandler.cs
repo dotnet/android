@@ -533,8 +533,13 @@ namespace Xamarin.Android.Net
 
 			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
 			IList <string> locationHeader;
-			if (!headers.TryGetValue ("Location", out locationHeader) || locationHeader == null || locationHeader.Count == 0)
-				throw new InvalidOperationException ($"HTTP connection redirected with code {redirectCode} ({(int)redirectCode}) but no Location header found in response");
+			if (!headers.TryGetValue ("Location", out locationHeader) || locationHeader == null || locationHeader.Count == 0) {
+				// As per https://tools.ietf.org/html/rfc7231#section-6.4.1 the reponse isn't required to contain the Location header and the
+				// client should act accordingly. Since it is not documented what the action in this case should be, we're following what
+				// Xamarin.iOS does and simply return the content of the request as if it wasn't a redirect.
+				disposeRet = false;
+				return true;
+			}
 
 			if (locationHeader.Count > 1 && Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"More than one location header for HTTP {redirectCode} redirect. Will use the first one.");
