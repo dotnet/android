@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using Mono.Unix;
 
 namespace Xamarin.Android.Build
 {
@@ -22,20 +21,20 @@ namespace Xamarin.Android.Build
 						return result;
 					}
 				} else {
-					try {
-						var sourceInfo = new UnixFileInfo (source);
-						var fileInfo = new UnixFileInfo (target);
-						fileInfo.CreateSymbolicLink (source);
-					} catch (UnixIOException exc) {
-						if (exc.ErrorCode == Mono.Unix.Native.Errno.EEXIST) {
-							return true;
-						}
-						Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {exc}");
-						return false;
-					}
+					return CreateUnixSymLink (source, target);
 				}
 			}
 
+			return true;
+		}
+
+		static bool CreateUnixSymLink (string source, string target)
+		{
+			int r = symlink (Path.GetFullPath (target), source);
+			if (r != 0) {
+				perror ($"`ln -s '{source}' '{target}'` failed");
+				return false;
+			}
 			return true;
 		}
 
@@ -48,5 +47,11 @@ namespace Xamarin.Android.Build
 		[DllImport ("kernel32.dll")]
 		[return: MarshalAs (UnmanagedType.I1)]
 		static extern bool CreateSymbolicLink (string lpSymlinkFileName, string lpTargetFileName, SymbolLinkFlag dwFlags);
+
+		[DllImport ("libc", SetLastError=true)]
+		static extern int symlink (string oldpath, string newpath);
+
+		[DllImport ("libc")]
+		static extern void perror (string s);
 	}
 }
