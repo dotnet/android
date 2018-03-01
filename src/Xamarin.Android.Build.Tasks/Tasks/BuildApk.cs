@@ -365,7 +365,7 @@ namespace Xamarin.Android.Tasks
 			const string defaultLogLevel = "MONO_LOG_LEVEL=info";
 			const string defaultMonoDebug = "MONO_DEBUG=gen-compact-seq-points";
 			const string defaultHttpMessageHandler = "XA_HTTP_CLIENT_HANDLER_TYPE=System.Net.Http.HttpClientHandler, System.Net.Http";
-			const string defaultTlsProvider = "XA_TLS_PROVIDER=default";
+			const string defaultTlsProvider = "XA_TLS_PROVIDER=btls";
 			string xamarinBuildId = string.Format ("XAMARIN_BUILD_ID={0}", buildId);
 
 			bool haveLogLevel = false;
@@ -484,7 +484,8 @@ namespace Xamarin.Android.Tasks
 
 		void AddBtlsLibs (ZipArchiveEx apk, string abi)
 		{
-			if (string.Compare ("btls", TlsProvider, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.IsNullOrEmpty (TlsProvider) ||
+					string.Compare ("btls", TlsProvider, StringComparison.OrdinalIgnoreCase) == 0) {
 				AddNativeLibrary (apk, abi, "libmono-btls-shared.so");
 			}
 			// These are the other supported values

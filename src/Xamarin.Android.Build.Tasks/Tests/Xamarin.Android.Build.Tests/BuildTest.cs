@@ -1852,7 +1852,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		static object [] TlsProviderTestCases =
 		{
 			// androidTlsProvider, isRelease, extpected
-			new object[] { "", true, false, },
+			new object[] { "", true, true, },
 			new object[] { "default", true, false, },
 			new object[] { "legacy", true, false, },
 			new object[] { "btls", true, true, }
