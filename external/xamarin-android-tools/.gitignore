@@ -12,3 +12,4 @@ bin
 **/obj
 packages/
 TestResult-*.xml
+.vs/

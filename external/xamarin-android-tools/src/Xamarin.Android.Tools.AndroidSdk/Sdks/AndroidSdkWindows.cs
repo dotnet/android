@@ -89,13 +89,17 @@ namespace Xamarin.Android.Tools
 			// Check some hardcoded paths for good measure
 			var xamarin_private = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Xamarin", "MonoAndroid", "android-sdk-windows");
 			var android_default = Path.Combine (OS.ProgramFilesX86, "Android", "android-sdk-windows");
-			var cdrive_default = @"C:\android-sdk-windows";
+			var vs_2017_default = Path.Combine (OS.ProgramFilesX86, "Android", "android-sdk");
+			var cdrive_default  = @"C:\android-sdk-windows";
 
 			if (ValidateAndroidSdkLocation (xamarin_private))
 				yield return xamarin_private;
 
 			if (ValidateAndroidSdkLocation (android_default))
 				yield return android_default;
+
+			if (ValidateAndroidSdkLocation (vs_2017_default))
+				yield return vs_2017_default;
 
 			if (ValidateAndroidSdkLocation (cdrive_default))
 				yield return cdrive_default;
