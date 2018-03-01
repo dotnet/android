@@ -7,6 +7,7 @@ CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
 TEST_TARGETS  = build-tools/scripts/RunTests.targets
+API_LEVEL     ?=
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -23,6 +24,10 @@ _SLN_BUILD  = $(MSBUILD)
 else    # $(MSBUILD) != 1
 _SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
 endif   # $(USE_MSBUILD) == 1
+
+ifneq ($(API_LEVEL),)
+MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS))
+endif
 
 all::
 	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
