@@ -2,26 +2,34 @@
 
 Tips and tricks while developing Xamarin.Android.
 
-# How do I build Xamarin.Android for a given API?
+# How do I build `Mono.Android.dll` for a given API Level?
 
 There are a few ways to do it:
 
-* Use [Configuration.Override.props][override-props]
-* Build all the platforms with
+  * Use [`Configuration.Override.props`][override-props], and override 
+    `$(AndroidApiLevel)` and `$(AndroidFrameworkVersion)`.
+
+  * Build all the platforms with:
   
-      make framework-assemblies
+        make framework-assemblies
   
-* Build several platforms other than the default
+    Note that `make framework-assemblies` builds `Mono.Android.dll`
+    for *both* Debug and Release configurations. To build only a
+    single configuration, set the `$(CONFIGURATIONS)` make variable:
+
+        make framework-assemblies CONFIGURATIONS=Debug
+
+  * Build several platforms other than the default
   
-      make framework-assemblies API_LEVELS="LEVEL1 LEVEL2"
+        make framework-assemblies API_LEVELS="LEVEL1 LEVEL2"
   
-  where *LEVEL1* and *LEVEL2* are [API levels from the API_LEVELS variable][api-levels]
+    where *LEVEL1* and *LEVEL2* are [API levels from the `$(API_LEVELS)` variable][api-levels].
   
-* Build just the platform you want, other than the default one with
+  * Build just the platform you want, other than the default one with
   
-      make API_LEVEL=LEVEL
+        make API_LEVEL=LEVEL
   
-  where *LEVEL* is one of the [API levels from the API_LEVELS variable][api-levels]
+    where *LEVEL* is one of the [API levels from the `$(API_LEVELS)` variable][api-levels].
 
 [override-props]: ../README.md#build-configuration
 [api-levels]: ../build-tools/scripts/BuildEverything.mk#L31]
