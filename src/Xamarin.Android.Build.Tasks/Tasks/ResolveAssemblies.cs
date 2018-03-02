@@ -10,6 +10,9 @@ using Mono.Cecil;
 using MonoDroid.Tuner;
 using System.IO;
 using Xamarin.Android.Tools;
+using NuGet.Common;
+using NuGet.Frameworks;
+using NuGet.ProjectModel;
 
 using Java.Interop.Tools.Cecil;
 
@@ -23,6 +26,12 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ReferenceAssembliesDirectory { get; set; }
+
+		public string ProjectAssetFile { get; set; }
+
+		public string TargetMoniker { get; set; }
+
+		public string NuGetPackageRoot { get; set; }
 
 		public string I18nAssemblies { get; set; }
 		public string LinkMode { get; set; }
@@ -57,6 +66,9 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
 			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
 			Log.LogDebugTaskItems ("  Assemblies:", Assemblies);
+			Log.LogDebugMessage ("  ProjectAssetFile: {0}", ProjectAssetFile);
+			Log.LogDebugMessage ("  NuGetPackageRoot: {0}", NuGetPackageRoot);
+			Log.LogDebugMessage ("  TargetMoniker: {0}", TargetMoniker);
 
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
@@ -64,6 +76,11 @@ namespace Xamarin.Android.Tasks
 			var assemblies = new HashSet<string> ();
 
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
+
+			LockFile lockFile = null;
+			if (!string.IsNullOrEmpty (ProjectAssetFile) && File.Exists (ProjectAssetFile)) {
+				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, NullLogger.Instance);
+			}
 
 			try {
 				foreach (var assembly in Assemblies) {
@@ -77,8 +94,13 @@ namespace Xamarin.Android.Tasks
 					if (assemblyDef == null)
 						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
 					if (MonoAndroidHelper.IsReferenceAssembly (assemblyDef)) {
-						Log.LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
-						continue;
+						// Resolve "runtime" library
+						if (lockFile != null)
+							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, assemblyDef.Name);
+						if (lockFile == null || assemblyDef == null) {
+							Log.LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
+							continue;
+						}
 					}
 					topAssemblyReferences.Add (assemblyDef);
 					assemblies.Add (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName));
@@ -119,6 +141,35 @@ namespace Xamarin.Android.Tasks
 
 		readonly List<string> do_not_package_atts = new List<string> ();
 		int indent = 2;
+
+		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, AssemblyNameDefinition assemblyNameDefinition)
+		{
+			if (string.IsNullOrEmpty(TargetMoniker) || string.IsNullOrEmpty (NuGetPackageRoot) || !Directory.Exists (NuGetPackageRoot)) 
+				return null;
+
+			var framework = NuGetFramework.Parse (TargetMoniker);
+			if (framework == null) {
+				Log.LogWarning ($"Could not parse '{TargetMoniker}'");
+				return null;
+			}
+			var target = lockFile.GetTarget (framework, string.Empty);
+			if (target == null) {
+				Log.LogWarning ($"Could not resolve target for '{TargetMoniker}'");
+				return null;
+			}
+			var libraryPath = lockFile.Libraries.FirstOrDefault (x => x.Name == assemblyNameDefinition.Name);
+			if (libraryPath == null)
+				return null;
+			var library = target.Libraries.FirstOrDefault (x => x.Name == assemblyNameDefinition.Name);
+			if (library == null)
+				return null;
+			var runtime = library.RuntimeAssemblies.FirstOrDefault ();
+			if (runtime == null)
+				return null;
+			var path = Path.Combine (NuGetPackageRoot, libraryPath.Path, runtime.Path);
+			Log.LogDebugMessage ($"Attempting to load {path}");
+			return resolver.Load (path, forceLoad: true);
+		}
 
 		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
 		{
