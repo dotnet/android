@@ -29,6 +29,7 @@ Makefile	eol=lf
 *.csproj	eol=crlf
 *.shproj	eol=crlf
 *.projitems	eol=crlf
+*.tpnitems	eol=crlf
 *.wixproj	eol=crlf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
