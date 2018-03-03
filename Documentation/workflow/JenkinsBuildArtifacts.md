@@ -69,7 +69,7 @@ the Visual Studio Extension Manager, and then click the **Revert** button
 to uninstall the `Xamarn.Android.Sdk-OSS` package and revert to the previously
 installed and stable commercial Xamarin.Android version.
 
-![VS Extensions Window](VS-Extensions-Revert.png)
+![VS Extensions Window](../images/VS-Extensions-Revert.png)
 
 Visual Studio 15.2 and earlier do not have a **Revert** button. The only way to
 return to a stable Xamarin.Android version is to uninstall and reinstall the
@@ -83,7 +83,7 @@ Once the `Xamarin.Android.Sdk-OSS*.vsix` file has been downloaded, you can
 double-click the file, and within the **VSIX Installer** window you can select
 which products the Xamarin.Android SDK should be installed into:
 
-![VSIX Installer Window](VSIX-Installer.png)
+![VSIX Installer Window](../images/VSIX-Installer.png)
 
 Once you've selected the desired Visual Studio products, click the **Install**
 button to install the Xamarin.Android SDK extension into Visual Studio 2017.
