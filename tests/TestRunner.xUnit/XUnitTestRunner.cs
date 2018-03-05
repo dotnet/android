@@ -724,7 +724,7 @@ namespace Xamarin.Android.UnitTests.XUnit
 				}
 			}
 
-			return outputFilePath;
+			return ToAdbPath(outputFilePath);
 		}
 
 		void Transform_Results (string xsltResourceName, XElement element, XmlWriter writer)

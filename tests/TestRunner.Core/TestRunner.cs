@@ -107,7 +107,7 @@ namespace Xamarin.Android.UnitTests
 			if (!usePathFile && !Directory.Exists (resultsPath))
 				Directory.CreateDirectory (resultsPath);
 
-			return ToAdbPath (Path.Combine (resultsPath, ResultsFileName));
+			return Path.Combine (resultsPath, ResultsFileName);
 		}
 
 		// On some Android targets, the external storage directory is "emulated",
@@ -119,7 +119,7 @@ namespace Xamarin.Android.UnitTests
 		// The `$EMULATED_STORAGE_SOURCE` and `$EMULATED_STORAGE_TARGET` environment
 		// variables control the "on-device" (`$EMULATED_STORAGE_TARGET`) and
 		// "off-device" (`$EMULATED_STORAGE_SOURCE`) directory prefixes
-		string ToAdbPath (string path)
+		protected string ToAdbPath (string path)
 		{
 			string source = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_SOURCE")?.Trim ();
 			string target = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_TARGET")?.Trim ();
