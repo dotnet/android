@@ -110,14 +110,14 @@ namespace Java.Interop.Tools.Cecil {
 			return new Dictionary<string, AssemblyDefinition>(cache);
 		}
 
-		public virtual AssemblyDefinition Load (string fileName)
+		public virtual AssemblyDefinition Load (string fileName, bool forceLoad = false)
 		{
 			if (!File.Exists (fileName))
 				return null;
 
-			AssemblyDefinition assembly;
+			AssemblyDefinition assembly = null;
 			var name = Path.GetFileNameWithoutExtension (fileName);
-			if (cache.TryGetValue (name, out assembly))
+			if (!forceLoad && cache.TryGetValue (name, out assembly))
 				return assembly;
 
 			try {
@@ -125,7 +125,7 @@ namespace Java.Interop.Tools.Cecil {
 			} catch (Exception e) {
 				Diagnostic.Error (9, e, "Error while loading assembly: {0}", fileName);
 			}
-			cache.Add (name, assembly);
+			cache [name] = assembly;
 			return assembly;
 		}
 
