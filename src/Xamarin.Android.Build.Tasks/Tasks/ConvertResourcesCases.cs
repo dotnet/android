@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 			foreach (string file in xmls) {
 				Log.LogDebugMessage ("  Processing: {0}", file);
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
-				var tmpdest = file + ".tmp";
+				var tmpdest = file + "_" + Path.GetFileName (Path.GetTempFileName ());
 				MonoAndroidHelper.CopyIfChanged (file, tmpdest);
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
