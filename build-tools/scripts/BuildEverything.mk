@@ -200,3 +200,8 @@ package-deb: $(ZIP_OUTPUT)
 	ln -sf $(ZIP_OUTPUT) xamarin.android-oss_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
+
+package-test-errors:
+ifneq ($(wildcard bin/Test*/temp),)
+	zip -r test-errors.zip bin/Test*/temp
+endif # We have test error output
