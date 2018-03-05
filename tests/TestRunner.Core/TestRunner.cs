@@ -109,26 +109,5 @@ namespace Xamarin.Android.UnitTests
 
 			return Path.Combine (resultsPath, ResultsFileName);
 		}
-
-		// On some Android targets, the external storage directory is "emulated",
-		// in which case the paths used on-device by the application are *not*
-		// paths that can be used off-device with `adb pull`.
-		// For example, `Contxt.GetExternalFilesDir()` may return `/storage/emulated/foo`,
-		// but `adb pull /storage/emulated/foo` will *fail*; instead, we may need
-		// `adb pull /mnt/shell/emulated/foo`.
-		// The `$EMULATED_STORAGE_SOURCE` and `$EMULATED_STORAGE_TARGET` environment
-		// variables control the "on-device" (`$EMULATED_STORAGE_TARGET`) and
-		// "off-device" (`$EMULATED_STORAGE_SOURCE`) directory prefixes
-		protected string ToAdbPath (string path)
-		{
-			string source = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_SOURCE")?.Trim ();
-			string target = global::System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_TARGET")?.Trim ();
-
-			if (!String.IsNullOrEmpty (source) && !String.IsNullOrEmpty (target) && path.StartsWith (target, StringComparison.Ordinal)) {
-				return path.Replace (target, source);
-			}
-
-			return path;
-		}
 	}
 }

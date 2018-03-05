@@ -196,7 +196,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 			var resultsXml = new NUnit2XmlOutputWriter (DateTime.UtcNow);
 			resultsXml.WriteResultFile (results, ret);
 
-			return ToAdbPath(ret);
+			return ret;
 		}
 	}
 }
