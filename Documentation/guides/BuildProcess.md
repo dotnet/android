@@ -783,6 +783,13 @@ To use the keystore generated above, use the property group:
         <AndroidSigningKeyPass>keystore.alias password</AndroidSigningKeyPass>
     </PropertyGroup>
 
+-   **AndroidDebugKeyAlgorithm** &ndash; Specifies the default
+    algorithm to use for the `debug.keystore`. It defaults to
+    `RSA`.
+
+-   **AndroidDebugKeyValidity** &ndash; Specifies the default
+    validity to use for the `debug.keystore`. It defaults to
+    `10950` or `30 * 365` or `30 years`.
 
 <a name="Build_Actions" class="injected"></a>
 
