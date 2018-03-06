@@ -123,22 +123,12 @@ prepare-image-dependencies:
 include build-tools/scripts/BuildEverything.mk
 include tests/api-compatibility/api-compatibility.mk
 
-prepare:: prepare-tpn
-
 topdir  := $(shell pwd)
 
-TPN_LICENSE_FILES = $(shell grep -h '<LicenseFile>' external/*.tpnitems src/*.tpnitems \
-	| sed -E 's,<LicenseFile>(.*)</LicenseFile>,\1,g;s,.\(MSBuildThisFileDirectory\),$(topdir)/external/,g' \
-	| tr \\ / )
-
-# Usage: $(call CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+# Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
 define CREATE_THIRD_PARTY_NOTICES
-prepare-tpn:: $(2)
-
-$(2) $(topdir)/$(2): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
-		$(wildcard external/*.tpnitems src/*.tpnitems) \
-		$(TPN_LICENSE_FILES)
-	$(MSBUILD) $(MSBUILD_FLAGS) $(_MSBUILD_ARGS) $$< \
+	$(MSBUILD) $(MSBUILD_FLAGS) $(_MSBUILD_ARGS) \
+		$(topdir)/build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
 		/p:Configuration=$(1) \
 		/p:ThirdPartyNoticeFile=$(topdir)/$(2) \
 		/p:ThirdPartyNoticeLicenseType=$(3) \
@@ -146,11 +136,26 @@ $(2) $(topdir)/$(2): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
 		/p:TpnIncludeBuildDependencies=$(5)
 endef # CREATE_THIRD_PARTY_NOTICES
 
+prepare:: prepare-tpn
+
+TPN_LICENSE_FILES = $(shell grep -h '<LicenseFile>' external/*.tpnitems src/*.tpnitems \
+	| sed -E 's,<LicenseFile>(.*)</LicenseFile>,\1,g;s,.\(MSBuildThisFileDirectory\),$(topdir)/external/,g' \
+	| tr \\ / )
+
+# Usage: $(call CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+define CREATE_THIRD_PARTY_NOTICES_RULE
+prepare-tpn:: $(2)
+
+$(2) $(topdir)/$(2): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
+		$(wildcard external/*.tpnitems src/*.tpnitems) \
+		$(TPN_LICENSE_FILES)
+	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4),$(5))
+endef # CREATE_THIRD_PARTY_NOTICES_RULE
+
 THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
 
-$(eval $(call CREATE_THIRD_PARTY_NOTICES,$(CONFIGURATION),ThirdPartyNotices.txt,foundation,False,False))
-$(foreach c, $(CONFIGURATIONS), \
-	$(eval $(call CREATE_THIRD_PARTY_NOTICES,$(c),bin/$(c)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False)))
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),ThirdPartyNotices.txt,foundation,False,False))
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunAllTests
