@@ -240,6 +240,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
 	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 
+	<AndroidDebugKeyAlgorithm>RSA</AndroidDebugKeyAlgorithm>
+	<AndroidDebugKeyValidity>10950</AndroidDebugKeyValidity>
+
 	<!-- Obsolete -->
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
@@ -2515,6 +2518,8 @@ because xbuild doesn't support framework reference assemblies.
 		KeyAlias="androiddebugkey"
 		KeyPass="android"
 		StorePass="android"
+		KeyAlgorithm="$(AndroidDebugKeyAlgorithm)"
+		Validity="$(AndroidDebugKeyValidity)"
 		ToolPath="$(KeytoolToolPath)"
 		ToolExe="$(KeytoolToolExe)"
 		Command="-genkeypair"
