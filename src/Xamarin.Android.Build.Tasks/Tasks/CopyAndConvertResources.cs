@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 				var destfilename = p.Value;
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (filename);
 				var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastAccessTimeUtc (destfilename) : DateTime.MinValue;
-				var tmpdest = p.Value + ".tmp";
+				var tmpdest = Path.GetTempFileName ();
 				MonoAndroidHelper.CopyIfChanged (filename, tmpdest);
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
