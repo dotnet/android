@@ -158,20 +158,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <!-- Get our Build Action to show up in VS -->
 <ItemGroup>
-	<AvailableItemName Include="AndroidAsset" />  
-	<AvailableItemName Include="AndroidEnvironment" />  
-	<AvailableItemName Include="AndroidInterfaceDescription" />  
-	<AvailableItemName Include="AndroidJavaSource" />
-	<AvailableItemName Include="AndroidJavaLibrary" />
-	<AvailableItemName Include="AndroidExternalJavaLibrary" />
-	<AvailableItemName Include="AndroidNativeLibrary" />
-    <AvailableItemName Include="EmbeddedNativeLibrary" />
-	<AvailableItemName Include="AndroidResource" />  
-	<AvailableItemName Include="LinkDescription" />  
-	<AvailableItemName Include="ProguardConfiguration" />
-	<AvailableItemName Include="ProjectReference" />
-	<AvailableItemName Include="AndroidLintConfig" />
-	<AvailableItemName Include="MultiDexMainDexList" />
+  <AvailableItemName Include="AndroidAarLibrary" />
+  <AvailableItemName Include="AndroidAsset" />
+  <AvailableItemName Include="AndroidEnvironment" />
+  <AvailableItemName Include="AndroidExternalJavaLibrary" />
+  <AvailableItemName Include="AndroidInterfaceDescription" />
+  <AvailableItemName Include="AndroidJavaLibrary" />
+  <AvailableItemName Include="AndroidJavaSource" />
+  <AvailableItemName Include="AndroidLintConfig" />
+  <AvailableItemName Include="AndroidNativeLibrary" />
+  <AvailableItemName Include="AndroidResource" />
+  <AvailableItemName Include="EmbeddedNativeLibrary" />
+  <AvailableItemName Include="LinkDescription" />
+  <AvailableItemName Include="MultiDexMainDexList" />
+  <AvailableItemName Include="ProguardConfiguration" />
+  <AvailableItemName Include="ProjectReference" />
 </ItemGroup>
 
 <!-- Version/fx properties -->
