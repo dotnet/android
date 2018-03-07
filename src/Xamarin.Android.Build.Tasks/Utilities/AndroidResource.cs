@@ -9,17 +9,14 @@ using System.Xml.XPath;
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static void UpdateXmlResource (string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null)
+		public static void UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null)
 		{
 			// use a temporary file so we only update the real file if things actually changed
 			string tmpfile = filename + ".bk";
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
 
-				// The assumption here is that the file we're fixing up is in a directory below the
-				// obj/${Configuration}/res/ directory and so appending ../gives us the actual path to
-				// 'res/'
-				UpdateXmlResource (Path.Combine (Path.GetDirectoryName (filename), ".."), doc.Root, acwMap, additionalDirectories);
+				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories);
 				using (var stream = File.OpenWrite (tmpfile))
 					using (var xw = new LinePreservedXmlWriter (new StreamWriter (stream)))
 						xw.WriteNode (doc.CreateNavigator (), false);
