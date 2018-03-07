@@ -240,8 +240,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
 	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 
-	<AndroidDebugKeyAlgorithm>RSA</AndroidDebugKeyAlgorithm>
-	<AndroidDebugKeyValidity>10950</AndroidDebugKeyValidity>
+	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
+	<AndroidDebugKeyValidity Condition=" $(AndroidDebugKeyValidity)'' == '' ">10950</AndroidDebugKeyValidity>
 
 	<!-- Obsolete -->
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
