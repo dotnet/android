@@ -54,11 +54,11 @@ namespace Xamarin.Android.Tasks
 			foreach (string file in xmls) {
 				Log.LogDebugMessage ("  Processing: {0}", file);
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
-				var tmpdest = file + ".tmp";
+				var tmpdest = Path.GetTempFileName ();
 				MonoAndroidHelper.CopyIfChanged (file, tmpdest);
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
-					AndroidResource.UpdateXmlResource (tmpdest, acwMap,
+					AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
 						ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec));
 
 					// We strip away an eventual UTF-8 BOM from the XML file.
