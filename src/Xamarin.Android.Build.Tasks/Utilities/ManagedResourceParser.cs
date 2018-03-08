@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 	class ManagedResourceParser : ResourceParser
 	{
 		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animation, attrib, boolean, ints, interpolators, styleable, style, arrays;
+		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays;
 		Dictionary<string, string> map;
 
 		void SortMembers (CodeTypeDeclaration decl)
@@ -31,18 +31,23 @@ namespace Xamarin.Android.Tasks
 			map = resourceMap ?? new Dictionary<string, string> ();
 			resources = CreateResourceClass ();
 			animation = CreateClass ("Animation");
+			animator = CreateClass ("Animator");
 			arrays = CreateClass ("Array");
 			attrib = CreateClass ("Attribute");
 			boolean = CreateClass ("Boolean");
+			font = CreateClass ("Font");
 			layout = CreateClass ("Layout");
 			ids = CreateClass ("Id");
 			ints = CreateClass ("Integer");
 			interpolators = CreateClass ("Interpolator");
+			menu = CreateClass ("Menu");
+			mipmaps = CreateClass ("Mipmap");
 			drawable = CreateClass ("Drawable");
 			strings = CreateClass ("String");
 			colors = CreateClass ("Color");
 			dimension = CreateClass ("Dimension");
 			raw = CreateClass ("Raw");
+			plurals = CreateClass ("Plurals");
 			styleable = CreateClass ("Styleable");
 			style = CreateClass ("Style");
 
@@ -72,6 +77,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			SortMembers (animation);
+			SortMembers (animator);
 			SortMembers (ids);
 			SortMembers (attrib);
 			SortMembers (arrays);
@@ -79,10 +85,14 @@ namespace Xamarin.Android.Tasks
 			SortMembers (colors);
 			SortMembers (dimension);
 			SortMembers (drawable);
+			SortMembers (font);
 			SortMembers (ints);
 			SortMembers (interpolators);
 			SortMembers (layout);
+			SortMembers (mipmaps);
+			SortMembers (menu);
 			SortMembers (raw);
+			SortMembers (plurals);
 			SortMembers (strings);
 			SortMembers (style);
 			SortMembers (styleable);
@@ -90,6 +100,8 @@ namespace Xamarin.Android.Tasks
 
 			if (animation.Members.Count > 1)
 				resources.Members.Add (animation);
+			if (animator.Members.Count > 1)
+				resources.Members.Add (animator);
 			if (arrays.Members.Count > 1)
 				resources.Members.Add (arrays);
 			if (attrib.Members.Count > 1)
@@ -102,6 +114,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (dimension);
 			if (drawable.Members.Count > 1)
 				resources.Members.Add (drawable);
+			if (font.Members.Count > 1)
+				resources.Members.Add (font);
 			if (ids.Members.Count > 1)
 				resources.Members.Add (ids);
 			if (ints.Members.Count > 1)
@@ -110,8 +124,14 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (interpolators);
 			if (layout.Members.Count > 1)
 				resources.Members.Add (layout);
+			if (menu.Members.Count > 1)
+				resources.Members.Add (menu);
+			if (mipmaps.Members.Count > 1)
+				resources.Members.Add (mipmaps);
 			if (raw.Members.Count > 1)
 				resources.Members.Add (raw);
+			if (plurals.Members.Count > 1)
+				resources.Members.Add (plurals);
 			if (strings.Members.Count > 1)
 				resources.Members.Add (strings);
 			if (style.Members.Count > 1)
@@ -133,6 +153,9 @@ namespace Xamarin.Android.Tasks
 				case "anim":
 					CreateIntField (animation, itemName, value);
 					break;
+				case "animator":
+					CreateIntField (animator, itemName, value);
+					break;
 				case "attr":
 					CreateIntField (attrib, itemName, value);
 					break;
@@ -148,6 +171,9 @@ namespace Xamarin.Android.Tasks
 				case "drawable":
 					CreateIntField (drawable, itemName, value);
 					break;
+				case "font":
+					CreateIntField (font, itemName, value);
+					break;
 				case "id":
 					CreateIntField (ids, itemName, value);
 					break;
@@ -159,6 +185,15 @@ namespace Xamarin.Android.Tasks
 					break;
 				case "layout":
 					CreateIntField (layout, itemName, value);
+					break;
+				case "menu":
+					CreateIntField (menu, itemName, value);
+					break;
+				case "mipmap":
+					CreateIntField (mipmaps, itemName, value);
+					break;
+				case "plurals":
+					CreateIntField (plurals, itemName, value);
 					break;
 				case "string":
 					CreateIntField (strings, itemName, value);
@@ -296,6 +331,9 @@ namespace Xamarin.Android.Tasks
 			var item = i < 0 ? root : root.Substring (0, i);
 			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
 			switch (item.ToLower ()) {
+			case "animator":
+				CreateIntField (animator, fieldName);
+				break;
 			case "bool":
 				CreateIntField (boolean, fieldName);
 				break;
@@ -306,6 +344,9 @@ namespace Xamarin.Android.Tasks
 				CreateIntField (drawable, fieldName);
 				break;
 			case "dimen":
+			case "font":
+				CreateIntField (font, fieldName);
+				break;
 			case "fraction":
 				CreateIntField (dimension, fieldName);
 				break;
@@ -324,8 +365,17 @@ namespace Xamarin.Android.Tasks
 			case "layout":
 				CreateIntField (layout, fieldName);
 				break;
+			case "menu":
+				CreateIntField (menu, fieldName);
+				break;
+			case "mipmap":
+				CreateIntField (mipmaps, fieldName);
+				break;
 			case "raw":
 				CreateIntField (raw, fieldName);
+				break;
+			case "plurals":
+				CreateIntField (plurals, fieldName);
 				break;
 			case "string":
 				CreateIntField (strings, fieldName);
