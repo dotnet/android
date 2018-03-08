@@ -1402,4 +1402,10 @@
    -->
   <attr path="/api/package[@name='android.os']/class[@name='Build']/method[@name='getSerial']" name="propertyName"></attr>
 
+  <!-- API Level 28 -->
+  <attr path="/api/package[@name='android.app.slice']" name="managedName">Android.App.Slices</attr>
+  <attr path="/api/package[@name='android.view.textclassifier.logging']" name="managedName">Android.Views.TextClassifiers.Logging</attr>
+  <!-- okay you are NOT documented. Wasn't Google going to kill nonpublic classes? -->
+  <remove-node path="/api/package[@name='android.text']/class[@name='PrecomputedText']" />
+
 </metadata>

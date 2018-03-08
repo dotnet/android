@@ -131,7 +131,7 @@
   </Target>
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="_GenerateFrameworkList"
-      Inputs="$(MSBuildProjectFullPath)"
+      Inputs="$(MSBuildProjectFullPath);$(MSBuildThisFileDirectory)Mono.Android.projitems"
       Outputs="$(OutputPath)AndroidApiInfo.xml">
    <MakeDir Directories="$(OutputPath)" />
    <ItemGroup>
