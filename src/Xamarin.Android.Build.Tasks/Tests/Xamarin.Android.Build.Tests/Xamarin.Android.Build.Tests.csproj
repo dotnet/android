@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="Content\" />
+    <Folder Include="Expected\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTest.OSS.cs" />
@@ -79,7 +79,7 @@
     <Compile Include="ManagedResourceParserTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\GenerateDesignerFileExpected.cs">
+    <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
