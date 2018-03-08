@@ -74,5 +74,6 @@
     <Compile Include="AndroidRegExTests.cs" />
     <Compile Include="GetDependenciesTests.cs" />
     <Compile Include="ResolveSdksTaskTests.cs" />
+    <Compile Include="AndroidResourceTests.cs" />
   </ItemGroup>
 </Project>

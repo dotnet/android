@@ -213,6 +213,7 @@ namespace Monodroid {
 			switch (attr.Name.LocalName) {
 			case "rectLayout":
 			case "roundLayout":
+			case "actionLayout":
 				attr.Value = attr.Value.ToLowerInvariant ();
 				return true;
 			}
