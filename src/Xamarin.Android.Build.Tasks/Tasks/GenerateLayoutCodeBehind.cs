@@ -46,6 +46,7 @@ namespace Xamarin.Android.Tasks {
 			public Widget Parent { get; set; }
 			public bool IsInaccessible { get; set; }
 			public bool IsRoot { get; set; }
+			public bool IsFragment { get; set; }
 
 			public void AddChild (Widget child)
 			{
@@ -121,7 +122,7 @@ namespace Xamarin.Android.Tasks {
 
 		void GetLineInfo (IXmlLineInfo linfo, out int line, out int column)
 		{
-			if (linfo == null || linfo.HasLineInfo ()) {
+			if (linfo == null || !linfo.HasLineInfo ()) {
 				line = column = 1;
 				return;
 			}
@@ -130,6 +131,7 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		readonly string classSuffix = "class";
+		readonly string managedTypeSuffix = "managedType";
 		readonly string androidSuffix = "android";
 		readonly string toolsNamespace = "http://schemas.xamarin.com/android/tools";
 		readonly string namespaceUri = "http://www.w3.org/2000/xmlns/";
@@ -175,16 +177,16 @@ namespace Xamarin.Android.Tasks {
 			return GenerateWidgetMembers (mainClass, mainClass.Name, root, globalIdCache, String.Empty);
 		}
 
-		void LoadWidgets (string fileName, XmlReader reader, IXmlLineInfo lineinfo,  string androidNS, Widget widgetRoot, Dictionary<string, int> globalIdCache)
+		void LoadWidgets (string fileName, XmlReader reader, IXmlLineInfo lineinfo, string androidNS, Widget widgetRoot, Dictionary<string, int> globalIdCache)
 		{
 			if (reader == null)
 				return;
 			string id =  reader.GetAttribute ("id", androidNS);
 			Widget root = null;
 			if (id != null) {
-				root = CreateWidget (fileName, reader, lineinfo, id, widgetRoot);
+				root = CreateWidget (fileName, reader, lineinfo, id, androidNS, widgetRoot);
 				if (root != null)
-					Log.LogDebugMessage ($"Adding Widget '{root.Name}' with ID '{root.ID}'");
+					Log.LogDebugMessage ($"Adding Widget '{root.Name}' with ID '{root.ID}' to parent widget '{widgetRoot.ID}' ({widgetRoot.Name})");
 				widgetRoot.AddChild (root);
 				if (!String.IsNullOrEmpty (root?.ID)) {
 					if (globalIdCache.ContainsKey (root.ID))
@@ -193,12 +195,43 @@ namespace Xamarin.Android.Tasks {
 						globalIdCache.Add (root.ID, 1);
 				}
 			}
-			while (reader.Read ()) {
-				LoadWidgets (fileName, reader, lineinfo, androidNS, root ?? widgetRoot, globalIdCache);
+
+			if (reader.NodeType != XmlNodeType.Element)
+				return;
+
+			using (var subtree = reader.ReadSubtree ()) {
+				bool first = true;
+				while (subtree.Read ()) {
+					// This check is here because `ReadSubtree` above returns the parent of the tree
+					// along with all of its children and thus passing the first element (the
+					// parent) to the recursive call would cause endless recursion and, eventually,
+					// stack overflow
+					if (first) {
+						first = false;
+						continue;
+					}
+
+					LoadWidgets (fileName, subtree, lineinfo, androidNS, root ?? widgetRoot, globalIdCache);
+				}
 			}
+
+			if (root == null || root.IsLeaf)
+				return;
+
+			// This is a shortcut to generate a viewclass.Widget member which is the *actual* Android view
+			root.AddChild (new Widget {
+				Name = "Widget",
+				Type = root.Type,
+				ID = root.ID,
+				Parent = root.Parent,
+				FileName = root.FileName,
+				Line = root.Line,
+				Column = root.Column,
+				IsFragment = root.IsFragment,
+			});
 		}
 
-		Widget CreateWidget (string fileName, XmlReader e, IXmlLineInfo lineInfo, string id, Widget parent)
+		Widget CreateWidget (string fileName, XmlReader e, IXmlLineInfo lineInfo, string id, string androidNS, Widget parent)
 		{
 			int line, column;
 			GetLineInfo (lineInfo, out line, out column);
@@ -209,15 +242,36 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			string parsedId, name;
+			bool isFragment = String.Compare ("fragment", e.LocalName, StringComparison.Ordinal) == 0;
+			string managedType = e.GetAttribute (managedTypeSuffix, toolsNamespace)?.Trim ();
+			if (String.IsNullOrEmpty (managedType)) {
+				if (isFragment) {
+					managedType = e.GetAttribute ("name", androidNS)?.Trim ();
+					if (String.IsNullOrEmpty (managedType))
+						managedType = "global::Android.App.Fragment";
+				} else
+					managedType = e.LocalName;
+			}
+
+			int comma = managedType.IndexOf (',');
+			if (comma >= 0)
+				managedType = managedType.Substring (0, comma).Trim ();
+
+			if (String.IsNullOrEmpty (managedType)) {
+				Log.LogError ($"Unable to determine managed type for element '{e.Name}' defined at '{fileName}:({line},{column})'");
+				return null;
+			}
+
 			ParseID (id, out parsedId, out name);
 			var ret = new Widget {
 				Name = name,
-				Type = e.LocalName,
+				Type = managedType,
 				ID = parsedId,
 				Parent = parent,
 				FileName = fileName,
 				Line = line,
-				Column = column
+				Column = column,
+				IsFragment = isFragment,
 			};
 
 			return ret;
@@ -225,15 +279,18 @@ namespace Xamarin.Android.Tasks {
 
 		bool GenerateWidgetMembers (CodeTypeDeclaration klass, string parentType, Widget widget, Dictionary<string, int> globalIdCache, string indent)
 		{
-			Log.LogDebugMessage ($"Widget members for class {klass.Name}");
-			if (!widget.IsRoot)
-				Log.LogDebugMessage ($"{indent}Widget {widget.Name} with ID '{widget.ID}' and type '{widget.Type}'");
+			if (!widget.IsRoot) {
+				Log.LogDebugMessage ($"Widget members for class {klass.Name}");
+				Log.LogDebugMessage ($"{indent}Widget {widget.Name} with ID '{widget.ID}' and type '{widget.Type}'; parent type '{parentType}'");
+			}
 
 			if (widget.IsInaccessible)
 				return true;
 
-			if (widget.IsLeaf)
+			if (widget.IsLeaf) {
+				Log.LogDebugMessage ($"Generating leaf member for widget {widget.Name} with ID '{widget.ID}' and type '{widget.Type}'");
 				return GenerateLeafWidgetMember (klass, widget, globalIdCache);
+			}
 
 			CodeTypeDeclaration widgetClass;
 			if (widget.IsRoot)
@@ -285,7 +342,7 @@ namespace Xamarin.Android.Tasks {
 		bool GenerateGroupWidgetMember (CodeTypeDeclaration klass, string parentType, Widget widget, Dictionary<string, int> globalIdCache, out CodeTypeDeclaration widgetClass)
 		{
 			string className = GetClassName (widget);
-			widgetClass = AddLayoutClass (klass, GetClassName (widget), parentType);
+			widgetClass = AddLayoutClass (klass, GetClassName (widget), parentType, widget);
 			return CreateWidgetMembers (klass, widget, className, globalIdCache, ImplementLayoutClassCreator (widget));
 		}
 
@@ -357,9 +414,15 @@ namespace Xamarin.Android.Tasks {
 			string className = GetClassName (widget);
 			CodeMemberMethod method = CreateMethod ($"__CreateClass_{className}", MethodAccessibility.Private, MethodScope.Final, className);
 
+			CodeExpression parent;
+
+			if (widget.Parent == null || widget.Parent.IsRoot)
+				parent = new CodeThisReferenceExpression ();
+			else
+				parent = new CodeFieldReferenceExpression (new CodeThisReferenceExpression (), "__parent");
 			var instantiate = new CodeObjectCreateExpression (
 				className,
-				new [] { new CodeThisReferenceExpression () }
+				new [] { parent }
 			);
 			method.Statements.Add (new CodeMethodReturnStatement (instantiate));
 
@@ -401,7 +464,8 @@ namespace Xamarin.Android.Tasks {
 
 		CodeMethodInvokeExpression CreateFindViewInvoke (Widget widget, CodeExpression parent, CodeExpression parentView)
 		{
-			var findViewRef = new CodeMethodReferenceExpression (parent, "__FindView");
+			string methodName = widget.IsFragment ? "__FindFragment" : "__FindView";
+			var findViewRef = new CodeMethodReferenceExpression (parent, methodName);
 			findViewRef.TypeArguments.Add (new CodeTypeReference (widget.Type));
 
 			return new CodeMethodInvokeExpression (findViewRef, new CodeExpression [] { parentView, new CodeSnippetExpression (widget.ID) });
@@ -416,7 +480,7 @@ namespace Xamarin.Android.Tasks {
 
 		CodeMemberField CreateBackingFuncField (Widget widget, string memberType)
 		{
-			return new CodeMemberField ($"Func<{memberType}>", $"__{widget.Name}Func");
+			return new CodeMemberField ($"global::System.Func<{memberType}>", $"__{widget.Name}Func");
 		}
 
 		bool HasUniqueId (Widget widget, Dictionary<string, int> globalIdCache)
@@ -484,7 +548,7 @@ namespace Xamarin.Android.Tasks {
 			var ns = new CodeNamespace (namespaceName);
 			compileUnit.Namespaces.Add (ns);
 			foreach (string import in StandardImports)
-				ns.Imports.Add (new CodeNamespaceImport (import));
+				ns.Imports.Add (new CodeNamespaceImport ($"global::{import}"));
 
 			CodeTypeDeclaration mainClass = AddMainClass (layoutFile, ns, className);
 			if (!GenerateLayoutMembers (mainClass, Path.GetFullPath (layoutFile.ItemSpec)))
@@ -521,14 +585,14 @@ namespace Xamarin.Android.Tasks {
 			return ret;
 		}
 
-		CodeTypeDeclaration AddLayoutClass (CodeTypeDeclaration outerClass, string className, string parentType)
+		CodeTypeDeclaration AddLayoutClass (CodeTypeDeclaration outerClass, string className, string parentType, Widget widget)
 		{
-			CodeTypeDeclaration klass = CreateLayoutClass (outerClass, className, parentType);
+			CodeTypeDeclaration klass = CreateLayoutClass (outerClass, className, parentType, widget);
 			outerClass.Members.Add (klass);
 			return klass;
 		}
 
-		CodeTypeDeclaration CreateLayoutClass (CodeTypeDeclaration mainClass, string className, string parentType)
+		CodeTypeDeclaration CreateLayoutClass (CodeTypeDeclaration mainClass, string className, string parentType, Widget widget)
 		{
 			CodeTypeDeclaration ret = CreateClass (className, isPartial: false, isPublic: true, isNested: true, isSealed: true);
 
@@ -577,8 +641,10 @@ namespace Xamarin.Android.Tasks {
 			klass.Members.Add (ImplementFindView (new CodeTypeReference ("Android.Views.View", CodeTypeReferenceOptions.GlobalReference)));
 			klass.Members.Add (ImplementFindView (activityTypeRef));
 			klass.Members.Add (ImplementFindView (new CodeTypeReference ("Android.App.Fragment", CodeTypeReferenceOptions.GlobalReference), activityTypeRef, (CodeVariableReferenceExpression parentView) => new CodePropertyReferenceExpression (parentView, "Activity")));
+			klass.Members.Add (ImplementFindFragment (activityTypeRef));
 			klass.Members.Add (ImplementEnsureView ());
 			klass.Members.Add (new CodeSnippetTypeMember ("\tpartial void OnLayoutViewNotFound<T> (int resourceId, ref T type) where T : global::Android.Views.View;"));
+			klass.Members.Add (new CodeSnippetTypeMember ("\tpartial void OnLayoutFragmentNotFound<T> (int resourceId, ref T type) where T : global::Android.App.Fragment;"));
 		}
 
 		CodeMemberMethod ImplementInitializeContentView (ITaskItem layoutFile)
@@ -609,7 +675,7 @@ namespace Xamarin.Android.Tasks {
 			method.TypeParameters.Add (typeParam);
 
 			var tRef = new CodeTypeReference (typeParam);
-			var funcRef = new CodeTypeReference (typeof (Func<>));
+			var funcRef = new CodeTypeReference (typeof (Func<>), CodeTypeReferenceOptions.GlobalReference);
 			funcRef.TypeArguments.Add (tRef);
 			method.Parameters.Add (new CodeParameterDeclarationExpression (funcRef, "creator"));
 
@@ -635,7 +701,7 @@ namespace Xamarin.Android.Tasks {
 			var creatorVarRef = new CodeVariableReferenceExpression ("creator");
 			var argNullEx = new CodeThrowExceptionStatement (
 				new CodeObjectCreateExpression (
-					new CodeTypeReference (typeof (ArgumentNullException)),
+					new CodeTypeReference (typeof (ArgumentNullException), CodeTypeReferenceOptions.GlobalReference),
 					new [] { new CodeSnippetExpression ("nameof (creator)") }
 				)
 			);
@@ -729,10 +795,80 @@ namespace Xamarin.Android.Tasks {
 
 			var throwInvOp = new CodeThrowExceptionStatement (
 				new CodeObjectCreateExpression (
-					new CodeTypeReference (typeof (InvalidOperationException)),
+					new CodeTypeReference (typeof (InvalidOperationException), CodeTypeReferenceOptions.GlobalReference),
 					new [] { new CodeSnippetExpression ("$\"View not found (ID: {resourceId})\"") }
 				)
 			);
+
+			method.Statements.Add (throwInvOp);
+
+			return method;
+		}
+
+		CodeMemberMethod ImplementFindFragment (CodeTypeReference typeForParent, CodeTypeReference typeForOverloadCall = null, Func<CodeVariableReferenceExpression, CodeExpression> constructParentViewCall = null)
+		{
+			CodeMemberMethod method = CreateMethod ("__FindFragment", MethodAccessibility.Private, MethodScope.Final);
+
+			var typeParam = new CodeTypeParameter ("T") {
+				Constraints = {
+					new CodeTypeReference ("Android.App.Fragment", CodeTypeReferenceOptions.GlobalReference),
+				},
+			};
+
+			method.TypeParameters.Add (typeParam);
+			method.Parameters.Add (new CodeParameterDeclarationExpression (typeForParent, "activity"));
+			method.Parameters.Add (new CodeParameterDeclarationExpression (typeof (int), "id"));
+
+			var tReference = new CodeTypeReference (typeParam);
+			method.ReturnType = tReference;
+
+			// T fragment = FragmentManager.FindFragmentById<T> (id);
+			var id = new CodeVariableReferenceExpression ("id");
+
+			var findByIdRef = new CodeMethodReferenceExpression (
+					new CodePropertyReferenceExpression (new CodeVariableReferenceExpression ("activity"), "FragmentManager"),
+					"FindFragmentById",
+					new[] { tReference }
+				);
+
+			var findByIdInvoke = new CodeMethodInvokeExpression (findByIdRef, new[] { id });
+			var viewVar = new CodeVariableDeclarationStatement (tReference, "fragment", findByIdInvoke);
+			method.Statements.Add (viewVar);
+
+			// if (view == null) {
+			//     OnLayoutFragmentNotFound (resourceId, ref view);
+			// }
+			// if (view != null)
+			//     return view;
+			// throw new System.InvalidOperationException($"Fragment not found (ID: {id})");
+
+			var viewVarRef = new CodeVariableReferenceExpression ("fragment");
+			var ifViewNotNull = new CodeConditionStatement (
+					new CodeBinaryOperatorExpression (viewVarRef, CodeBinaryOperatorType.IdentityInequality, new CodePrimitiveExpression (null)),
+					new CodeStatement[] { new CodeMethodReturnStatement (viewVarRef) }
+				);
+
+			var viewRefParam = new CodeDirectionExpression (FieldDirection.Ref, viewVarRef);
+			var viewNotFoundInvoke = new CodeMethodInvokeExpression (
+					new CodeThisReferenceExpression (),
+					"OnLayoutFragmentNotFound",
+					new CodeExpression[] { id, viewRefParam }
+				);
+
+			var ifViewNull = new CodeConditionStatement (
+					new CodeBinaryOperatorExpression (viewVarRef, CodeBinaryOperatorType.IdentityEquality, new CodePrimitiveExpression (null)),
+					new CodeStatement[] { new CodeExpressionStatement (viewNotFoundInvoke) }
+				);
+
+			method.Statements.Add (ifViewNull);
+			method.Statements.Add (ifViewNotNull);
+
+			var throwInvOp = new CodeThrowExceptionStatement (
+					new CodeObjectCreateExpression (
+							new CodeTypeReference (typeof (InvalidOperationException), CodeTypeReferenceOptions.GlobalReference),
+							new[] { new CodeSnippetExpression ("$\"Fragment not found (ID: {id})\"") }
+						)
+				);
 
 			method.Statements.Add (throwInvOp);
 
@@ -813,7 +949,7 @@ namespace Xamarin.Android.Tasks {
 
 		void AddCustomAttribute (CodeAttributeDeclarationCollection attributes, Type type)
 		{
-			attributes.Add (new CodeAttributeDeclaration (new CodeTypeReference (type)));
+			attributes.Add (new CodeAttributeDeclaration (new CodeTypeReference (type, CodeTypeReferenceOptions.GlobalReference)));
 		}
 	}
 }
