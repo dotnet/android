@@ -30,6 +30,9 @@
   </ItemDefinitionGroup>
   <Target Name="AddContent"
       Returns="@(MSBuild);@(ReferenceAssemblies)">
+    <ReadLinesFromFile File="$(LibDir)\xbuild-frameworks\.__sys_links.txt">
+      <Output TaskParameter="Lines" ItemName="_SymLinks"/>
+    </ReadLinesFromFile>
     <ItemGroup>
       <MSBuild Include="$(LibDir)xbuild\Novell\**\*.*" />
       <MSBuild>
@@ -57,6 +60,8 @@
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
       <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
+      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\.__sys_links.txt" />
+      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\%(_SymLinks.Identity)\**\*.*" />
       <ReferenceAssemblies Remove="**\*.dylib" />
       <ReferenceAssemblies Remove="**\libZipSharp*.*" />
       <ReferenceAssemblies>

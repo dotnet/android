@@ -26,6 +26,7 @@ namespace Xamarin.Android.Build
 					if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
 						return 1;
 					}
+					File.AppendAllText (Path.Combine (paths.FrameworksDirectory, ".__sys_links.txt"), name + "\n");
 				}
 
 				int exitCode = MSBuildApp.Main ();
