@@ -31,7 +31,7 @@
         AndroidAbi="x86"
         AndroidSdkHome="$(AndroidSdkDirectory)"
         JavaSdkHome="$(JavaSdkDirectory)"
-        SdkVersion="21"
+        SdkVersion="23"
         ImageName="$(_TestImageName)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(AndroidToolsBinPath)"
