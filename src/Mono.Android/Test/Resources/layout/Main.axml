@@ -7,30 +7,30 @@
     tools:class="Xamarin.Android.RuntimeTests.MainActivity"
     >
   <TextView
-    android:id="@+id/first_text_view"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:editable="false"
+      android:id="@+id/first_text_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:editable="false"
   />
   <TextView
-    android:id="@+id/second_text_view"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:editable="false"
+      android:id="@+id/second_text_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:editable="false"
   />
   <ScrollView
-    android:id="@+id/my_scroll_view">
+      android:id="@+id/my_scroll_view">
     <TextView
-       android:id="@+id/first_text_view"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:editable="false"
+        android:id="@+id/first_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:editable="false"
     />
     <TextView
-       android:id="@+id/second_text_view"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:editable="false"
+        android:id="@+id/second_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:editable="false"
     />
   </ScrollView>
 
