@@ -66,7 +66,7 @@ namespace Xamarin.Android.Build.Tests {
 		app:showAsAction = ""never"" />
 
 </menu>");
-			Monodroid.AndroidResource.UpdateXmlResource (actions, new Dictionary<string, string> (), null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, new Dictionary<string, string> (), null);
 			var actionsText = File.ReadAllText (actions);
 			Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
 			Directory.Delete (path, recursive: true);
