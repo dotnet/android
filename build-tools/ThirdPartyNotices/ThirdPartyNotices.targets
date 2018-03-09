@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(OutputPath)Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.CreateThirdPartyNotices" />
+  <Import Project="..\..\external\*.tpnitems" />
+  <Import Project="..\..\src\*.tpnitems" />
+  <PropertyGroup>
+    <ThirdPartyNoticeFile Condition=" '$(ThirdPartyNoticeFile)' == '' ">$(OutputPath)\ThirdPartyNotices.txt</ThirdPartyNoticeFile>
+  </PropertyGroup>
+  <Target Name="_CreateThirdPartyNotices"
+      AfterTargets="Build">
+    <CreateThirdPartyNotices
+        FileName="$(ThirdPartyNoticeFile)"
+        LicenseType="$(ThirdPartyNoticeLicenseType)"
+        Notices="@(ThirdPartyNotice)"
+    />
+  </Target>
+</Project>

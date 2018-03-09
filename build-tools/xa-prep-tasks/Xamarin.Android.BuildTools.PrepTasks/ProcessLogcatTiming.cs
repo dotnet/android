@@ -12,28 +12,33 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 	{
 		public string Activity { get; set; }
 
+		public int PID { get; set; } = -1;
+
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
 			using (var reader = new StreamReader (InputFilename)) {
 				string line;
-				int pid = -1;
 				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
-				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {procIdentification}: pid=(?<pid>\d+)");
+				var startIdentification = PID > 0 ? $".*: pid={PID}" : $@"{procIdentification}: pid=(?<pid>\d+)";
+				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {startIdentification}");
 				Regex timingRegex = null;
 				DateTime start = DateTime.Now;
 				DateTime last = start;
+				bool started = false;
 
 				while ((line = reader.ReadLine ()) != null) {
-					if (pid == -1) {
+					if (!started) {
 						var match = procStartRegex.Match (line);
 						if (!match.Success)
 							continue;
 
 						last = start = ParseTime (match.Groups ["timestamp"].Value);
-						pid = Int32.Parse (match.Groups ["pid"].Value);
-						Log.LogMessage (MessageImportance.Low, $"Time:      0ms process start, application: '{ApplicationPackageName}' PID: {pid}");
-						timingRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+{pid}\s+(?<message>.*)$");
+						if (PID < 1)
+							PID = Int32.Parse (match.Groups ["pid"].Value);
+						Log.LogMessage (MessageImportance.Low, $"Time:      0ms process start, application: '{ApplicationPackageName}' PID: {PID}");
+						timingRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+{PID}\s+(?<message>.*)$");
+						started = true;
 					} else {
 						var match = timingRegex.Match (line);
 						if (!match.Success)
@@ -60,7 +65,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					}
 				}
 
-				if (pid != -1) {
+				if (PID > 0) {
 					Log.LogMessage (MessageImportance.Normal, " -- Performance summary --");
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 

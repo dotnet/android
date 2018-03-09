@@ -11,7 +11,7 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 -->
 <Project InitialTargets="RedirectMonoAndroidSdkPaths;RemoveSdksCache" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-	<PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+	<PropertyGroup Condition="'$(VsInstallRoot)' != '' And Exists('$(VsInstallRoot)\Common7\IDE\devenv.isolation.ini')">
 		<!-- Grab InstallationID from devenv.ini.isolation's InstallationID=[ID] -->
 		<DevEnvIni>$([System.IO.File]::ReadAllText('$(VsInstallRoot)\Common7\IDE\devenv.isolation.ini'))</DevEnvIni>
 		<InstallationIDEqualsIndex>$(DevEnvIni.IndexOf('InstallationID='))</InstallationIDEqualsIndex>
@@ -35,7 +35,7 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 			<MonoAndroidBinDirectory Condition=" '$(MonoAndroidBinDirectory)' == '' ">$(VsInstallRoot)\MSBuild\Xamarin\Android</MonoAndroidBinDirectory>
 		</PropertyGroup>
 
-		<SetVsMonoAndroidRegistryKey InstallationID="$(VsInstallationID)" VisualStudioVersion="$(VisualStudioVersion)" />
+		<SetVsMonoAndroidRegistryKey Condition="'$(VsInstallationID)' != ''" InstallationID="$(VsInstallationID)" VisualStudioVersion="$(VisualStudioVersion)" />
 	</Target>
 
 	<Target Name="RemoveSdksCache" Condition="Exists('$(IntermediateOutputPath)sdks.cache')">

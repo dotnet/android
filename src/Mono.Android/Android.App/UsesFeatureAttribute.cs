@@ -22,6 +22,9 @@ namespace Android.App
 		public bool                   Required                {get; set;}
 #endif
 		public int                    GLESVersion             {get; set;}
+#if ANDROID_24
+		public int                    Version { get; private set; }
+#endif
 	}
 }
 

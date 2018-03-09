@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- External dependencies from `Xamarin.Android.Tools.JavadocImporter/packages.config` -->
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
+    <ThirdPartyNotice Include="lovettchris/SgmlReader">
+      <LicenseFile>$(MSBuildThisFileDirectory)\..\build-tools\license-data\Apache-2.0.txt</LicenseFile>
+      <SourceUrl>https://github.com/lovettchris/SgmlReader/</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>

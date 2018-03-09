@@ -17,12 +17,15 @@ namespace Android.App {
 	partial class ActivityAttribute {
 
 		bool _AllowEmbedded;
+		string _ColorMode;
 		bool _HardwareAccelerated;
+		float _MaxAspectRatio;
 		string _ParentActivity;
 		LayoutDirection _LayoutDirection;
 		UiOptions _UiOptions;
 		bool _Immersive;
 		bool _ResizeableActivity;
+		bool _ShowForAllUsers;
 		bool _SupportsPictureInPicture;
 		string _RoundIcon;
 
@@ -47,6 +50,11 @@ namespace Android.App {
 			  "clearTaskOnLaunch",
 			  self          => self.ClearTaskOnLaunch,
 			  (self, value) => self.ClearTaskOnLaunch = (bool) value
+			}, {
+			  "ColorMode",
+			  "colorMode",
+			  self          => self._ColorMode,
+			  (self, value) => self._ColorMode = (string) value
 			}, {
 			  "ConfigurationChanges",
 			  "configChanges",
@@ -113,6 +121,11 @@ namespace Android.App {
 			  null,
 			  (self, value) => self.MainLauncher  = (bool) value
 			}, {
+			  "MaxAspectRatio",
+			  "maxAspectRatio",
+			  self          => self._MaxAspectRatio,
+			  (self, value) => self._MaxAspectRatio = (float) value
+			}, {
 			  "MultiProcess",
 			  "multiprocess",
 			  self          => self.MultiProcess,
@@ -163,6 +176,11 @@ namespace Android.App {
 			  "screenOrientation",
 			  self          => self.ScreenOrientation,
 			  (self, value) => self.ScreenOrientation = (ScreenOrientation) value
+			}, {
+			  "ShowForAllUsers",
+			  "showForAllUsers",
+			  self          => self._ShowForAllUsers,
+			  (self, value) => self._ShowForAllUsers = (bool) value
 			}, {
 			  "StateNotNeeded",
 			  "stateNotNeeded",

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -203,6 +204,44 @@ namespace Xamarin.Android.Build.Tests
 		{
 			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, directory) };
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
+		}
+
+		protected bool FileCompare (string file1, string file2)
+		{
+			if (!File.Exists (file1) || !File.Exists (file2))
+				return false;
+			using (var stream1 = File.OpenRead (file1)) {
+				using (var stream2 = File.OpenRead (file2)) {
+					return StreamCompare (stream1, stream2);
+				}
+			}
+		}
+
+		protected bool StreamCompare (Stream stream1, Stream stream2)
+		{
+			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
+			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
+			byte[] f1 = ReadAllBytesIgnoringLineEndings (stream1);
+			byte[] f2 = ReadAllBytesIgnoringLineEndings (stream2);
+
+			var hash = MD5.Create ();
+			var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
+			var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
+			return f1hash.Equals (f2hash);
+		}
+
+		protected byte[] ReadAllBytesIgnoringLineEndings (Stream stream)
+		{
+			using (var memoryStream = new MemoryStream ()) {
+				int readByte;
+				while ((readByte = stream.ReadByte()) != -1) {
+					byte b = (byte)readByte;
+					if (b != '\r' && b != '\n') {
+						memoryStream.WriteByte (b);
+					}
+				}
+ 				return memoryStream.ToArray ();
+			}
 		}
 
 		[OneTimeSetUp]

@@ -7,6 +7,7 @@ CONFIGURATION = Debug
 RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
 SOLUTION      = Xamarin.Android.sln
 TEST_TARGETS  = build-tools/scripts/RunTests.targets
+API_LEVEL     ?=
 
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
@@ -23,6 +24,10 @@ _SLN_BUILD  = $(MSBUILD)
 else    # $(MSBUILD) != 1
 _SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
 endif   # $(USE_MSBUILD) == 1
+
+ifneq ($(API_LEVEL),)
+MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS))
+endif
 
 all::
 	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -117,6 +122,40 @@ prepare-image-dependencies:
 
 include build-tools/scripts/BuildEverything.mk
 include tests/api-compatibility/api-compatibility.mk
+
+topdir  := $(shell pwd)
+
+# Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+define CREATE_THIRD_PARTY_NOTICES
+	$(MSBUILD) $(MSBUILD_FLAGS) $(_MSBUILD_ARGS) \
+		$(topdir)/build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
+		/p:Configuration=$(1) \
+		/p:ThirdPartyNoticeFile=$(topdir)/$(2) \
+		/p:ThirdPartyNoticeLicenseType=$(3) \
+		/p:TpnIncludeExternalDependencies=$(4) \
+		/p:TpnIncludeBuildDependencies=$(5)
+endef # CREATE_THIRD_PARTY_NOTICES
+
+prepare:: prepare-tpn
+
+TPN_LICENSE_FILES = $(shell grep -h '<LicenseFile>' external/*.tpnitems src/*.tpnitems \
+	| sed -E 's,<LicenseFile>(.*)</LicenseFile>,\1,g;s,.\(MSBuildThisFileDirectory\),$(topdir)/external/,g' \
+	| tr \\ / )
+
+# Usage: $(call CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+define CREATE_THIRD_PARTY_NOTICES_RULE
+prepare-tpn:: $(2)
+
+$(2) $(topdir)/$(2): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
+		$(wildcard external/*.tpnitems src/*.tpnitems) \
+		$(TPN_LICENSE_FILES)
+	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4),$(5))
+endef # CREATE_THIRD_PARTY_NOTICES_RULE
+
+THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
+
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),ThirdPartyNotices.txt,foundation,False,False))
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunAllTests

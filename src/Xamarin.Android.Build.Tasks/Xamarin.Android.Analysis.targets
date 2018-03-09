@@ -50,7 +50,7 @@ Copyright (C) 2015 Xamarin. All rights reserved.
 		<Output TaskParameter="Result" ItemName="_MinSdkValue" />
 	</XmlPeek>
 	<ItemGroup>
-		<XamarinPackageAnalysisTargets Include="XAA0001" 
+		<XamarinProjectAnalysisResult Include="XAA0001"
 				Condition="($(AndroidSupportedAbis.Contains('arm64-v8a')) Or $(AndroidSupportedAbis.Contains('x86_64'))) And '@(_MinSdkValue)' &lt; '10'" >
 			<Category>Android</Category>
 			<Problem>
@@ -59,7 +59,7 @@ Copyright (C) 2015 Xamarin. All rights reserved.
 			<Fix>
 				Update the minSdkVersion in your app
 			</Fix>
-		</XamarinPackageAnalysisTargets>
+		</XamarinProjectAnalysisResult>
 	</ItemGroup>
 </Target>
 

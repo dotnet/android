@@ -154,6 +154,7 @@
     <Compile Include="Mono.Android\PermissionAttribute.Partial.cs" />
     <Compile Include="Mono.Android\PermissionGroupAttribute.Partial.cs" />
     <Compile Include="Mono.Android\PermissionTreeAttribute.Partial.cs" />
+    <Compile Include="Mono.Android\UsesConfigurationAttribute.Partial.cs" />
     <Compile Include="Mono.Android\UsesFeatureAttribute.Partial.cs" />
     <Compile Include="Mono.Android\SupportsGLTextureAttribute.Partial.cs" />
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
@@ -471,6 +472,9 @@
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\PermissionTreeAttribute.cs">
       <Link>Mono.Android\PermissionTreeAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesConfigurationAttribute.cs">
+      <Link>Mono.Android\UsesConfigurationAttribute.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.cs">
       <Link>Mono.Android\UsesFeatureAttribute.cs</Link>

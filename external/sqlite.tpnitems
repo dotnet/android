@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
+    <ThirdPartyNotice Include="xamarin/sqlite">
+      <LicenseFile>$(MSBuildThisFileDirectory)\sqlite\dist\NOTICE</LicenseFile>
+      <SourceUrl>https://github.com/xamarin/sqlite/</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>

@@ -95,7 +95,8 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(foreach conf, $(CONFIGURATIONS), \
-		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) && ) \
+		$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION) /p:Configuration=$(conf) $(_MSBUILD_ARGS) && \
+		$(call CREATE_THIRD_PARTY_NOTICES,$(conf),bin/$(conf)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False) && ) \
 	true
 
 framework-assemblies:
@@ -137,6 +138,7 @@ opentk-jcw:
 				/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)) || exit 1; ))
 
 _BUNDLE_ZIPS_INCLUDE  = \
+	$(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt \
 	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
 	$(ZIP_OUTPUT_BASENAME)/bin/Release
 
@@ -165,6 +167,7 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
+	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then cp -n bin/*/lib/xamarin.android/ThirdPartyNotices.txt $(ZIP_OUTPUT_BASENAME) ; fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
 	for c in $(CONFIGURATIONS) ; do \
@@ -192,3 +195,8 @@ package-deb: $(ZIP_OUTPUT)
 	ln -sf $(ZIP_OUTPUT) xamarin.android-oss_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
+
+package-test-errors:
+ifneq ($(wildcard bin/Test*/temp),)
+	zip -r test-errors.zip bin/Test*/temp
+endif # We have test error output

@@ -21,6 +21,9 @@ namespace Android.App {
 		public string                 RoundIcon               {get; set;}
 #endif
 		public string                 TargetPackage   {get; set;}
+#if ANDROID_26
+		public string                 TargetProcesses {get; set;}
+#endif
 	}
 }
 
