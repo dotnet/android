@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\bin\Debug</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="..\scripts\TestApks.targets" />
+  <Target Name="LogcatTiming">
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > tmp-logcat-timing.log" />
+    <ProcessLogcatTiming
+        InputFilename="tmp-logcat-timing.log"
+        ApplicationPackageName="$(Package)"
+        PID="$(PID)"
+        ResultsFilename="tmp-timing-results.csv"
+        DefinitionsFilename="..\scripts\TimingDefinitions.txt"
+        AddResults="true"
+        Activity="$(Activity)" />
+  </Target>
+</Project>

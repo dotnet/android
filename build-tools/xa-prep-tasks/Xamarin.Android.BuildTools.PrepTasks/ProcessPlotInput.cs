@@ -13,7 +13,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Required]
 		public string InputFilename { get; set; }
 
-		[Required]
 		public string ApplicationPackageName { get; set; }
 
 		[Required]
