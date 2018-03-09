@@ -13,14 +13,18 @@
   />
   <PropertyGroup>
     <ProductVersion>8.3.99</ProductVersion>
-    <!-- *Latest* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
+    <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">27</AndroidLatestStableApiLevel>
+    <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v8.1</AndroidLatestStableFrameworkVersion>
+    <!-- *Latest* (possibly unstable) API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">28</AndroidLatestApiLevel>
     <AndroidLatestPlatformId Condition=" '$(AndroidLatestPlatformId)' == '' ">P</AndroidLatestPlatformId>
     <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v8.1.99</AndroidLatestFrameworkVersion>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
-    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestApiLevel)</AndroidApiLevel>
-    <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestPlatformId)</AndroidPlatformId>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
+    <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>

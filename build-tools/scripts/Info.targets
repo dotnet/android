@@ -7,9 +7,9 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetAndroidLatestFrameworkVersion">
+  <Target Name="GetAndroidLatestStableFrameworkVersion">
     <Message
-        Text="$(AndroidLatestFrameworkVersion)"
+        Text="$(AndroidLatestStableFrameworkVersion)"
         Importance="High"
     />
   </Target>

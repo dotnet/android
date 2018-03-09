@@ -124,14 +124,14 @@ framework-assemblies:
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
-	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
+	_latest_stable_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestStableFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
-		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
+		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/Mono.Android.Export.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; ) \
 	$(foreach conf, $(CONFIGURATIONS), \
-		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
+		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/OpenTK-1.0.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
