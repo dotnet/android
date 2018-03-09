@@ -38,12 +38,6 @@ FRAMEWORKS        = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
 STABLE_FRAMEWORKS = $(foreach a, $(STABLE_API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
 PLATFORM_IDS      = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_PLATFORM_IDS)))
 
-ifeq ($(OS_NAME),Linux)
-CP_F              = cp -af
-else
-CP_F              = cp -f
-endif
-
 ALL_JIT_ABIS  = \
 	armeabi \
 	armeabi-v7a \
@@ -173,7 +167,7 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
-	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then $(CP_F) bin/*/lib/xamarin.android/ThirdPartyNotices.txt $(ZIP_OUTPUT_BASENAME) ; fi
+	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then cp -f bin/*/lib/xamarin.android/ThirdPartyNotices.txt $(ZIP_OUTPUT_BASENAME) ; fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
 	for c in $(CONFIGURATIONS) ; do \
