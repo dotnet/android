@@ -92,6 +92,8 @@
 
   <!-- LLVM+cross Linux -->
   <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <_CrossConfigureBuildHost32>$(HostTriplet32)</_CrossConfigureBuildHost32>
+    <_CrossConfigureBuildHost64>$(HostTriplet64)</_CrossConfigureBuildHost64>
     <_CrossConfigureBuildHost>$(HostTriplet)</_CrossConfigureBuildHost>
     <_CrossConfigureBuildHostWin32>$(_MingwTriplet32)</_CrossConfigureBuildHostWin32>
     <_CrossConfigureBuildHostWin64>$(_MingwTriplet64)</_CrossConfigureBuildHostWin64>
