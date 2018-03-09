@@ -115,7 +115,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogError ($"Emulator failed to start: `{e.Data}`. Please try again?");
 					sawError.Set ();
 				}
-				if (e.Data.IndexOf ("ERROR:", StringComparison.Ordinal) >= 0) {
+				if (e.Data.IndexOf ("ERROR:", StringComparison.Ordinal) >= 0 ||
+						e.Data.IndexOf (" failed ", StringComparison.Ordinal) >= 0) {
 					Log.LogError ($"Emulator failed to start: {e.Data}");
 					sawError.Set ();
 				}
