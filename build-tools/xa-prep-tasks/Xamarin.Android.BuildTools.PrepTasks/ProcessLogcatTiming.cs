@@ -22,6 +22,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
 				var startIdentification = PID > 0 ? $".*: pid={PID}" : $@"{procIdentification}: pid=(?<pid>\d+)";
 				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {startIdentification}");
+				var startIdentification2 = PID > 0 ? $"{PID}:" : $@"(?<pid>\d+):.*{procIdentification}";
+				var procStartRegex2 = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc {startIdentification2}");
 				Regex timingRegex = null;
 				DateTime start = DateTime.Now;
 				DateTime last = start;
@@ -30,6 +32,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				while ((line = reader.ReadLine ()) != null) {
 					if (!started) {
 						var match = procStartRegex.Match (line);
+						if (!match.Success)
+							match = procStartRegex2.Match (line);
 						if (!match.Success)
 							continue;
 
