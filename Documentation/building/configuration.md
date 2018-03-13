@@ -32,37 +32,37 @@ Overridable MSBuild properties include:
     Android version number with a leading `v`, e.g. `v4.0.3` for API-15.
 
   * `$(AndroidLatestStableApiLevel)`: The highest/latest Android API level that
-	   has a stable API. The `src/Xamarin.Android.Build.Tasks` build uses this
-  		value to reference files built within `src/Mono.Android`.
+    has a stable API. The `src/Xamarin.Android.Build.Tasks` build uses this
+    value to reference files built within `src/Mono.Android`.
 
     This should be consistent with `$(AndroidLatestStableFrameworkVersion)` and
-  		`$(AndroidLatestStablePlatformId)`.
+    `$(AndroidLatestStablePlatformId)`.
 
     This should only be updated when a new API level is declared stable.
 
   * `$(AndroidLatestStableFrameworkVersion)`: The highest/latest Xamarin.Android
-  	 `$(TargetFrameworkVersion)` value which has a stable API.
-		  The `src/Xamarin.Android.Build.Tasks` build uses this value to reference
-  		files built within `src/Mono.Android`.
+    `$(TargetFrameworkVersion)` value which has a stable API.
+    The `src/Xamarin.Android.Build.Tasks` build uses this value to reference
+    files built within `src/Mono.Android`.
 
     This should be consistent with `$(AndroidLatestStableApiLevel)` and
-		  `$(AndroidLatestStablePlatformId)`.
+    `$(AndroidLatestStablePlatformId)`.
 
     This should only be updated when a new API level is declared stable.
 
   * `$(AndroidLatestStablePlatformId)`: The highest/latest Android platform ID
-  	  which has a stable API.
-  		The `src/Xamarin.Android.Build.Tasks` build uses this value to reference
-		  files built within `src/Mono.Android`.
+    which has a stable API.
+    The `src/Xamarin.Android.Build.Tasks` build uses this value to reference
+    files built within `src/Mono.Android`.
 
     This should be consistent with `$(AndroidLatestStableApiLevel)` and
-		  `$(AndroidLatestStableFrameworkVersion)`.
+    `$(AndroidLatestStableFrameworkVersion)`.
 
     This should only be updated when a new API level is declared stable.
 
   * `$(AndroidPlatformId)`: The "Platform ID" for the `android.jar` to use when
     building `src/Mono.Android`. This is usually the same value as
-		  `$(AndroidApiLevel)`, but may differ with Android Preview releases.
+    `$(AndroidApiLevel)`, but may differ with Android Preview releases.
 
   * `$(AndroidSupportedHostJitAbis)`: The Android ABIs for which to build a
     host JIT *and* Xamarin.Android base class libraries (`mscorlib.dll`/etc.).
