@@ -121,6 +121,10 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-27</DestDir>
     </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-P_r01.zip">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-P</DestDir>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="docs-24_r01.zip">
       <HostOS></HostOS>
       <DestDir>docs</DestDir>

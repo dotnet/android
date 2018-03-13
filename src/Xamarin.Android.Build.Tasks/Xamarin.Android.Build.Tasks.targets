@@ -109,12 +109,12 @@
   </ItemGroup>
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
-      Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestApiLevel)\mcw\api.xml"
+      Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"
       Outputs="@(_MonoAndroidEnum)">
     <MSBuild
         Condition=" !Exists ('%(_MonoAndroidEnum.Identity)') "
         Projects="..\Mono.Android\Mono.Android.csproj"
-        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestApiLevel);AndroidFrameworkVersion=$(AndroidLatestFrameworkVersion)"
+        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestStableApiLevel);AndroidFrameworkVersion=$(AndroidLatestStableFrameworkVersion);AndroidPlatformId=$(AndroidLatestStablePlatformId)"
     />
   </Target>
   <Target Name="_GenerateXACommonProps"

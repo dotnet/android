@@ -25,7 +25,7 @@
     <MakeDir Directories="$(_OutputPath)api" />
     <Exec
         Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
-        Command="$(ManagedRuntime) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Level)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
+        Command="$(ManagedRuntime) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
     />
   </Target>
   <Target Name="_AdjustApiXml"
