@@ -325,7 +325,6 @@ namespace XamFormsSample
 				IsRelease = true,
 				UseLatestPlatformSdk = true,
 				References = {
-					new BuildItem.Reference ("Java.Interop.Export"),
 					new BuildItem.Reference ("Mono.Android.Export"),
 					new BuildItem.ProjectReference ($"..\\{netStandardProject.ProjectName}\\{netStandardProject.ProjectName}.csproj",
 						netStandardProject.ProjectName, netStandardProject.ProjectGuid),
