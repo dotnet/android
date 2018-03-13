@@ -1,6 +1,7 @@
 ﻿using Microsoft.Build.CommandLine;
 using System;
 using System.IO;
+using System.Threading;
 using System.Xml;
 
 namespace Xamarin.Android.Build
@@ -26,7 +27,18 @@ namespace Xamarin.Android.Build
 					if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
 						return 1;
 					}
-					File.AppendAllText (Path.Combine (paths.FrameworksDirectory, ".__sys_links.txt"), name + "\n");
+
+					//NOTE: on Windows, the NUnit tests can throw IOException when running xabuild in parallel
+					for (int i = 0;; i++) {
+						try {
+							File.AppendAllText (Path.Combine (paths.FrameworksDirectory, ".__sys_links.txt"), name + "\n");
+							break;
+						} catch (IOException) {
+							if (i == 2)
+								throw; //Fail after 3 tries
+							Thread.Sleep (100);
+						}
+					}
 				}
 
 				int exitCode = MSBuildApp.Main ();
