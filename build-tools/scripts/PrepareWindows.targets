@@ -34,5 +34,13 @@
         DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
         Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
     />
+    <MSBuild 
+        Projects="$(_TopDir)\build-tools\ThirdPartyNotices\ThirdPartyNotices.csproj"
+        Properties="ThirdPartyNoticeFile=$(_TopDir)\ThirdPartyNotices.txt;ThirdPartyNoticeLicenseType=foundation"
+    />
+    <MSBuild 
+        Projects="$(_TopDir)\build-tools\ThirdPartyNotices\ThirdPartyNotices.csproj"
+        Properties="ThirdPartyNoticeFile=$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\ThirdPartyNotices.txt;ThirdPartyNoticeLicenseType=microsoft-oss;TpnIncludeExternalDependencies=True"
+    />
   </Target>
 </Project>
