@@ -23,7 +23,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 		Dictionary<string, object> builderSettings;
 		TestSuiteResult results;
 
-		public ITestFilter Filter { get; set; }
+		public ITestFilter Filter { get; set; } = TestFilter.Empty;
 		public bool GCAfterEachFixture { get; set; }
 
 		protected override string ResultsFileName { get; set; } = "TestResults.NUnit.xml";
