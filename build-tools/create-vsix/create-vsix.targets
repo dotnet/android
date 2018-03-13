@@ -61,7 +61,10 @@
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
       <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
       <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\.__sys_links.txt" />
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\%(_SymLinks.Identity)\**\*.*" />
+      <ReferenceAssemblies
+          Condition=" '@(_SymLinks)' != '' "
+          Remove="$(LibDir)xbuild-frameworks\%(_SymLinks.Identity)\**\*.*"
+      />
       <ReferenceAssemblies Remove="**\*.dylib" />
       <ReferenceAssemblies Remove="**\libZipSharp*.*" />
       <ReferenceAssemblies>
