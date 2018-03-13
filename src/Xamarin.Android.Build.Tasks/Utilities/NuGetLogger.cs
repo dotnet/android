@@ -14,12 +14,12 @@ namespace Xamarin.Android.Tasks {
 
 		public void Log (LogLevel level, string data)
 		{
-			log.LogMessage (data);
+			log.LogDebugMessage (data);
 		}
 
 		public void Log (ILogMessage message)
 		{
-			log.LogMessage (message.Message);
+			log.LogDebugMessage (message.Message);
 		}
 
 		public System.Threading.Tasks.Task LogAsync (LogLevel level, string data)

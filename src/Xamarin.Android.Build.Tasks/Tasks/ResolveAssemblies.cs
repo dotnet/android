@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 
 			LockFile lockFile = null;
 			if (!string.IsNullOrEmpty (ProjectAssetFile) && File.Exists (ProjectAssetFile)) {
-				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, NullLogger.Instance);
+				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, new NuGetLogger(Log));
 			}
 
 			try {
