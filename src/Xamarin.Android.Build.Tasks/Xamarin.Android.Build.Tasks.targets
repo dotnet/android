@@ -114,7 +114,7 @@
     <MSBuild
         Condition=" !Exists ('%(_MonoAndroidEnum.Identity)') "
         Projects="..\Mono.Android\Mono.Android.csproj"
-        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestStableApiLevel);AndroidFrameworkVersion=$(AndroidLatestStableFrameworkVersion)"
+        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestStableApiLevel);AndroidFrameworkVersion=$(AndroidLatestStableFrameworkVersion);AndroidPlatformId=$(AndroidLatestStablePlatformId)"
     />
   </Target>
   <Target Name="_GenerateXACommonProps"
