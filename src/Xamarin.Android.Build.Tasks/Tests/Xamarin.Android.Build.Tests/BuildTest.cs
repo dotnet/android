@@ -450,6 +450,12 @@ namespace Xamarin.Android.Tests
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{enableProguard}{useLatestSdk}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				if (isRelease && enableProguard) {
+					var proguardProjectPrimary = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "proguard", "proguard_project_primary.cfg");
+					FileAssert.Exists (proguardProjectPrimary);
+					StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), "-keep class md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
+				}
 			}
 		}
 
