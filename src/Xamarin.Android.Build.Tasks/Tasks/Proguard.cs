@@ -130,9 +130,10 @@ namespace Xamarin.Android.Tasks
 			var classesZip = Path.Combine (ClassesOutputDirectory, "..", "classes.zip");
 			var acwLines = File.ReadAllLines (AcwMapFile);
 			using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration))
-				for (int i = 0; i + 3 < acwLines.Length; i += 4)
+				for (int i = 0; i + 2 < acwLines.Length; i += 3)
 					try {
-						var java = acwLines [i + 3].Substring (acwLines [i + 3].IndexOf (';') + 1);
+						var line = acwLines [i + 2];
+						var java = line.Substring (line.IndexOf (';') + 1);
 						appcfg.WriteLine ("-keep class " + java + " { *; }");
 					} catch {
 						// skip invalid lines
