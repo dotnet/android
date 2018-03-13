@@ -55,8 +55,8 @@ install::
 
 uninstall::
 	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
-	rm "$(prefix)/lib/mono/xbuild/Xamarin/Android"
-	rm "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
+	rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 ifeq ($(OS_NAME),Linux)
 export LINUX_DISTRO         := $(shell lsb_release -i -s || true)

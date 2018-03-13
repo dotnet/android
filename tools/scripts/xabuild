@@ -173,7 +173,7 @@ function ConfigureLocalXbuild()
 	for e in "$xbuild_dir"/* ; do
 		local b=`basename "$e"`
 		if [ -e "$TARGETS_DIR/$b" -o -f "$TARGETS_DIR/$b" -o -L "$TARGETS_DIR/$b" ]; then
-			rm "$TARGETS_DIR/$b"
+			rm -rf "$TARGETS_DIR/$b"
 		fi
 		ln -s "$e" "$TARGETS_DIR"
 		if [ -d "$e" ]; then
