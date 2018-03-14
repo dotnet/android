@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 
 using NUnit.Framework;
@@ -266,6 +267,20 @@ namespace Xamarin.Android.NetTests {
 			  tr.Wait ();
 			  tr.Result.EnsureSuccessStatusCode ();
 			  Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+		  }
+	  }
+
+	  [Test]
+	  public void Redirect_POST_With_Content_Works ()
+	  {
+		  var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
+		  var redirectedURI = new Uri ("https://httpbin.org/user-agent");
+		  using (var c = new HttpClient (CreateHandler ())) {
+			  var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+			  request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+			  var response = c.SendAsync(request).Result;
+			  response.EnsureSuccessStatusCode ();
+			  Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 		  }
 	  }
   }
