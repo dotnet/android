@@ -55,7 +55,7 @@ namespace Android.AppTests
 			using (var n = new ComponentName (context, klass)) {
 				var activityInfo  = context.PackageManager.GetActivityInfo (n, 0);
 				var configChanges = activityInfo.ConfigChanges;
-				Assert.AreEqual (ConfigChanges.KeyboardHidden, configChanges);
+				Assert.AreEqual (ConfigChanges.KeyboardHidden, configChanges & ConfigChanges.KeyboardHidden);
 			}
 		}
 	}
