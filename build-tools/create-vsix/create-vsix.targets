@@ -26,6 +26,16 @@
   <Target Name="AddContent"
       Returns="@(MSBuild);@(ReferenceAssemblies)">
     <ItemGroup>
+      <_FirstFrameworkFile  Include="Mono.Android.Export.dll" />
+      <_FirstFrameworkFile  Include="Mono.Android.Export.pdb" />
+      <_FirstFrameworkFile  Include="OpenTK-1.0.dll" />
+      <_FirstFrameworkFile  Include="OpenTK-1.0.pdb" />
+      <_FirstFrameworkFile  Include="OpenTK-1.0.xml" />
+      <_FirstFrameworkFile  Include="OpenTK.dll" />
+      <_FirstFrameworkFile  Include="OpenTK.pdb" />
+      <_FirstFrameworkFile  Include="OpenTK.xml" />
+    </ItemGroup>
+    <ItemGroup>
       <MSBuild Include="$(LibDir)xbuild\Novell\**\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Novell/%(RecursiveDir)</VSIXSubPath>
@@ -39,6 +49,11 @@
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Darwin\**\*.*" />
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Linux\**\*.*" />
       <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\**\*.dylib" />
+      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\**\*.pdb" />
+      <MSBuild
+          Condition=" '$(Configuration)' != 'Debug' "
+          Remove="$(LibDir)xbuild\Xamarin\Android\**\*.d.so"
+      />
       <MSBuild Include="..\..\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\**\*.*" />
       <MSBuild>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/%(RecursiveDir)</VSIXSubPath>
@@ -52,8 +67,18 @@
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
       <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
       <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
-      <ReferenceAssemblies Remove="**\*.dylib" />
-      <ReferenceAssemblies Remove="**\libZipSharp*.*" />
+      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\*.dylib" />
+      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\libZipSharp*.*" />
+    </ItemGroup>
+    <ItemGroup Condition="Exists('$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)')">
+      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\%(_FirstFrameworkFile.Identity)" />
+      <ReferenceAssemblies
+          Condition=" Exists ('$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)') "
+          Include="$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)">
+        <VSIXSubPath>Microsoft/Framework/$(AndroidFirstFrameworkVersion)/</VSIXSubPath>
+      </ReferenceAssemblies>
+    </ItemGroup>
+    <ItemGroup>
       <ReferenceAssemblies>
         <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Microsoft/Framework/%(RecursiveDir)</VSIXSubPath>
       </ReferenceAssemblies>
