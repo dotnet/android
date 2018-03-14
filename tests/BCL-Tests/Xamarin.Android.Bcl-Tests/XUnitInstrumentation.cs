@@ -65,7 +65,10 @@ namespace xUnitTestRunner
 				// From some failing corefx tests
 				new XUnitFilter ("category", "nonlinuxtests", true),
 				new XUnitFilter ("category", "nonmonotests", true),
-				new XUnitFilter ("category", "nonnetfxtests", true)
+				new XUnitFilter ("category", "nonnetfxtests", true),
+#if AOT
+				new XUnitFilter ("category", "nonuapaottests", true),
+#endif
 			};
 
 			if (excludedTestNames != null && excludedTestNames.Count > 0) {
