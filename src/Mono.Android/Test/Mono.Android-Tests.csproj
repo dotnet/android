@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -83,6 +83,7 @@
     <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
   </ItemGroup>
@@ -104,6 +105,14 @@
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-Tests.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\tests\TestRunner.Core\TestRunner.Core.csproj">
+      <Project>{3cc4e384-4985-4d93-a34c-73f69a379fa7}</Project>
+      <Name>TestRunner.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\tests\TestRunner.NUnit\TestRunner.NUnit.csproj">
+      <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
+      <Name>TestRunner.NUnit</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.Build.Tasks</Name>
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
