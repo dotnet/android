@@ -18,7 +18,7 @@ using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ResolveAssemblies : Task
+	public class ResolveAssemblies : AsyncTask
 	{
 		// The user's assemblies to package
 		[Required]
@@ -54,21 +54,30 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-				return Execute (resolver);
-			}
+			System.Threading.Tasks.Task.Run (() => {
+				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
+					return Execute (resolver);
+				}
+			}, Token).ContinueWith ((t) => {
+				if (t.Exception != null) {
+					var ex = t.Exception.GetBaseException ();
+					LogError (ex.Message + Environment.NewLine + ex.StackTrace);
+				}
+				Complete ();
+			});
+			return base.Execute ();
 		}
 
 		bool Execute (DirectoryAssemblyResolver resolver)
 		{
-			Log.LogDebugMessage ("ResolveAssemblies Task");
-			Log.LogDebugMessage ("  ReferenceAssembliesDirectory: {0}", ReferenceAssembliesDirectory);
-			Log.LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
-			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			Log.LogDebugTaskItems ("  Assemblies:", Assemblies);
-			Log.LogDebugMessage ("  ProjectAssetFile: {0}", ProjectAssetFile);
-			Log.LogDebugMessage ("  NuGetPackageRoot: {0}", NuGetPackageRoot);
-			Log.LogDebugMessage ("  TargetMoniker: {0}", TargetMoniker);
+			LogDebugMessage ("ResolveAssemblies Task");
+			LogDebugMessage ("  ReferenceAssembliesDirectory: {0}", ReferenceAssembliesDirectory);
+			LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
+			LogDebugMessage ("  LinkMode: {0}", LinkMode);
+			LogDebugTaskItems ("  Assemblies:", Assemblies);
+			LogDebugMessage ("  ProjectAssetFile: {0}", ProjectAssetFile);
+			LogDebugMessage ("  NuGetPackageRoot: {0}", NuGetPackageRoot);
+			LogDebugMessage ("  TargetMoniker: {0}", TargetMoniker);
 
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
@@ -76,10 +85,13 @@ namespace Xamarin.Android.Tasks
 			var assemblies = new HashSet<string> ();
 
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
+			var logger = new NuGetLogger((s) => {
+				LogDebugMessage ("{0}", s);
+			});
 
 			LockFile lockFile = null;
 			if (!string.IsNullOrEmpty (ProjectAssetFile) && File.Exists (ProjectAssetFile)) {
-				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, new NuGetLogger(Log));
+				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, logger);
 			}
 
 			try {
@@ -98,7 +110,7 @@ namespace Xamarin.Android.Tasks
 						if (lockFile != null)
 							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, assemblyDef.Name);
 						if (lockFile == null || assemblyDef == null) {
-							Log.LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
+							LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
 							continue;
 						}
 					}
@@ -106,14 +118,14 @@ namespace Xamarin.Android.Tasks
 					assemblies.Add (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName));
 				}
 			} catch (Exception ex) {
-				Log.LogError ("Exception while loading assemblies: {0}", ex);
+				LogError ("Exception while loading assemblies: {0}", ex);
 				return false;
 			}
 			try {
 				foreach (var assembly in topAssemblyReferences)
 					AddAssemblyReferences (resolver, assemblies, assembly, true);
 			} catch (Exception ex) {
-				Log.LogError ("Exception while loading assemblies: {0}", ex);
+				LogError ("Exception while loading assemblies: {0}", ex);
 				return false;
 			}
 
@@ -131,10 +143,10 @@ namespace Xamarin.Android.Tasks
 			ResolvedUserAssemblies = ResolvedAssemblies.Where (p => !MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
 			ResolvedDoNotPackageAttributes = do_not_package_atts.ToArray ();
 
-			Log.LogDebugTaskItems ("  [Output] ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugTaskItems ("  [Output] ResolvedUserAssemblies:", ResolvedUserAssemblies);
-			Log.LogDebugTaskItems ("  [Output] ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
-			Log.LogDebugTaskItems ("  [Output] ResolvedDoNotPackageAttributes:", ResolvedDoNotPackageAttributes);
+			LogDebugTaskItems ("  [Output] ResolvedAssemblies:", ResolvedAssemblies);
+			LogDebugTaskItems ("  [Output] ResolvedUserAssemblies:", ResolvedUserAssemblies);
+			LogDebugTaskItems ("  [Output] ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
+			LogDebugTaskItems ("  [Output] ResolvedDoNotPackageAttributes:", ResolvedDoNotPackageAttributes);
 			
 			return !Log.HasLoggedErrors;
 		}
@@ -149,12 +161,12 @@ namespace Xamarin.Android.Tasks
 
 			var framework = NuGetFramework.Parse (TargetMoniker);
 			if (framework == null) {
-				Log.LogWarning ($"Could not parse '{TargetMoniker}'");
+				LogWarning ($"Could not parse '{TargetMoniker}'");
 				return null;
 			}
 			var target = lockFile.GetTarget (framework, string.Empty);
 			if (target == null) {
-				Log.LogWarning ($"Could not resolve target for '{TargetMoniker}'");
+				LogWarning ($"Could not resolve target for '{TargetMoniker}'");
 				return null;
 			}
 			var libraryPath = lockFile.Libraries.FirstOrDefault (x => x.Name == assemblyNameDefinition.Name);
@@ -167,7 +179,7 @@ namespace Xamarin.Android.Tasks
 			if (runtime == null)
 				return null;
 			var path = Path.Combine (NuGetPackageRoot, libraryPath.Path, runtime.Path);
-			Log.LogDebugMessage ($"Attempting to load {path}");
+			LogDebugMessage ($"Attempting to load {path}");
 			return resolver.Load (path, forceLoad: true);
 		}
 
@@ -183,11 +195,11 @@ namespace Xamarin.Android.Tasks
 			foreach (var att in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "Java.Interop.DoNotPackageAttribute")) {
 				string file = (string) att.ConstructorArguments.First ().Value;
 				if (string.IsNullOrWhiteSpace (file))
-					Log.LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.FullName);
+					LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.FullName);
 				do_not_package_atts.Add (Path.GetFileName (file));
 			}
 
-			Log.LogMessage (MessageImportance.Low, "{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
+			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
 			indent += 2;
 			// Add this assembly
 			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
