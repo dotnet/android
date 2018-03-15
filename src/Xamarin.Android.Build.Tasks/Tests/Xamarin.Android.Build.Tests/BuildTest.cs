@@ -2056,8 +2056,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 						"The __library_projects__ directory should exist.");
 					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
-					//HACK: forces project to re-save, is there a *better* way?
-					proj.Sources.First ().Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 					if (useShortFileNames) {
 						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
