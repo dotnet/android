@@ -142,7 +142,7 @@ namespace Xamarin.Android.NetTests {
   [TestFixture]
   public class AndroidClientHandlerTests : HttpClientHandlerTestBase
   {
-    const string Tls_1_2_Url = "https://tlstest.xamdev.com/";
+    const string Tls_1_2_Url = "https://tlstest.internalx.com/";
 
     protected override HttpClientHandler CreateHandler ()
     {
@@ -259,8 +259,8 @@ namespace Xamarin.Android.NetTests {
 	  [Test]
 	  public void Redirect_Without_Protocol_Works()
 	  {
-		  var requestURI = new Uri ("http://tlstest.xamdev.com/redirect.php");
-		  var redirectedURI = new Uri ("http://tlstest.xamdev.com/redirect-301.html");
+		  var requestURI = new Uri ("http://tlstest.internalx.com/redirect.php");
+		  var redirectedURI = new Uri ("http://tlstest.internalx.com/redirect-301.html");
 		  using (var c = new HttpClient (CreateHandler ())) {
 			  var tr = c.GetAsync (requestURI);
 			  tr.Wait ();
