@@ -79,4 +79,7 @@
     <RemoveDir Directories="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)" />
     <Delete Files="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')" />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildUnlessCached">
+  </Target>
 </Project>

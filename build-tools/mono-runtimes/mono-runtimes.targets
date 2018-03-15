@@ -708,4 +708,7 @@
     <RemoveDir Directories="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity)');@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)');$(_LlvmBuildDir32);$(_LlvmBuildDir64);$(_LlvmBuildDirWin32);$(_LlvmBuildDirWin64)" />
     <Delete Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity).config.cache');$(_CrossOutputPrefix)*.config.cache;$(_CrossOutputDirTop)\llvm*.config.cache" />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildRuntimes">
+  </Target>
 </Project>
