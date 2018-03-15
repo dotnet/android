@@ -1,10 +1,11 @@
 ﻿using System;
 using NuGet.Common;
 using Microsoft.Build.Utilities;
+using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
-	class NuGetLogger : ILogger {
+	class NuGetLogger : LoggerBase {
 		TaskLoggingHelper log;
 
 		public NuGetLogger (TaskLoggingHelper log)
@@ -12,59 +13,22 @@ namespace Xamarin.Android.Tasks {
 			this.log = log;
 		}
 
-		public void Log (LogLevel level, string data)
-		{
-			log.LogDebugMessage (data);
+		public override void Log(ILogMessage message) {
+			log.LogDebugMessage ("{0}", message.Message);
 		}
 
-		public void Log (ILogMessage message)
-		{
-			log.LogDebugMessage (message.Message);
+		public override void Log(LogLevel level, string data) {
+			log.LogDebugMessage ("{0}", data);
 		}
 
-		public System.Threading.Tasks.Task LogAsync (LogLevel level, string data)
-		{
-			return System.Threading.Tasks.Task.Run (() => Log (level, data));
+		public override TPL.Task LogAsync(ILogMessage message) {
+			Log(message);
+			return TPL.Task.FromResult(0);
 		}
 
-		public System.Threading.Tasks.Task LogAsync (ILogMessage message)
-		{
-			return System.Threading.Tasks.Task.Run (() => Log (message));
-		}
-
-		public void LogDebug (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogError (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogInformation (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogInformationSummary (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogMinimal (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogVerbose (string data)
-		{
-			Log (LogLevel.Debug, data);
-		}
-
-		public void LogWarning (string data)
-		{
-			Log (LogLevel.Debug, data);
+		public override TPL.Task LogAsync(LogLevel level, string data) {
+			Log(level, data);
+			return TPL.Task.FromResult(0);
 		}
 	}
 }
