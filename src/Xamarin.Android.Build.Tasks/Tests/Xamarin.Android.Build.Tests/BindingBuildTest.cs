@@ -441,8 +441,8 @@ AAAA==";
 				binding.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasourcejartest-sources.jar") {
 					BinaryContent = () => Convert.FromBase64String (sourcesJarBase64)
 				});
-				bindingBuilder.Build (binding);
-				string xml = Path.Combine (bindingBuilder.Output.GetIntermediaryAsText ("docs/Com.Xamarin.Android.Test.Msbuildtest/JavaSourceJarTest.xml"));
+				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+				string xml = bindingBuilder.Output.GetIntermediaryAsText ("docs/Com.Xamarin.Android.Test.Msbuildtest/JavaSourceJarTest.xml");
 				Assert.IsTrue (xml.Contains ("<param name=\"name\"> - name to display.</param>"), "missing doc");
 			}
 		}
