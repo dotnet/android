@@ -31,4 +31,8 @@
       AfterTargets="Clean">
     <RemoveDir Directories="src/main/libs;src/main/obj" />
   </Target>
+
+  <Target Name="CoreCompile"
+      DependsOnTargets="_NdkBuild">
+  </Target>
 </Project>

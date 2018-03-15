@@ -23,5 +23,13 @@
 
   <Target Name="Clean">
   </Target>
+
+  <Target Name="CoreCompile"
+      DependsOnTargets="Build">
+  </Target>
+
+  <Target Name="Compile"
+      DependsOnTargets="CoreCompile">
+  </Target>
 </Project>
 

@@ -18,5 +18,8 @@
     <Delete Files="$(OutputPath)\netstandard.dll" />
     <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\netstandard PROFILE=monodroid clean" />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildNetstandardFacade">
+  </Target>
 </Project>
 

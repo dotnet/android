@@ -5,6 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}</ProjectGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkMoniker>.NETFramework,Version=v4.5.1</TargetFrameworkMoniker>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">

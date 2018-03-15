@@ -38,5 +38,8 @@
         WorkingDirectory="$(ProGuardSourceFullPath)"
     />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildProGuard">
+  </Target>
 </Project>
 
