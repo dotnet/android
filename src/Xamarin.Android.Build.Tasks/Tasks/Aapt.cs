@@ -215,21 +215,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute () 
 		{
-			var task = ThreadingTasks.Task.Run ( () => {
-				return DoExecute ();
-			}, Token);
-
-			task.ContinueWith ( (t) => {
-				Complete ();
-			});
-
-			base.Execute ();
-
-			return !Log.HasLoggedErrors;
-		}
-
-		bool DoExecute ()
-		{
 			Log.LogDebugMessage ("Aapt Task");
 			Log.LogDebugMessage ("  AssetDirectory: {0}", AssetDirectory);
 			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
@@ -248,7 +233,22 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
+			
+			var task = ThreadingTasks.Task.Run ( () => {
+				DoExecute ();
+			}, Token);
 
+			task.ContinueWith ( (t) => {
+				Complete ();
+			});
+
+			base.Execute ();
+
+			return !Log.HasLoggedErrors;
+		}
+
+		void DoExecute ()
+		{
 			if (ResourceNameCaseMap != null)
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
@@ -261,8 +261,6 @@ namespace Xamarin.Android.Tasks
 			};
 
 			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
-
-			return !Log.HasLoggedErrors;
 		}
 
 		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
