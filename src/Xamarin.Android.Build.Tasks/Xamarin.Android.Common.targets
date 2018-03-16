@@ -1084,6 +1084,8 @@ because xbuild doesn't support framework reference assemblies.
 	<_PropertyCacheItems Include="OS=$(OS)" />
 	<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
 	<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
+	<_PropertyCacheItems Include="AdbTarget=$(AdbTarget)" />
+	<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
 </ItemGroup>
 
 <Target Name="_ReadPropertiesCache">
@@ -1122,6 +1124,7 @@ because xbuild doesn't support framework reference assemblies.
 		References="@(ReferencePath)"
 		UseManagedResourceGenerator="True"
 		DesignTimeBuild="$(DesignTimeBuild)"
+		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>

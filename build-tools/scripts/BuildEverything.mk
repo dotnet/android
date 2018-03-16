@@ -23,12 +23,12 @@ ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 ## The following values *must* use SPACE, **not** TAB, to separate values.
 
 # $(ALL_API_LEVELS) and $(ALL_FRAMEWORKS) must be kept in sync w/ each other
-ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26  27
+ALL_API_LEVELS    = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26  27  28
 # this was different from ALL_API_LEVELS when API Level 26 was "O". Same could happen in the future.
-ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26  27
+ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    18    19    20        21    22    23    24    25    26  27  P
 # supported api levels
-ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0  v8.1
-API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26  27
+ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0  v8.1  v8.1.99
+API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26  27  28
 STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26
 
 ## The preceding values *must* use SPACE, **not** TAB, to separate values.
@@ -118,14 +118,14 @@ framework-assemblies:
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
-	_latest_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
+	_latest_stable_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestStableFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
-		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/Mono.Android.Export.* ; \
+		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/Mono.Android.Export.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; ) \
 	$(foreach conf, $(CONFIGURATIONS), \
-		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_framework"/OpenTK-1.0.* ; \
+		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/OpenTK-1.0.* ; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
@@ -167,7 +167,9 @@ package-oss $(ZIP_OUTPUT):
 	if [ -d bin/Release/bin ] ; then cp tools/scripts/xabuild bin/Release/bin ; fi
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
-	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then cp -n bin/*/lib/xamarin.android/ThirdPartyNotices.txt $(ZIP_OUTPUT_BASENAME) ; fi
+	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then \
+		cp -n $(firstword $(wildcard bin/*/lib/xamarin.android/ThirdPartyNotices.txt)) $(ZIP_OUTPUT_BASENAME) ; \
+	fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
 	for c in $(CONFIGURATIONS) ; do \

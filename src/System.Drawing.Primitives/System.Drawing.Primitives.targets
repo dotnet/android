@@ -18,5 +18,8 @@
     <Delete Files="$(OutputPath)\System.Drawing.Primitives.dll" />
     <Exec Command="make -C $(MonoSourceFullPath)\mcs\class\Facades\System.Drawing.Primitives PROFILE=monodroid clean" />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildSystemDrawingPrimitivesFacade">
+  </Target>
 </Project>
 

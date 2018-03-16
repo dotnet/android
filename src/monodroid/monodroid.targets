@@ -139,4 +139,7 @@
         Command="%(_HostRuntime.Strip) %(_HostRuntime.StripFlags) &quot;$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.%(_HostRuntime.NativeLibraryExtension)&quot;"
     />
   </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="Build">
+  </Target>
 </Project>

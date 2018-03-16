@@ -139,5 +139,11 @@
       <Id>27</Id>
       <Stable>True</Stable>
     </AndroidApiInfo>
+    <AndroidApiInfo Include="v8.1.99">
+      <Name>P Preview UNSTABLE</Name>
+      <Level>28</Level>
+      <Id>P</Id>
+      <Stable>False</Stable>
+    </AndroidApiInfo>
   </ItemGroup>
 </Project>

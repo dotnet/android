@@ -33,7 +33,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(__XA_NO_PREVIEW_L_SUPPORT__)' != ''">$(DefineConstants);XA_NO_PREVIEW_L_SUPPORT</DefineConstants>
-    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestApiLevel)\mcw</AndroidGeneratedClassDirectory>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />

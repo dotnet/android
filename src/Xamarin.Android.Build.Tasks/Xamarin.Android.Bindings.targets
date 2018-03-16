@@ -530,7 +530,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Target Name="BuildDocumentation"
-	  	Inputs="@(JavaDocIndex)"
+	  	Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
 	  	Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
 	  	Condition="'@(JavaDocIndex)' != ''">
     <MDoc

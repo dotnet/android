@@ -1,31 +1,35 @@
 ---
-id: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
 title: "Build Process"
-dateupdated: 2017-06-22
+ms.topic: article
+ms.prod: xamarin
+ms.assetid: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
+ms.technology: xamarin-android
+author: mgmclemore
+ms.author: mamcle
+ms.date: 03/14/2018
 ---
 
-<a name="Overview" class="injected"></a>
+# Build Process
 
-# Overview
+
+## Overview
 
 The Xamarin.Android build process is responsible for gluing everything
 together:
-[generating `Resource.designer.cs`](https://developer.xamarin.com/guides/android/advanced_topics/api_design#Resources),
+[generating `Resource.designer.cs`](~/android/internals/api-design.md),
 supporting the `AndroidAsset`, `AndroidResource`, and other
 [build actions](#Build_Actions), generating
-[Android-callable wrappers](https://developer.xamarin.com/guides/android/advanced_topics/java_integration_overview/android_callable_wrappers),
+[Android-callable wrappers](~/android/platform/java-integration/android-callable-wrappers.md),
 and generating a `.apk` for execution on Android devices.
 
-<a name="App_Packaging" class="injected"></a>
-<a name="Application_Packages" class="injected"></a>
 
-# Application Packages
+## Application Packages
 
 In broad terms, there are two types of Android application packages 
 (`.apk` files) which the Xamarin.Android build system can generate: 
 
 -   **Release** builds, which are fully self-contained and don't 
-    require additional packages in order to execute. These are the 
+    require additional packages to execute. These are the
     packages which would be provided to an App store. 
 
 -   **Debug** builds, which are not. 
@@ -33,9 +37,7 @@ In broad terms, there are two types of Android application packages
 Not coincidentally, these match the MSBuild `Configuration` which
 produces the package.
 
-<a name="Shared_Runtime" class="injected"></a>
-
-## Shared Runtime
+### Shared Runtime
 
 The *shared runtime* is a pair of additional Android packages which
 provide the Base Class Library (`mscorlib.dll`, etc.) and the
@@ -47,16 +49,16 @@ Debug package to be smaller.
 The shared runtime may be disabled in Debug builds by setting the 
 `$(AndroidUseSharedRuntime)` property to `False`. 
 
-<a name="Fast_Deployment" class="injected"></a>
+<a name="Fast_Deployment" />
 
-## Fast Deployment
+### Fast Deployment
 
 *Fast deployment* works in concert with the shared runtime to further 
 shrink the Android application package size. This is done by not 
 bundling the app's assemblies within the package. Instead, they are 
 copied onto the target via `adb push`. This process speeds up the 
-build/deploy/debug cycle because if *only* assemblies are changed, the 
-package is not reinstalled. Instead, only the updated assemblies are 
+build/deploy/debug cycle because if *only* assemblies are changed,
+the package is not reinstalled. Instead, only the updated assemblies are
 re-synchronized to the target device. 
 
 Fast deployment is known to fail on devices which block `adb` from 
@@ -67,12 +69,10 @@ Fast deployment is enabled by default, and may be disabled in Debug builds
 by setting the `$(EmbedAssembliesIntoApk)` property to `True`.
 
 
-<a name="MSBuild_Projects" class="injected"></a>
-
-# MSBuild Projects
+## MSBuild Projects
 
 The Xamarin.Android build process is based on MSBuild, which is also 
-the project file format used by Xamarin Studio and Visual Studio. 
+the project file format used by Visual Studio for Mac and Visual Studio.
 Ordinarily, users will not need to edit the MSBuild files by hand 
 &ndash; the IDE creates fully functional projects and updates them with 
 any changes made, and automatically invoke build targets as needed. 
@@ -83,9 +83,9 @@ This page documents only the Xamarin.Android-specific features and
 customizations &ndash; many more things are possible with the normal 
 MSBuild items, properties and targets. 
 
-<a name="Build_Targets" class="injected"></a>
+<a name="Build_Targets" />
 
-# Build Targets
+## Build Targets
 
 The following build targets are defined for Xamarin.Android projects:
 
@@ -107,9 +107,8 @@ The following build targets are defined for Xamarin.Android projects:
     `Resource.designer.cs` file. This target is usually called by the
     IDE when new resources are added to the project.
 
-<a name="Build_Properties" class="injected"></a>
 
-# Build Properties
+## Build Properties
 
 MSBuild properties control the behavior of the targets. They are 
 specified within the project file, e.g. **MyApp.csproj**, within 
@@ -124,9 +123,9 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     *By default*, the `Debug` configuration will result in the
     `Install` and `SignAndroidPackage` targets creating a smaller
     Android package which requires the presence of other files and
-    packages in order to operate.
+    packages to operate.
 
-    The default `Release` configuration will result in the in the
+    The default `Release` configuration will result in the
     `Install` and `SignAndroidPackage` targets creating an Android
     package which is *stand-alone*, and may be used without installing
     any other packages or files.
@@ -157,7 +156,7 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     debuggable.
 
 
-## Install Properties
+### Install Properties
 
 Install properties control the behavior of the `Install` and
 `Uninstall` targets.
@@ -167,13 +166,14 @@ Install properties control the behavior of the `Install` and
     this property is the same as the
     [`adb` Target Device option](http://developer.android.com/tools/help/adb.html#issuingcommands):
 
-        # Install package onto emulator via -e
-        # Use `/Library/Frameworks/Mono.framework/Commands/xbuild` on OS X
-        MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
+    ```bash
+    # Install package onto emulator via -e
+    # Use `/Library/Frameworks/Mono.framework/Commands/msbuild` on OS X
+    MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
+    ```
 
-<a name="App_Packaging" class="injected"></a>
 
-## Packaging Properties
+### Packaging Properties
 
 Packaging properties control the creation of the Android package, and are
 used by the `Install` and `SignAndroidPackage` targets.
@@ -228,15 +228,17 @@ when packaing Release applications.
     determines whether types may implement `Android.Runtime.IJavaObject`
     *without* also inheriting from `Java.Lang.Object` or `Java.Lang.Throwable`:
 
-        class BadType : IJavaObject {
-            public IntPtr Handle {
-                get {return IntPtr.Zero;}
-            }
-        
-            public void Dispose()
-            {
-            }
+    ```csharp
+    class BadType : IJavaObject {
+        public IntPtr Handle {
+            get {return IntPtr.Zero;}
         }
+
+        public void Dispose()
+        {
+        }
+    }
+    ```
 
     When True, such types will generate an XA4212 error, otherwise a
     XA4212 warning will be generated.
@@ -248,8 +250,7 @@ when packaing Release applications.
 -   **AndroidFastDeploymentType** &ndash; A `:` (colon)-separated list
     of values to control what types can be deployed to the
     [Fast Deployment directory](#Fast_Deployment) on the target device
-    when the
-    [`$(EmbedAssembliesIntoApk)`](#EmbedAssembliesIntoApk) MSBuild
+    when the `$(EmbedAssembliesIntoApk)` MSBuild
     property is `False`. If a resource is fast deployed, it is *not*
     embedded into the generated `.apk`, which can speed up deployment
     times. (The more that is fast deployed, then the less frequently
@@ -268,45 +269,67 @@ when packaing Release applications.
 
 -   **AndroidApplicationJavaClass** &ndash; The full Java class name to
     use in place of `android.app.Application` when a class inherits
-    from [Android.App.Application](/api/type/Android.App.Application/).
+    from [Android.App.Application](https://developer.xamarin.com/api/type/Android.App.Application/).
 
-    This property is generally set by *other* properties, such as the [`$(AndroidEnableMultiDex)`](#AndroidEnableMultiDex) MSBuild property.
+    This property is generally set by *other* properties, such as the
+		`$(AndroidEnableMultiDex)` MSBuild property.
 
     Added in Xamarin.Android 6.1.
 
--   **AndroidHttpClientHandlerType** &ndash; Allow setting the value of the
-    [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](https://developer.xamarin.com/guides/android/advanced_topics/environment/#XA_HTTP_CLIENT_HANDLER_TYPE).
-    This value will not override an explicitly specified
-    `XA_HTTP_CLIENT_HANDLER_TYPE` value. An
-    `XA_HTTP_CLIENT_HANDLER_TYPE` environment variable value specified
-    in an
-    [`@(AndroidEnvironment)`](#AndroidEnvironment) file will take
-    precedence.
+-   **AndroidHttpClientHandlerType** &ndash; Controls the default
+    `System.Net.Http.HttpMessageHandler` implementation which will be used by
+    the `System.Net.Http.HttpClient` default constructor. The value is an
+    assembly-qualified type name of an `HttpMessageHandler` subclass, suitable
+    for use with
+    [`System.Type.GetType(string)`](https://docs.microsoft.com/en-us/dotnet/api/system.type.gettype?view=netcore-2.0#System_Type_GetType_System_String_).
+
+    The default value is `System.Net.Http.HttpClientHandler, System.Net.Http`.
+
+    This may be overridden to instead contain
+    `Xamarin.Android.Net.AndroidClientHandler`, which uses the Android
+    Java APIs to perform network requests. This allows accessing TLS 1.2 URLs
+    when the underlying Android version supports TLS 1.2.  
+    Only Android 5.0 and later reliably provide TLS 1.2 support through Java.
+
+    *Note*: If TLS 1.2 support is required on Android versions prior to 5.0,
+    *or* if TLS 1.2 support is required with the `System.Net.WebClient` and
+    related APIs, then `$(AndroidTlsProvider)` should be used.
+
+    *Note*: Support for this property works by setting the
+    [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](~/android/deploy-test/environment.md).
+    A `$XA_HTTP_CLIENT_HANDLER_TYPE` value found in a file
+    with a Build action of `@(AndroidEnvironment)` will take precedence.
 
     Added in Xamarin.Android 6.1.
 
 -   **AndroidTlsProvider** &ndash; A string value which specifies which
     TLS provider should be used in an application. Possible values are:
-    Valid values include:
 
     - `btls`: Use
       [Boring SSL](https://boringssl.googlesource.com/boringssl) for
       TLS communication with
       [HttpWebRequest](https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx).
-      This allows use of TLS 1.2.
+      This allows use of TLS 1.2 on all Android versions.
 
     - `legacy`: Use the historical managed SSL implementation for
       network interaction. This *does not* support TLS 1.2.
 
-    - `default`, or unset/the empty string: In Xamarin.Android 7.1,
-      this is equivalent to `legacy`.
+    - `default`: Allow *Mono* to choose the default TLS provider.
+      This is equivalent to `legacy`, even in Xamarin.Android 7.3.  
+      *Note*: This value is unlikely to appear in `.csproj` values,
+      as the IDE "Default" value results in *removal* of the
+      `$(AndroidTlsProvider)` property.
+
+    - Unset/the empty string: In Xamarin.Android 7.1,
+      this is equivalent to `legacy`.  
+      In Xamarin.Android 7.3, this is equivalent to `btls`.
 
     The default value is the empty string.
 
-    **Experimental**. Added in Xamarin.Android 7.1.
+    Added in Xamarin.Android 7.1.
 
 -   **AndroidLinkMode** &ndash; Specifies which type of
-    [linking](https://developer.xamarin.com/guides/android/advanced_topics/linking/) should be
+    [linking](~/android/deploy-test/linker.md) should be
     performed on assemblies contained within the Android package. Only
     used in Android Application projects. The default value is
     *SdkOnly*. Valid values are:
@@ -317,18 +340,22 @@ when packaing Release applications.
       libraries only, not user's assemblies.
 
     - **Full**: Linking will be performed on base class libraries and
-      user assemblies.
+      user assemblies. **Note:** Using an `AndroidLinkMode` value of *Full* often
+      results in broken apps, particularly when Reflection is used. Avoid unless
+      you *really* know what you're doing.
 
-    > ℹ️ **Note:** Using an `AndroidLinkMode` value of *Full* often results in broken apps, particularly when Reflection is used. Avoid unless you *really* know what you're doing.
-
-            <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    ```xml
+    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    ```
 
 -   **AndroidLinkSkip** &ndash; Specifies a semicolon-delimited (`;`)
     list of assembly names, without file extensions, of assemblies that
     should not be linked. Only used within Android Application
     projects.
 
-        <AndroidLinkSkip>Assembly1;Assembly2</AndroidLinkSkip>
+    ```xml
+    <AndroidLinkSkip>Assembly1;Assembly2</AndroidLinkSkip>
+    ```
 
 -   **AndroidManagedSymbols** &ndash; A boolean property that controls
     whether sequence points are generated so that file name and line
@@ -338,19 +365,19 @@ when packaing Release applications.
 
 -   **AndroidManifest** &ndash; Specifies a filename to use as the
     template for the app's
-    [`AndroidManifest.xml`](https://developer.xamarin.com/guides/android/advanced_topics/working_with_androidmanifest.xml/).
+    [`AndroidManifest.xml`](~/android/platform/android-manifest.md).
     During the build, any other necessary values will be merged into to
     produce the actual `AndroidManifest.xml`.
     The `$(AndroidManifest)` must contain the package name in the `/manifest/@package` attribute.
 
--   **AndroidSdkBuildToolsVersion** &ndash; The Android SDK build-tools
-    package provides the **aapt** and **zipalign** tools, among others.
-    Multiple different versions of the build-tools package may be
-    installed simultaneously. The build-tools package chosen for
+-   **AndroidSdkBuildToolsVersion** &ndash; The Android SDK 
+    build-tools package provides the **aapt** and **zipalign** tools,
+    among others. Multiple different versions of the build-tools package
+    may be installed simultaneously. The build-tools package chosen for
     packaging is done by checking for and using a
     "preferred" build-tools version if it is present; if
     the "preferred" version is *not* present, then the
-    highested versioned installed build-tools package is used.
+    highest versioned installed build-tools package is used.
 
     The `$(AndroidSdkBuildToolsVersion)` MSBuild property contains
     the prefered build-tools version. The Xamarin.Android build system
@@ -416,7 +443,7 @@ when packaing Release applications.
 
 -   **EnableProguard** &ndash; A boolean property that determines
     whether or not [proguard](http://developer.android.com/tools/help/proguard.html)
-    is run as part of the packaging process in order to link Java code.
+    is run as part of the packaging process to link Java code.
 
     Support for this property was added in Xamarin.Android 5.1.
 
@@ -434,7 +461,9 @@ when packaing Release applications.
     Specifying this property is necessary if the
     [`_CompileDex` target throws a `java.lang.OutOfMemoryError`](https://bugzilla.xamarin.com/show_bug.cgi?id=18327).
 
-        <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
+    ```xml
+    <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
+    ```
 
 -   **JavaOptions** &ndash; Specifies additional command-line options
     to pass to **java** when building the `.dex` file.
@@ -515,7 +544,9 @@ when packaing Release applications.
         (DOS)* \[CP865\].
 
 
-        <MandroidI18n>West</MandroidI18n>
+    ```xml
+    <MandroidI18n>West</MandroidI18n>
+    ```
 
 -   **MonoSymbolArchive** &ndash; A boolean property which controls
     whether `.mSYM` artifacts are created for later use with
@@ -524,22 +555,18 @@ when packaing Release applications.
 
     This is True by default for &ldquo;Release&rdquo; apps which have
     debugging symbols enabled:
-    [`$(EmbedAssembliesIntoApk)`](#EmbedAssembliesIntoApk) is True,
+    `$(EmbedAssembliesIntoApk)` is True,
     `$(DebugSymbols)` is True, and `$(Optimize)` is True.
 
     Added in Xamarin.Android 7.1.
 
-    <a name="AndroidVersionCodePattern" class="injected"></a>
 -   **AndroidVersionCodePattern** &ndash; A string property which allows
     the developer to customize the `versionCode` in the manifest.
-    See [Creating the Version Code for the APK](https://developer.xamarin.com/guides/android/advanced_topics/build-abi-specific-apks/#Creating_the_Version_Code_for_the_APK)
+    See [Creating the Version Code for the APK](~/android/deploy-test/building-apps/abi-specific-apks.md)
     for information on deciding a `versionCode`.
     
     Some examples, if `abi` is `armeabi` and `versionCode` in the manifest
-    is `123`
-
-        {abi}{versionCode}
-
+    is `123`, `{abi}{versionCode}`
     will produce a versionCode of `1123` when `$(AndroidCreatePackagePerAbi)`
     is True, otherwise will produce a value of 123.
     If `abi` is `x86_64` and `versionCode` in the manifest
@@ -547,21 +574,17 @@ when packaing Release applications.
     is True, otherwise will produce a value of `44`.
 
     If we include a left padding format string 
-
-        {abi}{versionCode:0000}
-
-    it would produde `50044` because we are left padding the `versionCode`
+    `{abi}{versionCode:0000}`,
+    it would produce `50044` because we are left padding the `versionCode`
     with `0`. Alternatively you can use the decimal padding such as
-
-        {abi}{versionCode:D4}
-
-    which does the same as the previous example. 
+    `{abi}{versionCode:D4}`
+    which does the same as the previous example.
 
     Only '0' and 'Dx' padding format strings are supported since the value
     MUST be an integer.
     
     Pre defined key items
-        
+
     -   **abi**  &ndash; Inserts the targetted abi for the app
         -   1 &ndash; `armeabi`
         -   2 &ndash; `armeabi-v7a`
@@ -576,34 +599,30 @@ when packaing Release applications.
     -   **versionCode** &ndash; Uses the version code direrctly from 
         `Properties\AndroidManifest.xml`. 
 
-    You can define custom items using the [AndroidVersionCodeProperties](#AndroidVersionCodeProperties) 
-    property.
+    You can define custom items using the `$(AndroidVersionCodeProperties)`
+    property (defined next).
 
     By default the value will be set to `{abi}{versionCode:D6}`. If a developer
     wants to keep the old behaviour you can override the default by setting
-    the [AndroidUseLegacyVersionCode](#AndroidUseLegacyVersionCode) property to `true`
+    the `$(AndroidUseLegacyVersionCode)` property to `true`
 
     Added in Xamarin.Android 7.2.
 
-    <a name="AndroidVersionCodeProperties" class="injected"></a>
--   **AndroidVersionCodeProperties** &ndash; A string property which allows
-    the developer to define custom items to use with the [AndroidVersionCodePattern](#AndroidVersionCodePattern).
-    They are in the form of a `key=value` pair. All items in the `value` should
-    be integer values. 
-
-            screen=23;target=$(_SupportedApiLevel)
-
-    As you can see you can make use of existing or custom MSBuild properties
-    in the string. 
+-   **AndroidVersionCodeProperties** &ndash; A string property which
+    allows the developer to define custom items to use with the
+    `AndroidVersionCodePattern`. They are in the form of a `key=value`
+    pair. All items in the `value` should be integer values. For
+    example: `screen=23;target=$(_SupportedApiLevel)`. As you can see
+    you can make use of existing or custom MSBuild properties in the
+    string.
 
     Added in Xamarin.Android 7.2.
 
-    <a name="AndroidUseLegacyVersionCode" class="injected"></a>
 -   **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
     the developer to revert the versionCode calculation back to its old pre 
     Xamarin.Android 8.2 behaviour. This should ONLY be used for developers 
     with existing applications in the Google Play Store. It is highly recommended
-    that the new [AndroidVersionCodePattern](#AndroidVersionCodePattern) property is used.
+    that the new `$(AndroidVersionCodePattern)` property is used.
 
     Added in Xamarin.Android 8.2.
 
@@ -623,10 +642,10 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.2.
 
-## Binding Project Build Properties
+### Binding Project Build Properties
 
 The following MSBuild properties are used with
-[Binding projects](guides/android/advanced_topics/binding-a-java-library/):
+[Binding projects](~/android/platform/binding-java-library/index.md):
 
 -   **AndroidClassParser** &ndash; A string property which controls how
     `.jar` files are parsed. Possible values include:
@@ -683,10 +702,7 @@ The following MSBuild properties are used with
     The default value will change in a future release.
 
 
-<a name="Resgen" class="injected"></a>
-<a name="Resource_Properties" class="injected"></a>
-
-## Resource Properties
+### Resource Properties
 
 Resource properties control the generation of the 
 `Resource.designer.cs` file, which provides access to Android 
@@ -717,13 +733,12 @@ resources.
     **Experimental**. Added in Xamarin.Android 7.0.
 
 
-<a name="Signing" class="injected"></a>
-<a name="Signing_Properties" class="injected"></a>
+<a name="Signing_Properties" />
 
-## Signing Properties
+### Signing Properties
 
 Signing properties control how the Application package is signed so
-that it may be installed onto an Android device. In order to allow
+that it may be installed onto an Android device. To allow
 quicker build iteration, the Xamarin.Android tasks do not sign packages
 during the build process, because signing is quite slow. Instead, they
 are signed (if necessary) before installation or during export, by the
@@ -760,28 +775,32 @@ server, the following MSBuild properties can be used:
 
 For example, consider the following `keytool` invocation:
 
-    $ keytool -genkey -v -keystore filename.keystore -alias keystore.alias -keyalg RSA -keysize 2048 -validity 10000
-    Enter keystore password: keystore.filename password
-    Re-enter new password: keystore.filename password
-    ...
-    Is CN=... correct?
-      [no]:  yes
+```shell
+$ keytool -genkey -v -keystore filename.keystore -alias keystore.alias -keyalg RSA -keysize 2048 -validity 10000
+Enter keystore password: keystore.filename password
+Re-enter new password: keystore.filename password
+...
+Is CN=... correct?
+  [no]:  yes
 
-    Generating 2,048 bit RSA key pair and self-signed certificate (SHA1withRSA) with a validity of 10,000 days
-            for: ...
-    Enter key password for keystore.alias
-            (RETURN if same as keystore password): keystore.alias password
-    [Storing filename.keystore]
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA1withRSA) with a validity of 10,000 days
+        for: ...
+Enter key password for keystore.alias
+        (RETURN if same as keystore password): keystore.alias password
+[Storing filename.keystore]
+```
 
 To use the keystore generated above, use the property group:
 
-    <PropertyGroup>
-        <AndroidKeyStore>True</AndroidKeyStore>
-        <AndroidSigningKeyStore>filename.keystore</AndroidSigningKeyStore>
-        <AndroidSigningStorePass>keystore.filename password</AndroidSigningStorePass>
-        <AndroidSigningKeyAlias>keystore.alias</AndroidSigningKeyAlias>
-        <AndroidSigningKeyPass>keystore.alias password</AndroidSigningKeyPass>
-    </PropertyGroup>
+```xml
+<PropertyGroup>
+    <AndroidKeyStore>True</AndroidKeyStore>
+    <AndroidSigningKeyStore>filename.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>keystore.filename password</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>keystore.alias</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>keystore.alias password</AndroidSigningKeyPass>
+</PropertyGroup>
+```
 
 -   **AndroidDebugKeyAlgorithm** &ndash; Specifies the default
     algorithm to use for the `debug.keystore`. It defaults to
@@ -791,50 +810,45 @@ To use the keystore generated above, use the property group:
     validity to use for the `debug.keystore`. It defaults to
     `10950` or `30 * 365` or `30 years`.
 
-<a name="Build_Actions" class="injected"></a>
+<a name="Build_Actions" />
 
-# Build Actions
+## Build Actions
 
 *Build actions* are 
 [applied to files](http://msdn.microsoft.com/en-us/library/bb629388.aspx) 
 within the project and control how the file is processed. 
 
-<a name="AndroidEnvironment" class="injected"></a>
+<a name="AndroidEnvironment" />
 
-## AndroidEnvironment
+### AndroidEnvironment
 
 Files with a Build action of `AndroidEnvironment` are used
-to [initialize environment variables and system properties during process startup](https://developer.xamarin.com/guides/android/advanced_topics/environment/).
+to [initialize environment variables and system properties during process startup](~/android/deploy-test/environment.md).
 The `AndroidEnvironment` Build action may be applied to
 multiple files, and they will be evaluated in no particular order (so don't
 specify the same environment variable or system property in multiple
 files).
 
-<a name="Java_Interop_Support" class="injected"></a>
-<a name="AndroidJavaSource" class="injected"></a>
 
-## AndroidJavaSource
+### AndroidJavaSource
 
 Files with a Build action of `AndroidJavaSource` are Java source code which
 will be included in the final Android package.
 
-<a name="AndroidJavaLibrary" class="injected"></a>
 
-## AndroidJavaLibrary
+### AndroidJavaLibrary
 
 Files with a Build action of `AndroidJavaLibrary` are Java
 Archives ( `.jar` files) which will be included in the final Android
 package.
 
-<a name="Resources" class="injected"></a>
-<a name="AndroidResource" class="injected"></a>
 
-## AndroidResource
+### AndroidResource
 
 All files with an *AndroidResource* build action are compiled into
 Android resources during the build process and made accessible via `$(AndroidResgenFile)`.
 
-```
+```xml
 <ItemGroup>
   <AndroidResource Include="Resources\values\strings.xml" />
 </ItemGroup>
@@ -847,7 +861,7 @@ paths within these different directories, and using MSBuild conditions to
 conditionally include different files in different configurations. For
 example:
 
-```
+```xml
 <ItemGroup Condition="'$(Configuration)'!='Debug'">
   <AndroidResource Include="Resources\values\strings.xml" />
 </ItemGroup>
@@ -859,25 +873,25 @@ example:
 </PropertyGroup>
 ```
 
--   **LogicalName** &ndash; Specifies the resource path explicitly.
-    Allows &ldquo;aliasing&rdquo; files so that they will be available
-    as multiple distinct resource names.
+**LogicalName** &ndash; Specifies the resource path explicitly. Allows
+&ldquo;aliasing&rdquo; files so that they will be available as multiple
+distinct resource names.
 
-        <ItemGroup Condition="'$(Configuration)'!='Debug'">
-          <AndroidResource Include="Resources/values/strings.xml"/>
-        </ItemGroup>
-        <ItemGroup Condition="'$(Configuration)'=='Debug'">
-          <AndroidResource Include="Resources-Debug/values/strings.xml">
-            <LogicalName>values/strings.xml</LogicalName>
-          </AndroidResource>
-        </ItemGroup>
+```xml
+<ItemGroup Condition="'$(Configuration)'!='Debug'">
+  <AndroidResource Include="Resources/values/strings.xml"/>
+</ItemGroup>
+<ItemGroup Condition="'$(Configuration)'=='Debug'">
+  <AndroidResource Include="Resources-Debug/values/strings.xml">
+    <LogicalName>values/strings.xml</LogicalName>
+  </AndroidResource>
+</ItemGroup>
+```
 
-<a name="Native_Library_Support" class="injected"></a>
-<a name="AndroidNativeLibrary" class="injected"></a>
 
-## AndroidNativeLibrary
+### AndroidNativeLibrary
 
-[Native libraries](https://developer.xamarin.com/guides/android/advanced_topics/cpu_architecture/#Android_Native_Library_Installation)
+[Native libraries](~/android/platform/native-libraries.md)
 are added to the build by setting their Build action to
 `AndroidNativeLibrary`.
 
@@ -894,19 +908,20 @@ used to specify the ABI that the library targets. Thus, if you add
 `armeabi`. 
 
 
-Item Attribute Name
+#### Item Attribute Name
 
--   **Abi** &ndash; Specifies the ABI of the native library.
+**Abi** &ndash; Specifies the ABI of the native library.
 
-        <ItemGroup>
-          <AndroidNativeLibrary Include="path/to/libfoo.so">
-            <Abi>armeabi</Abi>
-          </AndroidNativeLibrary>
-        </ItemGroup>
+```xml
+<ItemGroup>
+  <AndroidNativeLibrary Include="path/to/libfoo.so">
+    <Abi>armeabi</Abi>
+  </AndroidNativeLibrary>
+</ItemGroup>
+```
 
-<a name="AndroidAarLibrary" class="injected"></a>
 
-## AndroidAarLibrary
+### AndroidAarLibrary
 
 The Build action of `AndroidAarLibrary` should be used to directly
 reference .aar files. This build action will be most commonly used
@@ -918,7 +933,7 @@ the embedded resources found in Library projects. The .aar will be
 extracted into the intermediate directory. Then any assets, resource
 and .jar files will be included in the appropriate item groups.  
 
-## Content
+### Content
 
 The normal `Content` Build action is not supported (as we
 haven't figured out how to support it without a possibly costly first-run
@@ -927,28 +942,26 @@ step).
 Starting in Xamarin.Android 5.1, attempting to use thw `@(Content)`
 Build action will result in a `XA0101` warning.
 
-## LinkDescription
+### LinkDescription
 
 Files with a *LinkDescription* build action are used to
-[control linker behavior](https://developer.xamarin.com/guides/cross-platform/advanced/custom_linking/).
+[control linker behavior](~/cross-platform/deploy-test/linker.md).
 
 
-<a name="ProguardConfiguration"></a>
+<a name="ProguardConfiguration" />
 
-## ProguardConfiguration
+### ProguardConfiguration
 
 Files with a *ProguardConfiguration* build action contain options which 
 are used to control `proguard` behavior. For more information about 
 this build action, see 
-[ProGuard](https://developer.xamarin.com/guides/android/deployment,_testing,_and_metrics/proguard/). 
+[ProGuard](~/android/deploy-test/release-prep/proguard.md).
 
 These files are ignored unless the `$(EnableProguard)` MSBuild property
 is `True`.
 
 
-<a name="Target_Definitions" class="injected"></a>
-
-# Target Definitions
+## Target Definitions
 
 The Xamarin.Android-specific parts of the build process are defined in 
 `$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets`,
@@ -958,15 +971,19 @@ are also required to build the assembly.
 The following build properties must be set before importing any language
 targets:
 
-    <PropertyGroup>
-      <TargetFrameworkIdentifier>MonoDroid</TargetFrameworkIdentifier>
-      <MonoDroidVersion>v1.0</MonoDroidVersion>
-      <TargetFrameworkVersion>v2.2</TargetFrameworkVersion>
-    </PropertyGroup>
+```xml
+<PropertyGroup>
+  <TargetFrameworkIdentifier>MonoDroid</TargetFrameworkIdentifier>
+  <MonoDroidVersion>v1.0</MonoDroidVersion>
+  <TargetFrameworkVersion>v2.2</TargetFrameworkVersion>
+</PropertyGroup>
+```
 
 All of these these targets and properties can be included for C# by 
 importing *Xamarin.Android.CSharp.targets*: 
 
-    <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+```xml
+<Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+```
 
 This file can easily be adapted for other languages.
