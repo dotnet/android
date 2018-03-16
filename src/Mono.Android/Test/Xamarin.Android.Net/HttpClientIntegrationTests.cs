@@ -41,7 +41,7 @@ namespace Xamarin.Android.NetTests {
 	[Category ("InetAccess")]
 	public abstract class HttpClientIntegrationTestBase
 	{
-    protected abstract HttpClientHandler CreateHandler ();
+		protected abstract HttpClientHandler CreateHandler ();
 
 		class CustomStream : Stream
 		{
@@ -209,35 +209,35 @@ namespace Xamarin.Android.NetTests {
 		{
 			bool? failed = null;
 			var listener = CreateListener (l => {
-				try {
-					var request = l.Request;
+					try {
+						var request = l.Request;
 
-					Assert.IsNull (request.AcceptTypes, "#1");
-					Assert.AreEqual (0, request.ContentLength64, "#2");
-					Assert.IsNull (request.ContentType, "#3");
-					Assert.AreEqual (0, request.Cookies.Count, "#4");
-					Assert.IsFalse (request.HasEntityBody, "#5");
-					Assert.AreEqual (TestHost, request.Headers["Host"], "#6b");
-					Assert.AreEqual ("GET", request.HttpMethod, "#7");
-					Assert.IsFalse (request.IsAuthenticated, "#8");
+						Assert.IsNull (request.AcceptTypes, "#1");
+						Assert.AreEqual (0, request.ContentLength64, "#2");
+						Assert.IsNull (request.ContentType, "#3");
+						Assert.AreEqual (0, request.Cookies.Count, "#4");
+						Assert.IsFalse (request.HasEntityBody, "#5");
+						Assert.AreEqual (TestHost, request.Headers["Host"], "#6b");
+						Assert.AreEqual ("GET", request.HttpMethod, "#7");
+						Assert.IsFalse (request.IsAuthenticated, "#8");
 #if false
-					Assert.IsTrue (request.IsLocal, "#9");
+						Assert.IsTrue (request.IsLocal, "#9");
 #endif // Buggy HttpListenerRequest (https://bugzilla.xamarin.com/show_bug.cgi?id=38322)
-					Assert.IsFalse (request.IsSecureConnection, "#10");
-					Assert.IsFalse (request.IsWebSocketRequest, "#11");
-					Assert.IsTrue (request.KeepAlive, "#12");
-					Assert.AreEqual (HttpVersion.Version11, request.ProtocolVersion, "#13");
-					Assert.IsNull (request.ServiceName, "#14");
-					Assert.IsNull (request.UrlReferrer, "#15");
-					Assert.IsNotNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
-					Assert.IsNull (request.UserLanguages, "#17");
-					failed = false;
-				} catch (Exception e) {
-					Console.WriteLine ("# jonp: Send_Complete_Default");
-					Console.WriteLine (e);
-					failed = true;
-				}
-			});
+						Assert.IsFalse (request.IsSecureConnection, "#10");
+						Assert.IsFalse (request.IsWebSocketRequest, "#11");
+						Assert.IsTrue (request.KeepAlive, "#12");
+						Assert.AreEqual (HttpVersion.Version11, request.ProtocolVersion, "#13");
+						Assert.IsNull (request.ServiceName, "#14");
+						Assert.IsNull (request.UrlReferrer, "#15");
+						Assert.IsNotNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
+						Assert.IsNull (request.UserLanguages, "#17");
+						failed = false;
+					} catch (Exception e) {
+						Console.WriteLine ("# jonp: Send_Complete_Default");
+						Console.WriteLine (e);
+						failed = true;
+					}
+				});
 
 			using (listener) {
 				try {
@@ -262,38 +262,38 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				try {
-					var request = l.Request;
+					try {
+						var request = l.Request;
 
-					Assert.IsNull (request.AcceptTypes, "#1");
-					Assert.AreEqual (0, request.ContentLength64, "#2");
-					Assert.IsNull (request.ContentType, "#3");
-					Assert.AreEqual (0, request.Cookies.Count, "#4");
-					Assert.IsFalse (request.HasEntityBody, "#5");
-					Assert.AreEqual (1, request.Headers.Count, "#6");
-					Assert.AreEqual (TestHost, request.Headers["Host"], "#6a");
-					Assert.AreEqual ("GET", request.HttpMethod, "#7");
-					Assert.IsFalse (request.IsAuthenticated, "#8");
+						Assert.IsNull (request.AcceptTypes, "#1");
+						Assert.AreEqual (0, request.ContentLength64, "#2");
+						Assert.IsNull (request.ContentType, "#3");
+						Assert.AreEqual (0, request.Cookies.Count, "#4");
+						Assert.IsFalse (request.HasEntityBody, "#5");
+						Assert.AreEqual (1, request.Headers.Count, "#6");
+						Assert.AreEqual (TestHost, request.Headers["Host"], "#6a");
+						Assert.AreEqual ("GET", request.HttpMethod, "#7");
+						Assert.IsFalse (request.IsAuthenticated, "#8");
 #if false
-					Assert.IsTrue (request.IsLocal, "#9");
+						Assert.IsTrue (request.IsLocal, "#9");
 #endif // Buggy HttpListenerRequest (https://bugzilla.xamarin.com/show_bug.cgi?id=38322)
-					Assert.IsFalse (request.IsSecureConnection, "#10");
-					Assert.IsFalse (request.IsWebSocketRequest, "#11");
-					Assert.IsFalse (request.KeepAlive, "#12");
+						Assert.IsFalse (request.IsSecureConnection, "#10");
+						Assert.IsFalse (request.IsWebSocketRequest, "#11");
+						Assert.IsFalse (request.KeepAlive, "#12");
 #if false // Java HTTP client doesn't support 1.0, always uses 1.1
-					Assert.AreEqual (HttpVersion.Version10, request.ProtocolVersion, "#13");
+						Assert.AreEqual (HttpVersion.Version10, request.ProtocolVersion, "#13");
 #endif
-					Assert.IsNull (request.ServiceName, "#14");
-					Assert.IsNull (request.UrlReferrer, "#15");
-					Assert.IsNotNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
-					Assert.IsNull (request.UserLanguages, "#17");
-					failed = false;
-				} catch (Exception e) {
-					Console.WriteLine ("# jonp: Send_Complete_Version_1_0");
-					Console.WriteLine (e);
-					failed = true;
-				}
-			});
+						Assert.IsNull (request.ServiceName, "#14");
+						Assert.IsNull (request.UrlReferrer, "#15");
+						Assert.IsNotNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
+						Assert.IsNull (request.UserLanguages, "#17");
+						failed = false;
+					} catch (Exception e) {
+						Console.WriteLine ("# jonp: Send_Complete_Version_1_0");
+						Console.WriteLine (e);
+						failed = true;
+					}
+				});
 
 			using (listener) {
 				try {
@@ -321,43 +321,43 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				var request = l.Request;
+					var request = l.Request;
 
-				try {
-					Assert.IsNull (request.AcceptTypes, "#1");
-					Assert.AreEqual (0, request.ContentLength64, "#2");
-					Assert.IsNull (request.ContentType, "#3");
-					Assert.AreEqual (1, request.Cookies.Count, "#4");
-					Assert.AreEqual (new Cookie ("mycookie", "vv"), request.Cookies[0], "#4a");
-					Assert.IsFalse (request.HasEntityBody, "#5");
-					Assert.AreEqual (4, request.Headers.Count, "#6");
-					Assert.AreEqual (TestHost, request.Headers["Host"], "#6a");
-					Assert.AreEqual ("gzip", request.Headers["Accept-Encoding"], "#6b");
-					Assert.AreEqual ("mycookie=vv", request.Headers["Cookie"], "#6c");
-					Assert.AreEqual ("GET", request.HttpMethod, "#7");
-					Assert.IsFalse (request.IsAuthenticated, "#8");
+					try {
+						Assert.IsNull (request.AcceptTypes, "#1");
+						Assert.AreEqual (0, request.ContentLength64, "#2");
+						Assert.IsNull (request.ContentType, "#3");
+						Assert.AreEqual (1, request.Cookies.Count, "#4");
+						Assert.AreEqual (new Cookie ("mycookie", "vv"), request.Cookies[0], "#4a");
+						Assert.IsFalse (request.HasEntityBody, "#5");
+						Assert.AreEqual (4, request.Headers.Count, "#6");
+						Assert.AreEqual (TestHost, request.Headers["Host"], "#6a");
+						Assert.AreEqual ("gzip", request.Headers["Accept-Encoding"], "#6b");
+						Assert.AreEqual ("mycookie=vv", request.Headers["Cookie"], "#6c");
+						Assert.AreEqual ("GET", request.HttpMethod, "#7");
+						Assert.IsFalse (request.IsAuthenticated, "#8");
 #if false
-					Assert.IsTrue (request.IsLocal, "#9");
+						Assert.IsTrue (request.IsLocal, "#9");
 #endif // Buggy HttpListenerRequest (https://bugzilla.xamarin.com/show_bug.cgi?id=38322)
-					Assert.IsFalse (request.IsSecureConnection, "#10");
-					Assert.IsFalse (request.IsWebSocketRequest, "#11");
-					Assert.IsTrue (request.KeepAlive, "#12");
+						Assert.IsFalse (request.IsSecureConnection, "#10");
+						Assert.IsFalse (request.IsWebSocketRequest, "#11");
+						Assert.IsTrue (request.KeepAlive, "#12");
 #if false // Java HTTP client doesn't support 1.0, always uses 1.1
-					Assert.AreEqual (HttpVersion.Version10, request.ProtocolVersion, "#13");
+						Assert.AreEqual (HttpVersion.Version10, request.ProtocolVersion, "#13");
 #endif
-					Assert.IsNull (request.ServiceName, "#14");
-					Assert.IsNull (request.UrlReferrer, "#15");
+						Assert.IsNull (request.ServiceName, "#14");
+						Assert.IsNull (request.UrlReferrer, "#15");
 #if false
-					Assert.IsNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
+						Assert.IsNull (request.UserAgent, "#16"); // We're not using .NET client here, but rather the Java one which sets the UserAgent header
 #endif
-					Assert.IsNull (request.UserLanguages, "#17");
-					failed = false;
-				} catch (Exception x) {
-					Console.WriteLine ("# jonp: Send_Complete_ClientHandlerSettings: ERROR");
-					Console.WriteLine (x.ToString ());
-					failed = true;
-				}
-			});
+						Assert.IsNull (request.UserLanguages, "#17");
+						failed = false;
+					} catch (Exception x) {
+						Console.WriteLine ("# jonp: Send_Complete_ClientHandlerSettings: ERROR");
+						Console.WriteLine (x.ToString ());
+						failed = true;
+					}
+				});
 
 			using (listener) {
 				try {
@@ -397,26 +397,26 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				try {
-					Assert.AreEqual ("vv", request.Headers["aa"], "#1");
+					var request = l.Request;
+					try {
+						Assert.AreEqual ("vv", request.Headers["aa"], "#1");
 
-					var response = l.Response;
-					response.Headers.Add ("rsp", "rrr");
-					response.Headers.Add ("upgrade", "vvvvaa");
-					response.Headers.Add ("Date", "aa");
-					response.Headers.Add ("cache-control", "audio");
+						var response = l.Response;
+						response.Headers.Add ("rsp", "rrr");
+						response.Headers.Add ("upgrade", "vvvvaa");
+						response.Headers.Add ("Date", "aa");
+						response.Headers.Add ("cache-control", "audio");
 
-					response.StatusDescription = "test description";
-					response.ProtocolVersion = HttpVersion.Version10;
-					response.SendChunked = true;
-					response.RedirectLocation = "w3.org";
+						response.StatusDescription = "test description";
+						response.ProtocolVersion = HttpVersion.Version10;
+						response.SendChunked = true;
+						response.RedirectLocation = "w3.org";
 
-					failed = false;
-				} catch {
-					failed = true;
-				}
-			});
+						failed = false;
+					} catch {
+						failed = true;
+					}
+				});
 
 			using (listener) {
 				try {
@@ -465,16 +465,16 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				var request = l.Request;
+					var request = l.Request;
 
-				try {
-					Assert.AreEqual ("MLK,Android,Phone,1.1.9", request.UserAgent, "#1");
-					failed = false;
-				} catch (Exception ex) {
-					failed = true;
-					Console.WriteLine (ex);
-				}
-			});
+					try {
+						Assert.AreEqual ("MLK,Android,Phone,1.1.9", request.UserAgent, "#1");
+						failed = false;
+					} catch (Exception ex) {
+						failed = true;
+						Console.WriteLine (ex);
+					}
+				});
 
 			using (listener) {
 				try {
@@ -503,16 +503,16 @@ namespace Xamarin.Android.NetTests {
 		{
 			bool? failed = null;
 			var listener = CreateListener (l => {
-				var request = l.Request;
+					var request = l.Request;
 
-				try {
-					Assert.AreEqual ("customhost", request.Headers["Host"], "#1");
-					failed = false;
-				} catch (Exception ex) {
-					failed = true;
-					Console.WriteLine (ex);
-				}
-			});
+					try {
+						Assert.AreEqual ("customhost", request.Headers["Host"], "#1");
+						failed = false;
+					} catch (Exception ex) {
+						failed = true;
+						Console.WriteLine (ex);
+					}
+				});
 
 			using (listener) {
 				try {
@@ -542,16 +542,16 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				var request = l.Request;
+					var request = l.Request;
 
-				try {
-					Assert.AreEqual (5, request.Headers.Count, "#1");
-					failed = false;
-				} catch (Exception ex) {
-					failed = true;
-					Console.WriteLine (ex);
-				}
-			});
+					try {
+						Assert.AreEqual (5, request.Headers.Count, "#1");
+						failed = false;
+					} catch (Exception ex) {
+						failed = true;
+						Console.WriteLine (ex);
+					}
+				});
 
 			using (listener) {
 				try {
@@ -576,8 +576,8 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				failed = true;
-			});
+					failed = true;
+				});
 
 			using (listener) {
 				try {
@@ -612,8 +612,8 @@ namespace Xamarin.Android.NetTests {
 			bool? failed = null;
 
 			var listener = CreateListener (l => {
-				failed = true;
-			});
+					failed = true;
+				});
 
 			using (listener) {
 				try {
@@ -634,10 +634,10 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Complete_Content ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				l.Response.OutputStream.WriteByte (55);
-				l.Response.OutputStream.WriteByte (75);
-			});
+					var request = l.Request;
+					l.Response.OutputStream.WriteByte (55);
+					l.Response.OutputStream.WriteByte (75);
+				});
 
 			using (listener) {
 				try {
@@ -665,10 +665,10 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Complete_Content_MaxResponseContentBufferSize ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				var b = new byte[4000];
-				l.Response.OutputStream.Write (b, 0, b.Length);
-			});
+					var request = l.Request;
+					var b = new byte[4000];
+					l.Response.OutputStream.Write (b, 0, b.Length);
+				});
 
 			using (listener) {
 				try {
@@ -691,10 +691,10 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Complete_Content_MaxResponseContentBufferSize_Error ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				var b = new byte[4000];
-				l.Response.OutputStream.Write (b, 0, b.Length);
-			});
+					var request = l.Request;
+					var b = new byte[4000];
+					l.Response.OutputStream.Write (b, 0, b.Length);
+				});
 
 			using (listener) {
 				try {
@@ -720,19 +720,19 @@ namespace Xamarin.Android.NetTests {
 		{
 			bool? failed = null;
 			var listener = CreateListener (l => {
-				try {
-					var request = l.Request;
+					try {
+						var request = l.Request;
 
-					Assert.AreEqual (6, request.Headers.Count, $"#1-{method}");
-					Assert.AreEqual ("0", request.Headers ["Content-Length"], $"#1b-{method}");
-					Assert.AreEqual (method.Method, request.HttpMethod, $"#2-{method}");
-					Console.WriteLine ($"Asserts are fine - {method}");
-					failed = false;
-				} catch (Exception ex) {
-					failed = true;
-					Console.WriteLine (ex);
-				}
-			});
+						Assert.AreEqual (6, request.Headers.Count, $"#1-{method}");
+						Assert.AreEqual ("0", request.Headers ["Content-Length"], $"#1b-{method}");
+						Assert.AreEqual (method.Method, request.HttpMethod, $"#2-{method}");
+						Console.WriteLine ($"Asserts are fine - {method}");
+						failed = false;
+					} catch (Exception ex) {
+						failed = true;
+						Console.WriteLine (ex);
+					}
+				});
 
 			using (listener) {
 				try {
@@ -774,9 +774,9 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Complete_Error ()
 		{
 			var listener = CreateListener (l => {
-				var response = l.Response;
-				response.StatusCode = 500;
-			});
+					var response = l.Response;
+					response.StatusCode = 500;
+				});
 
 			using (listener) {
 				try {
@@ -798,9 +798,9 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Content_Get ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				l.Response.OutputStream.WriteByte (72);
-			});
+					var request = l.Request;
+					l.Response.OutputStream.WriteByte (72);
+				});
 
 			using (listener) {
 				try {
@@ -819,14 +819,14 @@ namespace Xamarin.Android.NetTests {
 		public void Send_Content_BomEncoding ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
+					var request = l.Request;
 
-				var str = l.Response.OutputStream;
-				str.WriteByte (0xEF);
-				str.WriteByte (0xBB);
-				str.WriteByte (0xBF);
-				str.WriteByte (71);
-			});
+					var str = l.Response.OutputStream;
+					str.WriteByte (0xEF);
+					str.WriteByte (0xBB);
+					str.WriteByte (0xBF);
+					str.WriteByte (71);
+				});
 
 			using (listener) {
 				try {
@@ -846,11 +846,11 @@ namespace Xamarin.Android.NetTests {
 		{
 			bool passed = false;
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				passed = 7 == request.ContentLength64;
-				passed &= request.ContentType == "text/plain; charset=utf-8";
-				passed &= request.InputStream.ReadByte () == 'm';
-			});
+					var request = l.Request;
+					passed = 7 == request.ContentLength64;
+					passed &= request.ContentType == "text/plain; charset=utf-8";
+					passed &= request.InputStream.ReadByte () == 'm';
+				});
 
 			using (listener) {
 				try {
@@ -873,10 +873,10 @@ namespace Xamarin.Android.NetTests {
 		{
 			bool passed = false;
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				passed = 44 == request.ContentLength64;
-				passed &= request.ContentType == null;
-			});
+					var request = l.Request;
+					passed = 44 == request.ContentLength64;
+					passed &= request.ContentType == null;
+				});
 
 			using (listener) {
 				try {
@@ -930,10 +930,10 @@ namespace Xamarin.Android.NetTests {
 		public void GetByteArray_ServerError ()
 		{
 			var listener = CreateListener (l => {
-				var response = l.Response;
-				response.StatusCode = 500;
-				l.Response.OutputStream.WriteByte (72);
-			});
+					var response = l.Response;
+					response.StatusCode = 500;
+					l.Response.OutputStream.WriteByte (72);
+				});
 
 			using (listener) {
 				try {
@@ -957,12 +957,12 @@ namespace Xamarin.Android.NetTests {
 		public void DisallowAutoRedirect ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				var response = l.Response;
+					var request = l.Request;
+					var response = l.Response;
 
-				response.StatusCode = (int)HttpStatusCode.Moved;
-				response.RedirectLocation = "http://xamarin.com/";
-			});
+					response.StatusCode = (int)HttpStatusCode.Moved;
+					response.RedirectLocation = "http://xamarin.com/";
+				});
 
 			using (listener) {
 				try {
@@ -987,12 +987,12 @@ namespace Xamarin.Android.NetTests {
 		public void RequestUriAfterRedirect ()
 		{
 			var listener = CreateListener (l => {
-				var request = l.Request;
-				var response = l.Response;
+					var request = l.Request;
+					var response = l.Response;
 
-				response.StatusCode = (int)HttpStatusCode.Moved;
-				response.RedirectLocation = "http://xamarin.com/";
-			});
+					response.StatusCode = (int)HttpStatusCode.Moved;
+					response.RedirectLocation = "http://xamarin.com/";
+				});
 
 			using (listener) {
 				try {
@@ -1012,11 +1012,11 @@ namespace Xamarin.Android.NetTests {
 		}
 #endif
 #if false
-    // It doesn't appear to be possible to satisfy this test, because e.g.
-    // HttpClientHandler.set_AllowAutoRedirect only throws when
-    // HttpClientHandler.sentRequest is true, and sentRequest is only set
-    // if HttpClientHandler.SendAsync() is invoked, and *we can't call it*.
-    // Perhaps a mono implementation bug?
+		// It doesn't appear to be possible to satisfy this test, because e.g.
+		// HttpClientHandler.set_AllowAutoRedirect only throws when
+		// HttpClientHandler.sentRequest is true, and sentRequest is only set
+		// if HttpClientHandler.SendAsync() is invoked, and *we can't call it*.
+		// Perhaps a mono implementation bug?
 		[Test]
 		/*
 		 * Properties may only be modified before sending the first request.
@@ -1028,10 +1028,10 @@ namespace Xamarin.Android.NetTests {
 			var client = new HttpClient (chandler, true);
 
 			var listener = CreateListener (l => {
-				var response = l.Response;
-				response.StatusCode = 200;
-				response.OutputStream.WriteByte (55);
-			});
+					var response = l.Response;
+					response.StatusCode = 200;
+					response.OutputStream.WriteByte (55);
+				});
 
 			try {
 				client.GetStringAsync (LocalServer).Wait (WaitTimeout);
@@ -1054,14 +1054,14 @@ namespace Xamarin.Android.NetTests {
 			l.Prefixes.Add (string.Format ("http://+:{0}/", port));
 			l.Start ();
 			l.BeginGetContext (ar => {
-				var ctx = l.EndGetContext (ar);
-				try {
-					if (contextAssert != null)
-						contextAssert (ctx);
-				} finally {
-					ctx.Response.Close ();
-				}
-			}, null);
+					var ctx = l.EndGetContext (ar);
+					try {
+						if (contextAssert != null)
+							contextAssert (ctx);
+					} finally {
+						ctx.Response.Close ();
+					}
+				}, null);
 
 			return l;
 		}
