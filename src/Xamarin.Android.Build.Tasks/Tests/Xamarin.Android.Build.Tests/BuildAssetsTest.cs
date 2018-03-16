@@ -49,8 +49,8 @@ namespace Xamarin.Android.Build.Tests
 					var item = "assets/asset3.txt";
 					var data = ZipHelper.ReadFileFromZip (apk, item);
 					Assert.IsNotNull (data, "{0} should be in the apk.", item);
-					var text = Encoding.ASCII.GetString (data);
-					Assert.AreEqual ("Asset3\n", text, $"The Contents of {item} should be \"Asset3\" but was {text}");
+					var text = Encoding.ASCII.GetString (data).Trim ();
+					Assert.AreEqual ("Asset3", text, $"The Contents of {item} should be \"Asset3\" but was {text}");
 				}
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
