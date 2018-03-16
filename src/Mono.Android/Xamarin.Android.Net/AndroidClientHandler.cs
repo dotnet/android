@@ -62,6 +62,7 @@ namespace Xamarin.Android.Net
 			public Uri NewUrl;
 			public int RedirectCounter;
 			public HttpMethod Method;
+			public bool MethodChanged;
 		}
 
 		internal const string LOG_APP = "monodroid-net";
@@ -424,6 +425,20 @@ namespace Xamarin.Android.Net
 
 			bool disposeRet;
 			if (HandleRedirect (statusCode, httpConnection, redirectState, out disposeRet)) {
+				if (redirectState.MethodChanged) {
+					// If a redirect uses GET but the original request used POST with content, then the redirected
+					// request will fail with an exception.
+					// There's also no way to send content using GET (except in the URL, of course), so discarding
+					// request.Content is what we should do.
+					//
+					// See https://github.com/xamarin/xamarin-android/issues/1282
+					if (redirectState.Method == HttpMethod.Get) {
+						if (Logger.LogNet)
+							Logger.Log (LogLevel.Info, LOG_APP, $"Discarding content on redirect");
+						request.Content = null;
+					}
+				}
+
 				if (disposeRet) {
 					ret.Dispose ();
 					ret = null;
@@ -507,6 +522,7 @@ namespace Xamarin.Android.Net
 			disposeRet = true;
 
 			redirectState.NewUrl = null;
+			redirectState.MethodChanged = false;
 			switch (redirectCode) {
 				case HttpStatusCode.MultipleChoices:   // 300
 					break;
@@ -514,6 +530,7 @@ namespace Xamarin.Android.Net
 				case HttpStatusCode.Moved:             // 301
 				case HttpStatusCode.Redirect:          // 302
 				case HttpStatusCode.SeeOther:          // 303
+					redirectState.MethodChanged = redirectState.Method != HttpMethod.Get;
 					redirectState.Method = HttpMethod.Get;
 					break;
 
