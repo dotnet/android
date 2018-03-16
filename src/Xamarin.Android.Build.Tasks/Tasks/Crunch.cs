@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 
 		protected string ToolName { get { return OS.IsWindows ? "aapt.exe" : "aapt"; } }
 
-		int DoExecute (IGrouping<string, ITaskItem> imageGroup, ThreadingTasks.ParallelLoopState state, int loop)
+		void DoExecute (IGrouping<string, ITaskItem> imageGroup)
 		{
 			var tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (tempDirectory);
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 
 				// crunch them
 				if (!RunAapt (GenerateCommandLineCommands (tempDirectory, tempOutputDirectory))) {
-					return 0;
+					return;
 				}
 
 				// copy them back
@@ -67,10 +67,23 @@ namespace Xamarin.Android.Tasks
 				Directory.Delete (tempDirectory, recursive: true);
 				Directory.Delete (tempOutputDirectory, recursive: true);
 			}
-			return 0;
+			return;
 		}
 
-		public override bool Execute ()
+		public override bool Execute () 
+		{
+			var task = ThreadingTasks.Task.Run ( () => {
+				return DoExecute ();
+			}, Token);
+
+			task.ContinueWith ( (t) => {
+				Complete ();
+			});
+
+			return !Log.HasLoggedErrors;
+		}
+
+		bool DoExecute ()
 		{
 			LogDebugMessage ("Crunch Task");
 			LogDebugTaskItems ("  SourceFiles:", SourceFiles);
@@ -87,7 +100,7 @@ namespace Xamarin.Android.Tasks
 
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
 
-			ThreadingTasks.Parallel.ForEach (imageGroups, options, () => 0, DoExecute, (obj) => { Complete (); });
+			ThreadingTasks.Parallel.ForEach (imageGroups, options, DoExecute);
 
 			return !Log.HasLoggedErrors;
 		}

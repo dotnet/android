@@ -182,11 +182,11 @@ namespace Xamarin.Android.Tasks
 			return ret;
 		}
 
-		int DoExecute (ITaskItem manifestFile, ThreadingTasks.ParallelLoopState state, int loop)
+		void ProcessManifest (ITaskItem manifestFile)
 		{
 			if (!File.Exists (manifestFile.ItemSpec)) {
 				LogDebugMessage ("{0} does not exists. Skipping", manifestFile.ItemSpec);
-				return 0;
+				return;
 			}
 
 			bool upToDate = ManifestIsUpToDate (manifestFile.ItemSpec);
@@ -198,7 +198,7 @@ namespace Xamarin.Android.Tasks
 
 			if (upToDate) {
 				LogMessage ("  Additional Android Resources manifsets files are unchanged. Skipping.");
-				return 0;
+				return;
 			}
 
 			var defaultAbi = new string [] { null };
@@ -210,10 +210,25 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			return 0;
+			return;
 		}
 
-		public override bool Execute ()
+		public override bool Execute () 
+		{
+			var task = ThreadingTasks.Task.Run ( () => {
+				return DoExecute ();
+			}, Token);
+
+			task.ContinueWith ( (t) => {
+				Complete ();
+			});
+
+			base.Execute ();
+
+			return !Log.HasLoggedErrors;
+		}
+
+		bool DoExecute ()
 		{
 			Log.LogDebugMessage ("Aapt Task");
 			Log.LogDebugMessage ("  AssetDirectory: {0}", AssetDirectory);
@@ -245,9 +260,7 @@ namespace Xamarin.Android.Tasks
 				TaskScheduler = ThreadingTasks.TaskScheduler.Current,
 			};
 
-			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, () => 0, DoExecute, (obj) => { Complete (); });
-
-			base.Execute ();
+			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
 
 			return !Log.HasLoggedErrors;
 		}
