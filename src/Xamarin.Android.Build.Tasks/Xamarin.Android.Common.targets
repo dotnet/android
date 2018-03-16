@@ -410,21 +410,28 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
+<Target Name="_CollectLibraryProjects">
+	<ItemGroup>
+		<_LibraryProject Include="@(ReferencePath);@(ReferenceDependencyPaths)" />
+	</ItemGroup>
+</Target>
+
 <PropertyGroup>
 	<_BeforeBuildAdditionalResourcesCache>
 		_CreatePropertiesCache;
+		_CollectLibraryProjects;
 	</_BeforeBuildAdditionalResourcesCache>
 </PropertyGroup>
 
 <Target Name="_BuildAdditionalResourcesCache"
-	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
+	Inputs="@(_LibraryProject);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
 	Outputs="$(_AndroidResourcePathsCache)"
 	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
 	>
  <GetAdditionalResourcesFromAssemblies
    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
    AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-   Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+   Assemblies="@(_LibraryProject)"
    CacheFile="$(_AndroidResourcePathsCache)"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    DesignTimeBuild="$(DesignTimeBuild)"
@@ -1185,13 +1192,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ResolveLibraryProjectImports"
-		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
+		DependsOnTargets="_CollectLibraryProjects"
+		Inputs="$(MSBuildProjectFullPath);@(_LibraryProject);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryProjectImportsCache)">
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		DesignTimeBuild="$(DesignTimeBuild)"
-		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+		Assemblies="@(_LibraryProject)"
 		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
