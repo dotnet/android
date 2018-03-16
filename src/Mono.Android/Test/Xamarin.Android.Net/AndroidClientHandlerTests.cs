@@ -140,148 +140,148 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-  [TestFixture]
-  public class AndroidClientHandlerTests : HttpClientHandlerTestBase
-  {
-    const string Tls_1_2_Url = "https://httpbin.org";
+	[TestFixture]
+	public class AndroidClientHandlerTests : HttpClientHandlerTestBase
+	{
+		const string Tls_1_2_Url = "https://httpbin.org";
 
-    protected override HttpClientHandler CreateHandler ()
-    {
-      return new Xamarin.Android.Net.AndroidClientHandler ();
-    }
+		protected override HttpClientHandler CreateHandler ()
+		{
+			return new Xamarin.Android.Net.AndroidClientHandler ();
+		}
 
-    [Test]
-    public void Tls_1_2_Url_Works ()
-    {
-      if (((int) Build.VERSION.SdkInt) < 21) {
-        Assert.Ignore ("Host platform doesn't support TLS 1.2.");
-        return;
-      }
-      using (var c = new HttpClient (CreateHandler ())) {
-        var tr = c.GetAsync (Tls_1_2_Url);
-        tr.Wait ();
-        tr.Result.EnsureSuccessStatusCode ();
-      }
-    }
+		[Test]
+		public void Tls_1_2_Url_Works ()
+		{
+			if (((int) Build.VERSION.SdkInt) < 21) {
+				Assert.Ignore ("Host platform doesn't support TLS 1.2.");
+				return;
+			}
+			using (var c = new HttpClient (CreateHandler ())) {
+				var tr = c.GetAsync (Tls_1_2_Url);
+				tr.Wait ();
+				tr.Result.EnsureSuccessStatusCode ();
+			}
+		}
 
-    static IEnumerable<Exception> Exceptions (Exception e)
-    {
-        yield return e;
-        for (var i = e.InnerException; i != null; i = i.InnerException) {
-            yield return i;
-        }
-    }
+		static IEnumerable<Exception> Exceptions (Exception e)
+		{
+			yield return e;
+			for (var i = e.InnerException; i != null; i = i.InnerException) {
+				yield return i;
+			}
+		}
 
-    static bool IsSecureChannelFailure (Exception e)
-    {
-        return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
-    }
+		static bool IsSecureChannelFailure (Exception e)
+		{
+			return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
+		}
 
-    [Test]
-    public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
-    {
-      var tlsProvider   = global::System.Environment.GetEnvironmentVariable ("XA_TLS_PROVIDER");
-      var supportTls1_2 = tlsProvider.Equals ("btls", StringComparison.OrdinalIgnoreCase);
-      using (var c = new HttpClient (new HttpClientHandler ())) {
-        try {
-          var tr = c.GetAsync (Tls_1_2_Url);
-          tr.Wait ();
-          tr.Result.EnsureSuccessStatusCode ();
-          if (!supportTls1_2) {
-            Assert.Fail ("SHOULD NOT BE REACHED: Mono's HttpClientHandler doesn't support TLS 1.2.");
-          }
-        }
-        catch (AggregateException e) {
-          if (supportTls1_2) {
-            Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
-          }
-          if (!supportTls1_2) {
-            Assert.IsTrue (IsSecureChannelFailure (e),
-                "Nested exception and/or corresponding status code did not match expected results for TLS 1.2 incompatibility {0}",
-                 e);
-          }
-        }
-      }
-    }
+		[Test]
+		public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
+		{
+			var tlsProvider   = global::System.Environment.GetEnvironmentVariable ("XA_TLS_PROVIDER");
+			var supportTls1_2 = tlsProvider.Equals ("btls", StringComparison.OrdinalIgnoreCase);
+			using (var c = new HttpClient (new HttpClientHandler ())) {
+				try {
+					var tr = c.GetAsync (Tls_1_2_Url);
+					tr.Wait ();
+					tr.Result.EnsureSuccessStatusCode ();
+					if (!supportTls1_2) {
+						Assert.Fail ("SHOULD NOT BE REACHED: Mono's HttpClientHandler doesn't support TLS 1.2.");
+					}
+				}
+				catch (AggregateException e) {
+					if (supportTls1_2) {
+						Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
+					}
+					if (!supportTls1_2) {
+						Assert.IsTrue (IsSecureChannelFailure (e),
+							       "Nested exception and/or corresponding status code did not match expected results for TLS 1.2 incompatibility {0}",
+							       e);
+					}
+				}
+			}
+		}
 
-    [Test]
-    public void Cancel_Client_Works()
-    {
-      var cts = new CancellationTokenSource ();
-      cts.Cancel (); //Cancel immediately
-      using (var c = new HttpClient (CreateHandler())) {
-        var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
-        try {
-          tr.Wait();
-          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
-        }
-        catch (AggregateException ex) {
-          Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
-          Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
-        }
-      }
-    }
+		[Test]
+		public void Cancel_Client_Works()
+		{
+			var cts = new CancellationTokenSource ();
+			cts.Cancel (); //Cancel immediately
+			using (var c = new HttpClient (CreateHandler())) {
+				var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+				try {
+					tr.Wait();
+					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+				}
+				catch (AggregateException ex) {
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
+				}
+			}
+		}
 
-    [Test]
-    public void Token_Timeout_Works()
-    {
-      var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
-      using (var c = new HttpClient (CreateHandler())){
-        var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
-        try {
-          tr.Wait ();
-          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
-        }
-        catch (AggregateException ex) {
-          Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
-          Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
-        }
-      }
-    }
+		[Test]
+		public void Token_Timeout_Works()
+		{
+			var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
+			using (var c = new HttpClient (CreateHandler())){
+				var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+				try {
+					tr.Wait ();
+					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+				}
+				catch (AggregateException ex) {
+					Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
+				}
+			}
+		}
 
-    [Test]
-    public void Property_Timeout_Works()
-    {
-      using (var c = new HttpClient (CreateHandler ()))
-      {
-        c.Timeout = TimeSpan.FromMilliseconds (2000); //Cancel after 2000ms through Timeout property
-        var tr = c.GetAsync ("http://10.255.255.1");
-        try {
-          tr.Wait ();
-          Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
-        }
-        catch (AggregateException ex)
-        {
-          Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
-        }
-      }
-    }
+		[Test]
+		public void Property_Timeout_Works()
+		{
+			using (var c = new HttpClient (CreateHandler ()))
+			{
+				c.Timeout = TimeSpan.FromMilliseconds (2000); //Cancel after 2000ms through Timeout property
+				var tr = c.GetAsync ("http://10.255.255.1");
+				try {
+					tr.Wait ();
+					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
+				}
+				catch (AggregateException ex)
+				{
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+				}
+			}
+		}
 
-	  [Test]
-	  public void Redirect_Without_Protocol_Works()
-	  {
-		  var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
-		  var redirectedURI = new Uri ("https://httpbin.org/user-agent");
-		  using (var c = new HttpClient (CreateHandler ())) {
-			  var tr = c.GetAsync (requestURI);
-			  tr.Wait ();
-			  tr.Result.EnsureSuccessStatusCode ();
-			  Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
-		  }
-	  }
+		[Test]
+		public void Redirect_Without_Protocol_Works()
+		{
+			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
+			var redirectedURI = new Uri ("https://httpbin.org/user-agent");
+			using (var c = new HttpClient (CreateHandler ())) {
+				var tr = c.GetAsync (requestURI);
+				tr.Wait ();
+				tr.Result.EnsureSuccessStatusCode ();
+				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+			}
+		}
 
-	  [Test]
-	  public void Redirect_POST_With_Content_Works ()
-	  {
-		  var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
-		  var redirectedURI = new Uri ("https://httpbin.org/user-agent");
-		  using (var c = new HttpClient (CreateHandler ())) {
-			  var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-			  request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-			  var response = c.SendAsync(request).Result;
-			  response.EnsureSuccessStatusCode ();
-			  Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
-		  }
-	  }
-  }
+		[Test]
+		public void Redirect_POST_With_Content_Works ()
+		{
+			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
+			var redirectedURI = new Uri ("https://httpbin.org/user-agent");
+			using (var c = new HttpClient (CreateHandler ())) {
+				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+				var response = c.SendAsync(request).Result;
+				response.EnsureSuccessStatusCode ();
+				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+			}
+		}
+	}
 }
