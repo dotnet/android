@@ -24,6 +24,10 @@
 
   <!-- External dependencies from `Xamarin.Android.Build.Tasks/packages.config` -->
   <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
+    <ThirdPartyNotice Include="fsharp/fsharp">
+      <LicenseFile>$(MSBuildThisFileDirectory)\..\build-tools\license-data\Apache-2.0.txt</LicenseFile>
+      <SourceUrl>https://github.com/fsharp/fsharp/</SourceUrl>
+    </ThirdPartyNotice>
     <ThirdPartyNotice Include="fsprojects/FSharp.Compiler.CodeDom">
       <LicenseText>
         This is free and unencumbered software released into the public domain.
