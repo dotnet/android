@@ -2313,7 +2313,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			app1.SetProperty ("BuildingInsideVisualStudio", "False");
-			app1.SetProperty ("JavaMaximumHeapSize", "1G");
 			app1.Imports.Add (new Import ("foo.targets") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">

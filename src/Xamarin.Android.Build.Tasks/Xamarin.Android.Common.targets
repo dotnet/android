@@ -262,6 +262,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
 	<AndroidEnableDesugar Condition="'$(AndroidEnableDesugar)'==''">False</AndroidEnableDesugar>
 
+	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
+	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
+
 	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == ''">
 		{sdk.dir}tools\proguard\proguard-android.txt;
 		{intermediate.common.xamarin};

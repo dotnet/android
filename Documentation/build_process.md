@@ -429,12 +429,16 @@ when packaing Release applications.
 -   **JavaMaximumHeapSize** &ndash; Specifies the value of the **java**
     `-Xmx` parameter value to use when building the `.dex` file as part
     of the packaging process. If not specified, then the `-Xmx` option
-    is not provided to **java**.
+    supplies **java** with a value of `1G`. This was found to be commonly
+    required on Windows in comparison to other platforms.
 
-    Specifying this property is necessary if the
+    Without this value an error could be thrown such as:
     [`_CompileDex` target throws a `java.lang.OutOfMemoryError`](https://bugzilla.xamarin.com/show_bug.cgi?id=18327).
 
-        <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
+    Customize the value by changing:
+    ```xml
+    <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
+    ```
 
 -   **JavaOptions** &ndash; Specifies additional command-line options
     to pass to **java** when building the `.dex` file.

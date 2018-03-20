@@ -271,8 +271,6 @@ using System.Runtime.CompilerServices;
 				proj.Packages.Add (KnownPackages.GooglePlayServices_22_0_0_2);
 				proj.AndroidExplicitCrunch = explicitCrunch;
 				proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-				proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
-				proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
