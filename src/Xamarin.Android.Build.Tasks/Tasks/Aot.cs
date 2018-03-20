@@ -267,7 +267,7 @@ namespace Xamarin.Android.Tasks
 
 				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
 					CancellationToken = cts.Token,
-					TaskScheduler = ThreadingTasks.TaskScheduler.Current,
+					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 				};
 
 				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
