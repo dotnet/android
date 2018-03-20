@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool Execute () 
+		public override bool Execute ()
 		{
 			var task = ThreadingTasks.Task.Run ( () => {
 				return DoExecute ();
