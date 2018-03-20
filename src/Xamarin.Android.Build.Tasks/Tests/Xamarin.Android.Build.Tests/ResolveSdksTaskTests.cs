@@ -219,10 +219,13 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (task.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
 			var expected = Path.Combine (Root);
 			Assert.AreEqual (task.MonoAndroidToolsPath, expected, $"MonoAndroidToolsPath should be {expected}");
-			expected = Path.Combine (Root, "Darwin" + Path.DirectorySeparatorChar);
-			Assert.AreEqual (task.MonoAndroidBinPath, expected, $"MonoAndroidBinPath should be {expected}");
+			expected += Path.DirectorySeparatorChar;
+			if (task.MonoAndroidBinPath != expected) {
+				//For non-Windows platforms, remove a directory such as "Darwin", MonoAndroidBinPath also has a trailing /
+				var binPath = Path.GetDirectoryName (Path.GetDirectoryName (task.MonoAndroidBinPath)) + Path.DirectorySeparatorChar;
+				Assert.AreEqual (binPath, expected, $"MonoAndroidBinPath should be {expected}");
+			}
 			Assert.AreEqual (task.MonoAndroidIncludePath, null, "MonoAndroidIncludePath should be null");
-			//Assert.AreEqual (task.AndroidNdkPath, "26", "AndroidNdkPath should be 26");
 			Assert.AreEqual (task.AndroidSdkPath, androidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
 			Assert.AreEqual (task.JavaSdkPath, javaPath, $"JavaSdkPath should be {javaPath}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3");
