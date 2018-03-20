@@ -155,6 +155,30 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Include="expected\**\*.cs" />
+    <None Include="expected\**\*.xml" />
+    <None Include="expected.ji\**\*.cs" />
+    <None Include="expected.ji\**\*.xml" />
+    <None Include="..\Tests-Core\api-cp.xml">
+      <Link>Tests-Core\api-cp.xml</Link>
+    </None>
+    <None Include="..\Tests-Core\api.xml">
+      <Link>Tests-Core\api.xml</Link>
+    </None>
+    <None Include="..\Tests-Core\fields-cp.xml">
+      <Link>Tests-Core\fields-cp.xml</Link>
+    </None>
+    <None Include="..\Tests-Core\fields.xml">
+      <Link>Tests-Core\fields.xml</Link>
+    </None>
+    <None Include="..\Tests-Core\methods-cp.xml">
+      <Link>Tests-Core\methods-cp.xml</Link>
+    </None>
+    <None Include="..\Tests-Core\methods.xml">
+      <Link>Tests-Core\methods.xml</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="expected.targets" />

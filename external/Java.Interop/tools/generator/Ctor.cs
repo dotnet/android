@@ -162,6 +162,8 @@ namespace MonoDroid.Generation {
 			opt.CodeGenerator.WriteConstructorIdField (this, sw, indent, opt);
 			sw.WriteLine ("{0}// Metadata.xml XPath constructor reference: path=\"{1}/constructor[@name='{2}'{3}]\"", indent, type.MetadataXPathReference, type.JavaSimpleName, Parameters.GetMethodXPathPredicate ());
 			sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, ".ctor", jni_sig, String.Empty, this.AdditionalAttributeString ());
+			if (Deprecated != null)
+				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Deprecated.Replace ("\"", "\"\""));
 			GenerateCustomAttributes (sw, indent);
 			sw.WriteLine ("{0}{1} unsafe {2} ({3})\n{0}\t: {4} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)",
 					indent, Visibility, Name, GenBase.GetSignature (this, opt), use_base ? "base" : "this");
