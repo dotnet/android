@@ -21,23 +21,15 @@ namespace Xamarin.Android.Build
 				//Create a custom xabuild.exe.config
 				var xml = CreateConfig (paths);
 
-				//Create link to .NETFramework and .NETPortable directory
-				foreach (var dir in Directory.GetDirectories (paths.SystemProfiles)) {
-					var name = Path.GetFileName (dir);
-					if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
-						return 1;
-					}
-
-					//NOTE: on Windows, the NUnit tests can throw IOException when running xabuild in parallel
-					for (int i = 0;; i++) {
-						try {
-							File.AppendAllText (Path.Combine (paths.FrameworksDirectory, ".__sys_links.txt"), name + "\n");
-							break;
-						} catch (IOException) {
-							if (i == 2)
-								throw; //Fail after 3 tries
-							Thread.Sleep (100);
+				//Hold open the file while creating the symbolic links
+				using (var writer = OpenSysLinksFile (paths)) {
+					//Create link to .NETFramework and .NETPortable directory
+					foreach (var dir in Directory.GetDirectories (paths.SystemProfiles)) {
+						var name = Path.GetFileName (dir);
+						if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
+							return 1;
 						}
+						writer.WriteLine (name);
 					}
 				}
 
@@ -60,6 +52,22 @@ namespace Xamarin.Android.Build
 					if (File.Exists (file)) {
 						File.Delete (file);
 					}
+				}
+			}
+		}
+
+		static StreamWriter OpenSysLinksFile (XABuildPaths paths)
+		{
+			string path = Path.Combine (paths.FrameworksDirectory, ".__sys_links.txt");
+
+			//NOTE: on Windows, the NUnit tests can throw IOException when running xabuild in parallel
+			for (int i = 0;; i++) {
+				try {
+					return File.CreateText (path);
+				} catch (IOException) {
+					if (i == 2)
+						throw; //Fail after 3 tries
+					Thread.Sleep (100);
 				}
 			}
 		}
