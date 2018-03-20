@@ -9,3 +9,4 @@ xa-gendarme.html
 packages
 .vs/
 *.userprefs
+Resource.designer.cs
