@@ -184,11 +184,11 @@ namespace Xamarin.Android.Tasks
 			return ret;
 		}
 
-		int DoExecute (ITaskItem manifestFile, ThreadingTasks.ParallelLoopState state, int loop)
+		void ProcessManifest (ITaskItem manifestFile)
 		{
 			if (!File.Exists (manifestFile.ItemSpec)) {
 				LogDebugMessage ("{0} does not exists. Skipping", manifestFile.ItemSpec);
-				return 0;
+				return;
 			}
 
 			bool upToDate = ManifestIsUpToDate (manifestFile.ItemSpec);
@@ -200,7 +200,7 @@ namespace Xamarin.Android.Tasks
 
 			if (upToDate) {
 				LogMessage ("  Additional Android Resources manifsets files are unchanged. Skipping.");
-				return 0;
+				return;
 			}
 
 			var defaultAbi = new string [] { null };
@@ -212,10 +212,10 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			return 0;
+			return;
 		}
 
-		public override bool Execute ()
+		public override bool Execute () 
 		{
 			Log.LogDebugMessage ("Aapt Task");
 			Log.LogDebugMessage ("  AssetDirectory: {0}", AssetDirectory);
@@ -235,7 +235,22 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
+			
+			var task = ThreadingTasks.Task.Run ( () => {
+				DoExecute ();
+			}, Token);
 
+			task.ContinueWith ( (t) => {
+				Complete ();
+			});
+
+			base.Execute ();
+
+			return !Log.HasLoggedErrors;
+		}
+
+		void DoExecute ()
+		{
 			if (ResourceNameCaseMap != null)
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
@@ -244,14 +259,10 @@ namespace Xamarin.Android.Tasks
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
 				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Current,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
-			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, () => 0, DoExecute, (obj) => { Complete (); });
-
-			base.Execute ();
-
-			return !Log.HasLoggedErrors;
+			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
 		}
 
 		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
