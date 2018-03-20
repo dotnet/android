@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
 				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Current,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
