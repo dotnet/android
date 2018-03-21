@@ -16,10 +16,8 @@
 		</ImplicitlyExpandDesignTimeFacadesDependsOn>
 	</PropertyGroup>
 
-	<UsingTask
-		TaskName="GetDependsOnNETStandard"
-		Condition="'$(_IsXBuild)' != 'true' And Exists ('$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll')"
-		AssemblyFile="$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll" />
+	<Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).props" 
+		Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).props') And ('$(_IsXBuild)' != 'true' And Exists ('$(MSBuildExtensionsPath)\Microsoft\Microsoft.NET.Build.Extensions\tools\net46\Microsoft.NET.Build.Extensions.Tasks.dll'))" />
 	
 	<Target Name="ImplicitlyExpandDesignTimeFacades" Condition="'$(ImplicitlyExpandDesignTimeFacades)' == 'true'" DependsOnTargets="$(ImplicitlyExpandDesignTimeFacadesDependsOn)">
 
