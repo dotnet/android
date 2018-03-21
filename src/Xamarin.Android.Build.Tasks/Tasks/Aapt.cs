@@ -126,17 +126,19 @@ namespace Xamarin.Android.Tasks
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-
+			object lockObject = new object ();
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (sender, e) => {
 					if (e.Data != null)
-						output.Add (new OutputLine (e.Data, stdError: false));
+						lock (lockObject)
+							output.Add (new OutputLine (e.Data, stdError: false));
 					else
 						stdout_completed.Set ();
 				};
 				proc.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null)
-						output.Add (new OutputLine (e.Data, stdError: true));
+						lock (lockObject)
+							output.Add (new OutputLine (e.Data, stdError: true));
 					else
 						stderr_completed.Set ();
 				};
