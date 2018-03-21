@@ -75,7 +75,7 @@
       <ReferenceAssemblies
           Condition=" Exists ('$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)') "
           Include="$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)">
-        <VSIXSubPath>Microsoft/Framework/$(AndroidFirstFrameworkVersion)/</VSIXSubPath>
+        <VSIXSubPath>Microsoft/Framework/MonoAndroid/$(AndroidFirstFrameworkVersion)/</VSIXSubPath>
       </ReferenceAssemblies>
     </ItemGroup>
     <ItemGroup>
