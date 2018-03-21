@@ -15,6 +15,7 @@ FRAMEWORK_DIR     = bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/M
 run-api-compatibility-tests: $(MONO_API_HTML) $(MONO_API_INFO)
 	mkdir -p bin/Build$(CONFIGURATION)/compatibility
 	make -C external/xamarin-android-api-compatibility check \
+		STABLE_FRAMEWORKS="$(STABLE_FRAMEWORKS)" \
 		MONO_API_HTML="$(RUNTIME) $(abspath $(MONO_API_HTML))" \
 		MONO_API_INFO="$(RUNTIME) $(abspath $(MONO_API_INFO))" \
 		HTML_OUTPUT_DIR="$(abspath bin/Build$(CONFIGURATION)/compatibility)" \
