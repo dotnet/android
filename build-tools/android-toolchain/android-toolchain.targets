@@ -91,20 +91,6 @@
         AlwaysCreate="True"
     />
   </Target>
-  <Target Name="_CreateNdkToolchains"
-      Condition=" '$(OS)' == 'Unix' "
-      Inputs="$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
-      Outputs="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)\AndroidVersion.txt')">
-    <PropertyGroup>
-      <_Script>$(AndroidToolchainDirectory)\ndk\build\tools\make_standalone_toolchain.py</_Script>
-    </PropertyGroup>
-    <RemoveDir Directories="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)')" />
-    <Exec Command="python &quot;$(_Script)&quot; -v --api %(_NdkToolchain.Platform) --install-dir &quot;$(AndroidToolchainDirectory)\toolchains\%(_NdkToolchain.Identity)&quot; --arch %(_NdkToolchain.Arch)" />
-    <Touch
-        Files="@(_NdkToolchain->'$(AndroidToolchainDirectory)\toolchains\%(Identity)\AndroidVersion.txt')"
-        AlwaysCreate="False"
-    />
-  </Target>
   <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')))">
     <GitCommitTime

@@ -140,24 +140,6 @@
     </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
-    <_NdkToolchain Include="arm-linux-androideabi-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi:')) Or $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:'))">
-      <Platform>14</Platform>
-      <Arch>arm</Arch>
-    </_NdkToolchain>
-    <_NdkToolchain Include="aarch64-linux-android-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
-      <Platform>21</Platform>
-      <Arch>arm64</Arch>
-    </_NdkToolchain>
-    <_NdkToolchain Include="x86-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">
-      <Platform>14</Platform>
-      <Arch>x86</Arch>
-    </_NdkToolchain>
-    <_NdkToolchain Include="x86_64-clang" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains(':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">
-      <Platform>21</Platform>
-      <Arch>x86_64</Arch>
-    </_NdkToolchain>
-  </ItemGroup>
-  <ItemGroup>
     <AntItem Include="apache-ant-1.9.9-bin.zip">
       <HostOS></HostOS>
     </AntItem>
