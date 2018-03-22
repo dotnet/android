@@ -459,7 +459,13 @@ namespace Xamarin.Android.Tasks {
 					new XElement ("AdditionalNativeLibraryReferences", 
 							AdditionalNativeLibraryReferences.Select(e => new XElement ("AdditionalNativeLibraryReference", e)))
 					));
-			document.Save (CacheFile);
+			var tempFile = System.IO.Path.GetTempFileName ();
+			try {
+				document.Save (tempFile);
+				MonoAndroidHelper.CopyIfChanged (tempFile, CacheFile);
+			} finally {
+				File.Delete (tempFile);
+			}
 
 			LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
 			LogDebugTaskItems ("  AdditionalJavaLibraryReferences: ", AdditionalJavaLibraryReferences);

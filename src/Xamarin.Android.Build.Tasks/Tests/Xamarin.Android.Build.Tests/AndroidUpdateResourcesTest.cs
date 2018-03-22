@@ -958,7 +958,7 @@ namespace Lib1 {
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target NOT should be skipped since Lib1 was updated.");
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped");
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<color name=""theme_devicedefault_background"">#00000000</color>
