@@ -122,7 +122,13 @@ namespace Xamarin.Android.Tasks
 						new XElement ("ResolvedResourceDirectoryStamps",
 							ResolvedResourceDirectoryStamps.Select(e => new XElement ("ResolvedResourceDirectoryStamp", e)))
 					));
-				document.Save (CacheFile);
+				var tempFile = System.IO.Path.GetTempFileName ();
+				try {
+					document.Save (tempFile);
+					MonoAndroidHelper.CopyIfChanged (tempFile, CacheFile);
+				} finally {
+					File.Delete (tempFile);
+				}
 			}
 
 			assemblyMap.Save (AssemblyIdentityMapFile);
