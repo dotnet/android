@@ -171,10 +171,10 @@ namespace Xamarin.Android.Tasks
 			}
 			foreach (var folder in lockFile.PackageFolders) {
 				var path = assemblyPath.Replace (folder.Path, string.Empty);
-				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path));
+				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path, StringComparison.OrdinalIgnoreCase));
 				if (libraryPath == null)
 					continue;
-				var library = target.Libraries.FirstOrDefault (x => x.Name == libraryPath.Name);
+				var library = target.Libraries.FirstOrDefault (x => String.Compare (x.Name, libraryPath.Name, StringComparison.OrdinalIgnoreCase) == 0);
 				if (libraryPath == null)
 					continue;
 				var runtime = library.RuntimeAssemblies.FirstOrDefault ();
