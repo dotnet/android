@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tasks
 					if (MonoAndroidHelper.IsReferenceAssembly (assemblyDef)) {
 						// Resolve "runtime" library
 						if (lockFile != null)
-							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, assemblyDef.Name);
+							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, assembly_path);
 						if (lockFile == null || assemblyDef == null) {
 							LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
 							continue;
@@ -154,7 +154,7 @@ namespace Xamarin.Android.Tasks
 		readonly List<string> do_not_package_atts = new List<string> ();
 		int indent = 2;
 
-		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, AssemblyNameDefinition assemblyNameDefinition)
+		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, string assemblyPath)
 		{
 			if (string.IsNullOrEmpty(TargetMoniker) || string.IsNullOrEmpty (NuGetPackageRoot) || !Directory.Exists (NuGetPackageRoot)) 
 				return null;
@@ -169,18 +169,24 @@ namespace Xamarin.Android.Tasks
 				LogWarning ($"Could not resolve target for '{TargetMoniker}'");
 				return null;
 			}
-			var libraryPath = lockFile.Libraries.FirstOrDefault (x => x.Name == assemblyNameDefinition.Name);
-			if (libraryPath == null)
-				return null;
-			var library = target.Libraries.FirstOrDefault (x => x.Name == assemblyNameDefinition.Name);
-			if (library == null)
-				return null;
-			var runtime = library.RuntimeAssemblies.FirstOrDefault ();
-			if (runtime == null)
-				return null;
-			var path = Path.Combine (NuGetPackageRoot, libraryPath.Path, runtime.Path);
-			LogDebugMessage ($"Attempting to load {path}");
-			return resolver.Load (path, forceLoad: true);
+			foreach (var folder in lockFile.PackageFolders) {
+				var path = assemblyPath.Replace (folder.Path, string.Empty);
+				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path, StringComparison.OrdinalIgnoreCase));
+				if (libraryPath == null)
+					continue;
+				var library = target.Libraries.FirstOrDefault (x => String.Compare (x.Name, libraryPath.Name, StringComparison.OrdinalIgnoreCase) == 0);
+				if (libraryPath == null)
+					continue;
+				var runtime = library.RuntimeAssemblies.FirstOrDefault ();
+				if (runtime == null)
+					continue;
+				path = Path.Combine (NuGetPackageRoot, libraryPath.Path, runtime.Path);
+				if (!File.Exists (path))
+					continue;
+				LogDebugMessage ($"Attempting to load {path}");
+				return resolver.Load (path, forceLoad: true);
+			}
+			return null;
 		}
 
 		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
