@@ -26,7 +26,8 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 						}
 					}
 				}
-			}
+			} else
+				ValueAsArray = new string [] {Val};
 		}
 		
 		public string Name { get; set; }
