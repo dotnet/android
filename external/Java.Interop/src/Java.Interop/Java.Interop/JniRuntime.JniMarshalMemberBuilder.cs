@@ -135,7 +135,12 @@ namespace Java.Interop {
 				if (parameter.ParameterType == typeof (IntPtr))
 					return IntPtrValueMarshaler.Instance;
 
-				var attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
+				JniValueMarshalerAttribute attr;
+				try {
+					attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
+				} catch (System.IndexOutOfRangeException) {
+					attr = null;
+				}
 				if (attr != null) {
 					return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
 				}

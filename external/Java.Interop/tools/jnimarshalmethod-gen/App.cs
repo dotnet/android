@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
@@ -8,32 +7,71 @@ using System.Reflection.Emit;
 
 using Java.Interop;
 
+using Mono.Cecil;
+using Mono.Options;
+using Mono.Collections.Generic;
+using Java.Interop.Tools.Cecil;
+
 namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 	class App {
 
 		internal const string Name = "jnimarshalmethod-gen";
+		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: false);
+		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
+		static bool verbose;
 
-		public static void Main (string[] args)
+		public static int Main (string [] args)
 		{
+			var help = false;
+			var options = new OptionSet {
+				$"Usage: {Name}.exe OPTIONS* ASSEMBLY+",
+				"",
+				"Generates helper marshaling assemblies <AssemblyName>-JniMarshalMethods.dll for specified assemblies.",
+				"",
+				"Copyright 2018 Microsoft Corporation",
+				"",
+				"Options:",
+				{ "L=",
+				  "{DIRECTORY} to resolve assemblies from.",
+				  v => resolver.SearchDirectories.Add (v) },
+				{ "h|help|?",
+				  "Show this message and exit",
+				  v => help = v != null },
+				{ "v|verbose",
+				  "Show this message and exit",
+				  v => verbose = true },
+			};
+
 			var jvm = CreateJavaVM ();
 
-			foreach (var path in args) {
-				if (!File.Exists (path)) {
-					Console.Error.WriteLine ("{0}: Path '{1}' does not exist.", Name, path);
-					continue;
+			var assemblies = options.Parse (args);
+			if (help) {
+				options.WriteOptionDescriptions (Console.Out);
+
+				return 0;
+			}
+
+			foreach (var assembly in assemblies) {
+				if (!File.Exists (assembly)) {
+					Error ($"Path '{assembly}' does not exist.");
+					return 1;
 				}
+
+				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
+				resolver.Load (assembly);
+
 				try {
-					CreateMarshalMethodAssembly (path);
-				}
-				catch (Exception e) {
-					Console.Error.WriteLine ("{0}: {1}", Name, e.Message);
-					Console.WriteLine (e);
-					Environment.ExitCode    = 1;
+					CreateMarshalMethodAssembly (assembly);
+				} catch (Exception e) {
+					Error ($"Unable to process assembly '{assembly}'\n{e.Message}\n{e}");
+					return 1;
 				}
 			}
 
 			jvm.Dispose ();
+
+			return 0;
 		}
 
 		static JniRuntime CreateJavaVM ()
@@ -47,6 +85,24 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return JniEnvironment.Runtime.MarshalMemberBuilder;
 		}
 
+		static TypeBuilder GetTypeBuilder (ModuleBuilder mb, Type type)
+		{
+			if (definedTypes.ContainsKey (type.FullName))
+				return definedTypes [type.FullName];
+
+			if (type.IsNested) {
+				var outer = GetTypeBuilder (mb, type.DeclaringType);
+				var nested = outer.DefineNestedType (type.Name, System.Reflection.TypeAttributes.NestedPublic);
+				definedTypes [type.FullName] = nested;
+				return nested;
+			}
+
+			var tb = mb.DefineType (type.FullName, System.Reflection.TypeAttributes.Public);
+			definedTypes [type.FullName] = tb;
+
+			return tb;
+		}
+
 		static void CreateMarshalMethodAssembly (string path)
 		{
 			var assembly        = Assembly.LoadFile (path);
@@ -56,6 +112,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var destPath        = assemblyName.Name + ".dll";
 			var builder         = CreateExportedMemberBuilder ();
 
+			if (verbose)
+				ColorMessage ($"Preparing marshal method assembly '{assemblyName}'", ConsoleColor.Cyan);
+
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly (
 					assemblyName,
 					AssemblyBuilderAccess.Save,
@@ -63,36 +122,92 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			var dm = da.DefineDynamicModule ("<default>", destPath);
 
+			var ad = resolver.GetAssembly (path);
+
 			foreach (var type in assembly.DefinedTypes) {
+				if (type.IsGenericType || type.IsGenericTypeDefinition)
+					continue;
+
+				var td                      = ad.MainModule.FindType (type);
+
+				if (td == null) {
+					if (verbose)
+						Warning ($"Unable to find cecil's TypeDefinition of type {type}");
+					continue;
+				}
+				if (!td.ImplementsInterface ("Java.Interop.IJavaPeerable"))
+					continue;
+
 				var registrationElements    = new List<Expression> ();
 				var targetType              = Expression.Variable (typeof(Type), "targetType");
 				TypeBuilder dt = null;
 
 				var flags = BindingFlags.Public | BindingFlags.NonPublic |
 						BindingFlags.Instance | BindingFlags.Static;
-				foreach (var method in type.GetMethods (flags )) {
-					// TODO: Constructors, [Register] methods
+				foreach (var method in type.GetMethods (flags)) {
+					// TODO: Constructors
 					var export  = method.GetCustomAttribute<JavaCallableAttribute> ();
-					if (export == null)
-						continue;
+					string signature = null;
+					string name = null;
+					string methodName = method.Name;
+
+					if (export == null) {
+						if (method.IsGenericMethod || method.ContainsGenericParameters || method.IsGenericMethodDefinition || method.ReturnType.IsGenericType)
+							continue;
+
+						if (method.DeclaringType != type)
+							continue;
+
+						var md = td.GetMethodDefinition (method);
+
+						if (md == null) {
+							if (verbose)
+								Warning ($"Unable to find cecil's MethodDefinition of method {method}");
+							continue;
+						}
+
+						if (!md.NeedsMarshalMethod (resolver, method, ref name, ref methodName, ref signature))
+							continue;
+					}
+
 					if (dt == null)
-						dt = dm.DefineType (type.FullName, TypeAttributes.Public | TypeAttributes.Sealed);
+						dt = GetTypeBuilder (dm, type);
+
+					if (verbose) {
+						Console.Write ("Adding marshal method for ");
+						Console.ForegroundColor = ConsoleColor.Green;
+						Console.WriteLine ($"{method}");
+						Console.ResetColor ();
+					}
 
 					var mb = dt.DefineMethod (
-							method.Name,
-							MethodAttributes.Public | MethodAttributes.Static);
+							methodName,
+							System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
+
 					var lambda  = builder.CreateMarshalToManagedExpression (method);
 					lambda.CompileToMethod (mb);
-					var signature = export.Signature ??
-							builder.GetJniMethodSignature (method);
-					registrationElements.Add (CreateRegistration (export.Name, signature, lambda, targetType, method.Name));
+
+					if (export != null) {
+						name = export.Name;
+						signature = export.Signature;
+					}
+
+					if (signature == null)
+						signature = builder.GetJniMethodSignature (method);
+
+					registrationElements.Add (CreateRegistration (name, signature, lambda, targetType, methodName));
 				}
-				if (dt != null) {
+				if (dt != null)
 					AddRegisterNativeMembers (dt, targetType, registrationElements);
-					dt.CreateType ();
-				}
 			}
+
+			foreach (var tb in definedTypes)
+				tb.Value.CreateType ();
+
 			da.Save (destPath);
+
+			if (verbose)
+				ColorMessage ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
@@ -133,9 +248,169 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var lambda  = Expression.Lambda<Action<JniNativeMethodRegistrationArguments>> (body, new[]{ args });
 
 			var rb = dt.DefineMethod ("__RegisterNativeMembers",
-					MethodAttributes.Public | MethodAttributes.Static);
+					System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
 			rb.SetCustomAttribute (new CustomAttributeBuilder (typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes), new object[0]));
 			lambda.CompileToMethod (rb);
+		}
+
+		static void ColorMessage (string message, ConsoleColor color, TextWriter writer)
+		{
+			Console.ForegroundColor = color;
+			writer.WriteLine (message);
+			Console.ResetColor ();
+		}
+
+		static void ColorMessage (string message, ConsoleColor color) => ColorMessage (message, color, Console.Out);
+
+		public static void Error (string message) => ColorMessage ($"Error: {Name}: {message}", ConsoleColor.Red, Console.Error);
+
+		public static void Warning (string message) => ColorMessage ($"Warning: {Name}: {message}", ConsoleColor.Yellow, Console.Error);
+	}
+
+	static class Extensions
+	{
+		public static string GetCecilName (this Type type)
+		{
+			return type.FullName.Replace ('+', '/');
+		}
+
+		static bool CompareTypes (Type reflectionType, TypeReference cecilType)
+		{
+			return cecilType.ToString () == reflectionType.GetCecilName ();
+		}
+
+		static bool MethodsAreEqual (MethodInfo methodInfo, MethodDefinition methodDefinition)
+		{
+			if (methodInfo.Name != methodDefinition.Name)
+				return false;
+
+			if (!CompareTypes (methodInfo.ReturnType, methodDefinition.ReturnType))
+				return false;
+
+
+			var parameters = methodInfo.GetParameters ();
+			int infoParametersCount = parameters?.Length ?? 0;
+			if (!methodDefinition.HasParameters && infoParametersCount == 0)
+				return true;
+
+			if (infoParametersCount != (methodDefinition.Parameters?.Count ?? 0))
+				return false;
+
+
+			int i = 0;
+			foreach (var parameter in methodDefinition.Parameters) {
+				if (!CompareTypes (parameters [i].ParameterType, parameter.ParameterType))
+					return false;
+				i++;
+			}
+
+			return true;
+		}
+
+		public static MethodDefinition GetMethodDefinition (this TypeDefinition td, MethodInfo method)
+		{
+			foreach (var m in td.Methods)
+				if (MethodsAreEqual (method, m))
+					return m;
+
+			return null;
+		}
+
+		static bool CheckMethod (MethodDefinition m, ref string name, ref string methodName, ref string signature)
+		{
+			foreach (var registerAttribute in m.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
+				if (registerAttribute == null || !registerAttribute.HasConstructorArguments)
+					continue;
+
+				var constructorParameters = registerAttribute.Constructor.Parameters.ToArray ();
+				var constructorArguments = registerAttribute.ConstructorArguments.ToArray ();
+
+				for (int i = 0; i < constructorArguments.Length; i++) {
+					switch (constructorParameters [i].Name) {
+					case "name":
+						name = constructorArguments [i].Value.ToString ();
+						break;
+					case "signature":
+						signature = constructorArguments [i].Value.ToString ();
+						break;
+					}
+
+				}
+
+				var idx1 = signature.IndexOf ('(');
+				var idx2 = signature.IndexOf (')');
+				var arguments = signature;
+
+				if (idx1 >= 0 && idx2 >= idx1)
+					arguments = arguments.Substring (idx1 + 1, idx2 - idx1 - 1);
+
+				name = $"n_{name}";
+				methodName = $"{name}_{arguments?.Replace ('/', '_')?.Replace (';', '_')}";
+
+				if (name != null && signature != null)
+					return true;
+			}
+
+			return false;
+		}
+
+		public static bool NeedsMarshalMethod (this MethodDefinition md, DirectoryAssemblyResolver resolver, MethodInfo method, ref string name, ref string methodName, ref string signature)
+		{
+			var m = md;
+
+			while (m != null) {
+				if (CheckMethod (m, ref name, ref methodName, ref signature))
+					return true;
+
+				m = m.GetBaseDefinition ();
+
+				if (m == md)
+					break;
+
+				md = m;
+			}
+
+			foreach (var iface in method.DeclaringType.GetInterfaces ()) {
+				if (iface.IsGenericType)
+					continue;
+
+				var ifaceMap = method.DeclaringType.GetInterfaceMap (iface);
+				var ad = resolver.GetAssembly (iface.Assembly.Location);
+				var id = ad.MainModule.GetType (iface.GetCecilName ());
+
+				if (id == null) {
+					App.Warning ($"Couln't find iterface {iface.FullName}");
+					continue;
+				}
+
+				for (int i = 0; i < ifaceMap.TargetMethods.Length; i++)
+					if (ifaceMap.TargetMethods [i] == method) {
+						var imd = id.GetMethodDefinition (ifaceMap.InterfaceMethods [i]);
+
+						if (CheckMethod (imd, ref name, ref methodName, ref signature))
+							return true;
+					}
+			}
+
+			return false;
+		}
+
+		static TypeDefinition FindType (Collection<TypeDefinition> types, string name)
+		{
+			foreach (var type in types) {
+				if (type.FullName == name)
+					return type;
+
+				if (name.StartsWith (type.FullName + '/', StringComparison.InvariantCulture))
+					return FindType (type.NestedTypes, name);
+			}
+
+			return null;
+		}
+
+		public static TypeDefinition FindType (this ModuleDefinition md, Type type)
+		{
+			return FindType (md.Types, type.GetCecilName ());
 		}
 	}
 }
