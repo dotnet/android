@@ -374,7 +374,6 @@ namespace App1
 				"System.dll",
 				"System.Runtime.Serialization.dll",
 				"System.IO.Packaging.dll",
-				"System.IO.Compression.dll",
 				"Mono.Android.Export.dll",
 				"App1.dll",
 				"FormsViewGroup.dll",
