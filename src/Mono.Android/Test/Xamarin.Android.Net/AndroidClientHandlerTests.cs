@@ -143,7 +143,7 @@ namespace Xamarin.Android.NetTests {
 	[TestFixture]
 	public class AndroidClientHandlerTests : HttpClientHandlerTestBase
 	{
-		const string Tls_1_2_Url = "https://httpbin.org";
+		const string Tls_1_2_Url = "https://tls-test.internalx.com";
 
 		protected override HttpClientHandler CreateHandler ()
 		{
