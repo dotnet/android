@@ -1589,7 +1589,6 @@ because xbuild doesn't support framework reference assemblies.
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
 		ProjectAssetFile="$(ProjectLockFile)"
-		NuGetPackageRoot="$(NuGetPackageRoot)"
 		TargetMoniker="$(NuGetTargetMoniker)"
 		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
       <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />

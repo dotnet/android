@@ -31,8 +31,6 @@ namespace Xamarin.Android.Tasks
 
 		public string TargetMoniker { get; set; }
 
-		public string NuGetPackageRoot { get; set; }
-
 		public string I18nAssemblies { get; set; }
 		public string LinkMode { get; set; }
 
@@ -76,7 +74,6 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("  LinkMode: {0}", LinkMode);
 			LogDebugTaskItems ("  Assemblies:", Assemblies);
 			LogDebugMessage ("  ProjectAssetFile: {0}", ProjectAssetFile);
-			LogDebugMessage ("  NuGetPackageRoot: {0}", NuGetPackageRoot);
 			LogDebugMessage ("  TargetMoniker: {0}", TargetMoniker);
 
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -107,10 +104,11 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
 					if (MonoAndroidHelper.IsReferenceAssembly (assemblyDef)) {
 						// Resolve "runtime" library
+						var asmFullPath = Path.GetFullPath (assembly.ItemSpec);
 						if (lockFile != null)
-							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, assembly_path);
+							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, asmFullPath);
 						if (lockFile == null || assemblyDef == null) {
-							LogWarning ($"Ignoring {assembly_path} as it is a Reference Assembly");
+							LogWarning ($"Ignoring {asmFullPath} as it is a Reference Assembly");
 							continue;
 						}
 					}
@@ -156,7 +154,7 @@ namespace Xamarin.Android.Tasks
 
 		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, string assemblyPath)
 		{
-			if (string.IsNullOrEmpty(TargetMoniker) || string.IsNullOrEmpty (NuGetPackageRoot) || !Directory.Exists (NuGetPackageRoot)) 
+			if (string.IsNullOrEmpty(TargetMoniker)) 
 				return null;
 
 			var framework = NuGetFramework.Parse (TargetMoniker);
@@ -171,7 +169,7 @@ namespace Xamarin.Android.Tasks
 			}
 			foreach (var folder in lockFile.PackageFolders) {
 				var path = assemblyPath.Replace (folder.Path, string.Empty);
-				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path, StringComparison.OrdinalIgnoreCase));
+				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path.Replace('/', Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase));
 				if (libraryPath == null)
 					continue;
 				var library = target.Libraries.FirstOrDefault (x => String.Compare (x.Name, libraryPath.Name, StringComparison.OrdinalIgnoreCase) == 0);
@@ -180,7 +178,7 @@ namespace Xamarin.Android.Tasks
 				var runtime = library.RuntimeAssemblies.FirstOrDefault ();
 				if (runtime == null)
 					continue;
-				path = Path.Combine (NuGetPackageRoot, libraryPath.Path, runtime.Path);
+				path = Path.Combine (folder.Path, libraryPath.Path, runtime.Path).Replace('/', Path.DirectorySeparatorChar);
 				if (!File.Exists (path))
 					continue;
 				LogDebugMessage ($"Attempting to load {path}");
