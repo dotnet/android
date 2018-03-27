@@ -14,12 +14,13 @@ using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
-	class App {
+	class App
+	{
 
 		internal const string Name = "jnimarshalmethod-gen";
-		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: false);
+		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true });
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
-		static bool verbose;
+		static public bool Verbose;
 
 		public static int Main (string [] args)
 		{
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				  v => help = v != null },
 				{ "v|verbose",
 				  "Show this message and exit",
-				  v => verbose = true },
+				  v => Verbose = true },
 			};
 
 			var jvm = CreateJavaVM ();
@@ -112,8 +113,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var destPath        = assemblyName.Name + ".dll";
 			var builder         = CreateExportedMemberBuilder ();
 
-			if (verbose)
-				ColorMessage ($"Preparing marshal method assembly '{assemblyName}'", ConsoleColor.Cyan);
+			if (Verbose)
+				ColorWriteLine ($"Preparing marshal method assembly '{assemblyName}'", ConsoleColor.Cyan);
 
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly (
 					assemblyName,
@@ -131,7 +132,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				var td                      = ad.MainModule.FindType (type);
 
 				if (td == null) {
-					if (verbose)
+					if (Verbose)
 						Warning ($"Unable to find cecil's TypeDefinition of type {type}");
 					continue;
 				}
@@ -161,7 +162,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 						var md = td.GetMethodDefinition (method);
 
 						if (md == null) {
-							if (verbose)
+							if (Verbose)
 								Warning ($"Unable to find cecil's MethodDefinition of method {method}");
 							continue;
 						}
@@ -173,11 +174,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					if (dt == null)
 						dt = GetTypeBuilder (dm, type);
 
-					if (verbose) {
+					if (Verbose) {
 						Console.Write ("Adding marshal method for ");
-						Console.ForegroundColor = ConsoleColor.Green;
-						Console.WriteLine ($"{method}");
-						Console.ResetColor ();
+						ColorWriteLine ($"{method}", ConsoleColor.Green );
 					}
 
 					var mb = dt.DefineMethod (
@@ -206,8 +205,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			da.Save (destPath);
 
-			if (verbose)
-				ColorMessage ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
+			if (Verbose)
+				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
+
+			var dstAssembly = resolver.GetAssembly (destPath);
+			var mover = new TypeMover (dstAssembly, ad, definedTypes);
+			mover.Move ();
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
@@ -253,14 +256,19 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			lambda.CompileToMethod (rb);
 		}
 
-		static void ColorMessage (string message, ConsoleColor color, TextWriter writer)
+		static void ColorMessage (string message, ConsoleColor color, TextWriter writer, bool writeLine = true)
 		{
 			Console.ForegroundColor = color;
-			writer.WriteLine (message);
+			if (writeLine)
+				writer.WriteLine (message);
+			else
+				writer.Write (message);
 			Console.ResetColor ();
 		}
 
-		static void ColorMessage (string message, ConsoleColor color) => ColorMessage (message, color, Console.Out);
+		public static void ColorWriteLine (string message, ConsoleColor color) => ColorMessage (message, color, Console.Out);
+
+		public static void ColorWrite (string message, ConsoleColor color) => ColorMessage (message, color, Console.Out, false);
 
 		public static void Error (string message) => ColorMessage ($"Error: {Name}: {message}", ConsoleColor.Red, Console.Error);
 
