@@ -241,6 +241,10 @@ namespace Xamarin.Android.Tasks
 			}, Token);
 
 			task.ContinueWith ( (t) => {
+				if (t.Exception != null) {
+					var ex = t.Exception.GetBaseException ();
+					LogError (ex.Message + Environment.NewLine + ex.StackTrace);
+				}
 				Complete ();
 			});
 
