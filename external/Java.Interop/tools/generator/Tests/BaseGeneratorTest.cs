@@ -61,7 +61,10 @@ namespace generatortests
 				} else if (!FileCompare (file, dest)) {
 					var fullSource  = Path.GetFullPath (file);
 					var fullDest    = Path.GetFullPath (dest);
-					string message  = $"File contents differ; run: diff -u {fullSource} \\{Environment.NewLine}\t{fullDest}";
+					//Error message for diff in powershell vs bash
+					string message  = Environment.OSVersion.Platform == PlatformID.Win32NT ?
+						$"File contents differ; run: diff (cat {fullSource}) `{Environment.NewLine}\t(cat {fullDest})" :
+						$"File contents differ; run: diff -u {fullSource} \\{Environment.NewLine}\t{fullDest}";
 					Assert.Fail (message);
 				}
 			}
