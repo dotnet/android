@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 			taskCancelled.Set ();
 		}
 
-		public void Complete (System.Threading.Tasks.Task task)
+		protected void Complete (System.Threading.Tasks.Task task)
 		{
 			if (task.Exception != null) {
 				var ex = task.Exception.GetBaseException ();
