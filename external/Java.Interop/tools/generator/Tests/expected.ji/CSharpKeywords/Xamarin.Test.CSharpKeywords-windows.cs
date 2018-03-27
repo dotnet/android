@@ -60,5 +60,21 @@ namespace Xamarin.Test {
 			}
 		}
 
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+		[Register ("useThis", "(Ljava/lang/String;)Ljava/lang/String;", "")]
+		public static unsafe string UseThis (string this_)
+		{
+			const string __id = "useThis.(Ljava/lang/String;)Ljava/lang/String;";
+			IntPtr native_this = JNIEnv.NewString (this_);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_this);
+				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_this);
+			}
+		}
+
 	}
 }

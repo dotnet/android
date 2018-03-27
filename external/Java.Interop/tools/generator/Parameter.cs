@@ -47,8 +47,7 @@ namespace MonoDroid.Generation {
 
 		public string ToNative (CodeGenerationOptions opt)
 		{
-			var safeName = opt.GetSafeIdentifier (Name);
-			return NeedsPrep ? sym.Call (opt, safeName) : sym.ToNative (opt, safeName, null);
+			return NeedsPrep ? sym.Call (opt, Name) : sym.ToNative (opt, opt.GetSafeIdentifier (Name), null);
 		}
 
 		public string GenericType {
