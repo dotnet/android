@@ -12,7 +12,7 @@ namespace Android.GraphicsTests
 		[Test]
 		public void NinePatch ()
 		{
-			var d = Android.App.Application.Context.Resources.GetDrawable (Xamarin.Android.RuntimeTests.Resource.Drawable.Image);
+			var d = Android.App.Application.Context.Resources.GetDrawable (Xamarin.Android.RuntimeTests.Resource.Drawable.image);
 			Assert.IsNotNull (d);
 			Assert.IsNotNull (d as Android.Graphics.Drawables.NinePatchDrawable);
 		}
