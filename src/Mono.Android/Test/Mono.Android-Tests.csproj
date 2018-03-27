@@ -103,7 +103,7 @@
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
     <AndroidResource Include="Resources\layout\Main.axml" />
     <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
-      <Link>Resources\Drawable\Image.png</Link>
+      <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
