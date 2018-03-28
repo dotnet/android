@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{4C173212-3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "java-interop", "src\java-interop\java-interop.mdproj", "{BB0AB9F7-0979-41A7-B7A9-877260655F94}"
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "java-interop", "src\java-interop\java-interop.csproj", "{BB0AB9F7-0979-41A7-B7A9-877260655F94}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic", "src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj", "{AD4468F8-8883-434B-9D4C-E1801BB3B52A}"
 EndProject
