@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+	</package>
+	<package name="xamarin.test">
+		<!-- 
+			/* package */ abstract class PackageClass {
+				public abstract void foo();
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="PackageClass" static="false" visibility="">
+			<method abstract="true" deprecated="not deprecated" final="false" name="foo" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			public class PublicClass extends PackageClass {
+				@Override
+				public void foo();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.PackageClass" extends-generic-aware="xamarin.test.PackageClass" final="false" name="PublicClass" static="false" visibility="public">
+			<constructor deprecated="not deprecated" final="false" name="PublicClass" static="false" visibility="public" />
+			<method abstract="false" deprecated="not deprecated" final="false" name="foo" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			/* package */ abstract class ExtendPackageClass extends PackageClass {
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="xamarin.test.PackageClass" extends-generic-aware="xamarin.test.PackageClass" final="false" name="ExtendPackageClass" static="false" visibility="">
+		</class>
+		<!-- 
+			public class ExtendPublicClass extends ExtendPackageClass {
+				@Override
+				public void foo();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.ExtendPackageClass" extends-generic-aware="xamarin.test.ExtendPackageClass" final="false" name="ExtendPublicClass" static="false" visibility="public">
+			<constructor deprecated="not deprecated" final="false" name="ExtendPublicClass" static="false" visibility="public" />
+			<method abstract="false" deprecated="not deprecated" final="false" name="foo" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			public class BasePublicClass {
+				public void baseMethod();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="BasePublicClass" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="baseMethod" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			/* package */ class PackageClassA extends BasePublicClass {
+				public void packageMethodA();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.BasePublicClass" extends-generic-aware="xamarin.test.BasePublicClass" final="false" name="PackageClassA" static="false" visibility="">
+			<method abstract="false" deprecated="not deprecated" final="false" name="packageMethodA" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			/* package */ class PackageClassB extends PackageClassA {
+				public void packageMethodB();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.PackageClassA" extends-generic-aware="xamarin.test.PackageClassA" final="false" name="PackageClassB" static="false" visibility="">
+			<method abstract="false" deprecated="not deprecated" final="false" name="packageMethodB" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+		<!-- 
+			public final class PublicFinalClass extends PackageClassB {
+				public void publicMethod();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.PackageClassB" extends-generic-aware="xamarin.test.PackageClassB" final="true" name="PublicFinalClass" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="publicMethod" native="false" return="void" static="false" synchronized="false" visibility="public">
+			</method>
+		</class>
+	</package>
+</api>

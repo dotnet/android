@@ -1,5 +1,20 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Content Include='expected\AccessModifiers\AccessModifiers.xml'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\AccessModifiers\Xamarin.Test.BasePublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\AccessModifiers\Xamarin.Test.ExtendPublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\AccessModifiers\Xamarin.Test.PublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected\AccessModifiers\Xamarin.Test.PublicFinalClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include='expected\Adapters\Adapters.xml'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -122,6 +137,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected\java.util.List\Xamarin.Test.SomeObject.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\AccessModifiers\Mono.Android.projitems'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\AccessModifiers\Xamarin.Test.BasePublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\AccessModifiers\Xamarin.Test.ExtendPublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\AccessModifiers\Xamarin.Test.PublicClass.cs'>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include='expected.ji\AccessModifiers\Xamarin.Test.PublicFinalClass.cs'>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include='expected.ji\Adapters\enumlist'>

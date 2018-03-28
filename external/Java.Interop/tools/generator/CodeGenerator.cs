@@ -401,6 +401,8 @@ namespace Xamarin.Android.Binder {
 				foreach (GenBase gen in gens)
 					gen.ResetValidation ();
 				foreach (GenBase gen in gens)
+					gen.FixupAccessModifiers ();
+				foreach (GenBase gen in gens)
 					if ((opt.IgnoreNonPublicType &&
 					    (gen.RawVisibility != "public" && gen.RawVisibility != "internal"))
 					    || !gen.Validate (opt, null)) {

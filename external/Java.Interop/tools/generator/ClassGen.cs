@@ -59,6 +59,7 @@ namespace MonoDroid.Generation {
 		
 		public override string BaseType {
 			get { return nominal_base_type != null ? nominal_base_type.FullNameCorrected () : null; }
+			set { throw new NotSupportedException (); }
 		}
 
 		public override bool IsAbstract {
@@ -121,6 +122,7 @@ namespace MonoDroid.Generation {
 		
 		public override string BaseType {
 			get { return base_type; }
+			set { base_type = value; }
 		}
 	}
 
@@ -164,7 +166,7 @@ namespace MonoDroid.Generation {
 			get { return ctors; }
 		}
 
-		public abstract string BaseType { get; }
+		public abstract string BaseType { get; set; }
 
 		public bool ContainsCtor (string jni_sig)
 		{
@@ -235,6 +237,26 @@ namespace MonoDroid.Generation {
 			ctors = valid_ctors;
 
 			return true;
+		}
+
+		public override void FixupAccessModifiers ()
+		{
+			while (!IsAnnotation && !string.IsNullOrEmpty (BaseType)) {
+				var baseClass = SymbolTable.Lookup (BaseType) as ClassGen;
+				if (baseClass != null && RawVisibility == "public" && baseClass.RawVisibility != "public") {
+					//Skip the BaseType and copy over any "missing" methods
+					foreach (var baseMethod in baseClass.Methods) {
+						var method = Methods.FirstOrDefault (m => m.Name == baseMethod.Name && m.Parameters.JavaSignature == baseMethod.Parameters.JavaSignature);
+						if (method == null)
+							Methods.Add (baseMethod);
+					}
+					BaseType = baseClass.BaseType;
+				} else {
+					break;
+				}
+			}
+
+			base.FixupAccessModifiers ();
 		}
 		
 		public override void FixupExplicitImplementation ()

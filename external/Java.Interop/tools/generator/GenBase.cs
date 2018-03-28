@@ -727,6 +727,12 @@ namespace MonoDroid.Generation {
 				n.StripNonBindables ();
 		}
 
+		public virtual void FixupAccessModifiers ()
+		{
+			foreach (var nt in NestedTypes)
+				nt.FixupAccessModifiers ();
+		}
+
 		public void FillProperties ()
 		{
 			if (property_filled)
