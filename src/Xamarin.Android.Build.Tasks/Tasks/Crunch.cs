@@ -76,9 +76,7 @@ namespace Xamarin.Android.Tasks
 				return DoExecute ();
 			}, Token);
 
-			task.ContinueWith ( (t) => {
-				Complete ();
-			});
+			task.ContinueWith (Complete);
 
 			return !Log.HasLoggedErrors;
 		}

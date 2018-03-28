@@ -240,9 +240,7 @@ namespace Xamarin.Android.Tasks
 				DoExecute ();
 			}, Token);
 
-			task.ContinueWith ( (t) => {
-				Complete ();
-			});
+			task.ContinueWith (Complete);
 
 			base.Execute ();
 
