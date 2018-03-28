@@ -56,13 +56,7 @@ namespace Xamarin.Android.Tasks
 				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 					return Execute (resolver);
 				}
-			}, Token).ContinueWith ((t) => {
-				if (t.Exception != null) {
-					var ex = t.Exception.GetBaseException ();
-					LogError (ex.Message + Environment.NewLine + ex.StackTrace);
-				}
-				Complete ();
-			});
+			}, Token).ContinueWith (Complete);
 			return base.Execute ();
 		}
 

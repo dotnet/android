@@ -241,9 +241,7 @@ namespace Xamarin.Android.Tasks
 				return RunParallelAotCompiler (nativeLibs);
 			}, Token);
 
-			task.ContinueWith ( (t) => {
-				Complete ();
-			});
+			task.ContinueWith (Complete);
 
 			base.Execute ();
 
