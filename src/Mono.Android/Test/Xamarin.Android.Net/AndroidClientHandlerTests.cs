@@ -143,7 +143,7 @@ namespace Xamarin.Android.NetTests {
 	[TestFixture]
 	public class AndroidClientHandlerTests : HttpClientHandlerTestBase
 	{
-		const string Tls_1_2_Url = "https://httpbin.org";
+		const string Tls_1_2_Url = "https://tls-test.internalx.com";
 
 		protected override HttpClientHandler CreateHandler ()
 		{
@@ -260,8 +260,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
-			var redirectedURI = new Uri ("https://httpbin.org/user-agent");
+			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
+			var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
 			using (var c = new HttpClient (CreateHandler ())) {
 				var tr = c.GetAsync (requestURI);
 				tr.Wait ();
@@ -273,8 +273,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://httpbin.org/user-agent");
-			var redirectedURI = new Uri ("https://httpbin.org/user-agent");
+			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
+			var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
 			using (var c = new HttpClient (CreateHandler ())) {
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
