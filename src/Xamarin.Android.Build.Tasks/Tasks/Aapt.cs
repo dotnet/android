@@ -94,6 +94,7 @@ namespace Xamarin.Android.Tasks
 
 		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
+		string resourceDirectory;
 
 		struct OutputLine {
 			public string Line;
@@ -240,6 +241,9 @@ namespace Xamarin.Android.Tasks
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 
+			var resourceDirectory = ResourceDirectory.TrimEnd ('\\');
+			if (!Path.IsPathRooted (resourceDirectory))
+				resourceDirectory = Path.Combine (WorkingDirectory, resourceDirectory);
 			Yield ();
 			try {
 				var task = ThreadingTasks.Task.Run (() => {
@@ -335,10 +339,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (currentResourceOutputFile))
 				cmd.AppendSwitchIfNotNull ("-F ", currentResourceOutputFile + ".bk");
 			// The order of -S arguments is *important*, always make sure this one comes FIRST
-			var resDir = ResourceDirectory.TrimEnd ('\\');
-			if (!Path.IsPathRooted (resDir))
-				resDir = Path.Combine (WorkingDirectory, resDir);
-			cmd.AppendSwitchIfNotNull ("-S ", resDir);
+			cmd.AppendSwitchIfNotNull ("-S ", resourceDirectory.TrimEnd ('\\'));
 			if (AdditionalResourceDirectories != null)
 				foreach (var resdir in AdditionalResourceDirectories)
 					cmd.AppendSwitchIfNotNull ("-S ", resdir.ItemSpec.TrimEnd ('\\'));
@@ -356,7 +357,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrWhiteSpace (AssetDirectory)) {
 				var assetDir = AssetDirectory.TrimEnd ('\\');
 				if (!Path.IsPathRooted (assetDir))
-					resDir = Path.Combine (WorkingDirectory, assetDir);
+					assetDir = Path.Combine (WorkingDirectory, assetDir);
 				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir))
 					cmd.AppendSwitchIfNotNull ("-A ", assetDir);
 			}
@@ -437,8 +438,8 @@ namespace Xamarin.Android.Tasks
 
 				// Try to map back to the original resource file, so when the user
 				// double clicks the error, it won't take them to the obj/Debug copy
-				if (file.StartsWith (ResourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-					file = file.Substring (ResourceDirectory.Length);
+				if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+					file = file.Substring (resourceDirectory.Length);
 					file = resource_name_case_map.ContainsKey (file) ? resource_name_case_map [file] : file;
 					file = Path.Combine ("Resources", file);
 				}
