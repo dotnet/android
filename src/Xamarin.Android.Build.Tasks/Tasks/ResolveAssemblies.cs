@@ -52,12 +52,17 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			System.Threading.Tasks.Task.Run (() => {
-				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-					return Execute (resolver);
-				}
-			}, Token).ContinueWith (Complete);
-			return base.Execute ();
+			Yield ();
+			try {
+				System.Threading.Tasks.Task.Run (() => {
+					using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
+						return Execute (resolver);
+					}
+				}, Token).ContinueWith (Complete);
+				return base.Execute ();
+			} finally {
+				Reacquire ();
+			}
 		}
 
 		bool Execute (DirectoryAssemblyResolver resolver)
