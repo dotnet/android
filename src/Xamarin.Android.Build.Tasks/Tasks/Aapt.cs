@@ -125,6 +125,7 @@ namespace Xamarin.Android.Tasks
 				RedirectStandardError = true,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				WorkingDirectory = WorkingDirectory,
 			};
 			object lockObject = new object ();
 			using (var proc = new Process ()) {
@@ -143,6 +144,7 @@ namespace Xamarin.Android.Tasks
 						stderr_completed.Set ();
 				};
 				proc.StartInfo = psi;
+				LogDebugMessage ("Executing {0}", commandLine);
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
@@ -152,7 +154,6 @@ namespace Xamarin.Android.Tasks
 					} catch (Exception) {
 					}
 				});
-				LogDebugMessage ("Executing {0}", commandLine);
 				proc.WaitForExit ();
 				if (psi.RedirectStandardError)
 					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
@@ -186,12 +187,13 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessManifest (ITaskItem manifestFile)
 		{
-			if (!File.Exists (manifestFile.ItemSpec)) {
-				LogDebugMessage ("{0} does not exists. Skipping", manifestFile.ItemSpec);
+			var manifest = Path.IsPathRooted (manifestFile.ItemSpec) ? manifestFile.ItemSpec : Path.Combine (WorkingDirectory, manifestFile.ItemSpec);
+			if (!File.Exists (manifest)) {
+				LogDebugMessage ("{0} does not exists. Skipping", manifest);
 				return;
 			}
 
-			bool upToDate = ManifestIsUpToDate (manifestFile.ItemSpec);
+			bool upToDate = ManifestIsUpToDate (manifest);
 
 			if (AdditionalAndroidResourcePaths != null)
 				foreach (var dir in AdditionalAndroidResourcePaths)
@@ -207,7 +209,9 @@ namespace Xamarin.Android.Tasks
 			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
-				if (!ExecuteForAbi (GenerateCommandLineCommands (manifestFile.ItemSpec, abi, currentResourceOutputFile), currentResourceOutputFile)) {
+				if (!Path.IsPathRooted (currentResourceOutputFile))
+					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
+				if (!ExecuteForAbi (GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile), currentResourceOutputFile)) {
 					Cancel ();
 				}
 			}
@@ -235,14 +239,19 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			
-			var task = ThreadingTasks.Task.Run ( () => {
-				DoExecute ();
-			}, Token);
 
-			task.ContinueWith (Complete);
+			Yield ();
+			try {
+				var task = ThreadingTasks.Task.Run (() => {
+					DoExecute ();
+				}, Token);
 
-			base.Execute ();
+				task.ContinueWith (Complete);
+
+				base.Execute ();
+			} finally {
+				Reacquire ();
+			}
 
 			return !Log.HasLoggedErrors;
 		}
@@ -253,7 +262,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
 					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
 
-			assemblyMap.Load (AssemblyIdentityMapFile);
+			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
 				CancellationToken = Token,
@@ -300,6 +309,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitch ("-m");
 			string manifestFile;
 			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
+
 			Directory.CreateDirectory (manifestDir);
 			manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
@@ -325,7 +335,10 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (currentResourceOutputFile))
 				cmd.AppendSwitchIfNotNull ("-F ", currentResourceOutputFile + ".bk");
 			// The order of -S arguments is *important*, always make sure this one comes FIRST
-			cmd.AppendSwitchIfNotNull ("-S ", ResourceDirectory.TrimEnd ('\\'));
+			var resDir = ResourceDirectory.TrimEnd ('\\');
+			if (!Path.IsPathRooted (resDir))
+				resDir = Path.Combine (WorkingDirectory, resDir);
+			cmd.AppendSwitchIfNotNull ("-S ", resDir);
 			if (AdditionalResourceDirectories != null)
 				foreach (var resdir in AdditionalResourceDirectories)
 					cmd.AppendSwitchIfNotNull ("-S ", resdir.ItemSpec.TrimEnd ('\\'));
@@ -340,9 +353,13 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-I ", JavaPlatformJarPath);
 
 			// Add asset directory if it exists
-			if (!string.IsNullOrWhiteSpace (AssetDirectory) && Directory.Exists (AssetDirectory))
-				cmd.AppendSwitchIfNotNull ("-A ", AssetDirectory.TrimEnd ('\\'));
-
+			if (!string.IsNullOrWhiteSpace (AssetDirectory)) {
+				var assetDir = AssetDirectory.TrimEnd ('\\');
+				if (!Path.IsPathRooted (assetDir))
+					resDir = Path.Combine (WorkingDirectory, assetDir);
+				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir))
+					cmd.AppendSwitchIfNotNull ("-A ", assetDir);
+			}
 			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions))
 				foreach (var ext in UncompressedFileExtensions.Split (new char[] { ';', ','}, StringSplitOptions.RemoveEmptyEntries))
 					cmd.AppendSwitchIfNotNull ("-0 ", ext);
