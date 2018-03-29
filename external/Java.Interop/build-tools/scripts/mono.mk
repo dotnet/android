@@ -14,6 +14,9 @@
 #       * `$(MonoFrameworkPath)`: `$(JI_MONO_FRAMEWORK_PATH)` value.
 #       * `$(MonoLibs)`: `$(JI_MONO_LIBS)` value.
 #       * `@(MonoIncludePath)`: `$(JI_MONO_INCLUDE_PATHS)` values.
+#   $(JI_MONO_LIB_PATH):
+#       Base path to the mono instalation, it can be used to access base class
+#       assemblies in $(JI_MONO_LIB_PATH)/mono/<version>/
 #   $(JI_MONO_FRAMEWORK_PATH):
 #       Path to the `libmonosgen-2.0.1.dylib` file to link against.
 #   $(JI_MONO_INCLUDE_PATHS):
@@ -37,11 +40,14 @@ export MONO_OPTIONS
 endif   # $(MONO_OPTIONS) != ''
 
 ifeq ($(OS),Darwin)
-JI_MONO_FRAMEWORK_PATH = /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib
-JI_MONO_INCLUDE_PATHS = /Library/Frameworks/Mono.framework/Headers/mono-2.0
-JI_MONO_LIBS = -L /Library/Frameworks/Mono.framework/Libraries -lmonosgen-2.0
+JI_MONO_BASE = /Library/Frameworks/Mono.framework/
+JI_MONO_LIB_PATH = $(JI_MONO_BASE)Libraries/
+JI_MONO_FRAMEWORK_PATH = $(JI_MONO_LIB_PATH)libmonosgen-2.0.1.dylib
+JI_MONO_INCLUDE_PATHS = $(JI_MONO_BASE)Headers/mono-2.0
+JI_MONO_LIBS = -L $(JI_MONO_LIB_PATH) -lmonosgen-2.0
 endif
 ifeq ($(OS),Linux)
+JI_MONO_LIB_PATH = $(dir `which mono`)/../lib/
 JI_MONO_FRAMEWORK_PATH = $(shell pkg-config --variable=libdir mono-2)/libmonosgen-2.0.so
 JI_MONO_INCLUDE_PATHS = $(shell pkg-config --variable=includedir mono-2)
 JI_MONO_LIBS = -L $(shell pkg-config --variable=libdir mono-2) -lmonosgen-2.0
