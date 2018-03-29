@@ -80,22 +80,8 @@
 
   <ItemGroup>
     <_MonoRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
-      <UseMonoSdks>False</UseMonoSdks>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
-      <Cpp></Cpp>
-      <CFlags>$(_HostWin64CFlags)</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++</Cxx>
-      <CxxFlags>$(_HostWin64CFlags)</CxxFlags>
-      <CxxCpp></CxxCpp>
-      <DllTool>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-dlltool</DllTool>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
-      <LdFlags></LdFlags>
-      <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-objdump</Objdump>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
@@ -104,23 +90,9 @@
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
       <DoBuild>True</DoBuild>
     </_MonoRuntime>
-    <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
-      <UseMonoSdks>False</UseMonoSdks>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
-      <Cpp></Cpp>
-      <CFlags>$(_HostWin32CFlags)</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
-      <CxxFlags>$(_HostWin32CFlags)</CxxFlags>
-      <CxxCpp></CxxCpp>
-      <DllTool>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-dlltool</DllTool>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
-      <LdFlags></LdFlags>
-      <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-objdump</Objdump>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
+    <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix32) --target=$(MingwCommandPrefix32) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
