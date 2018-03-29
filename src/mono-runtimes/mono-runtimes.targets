@@ -36,6 +36,15 @@
   <PropertyGroup>
     <_MonoSdksConfiguration Condition=" '$(Configuration)' == 'Release' ">release</_MonoSdksConfiguration>
     <_MonoSdksConfiguration Condition=" '$(Configuration)' != 'Release' ">debug</_MonoSdksConfiguration>
+
+    <_MonoSdksAndroidToolchainDir>$(AndroidToolchainDirectory)</_MonoSdksAndroidToolchainDir>
+    <_MonoSdksAndroidToolchainCacheDir>$(AndroidToolchainCacheDirectory)</_MonoSdksAndroidToolchainCacheDir>
+    <_MonoSdksAndroidToolchainPrefix>$(AndroidToolchainDirectory)\toolchains</_MonoSdksAndroidToolchainPrefix>
+    <_MonoSdksLlvmSrc>$(MSBuildThisFileDirectory)..\..\external\llvm</_MonoSdksLlvmSrc>
+    <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
+    <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
+
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PACKAGE_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -199,7 +208,7 @@
           Condition=" '$(_LlvmNeeded)' != '' ">
     <Exec
         Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' "
-        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) CONFIGURATION=$(_MonoSdksConfiguration)"
+        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -441,7 +450,7 @@
       Outputs="@(_RuntimeSource);@(_MonoBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
     <Exec
         Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' And '%(_MonoRuntime.DoBuild)' == 'true' "
-        Command="make $(MakeConcurrency) package-android-%(_MonoRuntime.Identity) CONFIGURATION=$(_MonoSdksConfiguration) ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot;"
+        Command="make $(MakeConcurrency) package-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -886,13 +895,13 @@
       AfterTargets="Clean">
     <Exec
         Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' "
-        Command="make $(MakeConcurrency) clean-android-%(_MonoRuntime.Identity) CONFIGURATION=$(_MonoSdksConfiguration)"
+        Command="make $(MakeConcurrency) clean-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
         Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' "
-        Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) CONFIGURATION=$(_MonoSdksConfiguration)"
+        Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
