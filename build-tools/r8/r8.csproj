@@ -1,0 +1,9 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
+  </PropertyGroup>
+  <Import Project="r8.props" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="r8.targets" />
+</Project>
+

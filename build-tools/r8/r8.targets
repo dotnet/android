@@ -1,0 +1,72 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+
+  <!-- public targets -->
+
+  <Target Name="Build" DependsOnTargets="_SetupDepotTools;_BuildR8;_CopyR8" />
+  <Target Name="Clean" DependsOnTargets="_CleanR8;_CleanDepotTools" />
+
+  <!-- depot_tools -->
+
+  <!-- Why do people split files and make build scripts unreadable? That's unacceptable. Therefore properties are here. Always consider code readability. -->
+  <PropertyGroup>
+    <_WindowsDepotToolzZipDownload>..\..\bin\Build$(Configuration)\depot_tools.zip</_WindowsDepotToolzZipDownload>
+  </PropertyGroup>
+
+  <Target Name="_SetupDepotTools" DependsOnTargets="_SetupDepotToolsWindows" />
+  <Target Name="_CleanDepotTools" DependsOnTargets="_CleanDepotToolsWindows" />
+
+  <Target Name="_SetupDepotToolsWindows" Condition="$(HostOS) == 'Windows'">
+    <DownloadUri
+		SourceUris="https://storage.googleapis.com/chrome-infra/depot_tools.zip"
+		DestinationFiles="$(_WindowsDepotToolzZipDownload)"
+    />
+    <Unzip
+		Sources="$(_WindowsDepotToolsZipDownload)" 
+		Destination="bin\Build$(Configuration)\depot_tools"
+	/>
+  </Target>
+
+  <Target Name="_CleanDepotToolsWindows" Condition="$(HostOS) == 'Windows'">
+    <RemoveDir Directories="bin\Build$(Configuration)\depot_tools" />
+  </Target>
+
+
+  <!-- r8 -->
+
+  <PropertyGroup>
+    <_PathToDepotTools Condition="'$(HostOS)' == 'Windows'">..\..\bin\Build$(Configuration)\depot_tools</_PathToDepotTools>
+    <_PathToDepotTools Condition="'$(HostOS)' != 'Windows'">..\..\external\depot_tools</_PathToDepotTools>
+    <_Sep Condition="'$(HostOS)' == 'Windows'">;</_Sep>
+    <_Sep Condition="'$(HostOS)' != 'Windows'">:</_Sep>
+    <_W Condition="'$(HostOS)' == 'Windows'">"</_W>
+    <_W Condition="'$(HostOS)' != 'Windows'"></_W>    <_EnvForDepotTools>PATH=$(_W)$(_PathToDepotTools)$(_W)$(_Sep)$(PATH)</_EnvForDepotTools>
+  </PropertyGroup>
+
+  <Target Name="_BuildR8" DependsOnTargets="_SetupDepotTools">
+   <Exec
+	Command="..\..\external\r8\tools\gradle.py d8 r8"
+	WorkingDirectory="..\..\external\r8"
+	EnvironmentVariables="$(_EnvForDepotTools)"
+   />
+  </Target>
+
+  <Target Name="_CopyR8">
+    <Copy
+		SourceFiles="..\..\external\r8\build\libs\r8.jar"
+		DestinationFolder="$(XAInstallPrefix)\xbuild\Xamarin\Android\"
+		SkipUnchangedFiles="true"
+    />
+  </Target>
+
+  <Target Name="_CleanR8">
+    <Exec
+	Command="..\..\external\r8\tools\gradle.py clean"
+	WorkingDirectory="..\..\external\r8"
+	EnvironmentVariables="$(_EnvForDepotTools)"
+    />
+  </Target>
+
+</Project>
