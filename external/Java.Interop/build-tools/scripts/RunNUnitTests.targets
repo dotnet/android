@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
-    <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono</_Runtime>
+    <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono --debug</_Runtime>
     <_NUnit>$(_Runtime) packages\NUnit.Runners.2.6.3\tools\nunit-console.exe</_NUnit>
     <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
   </PropertyGroup>
