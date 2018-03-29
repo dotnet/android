@@ -241,7 +241,7 @@ namespace Xamarin.Android.Tasks
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 
-			var resourceDirectory = ResourceDirectory.TrimEnd ('\\');
+			resourceDirectory = ResourceDirectory.TrimEnd ('\\');
 			if (!Path.IsPathRooted (resourceDirectory))
 				resourceDirectory = Path.Combine (WorkingDirectory, resourceDirectory);
 			Yield ();
