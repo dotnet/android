@@ -85,6 +85,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
 		}
 
+		public bool UseR8 {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidUseR8), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidUseR8, value.ToString ()); }
+		}
+
 		public string AndroidFastDeploymentType {
 			get { return GetProperty (KnownProperties.AndroidFastDeploymentType); }
 			set { SetProperty (KnownProperties.AndroidFastDeploymentType, value); }

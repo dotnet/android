@@ -209,6 +209,9 @@ when packaing Release applications.
 
     This property is `False` by default.
 
+-   **AndroidEnableD8** &ndash; A boolean property that determines
+    whether or not use Google's new dexer (dx.jar alternative).
+
 -   **AndroidEnableMultiDex** &ndash; A boolean property that
     determines whether or not multi-dex support will be used in the
     final `.apk`.
@@ -418,6 +421,10 @@ when packaing Release applications.
 
     This property should be `True` for Debug builds, and `False` for
     Release projects.
+
+-   **AndroidUseR8** &ndash; A boolean property that determines
+    whether or not use Google's new Java code shlinker (proguard
+    alternative).
 
 -   **AotAssemblies** &ndash; A boolean property that determines
     whether or not assemblies will be Ahead-of-Time compiled into

@@ -55,6 +55,11 @@
 
   <Target Name="_CopyR8">
     <Copy
+		SourceFiles="..\..\external\r8\build\libs\d8.jar"
+		DestinationFolder="$(XAInstallPrefix)\xbuild\Xamarin\Android\"
+		SkipUnchangedFiles="true"
+    />
+    <Copy
 		SourceFiles="..\..\external\r8\build\libs\r8.jar"
 		DestinationFolder="$(XAInstallPrefix)\xbuild\Xamarin\Android\"
 		SkipUnchangedFiles="true"

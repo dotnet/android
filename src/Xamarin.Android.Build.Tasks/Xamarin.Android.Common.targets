@@ -72,6 +72,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Desugar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -279,6 +280,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
 	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
 	<AndroidEnableDesugar Condition="'$(AndroidEnableDesugar)'==''">False</AndroidEnableDesugar>
+    <AndroidUseR8 Condition="'$(AndroidUseR8)'==''">False</AndroidUseR8>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -940,11 +942,35 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
+    <CreateProperty Condition="'$(AndroidEnableD8)' == 'True'" Value="$(MonoAndroidToolsDirectory)\d8.jar">
+        <Output TaskParameter="Value" PropertyName="DxJarPath"
+                Condition="'$(DxJarPath)' == ''"
+        />
+    </CreateProperty>
+
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\desugar_deploy.jar">
 		<Output TaskParameter="Value" PropertyName="DesugarJarPath"
 				Condition="'$(DesugarJarPath)' == ''"
 		/>
 	</CreateProperty>
+
+    <CreateProperty Value="$(MonoAndroidToolsDirectory)\r8.jar">
+        <Output TaskParameter="Value" PropertyName="R8JarPath"
+                Condition="'$(R8JarPath)' == ''"
+        />
+    </CreateProperty>
+
+    <CreateProperty Value="--debug">
+        <Output TaskParameter="Value" PropertyName="DxExtraArguments"
+            Condition="'$(DxExtraArguments)' == '' And '$(AndroidEnableD8)' == 'True' And '$(Configuration)' == 'Debug'"
+        />
+    </CreateProperty>
+
+    <CreateProperty Value="--release">
+        <Output TaskParameter="Value" PropertyName="DxExtraArguments"
+            Condition="'$(DxExtraArguments)' == '' And '$(AndroidEnableD8)' == 'True' And '$(Configuration)' != 'Debug'"
+        />
+    </CreateProperty>
 
 	<CreateProperty Value="--dex --no-strict">
 		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
@@ -2457,6 +2483,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CompileToDalvikWithDx"
+  Condition="'$(AndroidUseR8)' != 'True'"
   DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(IntermediateOutputPath)_dex_stamp">
@@ -2507,8 +2534,7 @@ because xbuild doesn't support framework reference assemblies.
     ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
     ProguardConfigurationFiles="$(ProguardConfigFiles)"
     JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
-    ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
-    DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
+    JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
     ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
     EnableLogging="$(ProguardEnableLogging)"
     DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"
@@ -2567,8 +2593,66 @@ because xbuild doesn't support framework reference assemblies.
 
 </Target>
 
+<Target Name="_CompileToDalvikWithR8"
+  Condition="'$(AndroidUseR8)' == 'True'"
+  DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+  Inputs="$(_CompileToDalvikInputs)"
+  Outputs="$(IntermediateOutputPath)_dex_stamp">
+
+  <Error
+    Condition="!Exists('$(R8JarPath)')"
+    Text="r8.jar does not exist (R8JarPath property has to point to a valid file (current value: '$(R8JarPath)')." />
+
+  <!-- remove existing dex files that may be previous multidex outputs. -->
+  <Delete Files="$(IntermediateOutputPath)android\bin\classes\*.dex" />
+
+  <MakeDir Directories="$(IntermediateOutputPath)proguard" />
+
+  <CreateMultiDexMainDexClassList
+    Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
+    ToolPath="$(JavaToolPath)"
+    ToolExe="$(JavaToolExe)"
+    ProguardJarPath="$(ProguardJarPath)"
+    AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
+    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    JavaLibraries="@(_JavaLibrariesToCompile)"
+    MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
+    CustomMainDexListFiles="@(MultiDexMainDexList)"
+    ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
+    >
+  </CreateMultiDexMainDexClassList>
+
+  <R8
+    ToolPath="$(JavaToolPath)"
+    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+    JavaOptions="$(JavaOptions)"
+    R8JarPath="$(R8JarPath)"
+    AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    OutputDirectory="$(IntermediateOutputPath)android\"
+    Configuration="$(Configuration)"
+    JavaPlatformJarPath="$(JavaPlatformJarPath)"
+    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
+    JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
+    JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+    EnableDesugar="$(AndroidEnableDesugar)"
+    EnableTreeShaking="$(AndroidEnableProguard)"
+    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+    AcwMapFile="$(_AcwMapFile)"
+    ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
+    ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
+    ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
+    ProguardConfigurationFiles="$(ProguardConfigFiles)"
+    EnableMultiDex="$(AndroidEnableMultiDex)"
+    MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
+    R8ExtraArguments="$(R8ExtraArguments)"
+    />
+
+  <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
+        
+</Target>
+
 <Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx">
+		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithR8">
 
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />

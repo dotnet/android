@@ -495,10 +495,10 @@ namespace Xamarin.Android.Tests
 
 		[Test]
 		[TestCaseSource ("ProguardChecks")]
-		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk)
+		public void BuildProguardEnabledProject (bool isRelease, bool enableProguard, bool useLatestSdk, bool useR8)
 		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{enableProguard}{useLatestSdk}"))) {
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease, EnableProguard = enableProguard, UseR8 = useR8, UseLatestPlatformSdk = useLatestSdk, TargetFrameworkVersion = useLatestSdk ? "v7.1" : "v5.0" };
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{enableProguard}{useLatestSdk}{useR8}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (isRelease && enableProguard) {
