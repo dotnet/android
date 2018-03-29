@@ -234,45 +234,6 @@ namespace MonoDroid.Generation {
 
 		public string Annotation { get; internal set; }
 
-		void GenerateProperty (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase gen)
-		{
-			string type = Symbol.IsArray ? "IList<" + Symbol.ElementType + ">" : opt.GetOutputName (Symbol.FullName);
-			opt.CodeGenerator.WriteFieldIdField (this, sw, indent, opt);
-			sw.WriteLine ();
-			sw.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, gen.MetadataXPathReference, JavaName);
-			sw.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, JavaName, this.AdditionalAttributeString ());
-			sw.WriteLine ("{0}{1} {2}{3} {4} {{", indent, Visibility, IsStatic ? "static " : String.Empty, type, Name);
-			sw.WriteLine ("{0}\tget {{", indent);
-			opt.CodeGenerator.WriteFieldGetBody (this, sw, indent + "\t\t", opt);
-			sw.WriteLine ("{0}\t}}", indent);
-
-			if (!IsConst) {
-				sw.WriteLine ("{0}\tset {{", indent);
-				opt.CodeGenerator.WriteFieldSetBody (this, sw, indent + "\t\t", opt);
-				sw.WriteLine ("{0}\t}}", indent);
-			}
-			sw.WriteLine ("{0}}}", indent);
-		}
-
-		public void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type)
-		{
-			if (IsEnumified)
-				sw.WriteLine ("[global::Android.Runtime.GeneratedEnum]");
-			if (NeedsProperty)
-				GenerateProperty (sw, indent, opt, type);
-			else {
-				sw.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, type.MetadataXPathReference, JavaName);
-				sw.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, JavaName, this.AdditionalAttributeString ());
-				if (IsDeprecated)
-					sw.WriteLine ("{0}[Obsolete (\"{1}\")]",  indent, DeprecatedComment);
-				if (Annotation != null)
-					sw.WriteLine ("{0}{1}", indent, Annotation);
-
-				// the Value complication is due to constant enum from negative integer value (C# compiler requires explicit parenthesis).
-				sw.WriteLine ("{0}{1} const {2} {3} = ({2}) {4};", indent, Visibility, opt.GetOutputName (Symbol.FullName), Name, Value.Contains ('-') && Symbol.FullName.Contains ('.') ? '(' + Value + ')' : Value);
-			}
-		}
-
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
 			symbol = SymbolTable.Lookup (TypeName, type_params);

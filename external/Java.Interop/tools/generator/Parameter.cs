@@ -18,7 +18,7 @@ namespace MonoDroid.Generation {
 		ISymbol sym;
 		bool is_enumified;
 
-		private Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null)
+		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null)
 		{
 			this.name = name;
 			this.type = type;

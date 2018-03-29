@@ -74,7 +74,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		public void WriteCallArgs (StreamWriter sw, string indent, CodeGenerationOptions opt, bool invoker)
+		public void WriteCallArgs (TextWriter writer, string indent, CodeGenerationOptions opt, bool invoker)
 		{
 			if (items.Count == 0)
 				return;
@@ -85,10 +85,10 @@ namespace MonoDroid.Generation {
 				JValue  = invoker ? JValue : "JniArgumentValue";
 				break;
 			}
-			sw.WriteLine ("{0}{1}* __args = stackalloc {1} [{2}];", indent, JValue, items.Count);
+			writer.WriteLine ("{0}{1}* __args = stackalloc {1} [{2}];", indent, JValue, items.Count);
 			for (int i  = 0; i < items.Count; ++i) {
 				var p   = items [i];
-				sw.WriteLine ("{0}__args [{1}] = new {2} ({3});", indent, i, JValue, p.GetCall (opt));
+				writer.WriteLine ("{0}__args [{1}] = new {2} ({3});", indent, i, JValue, p.GetCall (opt));
 			}
 		}
 

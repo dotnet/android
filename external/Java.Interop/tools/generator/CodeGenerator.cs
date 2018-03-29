@@ -695,22 +695,57 @@ namespace MonoDroid.Generation {
 		{
 		}
 
-		internal    abstract    void    WriteClassHandle (ClassGen type,    StreamWriter sw,    string indent,  CodeGenerationOptions opt,  bool    requireNew);
+		internal    abstract    void    WriteClassHandle (ClassGen type,    TextWriter writer,    string indent,  CodeGenerationOptions opt,  bool    requireNew);
 
-		internal    abstract    void    WriteClassHandle (InterfaceGen type,            StreamWriter sw,    string indent,  CodeGenerationOptions opt,  string  declaringType);
+		internal    abstract    void    WriteClassHandle (InterfaceGen type,            TextWriter writer,    string indent,  CodeGenerationOptions opt,  string  declaringType);
 
-		internal    abstract    void    WriteClassInvokerHandle (ClassGen type,         StreamWriter sw,    string indent,  CodeGenerationOptions opt,  string  declaringType);
-		internal    abstract    void    WriteInterfaceInvokerHandle (InterfaceGen type, StreamWriter sw,    string indent,  CodeGenerationOptions opt,  string  declaringType);
+		internal    abstract    void    WriteClassInvokerHandle (ClassGen type,         TextWriter writer,    string indent,  CodeGenerationOptions opt,  string  declaringType);
+		internal    abstract    void    WriteInterfaceInvokerHandle (InterfaceGen type, TextWriter writer,    string indent,  CodeGenerationOptions opt,  string  declaringType);
 
-		internal    abstract    void    WriteConstructorIdField (Ctor ctor, StreamWriter sw,    string indent,  CodeGenerationOptions opt);
-		internal    abstract    void    WriteConstructorBody (Ctor ctor,    StreamWriter sw,    string indent,  CodeGenerationOptions opt, StringCollection call_cleanup);
+		internal    abstract    void    WriteConstructorIdField (Ctor ctor, TextWriter writer,    string indent,  CodeGenerationOptions opt);
+		internal    abstract    void    WriteConstructorBody (Ctor ctor,    TextWriter writer,    string indent,  CodeGenerationOptions opt, StringCollection call_cleanup);
 
-		internal    abstract    void    WriteMethodIdField (Method method,  StreamWriter sw,    string indent,  CodeGenerationOptions opt);
-		internal    abstract    void    WriteMethodBody (Method method,     StreamWriter sw,    string indent,  CodeGenerationOptions opt);
+		internal    abstract    void    WriteMethodIdField (Method method,  TextWriter writer,    string indent,  CodeGenerationOptions opt);
+		internal    abstract    void    WriteMethodBody (Method method,     TextWriter writer,    string indent,  CodeGenerationOptions opt);
 
-		internal    abstract    void    WriteFieldIdField (Field field,     StreamWriter sw,    string indent,  CodeGenerationOptions opt);
-		internal    abstract    void    WriteFieldGetBody (Field field,     StreamWriter sw,    string indent,  CodeGenerationOptions opt);
-		internal    abstract    void    WriteFieldSetBody (Field field,     StreamWriter sw,    string indent,  CodeGenerationOptions opt);
+		internal    abstract    void    WriteFieldIdField (Field field,     TextWriter writer,    string indent,  CodeGenerationOptions opt);
+		internal    abstract    void    WriteFieldGetBody (Field field,     TextWriter writer,    string indent,  CodeGenerationOptions opt, GenBase type);
+		internal    abstract    void    WriteFieldSetBody (Field field,     TextWriter writer,    string indent,  CodeGenerationOptions opt, GenBase type);
+
+		internal    virtual     void    WriteField (Field field,            TextWriter writer,    string indent,  CodeGenerationOptions opt, GenBase type)
+		{
+			if (field.IsEnumified)
+				writer.WriteLine ("[global::Android.Runtime.GeneratedEnum]");
+			if (field.NeedsProperty) {
+				string fieldType = field.Symbol.IsArray ? "IList<" + field.Symbol.ElementType + ">" : opt.GetOutputName (field.Symbol.FullName);
+				WriteFieldIdField (field, writer, indent, opt);
+				writer.WriteLine ();
+				writer.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, type.MetadataXPathReference, field.JavaName);
+				writer.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, field.JavaName, field.AdditionalAttributeString ());
+				writer.WriteLine ("{0}{1} {2}{3} {4} {{", indent, field.Visibility, field.IsStatic ? "static " : String.Empty, fieldType, field.Name);
+				writer.WriteLine ("{0}\tget {{", indent);
+				WriteFieldGetBody (field, writer, indent + "\t\t", opt, type);
+				writer.WriteLine ("{0}\t}}", indent);
+
+				if (!field.IsConst) {
+					writer.WriteLine ("{0}\tset {{", indent);
+					WriteFieldSetBody (field, writer, indent + "\t\t", opt, type);
+					writer.WriteLine ("{0}\t}}", indent);
+				}
+				writer.WriteLine ("{0}}}", indent);
+			}
+			else {
+				writer.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, type.MetadataXPathReference, field.JavaName);
+				writer.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, field.JavaName, field.AdditionalAttributeString ());
+				if (field.IsDeprecated)
+					writer.WriteLine ("{0}[Obsolete (\"{1}\")]", indent, field.DeprecatedComment);
+				if (field.Annotation != null)
+					writer.WriteLine ("{0}{1}", indent, field.Annotation);
+
+				// the Value complication is due to constant enum from negative integer value (C# compiler requires explicit parenthesis).
+				writer.WriteLine ("{0}{1} const {2} {3} = ({2}) {4};", indent, field.Visibility, opt.GetOutputName (field.Symbol.FullName), field.Name, field.Value.Contains ('-') && field.Symbol.FullName.Contains ('.') ? '(' + field.Value + ')' : field.Value);
+			}
+		}
 	}
 }
 

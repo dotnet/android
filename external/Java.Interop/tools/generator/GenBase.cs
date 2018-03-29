@@ -577,7 +577,7 @@ namespace MonoDroid.Generation {
 						seen.Add (f.Name);
 					needsProperty = needsProperty || f.NeedsProperty;
 					sw.WriteLine ();
-					f.Generate (sw, indent, opt, this);
+					opt.CodeGenerator.WriteField (f, sw, indent, opt, this);
 				}
 			}
 			return needsProperty;
