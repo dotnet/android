@@ -153,98 +153,35 @@
 
   <Target Name="_PrepareLlvmItems">
     <ItemGroup>
-      <_LlvmSourceFileWithoutMonoSdks Include="$(LlvmSourceFullPath)\lib\**\*.cpp" />
-      <_LlvmHeaderFileWithoutMonoSdks Include="$(LlvmSourceFullPath)\lib\**\*.h" />
-      <_LlvmMakefileConfigWithoutMonoSdks Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Makefile.config')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' " />
-      <_LlvmConfigureStampWithoutMonoSdks Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\.stamp-configure')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' " />
+      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(MonoSourceFullPath)\sdks\out\llvm-%(Identity)\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+
+      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(MonoSourceFullPath)\sdks\out\llvm-%(Identity)\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
+      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
     </ItemGroup>
-
-    <ItemGroup>
-      <_LlvmArchiveWithoutMonoSdks Include="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Release\lib\*.a" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' " />
-
-      <_LlvmSourceBinaryWithoutMonoSdks Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinaryWithoutMonoSdks Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-
-      <_LlvmSourceBinaryWithoutMonoSdks Include="@(_LlvmRuntime->'$(_LlvmOutputDirTop)\%(BuildDir)\Release\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinaryWithoutMonoSdks Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(MonoSourceFullPath)\sdks\out\llvm-%(Identity)\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-
-      <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(MonoSourceFullPath)\sdks\out\llvm-%(Identity)\bin\llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-      <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' And '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_ConfigureLlvmWithoutMonoSdks"
-          DependsOnTargets="_PrepareLlvmItems"
-          Inputs="$(LlvmSourceFullPath)\Makefile.config.in;$(LlvmSourceFullPath)\configure;@(_LlvmSourceFileWithoutMonoSdks);@(_LlvmHeaderFileWithoutMonoSdks)"
-          Outputs="@(_LlvmMakefileConfigWithoutMonoSdks);@(_LlvmConfigureStampWithoutMonoSdks)"
-          Condition=" '$(_LlvmNeeded)' != '' " >
-    <MakeDir
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Directories="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
-    />
-    <Exec
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Command="%(_LlvmRuntime.ConfigureEnvironment) $(LlvmSourceFullPath)\configure %(_LlvmRuntime.ConfigureFlags)"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
-    />
-    <Touch
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Files="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\Makefile.config"
-    />
-    <Touch
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Files="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)\.stamp-configure"
-        AlwaysCreate="true"
-    />
   </Target>
   
   <Target Name="_BuildLlvm"
-          DependsOnTargets="_BuildLlvmWithoutMonoSdks"
+          DependsOnTargets="_PrepareLlvmItems"
           Outputs="@(_LlvmSourceBinary)"
-          Condition=" '$(_LlvmNeeded)' != '' ">
+          Condition=" '@(_LlvmRuntime)' != '' ">
     <Exec
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' "
         Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
-  <Target Name="_BuildLlvmWithoutMonoSdks"
-          DependsOnTargets="_ConfigureLlvmWithoutMonoSdks"
-          Inputs="@(_LlvmConfigureStampWithoutMonoSdks);@(_LlvmSourceFileWithoutMonoSdks);@(_LlvmHeaderFileWithoutMonoSdks)"
-          Outputs="@(_LlvmArchiveWithoutMonoSdks);@(_LlvmSourceBinaryWithoutMonoSdks)"
-          Condition=" '$(_LlvmNeeded)' != '' ">
-    <Exec
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Command="%(_LlvmRuntime.BuildEnvironment) make $(MakeConcurrency) all install"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(_LlvmOutputDirTop)\%(_LlvmRuntime.BuildDir)"
-    />
-    <Touch
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' == 'False' "
-        Files="@(_LlvmArchiveWithoutMonoSdks);@(_LlvmSourceBinaryWithoutMonoSdks)"
-    />
-  </Target>
 
   <Target Name="_InstallLlvm"
           DependsOnTargets="_BuildLlvm"
-          Inputs="@(_LlvmSourceBinaryWithoutMonoSdks);@(_LlvmSourceBinary)"
-          Outputs="@(_LlvmTargetBinaryWithoutMonoSdks);@(_LlvmTargetBinary)"
-          Condition=" '$(_LlvmNeeded)' != '' ">
-    <Copy
-        SourceFiles="@(_LlvmSourceBinaryWithoutMonoSdks)"
-        DestinationFiles="@(_LlvmTargetBinaryWithoutMonoSdks)" />
+          Inputs="@(_LlvmSourceBinary)"
+          Outputs="@(_LlvmTargetBinary)"
+          Condition=" '@(_LlvmRuntime)' != '' ">
     <Copy
         SourceFiles="@(_LlvmSourceBinary)"
         DestinationFiles="@(_LlvmTargetBinary)" />
     <Touch
-        Files="@(_LlvmTargetBinaryWithoutMonoSdks);@(_LlvmTargetBinary)" />
+        Files="@(_LlvmTargetBinary)" />
   </Target>
 
   <Target Name="_Autogen"
@@ -865,7 +802,7 @@
       <BundleItem Include="@(_InstallUnstrippedMonoPosixHelperOutputWithoutMonoSdks);@(_InstallUnstrippedMonoPosixHelperOutput)" />
       <BundleItem Include="@(_RuntimeEglibHeaderOutputWithoutMonoSdks);@(_RuntimeEglibHeaderOutput)" />
       <BundleItem Include="@(_MonoConstsOutput)" />
-      <BundleItem Include="@(_LlvmTargetBinaryWithoutMonoSdks);@(_LlvmTargetBinary)" />
+      <BundleItem Include="@(_LlvmTargetBinary)" />
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)"
           Condition=" '@(_MonoCrossRuntime)' != '' "
       />
@@ -902,7 +839,6 @@
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
-        Condition=" '%(_LlvmRuntime.UseMonoSdks)' != 'False' "
         Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
@@ -916,7 +852,7 @@
         Files="@(_MonoRuntime->'$(IntermediateOutputPath)\%(Identity).config.cache')"
     />
     <RemoveDir
-        Directories="@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)');$(_LlvmBuildDirWin32);$(_LlvmBuildDirWin64)"
+        Directories="@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)')"
     />
     <Delete
         Files="$(_CrossOutputPrefix)*.config.cache;$(_CrossOutputDirTop)\llvm*.config.cache"

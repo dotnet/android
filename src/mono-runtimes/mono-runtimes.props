@@ -16,26 +16,13 @@
     <_MingwTriplet64>x86_64-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet64>
 
     <!-- LLVM -->
-    <_LlvmNeeded Condition=" '$(AndroidSupportedTargetAotAbis)' != '' ">yes</_LlvmNeeded>
     <_LlvmCanBuild64 Condition=" '$(HostBits)' == '64' ">yes</_LlvmCanBuild64>
-    <_LlvmHaveWindowsAOT Condition=" $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">yes</_LlvmHaveWindowsAOT>
-    <_LlvmNeededWindows32 Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmHaveWindowsAOT)' == 'yes' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))) ">yes</_LlvmNeededWindows32>
-    <_LlvmNeededWindows64 Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmHaveWindowsAOT)' == 'yes' And '$(_LlvmCanBuild64)' == 'yes' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))) ">yes</_LlvmNeededWindows64>
-    <_LlvmOutputDirTop>$(_CrossOutputDirTop)\llvm</_LlvmOutputDirTop>
 
     <_LlvmPrefix32>$(MonoSourceFullPath)\sdks\out\llvm-llvm32</_LlvmPrefix32>
     <_LlvmPrefix64>$(MonoSourceFullPath)\sdks\out\llvm-llvm64</_LlvmPrefix64>
 
-    <_LlvmBuildDirWin32>$(_LlvmOutputDirTop)\build-win32</_LlvmBuildDirWin32>
-    <_LlvmBuildDirWin64>$(_LlvmOutputDirTop)\build-win64</_LlvmBuildDirWin64>
-    <_LlvmPrefixWin32>$(_LlvmOutputDirTop)\installed-win32\usr</_LlvmPrefixWin32>
-    <_LlvmPrefixWin64>$(_LlvmOutputDirTop)\installed-win64\usr</_LlvmPrefixWin64>
-
-    <_LlvmCommonConfigureFlags>--enable-optimized --enable-assertions=no --enable-targets="arm,aarch64,x86"</_LlvmCommonConfigureFlags>
-
-    <_LlvmCommonConfigureFlagsWin>$(_LlvmCommonConfigureFlags) --disable-pthreads --disable-zlib</_LlvmCommonConfigureFlagsWin>
-    <_LlvmCommonConfigureFlagsWin32>$(_LlvmCommonConfigureFlagsWin) --prefix=$(_LlvmPrefixWin32) --with-llvm=$(_LlvmPrefix32) --cache-file=$(_CrossOutputDirTop)\llvm-win32.config.cache CC="$(_MingwCc32)" CXX="$(_MingwCxx32)"</_LlvmCommonConfigureFlagsWin32>
-    <_LlvmCommonConfigureFlagsWin64>$(_LlvmCommonConfigureFlagsWin) --prefix=$(_LlvmPrefixWin64) --with-llvm=$(_LlvmPrefix64) --cache-file=$(_CrossOutputDirTop)\llvm-win64.config.cache CC="$(_MingwCc64)" CXX="$(_MingwCxx64)"</_LlvmCommonConfigureFlagsWin64>
+    <_LlvmPrefixWin32>$(MonoSourceFullPath)\sdks\out\llvm-llvmwin32</_LlvmPrefixWin32>
+    <_LlvmPrefixWin64>$(MonoSourceFullPath)\sdks\out\llvm-llvmwin64</_LlvmPrefixWin64>
 
     <!-- Cross compilers -->
     <_AotOffsetsDumperName>MonoAotOffsetsDumper.exe</_AotOffsetsDumperName>
@@ -65,11 +52,6 @@
     <_CrossConfigureFlags32>--build=$(_CrossConfigureBuildHost32) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags32>
     <_CrossConfigureFlags64>--build=$(_CrossConfigureBuildHost64) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags64>
     <_CrossConfigureFlags>$(_CrossConfigureFlags64)</_CrossConfigureFlags>
-
-    <_LlvmConfigureEnvironmentWin32>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</_LlvmConfigureEnvironmentWin32>
-    <_LlvmConfigureEnvironmentWin64>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</_LlvmConfigureEnvironmentWin64>
-    <_LlvmConfigureFlagsWin32>--host="$(_CrossConfigureBuildHostWin32)" $(_LlvmCommonConfigureFlagsWin32)</_LlvmConfigureFlagsWin32>
-    <_LlvmConfigureFlagsWin64>--host="$(_CrossConfigureBuildHostWin64)" $(_LlvmCommonConfigureFlagsWin64)</_LlvmConfigureFlagsWin64>
   </PropertyGroup>
 
   <!-- LLVM+cross Linux -->
@@ -88,9 +70,6 @@
     <_CrossConfigureFlags64>--build=$(_CrossConfigureBuildHost64) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags64>
     <_CrossConfigureFlags Condition=" '$(HostBits)' == '64' " >$(_CrossConfigureFlags64)</_CrossConfigureFlags>
     <_CrossConfigureFlags Condition=" '$(HostBits)' == '32' " >$(_CrossConfigureFlags32)</_CrossConfigureFlags>
-
-    <_LlvmConfigureFlagsWin32>--host="$(_CrossConfigureBuildHostWin32)" $(_LlvmCommonConfigureFlagsWin32)</_LlvmConfigureFlagsWin32>
-    <_LlvmConfigureFlagsWin64>--host="$(_CrossConfigureBuildHostWin64)" $(_LlvmCommonConfigureFlagsWin64)</_LlvmConfigureFlagsWin64>
   </PropertyGroup>
 
   <!-- Mono runtimes settings -->
