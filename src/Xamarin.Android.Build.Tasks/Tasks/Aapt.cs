@@ -209,7 +209,7 @@ namespace Xamarin.Android.Tasks
 			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
-				if (!Path.IsPathRooted (currentResourceOutputFile))
+				if (!string.IsNullOrEmpty (currentResourceOutputFile) && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
 				if (!ExecuteForAbi (GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile), currentResourceOutputFile)) {
 					Cancel ();
