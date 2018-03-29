@@ -201,6 +201,20 @@ use `Inputs` or `Outputs`.
 
 # Best Practices for Xamarin.Android MSBuild targets
 
+## Naming in Xamarin.Android targets
+
+As mentioned [above](/MSBuildBestPractices.md#naming), a good amount
+of consideration should be done before adding new public-facing
+MSBuild properties. This is pretty clear when adding a new feature,
+since an obvious feature flag will be needed to enable it.
+
+The main thing to keep in mind here is that almost all of our
+public-facing MSBuild properties should be prefixed with `Android`.
+This is a good convention so it is easy to know which properties are
+specific to Xamarin.Android, and this will prevent them from
+conflicting with MSBuild properties from other products. All MSBuild
+properties are effectively "global variables"...
+
 ## Stamp Files
 
 From now on, we should try to put new stamp files in

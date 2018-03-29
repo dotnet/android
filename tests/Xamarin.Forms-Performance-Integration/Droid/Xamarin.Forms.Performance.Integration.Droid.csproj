@@ -17,6 +17,7 @@
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AndroidUseAapt2 Condition="'$(AndroidUseAapt2)' == ''">True</AndroidUseAapt2>
+    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
@@ -40,6 +41,7 @@
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -134,6 +136,7 @@
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="packages.config" />
+    <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

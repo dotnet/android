@@ -210,6 +210,23 @@ when packaing Release applications.
 
     This property is `False` by default.
 
+-   **AndroidDexTool** &ndash; An enum-style property with valid
+    values of `dx` or `d8`. Indicates which Android [dex][dex]
+    compiler is used during the Xamarin.Android build process.
+    Currently defaults to `dx`. For further information see our
+    documentation on [D8 and R8][d8-r8].
+
+    [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
+    [d8-r8]: D8andR8.md
+
+-   **AndroidEnableDesugar** &ndash; A boolean property that
+    determines if `desugar` is enabled. Android does not currently
+    support all Java 8 features, and the default toolchain implements
+    the new language features by performing bytecode transformations,
+    called `desugar`, on the output of the `javac` compiler. Defaults
+    to `False` if using `AndroidDexTool=dx` and defaults to `True` if
+    using `AndroidDexTool=d8`.
+
 -   **AndroidEnableMultiDex** &ndash; A boolean property that
     determines whether or not multi-dex support will be used in the
     final `.apk`.
@@ -359,6 +376,14 @@ when packaing Release applications.
     ```xml
     <AndroidLinkSkip>Assembly1;Assembly2</AndroidLinkSkip>
     ```
+
+-   **AndroidLinkTool** &ndash; An enum-style property with valid
+    values of `proguard` or `r8`. Indicates which code shrinker is
+    used for Java code. Currently defaults to an empty string, or
+    `proguard` if `$(AndroidEnableProguard)` is `True`. For further
+    information see our documentation on [D8 and R8][d8-r8].
+
+    [d8-r8]: D8andR8.md
 
 -   **LinkerDumpDependencies** &ndash; A bool property which enables
     generating of linker dependencies file. This file can be used as

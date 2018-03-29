@@ -1,0 +1,119 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+
+  <!-- public targets -->
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      _DownloadDepotTools;
+      _UnzipDepotTools;
+      _SetDepotToolsEnvironment;
+      _BootstrapDepotTools;
+      _BuildR8;
+      _CopyR8;
+    </BuildDependsOn>
+    <CleanDependsOn>
+      _SetDepotToolsEnvironment;
+      _CleanR8;
+      _CleanDepotTools;
+    </CleanDependsOn>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
+
+  <!-- 
+    depot_tools, a set of git extensions from Chromium
+    http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html
+  -->
+
+  <PropertyGroup>
+    <_DepotToolsZip>..\..\bin\Build$(Configuration)\depot_tools.zip</_DepotToolsZip>
+    <_PathToDepotTools>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\depot_tools'))</_PathToDepotTools>
+  </PropertyGroup>
+
+  <Target Name="_DownloadDepotTools">
+    <DownloadUri
+        SourceUris="https://storage.googleapis.com/chrome-infra/depot_tools.zip"
+        DestinationFiles="$(_DepotToolsZip)"
+    />
+  </Target>
+
+  <Target Name="_UnzipDepotTools"
+      Inputs="$(_DepotToolsZip)"
+      Outputs="$(_PathToDepotTools)\unzip.stamp">
+    <UnzipDirectoryChildren
+        HostOS="$(HostOS)"
+        NoSubdirectory="True"
+        SourceFiles="$(_DepotToolsZip)"
+        DestinationFolder="$(_PathToDepotTools)"
+    />
+    <Touch
+        Files="$(_PathToDepotTools)\unzip.stamp"
+        AlwaysCreate="True"
+    />
+  </Target>
+
+  <!--
+    NOTE: depot_tools has an odd requirement of being in PATH
+    I am also getting some odd failures on Windows, if not specifying namespace for <SetEnvironmentVariable />
+  -->
+
+  <Target Name="_SetDepotToolsEnvironment">
+    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
+        Name="PATH"
+        Value="$(_PathToDepotTools)$(PathSeparator)$(PATH)"
+    />
+  </Target>
+
+  <!-- This "bootstraps" depot_tools, such as downloading/installing gradle and python -->
+
+  <Target Name="_BootstrapDepotTools"
+      Inputs="$(_PathToDepotTools)\unzip.stamp"
+      Outputs="$(_PathToDepotTools)\bootstrap.stamp">
+    <Exec Command="gclient --version" />
+    <Touch
+        Files="$(_PathToDepotTools)\bootstrap.stamp"
+        AlwaysCreate="True"
+    />
+  </Target>
+
+  <Target Name="_CleanDepotTools">
+    <Delete Files="$(_DepotToolsZip)" />
+    <RemoveDir Directories="$(_PathToDepotTools)" />
+  </Target>
+
+  <!-- r8 -->
+
+  <Target Name="_BuildR8">
+    <Exec
+      Command="python tools\gradle.py d8 r8 --no-daemon"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      WorkingDirectory="..\..\external\r8"
+    />
+  </Target>
+
+  <Target Name="_CopyR8">
+    <Copy
+        SourceFiles="..\..\external\r8\build\libs\d8.jar"
+        DestinationFolder="$(XAInstallPrefix)\xbuild\Xamarin\Android\"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="..\..\external\r8\build\libs\r8.jar"
+        DestinationFolder="$(XAInstallPrefix)\xbuild\Xamarin\Android\"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+
+  <Target Name="_CleanR8">
+    <Exec
+      Command="python tools\gradle.py clean --no-daemon"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      WorkingDirectory="..\..\external\r8"
+    />
+  </Target>
+
+</Project>

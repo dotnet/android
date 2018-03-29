@@ -116,8 +116,14 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--input-list=", inputListFile);
 
 			if (MultiDexEnabled) {
-				cmd.AppendSwitch ("--multi-dex");
-				cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
+				if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
+					Log.LogCodedWarning ("XA4305", $"MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.");
+				} else if (!File.Exists (MultiDexMainDexListFile)) {
+					Log.LogCodedWarning ("XA4305", MultiDexMainDexListFile, 0, $"MultiDex is enabled, but main dex list file '{MultiDexMainDexListFile}' does not exist.");
+				} else {
+					cmd.AppendSwitch ("--multi-dex");
+					cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
+				}
 			}
 			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
 

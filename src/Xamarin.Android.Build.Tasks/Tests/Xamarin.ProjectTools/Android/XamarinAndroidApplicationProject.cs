@@ -85,6 +85,16 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
 		}
 
+		public string DexTool {
+			get { return GetProperty (KnownProperties.AndroidDexTool); }
+			set { SetProperty (KnownProperties.AndroidDexTool, value); }
+		}
+
+		public string LinkTool {
+			get { return GetProperty (KnownProperties.AndroidLinkTool); }
+			set { SetProperty (KnownProperties.AndroidLinkTool, value); }
+		}
+
 		public string AndroidFastDeploymentType {
 			get { return GetProperty (KnownProperties.AndroidFastDeploymentType); }
 			set { SetProperty (KnownProperties.AndroidFastDeploymentType, value); }

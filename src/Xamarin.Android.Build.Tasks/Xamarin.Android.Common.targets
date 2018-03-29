@@ -73,6 +73,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Desugar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.D8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -278,9 +280,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
-	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
-	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
-	<AndroidEnableDesugar Condition="'$(AndroidEnableDesugar)'==''">False</AndroidEnableDesugar>
+	<AndroidEnableProguard Condition=" '$(AndroidEnableProguard)' == '' ">$(EnableProguard)</AndroidEnableProguard>
+	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' == 'proguard' ">True</AndroidEnableProguard>
+	<AndroidEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' == '' ">False</AndroidEnableMultiDex>
+	<AndroidDexTool   Condition=" '$(AndroidDexTool)' == '' ">dx</AndroidDexTool>
+	<AndroidDexTool   Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
+	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableProguard)' == 'True' ">proguard</AndroidLinkTool>
+	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
+	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
+	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -352,6 +361,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		.dll.mdb;
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
+
+<!--
+*******************************************
+          Imports
+*******************************************
+-->
+<!-- As we split up/refactor this file, put new imports here -->
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" />
 
 <Target Name="_SeparateAppExtensionReferences">
 	<CreateItem Include="@(ProjectReference)" PreserveExistingMetadata="true" Condition="'%(Identity)' != '' AND '%(ProjectReference.IsAppExtension)' == 'true'">
@@ -947,6 +964,18 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\r8.jar">
+		<Output TaskParameter="Value" PropertyName="R8JarPath"
+				Condition="'$(R8JarPath)' == ''"
+		/>
+	</CreateProperty>
+
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\d8.jar">
+		<Output TaskParameter="Value" PropertyName="D8JarPath"
+				Condition="'$(D8JarPath)' == ''"
+		/>
+	</CreateProperty>
+
 	<CreateProperty Value="--dex --no-strict">
 		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
 			Condition="'$(DxExtraArguments)' == ''"
@@ -1171,7 +1200,8 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
-		<_PropertyCacheItems Include="EnableProguard=$(AndroidEnableProguard)" />
+		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
+		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
 		<_PropertyCacheItems Include="UseSharedRuntime=$(AndroidUseSharedRuntime)" />
 		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
 		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
@@ -2115,12 +2145,12 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_AndroidLinkFlag)">
 
     <CreateProperty
-    	Condition="'$(AndroidEnableProguard)' == 'True'"
+    	Condition=" '$(AndroidLinkTool)' != '' "
     	Value="$(IntermediateOutputPath)proguard\proguard_project_references.cfg">
     	<Output TaskParameter="Value" PropertyName="_ProguardProjectConfiguration" />
     </CreateProperty>
 
-    <MakeDir Condition="'$(AndroidEnableProguard)' == 'True'" Directories="$(IntermediateOutputPath)proguard" />
+    <MakeDir Condition=" '$(AndroidLinkTool)' != '' " Directories="$(IntermediateOutputPath)proguard" />
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
@@ -2517,6 +2547,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileToDalvikWithDx"
   DependsOnTargets="$(_BeforeCompileToDalvikWithDx);$(_CompileToDalvikDependsOnTargets)"
+  Condition=" '$(AndroidDexTool)' == 'dx' "
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(IntermediateOutputPath)_dex_stamp">
 
@@ -2550,7 +2581,7 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(IntermediateOutputPath)proguard" />
 
   <Proguard
-    Condition="'$(AndroidEnableProguard)' == 'True' and '$(_ProguardProjectConfiguration)' != ''"
+    Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' "
     ProguardJarPath="$(ProguardJarPath)"
     AndroidSdkDirectory="$(_AndroidSdkDirectory)"
     JavaToolPath="$(JavaToolPath)"
@@ -2565,8 +2596,7 @@ because xbuild doesn't support framework reference assemblies.
     ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
     ProguardConfigurationFiles="$(ProguardConfigFiles)"
     JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
-    ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
-    DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
+    JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
     ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
     EnableLogging="$(ProguardEnableLogging)"
     DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"
@@ -2578,12 +2608,12 @@ because xbuild doesn't support framework reference assemblies.
 
   <CreateItem 
     Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-    Condition="'$(AndroidEnableProguard)' == 'True' and '$(_ProguardProjectConfiguration)' != ''">
+    Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
   <CreateItem
     Include="$(IntermediateOutputPath)android\bin\classes.zip;@(_DesugaredJars)"
-    Condition="('$(AndroidEnableProguard)' != 'True' or '$(_ProguardProjectConfiguration)' == '') and '$(AndroidEnableDesugar)' == 'True'">
+    Condition=" ('$(AndroidLinkTool)' != 'proguard' Or '$(_ProguardProjectConfiguration)' == '') And '$(AndroidEnableDesugar)' == 'True' ">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
 
@@ -2625,11 +2655,14 @@ because xbuild doesn't support framework reference assemblies.
     AlternativeJarFiles="@(_AlternativeJarForAppDx)"
   />
   <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(IntermediateOutputPath)_dex_stamp" />
+  </ItemGroup>
 
 </Target>
 
 <Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx">
+		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithD8">
 
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
