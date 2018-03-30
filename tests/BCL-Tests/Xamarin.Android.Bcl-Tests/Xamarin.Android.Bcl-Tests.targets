@@ -4,7 +4,7 @@
   <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
-  <Import Project="..\..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
+  <Import Project="..\..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
   <Target Name="_AddTestAssemblies"
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">

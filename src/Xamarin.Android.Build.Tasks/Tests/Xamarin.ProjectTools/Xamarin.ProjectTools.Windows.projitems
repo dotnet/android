@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\build-tools\libzip-windows\libzip-windows.csproj">
+    <ProjectReference Include="..\..\..\..\src\libzip-windows\libzip-windows.csproj">
       <Project>{0DE278D6-000F-4001-BB98-187C0AF58A61}</Project>
       <Name>libzip-windows</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
