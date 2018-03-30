@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
 
-			TargetSdkVersion = platform;
+			TargetSdkVersion = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (platform).ToString ();
 
 			Log.LogDebugMessage ("  [Output] JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  [Output] TargetSdkVersion: {0}", TargetSdkVersion);
