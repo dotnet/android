@@ -258,13 +258,13 @@ namespace Xamarin.Android.Tasks
 		protected void Yield ()
 		{
 			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
-				(BuildEngine as IBuildEngine3).Yield ();
+				((IBuildEngine3)BuildEngine).Yield ();
 		}
 
 		protected void Reacquire ()
 		{
 			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
-					(BuildEngine as IBuildEngine3).Reacquire ();
+				((IBuildEngine3)BuildEngine).Reacquire ();
 		}
 
 		protected void WaitForCompletion ()
