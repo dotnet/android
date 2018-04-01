@@ -786,14 +786,19 @@
     />
   </Target>
 
+  <ItemGroup>
+    <_MonoCrossRuntimeStamp               Include="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\.stamp" />
+    <_MonoCrossRuntimeIntermediateOutput  Include="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)" />
+    <_MonoCrossRuntimeOutput              Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" />
+  </ItemGroup>
 
   <!-- The condition below is to work around a bug in xbuild which attempts to batch
        even if there are no _MonoCrossRuntime items and the Copy task fails
   -->
   <Target Name="_BuildCrossRuntimes"
       DependsOnTargets="_GenerateCrossOffsetHeaderFiles"
-      Inputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\.stamp"
-      Outputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+      Inputs="@(_MonoCrossRuntimeStamp)"
+      Outputs="@(_MonoCrossRuntimeIntermediateOutput)"
       Condition=" '@(_MonoCrossRuntime)' != '' ">
     <Message Text="Building %(_MonoCrossRuntime.Identity) in $(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"/>
     <Exec
@@ -802,7 +807,7 @@
         WorkingDirectory="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)"
     />
     <Touch
-        Files="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
+        Files="@(_MonoCrossRuntimeIntermediateOutput)"
     />
   </Target>
 
@@ -810,8 +815,8 @@
        even if there are no _MonoCrossRuntime items and the Copy task fails
   -->
   <Target Name="_InstallCrossRuntimes"
-      Inputs="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
-      Outputs="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+      Inputs="@(_MonoCrossRuntimeIntermediateOutput)"
+      Outputs="@(_MonoCrossRuntimeOutput)"
       Condition=" '@(_MonoCrossRuntime)' != '' ">
     <Copy
         SourceFiles="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)"
@@ -826,7 +831,7 @@
         Command="&quot;%(_MonoCrossRuntime.Strip)&quot; %(_MonoCrossRuntime.StripFlags) &quot;$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)&quot;"
     />
     <Touch
-        Files="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)"
+        Files="@(_MonoCrossRuntimeOutput)"
     />
   </Target>
   <Target Name="GetMonoBundleItems"

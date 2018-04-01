@@ -37,9 +37,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <_LibZipTargetMakefile Include="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile" />
+  </ItemGroup>
   <Target Name="_Make"
       Condition=" '@(_LibZipTarget)' != '' "
-      Inputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile"
+      Inputs="@(_LibZipTargetMakefile)"
       Outputs="@(Content)">
     <Exec
         Command="make"
