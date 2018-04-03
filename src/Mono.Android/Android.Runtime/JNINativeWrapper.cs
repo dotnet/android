@@ -1,10 +1,7 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Android.Runtime {
 	public static class JNINativeWrapper {
@@ -45,7 +42,11 @@ namespace Android.Runtime {
 			get_runtime_types ();
 
 			var ret_type = dlg.Method.ReturnType;
-			var param_types = dlg.Method.GetParameters ().Select (x => x.ParameterType).ToArray ();
+			var parameters = dlg.Method.GetParameters ();
+			var param_types = new Type [parameters.Length];
+			for (int i = 0; i < parameters.Length; i++) {
+				param_types [i] = parameters [i].ParameterType;
+			}
 
 			var dynamic = new DynamicMethod (Guid.NewGuid ().ToString (), ret_type, param_types, typeof (object), true);
 			var ig = dynamic.GetILGenerator ();

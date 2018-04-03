@@ -20,7 +20,6 @@
       _CopyBootstrapTasksAssembly;
       _DownloadItems;
       _UnzipFiles;
-      _CreateNdkToolchains;
       _CreateMxeToolchains;
       _AcceptAndroidSdkLicenses;
     </BuildDependsOn>

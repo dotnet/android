@@ -22,8 +22,9 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 	<PropertyGroup>
 		<!-- Until VS2017+ includes its own ReferenceAssemblies outside of C:\Program Files (x86)\Reference Assemblies and into 
 			 the VsInstallRoot, we must override this ourselves for our SDKs -->
-		<TargetFrameworkRootPath Condition="'$(VsInstallRoot)' != '' And '$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
-		<TargetFrameworkRootPath Condition="'$(VsInstallRoot)' == '' And '$(TargetFrameworkRootPath)' == ''">$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+		<TargetFrameworkRootPath Condition="'$(OS)' == 'Windows_NT' And '$(VsInstallRoot)' != '' And '$(TargetFrameworkRootPath)' == ''">$(VsInstallRoot)\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+		<TargetFrameworkRootPath Condition="'$(OS)' == 'Windows_NT' And '$(VsInstallRoot)' == '' And '$(TargetFrameworkRootPath)' == ''">$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\</TargetFrameworkRootPath>
+		<TargetFrameworkRootPath Condition="'$(OS)' != 'Windows_NT' And '$(TargetFrameworkRootPath)' == ''">$(MSBuildThisFileDirectory)..\..\xbuild-frameworks\</TargetFrameworkRootPath>
 
 		<!-- We should always override the framework path so that XA resolves to its own mscorlib.dll -->
 		<FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>

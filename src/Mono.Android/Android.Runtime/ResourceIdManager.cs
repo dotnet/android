@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Reflection;
 
 namespace Android.Runtime
@@ -12,23 +11,35 @@ namespace Android.Runtime
 			if (id_initialized)
 				return;
 			var executingAssembly = Assembly.GetExecutingAssembly ();
-			Func<Assembly,Type> f = assembly =>
-				assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)
-					.Select (ca => ca as ResourceDesignerAttribute)
-					.Where (ca => ca != null && ca.IsApplication)
-					.Select (ca => assembly.GetType (ca.FullName))
-					.Where (ty => ty != null)
-					.FirstOrDefault ();
-			var t = executingAssembly != null ? f (executingAssembly) : null;
-			if (t == null) {
-				t = AppDomain.CurrentDomain.GetAssemblies ()
-					.Select (assembly => f (assembly))
-					.Where (ty => ty != null)
-					.FirstOrDefault ();
+			var type = executingAssembly != null ? GetResourceTypeFromAssembly (executingAssembly) : null;
+			if (type == null) {
+				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies ()) {
+					type = GetResourceTypeFromAssembly (assembly);
+					if (type != null) {
+						break;
+					}
+				}
 			}
-			if (t != null)
-				t.GetMethod ("UpdateIdValues").Invoke (null, new object [0]);
+			if (type != null) {
+				var method = type.GetMethod ("UpdateIdValues");
+				if (method != null) {
+					var action = (Action) method.CreateDelegate (typeof (Action));
+					action ();
+				}
+			}
 			id_initialized = true;
+		}
+
+		static Type GetResourceTypeFromAssembly (Assembly assembly)
+		{
+			foreach (var customAttribute in assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)) {
+				if (customAttribute is ResourceDesignerAttribute resourceDesignerAttribute && resourceDesignerAttribute.IsApplication) {
+					var type = assembly.GetType (resourceDesignerAttribute.FullName);
+					if (type != null)
+						return type;
+				}
+			}
+			return null;
 		}
 	}
 }

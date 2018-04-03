@@ -3,7 +3,7 @@
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <Import Project="..\..\build-tools\mono-runtimes\ProfileAssemblies.projitems" />
+  <Import Project="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>

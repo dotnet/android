@@ -23,8 +23,8 @@
     </GitCommitHash>
     <!-- Files which contribute to the bundle "version" -->
     <ItemGroup>
-      <VersionFile Include="..\mono-runtimes\mono-runtimes.*" />
-      <VersionFile Include="..\mono-runtimes\ProfileAssemblies.projitems" />
+      <VersionFile Include="..\..\src\mono-runtimes\mono-runtimes.*" />
+      <VersionFile Include="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
       <VersionFile Include="..\scripts\BuildEverything.mk" />
     </ItemGroup>
     <HashFileContents

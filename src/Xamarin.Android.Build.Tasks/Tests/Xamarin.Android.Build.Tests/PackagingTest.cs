@@ -280,9 +280,14 @@ namespace XamFormsSample
 
         public App()
         {
-            JsonConvert.DeserializeObject<string>(""test"");
-            package = Package.Open ("""");
+            try {
+                JsonConvert.DeserializeObject<string>(""test"");
+                package = Package.Open ("""");
+            } catch {
+            }
             InitializeComponent();
+
+            MainPage = new ContentPage ();
         }
 
         protected override void OnStart()
@@ -337,6 +342,29 @@ namespace XamFormsSample
 					KnownPackages.XamarinForms_2_3_4_231,
 				}
 			};
+			app.MainActivity = @"using System;
+using Android.App;
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.OS;
+using XamFormsSample;
+
+namespace App1
+{
+	[Activity (Label = ""App1"", MainLauncher = true, Icon = ""@drawable/icon"")]
+	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity {
+			protected override void OnCreate (Bundle bundle)
+			{
+				base.OnCreate (bundle);
+
+				global::Xamarin.Forms.Forms.Init (this, bundle);
+
+				LoadApplication (new App ());
+			}
+		}
+	}";
 			app.SetProperty (KnownProperties.AndroidSupportedAbis, "x86;armeabi-v7a");
 			var expectedFiles = new string [] {
 				"Java.Interop.dll",
@@ -346,6 +374,7 @@ namespace XamFormsSample
 				"System.dll",
 				"System.Runtime.Serialization.dll",
 				"System.IO.Packaging.dll",
+				"System.IO.Compression.dll",
 				"Mono.Android.Export.dll",
 				"App1.dll",
 				"FormsViewGroup.dll",
