@@ -237,16 +237,21 @@ namespace Xamarin.Android.Tasks
 
 			var nativeLibs = new List<string> ();
 
-			var task = ThreadingTasks.Task.Run ( () => {
-				return RunParallelAotCompiler (nativeLibs);
-			}, Token);
+			Yield ();
+			try {
+				var task = ThreadingTasks.Task.Run ( () => {
+					return RunParallelAotCompiler (nativeLibs);
+				}, Token);
 
-			task.ContinueWith (Complete);
+				task.ContinueWith (Complete);
 
-			base.Execute ();
+				base.Execute ();
 
-			if (!task.Result)
-				return false;
+				if (!task.Result)
+					return false;
+			} finally {
+				Reacquire ();
+			}
 
 			NativeLibrariesReferences = nativeLibs.ToArray ();
 
@@ -457,6 +462,7 @@ namespace Xamarin.Android.Tasks
 				RedirectStandardError = true,
 				CreateNoWindow=true,
 				WindowStyle=ProcessWindowStyle.Hidden,
+				WorkingDirectory = WorkingDirectory,
 			};
 			
 			// we do not want options to be provided out of band to the cross compilers
