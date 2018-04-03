@@ -52,15 +52,20 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			System.Threading.Tasks.Task.Run (() => {
-				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-					return Execute (resolver);
-				}
-			}, Token).ContinueWith (Complete);
-			return base.Execute ();
+			Yield ();
+			try {
+				System.Threading.Tasks.Task.Run (() => {
+					using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
+						Execute (resolver);
+					}
+				}, Token).ContinueWith (Complete);
+				return base.Execute ();
+			} finally {
+				Reacquire ();
+			}
 		}
 
-		bool Execute (DirectoryAssemblyResolver resolver)
+		void Execute (DirectoryAssemblyResolver resolver)
 		{
 			LogDebugMessage ("ResolveAssemblies Task");
 			LogDebugMessage ("  ReferenceAssembliesDirectory: {0}", ReferenceAssembliesDirectory);
@@ -111,14 +116,14 @@ namespace Xamarin.Android.Tasks
 				}
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
-				return false;
+				return;
 			}
 			try {
 				foreach (var assembly in topAssemblyReferences)
 					AddAssemblyReferences (resolver, assemblies, assembly, true);
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
-				return false;
+				return;
 			}
 
 			// Add I18N assemblies if needed
@@ -139,8 +144,6 @@ namespace Xamarin.Android.Tasks
 			LogDebugTaskItems ("  [Output] ResolvedUserAssemblies:", ResolvedUserAssemblies);
 			LogDebugTaskItems ("  [Output] ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
 			LogDebugTaskItems ("  [Output] ResolvedDoNotPackageAttributes:", ResolvedDoNotPackageAttributes);
-			
-			return !Log.HasLoggedErrors;
 		}
 
 		readonly List<string> do_not_package_atts = new List<string> ();

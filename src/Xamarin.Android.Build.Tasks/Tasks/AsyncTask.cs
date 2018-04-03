@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Threading;
@@ -37,6 +38,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool YieldDuringToolExecution { get; set; }
 
+		protected string WorkingDirectory { get; private set; } 
+
 		[Obsolete ("Do not use the Log.LogXXXX from within your Async task as it will Lock the Visual Studio UI. Use the this.LogXXXX methods instead.")]
 		private new TaskLoggingHelper Log
 		{
@@ -47,6 +50,7 @@ namespace Xamarin.Android.Tasks
 		{
 			YieldDuringToolExecution = false;
 			UIThreadId = Thread.CurrentThread.ManagedThreadId;
+			WorkingDirectory = Directory.GetCurrentDirectory ();
 		}
 
 		public void Cancel ()
@@ -251,6 +255,18 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		protected void Yield ()
+		{
+			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
+				((IBuildEngine3)BuildEngine).Yield ();
+		}
+
+		protected void Reacquire ()
+		{
+			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
+				((IBuildEngine3)BuildEngine).Reacquire ();
+		}
+
 		protected void WaitForCompletion ()
 		{
 			WaitHandle[] handles = new WaitHandle[] {
@@ -261,8 +277,6 @@ namespace Xamarin.Android.Tasks
 				taskCancelled,
 				completed,
 			};
-			if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
-				(BuildEngine as IBuildEngine3).Yield ();
 			try {
 				while (isRunning) {
 					var index = (WaitHandleIndex)System.Threading.WaitHandle.WaitAny (handles, TimeSpan.FromMilliseconds (10));
@@ -305,8 +319,7 @@ namespace Xamarin.Android.Tasks
 
 			}
 			finally {
-				if (YieldDuringToolExecution && BuildEngine is IBuildEngine3)
-					(BuildEngine as IBuildEngine3).Reacquire ();
+
 			}
 		}
 	}
