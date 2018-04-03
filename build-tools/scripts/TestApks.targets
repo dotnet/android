@@ -162,6 +162,7 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
+      <_LogcatFilenameBase>logcat-$(Configuration)$(TestsAotName)</_LogcatFilenameBase>
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
@@ -169,6 +170,7 @@
         AdbOptions="$(AdbOptions)"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
+        LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package).txt"
         InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
@@ -180,16 +182,13 @@
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         Activity="%(TestApk.Activity)"
+        LogcatFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)">
     </RunUITests>
-    <PropertyGroup>
-      <_LogcatFilename>logcat-$(Configuration)$(TestsAotName).txt</_LogcatFilename>
-    </PropertyGroup>
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_LogcatFilename)" />
     <ProcessLogcatTiming
-        Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' "
-        InputFilename="$(_LogcatFilename)"
+        Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' And Exists ('$(_LogcatFilenameBase)-%(TestApk.Package).txt')"
+        InputFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
         ApplicationPackageName="%(TestApk.Package)"
         ResultsFilename="%(TestApk.TimingResultsFilename)"
         DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
