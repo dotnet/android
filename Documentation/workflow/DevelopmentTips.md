@@ -25,8 +25,8 @@ The update directory is not used in `Release` configuration builds.
 For example, if you're working on a mono/x86 bug and need to quickly update
 the app on the device to test `libmonosgen-2.0.so` changes:
 
-	$ make -C build-tools/mono-runtimes/obj/Debug/x86 && \
-	  adb push build-tools/mono-runtimes/obj/Debug/x86/mono/mini/.libs/libmonosgen-2.0.so \
+	$ make -C src/mono-runtimes/obj/Debug/x86 && \
+	  adb push src/mono-runtimes/obj/Debug/x86/mono/mini/.libs/libmonosgen-2.0.so \
 	    /data/data/Mono.Android_Tests/files/.__override__
 
 Alternatively, if you're working on an `mscorlib.dll` bug:
