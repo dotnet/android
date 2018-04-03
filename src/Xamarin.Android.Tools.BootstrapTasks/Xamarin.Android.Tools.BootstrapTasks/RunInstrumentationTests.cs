@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string              NUnit2TestResultsFile       { get; set; }
 
+		[Required]
+		public                  string              LogcatFilename              { get; set; }
+
 		[Output]
 		public                  string              FailedToRun                 { get; set; }
 
@@ -33,10 +36,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		enum ExecuteState {
 			RunInstrumentation,
 			PullFiles,
+			GetLogcat,
 		}
 
 		ExecuteState            executionState;
 		string                  targetTestResultsPath;
+		TextWriter              logcatWriter;
 
 		public override bool Execute ()
 		{
@@ -59,6 +64,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Log.LogMessage (MessageImportance.Low, $"    {a}:");
 			}
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (NUnit2TestResultsFile)}: {NUnit2TestResultsFile}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (LogcatFilename)}: {LogcatFilename}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (TestFixture)}: {TestFixture}");
 
 			executionState  = ExecuteState.RunInstrumentation;
@@ -77,6 +83,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			executionState  = ExecuteState.PullFiles;
 			base.Execute ();
+
+			using (logcatWriter = File.Exists (LogcatFilename) ? File.AppendText (LogcatFilename) : File.CreateText (LogcatFilename)) {
+				executionState = ExecuteState.GetLogcat;
+				base.Execute ();
+			}
 
 			return !Log.HasLoggedErrors;
 		}
@@ -98,12 +109,19 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return $"{AdbTarget} {AdbOptions} shell am instrument {args.ToString ()} -w \"{Component}\"";
 			case ExecuteState.PullFiles:
 				return $"{AdbTarget} {AdbOptions} pull \"{targetTestResultsPath}\" \"{NUnit2TestResultsFile}\"";
+			case ExecuteState.GetLogcat:
+				return $"{AdbTarget} {AdbOptions} logcat -v threadtime -d";
 			}
 			throw new InvalidOperationException ($"Invalid state `{executionState}`!");
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
+			if (executionState == ExecuteState.GetLogcat) {
+				logcatWriter.WriteLine (singleLine);
+				return;
+			}
+
 			const string TestResultsPathResult  = "INSTRUMENTATION_RESULT: nunit2-results-path=";
 
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
