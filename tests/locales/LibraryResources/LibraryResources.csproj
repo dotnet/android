@@ -16,6 +16,9 @@
     <AssemblyName>LibraryResources</AssemblyName>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
