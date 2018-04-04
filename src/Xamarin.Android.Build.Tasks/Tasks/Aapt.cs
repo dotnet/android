@@ -11,6 +11,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
 
@@ -114,7 +115,7 @@ namespace Xamarin.Android.Tasks
 				File.GetLastWriteTime (AndroidComponentResgenFlagFile) > File.GetLastWriteTime (manifestFile);
 		}
 
-		bool RunAapt (string commandLine, IList<OutputLine> output)
+		bool RunAapt (string commandLine, BlockingCollection<OutputLine> output)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
@@ -128,19 +129,16 @@ namespace Xamarin.Android.Tasks
 				WindowStyle = ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
 			};
-			object lockObject = new object ();
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (sender, e) => {
 					if (e.Data != null)
-						lock (lockObject)
-							output.Add (new OutputLine (e.Data, stdError: false));
+						output.Add (new OutputLine (e.Data, stdError: false));
 					else
 						stdout_completed.Set ();
 				};
 				proc.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null)
-						lock (lockObject)
-							output.Add (new OutputLine (e.Data, stdError: true));
+						output.Add (new OutputLine (e.Data, stdError: true));
 					else
 						stderr_completed.Set ();
 				};
@@ -166,7 +164,7 @@ namespace Xamarin.Android.Tasks
 
 		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
 		{
-			var output = new List<OutputLine> ();
+			var output = new BlockingCollection<OutputLine> ();
 			var ret = RunAapt (cmd, output);
 			var success = !string.IsNullOrEmpty (currentResourceOutputFile)
 				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
