@@ -1107,9 +1107,21 @@ because xbuild doesn't support framework reference assemblies.
 		Overwrite="true"/>
 </Target>
 
+<PropertyGroup>
+	<_ManagedUpdateAndroidResgenInputs>
+		$(MSBuildAllProjects);
+		@(AndroidResource);
+		@(ReferencePath);
+		@(_LibraryResourceDirectoryStamps);
+		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
+		$(_AndroidBuildPropertiesCache);
+		$(ProjectAssetsFile);
+	</_ManagedUpdateAndroidResgenInputs>
+</PropertyGroup>
+
 <!-- Managed DesignTime Resource Generation -->
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
-		Inputs="@(AndroidResource);@(ReferencePath)"
+		Inputs="$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsCache);$(_AndroidLibraryProjectImportsCache);$(_AndroidLibraryImportsCache);"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
 		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_CreateAdditionalResourceCache">
 	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" />
@@ -1188,7 +1200,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ResolveLibraryProjectImports"
-		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
+		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidLibraryProjectImportsCache)">
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1393,7 +1405,11 @@ because xbuild doesn't support framework reference assemblies.
 		@(_AndroidResourceDest);
 		@(_LibraryResourceDirectoryStamps);
 		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
-		$(_AndroidBuildPropertiesCache)
+		$(_AndroidBuildPropertiesCache);
+		$(ProjectAssetsFile);
+		$(_AndroidResourcePathsCache);
+		$(_AndroidLibraryProjectImportsCache);
+		$(_AndroidLibraryImportsCache);
 	</_UpdateAndroidResgenInputs>
 </PropertyGroup>
 
@@ -1591,6 +1607,8 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
+		ProjectAssetFile="$(ProjectLockFile)"
+		TargetMoniker="$(NuGetTargetMoniker)"
 		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
       <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />
       <Output TaskParameter="ResolvedUserAssemblies" ItemName="ResolvedUserAssemblies" />

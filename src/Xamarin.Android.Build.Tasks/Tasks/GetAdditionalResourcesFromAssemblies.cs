@@ -370,6 +370,18 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
+			Yield ();
+			try {
+				DoExecute ();
+			} finally {
+				Reacquire ();
+			}
+
+			return !Log.HasLoggedErrors;
+		}
+
+		void DoExecute ()
+		{
 			LogDebugMessage ("GetAdditionalResourcesFromAssemblies Task");
 			LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
 			LogDebugMessage ("  AndroidNdkDirectory: {0}", AndroidNdkDirectory);
@@ -385,7 +397,7 @@ namespace Xamarin.Android.Tasks {
 			var assemblies         = new HashSet<string> ();
 
 			if (Assemblies == null)
-				return true;
+				return;
 
 			System.Threading.Tasks.Task.Run (() => {
 				// The cache location can be overriden by the (to be documented) XAMARIN_CACHEPATH
@@ -427,20 +439,14 @@ namespace Xamarin.Android.Tasks {
 						}
 					}
 				}
-			}, Token).ContinueWith ((t) => {
-				if (t.Exception != null) {
-					var ex = t.Exception.GetBaseException ();
-					LogError (ex.Message + Environment.NewLine + ex.StackTrace);
-				}
-				Complete ();
-			});
+			}, Token).ContinueWith (Complete);
 
 			var result = base.Execute ();
 
 			if (!result || Log.HasLoggedErrors) {
 				if (File.Exists (CacheFile))
 					File.Delete (CacheFile);
-				return false;
+				return;
 			}
 
 			var AdditionalAndroidResourcePaths = androidResources.ToArray ();
@@ -459,13 +465,11 @@ namespace Xamarin.Android.Tasks {
 					new XElement ("AdditionalNativeLibraryReferences", 
 							AdditionalNativeLibraryReferences.Select(e => new XElement ("AdditionalNativeLibraryReference", e)))
 					));
-			document.Save (CacheFile);
+			document.SaveIfChanged (CacheFile);
 
 			LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
 			LogDebugTaskItems ("  AdditionalJavaLibraryReferences: ", AdditionalJavaLibraryReferences);
 			LogDebugTaskItems ("  AdditionalNativeLibraryReferences: ", AdditionalNativeLibraryReferences);
-
-			return result && !Log.HasLoggedErrors;
 		}
 	}
 }

@@ -238,7 +238,7 @@ history.
 
 ## The long way
 The various Mono runtimes -- over *20* of them (!) -- all store object code
-within `build-tools/mono-runtimes/obj/$(Configuration)/TARGET`.
+within `src/mono-runtimes/obj/$(Configuration)/TARGET`.
 
 If you change sources within `external/mono`, a top-level `make`/`xbuild`
 invocation may not rebuild those mono native binaries. To explicitly rebuild
@@ -256,7 +256,7 @@ an "intermediate" commit in order to trigger a rebuild.)
 The `ForceBuild` target can be executed as:
 
 	# Build and install all runtimes
-	$ xbuild /t:ForceBuild build-tools/mono-runtimes/mono-runtimes.csproj
+	$ xbuild /t:ForceBuild src/mono-runtimes/mono-runtimes.csproj
 
 The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
@@ -269,17 +269,17 @@ specific ABI, and improving turnaround time is paramount.
 
 To build Mono for a specific target, run `make` from the relevant directory,
 where the "relevant directory" is the target of interest within
-`build-tools/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
+`src/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
 invoke the `_InstallRuntimes` target so that the updated native libraries
 are copied into `bin/$(Configuration)/lib`, which will allow subsequent
 top-level `make` and [`xabuild`](../tools/xabuild) invocations to use them.
 
 For example, to rebuild Mono for armeabi-v7a:
 
-	$ make -C build-tools/mono-runtimes/obj/Debug/armeabi-v7a
+	$ make -C src/mono-runtimes/obj/Debug/armeabi-v7a
 	
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ xbuild /t:_InstallRuntimes build-tools/mono-runtimes/mono-runtimes.csproj
+	$ xbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
 
 
 # How do I rebuild BCL assemblies?
@@ -294,11 +294,11 @@ Alternatively, if you want to rebuild *all* the assemblies, the "host"
 Mono needs to be rebuilt. Note that the name of the "host" directory
 varies based on the operating system you're building from:
 
-	$ make -C build-tools/mono-runtimes/obj/Debug/host-Darwin
+	$ make -C src/mono-runtimes/obj/Debug/host-Darwin
 
 Once the assemblies have been rebuilt, they can be copied into the appropriate
 Xamarin.Android SDK directory by using the `_InstallBcl` target:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
-	$ xbuild build-tools/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
+	$ xbuild src/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
 

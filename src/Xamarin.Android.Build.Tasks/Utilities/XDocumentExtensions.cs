@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
@@ -26,6 +27,17 @@ namespace Xamarin.Android.Tasks
 		public static string ToFullString (this XElement element)
 		{
 			return element.ToString (SaveOptions.DisableFormatting);
+		}
+
+		public static void SaveIfChanged (this XDocument document, string fileName)
+		{
+			var tempFile = System.IO.Path.GetTempFileName ();
+			try {
+				document.Save (tempFile);
+				MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
+			} finally {
+				File.Delete (tempFile);
+			}
 		}
 	}
 }
