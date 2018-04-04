@@ -12,83 +12,19 @@
         Properties="OutputPath=$(AndroidToolchainDirectory)\"
     />
   </Target>
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
-  <Target Name="_DetermineItems">
-    <CreateItem
-        Include="@(AndroidSdkItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-			<Output TaskParameter="Include" ItemName="_PlatformAndroidSdkItem"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(AndroidNdkItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-			<Output TaskParameter="Include" ItemName="_PlatformAndroidNdkItem"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(AntItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-      <Output TaskParameter="Include" ItemName="_PlatformAntItem"/>
-    </CreateItem>
+  <Target Name="_PrepareAndroidToolchainItems">
     <ItemGroup>
-        <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
-    </ItemGroup>
-    <ItemGroup>
-      <_SdkStampFiles Include="@(_PlatformAntItem->'$(AntDirectory)\.stamp-%(Identity)')" />
-    </ItemGroup>
-    <ItemGroup>
-      <_DownloadedItem Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
-      <_DownloadedItem Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
-      <_DownloadedItem Include="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
+      <_AndroidSdkStampFiles Include="@(AndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' " />
+      <_AndroidNdkStampFiles Include="@(AndroidNdkItem->'$(AndroidToolchainDirectory)\ndk\.stamp-%(Identity)')" Condition=" '%(AndroidNdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidNdkItem.HostOS)' == '' " />
+      <_AntStampFiles Include="@(AntItem->'$(AndroidToolchainDirectory)\ant\.stamp-%(Identity)')" Condition=" '%(AntItem.HostOS)' == '$(HostOS)' Or '%(AntItem.HostOS)' == '' " />
     </ItemGroup>
   </Target>
-  <Target Name="_DownloadItems"
-      DependsOnTargets="_DetermineItems"
-      Outputs="@(_DownloadedItem)">
-    <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
-    <DownloadUri
-        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)')"
-        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-    />
-    <DownloadUri
-        SourceUris="@(_PlatformAntItem->'$(AntUri)/%(RelUrl)%(Identity)')"
-        DestinationFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-    />
-  </Target>
-  <Target Name="_UnzipFiles"
-      DependsOnTargets="_DetermineItems"
-      Inputs="@(_DownloadedItem)"
-      Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
-    <CreateItem
-        Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
-      <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidNdkItem.Identity)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-      <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
-    </CreateItem>
-
-    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
-    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
-
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AndroidToolchainDirectory)\sdk"
-    />
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AndroidToolchainDirectory)\ndk"
-    />
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AntDirectory)"
-    />
-    <Touch
-        Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
-        AlwaysCreate="True"
+  <Target Name="_CreateAndroidToolchains"
+      DependsOnTargets="_PrepareAndroidToolchainItems"
+      Outputs="@(_AndroidSdkStampFiles);@(_AndroidNdkStampFiles);@(_AntStampFiles)">
+    <Exec
+        Command="make $(MakeConcurrency) provision-android ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot;"
+        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
   <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"

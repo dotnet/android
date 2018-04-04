@@ -15,15 +15,15 @@
     <ItemGroup>
       <_Package
           Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
-          Include="@(AndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity) sdk/%(DestDir)')"
+          Include="@(AndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip sdk/%(DestDir)')"
       />
       <_Package
           Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
-          Include="@(AndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity) ndk/%(DestDir)')"
+          Include="@(AndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip ndk/%(DestDir)')"
       />
       <_Package
           Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
-          Include="@(AntItem->'$(AntUri)/%(RelUrl)%(Identity) ant/%(DestDir)')"
+          Include="@(AntItem->'$(AntUri)/%(RelUrl)%(Identity).zip ant/%(DestDir)')"
       />
     </ItemGroup>
     <ItemGroup>
