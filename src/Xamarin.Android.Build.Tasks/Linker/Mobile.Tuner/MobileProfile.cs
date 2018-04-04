@@ -98,6 +98,7 @@ namespace Mobile.Tuner {
 			"System.Linq.Parallel",
 			"System.Linq.Queryable",
 			"System.Linq",
+			"System.Memory",
 			"System.Net.AuthenticationManager",
 			"System.Net.Cache",
 			"System.Net.HttpListener",
