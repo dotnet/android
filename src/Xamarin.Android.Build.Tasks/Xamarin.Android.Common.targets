@@ -1060,9 +1060,9 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
-	<_AndroidResourcePathsDesignTimeCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
-	<_AndroidLibraryImportsDesignTimeCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
-	<_AndroidLibraryProjectImportsDesignTimeCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
+	<_AndroidResourcePathsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
+	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
+	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
 	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
