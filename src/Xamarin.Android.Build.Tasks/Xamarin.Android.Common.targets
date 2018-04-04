@@ -406,9 +406,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'True' And '$(DesignTimeBuild)' == 'True' And '$(BuildingInsideVisualStudio)' == 'True' ">True</ManagedDesignTimeBuild>
 		<ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
-		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsCache>
-		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsCache>
-		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
+		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidResourcePathsCache)') ">$(_AndroidResourcePathsDesignTimeCache)</_AndroidResourcePathsCache>
+		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
+		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
 	</PropertyGroup>
 	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
@@ -1060,6 +1060,9 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
+	<_AndroidResourcePathsDesignTimeCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
+	<_AndroidLibraryImportsDesignTimeCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
+	<_AndroidLibraryProjectImportsDesignTimeCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
 	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
