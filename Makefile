@@ -78,9 +78,9 @@ linux-prepare::
 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
 	fi; \
 	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
-		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh; \
+		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh $(LINUX_DISTRO_RELEASE); \
 	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
-		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh; \
+		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh $(LINUX_DISTRO_RELEASE); \
 	fi
 
 # $(call GetPath,path)

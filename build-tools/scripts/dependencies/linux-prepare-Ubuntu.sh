@@ -10,4 +10,11 @@ DISTRO_DEPS="$DISTRO_DEPS
 	"
 fi
 
+MAJOR=$(echo $1 | cut -d '.' -f 1)
+MINOR=$(echo $1 | cut -d '.' -f 2)
+
+if [ $MAJOR -eq 17 -a $MINOR -eq 10 ] || [ $MAJOR -ge 18 ]; then
+	DISTRO_DEPS="$DISTRO_DEPS libtool-bin"
+fi
+
 debian_install
