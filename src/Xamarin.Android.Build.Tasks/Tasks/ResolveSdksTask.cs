@@ -435,11 +435,26 @@ namespace Xamarin.Android.Tasks
 					// overwrite using user version only if it is 
 					// above the maxStableApi and a valid apiLevel.
 					if (userSelected != null && userSelected > maxSupported && userSelected <= maxInstalled) {
+						AndroidApiLevel   = userSelected.ToString ();
 						SupportedApiLevel = userSelected.ToString ();
 					}
 				}
 				TargetFrameworkVersion  = GetTargetFrameworkVersionFromApiLevel ();
 				return TargetFrameworkVersion != null;
+			}
+
+			if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
+				TargetFrameworkVersion  = TargetFrameworkVersion.Trim ();
+				string id   = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
+				if (id == null) {
+					Log.LogCodedError ("XA0000",
+							"Could not determine API level for $(TargetFrameworkVersion) of '{0}'.",
+							TargetFrameworkVersion);
+					return false;
+				}
+				AndroidApiLevel     = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id).ToString ();
+				SupportedApiLevel   = AndroidApiLevel;
+				return true;
 			}
 
 			if (!string.IsNullOrWhiteSpace (AndroidApiLevel)) {
@@ -449,19 +464,6 @@ namespace Xamarin.Android.Tasks
 				return TargetFrameworkVersion != null;
 			}
 
-			if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
-				TargetFrameworkVersion  = TargetFrameworkVersion.Trim ();
-				string apiLevel = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
-				if (apiLevel == null) {
-					Log.LogCodedError ("XA0000",
-							"Could not determine API level for $(TargetFrameworkVersion) of '{0}'.",
-							TargetFrameworkVersion);
-					return false;
-				}
-				AndroidApiLevel = apiLevel;
-				SupportedApiLevel = apiLevel;
-				return true;
-			}
 			Log.LogCodedError ("XA0000", "Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); SHOULD NOT BE REACHED.");
 			return false;
 		}
