@@ -209,7 +209,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 
 			var dstAssembly = resolver.GetAssembly (destPath);
-			var mover = new TypeMover (dstAssembly, ad, definedTypes);
+			var mover = new TypeMover (dstAssembly, ad, definedTypes, resolver);
 			mover.Move ();
 		}
 

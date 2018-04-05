@@ -15,11 +15,27 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		AssemblyDefinition Destination { get; }
 		Dictionary<string, System.Reflection.Emit.TypeBuilder> Types { get; }
 
-		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, Dictionary<string, System.Reflection.Emit.TypeBuilder> types)
+		MethodReference typeGetTypeFromHandle;
+
+		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver)
 		{
 			Source = source;
 			Destination = destination;
 			Types = types;
+
+			var assembly = resolver.Resolve ("mscorlib");
+			var typeTD = assembly.MainModule.GetType ("System.Type");
+			foreach (var md in typeTD.Methods) {
+				if (md.Name == "GetTypeFromHandle" && md.HasParameters && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == "System.RuntimeTypeHandle") {
+					typeGetTypeFromHandle = md;
+					break;
+				}
+			}
+
+			if (typeGetTypeFromHandle == null) {
+				App.Error ("Unable to find System.Type::GetTypeFromHandle method");
+				Environment.Exit (2);
+			}
 		}
 
 		public void Move ()
@@ -56,7 +72,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 					Console.Write ("Moving method ");
 					App.ColorWriteLine ($"{m}", ConsoleColor.Green);
 				}
-				jniType.Methods.Add (Duplicate (m, Destination.MainModule, typeDst));
+				jniType.Methods.Add (Duplicate (m, Destination.MainModule, typeDst, jniType));
 			}
 		}
 
@@ -177,14 +193,18 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return newField;
 		}
 
-		static Instruction GetUpdatedInstruction (Instruction il, TypeDefinition type, MethodDefinition method, ModuleDefinition module)
+		Instruction GetUpdatedInstruction (Instruction il, string typeName, TypeDefinition jniType, ModuleDefinition module, bool registerMethodImprovements)
 		{
 			if (il.Operand == null)
 				return Instruction.Create (il.OpCode);
 
-			var typeName = type.FullName.Replace ('/', '+');
-			if (method.Name == "__RegisterNativeMembers" && il.OpCode == OpCodes.Ldstr && il.Operand is string opStr && opStr != null && opStr == typeName)
-				il.Operand = $"{typeName}+{nestedName}";
+			if (registerMethodImprovements) {
+				if (il.OpCode == OpCodes.Ldstr && il.Operand is string opStr && opStr != null && opStr == typeName)
+					return Instruction.Create (OpCodes.Ldtoken, jniType);
+
+				if (il.OpCode == OpCodes.Call && il.Operand is MethodReference opMR && opMR.Name == "GetType" && opMR.DeclaringType.FullName == "System.Type")
+					return Instruction.Create (OpCodes.Call, GetUpdatedMethod (typeGetTypeFromHandle, module));
+			}
 
 			if (il.Operand is MethodReference mr)
 				return Instruction.Create (il.OpCode, GetUpdatedMethod (mr, module));
@@ -226,7 +246,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return handler;
 		}
 
-		static MethodDefinition Duplicate (MethodDefinition src, ModuleDefinition module, TypeDefinition type)
+		MethodDefinition Duplicate (MethodDefinition src, ModuleDefinition module, TypeDefinition type, TypeDefinition jniType)
 		{
 			var md = new MethodDefinition (src.Name, src.Attributes, GetUpdatedType (src.ReturnType, module));
 
@@ -247,9 +267,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			var instructions = src.Body.Instructions;
 			var newInstructions = md.Body.Instructions;
 			var count = instructions.Count;
+			var typeName = type.FullName.Replace ('/', '+');
+			var isRegisterMethod = src.Name == "__RegisterNativeMembers";
+
 			for (int i = 0; i < count; i++) {
 				var il = instructions [i];
-				Instruction newInstruction = GetUpdatedInstruction (il, type, src, module);
+				Instruction newInstruction = GetUpdatedInstruction (il, typeName, jniType, module, isRegisterMethod);
 				newInstructions.Add (newInstruction);
 				instructionMap [il] = newInstruction;
 			}
