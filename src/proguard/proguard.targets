@@ -2,7 +2,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll"  TaskName="Xamarin.Android.Tools.BootstrapTasks.Ant" />
   <Target Name="_BuildProGuard">
     <Ant
-        Arguments="-verbose -f buildscripts\build.xml proguard"
+        Arguments="$(AntProguardBuildAdditionalArguments) -f buildscripts\build.xml proguard"
         ToolPath="$(AntToolPath)"
         JavaSdkDirectory="$(JavaSdkDirectory)"
         WorkingDirectory="$(ProGuardSourceFullPath)"
