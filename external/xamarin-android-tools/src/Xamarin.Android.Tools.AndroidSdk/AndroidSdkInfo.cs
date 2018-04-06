@@ -122,6 +122,12 @@ namespace Xamarin.Android.Tools
 			get { return sdk.AndroidSdkPath; }
 		}
 
+		public string [] AllAndroidSdkPaths {
+			get {
+				return sdk.AllAndroidSdks ?? new string [0];
+			}
+		}
+
 		public string JavaSdkPath {
 			get { return sdk.JavaSdkPath; }
 		}
