@@ -80,6 +80,11 @@ namespace Xamarin.Android.Tools
 				if (ValidateAndroidSdkLocation (dir))
 					yield return dir;
 			}
+
+			// Check some hardcoded paths for good measure
+			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), "Library", "Android", "sdk");
+			if (ValidateAndroidSdkLocation (macSdkPath))
+				yield return macSdkPath;
 		}
 
 		protected override string GetJavaSdkPath ()
