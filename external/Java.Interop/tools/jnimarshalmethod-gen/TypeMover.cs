@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		AssemblyDefinition Destination { get; }
 		Dictionary<string, System.Reflection.Emit.TypeBuilder> Types { get; }
 
-		MethodReference typeGetTypeFromHandle;
+		MethodReference consoleWriteLine;
 
 		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver)
 		{
@@ -23,18 +23,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			Destination = destination;
 			Types = types;
 
-			var assembly = resolver.Resolve ("mscorlib");
-			var typeTD = assembly.MainModule.GetType ("System.Type");
-			foreach (var md in typeTD.Methods) {
-				if (md.Name == "GetTypeFromHandle" && md.HasParameters && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == "System.RuntimeTypeHandle") {
-					typeGetTypeFromHandle = md;
-					break;
+			if (App.Debug) {
+				consoleWriteLine = GetSingleParameterMethod (resolver, Destination.MainModule, "mscorlib", "System.Console", "WriteLine", "System.String");
+				if (consoleWriteLine == null) {
+					App.Warning ("Unable to find System.Console::WriteLine method. Disabling debug injection");
+					App.Debug = false;
 				}
-			}
-
-			if (typeGetTypeFromHandle == null) {
-				App.Error ("Unable to find System.Type::GetTypeFromHandle method");
-				Environment.Exit (2);
 			}
 		}
 
@@ -46,10 +40,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			var newName = $"{Path.Combine (Path.GetDirectoryName (Destination.MainModule.FileName), Path.GetFileNameWithoutExtension (Destination.MainModule.FileName))}-new{Path.GetExtension (Destination.MainModule.FileName)}";
 			Destination.Write (newName, new WriterParameters () { WriteSymbols = true });
 
-			App.ColorWriteLine ($"Wrote {newName} assembly", ConsoleColor.Cyan);
+			if (App.Verbose)
+				App.ColorWriteLine ($"Wrote {newName} assembly", ConsoleColor.Cyan);
 		}
 
 		static readonly string nestedName = "__<$>_jni_marshal_methods";
+
+		Dictionary<string, MethodReference> newHelperMethods;
 
 		void Move (Type type)
 		{
@@ -67,12 +64,33 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			jniType.BaseType = GetUpdatedType (typeSrc.BaseType, Destination.MainModule);
 			typeDst.NestedTypes.Add (jniType);
 
+
+			newHelperMethods = new Dictionary<string, MethodReference> ();
+
 			foreach (var m in typeSrc.Methods) {
-				if (App.Verbose) {
-					Console.Write ("Moving method ");
-					App.ColorWriteLine ($"{m}", ConsoleColor.Green);
-				}
-				jniType.Methods.Add (Duplicate (m, Destination.MainModule, typeDst, jniType));
+				if (m.Name == "__RegisterNativeMembers")
+					continue;
+				var newMethod = Duplicate (m, Destination.MainModule, typeDst);
+				AddMethod (jniType, newMethod);
+
+				newHelperMethods [newMethod.Name] = newMethod;
+			}
+
+			foreach (var m in typeSrc.Methods) {
+				if (m.Name != "__RegisterNativeMembers")
+					continue;
+
+				AddMethod (jniType, Duplicate (m, Destination.MainModule, typeDst));
+			}
+		}
+
+		void AddMethod (TypeDefinition type, MethodDefinition method)
+		{
+			type.Methods.Add (method);
+
+			if (App.Verbose) {
+				Console.Write ("Moved method ");
+				App.ColorWriteLine ($"{method}", ConsoleColor.Green);
 			}
 		}
 
@@ -193,18 +211,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return newField;
 		}
 
-		Instruction GetUpdatedInstruction (Instruction il, string typeName, TypeDefinition jniType, ModuleDefinition module, bool registerMethodImprovements)
+		Instruction GetUpdatedInstruction (Instruction il, ModuleDefinition module)
 		{
 			if (il.Operand == null)
 				return Instruction.Create (il.OpCode);
-
-			if (registerMethodImprovements) {
-				if (il.OpCode == OpCodes.Ldstr && il.Operand is string opStr && opStr != null && opStr == typeName)
-					return Instruction.Create (OpCodes.Ldtoken, jniType);
-
-				if (il.OpCode == OpCodes.Call && il.Operand is MethodReference opMR && opMR.Name == "GetType" && opMR.DeclaringType.FullName == "System.Type")
-					return Instruction.Create (OpCodes.Call, GetUpdatedMethod (typeGetTypeFromHandle, module));
-			}
 
 			if (il.Operand is MethodReference mr)
 				return Instruction.Create (il.OpCode, GetUpdatedMethod (mr, module));
@@ -246,7 +256,119 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return handler;
 		}
 
-		MethodDefinition Duplicate (MethodDefinition src, ModuleDefinition module, TypeDefinition type, TypeDefinition jniType)
+		MethodReference GetActionConstructor (TypeReference type, ModuleDefinition module)
+		{
+			var td = Resolve (type);
+			if (!td.HasMethods)
+				return null;
+
+			foreach (var m in td.Methods) {
+				if (m.IsConstructor && m.HasParameters && m.Parameters.Count == 2 && m.Parameters [0].ParameterType.FullName == "System.Object" && m.Parameters [1].ParameterType.FullName == "System.IntPtr") {
+					var mr = GetUpdatedMethod (m, module);
+					if (type is GenericInstanceType)
+						mr.DeclaringType = type;
+					return mr;
+				}
+			}
+			return null;
+		}
+
+		bool AnalyzeAndImprove (Mono.Collections.Generic.Collection<Instruction> instructions, Mono.Collections.Generic.Collection<Instruction> newInstructions, int idx, string typeName, out int skipCount, ModuleDefinition module)
+		{
+			var idxStart = idx;
+			var il = instructions [idx++];
+
+			skipCount = 0;
+
+			if (il.OpCode == OpCodes.Ldstr && il.Operand is string opStr && opStr != null && opStr == typeName) {
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR) || opMR.Name != "GetType" || opMR.DeclaringType.FullName != "System.Type")
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Stloc_0)
+					return false;
+
+				skipCount = 2;
+
+				if (App.Debug) {
+					newInstructions.Add (Instruction.Create (OpCodes.Ldstr, $"Registering JNI marshal methods in {opStr}"));
+					newInstructions.Add (Instruction.Create (OpCodes.Call, consoleWriteLine));
+				}
+
+				return true;
+			}
+
+			if (il.OpCode == OpCodes.Dup && instructions.Count > idxStart + 10) {
+				il = instructions [idx++];
+				if (!il.OpCode.ToString ().StartsWith ("ldc.i4.", StringComparison.InvariantCulture))
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Ldstr)
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Ldstr)
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Ldtoken || !(il.Operand is TypeReference))
+					return false;
+
+				var delegateType = GetUpdatedType (il.Operand as TypeReference, module);
+				var constructor = GetActionConstructor (delegateType, module);
+				if (constructor == null)
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR2) || opMR2.Name != "GetTypeFromHandle")
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Ldloc_0)
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Ldstr)
+					return false;
+
+				var methodName = il.Operand as string;
+				if (string.IsNullOrEmpty (methodName))
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR3) || opMR3.Name != "CreateDelegate")
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Newobj)
+					return false;
+
+				il = instructions [idx++];
+				if (il.OpCode != OpCodes.Stelem_Any)
+					return false;
+
+				idx = idxStart;
+				for (int i = 0; i < 4; i++)
+					newInstructions.Add (GetUpdatedInstruction (instructions [idx++], module));
+
+				newInstructions.Add (Instruction.Create (OpCodes.Ldnull));
+				newInstructions.Add (Instruction.Create (OpCodes.Ldftn, newHelperMethods?[methodName]));
+				newInstructions.Add (Instruction.Create (OpCodes.Newobj, constructor));
+
+				idx += 5;
+				for (int i = 0; i < 2; i++)
+					newInstructions.Add (GetUpdatedInstruction (instructions [idx++], module));
+
+				skipCount = 10;
+				return true;
+			}
+
+			return false;
+		}
+
+		MethodDefinition Duplicate (MethodDefinition src, ModuleDefinition module, TypeDefinition type)
 		{
 			var md = new MethodDefinition (src.Name, src.Attributes, GetUpdatedType (src.ReturnType, module));
 
@@ -259,23 +381,35 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 			md.Body.InitLocals = src.Body.InitLocals;
 
-			if (src.Body.HasVariables)
-				foreach (var v in src.Body.Variables)
-					md.Body.Variables.Add (new VariableDefinition (GetUpdatedType (v.VariableType, module)));
-
 			var instructionMap = new Dictionary<Instruction, Instruction> ();
 			var instructions = src.Body.Instructions;
 			var newInstructions = md.Body.Instructions;
 			var count = instructions.Count;
 			var typeName = type.FullName.Replace ('/', '+');
 			var isRegisterMethod = src.Name == "__RegisterNativeMembers";
+			int skipCount;
+			int improvements = 0;
+
+			if (src.Body.HasVariables)
+				foreach (var v in src.Body.Variables)
+					if (!isRegisterMethod || v.VariableType.FullName != "System.Type")
+						md.Body.Variables.Add (new VariableDefinition (GetUpdatedType (v.VariableType, module)));
 
 			for (int i = 0; i < count; i++) {
 				var il = instructions [i];
-				Instruction newInstruction = GetUpdatedInstruction (il, typeName, jniType, module, isRegisterMethod);
-				newInstructions.Add (newInstruction);
-				instructionMap [il] = newInstruction;
+
+				if (isRegisterMethod && AnalyzeAndImprove (instructions, newInstructions, i, typeName, out skipCount, module)) {
+					i += skipCount;
+					improvements++;
+				} else {
+					Instruction newInstruction = GetUpdatedInstruction (il, module);
+					newInstructions.Add (newInstruction);
+					instructionMap [il] = newInstruction;
+				}
 			}
+
+			if (isRegisterMethod && improvements < 2)
+				App.Warning ($"Method {md} was not improved. There should have been at least 2 improvements in this registration method.");
 
 			if (src.Body.HasExceptionHandlers)
 				foreach (var eh in src.Body.ExceptionHandlers)
@@ -284,6 +418,23 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			md.Body.MaxStackSize = src.Body.MaxStackSize;
 
 			return md;
+		}
+
+		MethodReference GetSingleParameterMethod (DirectoryAssemblyResolver resolver, ModuleDefinition module, string assemblyName, string typeName, string methodName, string parameterTypeName)
+		{
+			var assembly = resolver.Resolve (assemblyName);
+			if (assembly == null)
+				return null;
+
+			var typeTD = assembly.MainModule.GetType (typeName);
+			if (typeTD == null)
+				return null;
+
+			foreach (var md in typeTD.Methods)
+				if (md.Name == methodName && md.HasParameters && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == parameterTypeName)
+					return GetUpdatedMethod (md, module);
+
+			return null;
 		}
 	}
 }

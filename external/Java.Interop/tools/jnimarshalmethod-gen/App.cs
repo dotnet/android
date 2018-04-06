@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		internal const string Name = "jnimarshalmethod-gen";
 		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true });
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
+		static public bool Debug;
 		static public bool Verbose;
 
 		public static int Main (string [] args)
@@ -33,6 +34,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				"Copyright 2018 Microsoft Corporation",
 				"",
 				"Options:",
+				{ "d",
+				  "Inject debug messages",
+				  v => Debug = true },
 				{ "L=",
 				  "{DIRECTORY} to resolve assemblies from.",
 				  v => resolver.SearchDirectories.Add (v) },
