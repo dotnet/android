@@ -1,4 +1,5 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.GetMappedFilesThatExist"  AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" />
 
   <Import Project="..\..\src\Mono.Android\Mono.Android.projitems" />
 
@@ -9,14 +10,25 @@
 
   <Target Name="_DefineApiFiles">
     <CreateItem Include="@(AndroidApiInfo)"
+		Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt')"
         AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt;ClassParseXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.in">
       <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
     </CreateItem>
-    <ItemGroup>
-      <_ApiParameterDescription Include="%(ApiFileDefinition.ParameterDescription)" />
-      <_ApiClassParseXml        Include="%(ApiFileDefinition.ClassParseXml)" />
-      <_ApiAdjustedXml          Include="%(ApiFileDefinition.ApiAdjustedXml)" />
-    </ItemGroup>
+    <GetMappedFilesThatExist 
+		ResultingFiles="%(ApiFileDefinition.ParameterDescription)"
+		CheckedFiles="%(ApiFileDefinition.ParameterDescription)">
+      <Output TaskParameter="FilesThatExist" ItemName="_ApiParameterDescription" />
+    </GetMappedFilesThatExist>
+    <GetMappedFilesThatExist 
+		ResultingFiles="%(ApiFileDefinition.ClassParseXml)"
+		CheckedFiles="%(ApiFileDefinition.ParameterDescription)">
+      <Output TaskParameter="FilesThatExist" ItemName="_ApiClassParseXml" />
+    </GetMappedFilesThatExist>
+    <GetMappedFilesThatExist 
+		ResultingFiles="%(ApiFileDefinition.ApiAdjustedXml)"
+		CheckedFiles="%(ApiFileDefinition.ParameterDescription)">
+      <Output TaskParameter="FilesThatExist" ItemName="_ApiAdjustedXml" />
+    </GetMappedFilesThatExist>
   </Target>
 
   <Target Name="_ClassParse"
@@ -24,6 +36,7 @@
       DependsOnTargets="_DefineApiFiles"
       Inputs="@(_ApiParameterDescription)"
       Outputs="@(_ApiClassParseXml)">
+    
     <PropertyGroup>
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
