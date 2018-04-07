@@ -13,10 +13,11 @@ namespace Java.InteropTests
 
 		static JreRuntimeOptions CreateBuilder (string[] jars)
 		{
+			var dir = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location);
 			var builder = new JreRuntimeOptions ();
 			if (jars != null) {
 				foreach (var jar in jars)
-					builder.ClassPath.Add (jar);
+					builder.ClassPath.Add (Path.Combine (dir, jar));
 			}
 			builder.AddOption ("-Xcheck:jni");
 			builder.TypeManager                 = new JreTypeManager ();

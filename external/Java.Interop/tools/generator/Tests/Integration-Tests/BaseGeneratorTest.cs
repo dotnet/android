@@ -41,7 +41,7 @@ namespace generatortests
 			}
 			bool    hasErrors;
 			string  compilerOutput;
-			BuiltAssembly = Compiler.Compile (Options, "Mono.Android", AdditionalSourceDirectories,
+			BuiltAssembly = Compiler.Compile (Options, FullPath ("Mono.Android.dll"), AdditionalSourceDirectories,
 				out hasErrors, out compilerOutput, AllowWarnings);
 			Assert.AreEqual (false, hasErrors, compilerOutput);
 			Assert.IsNotNull (BuiltAssembly);
@@ -49,6 +49,11 @@ namespace generatortests
 
 		protected void CompareOutputs (string sourceDir, string destinationDir)
 		{
+			if (!Path.IsPathRooted (sourceDir))
+				sourceDir = FullPath (sourceDir);
+			if (!Path.IsPathRooted (destinationDir))
+				destinationDir = FullPath (destinationDir);
+
 			var files = Directory.GetFiles (sourceDir);
 			foreach (var file in files) {
 				var extension   = Path.GetExtension (file);
@@ -72,6 +77,8 @@ namespace generatortests
 
 		protected void Cleanup (string path)
 		{
+			if (!Path.IsPathRooted (path))
+				path = FullPath (path);
 			if (Directory.Exists (path))
 				Directory.Delete (path, true);
 		}
@@ -117,16 +124,23 @@ namespace generatortests
 			Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths);
 		}
 
+		protected string FullPath (string path)
+		{
+			var dir = Path.GetDirectoryName (GetType ().Assembly.Location);
+			return Path.Combine (dir, path.Replace ('/', Path.DirectorySeparatorChar));
+		}
+
 		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null)
 		{
 			Cleanup (outputPath);
 
 			Options.CodeGenerationTarget                        = target;
-			Options.ApiDescriptionFile                          = apiDescriptionFile;
-			Options.ManagedCallableWrapperSourceOutputDirectory = outputPath;
+			Options.ApiDescriptionFile                          = FullPath (apiDescriptionFile);
+			Options.ManagedCallableWrapperSourceOutputDirectory = FullPath (outputPath);
 
-			if (additionalSupportPaths != null)
-				AdditionalSourceDirectories.AddRange (additionalSupportPaths);
+			if (additionalSupportPaths != null) {
+				AdditionalSourceDirectories.AddRange (additionalSupportPaths.Select (p => FullPath (p)));
+			}
 
 			Execute ();
 

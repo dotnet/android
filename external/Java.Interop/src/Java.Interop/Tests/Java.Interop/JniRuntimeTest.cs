@@ -35,10 +35,10 @@ namespace Java.InteropTests
 		}
 #endif  // !__ANDROID__
 
-		[Test, ExpectedException (typeof (ArgumentNullException))]
+		[Test]
 		public void CreateJavaVMWithNullBuilder ()
 		{
-			new JavaVMWithNullBuilder ();
+			Assert.Throws<ArgumentNullException> (() => new JavaVMWithNullBuilder ());
 		}
 
 		class JavaVMWithNullBuilder : JniRuntime {

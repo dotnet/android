@@ -17,8 +17,8 @@ XA_CONFIGURATION  = XAIntegrationDebug
 GENDARME_URL = https://github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
 
 PACKAGES = \
-	packages/NUnit.2.6.3/NUnit.2.6.3.nupkg \
-	packages/NUnit.Runners.2.6.3/NUnit.Runners.2.6.3.nupkg
+	packages/NUnit.3.7.1/NUnit.3.7.1.nupkg \
+	packages/NUnit.Console.3.7.0/NUnit.Console.3.7.0.nupkg
 
 DEPENDENCIES = \
 	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
@@ -42,7 +42,7 @@ PTESTS = \
 ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
 
-NUNIT_CONSOLE = packages/NUnit.Runners.2.6.3/tools/nunit-console.exe
+NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 
 BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
 

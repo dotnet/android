@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using NUnit.Framework;
 
 namespace generatortests
@@ -10,9 +11,10 @@ namespace generatortests
 		public void FixedUp_OK ()
 		{
 			Cleanup ("out/EnumerationFixup");
-			Options.ApiDescriptionFile = "expected/EnumerationFixup/EnumerationFixup.xml";
-			Options.EnumFieldsMapFile = "expected/EnumerationFixup/EnumerationFixupMap.xml";
-			Options.EnumOutputDirectory = Options.ManagedCallableWrapperSourceOutputDirectory = "out/EnumerationFixup";
+			Options.ApiDescriptionFile = FullPath ("expected/EnumerationFixup/EnumerationFixup.xml");
+			Options.EnumFieldsMapFile = FullPath ("expected/EnumerationFixup/EnumerationFixupMap.xml");
+			Options.EnumOutputDirectory = Options.ManagedCallableWrapperSourceOutputDirectory = FullPath ("out/EnumerationFixup");
+			Options.EnumMetadataOutputFile = Path.Combine (Options.EnumOutputDirectory, "enummetadata");
 			Execute ();
 			Options.EnumFieldsMapFile = "";
 			Options.EnumOutputDirectory = "";

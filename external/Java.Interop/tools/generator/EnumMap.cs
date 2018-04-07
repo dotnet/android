@@ -36,6 +36,7 @@ namespace MonoDroid.Generation
 				: ParseXmlMethodMappings (methodMap, version);
 
 			// Create output metadata file
+			Directory.CreateDirectory (output_dir);
 			using (StreamWriter sw = new StreamWriter (output_metadata, false)) {
 				sw.WriteLine ("<metadata>");
 				WriteEnumerationRegistrations (sw, enums);

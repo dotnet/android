@@ -82,7 +82,8 @@ namespace Xamarin.Android.ToolsTests
 
 		static void Save (byte [] data, string path)
 		{
-			using (var o = File.OpenWrite (path)) {
+			var dir = Path.GetDirectoryName (typeof (TypeNameMapGeneratorTests).Assembly.Location);
+			using (var o = File.OpenWrite (Path.Combine (dir, path))) {
 				o.Write (data, 0, data.Length);
 			}
 		}

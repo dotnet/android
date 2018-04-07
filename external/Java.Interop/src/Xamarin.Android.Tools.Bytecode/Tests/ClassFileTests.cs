@@ -10,10 +10,10 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 	[TestFixture]
 	public class ClassFileTests {
 
-		[Test, ExpectedException (typeof (ArgumentNullException))]
+		[Test]
 		public void Constructor_Exceptions ()
 		{
-			new ClassFile (null);
+			Assert.Throws<ArgumentNullException> (() => new ClassFile (null));
 		}
 	}
 }

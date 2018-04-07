@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 using Java.Interop;
 
@@ -201,7 +200,8 @@ namespace Java.InteropTests
 			Console.WriteLine (expression.ToCSharpCode ());
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly(
 				new AssemblyName("dyn"), // call it whatever you want
-				System.Reflection.Emit.AssemblyBuilderAccess.Save);
+				System.Reflection.Emit.AssemblyBuilderAccess.Save,
+				Path.GetDirectoryName (typeof (MarshalMemberBuilderTest).Assembly.Location));
 
 			var _name = "dyn-" + memberName + ".dll";
 			var dm = da.DefineDynamicModule("dyn_mod", _name);

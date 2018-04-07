@@ -81,7 +81,8 @@ public class Name
 				ApplicationJavaClass        = applicationJavaClass,
 			};
 			var o   = new StringWriter ();
-			g.Generate ("__o");
+			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
+			g.Generate (Path.Combine (dir, "__o"));
 			g.Generate (o);
 			return o.ToString ();
 		}
