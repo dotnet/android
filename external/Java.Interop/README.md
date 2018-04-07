@@ -210,3 +210,30 @@ I halted the above loop after reaching 25686556 instances.
 I'm not sure when the JDK would stop handing out references, but it's probably
 bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
 
+### Building on Windows
+
+Building Java.Interop on Windows requires .NET and the `msbuild` command
+be available within the Command-Line environment.
+(The **Developer Command Prompt** that Visual Studio installs is sufficient.)
+
+MSBuild version 15 or later is required.
+
+ 1. Install the [build requirements](#build-requirements).
+
+ 2. Clone the java.interop repo:
+
+        git clone https://github.com/xamarin/java.interop.git
+
+ 3. Navigate to the `java.interop` directory
+
+ 4. Prepare the project:
+
+        msbuild Java.Interop.sln /t:Prepare
+
+    This will ensure that the build dependencies are installed, perform
+    `git submodule update`, download NuGet dependencies, and other
+    "preparatory" and pre-build tasks that need to be performed.
+
+ 5. Build the project (or open and build with an IDE):
+
+        msbuild Java.Interop.sln

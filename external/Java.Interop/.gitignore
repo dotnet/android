@@ -8,6 +8,7 @@ TestResult-*.xml
 xa-gendarme.html
 packages
 .vs/
+.nuget/
 *.userprefs
 *.user
 Resource.designer.cs

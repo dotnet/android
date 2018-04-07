@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Prepare" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
+    <_NuGetUri>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</_NuGetUri>
+    <_NuGetPath>$(_TopDir)\.nuget</_NuGetPath>
+    <_NuGet>$(_NuGetPath)\NuGet.exe</_NuGet>
+  </PropertyGroup>
+  <Import Project="$(_TopDir)\Configuration.props" />
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.JdkInfo" />
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.DownloadUri" />
+  <Target Name="Prepare">
+    <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\src\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj" />
+    <MakeDir Directories="$(_NuGetPath)" />
+    <DownloadUri
+        SourceUris="$(_NuGetUri)"
+        DestinationFiles="$(_NuGet)"
+    />
+    <Exec Command="$(_NuGet) restore Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
+    <JdkInfo Output="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
+      <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
+    </JdkInfo>
+  </Target>
+</Project>
