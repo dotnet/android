@@ -2008,13 +2008,6 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="TemporaryDirectory" PropertyName="AaptTemporaryDirectory" />
   </CreateTemporaryDirectory>
 
-	<!-- Change cases so we support mixed case resource names -->
-		<!--
-	<ConvertResourcesCases
-		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
-		AcwMapFile="$(_AcwMapFile)" />
-		-->
   <GetExtraPackages
   	IntermediateOutputPath="$(IntermediateOutputPath)"
   	LibraryProjectImportsDirectoryName="$(_LibraryProjectImportsDirectoryName)">
