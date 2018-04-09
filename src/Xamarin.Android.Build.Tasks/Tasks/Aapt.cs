@@ -439,7 +439,7 @@ namespace Xamarin.Android.Tasks
 				// Try to map back to the original resource file, so when the user
 				// double clicks the error, it won't take them to the obj/Debug copy
 				if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-					file = file.Substring (resourceDirectory.Length);
+					file = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
 					file = resource_name_case_map.ContainsKey (file) ? resource_name_case_map [file] : file;
 					file = Path.Combine ("Resources", file);
 				}
