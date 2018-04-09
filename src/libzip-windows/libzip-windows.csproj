@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -26,7 +26,7 @@
   <Import Project="libzip-windows.targets" />
   <Import Project="..\libzip\libzip.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.csproj" Condition=" '$(HostOS)' != 'Windows' ">
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj" Condition=" '$(HostOS)' != 'Windows' ">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
       <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
