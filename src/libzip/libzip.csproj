@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -25,7 +25,7 @@
   <Import Project="libzip.projitems" />
   <Import Project="libzip.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
+    <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
       <Name>xa-prep-tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
