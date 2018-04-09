@@ -5,7 +5,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools"
 EndProject
 Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "android-toolchain", "build-tools\android-toolchain\android-toolchain.csproj", "{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
 EndProject
 Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "mono-runtimes", "src\mono-runtimes\mono-runtimes.csproj", "{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}"
 EndProject
