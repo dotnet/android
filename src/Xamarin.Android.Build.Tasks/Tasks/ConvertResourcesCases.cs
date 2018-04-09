@@ -82,7 +82,6 @@ namespace Xamarin.Android.Tasks
 
 					if (MonoAndroidHelper.CopyIfChanged (tmpdest, file)) {
 						MonoAndroidHelper.SetWriteable (file);
-						//MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, srcmodifiedDate, Log);
 					}
 				} finally {
 					File.Delete (tmpdest);

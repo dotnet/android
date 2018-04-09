@@ -1951,7 +1951,6 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateJavaStubs>
   <ConvertResourcesCases 
 	ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-	AndroidConversionFlagFile="$(_AcwMapFile)"
 	AcwMapFile="$(_AcwMapFile)" />
 </Target>
 
