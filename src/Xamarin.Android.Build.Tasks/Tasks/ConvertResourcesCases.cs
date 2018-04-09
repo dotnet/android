@@ -18,14 +18,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AcwMapFile { get; set; }
 
-		public string AndroidResgenFlagFile { get; set; }
+		public string AndroidConversionFlagFile { get; set; }
 
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("ConvertResourcesCases Task");
 			Log.LogDebugMessage ("  ResourceDirectories: {0}", ResourceDirectories);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-			Log.LogDebugMessage ("  AndroidResgenFlagFile: {0}", AndroidResgenFlagFile);
+			Log.LogDebugMessage ("  AndroidConversionFlagFile: {0}", AndroidConversionFlagFile);
 
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
 
@@ -54,8 +54,8 @@ namespace Xamarin.Android.Tasks
 					.Concat (Directory.EnumerateFiles (dir, "*.axml")));
 
 			var lastUpdate = DateTime.MinValue;
-			if (!string.IsNullOrEmpty (AndroidResgenFlagFile) && File.Exists (AndroidResgenFlagFile)) {
-				lastUpdate = File.GetLastWriteTimeUtc (AndroidResgenFlagFile);
+			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
+				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
 			Log.LogDebugMessage ("  AndroidResgenFlagFile modified: {0}", lastUpdate);
 			// Fix up each file

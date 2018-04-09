@@ -1436,7 +1436,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ConvertResourcesCases
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
-		AndroidResgenFlagFile="$(_AndroidResgenFlagFile)"
+		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
 	/>
 
 	<GetExtraPackages
@@ -1951,7 +1951,7 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateJavaStubs>
   <ConvertResourcesCases 
 	ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-	AndroidResgenFlagFile="$(_AndroidResgenFlagFile)"
+	AndroidConversionFlagFile="$(_AcwMapFile)"
 	AcwMapFile="$(_AcwMapFile)" />
 </Target>
 
@@ -2010,11 +2010,12 @@ because xbuild doesn't support framework reference assemblies.
   </CreateTemporaryDirectory>
 
 	<!-- Change cases so we support mixed case resource names -->
+		<!--
 	<ConvertResourcesCases
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-		AndroidResgenFlagFile="$(_AndroidResgenFlagFile)"
+		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
 		AcwMapFile="$(_AcwMapFile)" />
-
+		-->
   <GetExtraPackages
   	IntermediateOutputPath="$(IntermediateOutputPath)"
   	LibraryProjectImportsDirectoryName="$(_LibraryProjectImportsDirectoryName)">
