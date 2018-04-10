@@ -38,7 +38,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <_LibZipTargetMakefile Include="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile" />
+    <_LibZipTargetMakefile Include="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)\Makefile')" />
   </ItemGroup>
   <Target Name="_Make"
       Condition=" '@(_LibZipTarget)' != '' "
