@@ -385,6 +385,7 @@ namespace Xamarin.Android.Tasks {
 			LogDebugMessage ("GetAdditionalResourcesFromAssemblies Task");
 			LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
 			LogDebugMessage ("  AndroidNdkDirectory: {0}", AndroidNdkDirectory);
+			LogDebugMessage ("  CacheFile: {0}", CacheFile);
 			LogDebugTaskItems ("  Assemblies: ", Assemblies);
 
 			if (Environment.GetEnvironmentVariable ("XA_DL_IGNORE_CERT_ERRROS") == "yesyesyes") {
@@ -398,6 +399,10 @@ namespace Xamarin.Android.Tasks {
 
 			if (Assemblies == null)
 				return;
+
+			var cacheFileFullPath = CacheFile;
+			if (!Path.IsPathRooted (cacheFileFullPath))
+				cacheFileFullPath = Path.Combine (WorkingDirectory, cacheFileFullPath);
 
 			System.Threading.Tasks.Task.Run (() => {
 				// The cache location can be overriden by the (to be documented) XAMARIN_CACHEPATH
@@ -444,8 +449,8 @@ namespace Xamarin.Android.Tasks {
 			var result = base.Execute ();
 
 			if (!result || Log.HasLoggedErrors) {
-				if (File.Exists (CacheFile))
-					File.Delete (CacheFile);
+				if (File.Exists (cacheFileFullPath))
+					File.Delete (cacheFileFullPath);
 				return;
 			}
 
@@ -465,7 +470,7 @@ namespace Xamarin.Android.Tasks {
 					new XElement ("AdditionalNativeLibraryReferences", 
 							AdditionalNativeLibraryReferences.Select(e => new XElement ("AdditionalNativeLibraryReference", e)))
 					));
-			document.Save (CacheFile);
+			document.Save (cacheFileFullPath);
 
 			LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
 			LogDebugTaskItems ("  AdditionalJavaLibraryReferences: ", AdditionalJavaLibraryReferences);
