@@ -3,10 +3,12 @@
   <ItemGroup>
     <TestApk Include="$(OutputPath)Xamarin.Android.Locale_Tests-Signed.apk">
       <Package>Xamarin.Android.Locale_Tests</Package>
-      <InstrumentationType>xamarin.android.localetests.TestInstrumentation</InstrumentationType>
-      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Locale_Tests.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.Locale_Tests-times.csv</TimingResultsFilename>
     </TestApk>
+    <TestApkInstrumentation Include="xamarin.android.localetests.TestInstrumentation">
+      <Package>Xamarin.Android.Locale_Tests</Package>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Locale_Tests.xml</ResultsPath>
+    </TestApkInstrumentation>
   </ItemGroup>
 </Project>
