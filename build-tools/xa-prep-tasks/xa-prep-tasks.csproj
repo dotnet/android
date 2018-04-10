@@ -57,6 +57,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Sleep.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessPlotInput.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessLogcatTiming.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GetMappedFilesThatExist.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
