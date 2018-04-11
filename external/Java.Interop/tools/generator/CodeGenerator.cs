@@ -665,6 +665,11 @@ namespace MonoDroid.Generation {
 
 		public string GetSafeIdentifier (string name)
 		{
+			// NOTE: "partial" differs in behavior on macOS vs. Windows, Windows reports "partial" as a valid identifier
+			//	This check ensures the same output on both platforms
+			if (name == "partial")
+				return name;
+
 			// In the ideal world, it should not be applied twice.
 			// Sadly that is not true in reality, so we need to exclude non-symbols
 			// when replacing the argument name with a valid identifier.

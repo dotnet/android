@@ -39,21 +39,21 @@ namespace Xamarin.Test {
 			return cb_usePartial_I;
 		}
 
-		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial_)
+		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
 			global::Xamarin.Test.CSharpKeywords __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.UsePartial (partial_));
+			return JNIEnv.NewString (__this.UsePartial (partial));
 		}
 #pragma warning restore 0169
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='usePartial' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("usePartial", "(I)Ljava/lang/String;", "GetUsePartial_IHandler")]
-		public virtual unsafe string UsePartial (int partial_)
+		public virtual unsafe string UsePartial (int partial)
 		{
 			const string __id = "usePartial.(I)Ljava/lang/String;";
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (partial_);
+				__args [0] = new JniArgumentValue (partial);
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			} finally {

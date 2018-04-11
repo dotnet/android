@@ -167,10 +167,12 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="expected\**\*.cs" />
-    <None Include="expected\**\*.xml" />
-    <None Include="expected.ji\**\*.cs" />
-    <None Include="expected.ji\**\*.xml" />
+    <Content Include="expected\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="expected.ji\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="..\Tests-Core\api-cp.xml">
       <Link>Tests-Core\api-cp.xml</Link>
     </None>
@@ -196,5 +198,4 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <Import Project="expected.targets" />
 </Project>

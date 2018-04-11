@@ -34,23 +34,23 @@ namespace Xamarin.Test {
 			return cb_usePartial_I;
 		}
 
-		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial_)
+		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
 			global::Xamarin.Test.CSharpKeywords __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.UsePartial (partial_));
+			return JNIEnv.NewString (__this.UsePartial (partial));
 		}
 #pragma warning restore 0169
 
 		static IntPtr id_usePartial_I;
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='usePartial' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("usePartial", "(I)Ljava/lang/String;", "GetUsePartial_IHandler")]
-		public virtual unsafe string UsePartial (int partial_)
+		public virtual unsafe string UsePartial (int partial)
 		{
 			if (id_usePartial_I == IntPtr.Zero)
 				id_usePartial_I = JNIEnv.GetMethodID (class_ref, "usePartial", "(I)Ljava/lang/String;");
 			try {
 				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue (partial_);
+				__args [0] = new JValue (partial);
 
 				if (((object) this).GetType () == ThresholdType)
 					return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_usePartial_I, __args), JniHandleOwnership.TransferLocalRef);
