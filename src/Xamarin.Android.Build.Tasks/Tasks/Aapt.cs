@@ -330,7 +330,8 @@ namespace Xamarin.Android.Tasks
 			manifest.Save (manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("-M ", manifestFile);
-			Directory.CreateDirectory (JavaDesignerOutputDirectory);
+			var designerDirectory = Path.IsPathRooted (JavaDesignerOutputDirectory) ? JavaDesignerOutputDirectory : Path.Combine (WorkingDirectory, JavaDesignerOutputDirectory);
+			Directory.CreateDirectory (designerDirectory);
 			cmd.AppendSwitchIfNotNull ("-J ", JavaDesignerOutputDirectory);
 
 			if (PackageName != null)
