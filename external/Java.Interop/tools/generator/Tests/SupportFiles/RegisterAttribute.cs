@@ -13,7 +13,8 @@ namespace Android.Runtime {
 		public RegisterAttribute (string name, string signature, string connector)
 			: this (name)
 		{
-			throw new NotImplementedException ();
+			Signature = signature;
+			Connector = connector;
 		}
 
 		public string Connector {

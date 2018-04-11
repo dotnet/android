@@ -40,6 +40,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Integration-Tests\AccessModifiers.cs" />
@@ -66,9 +67,12 @@
     <Compile Include="Integration-Tests\CSharpKeywords.cs" />
     <Compile Include="Integration-Tests\GenericArguments.cs" />
     <Compile Include="Integration-Tests\InterfaceMethodsConflict.cs" />
+    <Compile Include="SupportFiles\RegisterAttribute.cs" />
     <Compile Include="Unit-Tests\JavaInteropCodeGeneratorTests.cs" />
+    <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
     <Compile Include="Unit-Tests\XamarinAndroidCodeGeneratorTests.cs" />
+    <Compile Include="Unit-Tests\XmlTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -79,6 +83,10 @@
     <ProjectReference Include="..\..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
       <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>
       <Name>Xamarin.Android.Tools.ApiXmlAdjuster</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
