@@ -8,22 +8,23 @@
   </PropertyGroup>
 
   <Target Name="_DefineApiFiles">
-    <CreateItem Include="@(AndroidApiInfo)"
-        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt;ClassParseXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(AndroidApiInfo.Level).xml.in">
+    <ItemGroup>
+      <_Api
+          Condition=" Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(AndroidApiInfo.Level).params.txt') "
+          Include="@(AndroidApiInfo)">
+      </_Api>
+    </ItemGroup>
+    <CreateItem Include="@(_Api)"
+        AdditionalMetadata="ParameterDescription=$(_TopDir)\src\Mono.Android\Profiles\api-%(_Api.Level).params.txt;ClassParseXml=$(_OutputPath)api\api-%(_Api.Level).xml.class-parse;ApiAdjustedXml=$(_OutputPath)api\api-%(_Api.Level).xml.in">
       <Output TaskParameter="Include" ItemName="ApiFileDefinition"/>
     </CreateItem>
-    <ItemGroup>
-      <_ApiParameterDescription Include="%(ApiFileDefinition.ParameterDescription)" />
-      <_ApiClassParseXml        Include="%(ApiFileDefinition.ClassParseXml)" />
-      <_ApiAdjustedXml          Include="%(ApiFileDefinition.ApiAdjustedXml)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_ClassParse"
       BeforeTargets="_AdjustApiXml"
       DependsOnTargets="_DefineApiFiles"
-      Inputs="@(_ApiParameterDescription)"
-      Outputs="@(_ApiClassParseXml)">
+      Inputs="%(ApiFileDefinition.ParameterDescription)"
+      Outputs="%(ApiFileDefinition.ApiAdjustedXml)">
     <PropertyGroup>
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
@@ -36,8 +37,8 @@
   <Target Name="_AdjustApiXml"
       AfterTargets="Build"
       DependsOnTargets="_DefineApiFiles"
-      Inputs="@(_ApiClassParseXml)"
-      Outputs="@(_ApiAdjustedXml)">
+      Inputs="%(ApiFileDefinition.ClassParseXml)"
+      Outputs="%(ApiFileDefinition.ApiAdjustedXml)">
     <PropertyGroup>
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>

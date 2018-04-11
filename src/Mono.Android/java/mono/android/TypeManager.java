@@ -13,6 +13,6 @@ public class TypeManager {
 		String methods = 
 			"n_activate:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V:GetActivateHandler\n" +
 			"";
-		mono.android.Runtime.register ("Java.Interop.TypeManager, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", TypeManager.class, methods);
+		mono.android.Runtime.register ("Java.Interop.TypeManager+JavaTypeManager, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", TypeManager.class, methods);
 	}
 }

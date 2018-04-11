@@ -796,9 +796,9 @@
   </Target>
 
   <ItemGroup>
-    <_MonoCrossRuntimeStamp               Include="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\.stamp" />
-    <_MonoCrossRuntimeIntermediateOutput  Include="$(IntermediateOutputPath)\%(_MonoCrossRuntime.Identity)\mono\mini\mono-sgen%(_MonoCrossRuntime.ExeSuffix)" />
-    <_MonoCrossRuntimeOutput              Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" />
+    <_MonoCrossRuntimeStamp               Include="@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)\.stamp')" />
+    <_MonoCrossRuntimeIntermediateOutput  Include="@(_MonoCrossRuntime->'$(IntermediateOutputPath)\%(Identity)\mono\mini\mono-sgen%(ExeSuffix)')" />
+    <_MonoCrossRuntimeOutput              Include="@(_MonoCrossRuntime->'$(_MSBuildDir)\%(InstallPath)%(CrossMonoName)%(ExeSuffix)')" />
   </ItemGroup>
 
   <!-- The condition below is to work around a bug in xbuild which attempts to batch

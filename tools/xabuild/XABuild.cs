@@ -1,6 +1,7 @@
 ﻿using Microsoft.Build.CommandLine;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Xml;
 
@@ -21,15 +22,26 @@ namespace Xamarin.Android.Build
 				//Create a custom xabuild.exe.config
 				var xml = CreateConfig (paths);
 
-				//Hold open the file while creating the symbolic links
-				using (var writer = OpenSysLinksFile (paths)) {
-					//Create link to .NETFramework and .NETPortable directory
-					foreach (var dir in Directory.GetDirectories (paths.SystemProfiles)) {
-						var name = Path.GetFileName (dir);
-						if (!SymbolicLink.Create (Path.Combine (paths.FrameworksDirectory, name), dir)) {
-							return 1;
+				//Symbolic links to .NETFramework and .NETPortable directory
+				var systemDirectories = Directory.EnumerateDirectories (paths.SystemProfiles)
+					.Where (d => Path.GetFileName (d) != "MonoAndroid") //NOTE: this happened on one of our VSTS build agents
+					.ToArray ();
+				var symbolicLinks = systemDirectories
+					.Select (d => Path.Combine (paths.FrameworksDirectory, Path.GetFileName (d)))
+					.ToArray ();
+
+				if (symbolicLinks.Any (d => !Directory.Exists (d))) {
+					//Hold open the file while creating the symbolic links
+					using (var writer = OpenSysLinksFile (paths)) {
+						for (int i = 0; i < systemDirectories.Length; i++) {
+							var symbolicLink = symbolicLinks [i];
+							var systemDirectory = systemDirectories [i];
+							Console.WriteLine ($"[xabuild] creating symbolic link '{symbolicLink}' -> '{systemDirectory}'");
+							if (!SymbolicLink.Create (symbolicLink, systemDirectory)) {
+								return 1;
+							}
+							writer.WriteLine (Path.GetFileName (symbolicLink));
 						}
-						writer.WriteLine (name);
 					}
 				}
 
@@ -63,7 +75,7 @@ namespace Xamarin.Android.Build
 			//NOTE: on Windows, the NUnit tests can throw IOException when running xabuild in parallel
 			for (int i = 0;; i++) {
 				try {
-					return File.CreateText (path);
+					return File.AppendText (path);
 				} catch (IOException) {
 					if (i == 2)
 						throw; //Fail after 3 tries

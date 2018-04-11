@@ -25,7 +25,7 @@
   <Import Project="libzip.projitems" />
   <Import Project="libzip.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
+    <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
       <Name>xa-prep-tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

@@ -18,11 +18,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AcwMapFile { get; set; }
 
+		public string AndroidConversionFlagFile { get; set; }
+
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("ConvertResourcesCases Task");
 			Log.LogDebugMessage ("  ResourceDirectories: {0}", ResourceDirectories);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
+			Log.LogDebugMessage ("  AndroidConversionFlagFile: {0}", AndroidConversionFlagFile);
 
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
 
@@ -50,10 +53,19 @@ namespace Xamarin.Android.Tasks
 				.SelectMany (dir => Directory.EnumerateFiles (dir, "*.xml")
 					.Concat (Directory.EnumerateFiles (dir, "*.axml")));
 
+			var lastUpdate = DateTime.MinValue;
+			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
+				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
+			}
+			Log.LogDebugMessage ("  AndroidResgenFlagFile modified: {0}", lastUpdate);
 			// Fix up each file
 			foreach (string file in xmls) {
-				Log.LogDebugMessage ("  Processing: {0}", file);
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
+				if (srcmodifiedDate <= lastUpdate) {
+					Log.LogDebugMessage ("  Skipping: {0}  {1} <= {2}", file, srcmodifiedDate, lastUpdate);
+					continue;
+				}
+				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
 				var tmpdest = Path.GetTempFileName ();
 				MonoAndroidHelper.CopyIfChanged (file, tmpdest);
 				MonoAndroidHelper.SetWriteable (tmpdest);
@@ -70,7 +82,6 @@ namespace Xamarin.Android.Tasks
 
 					if (MonoAndroidHelper.CopyIfChanged (tmpdest, file)) {
 						MonoAndroidHelper.SetWriteable (file);
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, srcmodifiedDate, Log);
 					}
 				} finally {
 					File.Delete (tmpdest);
