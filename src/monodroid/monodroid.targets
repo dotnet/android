@@ -105,10 +105,10 @@
   </Target>
   <Target Name="_GetBuildHostRuntimes">
     <ItemGroup>
-      <_OutputDebugPath         Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\%(_HostRuntime.OutputBasename).debug.d.%(_HostRuntime.NativeLibraryExtension)" />
-      <_OutputDebugStripPath    Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\%(_HostRuntime.OutputBasename).debug.%(_HostRuntime.NativeLibraryExtension)" />
-      <_OutputReleasePath       Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\%(_HostRuntime.OutputBasename).release.d.%(_HostRuntime.NativeLibraryExtension)" />
-      <_OutputReleaseStripPath  Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\%(_HostRuntime.OutputBasename).release.%(_HostRuntime.NativeLibraryExtension)" />
+      <_OutputDebugPath         Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.debug.d.%(_HostRuntime.NativeLibraryExtension)" />
+      <_OutputDebugStripPath    Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.debug.%(_HostRuntime.NativeLibraryExtension)" />
+      <_OutputReleasePath       Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.d.%(_HostRuntime.NativeLibraryExtension)" />
+      <_OutputReleaseStripPath  Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.%(_HostRuntime.NativeLibraryExtension)" />
     </ItemGroup>
   </Target>
   <Target Name="_BuildHostRuntimes"
