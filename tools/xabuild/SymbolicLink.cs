@@ -24,7 +24,7 @@ namespace Xamarin.Android.Build
 		{
 			//NOTE: attempt with and without the AllowUnprivilegedCreate flag, seems to fix Windows Server 2016
 			if (!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory | SymbolLinkFlag.AllowUnprivilegedCreate) &&
-				!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
+					!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
 				if (!Directory.Exists (source)) {
 					var error = new Win32Exception ().Message;
 					Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {error}");
