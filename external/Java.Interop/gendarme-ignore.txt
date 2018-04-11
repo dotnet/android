@@ -657,7 +657,7 @@ T: Java.Interop.JavaSingleArray
 
 R: Gendarme.Rules.Concurrency.DoNotUseLockedRegionOutsideMethodRule
 # Looks like Gendarme issue, as there are both Monitor.TryEnter and Monitor.Exit used in this method
-M: System.Boolean Java.Interop.JniRuntime/JniTypeManager::TryRegisterNativeMembers(Java.Interop.JniType,System.Type,System.String)
+M: System.Boolean Java.Interop.JniRuntime/JniTypeManager::TryRegisterNativeMembers(Java.Interop.JniType,System.Type,System.String,System.Reflection.MethodInfo)
 
 R: Gendarme.Rules.Performance.AvoidUnsealedConcreteAttributesRule
 # We would like users to be able to derive from this attribute

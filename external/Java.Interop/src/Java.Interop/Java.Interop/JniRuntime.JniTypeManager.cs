@@ -220,17 +220,22 @@ namespace Java.Interop {
 				}
 			}
 
+			static Type [] registerMethodParameters = new Type [] { typeof (JniNativeMethodRegistrationArguments) };
+
 			static bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string methods)
 			{
 				var marshalType = type.GetTypeInfo ()?.GetDeclaredNestedType ("__<$>_jni_marshal_methods")?.AsType ();
 				if (marshalType == null || !(marshalType is Type))
 					return false;
-				return TryRegisterNativeMembers (nativeClass, marshalType, methods);
+
+				var registerMethod = marshalType.GetRuntimeMethod ("__RegisterNativeMembers", registerMethodParameters);
+
+				return TryRegisterNativeMembers (nativeClass, marshalType, methods, registerMethod);
 			}
 
 			static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
-			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods)
+			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods, MethodInfo registerMethod = null)
 			{
 				bool lockTaken = false;
 
@@ -244,18 +249,10 @@ namespace Java.Interop {
 						registrations = new List<JniNativeMethodRegistration> ();
 					}
 					JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
-					foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
-						if (methodInfo.GetCustomAttribute (typeof (JniAddNativeMethodRegistrationAttribute)) == null) {
-							continue;
-						}
-
-						if ((methodInfo.Attributes & MethodAttributes.Static) != MethodAttributes.Static) {
-							throw new InvalidOperationException ($"The method {methodInfo} marked with {nameof (JniAddNativeMethodRegistrationAttribute)} must be static");
-						}
-
-						var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));
-						register (arguments);
-					}
+					if (registerMethod != null)
+						registerMethod.Invoke (null, new object [] { arguments });
+					else
+						FindAndCallRegisterMethod (marshalType, arguments);
 					nativeClass.RegisterNativeMethods (registrations.ToArray ());
 				} finally {
 					if (lockTaken) {
@@ -264,6 +261,22 @@ namespace Java.Interop {
 				}
 
 				return true;
+			}
+
+			static void FindAndCallRegisterMethod (Type marshalType, JniNativeMethodRegistrationArguments arguments)
+			{
+				foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
+					if (methodInfo.GetCustomAttribute (typeof (JniAddNativeMethodRegistrationAttribute)) == null) {
+						continue;
+					}
+
+					if ((methodInfo.Attributes & MethodAttributes.Static) != MethodAttributes.Static) {
+						throw new InvalidOperationException ($"The method {methodInfo} marked with {nameof (JniAddNativeMethodRegistrationAttribute)} must be static");
+					}
+
+					var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));
+					register (arguments);
+				}
 			}
 		}
 	}
