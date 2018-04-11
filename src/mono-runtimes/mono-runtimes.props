@@ -95,18 +95,6 @@
 
   <!-- Mono runtimes settings -->
   <PropertyGroup>
-    <_ArmStrip>$(AndroidToolchainDirectory)\toolchains\arm-linux-androideabi-clang\bin\arm-linux-androideabi-strip</_ArmStrip>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_Arm64Strip>$(AndroidToolchainDirectory)\toolchains\aarch64-linux-android-clang\bin\aarch64-linux-android-strip</_Arm64Strip>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_X86Strip>$(AndroidToolchainDirectory)\toolchains\i686-linux-android-clang\bin\i686-linux-android-strip</_X86Strip>
-  </PropertyGroup>
-  <PropertyGroup>
-    <_X86_64Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-linux-android-clang\bin\x86_64-linux-android-strip</_X86_64Strip>
-  </PropertyGroup>
-  <PropertyGroup>
     <_HostWin64CFlags>$(_HostWinCFlags)</_HostWin64CFlags>
   </PropertyGroup>
 </Project>
