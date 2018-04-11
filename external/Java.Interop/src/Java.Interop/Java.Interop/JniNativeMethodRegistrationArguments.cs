@@ -5,8 +5,10 @@ namespace Java.Interop
 {
 	public struct JniNativeMethodRegistrationArguments
 	{
+		static readonly string invalidStateMessage = $"{nameof(JniNativeMethodRegistrationArguments)} state is invalid. Please use constructor with parameters.";
+
 		public ICollection<JniNativeMethodRegistration> Registrations {
-			get { return _registrations; }
+			get { return _registrations ?? throw new InvalidOperationException (invalidStateMessage); }
 		}
 		public string Methods { get; }
 		ICollection<JniNativeMethodRegistration> _registrations;
@@ -20,7 +22,7 @@ namespace Java.Interop
 		public void AddRegistrations (IEnumerable<JniNativeMethodRegistration> registrations)
 		{
 			if (_registrations == null)
-				throw new InvalidOperationException ($"{nameof(JniNativeMethodRegistrationArguments)} state is invalid. Please use constructor with parameters.");
+				throw new InvalidOperationException (invalidStateMessage);
 
 			if (registrations is List<JniNativeMethodRegistration> list) {
 				list.AddRange (registrations);
