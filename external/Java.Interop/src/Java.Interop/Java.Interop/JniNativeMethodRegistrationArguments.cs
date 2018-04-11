@@ -14,7 +14,7 @@ namespace Java.Interop
 		public JniNativeMethodRegistrationArguments (ICollection<JniNativeMethodRegistration> registrations, string methods)
 		{
 			_registrations = registrations ?? throw new ArgumentNullException (nameof (registrations));
-			Methods = methods ?? throw new ArgumentNullException (nameof (methods));
+			Methods = methods;
 		}
 
 		public void AddRegistrations (IEnumerable<JniNativeMethodRegistration> registrations)
