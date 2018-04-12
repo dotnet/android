@@ -36,8 +36,8 @@
       DependsOnTargets="_GetHashes">
     <PropertyGroup>
       <XABundleVersion>v21</XABundleVersion>
-      <XABundleFileName Condition=" '$(HostOS)' != 'Windows' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
-      <XABundleFileName Condition=" '$(HostOS)' == 'Windows' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-Darwin-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName Condition=" '$(HostOS)' != 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName Condition=" '$(HostOS)' == 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-Darwin-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
     </PropertyGroup>
   </Target>
 </Project>

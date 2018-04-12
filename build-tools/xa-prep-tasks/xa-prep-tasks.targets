@@ -69,9 +69,12 @@
       DependsOnTargets="_GetBundleOutputPath"
       Inputs=""
       Outputs="$(_BundlePath)">
+    <PropertyGroup>
+      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(Configuration)</XABundleDownloadPrefix>
+    </PropertyGroup>
     <DownloadUri
         ContinueOnError="True"
-        SourceUris="$(_AzureBaseUri)$(Configuration)/$(XABundleFileName)"
+        SourceUris="$(XABundleDownloadPrefix)/$(XABundleFileName)"
         DestinationFiles="$(_BundlePath)"
     />
     <Error
