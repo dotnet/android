@@ -5,8 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Reflection;
 
 using Java.Interop;
+using Java.Interop.Tools.TypeNameMappings;
 
 #if JAVA_INTEROP
 namespace Android.Runtime {
@@ -225,6 +227,62 @@ namespace Android.Runtime {
 			return base.GetSimpleReferences (type)
 				.Concat (Enumerable.Repeat (j, 1));
 		}
+
+		delegate Delegate GetCallbackHandler ();
+
+		static MethodInfo dynamic_callback_gen;
+
+		static Delegate CreateDynamicCallback (MethodInfo method)
+		{
+			if (dynamic_callback_gen == null) {
+				var assembly = Assembly.Load ("Mono.Android.Export");
+				if (assembly == null)
+					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
+				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
+				if (type == null)
+					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
+				dynamic_callback_gen = type.GetMethod ("Create");
+				if (dynamic_callback_gen == null)
+					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
+			}
+			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method });
+		}
+
+		public override void RegisterNativeMembers (JniType jniType, Type type, string methods)
+		{
+			if (base.TryRegisterNativeMembers (jniType, type, methods))
+				return;
+
+			if (methods == null)
+				return;
+
+			string[] members = methods.Split ('\n');
+			if (members.Length == 0)
+				return;
+
+			JniNativeMethodRegistration[] natives = new JniNativeMethodRegistration [members.Length-1];
+			for (int i = 0; i < members.Length; ++i) {
+				string method = members [i];
+				if (string.IsNullOrEmpty (method))
+					continue;
+				string[] toks = members [i].Split (new[]{':'}, 4);
+				Delegate callback;
+				if (toks [2] == "__export__") {
+					var mname = toks [0].Substring (2);
+					var minfo = type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).Where (m => m.Name == mname && JavaNativeTypeManager.GetJniSignature (m) == toks [1]).FirstOrDefault ();
+					if (minfo == null)
+						throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
+					callback = CreateDynamicCallback (minfo);
+				} else {
+					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler), 
+						toks.Length == 4 ? Type.GetType (toks [3], true) : type, toks [2]);
+					callback = connector ();
+				}
+				natives [i] = new JniNativeMethodRegistration (toks [0], toks [1], callback);
+			}
+
+			JniEnvironment.Types.RegisterNatives (jniType.PeerReference, natives, natives.Length);
+		}
 	}
 
 	class AndroidValueManager : JniRuntime.JniValueManager {
@@ -246,7 +304,7 @@ namespace Android.Runtime {
 
 		public override IJavaPeerable PeekPeer (JniObjectReference reference)
 		{
-			throw new NotImplementedException ();
+			return (IJavaPeerable) Java.Lang.Object.GetObject (reference.Handle, JniHandleOwnership.DoNotTransfer);
 		}
 
 		public override void CollectPeers ()
