@@ -48,11 +48,19 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 		Dictionary<string, MethodReference> newHelperMethods;
 
+		bool TypeIsEmptyOrHasOnlyDefaultConstructor (TypeDefinition type)
+		{
+			return !type.HasMethods || (type.Methods.Count == 1 && type.Methods [0].IsConstructor);
+		}
+
 		void Move (Type type)
 		{
 			var typeSrc = Source.MainModule.GetType (type.GetCecilName ());
 			var typeDst = Destination.MainModule.GetType (type.GetCecilName ());
 			var jniType = new TypeDefinition ("", nestedName, TypeAttributes.NestedPrivate | TypeAttributes.Sealed);
+
+			if (TypeIsEmptyOrHasOnlyDefaultConstructor (typeSrc))
+				return;
 
 			if (App.Verbose) {
 				Console.Write ($"Moving type ");
