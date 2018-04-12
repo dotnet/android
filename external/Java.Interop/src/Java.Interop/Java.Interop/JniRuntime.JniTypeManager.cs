@@ -238,6 +238,7 @@ namespace Java.Interop {
 			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods, MethodInfo registerMethod = null)
 			{
 				bool lockTaken = false;
+				bool rv = false;
 
 				try {
 					Monitor.TryEnter (sharedRegistrations, ref lockTaken);
@@ -249,22 +250,27 @@ namespace Java.Interop {
 						registrations = new List<JniNativeMethodRegistration> ();
 					}
 					JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
-					if (registerMethod != null)
+					if (registerMethod != null) {
 						registerMethod.Invoke (null, new object [] { arguments });
-					else
-						FindAndCallRegisterMethod (marshalType, arguments);
-					nativeClass.RegisterNativeMethods (registrations.ToArray ());
+						rv = true;
+					} else
+						rv = FindAndCallRegisterMethod (marshalType, arguments);
+
+					if (registrations.Count > 0)
+						nativeClass.RegisterNativeMethods (registrations.ToArray ());
 				} finally {
 					if (lockTaken) {
 						Monitor.Exit (sharedRegistrations);
 					}
 				}
 
-				return true;
+				return rv;
 			}
 
-			static void FindAndCallRegisterMethod (Type marshalType, JniNativeMethodRegistrationArguments arguments)
+			static bool FindAndCallRegisterMethod (Type marshalType, JniNativeMethodRegistrationArguments arguments)
 			{
+				bool found = false;
+
 				foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
 					if (methodInfo.GetCustomAttribute (typeof (JniAddNativeMethodRegistrationAttribute)) == null) {
 						continue;
@@ -276,7 +282,11 @@ namespace Java.Interop {
 
 					var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));
 					register (arguments);
+
+					found = true;
 				}
+
+				return found;
 			}
 		}
 	}
