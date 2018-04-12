@@ -121,6 +121,9 @@ prepare-image-dependencies:
 	cat bin/Build$(CONFIGURATION)/prepare-image-dependencies.sh | tr -d '\r' > prepare-image-dependencies.sh
 
 include build-tools/scripts/BuildEverything.mk
+
+# Must be after BuildEverything.mk - it uses variables defined there
+include build-tools/scripts/Packaging.mk
 include tests/api-compatibility/api-compatibility.mk
 
 topdir  := $(shell pwd)
