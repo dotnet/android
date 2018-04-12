@@ -385,6 +385,16 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
+		public static Package Microsoft_Azure_EventHubs = new Package {
+			Id = "Microsoft.Azure.EventHubs",
+			Version = "2.0.0",
+			TargetFramework = "netstandard2.0",
+			References = {
+				new BuildItem.Reference("Microsoft.Azure.EventHubs") {
+					MetadataValues = "HintPath=..\\packages\\Microsoft.Azure.EventHubs.2.0.0\\lib\\netstandard2.0\\Microsoft.Azure.EventHubs.dll"
+				}
+			}
+		};
 	}
 }
 

@@ -1855,6 +1855,55 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			}
 		}
 
+		[Test]
+		public void BuildWithResolveAssembliesFailure ()
+		{
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { void EventHubs () { Microsoft.Azure.EventHubs.EventHubClient c; } }"
+					},
+				}
+			};
+			lib.PackageReferences.Add (KnownPackages.Microsoft_Azure_EventHubs);
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				if (!libBuilder.RunningMSBuild)
+					Assert.Ignore ("This test requires MSBuild.");
+
+				libBuilder.Target = "Restore";
+				Assert.IsTrue (libBuilder.Build (lib), "Restore should have succeeded.");
+				libBuilder.Target = "Build";
+				Assert.IsTrue (libBuilder.Build (lib), "Build should have succeeded.");
+
+				appBuilder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
+				Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ("error XA9999: Could not find assembly `Microsoft.Azure.EventHubs`, referenced by `MyLibrary`. Please add a NuGet package or assembly reference for `Microsoft.Azure.EventHubs`, or remove the reference to `MyLibrary`."),
+					"Should recieve XA9999 error regarding `Microsoft.Azure.EventHubs`!");
+
+				//Now add the PackageReference to the app to see the issue with the NuGet
+				app.PackageReferences.Add (KnownPackages.Microsoft_Azure_EventHubs);
+				appBuilder.Target = "Restore";
+				Assert.IsTrue (appBuilder.Build (app), "Restore should have succeeded.");
+				appBuilder.Target = "Build";
+				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
+				Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ("error XA9999: Could not find assembly `Microsoft.Azure.Services.AppAuthentication`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Services.AppAuthentication`, or remove the reference to `Microsoft.Azure.EventHubs`."),
+					"Should recieve XA9999 error regarding `Microsoft.Azure.Services.AppAuthentication`!");
+			}
+		}
+
 		static object [] TlsProviderTestCases =
 		{
 			// androidTlsProvider, isRelease, extpected

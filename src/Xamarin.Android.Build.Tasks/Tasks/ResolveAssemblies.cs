@@ -9,6 +9,7 @@ using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using MonoDroid.Tuner;
 using System.IO;
+using System.Text;
 using Xamarin.Android.Tools;
 using NuGet.Common;
 using NuGet.Frameworks;
@@ -120,7 +121,7 @@ namespace Xamarin.Android.Tasks
 			}
 			try {
 				foreach (var assembly in topAssemblyReferences)
-					AddAssemblyReferences (resolver, assemblies, assembly, true);
+					AddAssemblyReferences (resolver, assemblies, assembly, null);
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
 				return;
@@ -184,14 +185,18 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, bool topLevel)
+		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
 		{
 			var fqname = assembly.MainModule.FullyQualifiedName;
 			var fullPath = Path.GetFullPath (fqname);
 
 			// Don't repeat assemblies we've already done
+			bool topLevel = resolutionPath == null;
 			if (!topLevel && assemblies.Contains (fullPath))
 				return;
+
+			if (resolutionPath == null)
+				resolutionPath = new List<string>();
 			
 			foreach (var att in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "Java.Interop.DoNotPackageAttribute")) {
 				string file = (string) att.ConstructorArguments.First ().Value;
@@ -201,17 +206,42 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
+			resolutionPath.Add (assembly.Name.Name);
 			indent += 2;
+
 			// Add this assembly
 			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
 				assemblies.Add (fullPath);
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
-				var reference_assembly = resolver.Resolve (reference);
-				AddAssemblyReferences (resolver, assemblies, reference_assembly, false);
+				AssemblyDefinition reference_assembly;
+				try {
+					reference_assembly = resolver.Resolve (reference);
+				} catch (FileNotFoundException ex) {
+					var references = new StringBuilder ();
+					for (int i = resolutionPath.Count - 1; i >= 0; i--) {
+						references.Append ('`');
+						references.Append (resolutionPath [i]);
+						references.Append ('`');
+						if (i != 0)
+							references.Append (" > ");
+					}
+
+					string missingAssembly = Path.GetFileNameWithoutExtension (ex.FileName);
+					string message = $"Could not find assembly `{missingAssembly}`, referenced by {references}.";
+					if (MonoAndroidHelper.IsFrameworkAssembly (ex.FileName)) {
+						LogError ("XA9999", $"{message} Perhaps it doesn't exist in the Mono for Android profile?");
+					} else {
+						LogError ("XA9999", $"{message} Please add a NuGet package or assembly reference for `{missingAssembly}`, or remove the reference to `{resolutionPath [0]}`.");
+					}
+					return;
+				}
+				AddAssemblyReferences (resolver, assemblies, reference_assembly, resolutionPath);
 			}
+
 			indent -= 2;
+			resolutionPath.RemoveAt (resolutionPath.Count - 1);
 		}
 
 		static LinkModes ParseLinkMode (string linkmode)
