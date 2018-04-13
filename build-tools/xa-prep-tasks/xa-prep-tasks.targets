@@ -97,9 +97,13 @@
       Condition=" Exists('$(_BundlePath)') "
       Inputs="$(_BundlePath)"
       Outputs="$(OutputPath).extracted-$(XABundleFileName)">
+    <PropertyGroup>
+      <_BundleUnzipPath Condition=" '$(_BundleUnzipPath)' == '' "></_BundleUnzipPath>
+    </PropertyGroup>
     <SystemUnzip
         SourceFiles="$(_BundlePath)"
         HostOS="$(HostOS)"
+        TempUnzipDir="$(_BundleUnzipPath)"
         DestinationFolder="..\..\bin\$(Configuration)"
     />
     <WriteLinesToFile
