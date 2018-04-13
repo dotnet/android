@@ -34,8 +34,17 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 		public void Move ()
 		{
-			foreach (var type in Types.Values)
+			int movedTypesCount = 0;
+
+			foreach (var type in Types.Values) {
 				Move (type);
+				movedTypesCount++;
+			}
+
+			if (movedTypesCount <= 0) {
+				App.Warning ("No type was moved => nothing to write, no new assembly created.");
+				return;
+			}
 
 			var newName = $"{Path.Combine (Path.GetDirectoryName (Destination.MainModule.FileName), Path.GetFileNameWithoutExtension (Destination.MainModule.FileName))}-new{Path.GetExtension (Destination.MainModule.FileName)}";
 			Destination.Write (newName, new WriterParameters () { WriteSymbols = true });

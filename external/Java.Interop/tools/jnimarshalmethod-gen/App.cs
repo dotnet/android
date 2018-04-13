@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 
 using Java.Interop;
 
@@ -22,6 +23,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static public bool Debug;
 		static public bool Verbose;
+		static List<Regex> typeNameRegexes = new List<Regex> ();
 
 		public static int Main (string [] args)
 		{
@@ -29,12 +31,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var options = new OptionSet {
 				$"Usage: {Name}.exe OPTIONS* ASSEMBLY+",
 				"",
-				"Generates helper marshaling assemblies <AssemblyName>-JniMarshalMethods.dll for specified assemblies.",
+				"Generates helper marshaling methods for specified assemblies.",
 				"",
 				"Copyright 2018 Microsoft Corporation",
 				"",
 				"Options:",
-				{ "d",
+				{ "d|debug",
 				  "Inject debug messages",
 				  v => Debug = true },
 				{ "L=",
@@ -43,8 +45,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "h|help|?",
 				  "Show this message and exit",
 				  v => help = v != null },
+				{ "t|type=",
+				  "Generate marshaling methods only for types whose names match {TYPE-REGEX}.",
+				  v => typeNameRegexes.Add (new Regex (v)) },
 				{ "v|verbose",
-				  "Show this message and exit",
+				  "Output information about progress during the run of the tool",
 				  v => Verbose = true },
 			};
 
@@ -116,6 +121,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var assemblyName    = new AssemblyName (baseName + "-JniMarshalMethods");
 			var destPath        = assemblyName.Name + ".dll";
 			var builder         = CreateExportedMemberBuilder ();
+			var matchType       = typeNameRegexes.Count > 0;
 
 			if (Verbose)
 				ColorWriteLine ($"Preparing marshal method assembly '{assemblyName}'", ConsoleColor.Cyan);
@@ -130,6 +136,16 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var ad = resolver.GetAssembly (path);
 
 			foreach (var type in assembly.DefinedTypes) {
+				if (matchType) {
+					var matched = false;
+
+					foreach (var r in typeNameRegexes)
+						matched |= r.IsMatch (type.FullName);
+
+					if (!matched)
+						continue;
+				}
+
 				if (type.IsGenericType || type.IsGenericTypeDefinition)
 					continue;
 
