@@ -98,12 +98,12 @@
       Inputs="$(_BundlePath)"
       Outputs="$(OutputPath).extracted-$(XABundleFileName)">
     <PropertyGroup>
-      <_BundleUnzipPath Condition=" '$(_BundleUnzipPath)' == '' "></_BundleUnzipPath>
+      <XABundleUnzipPath Condition=" '$(XABundleUnzipPath)' == '' "></XABundleUnzipPath>
     </PropertyGroup>
     <SystemUnzip
         SourceFiles="$(_BundlePath)"
         HostOS="$(HostOS)"
-        TempUnzipDir="$(_BundleUnzipPath)"
+        TempUnzipDir="$(XABundleUnzipPath)"
         DestinationFolder="..\..\bin\$(Configuration)"
     />
     <WriteLinesToFile
