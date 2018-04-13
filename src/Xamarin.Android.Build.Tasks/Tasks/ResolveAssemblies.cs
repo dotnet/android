@@ -220,20 +220,20 @@ namespace Xamarin.Android.Tasks
 					reference_assembly = resolver.Resolve (reference);
 				} catch (FileNotFoundException ex) {
 					var references = new StringBuilder ();
-					for (int i = resolutionPath.Count - 1; i >= 0; i--) {
+					for (int i = 0; i < resolutionPath.Count; i++) {
+						if (i != 0)
+							references.Append (" > ");
 						references.Append ('`');
 						references.Append (resolutionPath [i]);
 						references.Append ('`');
-						if (i != 0)
-							references.Append (" > ");
 					}
 
 					string missingAssembly = Path.GetFileNameWithoutExtension (ex.FileName);
-					string message = $"Could not find assembly `{missingAssembly}`, referenced by {references}.";
+					string message = $"Can not resolve reference: `{missingAssembly}`, referenced by {references}.";
 					if (MonoAndroidHelper.IsFrameworkAssembly (ex.FileName)) {
-						LogError ("XA9999", $"{message} Perhaps it doesn't exist in the Mono for Android profile?");
+						LogError ("XA2002", $"{message} Perhaps it doesn't exist in the Mono for Android profile?");
 					} else {
-						LogError ("XA9999", $"{message} Please add a NuGet package or assembly reference for `{missingAssembly}`, or remove the reference to `{resolutionPath [0]}`.");
+						LogError ("XA2002", $"{message} Please add a NuGet package or assembly reference for `{missingAssembly}`, or remove the reference to `{resolutionPath [0]}`.");
 					}
 					return;
 				}
