@@ -26,6 +26,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 		public  string          HostOS              { get; set; }
 
+		public  string          TempUnzipDir        { get; set; }
+
 		[Required]
 		public  ITaskItem       DestinationFolder   { get; set; }
 
@@ -58,7 +60,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			Directory.CreateDirectory (DestinationFolder.ItemSpec);
 
-			var tempDir = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			var tempDir = TempUnzipDir ?? Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (tempDir);
 			Log.LogMessage (MessageImportance.Low, $"  Extracting into temporary directory: {tempDir}");
 
