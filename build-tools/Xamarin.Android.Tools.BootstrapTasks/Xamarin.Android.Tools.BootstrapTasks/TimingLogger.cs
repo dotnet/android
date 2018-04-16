@@ -10,7 +10,7 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Timing
+namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class TimingLogger : Logger
 	{
@@ -151,7 +151,8 @@ namespace Xamarin.Android.Timing
 			if (!String.IsNullOrEmpty (solutionDir))
 				AddAttribute (e, "solution-dir", solutionDir);
 			AddAttribute (e, "file-id", ShortenFilePath (args.ProjectFile));
-			AddAttribute (e, "id", args.ProjectId.ToString ());
+			//NOTE: MissingMethodException on xbuild
+			//AddAttribute (e, "id", args.ProjectId.ToString ());
 		}
 
 		void OnProjectFinished (object sender, ProjectFinishedEventArgs args)

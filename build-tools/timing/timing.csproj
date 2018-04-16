@@ -1,28 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProjectGuid>{37CAA28C-40BE-4253-BA68-CC5D7316A617}</ProjectGuid>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="timing.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug</OutputPath>
+    <OutputPath>..\..\bin\TestDebug</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
+    <OutputPath>..\..\bin\TestRelease</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-  <Import Project="..\scripts\TestApks.targets" />
-  <Target Name="LogcatTiming">
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > tmp-logcat-timing.log" />
-    <ProcessLogcatTiming
-        InputFilename="tmp-logcat-timing.log"
-        ApplicationPackageName="$(Package)"
-        PID="$(PID)"
-        ResultsFilename="tmp-timing-results.csv"
-        DefinitionsFilename="..\scripts\TimingDefinitions.txt"
-        AddResults="true"
-        Activity="$(Activity)" />
-  </Target>
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+    </BuildDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
+      <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
+      <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

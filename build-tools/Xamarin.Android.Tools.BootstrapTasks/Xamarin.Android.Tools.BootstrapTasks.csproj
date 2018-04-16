@@ -47,8 +47,10 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\ProcessMSBuildTiming.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RenameTestCases.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\TimingLogger.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />

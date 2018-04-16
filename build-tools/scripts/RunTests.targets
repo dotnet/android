@@ -95,10 +95,14 @@
         Properties="AotAssemblies=True"
     />
   </Target>
+  <Target Name="RunPerformanceTests">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />
+  </Target>
   <ItemGroup>
     <_RunTestTarget Include="RunNUnitTests" />
     <_RunTestTarget Include="RunJavaInteropTests" />
     <_RunTestTarget Include="RunApkTests" />
+    <_RunTestTarget Include="RunPerformanceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">
     <MSBuild
