@@ -18,8 +18,7 @@
     <BuildDependsOn>
       ResolveReferences;
       _CopyBootstrapTasksAssembly;
-      _DownloadItems;
-      _UnzipFiles;
+      _CreateAndroidToolchains;
       _CreateMxeToolchains;
       _AcceptAndroidSdkLicenses;
     </BuildDependsOn>
