@@ -72,6 +72,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeBehindUnitTests", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performance-Tests", "Performance-Tests", "{68B8E272-5B12-47AA-8923-550B9CE535C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Timing", "tests\Xamarin.Android.Timing\Xamarin.Android.Timing.csproj", "{B5E42232-0B27-44B7-8FA6-1244230BB6EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timing\timing.csproj", "{37CAA28C-40BE-4253-BA68-CC5D7316A617}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.projitems*{195be9c2-1f91-40dc-bd6d-de860bf083fb}*SharedItemsImports = 13
@@ -186,6 +192,14 @@ Global
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5E42232-0B27-44B7-8FA6-1244230BB6EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5E42232-0B27-44B7-8FA6-1244230BB6EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5E42232-0B27-44B7-8FA6-1244230BB6EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5E42232-0B27-44B7-8FA6-1244230BB6EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -216,6 +230,8 @@ Global
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38} = {9B63992C-2201-4BB0-BD00-D637B481A995}
+		{B5E42232-0B27-44B7-8FA6-1244230BB6EE} = {68B8E272-5B12-47AA-8923-550B9CE535C7}
+		{37CAA28C-40BE-4253-BA68-CC5D7316A617} = {68B8E272-5B12-47AA-8923-550B9CE535C7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8643CD20-B195-4919-8135-27549488237E}
