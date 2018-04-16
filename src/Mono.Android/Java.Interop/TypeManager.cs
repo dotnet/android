@@ -358,5 +358,20 @@ namespace Java.Interop {
 				}
 			}
 		}
+
+		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
+		internal class JavaTypeManager : Java.Lang.Object
+		{
+			[Register ("activate", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V", "")]
+			static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
+			{
+				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+			}
+
+			internal static Delegate GetActivateHandler ()
+			{
+				return TypeManager.GetActivateHandler ();
+			}
+		}
 	}
 }

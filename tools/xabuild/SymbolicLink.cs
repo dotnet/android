@@ -11,15 +11,7 @@ namespace Xamarin.Android.Build
 		{
 			if (!Directory.Exists (source)) {
 				if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-					//NOTE: attempt with and without the AllowUnprivilegedCreate flag, seems to fix Windows Server 2016
-					if (!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory | SymbolLinkFlag.AllowUnprivilegedCreate) &&
-						!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
-						var error = new Win32Exception ().Message;
-						var result = Directory.Exists (source);
-						if (!result)
-							Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {error}");
-						return result;
-					}
+					return CreateWindowsSymLink (source, target);
 				} else {
 					return CreateUnixSymLink (source, target);
 				}
@@ -28,10 +20,24 @@ namespace Xamarin.Android.Build
 			return true;
 		}
 
+		static bool CreateWindowsSymLink (string source, string target)
+		{
+			//NOTE: attempt with and without the AllowUnprivilegedCreate flag, seems to fix Windows Server 2016
+			if (!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory | SymbolLinkFlag.AllowUnprivilegedCreate) &&
+					!CreateSymbolicLink (source, target, SymbolLinkFlag.Directory)) {
+				if (!Directory.Exists (source)) {
+					var error = new Win32Exception ().Message;
+					Console.Error.WriteLine ($"Unable to create symbolic link from `{source}` to `{target}`: {error}");
+					return false;
+				}
+			}
+			return true;
+		}
+
 		static bool CreateUnixSymLink (string source, string target)
 		{
 			int r = symlink (Path.GetFullPath (target), source);
-			if (r != 0) {
+			if (r != 0 && !Directory.Exists (source)) {
 				perror ($"`ln -s '{source}' '{target}'` failed");
 				return false;
 			}

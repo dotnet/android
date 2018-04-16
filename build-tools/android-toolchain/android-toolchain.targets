@@ -8,7 +8,7 @@
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
-        Projects="..\..\src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
+        Projects="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
         Properties="OutputPath=$(AndroidToolchainDirectory)\"
     />
   </Target>

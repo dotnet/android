@@ -69,10 +69,17 @@
       DependsOnTargets="_GetBundleOutputPath"
       Inputs=""
       Outputs="$(_BundlePath)">
+    <PropertyGroup>
+      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(Configuration)</XABundleDownloadPrefix>
+    </PropertyGroup>
     <DownloadUri
         ContinueOnError="True"
-        SourceUris="$(_AzureBaseUri)$(Configuration)/$(XABundleFileName)"
+        SourceUris="$(XABundleDownloadPrefix)/$(XABundleFileName)"
         DestinationFiles="$(_BundlePath)"
+    />
+    <Error
+        Text="The Windows build depends on a cached mono bundle, that may not be available yet. Try going back a few commits (with git reset) to download a different bundle."
+        Condition=" '$(HostOS)' == 'Windows' And '$(MSBuildLastTaskResult)' == 'False' "
     />
   </Target>
   <Target Name="_DownloadNuGet"
@@ -90,9 +97,13 @@
       Condition=" Exists('$(_BundlePath)') "
       Inputs="$(_BundlePath)"
       Outputs="$(OutputPath).extracted-$(XABundleFileName)">
+    <PropertyGroup>
+      <XABundleUnzipPath Condition=" '$(XABundleUnzipPath)' == '' "></XABundleUnzipPath>
+    </PropertyGroup>
     <SystemUnzip
         SourceFiles="$(_BundlePath)"
         HostOS="$(HostOS)"
+        TempUnzipDir="$(XABundleUnzipPath)"
         DestinationFolder="..\..\bin\$(Configuration)"
     />
     <WriteLinesToFile

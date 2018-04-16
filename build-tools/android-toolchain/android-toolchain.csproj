@@ -35,7 +35,7 @@
       <Name>dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
+    <ProjectReference Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
       <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
       <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

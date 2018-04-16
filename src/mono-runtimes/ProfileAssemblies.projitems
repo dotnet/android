@@ -46,6 +46,7 @@
     <MonoFacadeAssembly Include="System.Linq.Expressions.dll" />
     <MonoFacadeAssembly Include="System.Linq.Parallel.dll" />
     <MonoFacadeAssembly Include="System.Linq.Queryable.dll" />
+    <MonoFacadeAssembly Include="System.Memory.dll" />
     <MonoFacadeAssembly Include="System.Net.AuthenticationManager.dll" />
     <MonoFacadeAssembly Include="System.Net.Cache.dll" />
     <MonoFacadeAssembly Include="System.Net.HttpListener.dll" />
