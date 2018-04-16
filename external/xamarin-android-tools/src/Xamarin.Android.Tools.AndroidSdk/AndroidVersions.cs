@@ -62,10 +62,12 @@ namespace Xamarin.Android.Tools
 		{
 			foreach (var version in versions) {
 				installedVersions.Add (version);
-				if (MaxStableVersion == null || (version.Stable && MaxStableVersion.TargetFrameworkVersion < version.TargetFrameworkVersion)) {
+				if (!version.Stable)
+					continue;
+				if (MaxStableVersion == null || (MaxStableVersion.TargetFrameworkVersion < version.TargetFrameworkVersion)) {
 					MaxStableVersion    = version;
 				}
-				if (MinStableVersion == null || (version.Stable && MinStableVersion.TargetFrameworkVersion > version.TargetFrameworkVersion)) {
+				if (MinStableVersion == null || (MinStableVersion.TargetFrameworkVersion > version.TargetFrameworkVersion)) {
 					MinStableVersion = version;
 				}
 			}
