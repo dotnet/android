@@ -176,6 +176,22 @@ namespace MonoDroid.Generation {
 		public bool IsValid { get; private set; }
 		public string Annotation { get; internal set; }
 
+		public virtual bool Matches (MethodBase other)
+		{
+			if (Name != other.Name)
+				return false;
+
+			if (Parameters.Count != other.Parameters.Count)
+				return false;
+
+			for (int i = 0; i < Parameters.Count; i++) {
+				if (Parameters [i].RawNativeType != other.Parameters [i].RawNativeType)
+					return false;
+			}
+
+			return true;
+		}
+
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
 			opt.ContextMethod = this;

@@ -19,6 +19,12 @@ namespace Com.Mypackage
 		[Register ("barWithParams", "(ZID)Ljava/lang/String;", "")]
 		public string BarWithParams (bool a, int b, double c) => string.Empty;
 
+		[Register ("unknownTypes", "(Lmy/package/foo/Unknown;)V", "")]
+		public void UnknownTypes (object unknown) { }
+
+		[Register ("unknownTypes", "(Lmy/package/foo/Unknown;)Lmy/package/foo/Unknown;", "")]
+		public object UnknownTypesReturn (object unknown) => null;
+
 		[Register ("value")]
 		public const int Value = 1234;
 	}
@@ -83,6 +89,31 @@ namespace generatortests
 			Assert.IsFalse (method.IsFinal);
 			Assert.IsFalse (method.IsStatic);
 			Assert.IsNull (method.Deprecated);
+		}
+
+		[Test]
+		public void Method_Matches_True ()
+		{
+			var type = module.GetType ("Com.Mypackage.Foo");
+			var @class = new ManagedClassGen (type);
+			var unknownTypes = type.Methods.First (m => m.Name == "UnknownTypes");
+			var methodA = new ManagedMethod (@class, unknownTypes);
+			var methodB = new ManagedMethod (@class, unknownTypes);
+			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
+		}
+
+		[Test]
+		public void Method_Matches_False ()
+		{
+			var type = module.GetType ("Com.Mypackage.Foo");
+			var @class = new ManagedClassGen (type);
+			var unknownTypesA = type.Methods.First (m => m.Name == "UnknownTypes");
+			var unknownTypesB = type.Methods.First (m => m.Name == "UnknownTypesReturn");
+			unknownTypesB.Name = "UnknownTypes";
+			var methodA = new ManagedMethod (@class, unknownTypesA);
+			var methodB = new ManagedMethod (@class, unknownTypesB);
+			//Everything the same besides return type
+			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
 
 		[Test]

@@ -387,6 +387,22 @@ namespace MonoDroid.Generation {
 			get { return RetVal.FullName; }
 		}
 
+		public override bool Matches (MethodBase other)
+		{
+			bool ret = base.Matches (other);
+			if (!ret)
+				return ret;
+
+			var otherMethod = other as Method;
+			if (otherMethod == null)
+				return false;
+
+			if (RetVal.RawJavaType != otherMethod.RetVal.RawJavaType)
+				return false;
+
+			return true;
+		}
+
 		public string GetMetadataXPathReference (GenBase declaringType)
 		{
 			return string.Format ("{0}/method[@name='{1}'{2}]", declaringType.MetadataXPathReference, JavaName, Parameters.GetMethodXPathPredicate ());

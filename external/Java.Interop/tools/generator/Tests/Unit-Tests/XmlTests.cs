@@ -34,6 +34,12 @@ namespace generatortests
 				<parameter name=""b"" type=""int"" />
 				<parameter name=""c"" type=""double"" />
 			</method>
+			<method abstract=""false"" deprecated=""not deprecated"" final=""false"" name=""unknownTypes"" native=""false"" return=""void"" static=""false"" synchronized=""false"" visibility=""public"" managedReturn=""System.Void"">
+				<parameter name=""unknown"" type=""my.package.Unknown"" />
+			</method>
+			<method abstract=""false"" deprecated=""not deprecated"" final=""false"" name=""unknownTypesReturn"" native=""false"" return=""my.package.Unknown"" static=""false"" synchronized=""false"" visibility=""public"" managedReturn=""System.Object"">
+				<parameter name=""unknown"" type=""my.package.Unknown"" />
+			</method>
 	  		<field deprecated=""not deprecated"" final=""true"" name=""value"" static=""true"" transient=""false"" type=""int"" type-generic-aware=""int"" visibility=""public"" volatile=""false"" value=""1234"" />
 		</class>
 		<interface abstract=""true"" deprecated=""not deprecated"" final=""false"" name=""service"" static=""false"" visibility=""public"" />
@@ -85,6 +91,31 @@ namespace generatortests
 			Assert.IsFalse (method.IsFinal);
 			Assert.IsFalse (method.IsStatic);
 			Assert.IsNull (method.Deprecated);
+		}
+
+		[Test]
+		public void Method_Matches_True ()
+		{
+			var element = package.Element ("class");
+			var @class = new XmlClassGen (package, element);
+			var unknownTypes = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
+			var methodA = new XmlMethod (@class, unknownTypes);
+			var methodB = new XmlMethod (@class, unknownTypes);
+			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
+		}
+
+		[Test]
+		public void Method_Matches_False ()
+		{
+			var element = package.Element ("class");
+			var @class = new XmlClassGen (package, element);
+			var unknownTypesA = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
+			var unknownTypesB = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypesReturn").First ();
+			unknownTypesB.Attribute ("name").Value = "unknownTypes";
+			var methodA = new XmlMethod (@class, unknownTypesA);
+			var methodB = new XmlMethod (@class, unknownTypesB);
+			//Everything the same besides return type
+			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
 
 		[Test]

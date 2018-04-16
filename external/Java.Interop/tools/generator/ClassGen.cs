@@ -246,7 +246,7 @@ namespace MonoDroid.Generation {
 				if (baseClass != null && RawVisibility == "public" && baseClass.RawVisibility != "public") {
 					//Skip the BaseType and copy over any "missing" methods
 					foreach (var baseMethod in baseClass.Methods) {
-						var method = Methods.FirstOrDefault (m => m.Name == baseMethod.Name && m.Parameters.JavaSignature == baseMethod.Parameters.JavaSignature);
+						var method = Methods.FirstOrDefault (m => m.Matches (baseMethod));
 						if (method == null)
 							Methods.Add (baseMethod);
 					}
