@@ -135,7 +135,10 @@ namespace Xamarin.ProjectTools
 				var referenceGroup = p.Elements ().FirstOrDefault (x => x.Name.LocalName == "ItemGroup" &&  x.HasElements && x.Elements ().Any (e => e.Name.LocalName == "Reference"));
 				if (referenceGroup != null) {
 					foreach (var pr in PackageReferences) {
+						//NOTE: without the namespace it puts xmlns=""
+						XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 						var e = XElement.Parse ($"<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
+						e.Name = ns + e.Name.LocalName;
 						referenceGroup.Add (e);
 					}
 					sw = new StringWriter ();

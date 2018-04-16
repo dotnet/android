@@ -148,6 +148,12 @@ namespace Xamarin.Android.Build
 				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
 				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
+
+				string nuget = Path.Combine(mono, "xbuild", "Microsoft", "NuGet");
+				if (Directory.Exists(nuget)) {
+					NuGetTargets = Path.Combine (nuget, "Microsoft.NuGet.targets");
+					NuGetProps   = Path.Combine (nuget, "Microsoft.NuGet.props");
+				}
 				if (!string.IsNullOrEmpty (DotNetSdkPath)) {
 					NuGetRestoreTargets  = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
 				}
