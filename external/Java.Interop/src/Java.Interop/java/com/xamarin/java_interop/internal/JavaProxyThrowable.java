@@ -11,7 +11,7 @@ import com.xamarin.java_interop.GCUserPeerable;
 	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyThrowable, Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
-				JavaProxyObject.class,
+				JavaProxyThrowable.class,
 				assemblyQualifiedName,
 				"");
 	}
