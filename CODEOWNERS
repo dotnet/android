@@ -1,0 +1,32 @@
+# xamarin-android Code Owners File
+#
+# GitHub uses this file to determine who to assign for reviews
+# on pull requests. Please keep this file alphabetically sorted.
+#
+# References:
+#
+# https://github.com/blog/2392-introducing-code-owners
+# https://help.github.com/articles/about-codeowners
+
+# These owners will be the default owners for everything in the repo.
+* @jonpryor
+
+# Order is important. The last matching pattern has the most precedence.
+
+/build-tools/api-merge @atsushieno @jonpryor
+/build-tools/api-xml-adjuster @atsushieno @jonpryor
+/build-tools/debian-metadata @directhex
+/build-tools/enumification-helpers @atsushieno @jonpryor
+/build-tools/manifest-attribute-codegen @atsushieno @jonpryor
+
+/src/OpenTK-1.0 @radekdoulik @jonpryor
+/src/Mono.Android.Export @atsushieno @jonpryor
+/src/Xamarin.Android.Build.Tasks @dellis1972
+/src/Xamarin.Android.NamingCustomAttributes @atsushieno @jonpryor
+/src/Xamarin.Android.Tools.Aidl @atsushieno @jonpryor
+
+# Android Designer team relies on the files in this directory,
+# any changes there should be ran past them
+/src/Mono.Android/java/mono/android/ @garuma @jonpryor
+
+/tools/xabuild @jonathanpeppers @jonpryor
