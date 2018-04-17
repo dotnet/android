@@ -118,17 +118,12 @@ namespace Xamarin.Android.Tasks
 
 		public static void LogCodedWarning (this TaskLoggingHelper log, string code, string message, params object [] messageArgs)
 		{
-			log.LogWarning (
-					subcategory:        string.Empty,
-					warningCode:        code,
-					helpKeyword:        string.Empty,
-					file:               string.Empty,
-					lineNumber:         0,
-					columnNumber:       0,
-					endLineNumber:      0,
-					endColumnNumber:    0,
-					message:            message,
-					messageArgs:        messageArgs);
+			log.LogWarning (string.Empty, code, string.Empty, string.Empty, 0, 0, 0, 0, message, messageArgs);
+		}
+
+		public static void LogCodedWarning (this TaskLoggingHelper log, string code, string file, int lineNumber, string message, params object [] messageArgs)
+		{
+			log.LogWarning (string.Empty, code, string.Empty, file, lineNumber, 0, 0, 0, message, messageArgs);
 		}
 
 		public static Action<TraceLevel, string> CreateTaskLogger (this Task task)
