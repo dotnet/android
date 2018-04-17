@@ -2612,7 +2612,11 @@ because xbuild doesn't support framework reference assemblies.
 		TimestampAuthorityCertificateAlias="$(JarsignerTimestampAuthorityCertificateAlias)"
 		SigningAlgorithm="$(AndroidApkSigningAlgorithm)"
 	/>
-	<Delete Files="$(ApkFileSigned)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
+	<ItemGroup>
+		<ApkAbiFilesSigned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
+		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
+	</ItemGroup>
+	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		Source="%(ApkAbiFilesIntermediate.FullPath)"
 		DestinationDirectory="$(OutDir)"
@@ -2633,8 +2637,8 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 	<Message Text="Signed android package '$(ApkFileSigned)'" />
 	<ItemGroup>
-		<ApkAbiFilesSigned Include="$(ApkFileSigned)" />
-		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
+		<ApkAbiFilesSigned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' != 'true'" />
+		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' != 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' != 'true' "/>
 	<ItemGroup>
