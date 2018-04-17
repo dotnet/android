@@ -204,24 +204,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckSignApk ([Values(true, false)] bool useApkSigner)
+		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			if (useApkSigner && !File.Exists (Path.Combine (AndroidSdkPath, "build-tools", "26.0.1", "apksigner"+ ext))) {
-				Assert.Ignore ("Skipping test. Required build-tools verison 26.0.1 is not installed.");
+			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
+			if (useApkSigner && !foundApkSigner) {
+				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
 			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			if (useApkSigner) {
 				proj.SetProperty ("AndroidUseApkSigner", "true");
-				proj.SetProperty ("AndroidSdkBuildToolsVersion", "26.0.1");
+	//			proj.SetProperty ("AndroidSdkBuildToolsVersion", "26.0.1");
 			} else {
 				proj.RemoveProperty ("AndroidUseApkSigner");
 			}
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
+				proj.AndroidResources.First ().Timestamp = null;
+				Assert.IsTrue (b.Build (proj), "Second build failed");
 			}
 		}
 
