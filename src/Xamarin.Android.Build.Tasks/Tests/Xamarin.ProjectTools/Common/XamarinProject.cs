@@ -7,6 +7,8 @@ using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
 
+using XABuildPaths = Xamarin.Android.Build.Paths;
+
 namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinProject 
@@ -190,7 +192,7 @@ namespace Xamarin.ProjectTools
 
 		public string Root {
 			get {
-				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
+				return XABuildPaths.TestOutputDirectory;
 			}
 		}
 

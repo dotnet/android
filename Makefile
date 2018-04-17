@@ -64,7 +64,17 @@ export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 prepare:: linux-prepare
 endif # $(OS_NAME)=Linux
 
-prepare:: prepare-msbuild
+prepare:: prepare-paths prepare-msbuild
+
+XA_BUILD_PATHS_OUT = bin/Test$(CONFIGURATION)/XABuildPaths.cs
+
+prepare-paths: $(XA_BUILD_PATHS_OUT)
+
+$(XA_BUILD_PATHS_OUT): build-tools/scripts/XABuildPaths.cs.in
+	mkdir -p $(shell dirname $@)
+	sed -e 's;@CONFIGURATION@;$(CONFIGURATION);g' \
+	    -e 's;@TOP_DIRECTORY@;$(shell pwd);g' < $< > $@
+	cat $@
 
 linux-prepare::
 	BINFMT_MISC_TROUBLE="cli win" \
