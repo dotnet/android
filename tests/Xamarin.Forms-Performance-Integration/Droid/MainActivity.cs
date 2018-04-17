@@ -10,7 +10,7 @@ using Android.OS;
 
 namespace Xamarin.Forms.Performance.Integration.Droid
 {
-	[Activity (Icon = "@drawable/icon", Theme = "@style/MyTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+	[Activity (Icon = "@drawable/icon", Theme = "@style/MyTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, Name = "xamarin.forms.performance.integration.MainActivity")]
 	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
 	{
 		bool firstOnCreate = true;
