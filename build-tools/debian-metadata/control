@@ -10,7 +10,7 @@ Vcs-Browser: https://github.com/xamarin/xamarin-android
 
 Package: xamarin.android-oss
 Architecture: amd64
-Depends: mono-xbuild (>= 5.2), java8-sdk, ${misc:Depends}, ${shlibs:Depends}
+Depends: msbuild, java8-sdk, ${misc:Depends}, ${shlibs:Depends}
 Description: Xamarin.Android libraries and runtime (host component)
  The best way to build native Android apps.
  .

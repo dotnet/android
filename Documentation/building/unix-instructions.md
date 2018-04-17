@@ -1,8 +1,8 @@
 # Building Xamarin.Android on Linux and macOS
 
 Building Xamarin.Android on Linux and macOS relies on GNU make and
-MSBuild via the `xbuild` command (within Mono). MSBuild via `msbuild`
-can also be used by setting the `$(MSBUILD)` make variable to `msbuild`.
+MSBuild via the `msbuild` command (within Mono). MSBuild via `xbuild`
+can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
 # Building Xamarin.Android
 
@@ -240,7 +240,7 @@ history.
 The various Mono runtimes -- over *20* of them (!) -- all store object code
 within `src/mono-runtimes/obj/$(Configuration)/TARGET`.
 
-If you change sources within `external/mono`, a top-level `make`/`xbuild`
+If you change sources within `external/mono`, a top-level `make`/`msbuild`
 invocation may not rebuild those mono native binaries. To explicitly rebuild
 *all* Mono runtimes, you must do two things:
 
@@ -256,7 +256,7 @@ an "intermediate" commit in order to trigger a rebuild.)
 The `ForceBuild` target can be executed as:
 
 	# Build and install all runtimes
-	$ xbuild /t:ForceBuild src/mono-runtimes/mono-runtimes.csproj
+	$ msbuild /t:ForceBuild src/mono-runtimes/mono-runtimes.csproj
 
 The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
@@ -279,7 +279,7 @@ For example, to rebuild Mono for armeabi-v7a:
 	$ make -C src/mono-runtimes/obj/Debug/armeabi-v7a
 	
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
-	$ xbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
+	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
 
 
 # How do I rebuild BCL assemblies?
@@ -300,5 +300,5 @@ Once the assemblies have been rebuilt, they can be copied into the appropriate
 Xamarin.Android SDK directory by using the `_InstallBcl` target:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
-	$ xbuild src/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
+	$ msbuild src/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
 
