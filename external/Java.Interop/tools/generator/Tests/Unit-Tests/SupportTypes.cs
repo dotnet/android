@@ -137,4 +137,114 @@ namespace generatortests
 			}
 		}
 	}
+
+	class TestMethod : Method
+	{
+		int apiLevel = 27;
+		string @return, managedReturn, visibility = "public", deprecated;
+		bool isAbstract, isFinal, isStatic, asyncify, isReturnEnumified;
+
+		public TestMethod (TestClass @class, string name, string @return = "void") : base (@class)
+		{
+			Name = name;
+			this.@return = @return;
+			FillReturnType ();
+		}
+
+		public TestMethod SetApiLevel (int apiLevel)
+		{
+			this.apiLevel = apiLevel;
+			return this;
+		}
+
+		public TestMethod SetManagedReturn (string managedReturn)
+		{
+			this.managedReturn = managedReturn;
+			FillReturnType ();
+			return this;
+		}
+
+		public TestMethod SetFinal ()
+		{
+			isFinal = true;
+			IsVirtual = false;
+			return this;
+		}
+
+		public TestMethod SetAbstract ()
+		{
+			isAbstract = true;
+			return this;
+		}
+
+		public TestMethod SetStatic ()
+		{
+			isFinal =
+				isStatic = true;
+			IsVirtual = false;
+			return this;
+		}
+
+		public TestMethod SetAsyncify ()
+		{
+			asyncify = true;
+			return this;
+		}
+
+		public TestMethod SetVisibility (string visibility)
+		{
+			this.visibility = visibility;
+			return this;
+		}
+
+		public TestMethod SetDeprecated (string deprecated)
+		{
+			this.deprecated = deprecated;
+			return this;
+		}
+
+		public TestMethod SetReturnEnumified ()
+		{
+			this.isReturnEnumified = true;
+			return this;
+		}
+
+		public override string ArgsType => null;
+
+		public override string EventName => null;
+
+		public override bool IsAbstract => isAbstract;
+
+		public override bool IsFinal => isFinal;
+
+		public override bool IsInterfaceDefaultMethod => false;
+
+		public override string JavaName => Name;
+
+		public override bool IsStatic => isStatic;
+
+		public override bool IsVirtual { get; set; } = true;
+
+		public override string Return => @return;
+
+		public override bool IsReturnEnumified => isReturnEnumified;
+
+		public override string ManagedReturn => managedReturn;
+
+		public override int SourceApiLevel => apiLevel;
+
+		public override bool Asyncify => asyncify;
+
+		public override string CustomAttributes => null;
+
+		public override string Name { get; set; }
+
+		protected override string PropertyNameOverride => null;
+
+		public override string AssemblyName => null;
+
+		public override string Deprecated => deprecated;
+
+		public override string Visibility => visibility;
+	}
 }

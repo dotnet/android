@@ -1,34 +1,13 @@
 ﻿using MonoDroid.Generation;
 using NUnit.Framework;
-using System.IO;
-using System.Text;
+using Xamarin.Android.Binder;
 
 namespace generatortests
 {
 	[TestFixture]
-	public class XamarinAndroidCodeGeneratorTests
+	class XamarinAndroidCodeGeneratorTests : CodeGeneratorTests
 	{
-		CodeGenerator generator;
-		StringBuilder builder;
-		StringWriter writer;
-		CodeGenerationOptions options;
-
-		[SetUp]
-		public void SetUp ()
-		{
-			builder = new StringBuilder ();
-			writer = new StringWriter (builder);
-			options = new CodeGenerationOptions {
-				CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget.XamarinAndroid,
-			};
-			generator = options.CodeGenerator;
-		}
-
-		[TearDown]
-		public void TearDown ()
-		{
-			writer.Dispose ();
-		}
+		protected override CodeGenerationTarget Target => CodeGenerationTarget.XamarinAndroid;
 
 		[Test]
 		public void WriteClassHandle()
@@ -170,40 +149,6 @@ public int bar {
 		}
 
 		[Test]
-		public void WriteEnumifiedField ()
-		{
-			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var field = new TestField ("int", "bar").SetEnumified ();
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
-			generator.WriteField (field, writer, string.Empty, options, @class);
-
-			StringAssert.Contains ("[global::Android.Runtime.GeneratedEnum]", builder.ToString (), "Should contain GeneratedEnumAttribute!");
-		}
-
-		[Test]
-		public void WriteDeprecatedField ()
-		{
-			var comment = "Don't use this!";
-			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var field = new TestField ("int", "bar").SetConstant ("1234").SetDeprecated (comment);
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
-			generator.WriteField (field, writer, string.Empty, options, @class);
-
-			StringAssert.Contains ($"[Obsolete (\"{comment}\")]", builder.ToString (), "Should contain ObsoleteAttribute!");
-		}
-
-		[Test]
-		public void WriteProtectedField ()
-		{
-			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var field = new TestField ("int", "bar").SetVisibility ("protected");
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
-			generator.WriteField (field, writer, string.Empty, options, @class);
-
-			StringAssert.Contains ("protected int bar {", builder.ToString (), "Property should be protected!");
-		}
-
-		[Test]
 		public void WriteConstantField ()
 		{
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
@@ -252,6 +197,297 @@ public const string bar = (string) ""hello"";
 [Register (""bar"")]
 public const int bar = (int) 1234;
 ", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteMethodIdField ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+			generator.WriteMethodIdField (method, writer, string.Empty, options);
+
+			Assert.AreEqual (@"static IntPtr id_bar;
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteMethodBody ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethodBody (method, writer, string.Empty, options);
+
+			Assert.AreEqual (@"if (id_bar == IntPtr.Zero)
+	id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()V"");
+try {
+
+	if (((object) this).GetType () == ThresholdType)
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_bar);
+	else
+		JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, ""bar"", ""()V""));
+} finally {
+}
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteVoidMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static Delegate cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_bar);
+	return cb_bar;
+}
+
+static void n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	__this.bar ();
+}
+#pragma warning restore 0169
+
+static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()V"", ""GetbarHandler"")]
+public virtual unsafe void bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()V"");
+	try {
+
+		if (((object) this).GetType () == ThresholdType)
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_bar);
+		else
+			JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, ""bar"", ""()V""));
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteIntMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "int");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static Delegate cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_bar);
+	return cb_bar;
+}
+
+static int n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	return __this.bar ();
+}
+#pragma warning restore 0169
+
+static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()I"", ""GetbarHandler"")]
+public virtual unsafe int bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()I"");
+	try {
+
+		if (((object) this).GetType () == ThresholdType)
+			return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_bar);
+		else
+			return JNIEnv.CallNonvirtualIntMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, ""bar"", ""()I""));
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteStringMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "java.lang.String");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static Delegate cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_bar);
+	return cb_bar;
+}
+
+static IntPtr n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	return JNIEnv.NewString (__this.bar ());
+}
+#pragma warning restore 0169
+
+static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()Ljava/lang/String;"", ""GetbarHandler"")]
+public virtual unsafe string bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()Ljava/lang/String;"");
+	try {
+
+		if (((object) this).GetType () == ThresholdType)
+			return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_bar), JniHandleOwnership.TransferLocalRef);
+		else
+			return JNIEnv.GetString (JNIEnv.CallNonvirtualObjectMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, ""bar"", ""()Ljava/lang/String;"")), JniHandleOwnership.TransferLocalRef);
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteFinalVoidMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetFinal ();
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()V"", """")]
+public unsafe void bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()V"");
+	try {
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_bar);
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteAbstractVoidMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetAbstract ();
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static Delegate cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_bar);
+	return cb_bar;
+}
+
+static void n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	__this.bar ();
+}
+#pragma warning restore 0169
+
+static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()V"", ""GetbarHandler"")]
+public virtual unsafe void bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetMethodID (class_ref, ""bar"", ""()V"");
+	try {
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_bar);
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteStaticVoidMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetStatic ();
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (@"static IntPtr id_bar;
+// Metadata.xml XPath method reference: path=""/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]""
+[Register (""bar"", ""()V"", """")]
+public static unsafe void bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetStaticMethodID (class_ref, ""bar"", ""()V"");
+	try {
+		JNIEnv.CallStaticVoidMethod  (class_ref, id_bar);
+	} finally {
+	}
+}
+
+", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteAsyncifiedVoidMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetAsyncify ();
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			StringAssert.Contains (@"public global::System.Threading.Tasks.Task barAsync ()
+{
+	return global::System.Threading.Tasks.Task.Run (() => bar ());
+}", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteAsyncifiedIntMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "int").SetAsyncify ();
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			StringAssert.Contains (@"public global::System.Threading.Tasks.Task<int> barAsync ()
+{
+	return global::System.Threading.Tasks.Task.Run (() => bar ());
+}", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteProtectedMethod ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetVisibility ("protected");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			StringAssert.Contains (@"protected virtual unsafe void bar ()", builder.ToString ());
 		}
 	}
 }

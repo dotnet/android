@@ -47,9 +47,9 @@ namespace MonoDroid.Generation {
 
 		public void GenerateCallbacks (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase gen, string name)
 		{
-			Getter.GenerateCallback (sw, indent, opt, gen, name);
+			opt.CodeGenerator.WriteMethodCallback (Getter, sw, indent, opt, gen, name);
 			if (Setter != null)
-				Setter.GenerateCallback (sw, indent, opt, gen, name);
+				opt.CodeGenerator.WriteMethodCallback (Setter, sw, indent, opt, gen, name);
 		}
 
 		public void GenerateAbstractDeclaration (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase gen)
@@ -83,12 +83,12 @@ namespace MonoDroid.Generation {
 				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
 			if (Getter.IsReturnEnumified)
 				sw.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
-			Getter.GenerateCustomAttributes (sw, indent);
+			opt.CodeGenerator.WriteMethodCustomAttributes (Getter, sw, indent);
 			sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] get;", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.AdditionalAttributeString ());
 			if (Setter != null) {
 				if (gen.IsGeneratable)
 					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
-				Setter.GenerateCustomAttributes (sw, indent);
+				opt.CodeGenerator.WriteMethodCustomAttributes (Setter, sw, indent);
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] set;", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.AdditionalAttributeString ());
 			}
 			sw.WriteLine ("{0}}}", indent);
@@ -121,18 +121,18 @@ namespace MonoDroid.Generation {
 		public void GenerateInvoker (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase container)
 		{
 			GenerateCallbacks (sw, indent, opt, container);
-			Getter.GenerateIdField (sw, indent, opt, invoker: true);
+			opt.CodeGenerator.WriteMethodIdField (Getter, sw, indent, opt, invoker: true);
 			if (Setter != null)
-				Setter.GenerateIdField (sw, indent, opt, invoker: true);
+				opt.CodeGenerator.WriteMethodIdField (Setter, sw, indent, opt, invoker: true);
 			sw.WriteLine ("{0}public unsafe {1} {2} {{", indent, opt.GetOutputName (Getter.ReturnType), AdjustedName);
 			sw.WriteLine ("{0}\tget {{", indent);
-			Getter.GenerateInvokerBody (sw, indent + "\t\t", opt);
+			opt.CodeGenerator.WriteMethodInvokerBody (Getter, sw, indent + "\t\t", opt);
 			sw.WriteLine ("{0}\t}}", indent);
 			if (Setter != null) {
 				string pname = Setter.Parameters [0].Name;
 				Setter.Parameters [0].Name = "value";
 				sw.WriteLine ("{0}\tset {{", indent);
-				Setter.GenerateInvokerBody (sw, indent + "\t\t", opt);
+				opt.CodeGenerator.WriteMethodInvokerBody (Setter, sw, indent + "\t\t", opt);
 				sw.WriteLine ("{0}\t}}", indent);
 				Setter.Parameters [0].Name = pname;
 			}
@@ -248,11 +248,11 @@ namespace MonoDroid.Generation {
 			bool is_virtual = Getter.IsVirtual && (Setter == null || Setter.IsVirtual);
 			if (with_callbacks && is_virtual) {
 				virtual_override = needNew + " virtual";
-				Getter.GenerateCallback (sw, indent, opt, gen, AdjustedName);
+				opt.CodeGenerator.WriteMethodCallback (Getter, sw, indent, opt, gen, AdjustedName);
 			}
 			if (with_callbacks && is_virtual && Setter != null) {
 				virtual_override = needNew + " virtual";
-				Setter.GenerateCallback (sw, indent, opt, gen, AdjustedName);
+				opt.CodeGenerator.WriteMethodCallback (Setter, sw, indent, opt, gen, AdjustedName);
 			}
 			virtual_override = force_override ? " override" : virtual_override;
 			if ((Getter ?? Setter).IsStatic)
@@ -260,31 +260,31 @@ namespace MonoDroid.Generation {
 			// It should be using AdjustedName instead of Name, but ICharSequence ("Formatted") properties are not caught by this...
 			else if (gen.BaseSymbol != null && gen.BaseSymbol.GetPropertyByName (Name, true) != null)
 				virtual_override = needNew + " override";
-			
-			Getter.GenerateIdField (sw, indent, opt);
+
+			opt.CodeGenerator.WriteMethodIdField (Getter, sw, indent, opt);
 			if (Setter != null)
-				Setter.GenerateIdField (sw, indent, opt);
+				opt.CodeGenerator.WriteMethodIdField (Setter, sw, indent, opt);
 			string visibility = Getter.IsAbstract && Getter.RetVal.IsGeneric ? "protected" : (Setter ?? Getter).Visibility;
 			// Unlike [Register], mcs does not allow applying [Obsolete] on property accessors, so we can apply them only under limited condition...
 			if (Getter.Deprecated != null && (Setter == null || Setter.Deprecated != null))
 				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (Setter != null && Setter.Deprecated != Getter.Deprecated ? " " + Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null));
-			Getter.GenerateCustomAttributes (sw, indent);
+			opt.CodeGenerator.WriteMethodCustomAttributes (Getter, sw, indent);
 			sw.WriteLine ("{0}{1}{2} unsafe {3} {4} {{", indent, visibility, virtual_override, opt.GetOutputName (Getter.ReturnType), decl_name);
 			if (gen.IsGeneratable)
 				sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Getter.JavaName, Getter.Parameters.GetMethodXPathPredicate ());
 			sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, Getter.JavaName, Getter.JniSignature, Getter.ConnectorName, Getter.AdditionalAttributeString ());
 			sw.WriteLine ("{0}\tget {{", indent);
-			Getter.GenerateBody (sw, indent + "\t\t", opt);
+			opt.CodeGenerator.WriteMethodBody (Getter, sw, indent + "\t\t", opt);
 			sw.WriteLine ("{0}\t}}", indent);
 			if (Setter != null) {
 				if (gen.IsGeneratable)
 					sw.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, Setter.JavaName, Setter.Parameters.GetMethodXPathPredicate ());
-				Setter.GenerateCustomAttributes (sw, indent);
+				opt.CodeGenerator.WriteMethodCustomAttributes (Setter, sw, indent);
 				sw.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, Setter.JavaName, Setter.JniSignature, Setter.ConnectorName, Setter.AdditionalAttributeString ());
 				sw.WriteLine ("{0}\tset {{", indent);
 				string pname = Setter.Parameters [0].Name;
 				Setter.Parameters [0].Name = "value";
-				Setter.GenerateBody (sw, indent + "\t\t", opt);
+				opt.CodeGenerator.WriteMethodBody (Setter, sw, indent + "\t\t", opt);
 				Setter.Parameters [0].Name = pname;
 				sw.WriteLine ("{0}\t}}", indent);
 			} else if (GenerateDispatchingSetter) {

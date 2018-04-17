@@ -138,13 +138,13 @@ namespace MonoDroid.Generation {
 				writer.WriteLine ("{0}if (((object) this).GetType () == ThresholdType)", indent);
 				GenerateJNICall (method, writer, indent + "\t", opt,
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
-						opt.ContextType.GetObjectHandleProperty ("this") +
+						method.DeclaringType.GetObjectHandleProperty ("this") +
 						", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")",
 						declare_ret: false);
 				writer.WriteLine ("{0}else", indent);
 				GenerateJNICall (method, writer, indent + "\t", opt,
 						"JNIEnv.CallNonvirtual" + method.RetVal.CallMethodPrefix + "Method (" +
-						opt.ContextType.GetObjectHandleProperty ("this") +
+						method.DeclaringType.GetObjectHandleProperty ("this") +
 						", ThresholdClass, " +
 						string.Format ("JNIEnv.GetMethodID (ThresholdClass, \"{0}\", \"{1}\")", method.JavaName, method.JniSignature) +
 						method.Parameters.GetCallArgs (opt, invoker:false) + ")",
@@ -156,7 +156,7 @@ namespace MonoDroid.Generation {
 						indent,
 						opt,
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
-							opt.ContextType.GetObjectHandleProperty ("this") +
+							method.DeclaringType.GetObjectHandleProperty ("this") +
 							", " + method.EscapedIdName +
 							method.Parameters.GetCallArgs (opt, invoker:false) + ")",
 						declare_ret: true);

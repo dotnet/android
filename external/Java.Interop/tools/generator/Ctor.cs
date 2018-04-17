@@ -15,14 +15,10 @@ namespace MonoDroid.Generation {
 		bool is_acw;
 
 		public ManagedCtor (GenBase declaringType, MethodDefinition m)
-			: this (declaringType, m, new ManagedMethodBaseSupport (m))
-		{
-		}
-		
-		ManagedCtor (GenBase declaringType, MethodDefinition m, ManagedMethodBaseSupport support)
-			: base (declaringType, support)
+			: base (declaringType)
 		{
 			this.m = m;
+			GenericArguments = m.GenericArguments ();
 			name = m.Name;
 			// If 'elem' is a constructor for a non-static nested type, then
 			// the type of the containing class must be inserted as the first
@@ -31,7 +27,7 @@ namespace MonoDroid.Generation {
 				Parameters.AddFirst (Parameter.FromManagedType (m.DeclaringType.DeclaringType, DeclaringType.JavaName));
 			var regatt = m.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute");
 			is_acw = regatt != null;
-			foreach (var p in support.GetParameters (regatt))
+			foreach (var p in m.GetParameters (regatt))
 				Parameters.Add (p);
 		}
 
@@ -52,17 +48,26 @@ namespace MonoDroid.Generation {
 		public override string CustomAttributes {
 			get { return null; }
 		}
+
+		public override string AssemblyName => m.DeclaringType.Module.Assembly.FullName;
+
+		public override string Visibility => m.Visibility ();
+
+		public override string Deprecated => m.Deprecated ();
 	}
 #endif  // HAVE_CECIL
 
 	public class XmlCtor : Ctor {
+		XElement elem;
 		string name;
 		bool nonStaticNestedType;
 		bool missing_enclosing_class;
 		string custom_attributes;
 
-		public XmlCtor (GenBase declaringType, XElement elem) : base (declaringType, new XmlMethodBaseSupport (elem))
+		public XmlCtor (GenBase declaringType, XElement elem) : base (declaringType)
 		{
+			this.elem = elem;
+			GenericArguments = elem.GenericArguments ();
 			name = elem.XGetAttribute ("name");
 			int idx = name.LastIndexOf ('.');
 			if (idx > 0)
@@ -125,12 +130,16 @@ namespace MonoDroid.Generation {
 		public override string CustomAttributes {
 			get { return custom_attributes; }
 		}
+
+		public override string Deprecated => elem.Deprecated ();
+
+		public override string Visibility => elem.Visibility ();
 	}
 
 	public abstract class Ctor : MethodBase {
 
-		protected Ctor (GenBase declaringType, IMethodBaseSupport support)
-			: base (declaringType, support)
+		protected Ctor (GenBase declaringType)
+			: base (declaringType)
 		{
 		}
 		

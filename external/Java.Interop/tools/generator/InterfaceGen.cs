@@ -200,15 +200,15 @@ namespace MonoDroid.Generation {
 			foreach (Method m in Methods.Where (m => !m.IsStatic)) {
 				if (m.Name == Name || ContainsProperty (m.Name, true))
 					m.Name = "Invoke" + m.Name;
-				m.GenerateDeclaration (sw, indent, opt, this, AssemblyQualifiedName + "Invoker");
+				opt.CodeGenerator.WriteMethodDeclaration (m, sw, indent, opt, this, AssemblyQualifiedName + "Invoker");
 			}
 		}
 
 		void GenExtensionMethods (StreamWriter sw, string indent, CodeGenerationOptions opt)
 		{
 			foreach (Method m in Methods.Where (m => !m.IsStatic)) {
-				m.GenerateExtensionOverload (sw, indent, opt, FullName);
-				m.GenerateExtensionAsyncWrapper (sw, indent, opt, FullName);
+				opt.CodeGenerator.WriteMethodExtensionOverload (m, sw, indent, opt, FullName);
+				opt.CodeGenerator.WriteMethodExtensionAsyncWrapper (m, sw, indent, opt, FullName);
 			}
 		}
 
@@ -288,7 +288,7 @@ namespace MonoDroid.Generation {
 				if (members.Contains (sig))
 					continue;
 				members.Add (sig);
-				m.GenerateInvoker (sw, indent, opt, this);
+				opt.CodeGenerator.WriteMethodInvoker (m, sw, indent, opt, this);
 			}
 		}
 
@@ -632,9 +632,9 @@ namespace MonoDroid.Generation {
 				if (mapped)
 					continue;
 				if (gen.ExplicitlyImplementedInterfaceMethods.Contains (sig))
-					m.GenerateExplicitInterfaceImplementation (sw, indent, opt, this);
+					opt.CodeGenerator.WriteMethodExplicitInterfaceImplementation (m, sw, indent, opt, this);
 				else
-					m.GenerateAbstractDeclaration (sw, indent, opt, this, gen);
+					opt.CodeGenerator.WriteMethodAbstractDeclaration (m, sw, indent, opt, this, gen);
 				opt.ContextGeneratedMethods.Add (m); 
 			}
 			foreach (Property prop in Properties.Where (p => !p.Getter.IsStatic)) {
@@ -714,7 +714,7 @@ namespace MonoDroid.Generation {
 				}
 
 				foreach (var m in Methods.Where (m => m.IsStatic))
-					m.Generate (sw, indent + "\t", opt, this, true);
+					opt.CodeGenerator.WriteMethod (m, sw, indent + "\t", opt, this, true);
 
 				if (needsClassRef) {
 					sw.WriteLine ();

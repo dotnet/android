@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Text.RegularExpressions;
+using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
-
+using MonoDroid.Utils;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xamarin.Android.Tools;
 
-using MonoDroid.Utils;
-using System.Xml.Linq;
-
-namespace MonoDroid.Generation {
+namespace MonoDroid.Generation
+{
 #if HAVE_CECIL
 	public class ManagedMethod : Method {
 		MethodDefinition m;
@@ -21,30 +18,33 @@ namespace MonoDroid.Generation {
 		bool is_interface_default_method;
 
 		public ManagedMethod (GenBase declaringType, MethodDefinition m)
-			: this (declaringType, m, new ManagedMethodBaseSupport (m))
-		{
-		}
-		
-		ManagedMethod (GenBase declaringType, MethodDefinition m, ManagedMethodBaseSupport support)
-			: base (declaringType, support)
+			: base (declaringType)
 		{
 			this.m = m;
+			GenericArguments = m.GenericArguments ();
 			var regatt = m.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute");
 			is_acw = regatt != null;
 			is_interface_default_method = m.CustomAttributes
 				.Any (ca => ca.AttributeType.FullName == "Java.Interop.JavaInterfaceDefaultMethodAttribute");
 			java_name = regatt != null ? ((string) regatt.ConstructorArguments [0].Value) : m.Name;
 			
-			foreach (var p in support.GetParameters (regatt))
+			foreach (var p in m.GetParameters (regatt))
 				Parameters.Add (p);
 			
 			if (regatt != null) {
-				var rt = support.GetJniReturnType (regatt);
+				var jnisig = (string)(regatt.ConstructorArguments.Count > 1 ? regatt.ConstructorArguments [1].Value : regatt.Properties.First (p => p.Name == "JniSignature").Argument.Value);
+				var rt = JavaNativeTypeManager.ReturnTypeFromSignature (jnisig);
 				if (rt != null)
 					java_return = rt.Type;
 			}
 			FillReturnType ();
 		}
+
+		public override string AssemblyName => m.DeclaringType.Module.Assembly.FullName;
+
+		public override string Deprecated => m.Deprecated ();
+
+		public override string Visibility => m.Visibility ();
 
 		public override bool IsAcw {
 			get { return is_acw; }
@@ -128,9 +128,10 @@ namespace MonoDroid.Generation {
 		XElement elem;
 
 		public XmlMethod (GenBase declaringType, XElement elem)
-			: base (declaringType, new XmlMethodBaseSupport (elem))
+			: base (declaringType)
 		{
 			this.elem = elem;
+			GenericArguments = elem.GenericArguments ();
 			is_static = elem.XGetAttribute ("static") == "true";
 			is_virtual = !is_static && elem.XGetAttribute ("final") == "false";
 			if (elem.Attribute ("managedName") != null)
@@ -152,6 +153,9 @@ namespace MonoDroid.Generation {
 		}
 
 		// core XML-based properties
+		public override string Deprecated => elem.Deprecated ();
+
+		public override string Visibility => elem.Visibility ();
 
 		public override string ArgsType {
 			get {
@@ -255,8 +259,8 @@ namespace MonoDroid.Generation {
 
 	public abstract class Method : MethodBase {
 
-		protected Method (GenBase declaringType, IMethodBaseSupport support)
-			: base (declaringType, support)
+		protected Method (GenBase declaringType)
+			: base (declaringType)
 		{
 		}
 		
@@ -443,7 +447,7 @@ namespace MonoDroid.Generation {
 		}
 
 		string escaped_cb_name;
-		string EscapedCallbackName {
+		internal string EscapedCallbackName {
 			get {
 				if (escaped_cb_name == null)
 					escaped_cb_name = "cb_" + JavaName + IDSignature;
@@ -461,7 +465,7 @@ namespace MonoDroid.Generation {
 		}
 
 		string delegate_type;
-		string GetDelegateType ()
+		internal string GetDelegateType ()
 		{
 			if (delegate_type == null) {
 				string parms = Parameters.DelegateTypeParams;
@@ -478,368 +482,15 @@ namespace MonoDroid.Generation {
 			get { return IsReturnCharSequence ? Name + "Formatted" : Name; }
 		}
 
-		public void GenerateCallback (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, string property_name)
-		{
-			GenerateCallback (sw, indent, opt, type, property_name, false);
-		}
-
-		#region "if you're changing this part, also change method in CallbackCode.cs"
-		void GenerateCallback (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, string property_name, bool as_formatted)
-		{
-			string delegate_type = GetDelegateType ();
-			sw.WriteLine ("{0}static Delegate {1};", indent, EscapedCallbackName);
-			sw.WriteLine ("#pragma warning disable 0169");
-			sw.WriteLine ("{0}static Delegate {1} ()", indent, ConnectorName);
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\tif ({1} == null)", indent, EscapedCallbackName);
-			sw.WriteLine ("{0}\t\t{1} = JNINativeWrapper.CreateDelegate (({2}) n_{3});", indent, EscapedCallbackName, delegate_type, Name + IDSignature);
-			sw.WriteLine ("{0}\treturn {1};", indent, EscapedCallbackName);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-			sw.WriteLine ("{0}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, RetVal.NativeType, Name + IDSignature, Parameters.GetCallbackSignature (opt));
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\t{1} __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
-			foreach (string s in Parameters.GetCallbackPrep (opt))
-				sw.WriteLine ("{0}\t{1}", indent, s);
-			if (String.IsNullOrEmpty (property_name)) {
-				string call = "__this." + Name + (as_formatted ? "Formatted" : String.Empty) + " (" + Parameters.GetCall (opt) + ")";
-				if (IsVoid)
-					sw.WriteLine ("{0}\t{1};", indent, call);
-				else
-					sw.WriteLine ("{0}\t{1} {2};", indent, Parameters.HasCleanup ? RetVal.NativeType + " __ret =" : "return", RetVal.ToNative (opt, call));
-			} else {
-				if (IsVoid)
-					sw.WriteLine ("{0}\t__this.{1} = {2};", indent, property_name, Parameters.GetCall (opt));
-				else
-					sw.WriteLine ("{0}\t{1} {2};", indent, Parameters.HasCleanup ? RetVal.NativeType + " __ret =" : "return", RetVal.ToNative (opt, "__this." + property_name));
-			}
-			foreach (string cleanup in Parameters.GetCallbackCleanup (opt))
-				sw.WriteLine ("{0}\t{1}", indent, cleanup);
-			if (!IsVoid && Parameters.HasCleanup)
-				sw.WriteLine ("{0}\treturn __ret;", indent);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ("#pragma warning restore 0169");
-			sw.WriteLine ();
-		}
-		#endregion
-
-		public void GenerateCustomAttributes (StreamWriter sw, string indent)
-		{
-			if (this.GenericArguments != null && this.GenericArguments.Any ())
-				sw.WriteLine ("{0}{1}", indent, GenericArguments.ToGeneratedAttributeString ());
-			if (CustomAttributes != null)
-				sw.WriteLine ("{0}{1}", indent, CustomAttributes);
-			if (Annotation != null)
-				sw.WriteLine ("{0}{1}", indent, Annotation);
-		}
-
-		public void GenerateBody (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			opt.CodeGenerator.WriteMethodBody (this, sw, indent, opt);
-		}
-
-		public void GenerateExplicitInterfaceImplementation (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase iface)
-		{
-//			sw.WriteLine ("// explicitly implemented method from " + iface.FullName);
-			GenerateCustomAttributes (sw, indent);
-			sw.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (RetVal.FullName), opt.GetOutputName (iface.FullName), Name, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn {1} ({2});", indent, Name, Parameters.GetCall (opt));
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public void GenerateExplicitInterfaceInvoker (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase iface)
-		{
-			//sw.WriteLine ("\t\t// explicitly implemented invoker method from " + iface.FullName);
-			GenerateIdField (sw, indent, opt);
-			sw.WriteLine ("{0}unsafe {1} {2}.{3} ({4})",
-					indent, opt.GetOutputName (RetVal.FullName), opt.GetOutputName (iface.FullName), Name, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			GenerateBody (sw, indent + "\t", opt);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public void GenerateAbstractDeclaration (StreamWriter sw, string indent, CodeGenerationOptions opt, InterfaceGen gen, GenBase impl)
-		{
-			if (RetVal.IsGeneric && gen != null) {
-				GenerateCustomAttributes (sw, indent);
-				sw.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (RetVal.FullName), opt.GetOutputName (gen.FullName), Name, GenBase.GetSignature (this, opt));
-				sw.WriteLine ("{0}{{", indent);
-				sw.WriteLine ("{0}\tthrow new NotImplementedException ();", indent);
-				sw.WriteLine ("{0}}}", indent);
-				sw.WriteLine ();
-			} else {
-				bool gen_as_formatted = IsReturnCharSequence;
-				string name = AdjustedName;
-				GenerateCallback (sw, indent, opt, impl, null, gen_as_formatted);
-				if (DeclaringType.IsGeneratable)
-					sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
-				sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, JavaName, JniSignature, ConnectorName, this.AdditionalAttributeString ());
-				GenerateCustomAttributes (sw, indent);
-				sw.WriteLine ("{0}{1} abstract {2} {3} ({4});", indent, Visibility, opt.GetOutputName (RetVal.FullName), name, GenBase.GetSignature (this, opt));
-				sw.WriteLine ();
-
-				if (gen_as_formatted || Parameters.HasCharSequence)
-					GenerateStringOverload (sw, indent, opt);
-			}
-
-			GenerateAsyncWrapper (sw, indent, opt);
-		}
-
-		public void GenerateDeclaration (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, string adapter)
-		{
-			if (DeclaringType.IsGeneratable)
-				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
-			if (Deprecated != null)
-				sw.WriteLine ("[Obsolete (@\"{0}\")]", Deprecated.Replace ("\"", "\"\""));
-			if (IsReturnEnumified)
-				sw.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
-			if (IsInterfaceDefaultMethod)
-				sw.WriteLine ("{0}[global::Java.Interop.JavaInterfaceDefaultMethod]", indent);
-			sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})]", indent, JavaName, JniSignature, ConnectorName, GetAdapterName (opt, adapter), this.AdditionalAttributeString ());
-			GenerateCustomAttributes (sw, indent);
-			sw.WriteLine ("{0}{1} {2} ({3});", indent, opt.GetOutputName (RetVal.FullName), AdjustedName, GenBase.GetSignature (this, opt));
-			sw.WriteLine ();
-		}
-
-		public void GenerateEventDelegate (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			sw.WriteLine ("{0}public delegate {1} {2}EventHandler ({3});", indent, opt.GetOutputName (RetVal.FullName), Name, GenBase.GetSignature (this, opt));
-			sw.WriteLine ();
-		}
-
-		// This is supposed to generate instantiated generic method output, but I don't think it is done yet.
-		public void GenerateExplicitIface (StreamWriter sw, string indent, CodeGenerationOptions opt, GenericSymbol gen)
-		{
-			sw.WriteLine ("{0}// This method is explicitly implemented as a member of an instantiated {1}", indent, gen.FullName);
-			GenerateCustomAttributes (sw, indent);
-			sw.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (RetVal.FullName), opt.GetOutputName (gen.Gen.FullName), Name, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			Dictionary<string, string> mappings = new Dictionary<string, string> ();
-			for (int i = 0; i < gen.TypeParams.Length; i++)
-				mappings [gen.Gen.TypeParameters[i].Name] = gen.TypeParams [i].FullName;
-			GenerateGenericBody (sw, indent + "\t", opt, null, String.Empty, mappings);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		void GenerateGenericBody (StreamWriter sw, string indent, CodeGenerationOptions opt, string property_name, string container_prefix, Dictionary<string, string> mappings)
-		{
-			if (String.IsNullOrEmpty (property_name)) {
-				string call = container_prefix + Name + " (" + Parameters.GetGenericCall (opt, mappings) + ")";
-				sw.WriteLine ("{0}{1}{2};", indent, IsVoid ? String.Empty : "return ", RetVal.GetGenericReturn (opt, call, mappings));
-			} else {
-				if (IsVoid) // setter
-					sw.WriteLine ("{0}{1} = {2};", indent, container_prefix + property_name, Parameters.GetGenericCall (opt, mappings));
-				else // getter
-					sw.WriteLine ("{0}return {1};", indent, RetVal.GetGenericReturn (opt, container_prefix + property_name, mappings));
-			}
-		}
-
-		public void GenerateIdField (StreamWriter sw, string indent, CodeGenerationOptions opt, bool invoker = false)
-		{
-			if (invoker) {
-				sw.WriteLine ("{0}IntPtr {1};", indent, EscapedIdName);
-				return;
-			}
-			opt.CodeGenerator.WriteMethodIdField (this, sw, indent, opt);
-		}
-
-		public void GenerateInvoker (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type)
-		{
-			GenerateCallback (sw, indent, opt, type, null, IsReturnCharSequence);
-			GenerateIdField (sw, indent, opt, invoker:true);
-			sw.WriteLine ("{0}public unsafe {1}{2} {3} ({4})",
-			              indent, IsStatic ? "static " : string.Empty, opt.GetOutputName (RetVal.FullName), AdjustedName, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			GenerateInvokerBody (sw, indent + "\t", opt);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public void GenerateInvokerBody (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			sw.WriteLine ("{0}if ({1} == IntPtr.Zero)", indent, EscapedIdName);
-			sw.WriteLine ("{0}\t{1} = JNIEnv.GetMethodID (class_ref, \"{2}\", \"{3}\");", indent, EscapedIdName, JavaName, JniSignature);
-			foreach (string prep in Parameters.GetCallPrep (opt))
-				sw.WriteLine ("{0}{1}", indent, prep);
-			Parameters.WriteCallArgs (sw, indent, opt, invoker:true);
-			string env_method = "Call" + RetVal.CallMethodPrefix + "Method";
-			string call = "JNIEnv." + env_method + " (" +
-				opt.ContextType.GetObjectHandleProperty ("this") + ", " + EscapedIdName + Parameters.GetCallArgs (opt, invoker:true) + ")";
-			if (IsVoid)
-				sw.WriteLine ("{0}{1};", indent, call);
-			else
-				sw.WriteLine ("{0}{1}{2};", indent, Parameters.HasCleanup ? opt.GetOutputName (RetVal.FullName) + " __ret = " : "return ", RetVal.FromNative (opt, call, true));
-
-			foreach (string cleanup in Parameters.GetCallCleanup (opt))
-				sw.WriteLine ("{0}{1}", indent, cleanup);
-
-			if (!IsVoid && Parameters.HasCleanup)
-				sw.WriteLine ("{0}return __ret;", indent);
-		}
-
 		public string GetSignature ()
 		{
 			return String.Format ("n_{0}:{1}:{2}", JavaName, JniSignature, ConnectorName);
-		}
-
-		void GenerateStringOverloadBody (StreamWriter sw, string indent, CodeGenerationOptions opt, bool haveSelf)
-		{
-			var call = new System.Text.StringBuilder ();
-			foreach (Parameter p in Parameters) {
-				string pname = p.Name;
-				if (p.Type == "Java.Lang.ICharSequence") {
-					pname = p.GetName ("jls_");
-					sw.WriteLine ("{0}global::Java.Lang.String {1} = {2} == null ? null : new global::Java.Lang.String ({2});", indent, pname, p.Name);
-				} else if (p.Type == "Java.Lang.ICharSequence[]" || p.Type == "params Java.Lang.ICharSequence[]") {
-					pname = p.GetName ("jlca_");
-					sw.WriteLine ("{0}global::Java.Lang.ICharSequence[] {1} = CharSequence.ArrayFromStringArray({2});", indent, pname, p.Name);
-				}
-				if (call.Length > 0)
-					call.Append (", ");
-				call.Append (pname);
-			}
-			sw.WriteLine ("{0}{1}{2}{3} ({4});", indent, RetVal.IsVoid ? String.Empty : opt.GetOutputName (RetVal.FullName) + " __result = ", haveSelf ? "self." : "", AdjustedName, call.ToString ());
-			switch (RetVal.FullName) {
-			case "void":
-				break;
-			case "Java.Lang.ICharSequence[]":
-				sw.WriteLine ("{0}var __rsval = CharSequence.ArrayToStringArray (__result);", indent);
-				break;
-			case "Java.Lang.ICharSequence":
-				sw.WriteLine ("{0}var __rsval = __result?.ToString ();", indent);
-				break;
-			default:
-				sw.WriteLine ("{0}var __rsval = __result;", indent);
-				break;
-			}
-			foreach (Parameter p in Parameters) {
-				if (p.Type == "Java.Lang.ICharSequence")
-					sw.WriteLine ("{0}{1}?.Dispose ();", indent, p.GetName ("jls_"));
-				else if (p.Type == "Java.Lang.ICharSequence[]")
-					sw.WriteLine ("{0}if ({1} != null) foreach (global::Java.Lang.String s in {1}) s?.Dispose ();", indent, p.GetName ("jlca_"));
-			}
-			if (!RetVal.IsVoid) {
-				sw.WriteLine ($"{indent}return __rsval;");
-			}
-		}
-
-		void GenerateStringOverload (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			string static_arg = IsStatic ? " static" : String.Empty;
-			string ret = opt.GetOutputName (RetVal.FullName.Replace ("Java.Lang.ICharSequence", "string"));
-			if (Deprecated != null)
-				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Deprecated.Replace ("\"", "\"\"").Trim ());
-			sw.WriteLine ("{0}{1}{2} {3} {4} ({5})", indent, Visibility, static_arg, ret, Name, GenBase.GetSignature (this, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
-			sw.WriteLine ("{0}{{", indent);
-			GenerateStringOverloadBody (sw, indent + "\t", opt, false);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
 		}
 
 		public bool CanHaveStringOverload {
 			get { return IsReturnCharSequence || Parameters.HasCharSequence; }
 		}
 
-		public void GenerateExtensionOverload (StreamWriter sw, string indent, CodeGenerationOptions opt, string selfType)
-		{
-			if (!CanHaveStringOverload)
-				return;
-
-			string ret = opt.GetOutputName (RetVal.FullName.Replace ("Java.Lang.ICharSequence", "string"));
-			sw.WriteLine ();
-			sw.WriteLine ("{0}public static {1} {2} (this {3} self, {4})",
-					indent, ret, Name, selfType,
-				GenBase.GetSignature (this, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
-			sw.WriteLine ("{0}{{", indent);
-			GenerateStringOverloadBody (sw, indent + "\t", opt, true);
-			sw.WriteLine ("{0}}}", indent);
-		}
-
-		public void GenerateAsyncWrapper (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			if (!Asyncify)
-				return;
-
-			string static_arg = IsStatic ? " static" : String.Empty;
-			string ret;
-
-			if (IsVoid)
-				ret = "global::System.Threading.Tasks.Task";
-			else
-				ret = "global::System.Threading.Tasks.Task<" + opt.GetOutputName (RetVal.FullName) + ">";
-
-			sw.WriteLine ("{0}{1}{2} {3} {4}Async ({5})", indent, Visibility, static_arg, ret, AdjustedName, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => {1} ({2}));", indent, AdjustedName, Parameters.GetCall (opt));
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public void GenerateExtensionAsyncWrapper (StreamWriter sw, string indent, CodeGenerationOptions opt, string selfType)
-		{
-			if (!Asyncify)
-				return;
-
-			string ret;
-
-			if (IsVoid)
-				ret = "global::System.Threading.Tasks.Task";
-			else
-				ret = "global::System.Threading.Tasks.Task<" + opt.GetOutputName (RetVal.FullName) + ">";
-
-			sw.WriteLine ("{0}public static {1} {2}Async (this {3} self{4}{5})", indent, ret, AdjustedName, selfType, Parameters.Count > 0 ? ", " : string.Empty, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => self.{1} ({2}));", indent, AdjustedName, Parameters.GetCall (opt));
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenBase type, bool generate_callbacks)
-		{
-			if (!IsValid)
-				return;
-
-			bool gen_as_formatted =  IsReturnCharSequence;
-			if (generate_callbacks && IsVirtual)
-				GenerateCallback (sw, indent, opt, type, null, gen_as_formatted);
-
-			string name_and_jnisig = JavaName + JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-			bool gen_string_overload =  !IsOverride && Parameters.HasCharSequence && !type.ContainsMethod (name_and_jnisig);
-
-			string static_arg = IsStatic ? " static" : String.Empty;
-			string virt_ov = IsOverride ? " override" : IsVirtual ? " virtual" : String.Empty;
-			if ((string.IsNullOrEmpty (virt_ov) || virt_ov == " virtual") && type.RequiresNew (AdjustedName)) {
-				virt_ov = " new" + virt_ov;
-			}
-			string seal = IsOverride && IsFinal ? " sealed" : null;
-			string ret = opt.GetOutputName (RetVal.FullName);
-			GenerateIdField (sw, indent, opt);
-			if (DeclaringType.IsGeneratable)
-				sw.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, GetMetadataXPathReference (this.DeclaringType));
-			if (Deprecated != null)
-				sw.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, Deprecated.Replace ("\"", "\"\""));
-			if (IsReturnEnumified)
-				sw.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
-			sw.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]",
-				indent, JavaName, JniSignature, IsVirtual ? ConnectorName : String.Empty, this.AdditionalAttributeString ());
-			GenerateCustomAttributes (sw, indent);
-			sw.WriteLine ("{0}{1}{2}{3}{4} unsafe {5} {6} ({7})", indent, Visibility, static_arg, virt_ov, seal, ret, AdjustedName, GenBase.GetSignature (this, opt));
-			sw.WriteLine ("{0}{{", indent);
-			GenerateBody (sw, indent + "\t", opt);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-
-			//NOTE: Invokers are the only place false is passed for generate_callbacks, they do not need string overloads
-			if (generate_callbacks && (gen_string_overload || gen_as_formatted))
-				GenerateStringOverload (sw, indent, opt);
-
-			GenerateAsyncWrapper (sw, indent, opt);
-		}
-		
 		internal string GetAdapterName (CodeGenerationOptions opt, string adapter)
 		{
 			if (String.IsNullOrEmpty (adapter))

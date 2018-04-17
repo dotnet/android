@@ -15,15 +15,7 @@ using MonoDroid.Utils;
 using System.Xml.Linq;
 
 namespace MonoDroid.Generation {
-#if HAVE_CECIL
-	static class ManagedExtensions
-	{
-		public static string FullNameCorrected (this TypeReference t)
-		{
-			return t.FullName.Replace ('/', '.');
-		}
-	}
-	
+#if HAVE_CECIL	
 	public class ManagedClassGen : ClassGen {
 		TypeDefinition t;
 		TypeReference nominal_base_type;
@@ -352,9 +344,9 @@ namespace MonoDroid.Generation {
 				bool virt = m.IsVirtual;
 				m.IsVirtual = !IsFinal && virt;
 				if (m.IsAbstract && !m.IsInterfaceDefaultMethodOverride && !m.IsInterfaceDefaultMethod)
-					m.GenerateAbstractDeclaration (sw, indent, opt, null, this);
+					opt.CodeGenerator.WriteMethodAbstractDeclaration (m, sw, indent, opt, null, this);
 				else
-					m.Generate (sw, indent, opt, this, true);
+					opt.CodeGenerator.WriteMethod (m, sw, indent, opt, this, true);
 				opt.ContextGeneratedMethods.Add (m);
 				m.IsVirtual = virt;
 			}
@@ -497,7 +489,7 @@ namespace MonoDroid.Generation {
 							if (m.IsInterfaceDefaultMethod || m.IsStatic)
 								continue;
 							if (m.IsGeneric)
-								m.GenerateExplicitIface (sw, indent + "\t", opt, gs);
+								opt.CodeGenerator.WriteMethodExplicitIface (m, sw, indent + "\t", opt, gs);
 						}
 
 						var adapter = gs.Gen.AssemblyQualifiedName + "Invoker";
@@ -631,11 +623,11 @@ namespace MonoDroid.Generation {
 					continue;
 				if (IsExplicitlyImplementedMethod (sig)) {
 					// sw.WriteLine ("// This invoker explicitly implements this method");
-					m.GenerateExplicitInterfaceInvoker (sw, indent, opt, gen);
+					opt.CodeGenerator.WriteMethodExplicitInterfaceInvoker (m, sw, indent, opt, gen);
 				} else {
 					// sw.WriteLine ("// This invoker overrides {0} method", gen.FullName);
 					m.IsOverride = true;
-					m.Generate (sw, indent, opt, this, false);
+					opt.CodeGenerator.WriteMethod (m, sw, indent, opt, this, false);
 					m.IsOverride = false;
 				}
 			}
