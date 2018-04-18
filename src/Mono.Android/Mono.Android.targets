@@ -2,7 +2,6 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
-  <Import Project="Mono.Android.projitems" />
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
