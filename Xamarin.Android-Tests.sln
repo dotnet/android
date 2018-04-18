@@ -1,6 +1,7 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2037
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Tests", "src\Mono.Android\Test\Mono.Android-Tests.csproj", "{40EAD437-216B-4DF4-8258-3F47E1672C3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
@@ -72,6 +73,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.projitems*{195be9c2-1f91-40dc-bd6d-de860bf083fb}*SharedItemsImports = 13
+		tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.projitems*{576312cc-83ff-48b1-a473-488cdc7121ad}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -182,9 +187,12 @@ Global
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
+		{2305B00D-DE81-4744-B0DA-357835CAFE5A} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}
 		{05768F39-7BAF-43E6-971E-712F5771E88E} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
 		{9D5C83B5-70D5-4CC2-9DB7-78B23DC8F255} = {D6BFEDF6-2F48-44B2-9553-F2F6F92531BD}
 		{EF798EB3-D639-4E09-9DB0-233E67F727B0} = {2EFFECF5-1CCA-4005-AE62-1D6F01C88DF4}
@@ -208,5 +216,8 @@ Global
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38} = {9B63992C-2201-4BB0-BD00-D637B481A995}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8643CD20-B195-4919-8135-27549488237E}
 	EndGlobalSection
 EndGlobal
