@@ -46,11 +46,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				return;
 			}
 
-			var newName = $"{Path.Combine (Path.GetDirectoryName (Destination.MainModule.FileName), Path.GetFileNameWithoutExtension (Destination.MainModule.FileName))}-new{Path.GetExtension (Destination.MainModule.FileName)}";
-			Destination.Write (newName, new WriterParameters () { WriteSymbols = true });
+			Destination.Write (new WriterParameters () { WriteSymbols = true });
 
 			if (App.Verbose)
-				App.ColorWriteLine ($"Wrote {newName} assembly", ConsoleColor.Cyan);
+				App.ColorWriteLine ($"Wrote updated {Destination.MainModule.FileName} assembly", ConsoleColor.Cyan);
 		}
 
 		static readonly string nestedName = "__<$>_jni_marshal_methods";

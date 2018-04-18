@@ -110,6 +110,18 @@ namespace Java.Interop.Tools.Cecil {
 			return new Dictionary<string, AssemblyDefinition>(cache);
 		}
 
+		public bool AddToCache (AssemblyDefinition assembly)
+		{
+			var name = Path.GetFileNameWithoutExtension (assembly.MainModule.FileName);
+
+			if (cache.ContainsKey (name))
+				return false;
+
+			cache [name] = assembly;
+
+			return true;
+		}
+
 		public virtual AssemblyDefinition Load (string fileName, bool forceLoad = false)
 		{
 			if (!File.Exists (fileName))

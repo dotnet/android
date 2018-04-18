@@ -62,6 +62,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				return 0;
 			}
 
+			var readWriteParameters    = new ReaderParameters {
+				AssemblyResolver   = resolver,
+				ReadSymbols        = true,
+				ReadWrite          = true,
+			};
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
 					Error ($"Path '{assembly}' does not exist.");
@@ -69,7 +74,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				}
 
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
-				resolver.Load (assembly);
+				var ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParameters);
+				resolver.AddToCache (ad);
 
 				try {
 					CreateMarshalMethodAssembly (assembly);

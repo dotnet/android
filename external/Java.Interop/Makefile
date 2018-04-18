@@ -159,9 +159,7 @@ run-android: $(ATESTS)
 run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	MONO_TRACE_LISTENER=Console.Out \
 	$(RUNTIME) bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe -v -L $(JI_MONO_LIB_PATH)mono/4.5 -L $(JI_MONO_LIB_PATH)mono/4.5/Facades "$<"
-	$(RM) "$<" "$(basename $<)-JniMarshalMethods.dll"
-	mv "$(basename $<)-new.dll" "$<"
-	mv "$(basename $<)-new.pdb" "$(basename $<).pdb"
+	$(RM) "$(basename $<)-JniMarshalMethods.dll"
 	$(call RUN_TEST,$<)
 
 
