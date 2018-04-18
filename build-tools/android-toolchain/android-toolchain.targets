@@ -12,116 +12,27 @@
         Properties="OutputPath=$(AndroidToolchainDirectory)\"
     />
   </Target>
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
-  <Target Name="_DetermineItems">
-    <CreateItem
-        Include="@(AndroidSdkItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-			<Output TaskParameter="Include" ItemName="_PlatformAndroidSdkItem"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(AndroidNdkItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-			<Output TaskParameter="Include" ItemName="_PlatformAndroidNdkItem"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(AntItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-      <Output TaskParameter="Include" ItemName="_PlatformAntItem"/>
-    </CreateItem>
+  <Target Name="_PrepareAndroidToolchainItems">
     <ItemGroup>
-        <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
-    </ItemGroup>
-    <ItemGroup>
-      <_SdkStampFiles Include="@(_PlatformAntItem->'$(AntDirectory)\.stamp-%(Identity)')" />
-    </ItemGroup>
-    <ItemGroup>
-      <_DownloadedItem Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
-      <_DownloadedItem Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
-      <_DownloadedItem Include="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')" />
+      <_AndroidSdkStampFiles Include="@(AndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" Condition=" '%(AndroidSdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidSdkItem.HostOS)' == '' " />
+      <_AndroidNdkStampFiles Include="@(AndroidNdkItem->'$(AndroidToolchainDirectory)\ndk\.stamp-%(Identity)')" Condition=" '%(AndroidNdkItem.HostOS)' == '$(HostOS)' Or '%(AndroidNdkItem.HostOS)' == '' " />
+      <_AntStampFiles Include="@(AntItem->'$(AndroidToolchainDirectory)\ant\.stamp-%(Identity)')" Condition=" '%(AntItem.HostOS)' == '$(HostOS)' Or '%(AntItem.HostOS)' == '' " />
     </ItemGroup>
   </Target>
-  <Target Name="_DownloadItems"
-      DependsOnTargets="_DetermineItems"
-      Outputs="@(_DownloadedItem)">
-    <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
-    <DownloadUri
-        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity)')"
-        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-    />
-    <DownloadUri
-        SourceUris="@(_PlatformAntItem->'$(AntUri)/%(RelUrl)%(Identity)')"
-        DestinationFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
+  <Target Name="_CreateAndroidToolchains"
+      DependsOnTargets="_PrepareAndroidToolchainItems"
+      Outputs="@(_AndroidSdkStampFiles);@(_AndroidNdkStampFiles);@(_AntStampFiles)">
+    <Exec
+        Command="make $(MakeConcurrency) provision-android ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot;"
+        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
-  <Target Name="_UnzipFiles"
-      DependsOnTargets="_DetermineItems"
-      Inputs="@(_DownloadedItem)"
-      Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
-    <CreateItem
-        Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity)">
-      <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
-    </CreateItem>
-    <CreateItem
-        Include="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidNdkItem.Identity)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-      <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
-    </CreateItem>
-
-    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
-    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
-
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AndroidToolchainDirectory)\sdk"
-    />
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AndroidToolchainDirectory)\ndk"
-    />
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        SourceFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity)')"
-        DestinationFolder="$(AntDirectory)"
-    />
-    <Touch
-        Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
-        AlwaysCreate="True"
-    />
-  </Target>
-  <Target Name="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
-      Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')))">
-    <GitCommitTime
-        WorkingDirectory="..\..\external\mxe"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Time" PropertyName="_MxeCommitTime" />
-    </GitCommitTime>
-    <Touch Files="..\..\external\mxe\Makefile" Time="$(_MxeCommitTime)" />
-  </Target>
-  <ItemGroup>
-    <_AndroidMxeToolchain Include="$(MingwCommandPrefix32)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))" />
-    <_AndroidMxeToolchain Include="$(MingwCommandPrefix64)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-  </ItemGroup>
-  <ItemGroup>
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-gcc')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\bin\%(Identity)-cmake')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\dlfcn.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\pthread.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\sys\mman.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\include\zlib.h')" />
-    <_AndroidMxeOutput Include="@(_AndroidMxeToolchain->'$(AndroidMxeFullPath)\%(Identity)\lib\libz.a')" />
-  </ItemGroup>
   <Target Name="_AcceptAndroidSdkLicenses">
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
   </Target>
   <Target Name="_CreateMxeToolchains"
-      DependsOnTargets="_SetMxeToolchainMakefileTimeToLastCommitTimestamp"
       Condition=" '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"
-      Inputs="..\..\external\mxe\Makefile"
-      Outputs="@(_AndroidMxeOutput)">
+      Outputs="$(AndroidMxeFullPath)\.stamp">
     <GitCommitHash
         WorkingDirectory="..\..\external\mxe"
         ToolPath="$(GitToolPath)"
@@ -132,20 +43,9 @@
         Condition=" !$(AndroidMxeFullPath.EndsWith ($(_MxeHash))) "
         Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
     />
-    <PropertyGroup>
-      <_AutopointPath Condition=" '$(HostOS)' == 'Darwin' ">:%24(dirname %24(brew list gettext | grep autopoint%24))</_AutopointPath>
-      <_Path>$PATH$(_AutopointPath)</_Path>
-    </PropertyGroup>
     <Exec
-        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))"
-        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix32)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
-        WorkingDirectory="..\..\external\mxe"
+        Command="make $(MakeConcurrency) provision-mxe MXE_SRC=&quot;$(MSBuildThisFileDirectory)\..\..\external\mxe&quot; MXE_PREFIX_DIR=&quot;$(AndroidToolchainDirectory)&quot;"
+        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
-    <Exec
-        Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))"
-        Command="PATH=$(_Path) make MXE_TARGETS=&quot;$(MingwCommandPrefix64)&quot; gcc cmake zlib pthreads dlfcn-win32 mman-win32 PREFIX=&quot;$(AndroidMxeFullPath)&quot; OS_SHORT_NAME=&quot;disable-native-plugins&quot;"
-        WorkingDirectory="..\..\external\mxe"
-    />
-    <Touch Files="@(_AndroidMxeOutput)" />
   </Target>
 </Project>

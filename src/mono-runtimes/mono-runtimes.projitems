@@ -170,39 +170,27 @@
 
   <ItemGroup>
     <!-- LLVM -->
-    <_LlvmRuntime Include="llvm32" Condition=" '$(_LlvmNeeded)' != '' ">
+    <_LlvmRuntime Include="llvm32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))) ">
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvm64" Condition=" '$(_LlvmNeeded)' != '' And '$(_LlvmCanBuild64)' == 'yes' ">
+    <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin32" Condition=" '$(_LlvmNeededWindows32)' != '' ">
-      <UseMonoSdks>False</UseMonoSdks>
-      <BuildDir>build-win32</BuildDir>
-      <Prefix>$(_LlvmPrefixWin32)</Prefix>
-      <ConfigureFlags>$(_LlvmConfigureFlagsWin32)</ConfigureFlags>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
+    <_LlvmRuntime Include="llvmwin32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))) ">
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath></InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin64" Condition=" '$(_LlvmNeededWindows64)' != '' ">
-      <UseMonoSdks>False</UseMonoSdks>
-      <BuildDir>build-win64</BuildDir>
-      <Prefix>$(_LlvmPrefixWin64)</Prefix>
-      <ConfigureFlags>$(_LlvmConfigureFlagsWin64)</ConfigureFlags>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin64)</ConfigureEnvironment>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
+    <_LlvmRuntime Include="llvmwin64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>false</InstallBinaries>
       <InstallPath></InstallPath>
@@ -325,7 +313,7 @@
       <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)arm-win.config.cache --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
@@ -348,7 +336,7 @@
       <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin64)" --cache-file=$(_CrossConfigureCachePrefix)arm64-win.config.cache --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin64)</ConfigureEnvironment>
+      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
@@ -371,7 +359,7 @@
       <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --cache-file=$(_CrossConfigureCachePrefix)x86-win.config.cache --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
@@ -394,7 +382,7 @@
       <ConfigureFlags>--target=x86_64-linux-android --host="$(_CrossConfigureBuildHostWin64)" --cache-file=$(_CrossConfigureCachePrefix)x86_64-win.config.cache --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>$(_LlvmConfigureEnvironmentWin32)</ConfigureEnvironment>
+      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>

@@ -5,142 +5,142 @@
     <AntUri Condition=" '$(AntUri)' == '' ">https://archive.apache.org/dist/ant/binaries</AntUri>
   </PropertyGroup>
   <ItemGroup>
-    <AndroidNdkItem Include="android-ndk-r14b-linux-x86_64.zip">
+    <AndroidNdkItem Include="android-ndk-r14b-linux-x86_64">
       <HostOS>Linux</HostOS>
     </AndroidNdkItem>
     <!--
       $(XABuildToolsVersion) is defined in Configuration.props
       -->
-    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-linux.zip">
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-linux">
       <HostOS>Linux</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-linux.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-linux">
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-linux-4333796.zip">
+    <AndroidSdkItem Include="sdk-tools-linux-4333796">
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-linux-4266726.zip">
+    <AndroidSdkItem Include="emulator-linux-4266726">
       <HostOS>Linux</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidNdkItem Include="android-ndk-r14b-darwin-x86_64.zip">
+    <AndroidNdkItem Include="android-ndk-r14b-darwin-x86_64">
       <HostOS>Darwin</HostOS>
     </AndroidNdkItem>
-    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-macosx.zip">
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-macosx">
       <HostOS>Darwin</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-darwin.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-darwin">
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-darwin-4333796.zip">
+    <AndroidSdkItem Include="sdk-tools-darwin-4333796">
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-darwin-4266726.zip">
+    <AndroidSdkItem Include="emulator-darwin-4266726">
       <HostOS>Darwin</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidNdkItem Include="android-ndk-r14b-windows-x86_64.zip">
+    <AndroidNdkItem Include="android-ndk-r14b-windows-x86_64">
       <HostOS>Windows</HostOS>
     </AndroidNdkItem>
-    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-windows.zip">
+    <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-windows">
       <HostOS>Windows</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-windows.zip">
+    <AndroidSdkItem Include="platform-tools_r27.0.1-windows">
       <HostOS>Windows</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="sdk-tools-windows-4333796.zip">
+    <AndroidSdkItem Include="sdk-tools-windows-4333796">
       <HostOS>Windows</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-windows-4266726.zip">
+    <AndroidSdkItem Include="emulator-windows-4266726">
       <HostOS>Windows</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-2.3.3_r02-linux.zip">
+    <AndroidSdkItem Include="android-2.3.3_r02-linux">
       <HostOS></HostOS>
       <DestDir>platforms\android-10</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-15_r03.zip">
+    <AndroidSdkItem Include="android-15_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-15</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-16_r04.zip">
+    <AndroidSdkItem Include="android-16_r04">
       <HostOS></HostOS>
       <DestDir>platforms\android-16</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-17_r02.zip">
+    <AndroidSdkItem Include="android-17_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-17</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-18_r02.zip">
+    <AndroidSdkItem Include="android-18_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-18</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-19_r03.zip">
+    <AndroidSdkItem Include="android-19_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-19</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-20_r02.zip">
+    <AndroidSdkItem Include="android-20_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-20</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-21_r02.zip">
+    <AndroidSdkItem Include="android-21_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-21</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-22_r02.zip">
+    <AndroidSdkItem Include="android-22_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-22</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-23_r03.zip">
+    <AndroidSdkItem Include="platform-23_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-23</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-24_r02.zip">
+    <AndroidSdkItem Include="platform-24_r02">
       <HostOS></HostOS>
       <DestDir>platforms\android-24</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-25_r03.zip">
+    <AndroidSdkItem Include="platform-25_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-25</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-26_r01.zip">
+    <AndroidSdkItem Include="platform-26_r01">
       <HostOS></HostOS>
       <DestDir>platforms\android-26</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-27_r01.zip">
+    <AndroidSdkItem Include="platform-27_r01">
       <HostOS></HostOS>
       <DestDir>platforms\android-27</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-P_r01.zip">
+    <AndroidSdkItem Include="platform-P_r01">
       <HostOS></HostOS>
       <DestDir>platforms\android-P</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="docs-24_r01.zip">
+    <AndroidSdkItem Include="docs-24_r01">
       <HostOS></HostOS>
       <DestDir>docs</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android_m2repository_r16.zip">
+    <AndroidSdkItem Include="android_m2repository_r16">
       <HostOS></HostOS>
       <DestDir>extras\android\m2repository</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="x86-21_r05.zip">
+    <AndroidSdkItem Include="x86-21_r05">
       <HostOS></HostOS>
       <RelUrl>sys-img/android/</RelUrl>
       <DestDir>system-images\android-21\default\x86</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
-    <AntItem Include="apache-ant-1.9.9-bin.zip">
+    <AntItem Include="apache-ant-1.9.9-bin">
       <HostOS></HostOS>
     </AntItem>
   </ItemGroup>
