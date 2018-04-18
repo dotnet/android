@@ -132,7 +132,7 @@ namespace Xamarin.Android.Build.Tests
 				});
 			}
 			foreach (var level in apiLevels ?? defaults.ToArray ()) {
-				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{level}");
+				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{level.Id}");
 				Directory.CreateDirectory(dir);
 				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
 			}
