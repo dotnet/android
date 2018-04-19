@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static string AndroidSdkPath {
 			get {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 				if (string.IsNullOrEmpty (sdkPath))
 					sdkPath = Path.Combine (home, "android-toolchain", "sdk");
