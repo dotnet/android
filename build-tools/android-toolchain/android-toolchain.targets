@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\Configuration.props" />
-  <Import Project="android-toolchain.projitems" />
-  <Import Project="..\scripts\RequiredPrograms.targets" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.AcceptAndroidSdkLicenses" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+      _CopyBootstrapTasksAssembly;
+      _CreateAndroidToolchains;
+      _CreateMxeToolchains;
+      _AcceptAndroidSdkLicenses;
+    </BuildDependsOn>
+  </PropertyGroup>
   <Target Name="_CopyBootstrapTasksAssembly"
       Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
     <MSBuild
