@@ -4,6 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 
+using XABuildPaths = Xamarin.Android.Build.Paths;
+
 namespace Xamarin.ProjectTools
 {
 	public class ProjectBuilder : Builder
@@ -60,7 +62,7 @@ namespace Xamarin.ProjectTools
 
 			Output = project.CreateBuildOutput (this);
 
-			project.NuGetRestore (Path.Combine (Root, ProjectDirectory), PackagesDirectory);
+			project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables);
 			built_before = true;
@@ -103,7 +105,7 @@ namespace Xamarin.ProjectTools
 				return;
 			built_before = false;
 
-			var projectDirectory = Path.Combine (Root, ProjectDirectory);
+			var projectDirectory = Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory);
 			if (Directory.Exists (projectDirectory)) {
 				FileSystemUtils.SetDirectoryWriteable (projectDirectory);
 				Directory.Delete (projectDirectory, true);
