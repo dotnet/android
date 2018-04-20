@@ -47,15 +47,20 @@ namespace Xamarin.Android.Tasks
 				log.LogMessage ("    {0}", item);
 		}
 
-		public static void LogDebugTaskItems (this TaskLoggingHelper log, string message, ITaskItem[] items)
+		public static void LogDebugTaskItems (this TaskLoggingHelper log, string message, ITaskItem[] items, bool logMetadata = false)
 		{
 			log.LogMessage (MessageImportance.Low, message);
 
 			if (items == null)
 				return;
 
-			foreach (var item in items)
+			foreach (var item in items) {
 				log.LogMessage (MessageImportance.Low, "    {0}", item.ItemSpec);
+				if (!logMetadata || item.MetadataCount <= 0)
+					continue;
+				foreach (string name in item.MetadataNames)
+					log.LogMessage (MessageImportance.Low, $"       {name} = {item.GetMetadata (name)}");
+			}
 		}
 
 		public static void LogDebugTaskItems (this TaskLoggingHelper log, string message, params string[] items)

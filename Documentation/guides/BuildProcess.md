@@ -155,7 +155,9 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     `DebugSymbols` property controls whether or not th Application is
     debuggable.
 
-
+    - **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](LayoutCodeBehind.md)
+	  if set to `true` (the default) or disables it completely if set to `false`
+	
 ### Install Properties
 
 Install properties control the behavior of the `Install` and
@@ -890,6 +892,16 @@ distinct resource names.
 </ItemGroup>
 ```
 
+### AndroidBoundLayout
+
+Indicates that the layout file is to have code-behind generated for it in case when
+the `AndroidGenerateLayoutBindings` property is set to `false`. In all other aspects
+it is identical to `AndroidResource` described above. This action can be used **only**
+with layout files:
+
+```xml
+<AndroidBoundLayout Include="Resources\layout\Main.axml" />
+```
 
 ### AndroidNativeLibrary
 

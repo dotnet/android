@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/options_container"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <Button android:id="@+id/free_radio_toggle" />
+    <Button android:id="@+id/visit_help_button" />
+    <Button android:id="@+id/submit_email_button" />
+    <Button android:id="@+id/submit_log_button" />
+
+    <include android:id="@+id/submit_log_progress_indicator" layout="@layout/loading" />
+
+    <TextView android:id="@+id/submit_log_description" />
+</LinearLayout>

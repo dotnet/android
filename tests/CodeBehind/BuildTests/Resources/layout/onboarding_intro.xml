@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	      android:id="@+id/onboarding_intro"
+	      xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+	      xamarin:classes="Xamarin.Android.Tests.CodeBehindBuildTests.OnboardingActivityPartial">
+    <TextView android:id="@+id/title" />
+    <TextView android:id="@+id/welcome" />
+    <RelativeLayout>
+        <include android:id="@+id/onboarding_info" layout="@layout/onboarding_info" />
+    </RelativeLayout>
+
+    <TextView android:id="@+id/different_view_types" />
+</LinearLayout>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+    xamarin:classes="Xamarin.Android.Tests.CodeBehindBuildTests.MainActivity;Xamarin.Android.Tests.CodeBehindBuildTests.AnotherMainActivity"
+    >
+<Button  
+    android:id="@+id/myButton"
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+<fragment
+    xamarin:managedType="CommonSampleLibrary.LogFragment"
+    android:name="commonsamplelibrary.LogFragment"
+    android:id="@+id/log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+<fragment
+    android:name="CommonSampleLibrary.LogFragment"
+    android:id="@+id/secondary_log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+</LinearLayout>

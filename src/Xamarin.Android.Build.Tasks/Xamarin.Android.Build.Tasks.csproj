@@ -236,7 +236,11 @@
     <Compile Include="Tasks\ReadAdditionalResourcesFromAssemblyCache.cs" />
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.BindingGenerator.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.CSharpBindingGenerator.cs" />
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
@@ -554,6 +558,10 @@
     <Compile Include="Tasks\AndroidApkSigner.cs" />
     <Compile Include="Tasks\Desugar.cs" />
     <Compile Include="Utilities\NuGetLogger.cs" />
+    <Compile Include="Tasks\LayoutWidgetType.cs" />
+    <Compile Include="Tasks\LayoutLocationInfo.cs" />
+    <Compile Include="Tasks\LayoutTypeFixup.cs" />
+    <Compile Include="Tasks\LayoutWidget.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

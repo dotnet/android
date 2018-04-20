@@ -177,9 +177,11 @@ using System.Runtime.CompilerServices;
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.LayoutMain = @"<root/>\n" + proj.LayoutMain;
-			using (var b = CreateApkBuilder ("temp/ErroneousResource")) {
+			using (var b = CreateApkBuilder ("temp/ErroneousResource", false, false)) {
 				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				// The AndroidGenerateLayoutBindings=false property is necessary because otherwise build
+				// will fail in code-behind generator instead of in aapt
+				Assert.IsFalse (b.Build (proj, parameters: new[] { "AndroidGenerateLayoutBindings=false" }), "Build should have failed.");
 				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
@@ -423,11 +425,11 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultExtension);
-				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
+					"Resource.designer"  + proj.Language.DefaultExtension);
+				Assert.IsTrue (File.Exists (outputFile), "Resource.designer{1} should have been created in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
+				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
 			}
 		}
@@ -482,11 +484,11 @@ namespace UnnamedProject
 				Assert.IsFalse (fi.Length > new [] { 0xef, 0xbb, 0xbf, 0x0d, 0x0a }.Length,
 					"{0} should not contain anything.", designer);
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
-				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension);
+				Assert.IsTrue (File.Exists (outputFile), "Resource.designer{1} should have been created in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
+				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
@@ -503,7 +505,7 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.Designer" + proj.Language.DefaultExtension);
+			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer" + proj.Language.DefaultExtension);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var designer = proj.Sources.FirstOrDefault (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 				designer = designer ?? proj.OtherBuildItems.FirstOrDefault (x => x.Include () == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
@@ -514,11 +516,11 @@ namespace UnnamedProject
 					"Resource.designer"  + proj.Language.DefaultDesignerExtension)),
 					"{0} should not exists", designer.Include ());
 				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.Designer"  + proj.Language.DefaultDesignerExtension);
-				Assert.IsTrue (File.Exists (outputFile), "Resource.Designer{1} should have been created in {0}",
+					"Resource.designer"  + proj.Language.DefaultDesignerExtension);
+				Assert.IsTrue (File.Exists (outputFile), "Resource.designer{1} should have been created in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.Designer{1} should have been cleaned in {0}",
+				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
 					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
 			}
 		}
@@ -998,7 +1000,7 @@ namespace Lib1 {
 					"DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
-				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
 				FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 				var designerContents = File.ReadAllText (designerFile);
@@ -1073,7 +1075,7 @@ namespace Lib1 {
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
-					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 					var designerContents = File.ReadAllText (designerFile);
@@ -1111,7 +1113,7 @@ namespace Lib1 {
 
 					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
 					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
-					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.Designer.cs");
+					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
 					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
 					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 
@@ -1212,9 +1214,9 @@ namespace UnnamedProject
 			protected override void OnCreate (Bundle bundle)
 			{
 				base.OnCreate (bundle);
-				InitializeContentView ();
-				myButton.Click += delegate {
-					myButton.Text = string.Format (""{0} clicks!"", count++);
+				var widgets = SetContentView <Binding.Main> ();
+				widgets.myButton.Click += delegate {
+					widgets.myButton.Text = string.Format (""{0} clicks!"", count++);
 				};
 			}
 		}
@@ -1223,9 +1225,9 @@ namespace UnnamedProject
 			};
 			using (var builder = CreateApkBuilder (path)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Main-UnnamedProject.MainActivity.g.cs"));
+				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));
 				Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
-				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Main-UnnamedProject.MainActivity.g.cs"));
+				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));
 			}
 		}
 	}

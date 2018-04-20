@@ -278,7 +278,7 @@ namespace Xamarin.Android.Tasks
 
 		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
 		{
-			// For creating Resource.Designer.cs:
+			// For creating Resource.designer.cs:
 			//   Running command: C:\Program Files (x86)\Android\android-sdk-windows\platform-tools\aapt
 			//     "package"
 			//     "-M" "C:\Users\Jonathan\AppData\Local\Temp\ryob4gaw.way\AndroidManifest.xml"
