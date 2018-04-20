@@ -15,7 +15,7 @@ using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
-	class App
+	class App : MarshalByRefObject
 	{
 
 		internal const string Name = "jnimarshalmethod-gen";
@@ -23,9 +23,28 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static public bool Debug;
 		static public bool Verbose;
+		static bool keepTemporary;
 		static List<Regex> typeNameRegexes = new List<Regex> ();
+		List<string> FilesToDelete = new List<string> ();
 
 		public static int Main (string [] args)
+		{
+			var domain = AppDomain.CreateDomain ("workspace");
+			var app = (App)domain.CreateInstanceAndUnwrap (typeof (App).Assembly.FullName, typeof (App).FullName);
+
+			var assemblies = app.ProcessArguments (args);
+			app.ProcessAssemblies (assemblies);
+			var filesToDelete = app.FilesToDelete;
+
+			AppDomain.Unload (domain);
+
+			foreach (var path in filesToDelete)
+				File.Delete (path);
+
+			return 0;
+		}
+
+		List<string> ProcessArguments (string [] args)
 		{
 			var help = false;
 			var options = new OptionSet {
@@ -39,6 +58,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "d|debug",
 				  "Inject debug messages",
 				  v => Debug = true },
+				{ "keeptemp",
+				  "Keep temporary *-JniMarshalMethod.dll files.",
+				  v => keepTemporary = true },
 				{ "L=",
 				  "{DIRECTORY} to resolve assemblies from.",
 				  v => resolver.SearchDirectories.Add (v) },
@@ -53,24 +75,35 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				  v => Verbose = true },
 			};
 
-			var jvm = CreateJavaVM ();
-
 			var assemblies = options.Parse (args);
-			if (help) {
+			if (help || args.Length < 1) {
 				options.WriteOptionDescriptions (Console.Out);
 
-				return 0;
+				Environment.Exit (0);
 			}
+
+			if (assemblies.Count < 1) {
+				Error ("Please specify at least one ASSEMBLY to process.");
+				Environment.Exit (2);
+			}
+
+			return assemblies;
+		}
+
+		void ProcessAssemblies (List<string> assemblies)
+		{
+			CreateJavaVM ();
 
 			var readWriteParameters    = new ReaderParameters {
 				AssemblyResolver   = resolver,
 				ReadSymbols        = true,
 				ReadWrite          = true,
 			};
+
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
 					Error ($"Path '{assembly}' does not exist.");
-					return 1;
+					Environment.Exit (1);
 				}
 
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
@@ -81,19 +114,15 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					CreateMarshalMethodAssembly (assembly);
 				} catch (Exception e) {
 					Error ($"Unable to process assembly '{assembly}'\n{e.Message}\n{e}");
-					return 1;
+					Environment.Exit (1);
 				}
 			}
-
-			jvm.Dispose ();
-
-			return 0;
 		}
 
-		static JniRuntime CreateJavaVM ()
+		void CreateJavaVM ()
 		{
 			var builder = new JreRuntimeOptions ();
-			return builder.CreateJreVM ();
+			builder.CreateJreVM ();
 		}
 
 		static JniRuntime.JniMarshalMemberBuilder CreateExportedMemberBuilder ()
@@ -119,7 +148,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return tb;
 		}
 
-		static void CreateMarshalMethodAssembly (string path)
+		void CreateMarshalMethodAssembly (string path)
 		{
 			var assembly        = Assembly.LoadFile (path);
 
@@ -237,6 +266,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var dstAssembly = resolver.GetAssembly (destPath);
 			var mover = new TypeMover (dstAssembly, ad, definedTypes, resolver);
 			mover.Move ();
+
+			if (!keepTemporary)
+				FilesToDelete.Add (dstAssembly.MainModule.FileName);
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
