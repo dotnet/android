@@ -168,12 +168,8 @@ namespace Xamarin.Android.Tasks
 			if (!outdir.Exists)
 				outdir.Create ();
 
-			foreach (var assembly in Assemblies) {
-				Log.LogDebugMessage ($"Loading {assembly.ItemSpec}");
-				var asm = res.Load (assembly.ItemSpec);
-				if (asm == null)
-					Log.LogDebugMessage ($"Failed to Load {assembly.ItemSpec}");
-			}
+			foreach (var assembly in Assemblies)
+				res.Load (assembly.ItemSpec);
 
 			bool updated = false;
 			// FIXME: reorder references by import priority (not sure how to do that yet)
