@@ -433,7 +433,7 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 				if (level.Contains ("warning")) {
-					LogWarning (singleLine);
+					LogCodedWarning ("APT0000", singleLine);
 					return;
 				}
 
@@ -450,15 +450,15 @@ namespace Xamarin.Android.Tasks
 					message = message.Substring ("error: ".Length);
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
-					LogError ("APT0000", message, file, line);
+					LogCodedError ("APT0000", message, file, line);
 					return;
 				}
 			}
 
 			if (!apptResult) {
-				LogError ("APT0000", string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1)), ToolName);
+				LogCodedError ("APT0000", string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1)), ToolName);
 			} else {
-				LogWarning (singleLine);
+				LogCodedWarning ("APT0000", singleLine);
 			}
 		}
 	}
