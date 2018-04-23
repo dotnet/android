@@ -31,10 +31,10 @@
         ContinueOnError="ErrorAndContinue"
     />
     <ItemGroup>
-      <_RenameTestCasesGlob Include="$(_TopDir)\TestResult-*Tests.xml" />
+      <_RenameNUnitTestCasesGlob Include="$(_TopDir)\TestResult-*Tests.xml" />
     </ItemGroup>
     <PropertyGroup>
-      <_RenamedTestCases>@(_RenameTestCasesGlob)</_RenamedTestCases>
+      <_RenamedTestCases>@(_RenameNUnitTestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
@@ -54,10 +54,10 @@
         Properties="AndroidSdkDirectory=$(AndroidSdkDirectory)"
     />
     <ItemGroup>
-      <_RenameTestCasesGlob Include="$(JavaInteropSourceDirectory)\TestResult-*Tests.xml" />
+      <_RenameJITestCasesGlob Include="$(JavaInteropSourceDirectory)\TestResult-*Tests.xml" />
     </ItemGroup>
     <PropertyGroup>
-      <_RenamedTestCases>@(_RenameTestCasesGlob)</_RenamedTestCases>
+      <_RenamedTestCases>@(_RenameJITestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
