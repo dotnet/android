@@ -26,7 +26,7 @@
   <Target Name="RunNUnitTests">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Test) --result=&quot;TestResult-%(Filename).xml;format=nunit2&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Test) --labels=All --result=&quot;TestResult-%(Filename).xml;format=nunit2&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
         WorkingDirectory="$(_TopDir)"
         ContinueOnError="ErrorAndContinue"
     />
