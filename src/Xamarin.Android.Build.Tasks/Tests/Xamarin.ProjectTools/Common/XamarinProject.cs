@@ -286,10 +286,21 @@ namespace Xamarin.ProjectTools
 			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
 				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
 				CreateNoWindow = true,
+				UseShellExecute = false,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
 			};
-			var process = Process.Start (psi);
-			process.WaitForExit ();
+			using (var process = new Process {
+				StartInfo = psi,
+			}) {
+				process.OutputDataReceived += (sender, e) => Console.WriteLine (e.Data);
+				process.ErrorDataReceived += (sender, e) => Console.Error.WriteLine (e.Data);
+				process.Start ();
+				process.BeginOutputReadLine ();
+				process.BeginErrorReadLine ();
+				process.WaitForExit ();
+			}
 		}
 
 		public string ProcessSourceTemplate (string source)
