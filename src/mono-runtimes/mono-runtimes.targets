@@ -166,7 +166,7 @@
           Outputs="@(_LlvmSourceBinary)"
           Condition=" '@(_LlvmRuntime)' != '' ">
     <Exec
-        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters) CC=&quot;%(_LlvmRuntime.Cc)&quot; CXX=&quot;%(_LlvmRuntime.Cxx)&quot;"
+        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -839,7 +839,6 @@
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
-        Condition=" '@(_LlvmRuntime)' != '' "
         Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
