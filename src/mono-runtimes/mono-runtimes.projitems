@@ -171,6 +171,8 @@
   <ItemGroup>
     <!-- LLVM -->
     <_LlvmRuntime Include="llvm32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))) ">
+      <Cc>$(HostCc32)</Cc>
+      <Cxx>$(HostCxx32)</Cxx>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
@@ -178,6 +180,8 @@
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
+      <Cc>$(HostCc64)</Cc>
+      <Cxx>$(HostCxx64)</Cxx>
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
