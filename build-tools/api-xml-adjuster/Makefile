@@ -29,7 +29,7 @@ ANDROID_JAR = $(ANDROID_SDK_PATH)/platforms/android-$(LEVEL)/android.jar
 
 DOCS_DIR_CUR_LEVEL = $(DOCS_DIR)/docs-api-$(LEVEL)
 
-XBUILD = JAVA_INTEROP_PATH=$(JAVA_INTEROP_PATH) xbuild
+XBUILD = JAVA_INTEROP_PATH=$(JAVA_INTEROP_PATH) msbuild
 
 all:
 	for level in $(API_LEVELS) ; do \

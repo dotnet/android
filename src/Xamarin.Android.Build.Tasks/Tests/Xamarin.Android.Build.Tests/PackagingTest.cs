@@ -206,7 +206,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
 		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
 			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
 			if (useApkSigner && !foundApkSigner) {
 				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");

@@ -80,6 +80,9 @@
     <Compile Include="Common\ContentBuilder.cs" />
     <Compile Include="Common\DotNetStandard.cs" />
     <Compile Include="Common\DotNetXamarinProject.cs" />
+    <Compile Include="..\..\..\..\bin\Test$(CONFIGURATION)\XABuildPaths.cs">
+       <Link>XABuildPaths.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\" />

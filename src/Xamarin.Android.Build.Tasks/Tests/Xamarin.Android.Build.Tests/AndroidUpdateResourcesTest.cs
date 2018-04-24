@@ -1144,7 +1144,8 @@ namespace Lib1 {
 					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
 				}
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("warning : max res 26, skipping values-v27", builder.LastBuildOutput, "Build output should contain a warning about 'max res 26, skipping values-v27'");
+				var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
+				StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
 			}
 		}
 
@@ -1160,15 +1161,16 @@ namespace Lib1 {
 				},
 			};
 
+			string name = "test";
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-fr\\Strings.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+				TextContent = () => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
-  <string name=""test"" >Test</string>
+  <string name=""{name}"" >Test</string>
 </resources>",
 			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("has no default translation", builder.LastBuildOutput, "Build output should contain a warning about 'no default translation'");
+				StringAssertEx.Contains ($"warning APT0000: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'no default translation'");
 			}
 		}
 
