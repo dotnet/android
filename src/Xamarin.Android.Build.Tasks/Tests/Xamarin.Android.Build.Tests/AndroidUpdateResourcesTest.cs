@@ -1144,7 +1144,8 @@ namespace Lib1 {
 					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
 				}
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("warning APT0000: warning : max res 26, skipping values-v27", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
+				var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
+				StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
 			}
 		}
 
