@@ -83,5 +83,17 @@
         Properties="AotAssemblies=True"
     />
   </Target>
-  <Target Name="RunAllTests" DependsOnTargets="RunNUnitTests;RunJavaInteropTests;RunApkTests" />
+  <ItemGroup>
+    <_RunTestTarget Include="RunNUnitTests" />
+    <_RunTestTarget Include="RunJavaInteropTests" />
+    <_RunTestTarget Include="RunApkTests" />
+  </ItemGroup>
+  <Target Name="RunAllTests">
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(MSBuildThisFileDirectory)RunTests.targets"
+        RunEachTargetSeparately="True"
+        Targets="@(_RunTestTarget)"
+    />
+  </Target>
 </Project>
