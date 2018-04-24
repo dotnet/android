@@ -317,7 +317,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 			if (il.OpCode == OpCodes.Dup && instructions.Count > idxStart + 10) {
 				il = instructions [idx++];
-				if (!il.OpCode.ToString ().StartsWith ("ldc.i4.", StringComparison.InvariantCulture))
+				if (!il.OpCode.ToString ().StartsWith ("ldc.i4", StringComparison.InvariantCulture))
 					return false;
 
 				il = instructions [idx++];
