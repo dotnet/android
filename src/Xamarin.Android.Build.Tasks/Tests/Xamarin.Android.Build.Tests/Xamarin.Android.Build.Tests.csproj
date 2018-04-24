@@ -11,6 +11,7 @@
   </PropertyGroup>
   <Import Project="Xamarin.Android.Build.Tests.Shared.projitems" Label="Shared" Condition="Exists('Xamarin.Android.Build.Tests.Shared.projitems')" />
   <Import Project="..\..\..\..\Configuration.props" />
+  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -31,8 +32,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Microsoft.Build" />
-    <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
@@ -43,9 +42,6 @@
       <HintPath>$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
     </Reference>
     -->
-    <Reference Include="Microsoft.Build.Engine" />
-    <Reference Include="Microsoft.Build.Tasks.v4.0" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
