@@ -37,25 +37,19 @@
       <_RenamedTestCases>@(_RenameNUnitTestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
-        ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
         Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
     />
   </Target>
   <Target Name="RunJavaInteropTests">
-    <MSBuild
-        Condition=" '$(HostOS)' == 'Windows' "
-        ContinueOnError="ErrorAndContinue"
-        Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln"
-    />
+    <MSBuild Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln" Condition=" '$(HostOS)' == 'Windows' " />
     <Exec
         Command ="make -C &quot;$(JavaInteropSourceDirectory)&quot; CONFIGURATION=$(Configuration) all"
         Condition=" '$(HostOS)' != 'Windows' "
     />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH" Value="$(AndroidSdkFullPath)" />
     <MSBuild 
-        ContinueOnError="ErrorAndContinue"
         Projects="$(JavaInteropSourceDirectory)\build-tools\scripts\RunNUnitTests.targets"
         Properties="AndroidSdkDirectory=$(AndroidSdkDirectory)"
     />
@@ -66,7 +60,6 @@
       <_RenamedTestCases>@(_RenameJITestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
-        ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
         Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
@@ -79,16 +72,12 @@
   </Target>
   <Target Name="RunApkTests">
     <Exec Command="$(_XABuild) %(_ApkTestProject.Identity) /t:SignAndroidPackage $(_XABuildProperties)" />
-    <MSBuild
-        ContinueOnError="ErrorAndContinue"
-        Projects="$(_TopDir)\tests\RunApkTests.targets"
-    />
+    <MSBuild Projects="$(_TopDir)\tests\RunApkTests.targets" />
     <Exec 
         Command="$(_XABuild) %(_ApkTestProjectAot.Identity) /t:SignAndroidPackage $(_XABuildProperties) /p:AotAssemblies=True"
         Condition=" '$(Configuration)' == 'Release' "
     />
     <MSBuild 
-        ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Condition=" '$(Configuration)' == 'Release' "
         Properties="AotAssemblies=True"
