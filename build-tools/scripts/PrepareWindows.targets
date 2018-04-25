@@ -34,6 +34,12 @@
         DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
         Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
     />
+    <MakeDir Directories="$(_TopDir)\bin\Test$(Configuration)" />
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)XABuildPaths.cs.in"
+        DestinationFile="$(_TopDir)\bin\Test$(Configuration)\XABuildPaths.cs"
+        Replacements="@TOP_DIRECTORY@=$(_TopDir);@CONFIGURATION@=$(Configuration)"
+    />
     <MSBuild 
         Projects="$(_TopDir)\build-tools\ThirdPartyNotices\ThirdPartyNotices.csproj"
         Properties="ThirdPartyNoticeFile=$(_TopDir)\ThirdPartyNotices.txt;ThirdPartyNoticeLicenseType=foundation"

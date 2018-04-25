@@ -8,12 +8,16 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 
+using XABuildPaths = Xamarin.Android.Build.Paths;
+
 namespace Xamarin.ProjectTools
 {
 	public class Builder : IDisposable
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
+
+		string root;
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
@@ -61,11 +65,8 @@ namespace Xamarin.ProjectTools
 					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0" && !RequiresMSBuild) {
 						RunningMSBuild = false;
 					}
-					#if DEBUG
-					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild"));
-					#else
-					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild"));
-					#endif
+
+					xabuild = XABuildPaths.XABuildScript;
 					if (File.Exists (xabuild))
 						return xabuild;
 					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out", "bin", "xabuild"));
@@ -74,11 +75,7 @@ namespace Xamarin.ProjectTools
 					return RunningMSBuild ? "msbuild" : "xbuild";
 				}
 
-				#if DEBUG
-				xabuild = Path.GetFullPath (Path.Combine (Root, "..", "Debug", "bin", "xabuild.exe"));
-				#else
-				xabuild =  Path.GetFullPath (Path.Combine (Root, "..", "Release", "bin", "xabuild.exe"));
-				#endif
+				xabuild = XABuildPaths.XABuildExe;
 				if (File.Exists (xabuild))
 					return xabuild;
 				return "msbuild";
@@ -98,20 +95,18 @@ namespace Xamarin.ProjectTools
 		public string FrameworkLibDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
-				#if DEBUG
-				var configuraton = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Debug";
-				#else
-				var configuraton = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Release";
-				#endif
+				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
 				var libmonodroidPath = Path.Combine ("lib", "xamarin.android", "xbuild", "Xamarin", "Android", "lib", "armeabi-v7a", "libmono-android.release.so");
 				if (String.IsNullOrEmpty(outdir))
 					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", configuraton));
+					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", configuration);
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Debug"));
+					outdir = XABuildPaths.PrefixDirectory;
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "bin", "Release"));
+					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Debug");
+				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
+					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Release");
 				if (IsUnix) {
 					if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
 						outdir = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
@@ -207,8 +202,9 @@ namespace Xamarin.ProjectTools
 
 		public string Root {
 			get {
-				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
+				return String.IsNullOrEmpty (root) ? Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath) : root;
 			}
+			set { root = value; }
 		}
 
 		public Builder ()
@@ -245,7 +241,7 @@ namespace Xamarin.ProjectTools
 		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
-				? Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
+				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
 				: null;
 			string processLog = !string.IsNullOrEmpty (BuildLogFile)
 				? Path.Combine (Path.GetDirectoryName (buildLogFullPath), "process.log")
@@ -273,7 +269,7 @@ namespace Xamarin.ProjectTools
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
 			args.AppendFormat ("{0} /t:{1} {2}",
-				QuoteFileName(Path.Combine (Root, projectOrSolution)), target, logger);
+				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (RunningMSBuild)
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
@@ -291,7 +287,7 @@ namespace Xamarin.ProjectTools
 			}
 			if (RunningMSBuild) {
 				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-				args.Append ($" /bl:\"{Path.GetFullPath (Path.Combine (Root, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				args.Append ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
 			}
 			if (environmentVariables != null) {
 				foreach (var kvp in environmentVariables) {

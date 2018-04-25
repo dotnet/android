@@ -26,40 +26,47 @@
   <Target Name="RunNUnitTests">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Test) --result=&quot;TestResult-%(Filename).xml;format=nunit2&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Test) --labels=All --result=&quot;TestResult-%(Filename).xml;format=nunit2&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
         WorkingDirectory="$(_TopDir)"
         ContinueOnError="ErrorAndContinue"
     />
     <ItemGroup>
-      <_RenameTestCasesGlob Include="$(_TopDir)\TestResult-*Tests.xml" />
+      <_RenameNUnitTestCasesGlob Include="$(_TopDir)\TestResult-*Tests.xml" />
     </ItemGroup>
     <PropertyGroup>
-      <_RenamedTestCases>@(_RenameTestCasesGlob)</_RenamedTestCases>
+      <_RenamedTestCases>@(_RenameNUnitTestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
+        ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
         Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
     />
   </Target>
   <Target Name="RunJavaInteropTests">
-    <MSBuild Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln" Condition=" '$(HostOS)' == 'Windows' " />
+    <MSBuild
+        Condition=" '$(HostOS)' == 'Windows' "
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln"
+    />
     <Exec
         Command ="make -C &quot;$(JavaInteropSourceDirectory)&quot; CONFIGURATION=$(Configuration) all"
         Condition=" '$(HostOS)' != 'Windows' "
     />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH" Value="$(AndroidSdkFullPath)" />
     <MSBuild 
+        ContinueOnError="ErrorAndContinue"
         Projects="$(JavaInteropSourceDirectory)\build-tools\scripts\RunNUnitTests.targets"
         Properties="AndroidSdkDirectory=$(AndroidSdkDirectory)"
     />
     <ItemGroup>
-      <_RenameTestCasesGlob Include="$(JavaInteropSourceDirectory)\TestResult-*Tests.xml" />
+      <_RenameJITestCasesGlob Include="$(JavaInteropSourceDirectory)\TestResult-*Tests.xml" />
     </ItemGroup>
     <PropertyGroup>
-      <_RenamedTestCases>@(_RenameTestCasesGlob)</_RenamedTestCases>
+      <_RenamedTestCases>@(_RenameJITestCasesGlob)</_RenamedTestCases>
     </PropertyGroup>
     <MSBuild
+        ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
         Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
@@ -72,16 +79,32 @@
   </Target>
   <Target Name="RunApkTests">
     <Exec Command="$(_XABuild) %(_ApkTestProject.Identity) /t:SignAndroidPackage $(_XABuildProperties)" />
-    <MSBuild Projects="$(_TopDir)\tests\RunApkTests.targets" />
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+    />
     <Exec 
         Command="$(_XABuild) %(_ApkTestProjectAot.Identity) /t:SignAndroidPackage $(_XABuildProperties) /p:AotAssemblies=True"
         Condition=" '$(Configuration)' == 'Release' "
     />
     <MSBuild 
+        ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Condition=" '$(Configuration)' == 'Release' "
         Properties="AotAssemblies=True"
     />
   </Target>
-  <Target Name="RunAllTests" DependsOnTargets="RunNUnitTests;RunJavaInteropTests;RunApkTests" />
+  <ItemGroup>
+    <_RunTestTarget Include="RunNUnitTests" />
+    <_RunTestTarget Include="RunJavaInteropTests" />
+    <_RunTestTarget Include="RunApkTests" />
+  </ItemGroup>
+  <Target Name="RunAllTests">
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(MSBuildThisFileDirectory)RunTests.targets"
+        RunEachTargetSeparately="True"
+        Targets="@(_RunTestTarget)"
+    />
+  </Target>
 </Project>

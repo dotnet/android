@@ -6,7 +6,7 @@
     <ProjectGuid>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</ProjectGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
-  <Import Project="android-toolchain.targets" />
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>$(AndroidToolchainDirectory)</OutputPath>
   </PropertyGroup>
@@ -14,16 +14,10 @@
     <OutputPath>$(AndroidToolchainDirectory)</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <BuildDependsOn>
-      ResolveReferences;
-      _CopyBootstrapTasksAssembly;
-      _DownloadItems;
-      _UnzipFiles;
-      _CreateMxeToolchains;
-      _AcceptAndroidSdkLicenses;
-    </BuildDependsOn>
-  </PropertyGroup>
+  <Import Project="android-toolchain.projitems" />
+  <Import Project="..\scripts\RequiredPrograms.targets" />
+  <Import Project="android-toolchain.targets" Condition=" '$(HostOS)' != 'Windows' " />
+  <Import Project="android-toolchain-windows.targets" Condition=" '$(HostOS)' == 'Windows' " />
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>

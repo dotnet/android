@@ -17,9 +17,11 @@ namespace Xamarin.Android.Build.Tests {
 #pragma warning disable 414
 
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
+			new ApiInfo () { Id = "25", Level = 25, Name = "Nougat", FrameworkVersion = "v7.1",  Stable = true },
 			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
 			new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
 			new ApiInfo () { Id = "P",  Level = 28, Name = "P",    FrameworkVersion = "v8.99", Stable = false },
+			new ApiInfo () { Id = "Z",  Level = 127, Name = "Z",    FrameworkVersion = "v108.1.99", Stable = false },
 		};
 
 		static object [] UseLatestAndroidSdkTestCases = new object [] {
@@ -73,6 +75,17 @@ namespace Xamarin.Android.Build.Tests {
 				/* apis*/ apiInfoSelection,
 				/* useLatestAndroidSdk */ true,
 				/* targetFrameworkVersion */ null,
+				/* expectedTaskResult */ true,
+				/* expectedTargetFramework */ "v8.1",
+				/* expectedError */ "",
+				/* expectedErrorMessage */ "",
+			},
+			new object[] {
+				/* buildtools */   "26.0.3",
+				/* jdk */ "1.8.0",
+				/* apis*/ apiInfoSelection,
+				/* useLatestAndroidSdk */ true,
+				/* targetFrameworkVersion */ "v7.1",
 				/* expectedTaskResult */ true,
 				/* expectedTargetFramework */ "v8.1",
 				/* expectedError */ "",
@@ -140,7 +153,7 @@ namespace Xamarin.Android.Build.Tests {
 		public void UseLatestAndroidSdk (string buildtools, string jdk, ApiInfo[] apis, bool useLatestAndroidSdk, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
 		{
 			var path = Path.Combine ("temp", "UseLatestAndroidSdk_" + Guid.NewGuid ());
-			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, minApiLevel: 26, maxApiLevel: 27, alphaApiLevel: "P");
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
 			string javaExe = string.Empty;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apis);

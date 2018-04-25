@@ -49,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				}
 			}
-			Assert.Fail (message);
+			Assert.Fail (message ?? $"String did not contain '{text}'!");
 		}
 
 		public static bool ContainsText (this IEnumerable<string> collection, string expected) {

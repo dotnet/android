@@ -1855,6 +1855,81 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			}
 		}
 
+		[Test]
+		public void BuildWithResolveAssembliesFailure ([Values (true, false)] bool usePackageReference)
+		{
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { void EventHubs () { Microsoft.Azure.EventHubs.EventHubClient c; } }"
+					},
+				}
+			};
+			if (usePackageReference)
+				lib.PackageReferences.Add (KnownPackages.Microsoft_Azure_EventHubs);
+			else
+				lib.Packages.Add (KnownPackages.Microsoft_Azure_EventHubs);
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				if (usePackageReference) {
+					//NOTE: <PackageReference /> not working under xbuild
+					if (!libBuilder.RunningMSBuild)
+						Assert.Ignore ("This test requires MSBuild.");
+
+					libBuilder.Target = "Restore";
+					Assert.IsTrue (libBuilder.Build (lib), "Restore should have succeeded.");
+					libBuilder.Target = "Build";
+				}
+				Assert.IsTrue (libBuilder.Build (lib), "Build should have succeeded.");
+
+				appBuilder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
+
+				const string error = "error XA2002: Can not resolve reference:";
+
+				//NOTE: we get a different message when using <PackageReference /> due to automatically getting the Microsoft.Azure.Amqp (and many other) transient dependencies
+				if (usePackageReference) {
+					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.EventHubs`, referenced by `MyLibrary`. Please add a NuGet package or assembly reference for `Microsoft.Azure.EventHubs`, or remove the reference to `MyLibrary`."),
+						$"Should recieve '{error}' regarding `Microsoft.Azure.EventHubs`!");
+				} else {
+					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `MyLibrary` > `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `MyLibrary`."),
+						$"Should recieve '{error}' regarding `Microsoft.Azure.Amqp`!");
+				}
+
+				//Now add the PackageReference to the app to see a different error message
+				if (usePackageReference) {
+					app.PackageReferences.Add (KnownPackages.Microsoft_Azure_EventHubs);
+					appBuilder.Target = "Restore";
+					Assert.IsTrue (appBuilder.Build (app), "Restore should have succeeded.");
+					appBuilder.Target = "Build";
+				} else {
+					app.Packages.Add (KnownPackages.Microsoft_Azure_EventHubs);
+				}
+				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
+
+				//NOTE: we get a different message when using <PackageReference /> due to automatically getting the Microsoft.Azure.Amqp (and many other) transient dependencies
+				if (usePackageReference) {
+					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Services.AppAuthentication`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Services.AppAuthentication`, or remove the reference to `Microsoft.Azure.EventHubs`."),
+						$"Should recieve '{error}' regarding `Microsoft.Azure.Services.AppAuthentication`!");
+				} else {
+					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `Microsoft.Azure.EventHubs`."),
+						$"Should recieve '{error}' regarding `Microsoft.Azure.Services.Amqp`!");
+				}
+			}
+		}
+
 		static object [] TlsProviderTestCases =
 		{
 			// androidTlsProvider, isRelease, extpected
@@ -2209,7 +2284,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void IfAndroidJarDoesNotExistThrowXA5207 ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", minApiLevel: 10, maxApiLevel: 26);
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = "v8.1",
@@ -2235,15 +2310,16 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void ValidateUseLatestAndroid ()
 		{
-			var path = Path.Combine ("temp", TestName);
-			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
-				"23.0.6", minApiLevel: 10, maxApiLevel: 28, alphaApiLevel: "P");
-			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), new ApiInfo [] {
+			var apis = new ApiInfo [] {
 				new ApiInfo () { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
 				new ApiInfo () { Id = "P", Level = 28, Name = "P", FrameworkVersion="v8.99", Stable = false },
-			});
+			};
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
+					"23.0.6", apis);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = "v8.0",

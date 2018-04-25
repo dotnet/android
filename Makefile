@@ -64,7 +64,7 @@ export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
 prepare:: linux-prepare
 endif # $(OS_NAME)=Linux
 
-prepare:: prepare-msbuild
+prepare:: prepare-paths prepare-msbuild
 
 linux-prepare::
 	BINFMT_MISC_TROUBLE="cli win" \
@@ -127,6 +127,18 @@ include build-tools/scripts/Packaging.mk
 include tests/api-compatibility/api-compatibility.mk
 
 topdir  := $(shell pwd)
+
+
+XA_BUILD_PATHS_OUT = $(CONFIGURATIONS:%=bin/Test%/XABuildPaths.cs)
+
+prepare-paths: $(XA_BUILD_PATHS_OUT)
+
+$(XA_BUILD_PATHS_OUT): bin/Test%/XABuildPaths.cs: build-tools/scripts/XABuildPaths.cs.in
+	mkdir -p $(shell dirname $@)
+	sed -e 's;@CONFIGURATION@;$*;g' \
+	    -e 's;@TOP_DIRECTORY@;$(topdir);g' < $< > $@
+	cat $@
+
 
 # Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
 define CREATE_THIRD_PARTY_NOTICES

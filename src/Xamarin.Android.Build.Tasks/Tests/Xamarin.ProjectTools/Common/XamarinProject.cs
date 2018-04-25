@@ -7,6 +7,8 @@ using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
 
+using XABuildPaths = Xamarin.Android.Build.Paths;
+
 namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinProject 
@@ -190,7 +192,7 @@ namespace Xamarin.ProjectTools
 
 		public string Root {
 			get {
-				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
+				return XABuildPaths.TestOutputDirectory;
 			}
 		}
 
@@ -284,10 +286,21 @@ namespace Xamarin.ProjectTools
 			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
 				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
 				CreateNoWindow = true,
+				UseShellExecute = false,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
 			};
-			var process = Process.Start (psi);
-			process.WaitForExit ();
+			using (var process = new Process {
+				StartInfo = psi,
+			}) {
+				process.OutputDataReceived += (sender, e) => Console.WriteLine (e.Data);
+				process.ErrorDataReceived += (sender, e) => Console.Error.WriteLine (e.Data);
+				process.Start ();
+				process.BeginOutputReadLine ();
+				process.BeginErrorReadLine ();
+				process.WaitForExit ();
+			}
 		}
 
 		public string ProcessSourceTemplate (string source)
