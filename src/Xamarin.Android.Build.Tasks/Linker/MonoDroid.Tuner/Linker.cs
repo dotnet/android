@@ -43,7 +43,7 @@ namespace MonoDroid.Tuner
 				if (prepareDependenciesDump != null)
 					prepareDependenciesDump.Invoke (context.Annotations, null);
 			}
-			context.LogInternalExceptions = true;
+			context.LogMessages = true;
 			context.Logger = logger;
 			context.CoreAction = AssemblyAction.Link;
 			context.UserAction = AssemblyAction.Link;
