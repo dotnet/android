@@ -30,7 +30,6 @@
       RunTestApks;
       ReleaseAndroidTarget;
       RenameApkTestCases;
-      ReportComponentFailures;
     </RunApkTestsDependsOn>
   </PropertyGroup>
   <Target Name="RunApkTests"

@@ -117,8 +117,6 @@
         ContinueOnError="True"
         Command="kill -KILL $(_EmuPid)"
     />
-  </Target>
-  <Target Name="ReportComponentFailures">
     <Error
         Condition="'@(_FailedComponent)' != ''"
         Text="Execution of the following components did not complete successfully: @(_FailedComponent->'%(Identity)', ', ')"
