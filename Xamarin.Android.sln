@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{04E3E11E-B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export", "external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj", "{B501D075-6183-4E1D-92C9-F7B5002475B1}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator", "external\Java.Interop\tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.NamingCustomAttributes", "external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.shproj", "{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}"

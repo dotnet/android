@@ -7,6 +7,8 @@ using Mono.Linker;
 
 using Mono.Tuner;
 
+using Java.Interop;
+
 namespace MonoDroid.Tuner {
 
 	static class Extensions {
@@ -137,8 +139,15 @@ namespace MonoDroid.Tuner {
 
 		public static bool TryGetRegisterMember (this MethodDefinition md, out string method)
 		{
+			return TryGetRegisterMember (md, out method, out _, out _);
+		}
+
+		public static bool TryGetRegisterMember (this MethodDefinition md, out string method, out string nativeMethod, out string signature)
+		{
 			CustomAttribute register;
 			method = null;
+			nativeMethod = null;
+			signature = null;
 
 			if (!md.TryGetRegisterAttribute (out register))
 				return false;
@@ -146,12 +155,44 @@ namespace MonoDroid.Tuner {
 			if (register.ConstructorArguments.Count != 3)
 				return false;
 
+			nativeMethod = (string)register.ConstructorArguments [0].Value;
+			signature = (string)register.ConstructorArguments [1].Value;
 			method = (string)register.ConstructorArguments [2].Value;
 
 			if (string.IsNullOrEmpty (method))
 				return false;
 
 			return true;
+		}
+
+		public static bool TryGetMarshalMethod (this MethodDefinition method, string nativeMethod, string signature, out MethodDefinition marshalMethod)
+		{
+			marshalMethod = null;
+			var type = method.DeclaringType;
+			if (!type.HasNestedTypes)
+				return false;
+
+			TypeDefinition marshalType = null;
+			foreach (var nt in type.NestedTypes)
+				if (nt.Name == "__<$>_jni_marshal_methods") {
+					marshalType = nt;
+					break;
+				}
+
+			if (marshalType == null || !marshalType.HasMethods)
+				return false;
+
+			var marshalMethodName = MarshalMemberBuilder.GetMarshalMethodName (nativeMethod, signature);
+			if (marshalMethodName == null)
+				return false;
+
+			foreach (var m in marshalType.Methods)
+				if (m.Name == marshalMethodName) {
+					marshalMethod = m;
+					return true;
+				}
+
+			return false;
 		}
 	}
 }
