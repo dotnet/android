@@ -1800,7 +1800,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
   Inputs="@(ResolvedUserAssemblies)"
-  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateDir)%(Filename)%(Extension)')">
+  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
@@ -2733,7 +2733,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
-	<Delete Files="$(_AndroidResFlagFile)" />
+	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
 	<Delete Files="$(MonoAndroidIntermediate)mergeresources.cache" />
