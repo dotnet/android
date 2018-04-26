@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tasks
 						if (lockFile != null)
 							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, asmFullPath);
 						if (lockFile == null || assemblyDef == null) {
-							LogWarning ($"Ignoring {asmFullPath} as it is a Reference Assembly");
+							LogCodedWarning ("XA0107", asmFullPath, 0, "Ignoring {0} as it is a Reference Assembly", asmFullPath);
 							continue;
 						}
 					}
