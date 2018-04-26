@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Build.Locator;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -115,18 +116,24 @@ namespace Xamarin.Android.Build
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
 			if (IsWindows) {
-				foreach (var edition in new [] { "Enterprise", "Professional", "Community", "BuildTools" }) {
-					var vsInstall = Path.Combine (programFiles, "Microsoft Visual Studio", "2017", edition);
-					if (Directory.Exists (vsInstall)) {
-						VsInstallRoot = vsInstall;
-						break;
+				var vsInstallDir = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
+				if (string.IsNullOrEmpty (vsInstallDir)) {
+					var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances ().OrderByDescending (v => v.Version).FirstOrDefault ();
+					if (visualStudioInstance != null) {
+						VsInstallRoot       = visualStudioInstance.VisualStudioRootPath;
+						MSBuildPath         = Path.GetDirectoryName (Path.GetDirectoryName (visualStudioInstance.MSBuildPath)); //Remove /15.0/Bin/
+						MSBuildBin          = visualStudioInstance.MSBuildPath;
 					}
+				} else {
+					VsInstallRoot = vsInstallDir;
 				}
 				if (VsInstallRoot == null)
 					VsInstallRoot = programFiles;
+				if (MSBuildPath == null)
+					MSBuildPath = Path.Combine (VsInstallRoot, "MSBuild");
+				if (MSBuildBin == null)
+					MSBuildBin = Path.Combine (MSBuildPath, vsVersion, "Bin");
 
-				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "Bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");

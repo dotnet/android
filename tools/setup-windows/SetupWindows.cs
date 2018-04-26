@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Build.Locator;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -48,12 +49,19 @@ namespace Xamarin.Android.Tools
 			var vsInstall = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
 
 			if (string.IsNullOrEmpty (vsInstall)) {
-				vsInstall = progFiles;
-			} else {
+				var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances ().OrderByDescending (v => v.Version).FirstOrDefault ();
+				if (visualStudioInstance != null) {
+					vsInstall = visualStudioInstance.VisualStudioRootPath;
+				}
+			}
+
+			if (!string.IsNullOrEmpty (vsInstall)) {
 				links.Add (new SymbolicLink {
 					Source = Path.Combine (vsInstall, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid"),
 					Target = newAssemblies,
 				});
+			} else {
+				vsInstall = progFiles;
 			}
 
 			links.Add (new SymbolicLink {

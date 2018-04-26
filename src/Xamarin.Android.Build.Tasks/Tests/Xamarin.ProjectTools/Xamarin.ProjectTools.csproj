@@ -79,16 +79,8 @@
     <Compile Include="Common\DotNetStandard.cs" />
     <Compile Include="Common\DotNetXamarinProject.cs" />
     <Compile Include="..\..\..\..\bin\Test$(CONFIGURATION)\XABuildPaths.cs">
-       <Link>XABuildPaths.cs</Link>
+      <Link>XABuildPaths.cs</Link>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Android\" />
-    <Folder Include="Resources\" />
-    <Folder Include="Resources\Wear\" />
-    <Folder Include="Resources\Base\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
@@ -139,8 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content
-        Include="..\..\..\..\.nuget\NuGet.exe">
+    <Content Include="..\..\..\..\.nuget\NuGet.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -148,6 +139,10 @@
     <ProjectReference Include="..\..\..\..\external\LibZipSharp\libZipSharp.csproj">
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\tools\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj">
+      <Project>{158e7760-6f87-446c-b782-18e23bf54da6}</Project>
+      <Name>Microsoft.Build.Locator</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>

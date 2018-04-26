@@ -121,6 +121,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Andro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proprietary", "build-tools\proprietary\proprietary.csproj", "{D93CAC27-3893-42A3-99F1-2BCA72E186F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Build.Locator", "tools\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj", "{158E7760-6F87-446C-B782-18E23BF54DA6}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 4
@@ -336,6 +338,10 @@ Global
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{158E7760-6F87-446C-B782-18E23BF54DA6}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{158E7760-6F87-446C-B782-18E23BF54DA6}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{158E7760-6F87-446C-B782-18E23BF54DA6}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{158E7760-6F87-446C-B782-18E23BF54DA6}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -395,6 +401,7 @@ Global
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{1E5501E8-49C1-4659-838D-CC9720C5208F} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{158E7760-6F87-446C-B782-18E23BF54DA6} = {864062D3-A415-4A6F-9324-5820237BA058}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
