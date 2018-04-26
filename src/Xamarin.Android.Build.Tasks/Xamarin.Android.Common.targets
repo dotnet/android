@@ -1043,6 +1043,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
+	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
 	<_AndroidComponentResgenFlagFile>$(IntermediateOutputPath)Component.R.cs.flag</_AndroidComponentResgenFlagFile>
 	<_AndroidStripFlag>$(IntermediateOutputPath)strip.flag</_AndroidStripFlag>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
@@ -1178,7 +1179,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateAndroidResourceDir"
 	Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
-	Outputs="@(_AndroidResourceDest)"
+	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CopyAndConvertResources SourceFiles="@(_AndroidResolvedResources)"
 			DestinationFiles="@(_AndroidResourceDest)"
@@ -1197,6 +1198,10 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
 		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
 	</RemoveUnknownFiles>
+	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidResFlagFile)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_ResolveLibraryProjectImports"
@@ -1948,7 +1953,6 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateJavaStubs>
   <ConvertResourcesCases 
 	ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-	AndroidConversionFlagFile="$(_AcwMapFile)"
 	AcwMapFile="$(_AcwMapFile)" />
 </Target>
 
@@ -2729,6 +2733,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
+	<Delete Files="$(_AndroidResFlagFile)" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
 	<Delete Files="$(MonoAndroidIntermediate)mergeresources.cache" />

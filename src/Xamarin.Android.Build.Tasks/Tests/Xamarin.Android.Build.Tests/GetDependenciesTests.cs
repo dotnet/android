@@ -52,6 +52,7 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.IsNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle"),
 					"Dependencies should not contain a ndk-bundle item");
 			}
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 		
 		[Test]
@@ -87,6 +88,7 @@ namespace Xamarin.Android.Build.Tests {
 				"Dependencies should contains a platform-tools version 26.0.3");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
 				"Dependencies should contains a ndk-bundle version 12.1");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
 		[Test]
