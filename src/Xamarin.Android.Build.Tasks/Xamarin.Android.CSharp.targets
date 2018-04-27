@@ -33,7 +33,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
              our mscorlib.dll isn't properly signed, as far as its concerned.
              Disable generation to avoid "bizarre" build errors. -->
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-        <_AndroidResourceDesigner>Resource.Designer.cs</_AndroidResourceDesigner>
+        <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
     </PropertyGroup>
     <!-- Force Xbuild to behave like msbuild -->
     <PropertyGroup>

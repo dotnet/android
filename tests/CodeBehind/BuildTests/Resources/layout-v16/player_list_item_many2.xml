@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:id="@+id/track_number" />
+
+    <LinearLayout android:id="@+id/metadata_container">
+        <LinearLayout android:id="@+id/primary_container">
+            <TextView android:id="@+id/primary" />
+            <TextView android:id="@+id/secondary" />
+            <TextView android:id="@+id/tertiary" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/label_container">
+            <LinearLayout>
+                <TextView android:id="@+id/unavailable_label" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

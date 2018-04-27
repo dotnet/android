@@ -8,6 +8,10 @@
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <_MSBuildExtension Condition=" '$(OS)' == 'Windows_NT' ">exe</_MSBuildExtension>
+    <_MSBuildExtension Condition=" '$(OS)' != 'Windows_NT' ">dll</_MSBuildExtension>
+    <_MSBuildToolsPath Condition=" !$(MSBuildToolsPath.Contains('xbuild')) ">$(MSBuildToolsPath)</_MSBuildToolsPath>
+    <_MSBuildToolsPath Condition=" $(MSBuildToolsPath.Contains('xbuild')) ">$([System.IO.Path]::GetFullPath ('$(MSBuildToolsPath)\..\..\..\msbuild\15.0\bin'))</_MSBuildToolsPath>
   </PropertyGroup>
   <Import Project="Xamarin.Android.Build.Tests.Shared.projitems" Label="Shared" Condition="Exists('Xamarin.Android.Build.Tests.Shared.projitems')" />
   <Import Project="..\..\..\..\Configuration.props" />

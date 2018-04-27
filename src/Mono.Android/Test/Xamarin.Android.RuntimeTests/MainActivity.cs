@@ -24,13 +24,13 @@ namespace Xamarin.Android.RuntimeTests
 				// ignore
 			};
 
-			my_scroll_view.Widget.FillViewport = true;
+			my_scroll_view.FillViewport = true;
 
-			my_scroll_view.first_text_view.Click += delegate {
+			first_text_view.Click += delegate {
 				// ignore
 			};
 
-			my_scroll_view.second_text_view.Click += delegate {
+			second_text_view.Click += delegate {
 				// ignore
 			};
 

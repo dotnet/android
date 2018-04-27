@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	      android:id="@+id/onboarding_intro">
+    <TextView android:id="@+id/welcome" />
+    <RelativeLayout>
+	<RelativeLayout android:id="@+id/onboarding_info">
+	    <TextView android:id="@+id/intro_highlighted_text"/>
+	    <TextView android:id="@+id/intro_primary_text" />
+	    <TextView android:id="@+id/intro_secondary_text" />
+	</RelativeLayout>
+	<RelativeLayout android:id="@+id/more_info">
+	    <TextView android:id="@+id/more_highlighted_text" />
+	    <TextView android:id="@+id/more_intro_primary_text" />
+	    <TextView android:id="@+id/more_intro_secondary_text" />
+	</RelativeLayout>
+    </RelativeLayout>
+    <Button android:id="@+id/different_view_types" />
+</LinearLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+    xamarin:classes="Xamarin.Android.Tests.CodeBehindBuildTests.MainActivity"
+    >
+<Button  
+    android:id="@+id/myButton"
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+<fragment
+    xamarin:managedType="CommonSampleLibrary.LogFragment"
+    android:name="commonsamplelibrary.LogFragment"
+    android:id="@+id/log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+
+<!-- This should cause the property type to decay to Fragment -->
+<fragment
+    android:name="commonsamplelibrary.LogFragment"
+    android:id="@+id/secondary_log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+
+<!-- This tests naive fixup of type names - capitalization of the namespaces -->
+<fragment
+    android:name="commonSampleLibrary.LogFragment"
+    android:id="@+id/tertiary_log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+
+</LinearLayout>
