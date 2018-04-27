@@ -228,6 +228,9 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_CompileJava"),
 					"The Target _CompileJava should have been skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
+					"The Target _LinkAssembliesNoShrink should have been skipped");
 				image1.Timestamp = DateTime.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTime.UtcNow;
@@ -238,6 +241,9 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_CompileJava"),
 					"The Target _CompileJava (2) should have been skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
+					"The Target _LinkAssembliesNoShrink should have been skipped");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CreateBaseApk"),
 					"The Target _CreateBaseApk should not have been skipped");
