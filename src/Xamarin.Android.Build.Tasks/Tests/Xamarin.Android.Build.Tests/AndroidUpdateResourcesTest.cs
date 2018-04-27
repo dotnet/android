@@ -111,6 +111,7 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "res.flag"), "res.flag should exist after IncrementalClean!");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
@@ -222,9 +223,6 @@ using System.Runtime.CompilerServices;
 				var firstBuildTime = b.LastBuildTime;
 				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
-					"The Target _UpdateAndroidResgen should have been skipped");
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
 					"The Target _UpdateAndroidResgen should have been skipped");
