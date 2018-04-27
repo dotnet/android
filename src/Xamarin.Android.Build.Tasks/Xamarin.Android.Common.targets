@@ -1798,7 +1798,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
   Inputs="@(ResolvedUserAssemblies)"
-  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateDir)%(Filename)%(Extension)')">
+  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
