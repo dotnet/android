@@ -111,6 +111,7 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
 					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "res.flag"), "res.flag should exist after IncrementalClean!");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
@@ -223,6 +224,9 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
 				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
+					"The Target _UpdateAndroidResgen should have been skipped");
+				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should have been skipped");
 				Assert.IsTrue (
@@ -235,6 +239,9 @@ using System.Runtime.CompilerServices;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
+					"The Target _UpdateAndroidResgen should not have been skipped");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should not have been skipped");
