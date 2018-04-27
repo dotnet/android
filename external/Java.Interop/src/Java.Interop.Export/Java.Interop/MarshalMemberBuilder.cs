@@ -120,10 +120,23 @@ namespace Java.Interop {
 
 			var envp        = Expression.Variable (typeof (JniTransition), "__envp");
 			var jvm         = Expression.Variable (typeof (JniRuntime), "__jvm");
+			var vm          = Expression.Variable (typeof (JniRuntime.JniValueManager), "__vm");
 			var envpVars    = new List<ParameterExpression> () {
 				envp,
 				jvm,
 			};
+
+			int peerableParametersCount = 0;
+			for (int i = 0; i < methodParameters.Length; ++i) {
+				var marshaler = GetParameterMarshaler (methodParameters [i]);
+
+				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (methodParameters [i].ParameterType.GetTypeInfo ()))
+				    peerableParametersCount ++;
+			}
+
+			bool useVmVariable = (!method.IsStatic || peerableParametersCount > 0) && !direct;
+			if (useVmVariable)
+				envpVars.Add (vm);
 
 			var envpBody    = new List<Expression> () {
 				Expression.Assign (envp, CreateJniTransition (jnienv)),
@@ -133,11 +146,16 @@ namespace Java.Interop {
 				.GetRuntimeMethod (nameof (JniRuntime.JniValueManager.WaitForGCBridgeProcessing), new Type [0]);
 			var marshalBody = new List<Expression> () {
 				Expression.Assign (jvm, GetRuntime ()),
-				Expression.Call (Expression.Property (jvm, "ValueManager"), waitForGCBridge),
 			};
 
+			if (useVmVariable) {
+				marshalBody.Add (Expression.Assign (vm, Expression.Property (jvm, "ValueManager")));
+				marshalBody.Add (Expression.Call (vm, waitForGCBridge));
+			} else
+				marshalBody.Add (Expression.Call (Expression.Property (jvm, "ValueManager"), waitForGCBridge));
+
 			Expression self = null;
-			var marshalerContext    = new JniValueMarshalerContext (jvm);
+			var marshalerContext    = new JniValueMarshalerContext (jvm, useVmVariable ? vm : null);
 			if (!method.IsStatic) {
 				var selfMarshaler   = Runtime.ValueManager.GetValueMarshaler (type);
 				self                = selfMarshaler.CreateParameterToManagedExpression (marshalerContext, context, 0, type);
@@ -300,9 +318,7 @@ namespace Java.Interop {
 
 		static Expression GetRuntime ()
 		{
-			var env     = typeof (JniEnvironment);
-			var runtime = Expression.Property (null, env, "Runtime");
-			return runtime;
+			return Expression.Property (null, typeof (JniEnvironment), "Runtime");
 		}
 
 		static  MethodInfo  FormatterServices_GetUninitializedObject    = Type.GetType ("System.Runtime.Serialization.FormatterServices", throwOnError: true)

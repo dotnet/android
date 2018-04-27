@@ -18,16 +18,16 @@ namespace Java.Interop.Expressions {
 
 	public sealed class JniValueMarshalerContext {
 		public  Expression                                      Runtime             {get;}
+		public  Expression                                      ValueManager        {get;}
 
 		public  KeyedCollection<string, ParameterExpression>    LocalVariables      {get;}  = new VariableCollection ();
 		public  Collection<Expression>                          CreationStatements  {get;}  = new Collection<Expression> ();
 		public  Collection<Expression>                          CleanupStatements   {get;}  = new Collection<Expression> ();
 
-		public JniValueMarshalerContext (Expression runtime)
+		public JniValueMarshalerContext (Expression runtime, Expression vm = null)
 		{
-			if (runtime == null)
-				throw new ArgumentNullException (nameof (runtime));
-			Runtime = runtime;
+			Runtime        = runtime ?? throw new ArgumentNullException (nameof (runtime));
+			ValueManager   = vm;
 		}
 	}
 }

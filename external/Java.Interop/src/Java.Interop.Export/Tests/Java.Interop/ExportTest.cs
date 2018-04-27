@@ -63,6 +63,16 @@ namespace Java.InteropTests
 		{
 			return this;
 		}
+
+		[JavaCallable ("actionIJavaObject", Signature="(Ljava/lang/Object;)V")]
+		public void InstanceActionIJavaObject (JavaObject test)
+		{
+		}
+
+		[JavaCallable ("staticActionIJavaObject", Signature="(Ljava/lang/Object;)V")]
+		public static void StaticActionIJavaObject (JavaObject test)
+		{
+		}
 	}
 
 	[JniValueMarshaler (typeof (MyColorValueMarshaler))]

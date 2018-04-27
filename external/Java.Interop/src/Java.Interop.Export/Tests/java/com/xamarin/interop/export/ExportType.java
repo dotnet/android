@@ -26,11 +26,14 @@ public class ExportType
 	}
 
 	public static native void staticAction ();
+	public static native void staticActionIJavaObject (Object test);
 	public static native void staticActionInt32String (int i, String s);
 	public static native int  staticFuncMyLegacyColorMyColor_MyColor (int color1, int color2);
 
 	public void testMethods () {
 	    action ();
+
+	    actionIJavaObject (this);
 
 	    long j = funcInt64 ();
 	    if (j != 42)
@@ -42,6 +45,7 @@ public class ExportType
 	}
 
 	public native void action ();
+	public native void actionIJavaObject (Object test);
 	public native long funcInt64 ();
 	public native Object funcIJavaObject ();
 

@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = CreateBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (6, methods.Count);
+				Assert.AreEqual (8, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
@@ -165,14 +165,16 @@ namespace Java.InteropTests
 {
 	JniTransition __envp;
 	JniRuntime __jvm;
+	JniValueManager __vm;
 	ExportTest __this_val;
 
 	__envp = new JniTransition(__jnienv);
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
-		__jvm.ValueManager.WaitForGCBridgeProcessing();
-		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__vm = __jvm.ValueManager;
+		__vm.WaitForGCBridgeProcessing();
+		__this_val = __vm.GetValue<ExportTest>(__this);
 		__this_val.InstanceAction();
 	}
 	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
@@ -236,6 +238,74 @@ namespace Java.InteropTests
 		__jvm = JniEnvironment.Runtime;
 		__jvm.ValueManager.WaitForGCBridgeProcessing();
 		ExportTest.StaticAction();
+	}
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_StaticActionIJavaLangObject ()
+		{
+			var t                 = typeof (ExportTest);
+			var m = t.GetMethod ("StaticActionIJavaObject");
+			CheckCreateMarshalToManagedExpression (null, t, m, typeof(Action<IntPtr, IntPtr, IntPtr>),
+					@"void (IntPtr __jnienv, IntPtr __class, IntPtr test)
+{
+	JniTransition __envp;
+	JniRuntime __jvm;
+	JniValueManager __vm;
+	JavaObject test_val;
+
+	__envp = new JniTransition(__jnienv);
+	try
+	{
+		__jvm = JniEnvironment.Runtime;
+		__vm = __jvm.ValueManager;
+		__vm.WaitForGCBridgeProcessing();
+		test_val = __vm.GetValue<JavaObject>(test);
+		ExportTest.StaticActionIJavaObject(test_val);
+	}
+	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
+	{
+		__envp.SetPendingException(__e);
+	}
+	finally
+	{
+		__envp.Dispose();
+	}
+}");
+		}
+
+		[Test]
+		public void CreateMarshalFromJniMethodExpression_InstanceActionIJavaLangObject ()
+		{
+			var t                 = typeof (ExportTest);
+			var m = t.GetMethod ("InstanceActionIJavaObject");
+			CheckCreateMarshalToManagedExpression (null, t, m, typeof(Action<IntPtr, IntPtr, IntPtr>),
+					@"void (IntPtr __jnienv, IntPtr __this, IntPtr test)
+{
+	JniTransition __envp;
+	JniRuntime __jvm;
+	JniValueManager __vm;
+	ExportTest __this_val;
+	JavaObject test_val;
+
+	__envp = new JniTransition(__jnienv);
+	try
+	{
+		__jvm = JniEnvironment.Runtime;
+		__vm = __jvm.ValueManager;
+		__vm.WaitForGCBridgeProcessing();
+		__this_val = __vm.GetValue<ExportTest>(__this);
+		test_val = __vm.GetValue<JavaObject>(test);
+		__this_val.InstanceActionIJavaObject(test_val);
 	}
 	catch (Exception __e) if (__jvm.ExceptionShouldTransitionToJni(__e))
 	{
@@ -336,6 +406,7 @@ namespace Java.InteropTests
 {
 	JniTransition __envp;
 	JniRuntime __jvm;
+	JniValueManager __vm;
 	long __mret;
 	ExportTest __this_val;
 
@@ -343,8 +414,9 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
-		__jvm.ValueManager.WaitForGCBridgeProcessing();
-		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__vm = __jvm.ValueManager;
+		__vm.WaitForGCBridgeProcessing();
+		__this_val = __vm.GetValue<ExportTest>(__this);
 		__mret = __this_val.FuncInt64();
 		return __mret;
 	}
@@ -373,6 +445,7 @@ namespace Java.InteropTests
 {
 	JniTransition __envp;
 	JniRuntime __jvm;
+	JniValueManager __vm;
 	JavaObject __mret;
 	ExportTest __this_val;
 	JniObjectReference __mret_ref;
@@ -383,8 +456,9 @@ namespace Java.InteropTests
 	try
 	{
 		__jvm = JniEnvironment.Runtime;
-		__jvm.ValueManager.WaitForGCBridgeProcessing();
-		__this_val = __jvm.ValueManager.GetValue<ExportTest>(__this);
+		__vm = __jvm.ValueManager;
+		__vm.WaitForGCBridgeProcessing();
+		__this_val = __vm.GetValue<ExportTest>(__this);
 		__mret = __this_val.FuncIJavaObject();
 		if (null == __mret)
 		{

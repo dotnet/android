@@ -620,7 +620,7 @@ namespace Java.Interop
 			context.CreationStatements.Add (
 					Expression.Assign (r,
 						Expression.Call (
-							Expression.Property (context.Runtime, "ValueManager"),
+							context.ValueManager ?? Expression.Property (context.Runtime, "ValueManager"),
 							"GetValue",
 							new[]{targetType},
 							sourceValue)));
