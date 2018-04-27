@@ -223,6 +223,12 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
 				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
+					"The Target _UpdateAndroidResgen should have been skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
+					"The Target _UpdateAndroidResgen should have been skipped");
+				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should have been skipped");
 				Assert.IsTrue (
@@ -232,6 +238,9 @@ using System.Runtime.CompilerServices;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
+					"The Target _UpdateAndroidResgen should not have been skipped");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"The Target _GenerateAndroidResourceDir should not have been skipped");
