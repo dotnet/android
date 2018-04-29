@@ -84,10 +84,12 @@ namespace Android.Views {
 			activity?.OnLayoutViewNotFound <T> (resourceId, ref view);
 		}
 
+#if ANDROID_11
 		public virtual void OnLayoutFragmentNotFound <T> (int resourceId, ref T fragment) where T: global::Android.App.Fragment
 		{
 			var activity = Context as global::Android.App.Activity;
 			activity?.OnLayoutFragmentNotFound <T> (resourceId, ref fragment);
 		}
+#endif  // ANDROID_11
 	}
 }

@@ -12,6 +12,8 @@ namespace Xamarin.Android.Design
 
 		T FindViewById<T> (int value) where T : View;
 		void OnLayoutViewNotFound <T> (int resourceId, ref T view) where T: View;
+#if ANDROID_14
 		void OnLayoutFragmentNotFound <T> (int resourceId, ref T fragment) where T: Fragment;
+#endif  // ANDROID_14
 	}
 }

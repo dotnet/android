@@ -46,8 +46,10 @@ namespace Android.App {
 		public virtual void OnLayoutViewNotFound <T> (int resourceId, ref T view) where T: View
 		{}
 
+#if ANDROID_11
 		public virtual void OnLayoutFragmentNotFound <T> (int resourceId, ref T fragment) where T: Fragment
 		{}
+#endif  // ANDROID_11
 	}
 }
 
