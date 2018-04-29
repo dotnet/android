@@ -32,6 +32,7 @@ namespace Xamarin.Android.Design
 			return ret;
 		}
 
+#if ANDROID_11
 		protected T FindFragment <T> (int resourceId, ref T cachedField) where T: Fragment
 		{
 			if (cachedField != null)
@@ -51,5 +52,6 @@ namespace Xamarin.Android.Design
 			cachedField = ret;
 			return ret;
 		}
+#endif  // ANDROID_11
 	}
 }
