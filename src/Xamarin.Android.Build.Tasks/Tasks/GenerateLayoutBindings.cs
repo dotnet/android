@@ -280,6 +280,8 @@ namespace Xamarin.Android.Tasks
 
 		bool GenerateSource (BindingGenerator generator, string outputFilePath, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass> partialClasses)
 		{
+			bool result = false;
+			var tempFile = Path.GetTempFileName ();
 			try {
 				if (partialClasses != null && partialClasses.Count > 0) {
 					foreach (var pc in partialClasses) {
@@ -291,12 +293,16 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				using (var fs = File.Open (outputFilePath, FileMode.Create)) {
+				using (var fs = File.Open (tempFile, FileMode.Create)) {
 					using (var sw = new StreamWriter (fs, Encoding.UTF8)) {
-						return GenerateSource (sw, generator, widgets, classNamespace, className, partialClasses);
+						result = GenerateSource (sw, generator, widgets, classNamespace, className, partialClasses);
 					}
 				}
+				if (result)
+					MonoAndroidHelper.CopyIfChanged (tempFile, outputFilePath);
 			} finally {
+				if (File.Exists (tempFile))
+					File.Delete (tempFile);
 				if (partialClasses != null && partialClasses.Count > 0) {
 					foreach (var pc in partialClasses) {
 						if (pc == null)
@@ -315,6 +321,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
+			return result;
 		}
 
 		bool GenerateSource (StreamWriter writer, BindingGenerator generator, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass> partialClasses)
