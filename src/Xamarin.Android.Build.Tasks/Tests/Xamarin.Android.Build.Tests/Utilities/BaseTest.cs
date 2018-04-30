@@ -76,6 +76,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static string AndroidNdkPath {
+			get {
+				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+				if (string.IsNullOrEmpty (sdkPath))
+					sdkPath = Path.Combine (home, "android-toolchain", "ndk");
+				return sdkPath;
+			}
+		}
+
 		protected void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);

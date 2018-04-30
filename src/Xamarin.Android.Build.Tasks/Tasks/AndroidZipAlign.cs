@@ -28,6 +28,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 		static readonly string strSignedUnaligned = "-Signed-Unaligned";
+
+		protected override string DefaultErrorCode => "ANDZA0000";
+
 		protected override string GenerateCommandLineCommands ()
 		{
 			string sourceFilename = Path.GetFileNameWithoutExtension (Source.ItemSpec);

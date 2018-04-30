@@ -78,19 +78,28 @@ namespace Xamarin.Android.Tasks
 		static readonly Regex Message = new Regex (
 				@"^(?<source>[^: ]+)\s*:\s*(?<type>warning|error) (?<code>[^:]+): (?<message>.*)");
 
-		public static void LogFromStandardError (this TaskLoggingHelper log, string message)
+		public static void LogFromStandardError (this TaskLoggingHelper log, string defaultErrorCode, string message)
 		{
 			if (string.IsNullOrEmpty (message))
 				return;
 
 			var m = Message.Match (message);
-			if (!m.Success)
+			if (!m.Success) {
+				if (message.IndexOf ("error:", StringComparison.InvariantCultureIgnoreCase) != -1) {
+					log.LogCodedError (defaultErrorCode, message);
+				} else {
+					log.LogMessage (null, defaultErrorCode, null, null, 0, 0, 0, 0, MessageImportance.Low, message);
+				}
 				return;
+			}
 
 			string subcategory  = m.Groups ["source"].Value;
 			string type         = m.Groups ["type"].Value;
 			string code         = m.Groups ["code"].Value;
 			string msg          = m.Groups ["message"].Value;
+
+			if (string.IsNullOrEmpty (code))
+				code = defaultErrorCode;
 
 			if (type == "warning")
 				log.LogWarning (subcategory, code, string.Empty, string.Empty, 0, 0, 0, 0, "{0}", msg);
