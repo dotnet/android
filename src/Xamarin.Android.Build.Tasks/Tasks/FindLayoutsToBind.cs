@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 {
 	public class FindLayoutsToBind : Task
 	{
-		static readonly char DirSeparator = Path.DirectorySeparatorChar == '\\' ? '\\' : '/';
+		static readonly string DirSeparator = Path.DirectorySeparatorChar == '\\' ? @"\\" : "/";
 		static readonly Regex layoutPathRegex = new Regex ($".*{DirSeparator}+layout(-?\\w+)*{DirSeparator}+.*\\.a?xml$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		public bool GenerateLayoutBindings { get; set; }
