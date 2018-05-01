@@ -61,14 +61,14 @@
     <None Include="Assets\AboutAssets.txt" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\Main.axml" />
-    <AndroidResource Include="Resources\layout-land\Main.axml" />
-    <AndroidResource Include="Resources\layout\settings.xml" />
-    <AndroidResource Include="Resources\layout\loading.xml" />
-    <AndroidResource Include="Resources\layout\item_separator.xml" />
-    <AndroidResource Include="Resources\layout\onboarding_intro.xml" />
-    <AndroidResource Include="Resources\layout\onboarding_info.xml" />
-    <AndroidResource Include="Resources\layout-land\onboarding_intro.xml" />
+    <AndroidBoundLayout Include="Resources\layout\Main.axml" />
+    <AndroidBoundLayout Include="Resources\layout-land\Main.axml" />
+    <AndroidBoundLayout Include="Resources\layout\settings.xml" />
+    <AndroidBoundLayout Include="Resources\layout\loading.xml" />
+    <AndroidBoundLayout Include="Resources\layout\item_separator.xml" />
+    <AndroidBoundLayout Include="Resources\layout\onboarding_intro.xml" />
+    <AndroidBoundLayout Include="Resources\layout\onboarding_info.xml" />
+    <AndroidBoundLayout Include="Resources\layout-land\onboarding_intro.xml" />
     <AndroidResource Include="Resources\values\Strings.xml" />
     <AndroidResource Include="Resources\mipmap-hdpi\Icon.png" />
     <AndroidResource Include="Resources\mipmap-mdpi\Icon.png" />
