@@ -59,12 +59,12 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 			onSetContentViewCalled_01 = true;
 		}
 
-                partial void OnSetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn)
+		partial void OnSetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn)
 		{
 			onSetContentViewCalled_02 = true;
 		}
 
-                partial void OnSetContentView (int layoutResID, ref bool callBaseAfterReturn)
+		partial void OnSetContentView (int layoutResID, ref bool callBaseAfterReturn)
 		{
 			onSetContentViewCalled_03 = true;
 		}

@@ -5,9 +5,9 @@
 	      xamarin:classes="Xamarin.Android.Tests.CodeBehindBuildTests.OnboardingActivityPartial">
     <TextView android:id="@+id/title" />
     <TextView android:id="@+id/welcome" />
-    <RelativeLayout>
+    <LinearLayout>
         <include android:id="@+id/onboarding_info" layout="@layout/onboarding_info" />
-    </RelativeLayout>
+    </LinearLayout>
 
     <TextView android:id="@+id/different_view_types" />
 </LinearLayout>

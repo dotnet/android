@@ -101,7 +101,7 @@
     <AndroidResource Include="Resources\drawable\android_button.xml" />
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
-    <AndroidResource Include="Resources\layout\Main.axml" />
+    <AndroidBoundLayout Include="Resources\layout\Main.axml" />
     <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
