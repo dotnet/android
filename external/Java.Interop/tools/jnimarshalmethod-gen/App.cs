@@ -403,18 +403,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 				}
 
-				var idx1 = signature.IndexOf ('(');
-				var idx2 = signature.IndexOf (')');
-				var arguments = signature;
+				if (string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature))
+					continue;
 
-				if (idx1 >= 0 && idx2 >= idx1)
-					arguments = arguments.Substring (idx1 + 1, idx2 - idx1 - 1);
-
+				methodName = MarshalMemberBuilder.GetMarshalMethodName (name, signature);
 				name = $"n_{name}";
-				methodName = $"{name}_{arguments?.Replace ('/', '_')?.Replace (';', '_')}";
 
-				if (name != null && signature != null)
-					return true;
+				return true;
 			}
 
 			return false;

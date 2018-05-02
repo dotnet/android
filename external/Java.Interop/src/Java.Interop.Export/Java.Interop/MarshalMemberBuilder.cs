@@ -347,6 +347,24 @@ namespace Java.Interop {
 					s);
 			return Expression.Lambda<Func<ConstructorInfo, JniObjectReference, object[], object>> (b, new []{c, r, p});
 		}
+
+		public static string GetMarshalMethodName (string name, string signature)
+		{
+			if (name == null)
+				throw new ArgumentNullException (nameof (name));
+
+			if (signature == null)
+				throw new ArgumentNullException (nameof (signature));
+
+			var idx1 = signature.IndexOf ('(');
+			var idx2 = signature.IndexOf (')');
+			var arguments = signature;
+
+			if (idx1 >= 0 && idx2 >= idx1)
+				arguments = arguments.Substring (idx1 + 1, idx2 - idx1 - 1);
+
+			return $"n_{name}{(string.IsNullOrEmpty (arguments) ? "" : "_")}{arguments?.Replace ('/', '_')?.Replace (';', '_')}";
+		}
 	}
 
 	static class JniSignature {
