@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_TopDir>$(MSBuildThisFileDirectory)..\..\</_TopDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <XACaptureBuildTimingProject Include="$(_TopDir)samples\HelloWorld\HelloWorld.csproj">
+      <Name>HelloWorld</Name>
+      <ShortName>HelloWorld</ShortName>
+      <DirectoryToClean>$([System.IO.Path]::GetFullPath('$(_TopDir)samples\HelloWorld'))</DirectoryToClean>
+      <CSharpFile>$(_TopDir)samples\HelloWorld\MainActivity.cs</CSharpFile>
+      <AndroidResourceFile>$(_TopDir)samples\HelloWorld\Resources\values\Strings.xml</AndroidResourceFile>
+    </XACaptureBuildTimingProject>
+    <XACaptureBuildTimingProject Include="$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj">
+      <Name>Xamarin.Forms-Integration</Name>
+      <ShortName>XF</ShortName>
+      <DirectoryToClean>$([System.IO.Path]::GetFullPath('$(_TopDir)tests\Xamarin.Forms-Performance-Integration'))</DirectoryToClean>
+      <CSharpFile>$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Droid\MainActivity.cs</CSharpFile>
+      <AndroidResourceFile>$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Droid\Resources\values\styles.xml</AndroidResourceFile>
+    </XACaptureBuildTimingProject>
+  </ItemGroup>
+</Project>

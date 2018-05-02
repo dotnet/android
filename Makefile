@@ -197,4 +197,7 @@ run-ji-tests:
 run-apk-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunApkTests
 
+run-performance-tests:
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunPerformanceTests
+
 include build-tools/scripts/runtime-helpers.mk
