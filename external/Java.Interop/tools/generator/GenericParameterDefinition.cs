@@ -36,7 +36,7 @@ namespace MonoDroid.Generation
 				return is_valid;
 			var syms = new List<ISymbol> ();
 			foreach (var c in ConstraintExpressions) {
-				var sym = SymbolTable.Lookup (c, type_params);
+				var sym = opt.SymbolTable.Lookup (c, type_params);
 				if (sym == null) {
 					Report.Warning (0, Report.WarningGenericParameterDefinition + 0, "Unknown generic argument constraint type {0} {1}.", c, opt.ContextString);
 					validated = true;

@@ -6,9 +6,16 @@ using System.Xml;
 using System.Xml.Linq;
 using Xamarin.Android.Tools;
 
-namespace MonoDroid.Generation {
+namespace MonoDroid.Generation
+{
+	public class Parser
+	{
+		readonly CodeGenerationOptions opt;
 
-	public class Parser  {
+		public Parser (CodeGenerationOptions opt)
+		{
+			this.opt = opt;
+		}
 
 		public string ApiSource { get; private set; }
 
@@ -68,7 +75,7 @@ namespace MonoDroid.Generation {
 					break;
 				case "enum":
 					ISymbol sym = new EnumSymbol (elem.XGetAttribute ("name"));
-					SymbolTable.AddType (elem.XGetAttribute ("name"), sym);
+					opt.SymbolTable.AddType (elem.XGetAttribute ("name"), sym);
 					continue;
 				default:
 					Report.Warning (0, Report.WarningParser + 2, "Unexpected child node: {0}.", elem.Name);

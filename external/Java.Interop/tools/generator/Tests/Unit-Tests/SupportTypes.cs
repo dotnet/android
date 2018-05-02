@@ -60,20 +60,12 @@ namespace generatortests
 	{
 		bool isFinal, isStatic, isEnumified, isDeprecated;
 		string type, value, deprecatedComment, visibility = "public";
-		ISymbol managedSymbol;
 		Parameter setterParameter;
 
 		public TestField (string type, string name)
 		{
 			this.type = type;
 			Name = name;
-
-			//HACK: SymbolTable is static, hence problematic for testing
-			//	If running a unit test first, we need to add java.lang.String.
-			//	If an integration test was run, java.lang.String exists already.
-			//	Down the line SymbolTable should be refactored to be non-static, so this could be done in [SetUp]
-			managedSymbol = SymbolTable.Lookup (type) ?? 
-				new SimpleSymbol ("", "java.lang.String", "Ljava/lang/String;", "Java.Lang.String");
 		}
 
 		public TestField SetStatic ()
@@ -131,8 +123,11 @@ namespace generatortests
 
 		protected override Parameter SetterParameter {
 			get {
-				if (setterParameter == null)
-					setterParameter = new Parameter ("value", type, managedSymbol.FullName, isEnumified);
+				if (setterParameter == null) {
+					//NOTE: passing `type` for `managedType`, required since `SymbolTable` is no longer static
+					//	This currently isn't causing any test failures
+					setterParameter = new Parameter ("value", type, type, isEnumified);
+				}
 				return setterParameter;
 			}
 		}

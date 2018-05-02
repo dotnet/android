@@ -285,7 +285,7 @@ namespace Xamarin.Android.Binder {
 			}
 			if (apiSourceAttr == "class-parse") {
 				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				new Adjuster ().Process (filename, SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
+				new Adjuster ().Process (filename, opt.SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
 			}
 			if (only_xml_adjuster)
 				return;
@@ -302,7 +302,7 @@ namespace Xamarin.Android.Binder {
 				fixups.Add (enum_metadata);
 			}
 
-			Parser p = new Parser ();
+			Parser p = new Parser (opt);
 			List<GenBase> gens = p.Parse (apiXmlFile, fixups, api_level, product_version);
 			if (gens == null) {
 				return;
@@ -315,7 +315,7 @@ namespace Xamarin.Android.Binder {
 			foreach (var gen in gens) {
 				gen.StripNonBindables ();
 				if (gen.IsGeneratable)
-					AddTypeToTable (gen);
+					AddTypeToTable (opt, gen);
 			}
 
 			Validate (gens, opt);
@@ -330,7 +330,7 @@ namespace Xamarin.Android.Binder {
 				gen.UpdateEnums (opt);
 
 			foreach (GenBase gen in gens)
-				gen.FixupMethodOverrides ();
+				gen.FixupMethodOverrides (opt);
 
 			foreach (GenBase gen in gens)
 				gen.FixupExplicitImplementation ();
@@ -362,11 +362,11 @@ namespace Xamarin.Android.Binder {
 			gen_info.GenerateLibraryProjectFile (options, enumFiles);
 		}
 
-		static void AddTypeToTable (GenBase gb)
+		static void AddTypeToTable (CodeGenerationOptions opt, GenBase gb)
 		{
-			SymbolTable.AddType (gb);
+			opt.SymbolTable.AddType (gb);
 			foreach (var nt in gb.NestedTypes)
-				AddTypeToTable (nt);
+				AddTypeToTable (opt, nt);
 		}
 
 		static bool BindSameType (TypeDefinition a, TypeDefinition b)
@@ -401,7 +401,7 @@ namespace Xamarin.Android.Binder {
 				foreach (GenBase gen in gens)
 					gen.ResetValidation ();
 				foreach (GenBase gen in gens)
-					gen.FixupAccessModifiers ();
+					gen.FixupAccessModifiers (opt);
 				foreach (GenBase gen in gens)
 					if ((opt.IgnoreNonPublicType &&
 					    (gen.RawVisibility != "public" && gen.RawVisibility != "internal"))
@@ -443,7 +443,7 @@ namespace Xamarin.Android.Binder {
 			}
 
 			ISymbol gb = td.IsEnum ? (ISymbol) new EnumSymbol (td.FullNameCorrected ()) : td.IsInterface ? (ISymbol) new ManagedInterfaceGen (td) : new ManagedClassGen (td);
-			SymbolTable.AddType (gb);
+			opt.SymbolTable.AddType (gb);
 
 			foreach (var nt in td.NestedTypes)
 				ProcessReferencedType (nt, opt);
@@ -614,7 +614,9 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		internal    CodeGenerator           CodeGenerator           {get; private set;} = new XamarinAndroidCodeGenerator ();
+		internal    CodeGenerator           CodeGenerator           { get; private set; } = new XamarinAndroidCodeGenerator ();
+
+		public      SymbolTable             SymbolTable             { get; } = new SymbolTable ();
 
 		public bool UseGlobal { get; set; }
 		public bool IgnoreNonPublicType { get; set; }

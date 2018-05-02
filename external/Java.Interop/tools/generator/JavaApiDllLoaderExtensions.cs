@@ -84,13 +84,13 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			return '<' + string.Join (", ", tps.Select (_ => _.JavaName)) + '>';
 		}
 
-		static void Load (this JavaClass kls, ClassGen gen)
+		static void Load (this JavaClass kls, CodeGenerationOptions opt, ClassGen gen)
 		{
 			((JavaType) kls).Load (gen);
 
 			kls.Abstract = gen.IsAbstract;
 			kls.Final = gen.IsFinal;
-			var baseGen = gen.BaseType != null ? SymbolTable.Lookup (gen.BaseType) : null;
+			var baseGen = gen.BaseType != null ? opt.SymbolTable.Lookup (gen.BaseType) : null;
 
 			if (baseGen != null) {
 				kls.Extends = baseGen.JavaName;

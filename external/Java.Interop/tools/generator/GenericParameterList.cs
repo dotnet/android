@@ -88,7 +88,7 @@ namespace MonoDroid.Generation {
 					continue;
 				}
 
-				ISymbol psym = SymbolTable.Lookup (tp, in_params);
+				ISymbol psym = opt.SymbolTable.Lookup (tp, in_params);
 				if (psym == null || !psym.Validate (opt, in_params))
 					return false;
 				

@@ -199,9 +199,16 @@ namespace MonoDroid.Generation {
 			
 			validated = true;
 
-			// We're validating this in prior to BaseType.
-			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params))
+			if (!support.OnValidate (opt)) {
+				is_valid = false;
 				return false;
+			}
+
+			// We're validating this in prior to BaseType.
+			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params)) {
+				is_valid = false;
+				return false;
+			}
 
 			if (Char.IsNumber (Name [0])) {
 				// it is an anonymous class which does not need output.
@@ -209,7 +216,7 @@ namespace MonoDroid.Generation {
 				return false;
 			}
 			
-			base_symbol = IsAnnotation ? SymbolTable.Lookup ("java.lang.Object") : BaseType != null ? SymbolTable.Lookup (BaseType) : null;
+			base_symbol = IsAnnotation ? opt.SymbolTable.Lookup ("java.lang.Object") : BaseType != null ? opt.SymbolTable.Lookup (BaseType) : null;
 			if (base_symbol == null && FullName != "Java.Lang.Object" && FullName != "System.Object") {
 				Report.Warning (0, Report.WarningClassGen + 2, "Class {0} has unknown base type {1}.", FullName, BaseType);
 				is_valid = false;
@@ -231,10 +238,10 @@ namespace MonoDroid.Generation {
 			return true;
 		}
 
-		public override void FixupAccessModifiers ()
+		public override void FixupAccessModifiers (CodeGenerationOptions opt)
 		{
 			while (!IsAnnotation && !string.IsNullOrEmpty (BaseType)) {
-				var baseClass = SymbolTable.Lookup (BaseType) as ClassGen;
+				var baseClass = opt.SymbolTable.Lookup (BaseType) as ClassGen;
 				if (baseClass != null && RawVisibility == "public" && baseClass.RawVisibility != "public") {
 					//Skip the BaseType and copy over any "missing" methods
 					foreach (var baseMethod in baseClass.Methods) {
@@ -248,7 +255,7 @@ namespace MonoDroid.Generation {
 				}
 			}
 
-			base.FixupAccessModifiers ();
+			base.FixupAccessModifiers (opt);
 		}
 		
 		public override void FixupExplicitImplementation ()

@@ -19,7 +19,7 @@ namespace MonoDroid.Generation {
 			this.support = support;
 		}
 		
-		GenBaseSupport support;
+		protected GenBaseSupport support;
 
 		Dictionary<string, Method> jni_sig_hash = new Dictionary<string, Method> ();
 		Dictionary<string, Property> prop_hash = new Dictionary<string, Property> ();
@@ -664,7 +664,7 @@ namespace MonoDroid.Generation {
 			    (Name [TypeNamePrefix.Length] == '.' || Char.IsDigit (Name [TypeNamePrefix.Length]))) // see bug #5111
 				return false;
 				
-			if (!support.ValidateNamespace ())
+			if (!support.OnValidate (opt))
 				return false;
 
 			List<GenBase> valid_nests = new List<GenBase> ();
@@ -677,7 +677,7 @@ namespace MonoDroid.Generation {
 			AdjustNestedTypeFullName (this);
 
 			foreach (string iface_name in iface_names) {
-				ISymbol isym = SymbolTable.Lookup (iface_name);
+				ISymbol isym = opt.SymbolTable.Lookup (iface_name);
 				if (isym != null && isym.Validate (opt, TypeParameters))
 					ifaces.Add (isym);
 				else {
@@ -727,10 +727,10 @@ namespace MonoDroid.Generation {
 				n.StripNonBindables ();
 		}
 
-		public virtual void FixupAccessModifiers ()
+		public virtual void FixupAccessModifiers (CodeGenerationOptions opt)
 		{
 			foreach (var nt in NestedTypes)
-				nt.FixupAccessModifiers ();
+				nt.FixupAccessModifiers (opt);
 		}
 
 		public void FillProperties ()
@@ -770,10 +770,10 @@ namespace MonoDroid.Generation {
 			return false;
 		}
 		
-		public void FixupMethodOverrides ()
+		public void FixupMethodOverrides (CodeGenerationOptions opt)
 		{
 			foreach (Method m in methods.Where (m => !m.IsInterfaceDefaultMethod)) {
-				for (var bt = this.GetBaseGen (); bt != null; bt = bt.GetBaseGen ()) {
+				for (var bt = this.GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
 					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && mm.Visibility == m.Visibility && ParameterList.Equals (mm.Parameters, m.Parameters));
 					if (bm != null && bm.RetVal.FullName == m.RetVal.FullName) { // if return type is different, it could be still "new", not "override".
 						m.IsOverride = true;
@@ -801,14 +801,14 @@ namespace MonoDroid.Generation {
 			}
 
 			foreach (var nt in NestedTypes)
-				nt.FixupMethodOverrides ();
+				nt.FixupMethodOverrides (opt);
 		}
 
 		public virtual void FixupExplicitImplementation ()
 		{
 		}
 
-		GenBase GetBaseGen ()
+		GenBase GetBaseGen (CodeGenerationOptions opt)
 		{
 			if (this is InterfaceGen)
 				return null;
@@ -816,7 +816,7 @@ namespace MonoDroid.Generation {
 				return this.BaseGen;
 			if (this.BaseSymbol == null)
 				return null;
-			var bg = SymbolTable.Lookup (this.BaseSymbol.FullName) as GenBase;
+			var bg = opt.SymbolTable.Lookup (this.BaseSymbol.FullName) as GenBase;
 			if (bg != null && bg != this)
 				return bg;
 			return null;
@@ -829,7 +829,7 @@ namespace MonoDroid.Generation {
 			if (enum_updated || !IsGeneratable)
 				return;
 			enum_updated = true;
-			var baseGen = GetBaseGen ();
+			var baseGen = GetBaseGen (opt);
 			if (baseGen != null)
 				baseGen.UpdateEnums (opt);
 
@@ -907,7 +907,7 @@ namespace MonoDroid.Generation {
 				// An Annotation attribute property is generated for each applicable annotation method,
 				// where *applicable* means java annotation compatible types. See IsTypeCommensurate().
 				foreach (var method in Methods.Where (m => m.Parameters.Count == 0 &&
-				                                      IsTypeCommensurate (SymbolTable.Lookup (m.RetVal.JavaName)))) {
+				                                      IsTypeCommensurate (opt, opt.SymbolTable.Lookup (m.RetVal.JavaName)))) {
 					sw.WriteLine ("\t\t[global::Android.Runtime.Register (\"{0}\"{1})]", method.JavaName, method.AdditionalAttributeString ());
 					sw.WriteLine ("\t\tpublic {0} {1} {{ get; set; }}", opt.GetOutputName (method.RetVal.FullName), method.Name);
 					sw.WriteLine ();
@@ -923,7 +923,7 @@ namespace MonoDroid.Generation {
 		// as it does not cover java.lang.Enum. Though C# attributes cannot handle JLE.
 		// Class literal (FooBar.class) cannot be supported either.
 		// We might be able to support System.Type for JLC and custom generated .NET Enums for JLE in the future.
-		static bool IsTypeCommensurate (ISymbol sym)
+		static bool IsTypeCommensurate (CodeGenerationOptions opt, ISymbol sym)
 		{
 			if (sym == null)
 				return false;
@@ -944,7 +944,7 @@ namespace MonoDroid.Generation {
 			}
 			var arr = sym as ArraySymbol;
 			if (arr != null)
-				return IsTypeCommensurate (SymbolTable.Lookup (arr.ElementType));
+				return IsTypeCommensurate (opt, opt.SymbolTable.Lookup (arr.ElementType));
 			if (sym is GenericSymbol)
 				return sym.JavaName == "java.lang.Class";
 

@@ -5,10 +5,19 @@ using NUnit.Framework;
 using System.IO;
 using System.Linq;
 
+namespace Java.Lang
+{
+	[Register ("java/lang/Object")]
+	public class Object { }
+
+	[Register ("java/lang/String")]
+	public sealed class String : Object { }
+}
+
 namespace Com.Mypackage
 {
 	[Register ("com/mypackage/foo")]
-	public class Foo
+	public class Foo : Java.Lang.Object
 	{
 		[Register ("foo", "()V", "")]
 		public Foo () { }
@@ -40,6 +49,7 @@ namespace generatortests
 	{
 		string tempFile;
 		ModuleDefinition module;
+		CodeGenerationOptions options;
 
 		[SetUp]
 		public void SetUp ()
@@ -47,6 +57,13 @@ namespace generatortests
 			tempFile = Path.GetTempFileName ();
 			File.Copy (GetType ().Assembly.Location, tempFile, true);
 			module = ModuleDefinition.ReadModule (tempFile);
+			options = new CodeGenerationOptions ();
+
+			foreach (var type in module.Types.Where(t => t.IsClass && t.Namespace == "Java.Lang")) {
+				var @class = new ManagedClassGen (type);
+				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+				options.SymbolTable.AddType (@class);
+			}
 		}
 
 		[TearDown]
@@ -61,6 +78,8 @@ namespace generatortests
 		public void Class ()
 		{
 			var @class = new ManagedClassGen (module.GetType ("Com.Mypackage.Foo"));
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+
 			Assert.AreEqual ("public", @class.Visibility);
 			Assert.AreEqual ("Foo", @class.Name);
 			Assert.AreEqual ("com.mypackage.foo", @class.JavaName);

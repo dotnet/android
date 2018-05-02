@@ -236,7 +236,7 @@ namespace MonoDroid.Generation {
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
-			symbol = SymbolTable.Lookup (TypeName, type_params);
+			symbol = opt.SymbolTable.Lookup (TypeName, type_params);
 			
 			if (symbol == null || !symbol.Validate (opt, type_params)) {
 				Report.Warning (0, Report.WarningField + 0, "unexpected field type {0} {1}.", TypeName, opt.ContextString);

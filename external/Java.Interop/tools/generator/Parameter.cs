@@ -246,7 +246,7 @@ namespace MonoDroid.Generation {
 			if (targetType.EndsWith ("[]")) {
 				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
-			var rgm = SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
+			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
 			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1})",
 					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
 					name); 
@@ -254,7 +254,7 @@ namespace MonoDroid.Generation {
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
-			sym = SymbolTable.Lookup (type, type_params);
+			sym = opt.SymbolTable.Lookup (type, type_params);
 			if (sym == null) {
 				Report.Warning (0, Report.WarningParameter + 0, "Unknown parameter type {0} {1}.", type, opt.ContextString);
 				return false;

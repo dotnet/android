@@ -5,17 +5,17 @@ using System.Collections.Generic;
 
 namespace MonoDroid.Generation {
 
-	public static class SymbolTable {
+	public class SymbolTable {
 
-		static Dictionary<string, List<ISymbol>> symbols = new Dictionary<string, List<ISymbol>> ();
-		static ISymbol char_seq;
-		static ISymbol fileinstream_sym;
-		static ISymbol fileoutstream_sym;
-		static ISymbol instream_sym;
-		static ISymbol outstream_sym;
-		static ISymbol xmlpullparser_sym;
-		static ISymbol xmlresourceparser_sym;
-		static ISymbol string_sym;
+		Dictionary<string, List<ISymbol>> symbols = new Dictionary<string, List<ISymbol>> ();
+		ISymbol char_seq;
+		ISymbol fileinstream_sym;
+		ISymbol fileoutstream_sym;
+		ISymbol instream_sym;
+		ISymbol outstream_sym;
+		ISymbol xmlpullparser_sym;
+		ISymbol xmlresourceparser_sym;
+		ISymbol string_sym;
 
 		static readonly string[] InvariantSymbols = new string[]{
 			"Android.Graphics.Color",
@@ -30,12 +30,12 @@ namespace MonoDroid.Generation {
 			"void",
 		};
 
-		public static IEnumerable<ISymbol> AllRegisteredSymbols ()
+		public IEnumerable<ISymbol> AllRegisteredSymbols ()
 		{
 			return symbols.Values.SelectMany (v => v);
 		}
 
-		static SymbolTable ()
+		public SymbolTable ()
 		{
 			AddType (new SimpleSymbol ("IntPtr.Zero", "void", "void", "V"));
 			AddType (new SimpleSymbol ("false", "boolean", "bool", "Z"));
@@ -63,7 +63,7 @@ namespace MonoDroid.Generation {
 		//   type_params: "<T1<T2>[]>"
 		//     arrayRank: 2
 		//  has_ellipsis: true
-		public static string GetSymbolInfo (string java_type, out string type_params, out int arrayRank, out bool has_ellipsis)
+		public string GetSymbolInfo (string java_type, out string type_params, out int arrayRank, out bool has_ellipsis)
 		{
 			type_params   = string.Empty;
 			arrayRank     = 0;
@@ -114,7 +114,7 @@ namespace MonoDroid.Generation {
 			return erased.ToString ();
 		}
 
-		public static void AddType (ISymbol symbol)
+		public void AddType (ISymbol symbol)
 		{
 			string dummy;
 			int ar;
@@ -124,7 +124,7 @@ namespace MonoDroid.Generation {
 			AddType (key, symbol);
 		}
 
-		static bool ShouldAddType (string key)
+		bool ShouldAddType (string key)
 		{
 			if (!symbols.ContainsKey (key))
 				return true;
@@ -133,7 +133,7 @@ namespace MonoDroid.Generation {
 			return true;
 		}
 
-		public static void AddType (string key, ISymbol symbol)
+		public void AddType (string key, ISymbol symbol)
 		{
 			if (!ShouldAddType (key))
 				return;
@@ -177,7 +177,7 @@ namespace MonoDroid.Generation {
 			return null;
 		}
 
-		public static ISymbol Lookup (string java_type, GenericParameterDefinitionList in_params)
+		public ISymbol Lookup (string java_type, GenericParameterDefinitionList in_params)
 		{
 			string type_params;
 			int arrayRank;
@@ -239,7 +239,7 @@ namespace MonoDroid.Generation {
 			return CreateArray (result, arrayRank, has_ellipsis);
 		}
 
-		static ISymbol CreateArray (ISymbol symbol, int rank, bool has_ellipsis)
+		ISymbol CreateArray (ISymbol symbol, int rank, bool has_ellipsis)
 		{
 			if (symbol == null)
 				return null;
@@ -252,7 +252,7 @@ namespace MonoDroid.Generation {
 			return symbol;
 		}
 
-		public static ISymbol Lookup (string java_type)
+		public ISymbol Lookup (string java_type)
 		{
 			string type_params;
 			int ar;
@@ -287,7 +287,7 @@ namespace MonoDroid.Generation {
 			return result;
 		}
 		
-		public static void Dump ()
+		public void Dump ()
 		{
 			foreach (var p in symbols) {
 				if (p.Key.StartsWith ("System"))

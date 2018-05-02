@@ -33,7 +33,7 @@ namespace MonoDroid.Generation
 			get { return String.Empty; }
 		}
 		
-		public virtual bool ValidateNamespace ()
+		public virtual bool OnValidate (CodeGenerationOptions opt)
 		{
 			// See com.google.inject.internal.util package for this case.
 			// Some Java compiler-generated internals are named as $foobar (dollar prefixed).
@@ -62,6 +62,10 @@ namespace MonoDroid.Generation
 		public ManagedGenBaseSupport (TypeDefinition t)
 		{
 			this.t = t;
+		}
+
+		public override bool OnValidate (CodeGenerationOptions opt)
+		{
 			var regatt = t.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute");
 			is_acw = regatt != null;
 			string jn = regatt != null ? ((string) regatt.ConstructorArguments [0].Value).Replace ('/', '.') : t.FullNameCorrected ();
@@ -72,7 +76,7 @@ namespace MonoDroid.Generation
 				java_name = idx < 0 ? jn : jn.Substring (idx + 1);
 				full_name = t.FullNameCorrected ();
 			} else {
-				var sym = SymbolTable.Lookup (java_name);
+				var sym = opt.SymbolTable.Lookup (java_name);
 				full_name = sym != null ? sym.FullName : t.FullNameCorrected ();
 			}
 			java_name = java_name.Replace ('$', '.');
@@ -85,6 +89,8 @@ namespace MonoDroid.Generation
 					? obsolete.ConstructorArguments [0].Value.ToString ()
 					: "This class is obsoleted in this android platform";
 			}
+
+			return base.OnValidate (opt);
 		}
 
 		public override bool IsAcw {
@@ -284,10 +290,10 @@ namespace MonoDroid.Generation
 		public override string Visibility {
 			get { return visibility; }
 		}
-		
-		public override bool ValidateNamespace ()
+
+		public override bool OnValidate (CodeGenerationOptions opt)
 		{
-			if (!base.ValidateNamespace ())
+			if (!base.OnValidate (opt))
 				return false;
 			string topmost;
 			int split = ns.LastIndexOf ('.');
