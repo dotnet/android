@@ -66,9 +66,9 @@ namespace xUnitTestRunner
 				new XUnitFilter ("category", "nonlinuxtests", true),
 				new XUnitFilter ("category", "nonmonotests", true),
 				new XUnitFilter ("category", "nonnetfxtests", true),
-#if AOT
+#if !DEBUG // aka "Release"
 				new XUnitFilter ("category", "nonuapaottests", true),
-#endif
+#endif  // !DEBUG
 			};
 
 			if (excludedTestNames != null && excludedTestNames.Count > 0) {
