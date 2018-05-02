@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Build.Tasks {
+namespace Xamarin.Android.Tasks {
 	public class CheckForInvalidResourceFileNames : Task {
 		[Required]
 		public ITaskItem[] Resources { get; set; }
