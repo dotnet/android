@@ -29,16 +29,9 @@ package-oss $(ZIP_OUTPUT):
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then \
-		TPN="$(firstword $(wildcard bin/*/lib/xamarin.android/ThirdPartyNotices.txt))"; \
-		if [ -f "$$TPN" ]; then \
-			cp -n "$$TPN" $(ZIP_OUTPUT_BASENAME) ; \
-		else \
-			echo "warning: ThirdPartyNotices.txt file '$$TPN' does not exist." ; \
-			echo "warning: pwd=`pwd`"; \
-			echo "warning: files?" $(ls bin/*/lib/xamarin.android/ThirdPartyNotices.txt); \
-			echo "warning: trying hard-coded path"; \
-			cp bin/Debug/lib/xamarin.android/ThirdPartyNotices.txt $(ZIP_OUTPUT_BASENAME) || true ; \
-		fi; \
+		for f in bin/*/lib/xamarin.android/ThirdPartyNotices.txt ; do \
+			cp -n "$$f" $(ZIP_OUTPUT_BASENAME) || true; \
+		done; \
 	fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
