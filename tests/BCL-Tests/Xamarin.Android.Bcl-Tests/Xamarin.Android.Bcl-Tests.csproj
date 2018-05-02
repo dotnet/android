@@ -44,9 +44,6 @@
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <MandroidI18n>cjk;mideast;other;rare;west</MandroidI18n>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(AotAssemblies)' == 'true' ">
-    <DefineConstants>$(DefineConstants);AOT</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
