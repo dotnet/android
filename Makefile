@@ -48,6 +48,7 @@ install::
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
+	ln -s "$(prefix)/lib/xamarin.android/xbuild/Novell/" "$(prefix)/lib/mono/xbuild/Novell"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	if [ ! -e "$(prefix)/bin/mono" ]; then \
 		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"; \
