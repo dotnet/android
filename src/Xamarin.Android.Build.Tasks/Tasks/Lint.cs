@@ -375,7 +375,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				Log.LogCodedWarning ("XA0000", $"Could not get version from '{tool}'. Defaulting to 1.0");
+				Log.LogCodedWarning ("XA0108", $"Could not get version from '{tool}'. Defaulting to 1.0");
 				return new Version (1, 0);
 			}
 			// lint: version 26.0.2

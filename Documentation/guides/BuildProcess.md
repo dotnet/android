@@ -962,7 +962,18 @@ which are required to get Google Play and other services working.
 Files with this Build action will be treated in a similar fashion too
 the embedded resources found in Library projects. The .aar will be 
 extracted into the intermediate directory. Then any assets, resource
-and .jar files will be included in the appropriate item groups.  
+and .jar files will be included in the appropriate item groups. 
+
+### AndroidLintConfig
+
+The Build action 'AndroidLintConfig' should be used in conjunction with 
+the `AndroidLintEnabled` build property. Files with this build action
+will be merged together and passed to the android `lint` tooling. They
+should be xml files which contain information on which tests to 
+enabled/disabled.
+
+See the [lint documentation](http://www.androiddocs.com/tools/help/lint.html)
+for more details.
 
 ### Content
 
