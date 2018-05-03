@@ -321,7 +321,6 @@
       <Link>pdb2mdb\SourceLocationProvider.cs</Link>
     </Compile>
     <Compile Include="Tasks\Lint.cs" />
-    <Compile Include="Tasks\ReadResolvedSdksCache.cs" />
     <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
     <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
     <Compile Include="Utilities\XDocumentExtensions.cs" />
