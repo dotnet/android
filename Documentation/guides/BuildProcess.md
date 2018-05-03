@@ -646,18 +646,19 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.2.
 
-  <a name="AndroidLintEnabled" />
-- **AndroidLintEnabled** &ndash; A bool property which allows the developer to 
+<a name="AndroidLintEnabled" />
+
+-  **AndroidLintEnabled** &ndash; A bool property which allows the developer to 
     run the android `lint` tool as part of the packaging process.
 
-    - **AndroidLintEnabledIssues** &ndash; A comma seperated list of lint issues to enable.
+    -   **AndroidLintEnabledIssues** &ndash; A comma seperated list of lint issues to enable.
 
-    - **AndroidLintDisabledIssues** &ndash; A comma seperated list of lint issues to disable.
+    -   **AndroidLintDisabledIssues** &ndash; A comma seperated list of lint issues to disable.
 
-    - **AndroidLintCheckIssues** &ndash; A comma seperated list of lint issues to check. 
+    -   **AndroidLintCheckIssues** &ndash; A comma seperated list of lint issues to check. 
        Note: only these issues will be checked.
 
-    - **AndroidLintConfig** &ndash; This is a Build action for a lint style config file. This
+    -   **AndroidLintConfig** &ndash; This is a Build action for a lint style config file. This
        can be used to enabled/disable issues to check. Multiple files can use this build
        action as their contents will be merged.
 
