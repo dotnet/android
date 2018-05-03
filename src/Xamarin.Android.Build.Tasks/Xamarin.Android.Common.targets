@@ -944,7 +944,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckTargetFramework">
-	<Warning Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
 </Target>
 
 <Target Name="_CheckForContent">
