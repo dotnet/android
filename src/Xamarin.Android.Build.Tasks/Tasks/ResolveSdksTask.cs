@@ -395,7 +395,7 @@ namespace Xamarin.Android.Tasks
 				);
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
-				Log.LogWarning ($"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
+				Log.LogCodedWarning ("XA0034", $"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
 				return false;
 			}
 			var versionInfo = sb.ToString ();
@@ -405,16 +405,16 @@ namespace Xamarin.Android.Tasks
 				JdkVersion  = versionNumberMatch.Groups ["version"].Value;
 				Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
 				if (versionNumber < requiredJavaForFrameworkVersion) {
-					Log.LogError ($"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVerison {targetFrameworkVersion}.");
+					Log.LogCodedError ("XA0031", $"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVerison {targetFrameworkVersion}.");
 				}
 				if (versionNumber < requiredJavaForBuildTools) {
-					Log.LogError ($"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
+					Log.LogCodedError ("XA0032", $"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
 				}
 				if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
 					Log.LogCodedError ("XA0030", $"Building with JDK Version `{versionNumber}` is not supported. Please install JDK version `{LatestSupportedJavaVersion}`. See https://aka.ms/xamarin/jdk9-errors");
 				}
 			} else
-				Log.LogWarning ($"Failed to get the Java SDK version as it does not appear to contain a valid version number. `javac -version` returned: ```{versionInfo}```");
+				Log.LogCodedWarning ("XA0033", $"Failed to get the Java SDK version as it does not appear to contain a valid version number. `javac -version` returned: ```{versionInfo}```");
 			return !Log.HasLoggedErrors;
 		}
 
