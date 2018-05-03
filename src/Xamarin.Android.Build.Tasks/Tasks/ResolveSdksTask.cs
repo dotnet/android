@@ -161,19 +161,35 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
-			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+
+			try {
+				MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath, Log);
+			}
+			catch (InvalidOperationException e) {
+				if (e.Message.Contains (" Android ")) {
+					Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+				}
+				if (e.Message.Contains (" Java ")) {
+					Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+				}
+				return false;
+			}
 
 			this.AndroidNdkPath = MonoAndroidHelper.AndroidSdk.AndroidNdkPath;
 			this.AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
 			this.JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
 
-			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
-				return false;
-
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
-				Log.LogCodedError ("XA5205", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+				Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
 				return false;
 			}
+			if (string.IsNullOrEmpty (JavaSdkPath)) {
+				Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+				return false;
+			}
+
+			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
+				return false;
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);

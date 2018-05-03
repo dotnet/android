@@ -88,10 +88,10 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 		static TaskLoggingHelper androidSdkLogger;
 
-		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath)
+		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath, TaskLoggingHelper logHelper = null)
 		{
 			Action<TraceLevel, string> logger = (level, value) => {
-				var log = androidSdkLogger;
+				var log = logHelper ?? androidSdkLogger;
 				switch (level) {
 				case TraceLevel.Error:
 					if (log == null)
