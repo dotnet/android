@@ -646,8 +646,6 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.2.
 
-<a name="AndroidLintEnabled" />
-
 -  **AndroidLintEnabled** &ndash; A bool property which allows the developer to 
     run the android `lint` tool as part of the packaging process.
 
