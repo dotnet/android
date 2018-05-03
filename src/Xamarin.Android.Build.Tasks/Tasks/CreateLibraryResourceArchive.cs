@@ -127,6 +127,9 @@ namespace Xamarin.Android.Tasks
 					if (!File.Exists (dstpath))
 						MonoAndroidHelper.CopyIfChanged (file, dstpath);
 				}
+				dstdir = Path.Combine (OutputDirectory, "aapt");
+				Directory.CreateDirectory (dstdir);
+				MonoAndroidHelper.CopyIfChanged (Path.Combine (projdir, "AndroidManifest.xml"), Path.Combine (dstdir, "AndroidManifest.xml"));
 			}
 			return true;
 		}
