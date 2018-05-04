@@ -2945,7 +2945,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)proguard" Condition="Exists ('$(MonoAndroidIntermediate)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
-	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
+	<Delete Files="$(MonoAndroidIntermediate)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
 	<Delete Files="$(MonoAndroidIntermediate)mergeresources.cache" />
@@ -2954,7 +2954,8 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)__AndroidLibraryProjects__.zip" />
 	<Delete Files="$(MonoAndroidIntermediate)__AndroidNativeLibraries__.zip" />
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
-	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
+	<Delete Files="$(MonoAndroidIntermediate)_javac.stamp" />
+	<Delete Files="$(MonoAndroidIntermediate)compiled.flata" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidStripFlag)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
@@ -2968,7 +2969,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
-	<Delete Files="$(IntermediateOutputPath)R.txt" />
+	<Delete Files="$(MonoAndroidIntermediate)R.txt" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">

@@ -36,11 +36,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
+		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
 
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}");
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
 			var cachePath = Path.Combine (path, "Cache");
 			var envVar = new Dictionary<string, string> () {
 				{ "XAMARIN_CACHEPATH", cachePath },
@@ -67,6 +67,8 @@ using System.Runtime.CompilerServices;
 	Version=""1"", PackageName=""Lib1"")]
 ",
 			};
+			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {
@@ -75,6 +77,7 @@ using System.Runtime.CompilerServices;
 			};
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			if (useManagedParser)
 				proj.SetProperty ("BuildingInsideVisualStudio", "True");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
