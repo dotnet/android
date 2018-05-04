@@ -34,6 +34,8 @@ namespace Xamarin.Android.Tasks
 
 		public string SigningAlgorithm { get; set; }
 
+		protected override string DefaultErrorCode => "ANDJS0000";
+
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = new CommandLineBuilder ();
@@ -70,7 +72,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (hasWarnings)
-				Log.LogWarning (singleLine);
+				Log.LogCodedWarning (DefaultErrorCode, GenerateFullPathToTool (), 0, singleLine);
 			else
 				Log.LogMessage (singleLine, importance);
 		}

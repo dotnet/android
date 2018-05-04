@@ -10,6 +10,8 @@ namespace Xamarin.Android.Tasks
 	{
 		protected static bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
+		protected abstract string DefaultErrorCode { get; }
+
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
@@ -17,7 +19,7 @@ namespace Xamarin.Android.Tasks
 			if (messageImportance != StandardErrorLoggingImportance)
 				return;
 
-			Log.LogFromStandardError (singleLine);
+			Log.LogFromStandardError (DefaultErrorCode, singleLine);
 		}
 
 		// Disabled because this regex does not match our errors:

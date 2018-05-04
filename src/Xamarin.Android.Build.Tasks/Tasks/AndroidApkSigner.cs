@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			if (singleLine.StartsWith ("Warning:", StringComparison.OrdinalIgnoreCase)) {
-				Log.LogWarning (singleLine);
+				Log.LogCodedWarning ("ANDAS0000", ApkSignerJar, 0, singleLine);
 				return;
 			}
 
