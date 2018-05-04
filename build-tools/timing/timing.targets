@@ -71,7 +71,7 @@
         WorkingDirectory="$(_TopDir)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)" />
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="FreshInstall"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_FreshInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -81,7 +81,7 @@
       <_Target>Install</_Target>
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="SecondBuild"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_SecondBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -91,7 +91,7 @@
       <_Target>SignAndroidPackage</_Target>
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="SecondInstall"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_SecondInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -101,7 +101,7 @@
       <_Target>Install</_Target>
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="TouchCSharpBuild"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchCSharpBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -112,7 +112,7 @@
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
     <Touch Files="%(XACaptureBuildTimingProject.CSharpFile)" />
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="TouchCSharpInstall"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchCSharpInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -122,7 +122,7 @@
       <_Target>Install</_Target>
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="TouchAndroidResourceBuild"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchAndroidResourceBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -133,7 +133,7 @@
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
     <Touch Files="%(XACaptureBuildTimingProject.AndroidResourceFile)" />
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="TouchAndroidResourceInstall"
       Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchAndroidResourceInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
@@ -143,6 +143,6 @@
       <_Target>Install</_Target>
       <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
     </PropertyGroup>
-    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
 </Project>

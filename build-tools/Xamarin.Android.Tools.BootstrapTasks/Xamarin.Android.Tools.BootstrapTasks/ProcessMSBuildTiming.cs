@@ -28,7 +28,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				var build = element.Element ("build");
 				var id = build.Attribute ("id")?.Value;
 				var elapsed = build.Attribute ("elapsed")?.Value;
-				results [id] = elapsed;
+				if (TimeSpan.TryParse (elapsed, out TimeSpan result)) {
+					results [id] = result.TotalMilliseconds.ToString ();
+				}
 			}
 			WriteResults ();
 
