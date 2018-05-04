@@ -13,8 +13,8 @@ using Xamarin.Android.Tools;
 namespace MonoDroid.Generation {
 #if HAVE_CECIL
 	public class ManagedInterfaceGen : InterfaceGen {
-		public ManagedInterfaceGen (TypeDefinition t)
-			: base (new ManagedGenBaseSupport (t))
+		public ManagedInterfaceGen (TypeDefinition t, CodeGenerationOptions opt)
+			: base (new ManagedGenBaseSupport (t, opt))
 		{
 			foreach (var ifaceImpl in t.Interfaces) {
 				AddInterface (ifaceImpl.InterfaceType.FullNameCorrected ());

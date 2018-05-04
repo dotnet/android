@@ -59,13 +59,9 @@ namespace MonoDroid.Generation
 		bool deprecated, is_acw;
 		string deprecatedComment;
 
-		public ManagedGenBaseSupport (TypeDefinition t)
+		public ManagedGenBaseSupport (TypeDefinition t, CodeGenerationOptions opt)
 		{
 			this.t = t;
-		}
-
-		public override bool OnValidate (CodeGenerationOptions opt)
-		{
 			var regatt = t.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute");
 			is_acw = regatt != null;
 			string jn = regatt != null ? ((string) regatt.ConstructorArguments [0].Value).Replace ('/', '.') : t.FullNameCorrected ();
@@ -89,8 +85,6 @@ namespace MonoDroid.Generation
 					? obsolete.ConstructorArguments [0].Value.ToString ()
 					: "This class is obsoleted in this android platform";
 			}
-
-			return base.OnValidate (opt);
 		}
 
 		public override bool IsAcw {

@@ -442,18 +442,7 @@ namespace Xamarin.Android.Binder {
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
 			}
 
-			ISymbol gb;
-			if (td.IsEnum) {
-				gb = new EnumSymbol (td.FullNameCorrected ());
-			} else if (td.IsInterface) {
-				var iface = new ManagedInterfaceGen (td);
-				iface.Validate (opt, null); //This will initialize the type, using opt.SymbolTable
-				gb = iface;
-			} else {
-				var @class = new ManagedClassGen (td);
-				@class.Validate (opt, null); //This will initialize the type, using opt.SymbolTable
-				gb = @class;
-			}
+			ISymbol gb = td.IsEnum ? (ISymbol)new EnumSymbol (td.FullNameCorrected ()) : td.IsInterface ? (ISymbol)new ManagedInterfaceGen (td, opt) : new ManagedClassGen (td, opt);
 			opt.SymbolTable.AddType (gb);
 
 			foreach (var nt in td.NestedTypes)
