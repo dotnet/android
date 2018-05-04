@@ -70,8 +70,7 @@ namespace generatortests
 		public void TearDown ()
 		{
 			module.Dispose ();
-			if (File.Exists (tempFile))
-				File.Delete (tempFile);
+			File.Delete (tempFile);
 		}
 
 		[Test]

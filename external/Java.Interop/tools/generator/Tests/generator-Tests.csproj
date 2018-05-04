@@ -69,6 +69,7 @@
     <Compile Include="Integration-Tests\InterfaceMethodsConflict.cs" />
     <Compile Include="SupportFiles\RegisterAttribute.cs" />
     <Compile Include="Unit-Tests\CodeGeneratorTests.cs" />
+    <Compile Include="Unit-Tests\AdjusterTests.cs" />
     <Compile Include="Unit-Tests\JavaInteropCodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />

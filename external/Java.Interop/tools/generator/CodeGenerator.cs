@@ -419,7 +419,7 @@ namespace Xamarin.Android.Binder {
 		}
 
 #if HAVE_CECIL
-		static void ProcessReferencedType (TypeDefinition td, CodeGenerationOptions opt)
+		internal static void ProcessReferencedType (TypeDefinition td, CodeGenerationOptions opt)
 		{
 			if (!td.IsPublic && !td.IsNested)
 				return;
@@ -442,7 +442,18 @@ namespace Xamarin.Android.Binder {
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
 			}
 
-			ISymbol gb = td.IsEnum ? (ISymbol) new EnumSymbol (td.FullNameCorrected ()) : td.IsInterface ? (ISymbol) new ManagedInterfaceGen (td) : new ManagedClassGen (td);
+			ISymbol gb;
+			if (td.IsEnum) {
+				gb = new EnumSymbol (td.FullNameCorrected ());
+			} else if (td.IsInterface) {
+				var iface = new ManagedInterfaceGen (td);
+				iface.Validate (opt, null); //This will initialize the type, using opt.SymbolTable
+				gb = iface;
+			} else {
+				var @class = new ManagedClassGen (td);
+				@class.Validate (opt, null); //This will initialize the type, using opt.SymbolTable
+				gb = @class;
+			}
 			opt.SymbolTable.AddType (gb);
 
 			foreach (var nt in td.NestedTypes)
