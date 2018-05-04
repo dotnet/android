@@ -190,8 +190,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var encoding    = Encoding.UTF8;
 			var binary      = ToBinary (mapping, encoding);
 
-			var keyLen      = binary.Keys.Max (v => v.Length);
-			var valueLen    = binary.Values.Max (v => v.Length);
+			var keyLen      = binary.Keys.Max (v => v?.Length) ?? 0;
+			var valueLen    = binary.Values.Max (v => v?.Length) ?? 0;
 
 			WriteHeader (o, binary.Count, keyLen, valueLen, encoding);
 

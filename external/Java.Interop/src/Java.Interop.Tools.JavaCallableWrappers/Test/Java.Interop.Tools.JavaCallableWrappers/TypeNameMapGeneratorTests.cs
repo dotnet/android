@@ -107,6 +107,16 @@ namespace Xamarin.Android.ToolsTests
 		}
 
 		[Test]
+		public void WriteManagedToJavaWithNoTypes ()
+		{
+			var v = new TypeNameMapGenerator (new string[0], logger: Diagnostic.CreateConsoleLogger ());
+			var o = new MemoryStream ();
+			v.WriteManagedToJava (o);
+			var a = ToArray (o);
+			Assert.AreEqual (52, a.Length);
+		}
+
+		[Test]
 		public void WriteManagedToJava ()
 		{
 			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logger: Diagnostic.CreateConsoleLogger ());
