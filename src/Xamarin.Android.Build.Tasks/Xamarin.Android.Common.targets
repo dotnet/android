@@ -667,6 +667,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 			JavaToolExe="$(JavaToolExe)"
+			JavacToolExe="$(JavacToolExe)"
 			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
 			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
 			LintToolPath="$(LintToolPath)"

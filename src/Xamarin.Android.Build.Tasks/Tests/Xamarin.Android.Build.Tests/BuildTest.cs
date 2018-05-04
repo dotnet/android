@@ -2277,7 +2277,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");
 			string javaExe = "java";
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "JavaSDK"), javaVersion, out javaExe);
+			string javacExe;
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "JavaSDK"), javaVersion, out javaExe, out javacExe);
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildToolsVersion);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -2292,6 +2293,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.AreEqual (expectedResult, builder.Build (proj, parameters: new string[] {
 					$"JavaSdkDirectory={javaPath}",
 					$"JavaToolExe={javaExe}",
+					$"JavacToolExe={javacExe}",
 					$"AndroidSdkBuildToolsVersion={buildToolsVersion}",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
 					$"LatestSupportedJavaVersion={latestSupportedJavaVersion}",
