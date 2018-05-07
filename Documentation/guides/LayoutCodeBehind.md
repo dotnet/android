@@ -47,7 +47,10 @@ partial class Resource {
 constants from the `Resource` type and the `FindViewById<T>()` method:
 
 ```csharp
-partial class MainActivity : Activity {
+class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -119,7 +122,10 @@ for strongly-typed access to IDs within the layout file:
 
 ```csharp
 // User-written code
-partial class MainActivity : Activity {
+class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -140,7 +146,10 @@ Alternatively, instead of using `SetContentView(int)`, which may result in a
 
 ```csharp
 // User-written code
-partial class MainActivity : Activity {
+class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -221,7 +230,7 @@ strongly typed properties for all of the *ids* within the layout file.
 Code-Behind builds atop the Binding mechanism, while requiring that layout
 files "opt-in" to Code-Behind generation by using the new
 [`xamarin:classes`](#xamarin:classes) XML attribute, which is a `;`-separated
-list of full class names to generated.
+list of full class names to be generated.
 
 Given the Android Layout file `Resources\layout\Main.axml`:
 
