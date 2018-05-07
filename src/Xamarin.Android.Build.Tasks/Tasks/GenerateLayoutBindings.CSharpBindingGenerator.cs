@@ -177,6 +177,7 @@ namespace Xamarin.Android.Tasks
 
 			protected override void WriteBindingConstructor (State state, string className)
 			{
+				WriteLineIndent (state, $"[global::Android.Runtime.PreserveAttribute (Conditional=true)]");
 				WriteLineIndent (state, $"public {className} (global::{BindingClientInterfaceFull} client) : base (client)");
 				WriteLineIndent (state, "{}");
 				state.WriteLine ();
