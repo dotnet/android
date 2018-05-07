@@ -48,6 +48,9 @@ constants from the `Resource` type and the `FindViewById<T>()` method:
 
 ```csharp
 class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -120,6 +123,9 @@ for strongly-typed access to IDs within the layout file:
 ```csharp
 // User-written code
 class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
@@ -141,6 +147,9 @@ Alternatively, instead of using `SetContentView(int)`, which may result in a
 ```csharp
 // User-written code
 class MainActivity : Activity {
+
+  // Code omitted for brevity
+
   protected override void OnCreate (Bundle savedInstanceState)
   {
     base.OnCreate (savedInstanceState);
