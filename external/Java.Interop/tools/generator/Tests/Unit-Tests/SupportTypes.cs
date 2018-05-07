@@ -7,7 +7,7 @@ namespace generatortests
 	{
 		public TestClass (string baseType, string javaName) : base (new TestBaseSupport (javaName))
 		{
-			this.BaseType = BaseType;
+			this.BaseType = baseType;
 		}
 
 		public override bool IsAbstract => false;

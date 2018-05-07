@@ -259,7 +259,7 @@ namespace MonoDroid.Generation {
 				virtual_override = " static";
 			// It should be using AdjustedName instead of Name, but ICharSequence ("Formatted") properties are not caught by this...
 			else if (gen.BaseSymbol != null && gen.BaseSymbol.GetPropertyByName (Name, true) != null)
-				virtual_override = needNew + " override";
+				virtual_override = " override";
 
 			opt.CodeGenerator.WriteMethodIdField (Getter, sw, indent, opt);
 			if (Setter != null)
