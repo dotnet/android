@@ -334,6 +334,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyResolver.cs">
       <Link>Linker\Linker\AssemblyResolver.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
+      <Link>Linker\Linker\AssemblyUtilities.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
