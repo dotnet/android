@@ -177,32 +177,56 @@ namespace Xamarin.Android.Build.Tests
 			return referencesDirectory;
 		}
 
-		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe)
+		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe)
 		{
 			javaExe = IsWindows ? "Java.cmd" : "java.bash";
+			javacExe  = IsWindows ? "Javac.cmd" : "javac.bash";
 			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
 			var javaPath = Path.Combine (Root, path);
 			var javaBinPath = Path.Combine (javaPath, "bin");
 			Directory.CreateDirectory (javaBinPath);
-			var sb = new StringBuilder ();
+
+			CreateFauxJavaExe (Path.Combine (javaBinPath, javaExe), javaVersion);
+			CreateFauxJavacExe (Path.Combine (javaBinPath, javacExe), javaVersion);
+
+			File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
+			return javaPath;
+		}
+
+		void CreateFauxJavaExe (string javaExeFullPath, string version)
+		{
+			var sb  = new StringBuilder ();
 			if (IsWindows) {
 				sb.AppendLine ("@echo off");
-				sb.AppendLine ($"echo java version \"{javaVersion}\"");
-				sb.AppendLine ($"echo Java(TM) SE Runtime Environment (build {javaVersion}-b13)");
+				sb.AppendLine ($"echo java version \"{version}\"");
+				sb.AppendLine ($"echo Java(TM) SE Runtime Environment (build {version}-b13)");
 				sb.AppendLine ($"echo Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)");
 			} else {
 				sb.AppendLine ("#!/bin/bash");
-				sb.AppendLine ($"echo \"java version \\\"{javaVersion}\\\"\"");
-				sb.AppendLine ($"echo \"Java(TM) SE Runtime Environment (build {javaVersion}-b13)\"");
+				sb.AppendLine ($"echo \"java version \\\"{version}\\\"\"");
+				sb.AppendLine ($"echo \"Java(TM) SE Runtime Environment (build {version}-b13)\"");
 				sb.AppendLine ($"echo \"Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)\"");
 			}
-			
-			File.WriteAllText (Path.Combine (javaBinPath, javaExe), sb.ToString ());
+			File.WriteAllText (javaExeFullPath, sb.ToString ());
 			if (!IsWindows) {
-				RunProcess ("chmod", $"u+x {Path.Combine (javaBinPath, javaExe)}");
+				RunProcess ("chmod", $"u+x {javaExeFullPath}");
 			}
-			File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
-			return javaPath;
+		}
+
+		void CreateFauxJavacExe (string javacExeFullPath, string version)
+		{
+			var sb  = new StringBuilder ();
+			if (IsWindows) {
+				sb.AppendLine ("@echo off");
+				sb.AppendLine ($"echo javac {version}");
+			} else {
+				sb.AppendLine ("#!/bin/bash");
+				sb.AppendLine ($"echo \"javac {version}\"");
+			}
+			File.WriteAllText (javacExeFullPath, sb.ToString ());
+			if (!IsWindows) {
+				RunProcess ("chmod", $"u+x {javacExeFullPath}");
+			}
 		}
 
 		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
