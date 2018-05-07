@@ -542,6 +542,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    <CompileDependsOn>
      _SetupDesignTimeBuildForCompile;
      _AddAndroidDefines;
+     _IncludeLayoutBindingSources;
      $(CompileDependsOn);
    </CompileDependsOn>
  </PropertyGroup>
