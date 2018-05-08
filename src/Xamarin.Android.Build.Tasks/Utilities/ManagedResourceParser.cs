@@ -304,7 +304,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			var f = new CodeMemberField (typeof (int []), name) {
 				// pity I can't make the member readonly...
-				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
+				Attributes = MemberAttributes.Static | MemberAttributes.Public,
 			};
 			CodeArrayCreateExpression c = (CodeArrayCreateExpression)f.InitExpression;
 			if (c == null) {
