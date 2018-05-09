@@ -60,6 +60,7 @@ namespace Xamarin.Android.Tasks
 		public const string LayoutPartialClassFileNameMetadata = "LayoutPartialClassFileName";
 		public const string PartialClassNamesMetadata = "PartialClassNames";
 		public const string PartialCodeBehindClassNameMetadata = "PartialCodeBehindClassName";
+		public const string GlobalIdPrefix = "global@";
 
 		const string DefaultAndroidNamespace = "http://schemas.android.com/apk/res/android";
 		const string DefaultXamarinNamespace = "http://schemas.xamarin.com/android/xamarin/tools";
@@ -487,7 +488,7 @@ namespace Xamarin.Android.Tasks
 			if (id.StartsWith ("@id/", StringComparison.Ordinal) || id.StartsWith ("@+id/", StringComparison.Ordinal))
 				ns = "Resource.Id";
 			else if (id.StartsWith ("@android:id/")) {
-				ns = "Android.Resource.Id";
+				ns = $"{GlobalIdPrefix}Android.Resource.Id";
 				capitalize = true;
 			} else
 				return false;

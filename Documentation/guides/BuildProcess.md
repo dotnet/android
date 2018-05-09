@@ -920,6 +920,13 @@ with layout files:
 <AndroidBoundLayout Include="Resources\layout\Main.axml" />
 ```
 
+### AndroidFragmentType
+
+Specifies the default fully qualified type to be used for all `<fragment>` layout 
+elements when generating the layout bindings code. The property defaults to the standard
+Android `Android.App.Fragment` type.
+
+
 ### AndroidNativeLibrary
 
 [Native libraries](~/android/platform/native-libraries.md)

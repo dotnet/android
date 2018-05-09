@@ -565,6 +565,10 @@
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\LayoutBinding.cs">
+      <Link>LayoutBinding.cs</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Tasks\JavaDoc.cs" />
   </ItemGroup>
   <ItemGroup>

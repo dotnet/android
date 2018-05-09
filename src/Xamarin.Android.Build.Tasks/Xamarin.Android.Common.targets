@@ -196,6 +196,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
+	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 
 	<!-- Currently only C# is supported -->
 	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
@@ -1403,6 +1404,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_FindLayoutsForBinding">
   <MakeDir Directories="$(MonoAndroidCodeBehindDir)" Condition="!Exists('$(MonoAndroidCodeBehindDir)')"/>
   <GenerateLayoutBindings
+      AndroidFragmentType="$(AndroidFragmentType)"
       ResourceFiles="@(_LayoutForBinding)"
       PartialClassFiles="@(_LayoutPartialClass)"
       MonoAndroidCodeBehindDir="$(MonoAndroidCodeBehindDir)"
@@ -1413,7 +1415,11 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_IncludeLayoutBindingSources" DependsOnTargets="_GenerateLayoutBindings" Condition=" '$(Language)' == 'C#' ">
-	<ItemGroup>
+	<ItemGroup Condition=" '@(_LayoutForBinding)' != '' ">
+		<Compile Include="$(MSBuildThisFileDirectory)\LayoutBinding$(DefaultLanguageSourceExtension)" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '@(_LayoutForBinding)' != '' ">
 		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"
 			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)')"/>
 		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"

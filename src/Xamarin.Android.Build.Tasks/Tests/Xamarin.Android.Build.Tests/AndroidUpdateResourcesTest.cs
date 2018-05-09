@@ -1240,7 +1240,8 @@ namespace UnnamedProject
 			protected override void OnCreate (Bundle bundle)
 			{
 				base.OnCreate (bundle);
-				var widgets = SetContentView <Binding.Main> ();
+				SetContentView (Resource.Layout.Main);
+				var widgets = new Binding.Main (this);
 				widgets.myButton.Click += delegate {
 					widgets.myButton.Text = string.Format (""{0} clicks!"", count++);
 				};

@@ -1,7 +1,7 @@
 ---
 id: 11763499-79e9-4868-83e6-41f3061745d1
 title: "Layout CodeBehind"
-dateupdated: 2018-04-23
+dateupdated: 2018-05-14
 ---
 
 # Overview
@@ -88,12 +88,12 @@ Given the Android Layout file `Resources\layout\Main.axml`:
     xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools">
   <Button android:id="@+id/myButton" />
   <fragment
-      android:id="@+id/log_fragment"
+      android:id="@+id/fragmentWithExplicitManagedType"
       android:name="commonsamplelibrary.LogFragment"
       xamarin:managedType="CommonSampleLibrary.LogFragment"
   />
   <fragment
-      android:id="@+id/secondary_log_fragment"
+      android:id="@+id/fragmentWithInferredType"
       android:name="CommonSampleLibrary.LogFragment"
   />
 </LinearLayout>
@@ -104,18 +104,35 @@ then following type will be generated:
 ```csharp
 // Generated code
 namespace Binding {
-  sealed class Main : global::Xamarin.Android.Design.LayoutBinding
-  {
-    public Main (global::Xamarin.Android.Design.ILayoutBindingClient client);
+  sealed class Main : global::Xamarin.Android.Design.LayoutBinding {
 
-    public override int ResourceLayoutID => Resource.Layout.Main;
-   
-    public Button                          myButton                {get;}
-    public CommonSampleLibrary.LogFragment log_fragment            {get;}
-    public global::Android.App.Fragment    secondary_log_fragment  {get;}
+    [global::Android.Runtime.PreserveAttribute (Conditional=true)]
+    public Main (
+      global::Android.App.Activity client,
+      global::Xamarin.Android.Design.OnLayoutItemNotFoundHandler itemNotFoundHandler = null)
+        : base (client, itemNotFoundHandler) {}
+
+    [global::Android.Runtime.PreserveAttribute (Conditional=true)]
+    public Main (
+      global::Android.Views.View client,
+      global::Xamarin.Android.Design.OnLayoutItemNotFoundHandler itemNotFoundHandler = null)
+        : base (client, itemNotFoundHandler) {}
+
+    Button __myButton;
+    public Button myButton => FindView (global::Xamarin.Android.Tests.CodeBehindFew.Resource.Id.myButton, ref __myButton);
+
+    CommonSampleLibrary.LogFragment __fragmentWithExplicitManagedType;
+    public CommonSampleLibrary.LogFragment fragmentWithExplicitManagedType => FindFragment (global::Xamarin.Android.Tests.CodeBehindFew.Resource.Id.fragmentWithExplicitManagedType, __fragmentWithExplicitManagedType, ref __fragmentWithExplicitManagedType);
+                
+    global::Android.App.Fragment __fragmentWithInferredType;
+    public global::Android.App.Fragment fragmentWithInferredType => FindFragment (global::Xamarin.Android.Tests.CodeBehindFew.Resource.Id.fragmentWithInferredType, __fragmentWithInferredType, ref __fragmentWithInferredType);
   }
 }
 ```
+
+The binding's base type, `Xamarin.Android.Design.LayoutBinding` is **not** part of the
+Xamarin.Android class library but rather shipped with Xamarin.Android in source form
+and included in the application's build automatically whenever bindings are used.
 
 The generated binding type can be created around `Activity` instances, allowing
 for strongly-typed access to IDs within the layout file:
@@ -140,29 +157,6 @@ class MainActivity : Activity {
 }
 ```
 
-Alternatively, instead of using `SetContentView(int)`, which may result in a
-"mismatch" between the Layout id and the Binding type, the new
-`Activity.SetContentView<T>()` method may be used instead:
-
-```csharp
-// User-written code
-class MainActivity : Activity {
-
-  // Code omitted for brevity
-
-  protected override void OnCreate (Bundle savedInstanceState)
-  {
-    base.OnCreate (savedInstanceState);
-
-    var binding     = SetContentView<Binding.Main>();
-    Button button   = binding.myButton;
-    button.Click   += delegate {
-        button.Text = $"{count++} clicks!";
-    };
-  }
-}
-```
-
 Binding types may also be constructed around `View` instances, allowing
 strongly-typed access to Resource IDs *within* the View or its children:
 
@@ -177,47 +171,40 @@ implementation. If `FindViewById<T>()` returns `null`, then the default
 behavior is for the property to throw an `InvalidOperationException`
 instead of returning `null`.
 
-This default behavior may be overridden by overriding one of the following
-methods on the `Activity` type provided to the Binding class constructor:
+This default behavior may be overridden by passing an error handler delegate to
+the generated binding on its instantiation:
 
 ```csharp
-namespace Android.App {
-  partial class Activity {
-    protected virtual void OnLayoutViewNotFound<T> (int resourceId, ref T view)
-        where T: View;
-    protected virtual void OnLayoutFragmentNotFound<T> (int resourceId, ref T fragment)
-        where T: Fragment;
+// User-written code
+class MainActivity : Activity {
+
+  // Code omitted for brevity
+
+  Java.Lang.Object OnLayoutItemNotFound (int resourceId, Type expectedViewType)
+  {
+     // Find and return the View or Fragment identified by `resourceId`
+     // or `null` if unknown
+     return null;
+  }
+  
+  protected override void OnCreate (Bundle savedInstanceState)
+  {
+    base.OnCreate (savedInstanceState);
+
+    SetContentView (Resource.Layout.Main);
+    var binding     = new Binding.Main (this, OnLayoutItemNotFound);
   }
 }
 ```
 
-The `Activity.OnLayoutViewNotFound<T>()` method is invoked when a resource ID
-for a `View` could not be found.
+The `OnLayoutItemNotFound()` method is invoked when a resource ID for a `View` or a `Fragment`
+could not be found.
 
-The `Activity.OnLayoutFragmentNotFound<T>()` method is invoked when a
-resource ID for a `Fragment` could not be found.
-
-`Android.Views.View` also provides these methods, for us by custom `View`
-subclasses:
-
-```csharp
-namespace Android.Views {
-  partial class View {
-    protected virtual void OnLayoutViewNotFound<T> (int resourceId, ref T view)
-        where T: View;
-    protected virtual void OnLayoutFragmentNotFound<T> (int resourceId, ref T fragment)
-        where T: Fragment;
-  }
-}
-```
-
-On both `Activity`s and `View`s, `OnLayoutViewNotFound<T>()` *must* set `view`
-to a non-`null` value in order to prevent the `InvalidOperationException` from
-being thrown.
-
-Likewise, on both `Activity`s and `View`s, `OnLayoutFragmentNotFound<T>()`
-*must* set `fragment` to a non-`null` value in order to prevent the
-`InvalidOperationException` from being thrown.
+The handler *must* return either `null`, in which case the `InvalidOperationException` will be
+thrown or, preferably, return the `View` or `Fragment` instance that corresponds to the
+ID passed to the handler. The returned object **must** be of the correct type matching the type
+of the corresponding Binding property. The returned value is cast to that type, so if the object
+isn't correctly typed an exception will be thrown.
 
 
 <a name="resource-codebehind" />
@@ -241,12 +228,12 @@ Given the Android Layout file `Resources\layout\Main.axml`:
     xamarin:classes="Example.MainActivity">
   <Button android:id="@+id/myButton" />
   <fragment
-      android:id="@+id/log_fragment"
+      android:id="@+id/fragmentWithExplicitManagedType"
       android:name="commonsamplelibrary.LogFragment"
       xamarin:managedType="CommonSampleLibrary.LogFragment"
   />
   <fragment
-      android:id="@+id/secondary_log_fragment"
+      android:id="@+id/fragmentWithInferredType"
       android:name="CommonSampleLibrary.LogFragment"
   />
 </LinearLayout>
@@ -258,17 +245,27 @@ at build time the following type will be produced:
 // Generated code
 namespace Example {
   partial class MainActivity {
-    public Button                           myButton                {get;}
-    public CommonSampleLibrary.LogFragment  log_fragment            {get;}
-    public global::Android.App.Fragment     secondary_log_fragment  {get;}
+    Binding.Main __layout_binding;
 
     public override void SetContentView (global::Android.Views.View view);
+    void SetContentView (global::Android.Views.View view, 
+	                     global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound);
+
     public override void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params);
+    void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params,
+	                     global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound);
+
     public override void SetContentView (int layoutResID);
+    void SetContentView (int layoutResID,
+	                     global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound);
 
     partial void OnSetContentView (global::Android.Views.View view, ref bool callBaseAfterReturn);
     partial void OnSetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn);
     partial void OnSetContentView (int layoutResID, ref bool callBaseAfterReturn);
+
+    public Button myButton => __layout_binding?.myButton;
+    public CommonSampleLibrary.LogFragment fragmentWithExplicitManagedType => __layout_binding?.fragmentWithExplicitManagedType;
+    public global::Android.App.Fragment fragmentWithInferredType => __layout_binding?.fragmentWithInferredType;
   }
 }
 ```
@@ -287,6 +284,28 @@ partial class MainActivity : Activity {
     myButton.Click += delegate {
         button.Text = $"{count++} clicks!";
     };
+  }
+}
+```
+
+The `OnLayoutItemNotFound` error handler can be passed as the last parameter of whatever overload
+of `SetContentView` the activity is using:
+
+```csharp
+// User-written code
+Java.Lang.Object OnLayoutItemNotFound (int resourceId, Type expectedViewType)
+{
+  // Find and return the View or Fragment identified by `resourceId`
+  // or `null` if unknown
+  return null;
+}
+  
+partial class MainActivity : Activity {
+  protected override void OnCreate (Bundle savedInstanceState)
+  {
+    base.OnCreate (savedInstanceState);
+
+    SetContentView (Resource.Layout.Main, OnLayoutItemNotFound);
   }
 }
 ```
@@ -327,8 +346,7 @@ namespace Example
 
     Binding.Main __layout_binding;
 
-    public override void SetContentView (global::Android.Views.View view)
-    {
+    public override void SetContentView (global::Android.Views.View view) {
       __layout_binding = new global::Binding.Main (view);
       bool callBase = true;
       OnSetContentView (view, ref callBase);
@@ -337,23 +355,48 @@ namespace Example
       }
     }
 
-    public override void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params)
-    {
-      __layout_binding = new global::Binding.Main (view);
+    void SetContentView (global::Android.Views.View view, global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound) {
+      __layout_binding = new global::Binding.Main (view, onLayoutItemNotFound);
       bool callBase = true;
-      OnSetContentView (view, @params, ref callBase);
+      OnSetContentView (view, ref callBase);
       if (callBase) {
         base.SetContentView (view);
       }
     }
 
-    public override void SetContentView (int layoutResID)
-    {
+    public override void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params) {
+      __layout_binding = new global::Binding.Main (view);
+      bool callBase = true;
+      OnSetContentView (view, @params, ref callBase);
+      if (callBase) {
+        base.SetContentView (view, @params);
+      }
+    }
+
+    void SetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound) {
+      __layout_binding = new global::Binding.Main (view, onLayoutItemNotFound);
+      bool callBase = true;
+      OnSetContentView (view, @params, ref callBase);
+      if (callBase) {
+        base.SetContentView (view, @params);
+      }
+    }
+
+    public override void SetContentView (int layoutResID) {
       __layout_binding = new global::Binding.Main (this);
       bool callBase = true;
       OnSetContentView (layoutResID, ref callBase);
       if (callBase) {
-        base.SetContentView (view);
+        base.SetContentView (layoutResID);
+      }
+    }
+
+    void SetContentView (int layoutResID, global::Xamarin.Android.Design.LayoutBinding.OnLayoutItemNotFoundHandler onLayoutItemNotFound) {
+      __layout_binding = new global::Binding.Main (this, onLayoutItemNotFound);
+      bool callBase = true;
+      OnSetContentView (layoutResID, ref callBase);
+      if (callBase) {
+        base.SetContentView (layoutResID);
       }
     }
 
@@ -361,9 +404,9 @@ namespace Example
     partial void OnSetContentView (global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn);
     partial void OnSetContentView (int layoutResID, ref bool callBaseAfterReturn);
 
-    public  Button                          myButton                => __layout_binding?.myButton;
-    public  CommonSampleLibrary.LogFragment log_fragment            => __layout_binding?.log_fragment;
-    public  global::Android.App.Fragment    secondary_log_fragment  => __layout_binding?.secondary_log_fragment;
+    public  Button                          myButton                         => __layout_binding?.myButton;
+    public  CommonSampleLibrary.LogFragment fragmentWithExplicitManagedType  => __layout_binding?.fragmentWithExplicitManagedType;
+    public  global::Android.App.Fragment    fragmentWithInferredType         => __layout_binding?.fragmentWithInferredType;
   }
 }
 ```
@@ -464,6 +507,30 @@ name, for instance the above fragment could be redeclared as follows:
     android:layout_height="match_parent"
 />
 ```
+
+## Fragments: a special case
+
+The Android ecosystem currently supports two distinct implementations of the `Fragment` widget:
+
+    * Android.App.Fragment
+	  The "classic" Fragment shipped with the base Android system
+    * Android.Support.V4.App.Fragment
+
+And in the near future, the AndroidX project will introduce the third type:
+
+    * Androidx.Fragment.App.Fragment
+
+All three of those classes are **not** compatible with each other and so special care must be
+taken when generating binding code for `<fragment>` elements in the layout files. Xamarin.Android must
+choose one `Fragment` implementation as the default one to be used if the `<fragment>` element does not
+have any specific type (managed or otherwise) specified. Binding code generator uses the `AndroidFragmentType` 
+MSBuild property for that purpose. The property can be overriden by the user to specify a type different
+than the default one. The property is set to `Android.App.Fragment` by default, unless overriden by the
+support libraries or the future AndroidX libraries.
+
+If the generated code does not build, the layout file must be amended by specifying the manged type of the
+fragment in question.
+
 
 # Code-behind layout selection and processing
 

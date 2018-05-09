@@ -30,16 +30,26 @@ namespace Xamarin.Android.Tasks
 				// generating code for the partial Activity class
 				public string BindingClassName { get; }
 
-				public State (StreamWriter writer, string className, bool isInNamespace, string bindingClassName = null)
+				public bool LinkerPreserveConstructors { get; set; }
+
+				public List<string> ExtraImportNamespaces { get; } = new List <string> ();
+
+				public string AndroidFragmentType { get; }
+
+				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string bindingClassName = null)
 				{
 					if (writer == null)
 						throw new ArgumentNullException (nameof (writer));
 					if (String.IsNullOrWhiteSpace (className))
 						throw new ArgumentException (nameof (writer));
+					if (String.IsNullOrEmpty (androidFragmentType))
+						throw new ArgumentException (nameof (androidFragmentType));
+
 					this.writer = writer;
 					ClassName = className;
 					BindingClassName = bindingClassName;
 					IsInNamespace = isInNamespace;
+					AndroidFragmentType = androidFragmentType;
 				}
 
 				public void IncreaseIndent ()
@@ -87,9 +97,7 @@ namespace Xamarin.Android.Tasks
 
 			// This must be a fully qualified type name
 			protected const string BindingBaseTypeFull = XamarinBindingsNamespace + ".LayoutBinding";
-
-			// This must be a fully qualified type name
-			protected const string BindingClientInterfaceFull = XamarinBindingsNamespace + ".ILayoutBindingClient";
+			protected const string ItemNotFoundHandlerType = XamarinBindingsNamespace + ".OnLayoutItemNotFoundHandler";
 
 			protected static readonly List<string> ImportNamespaces = new List <string> {
 				"System",
@@ -107,14 +115,15 @@ namespace Xamarin.Android.Tasks
 			protected BindingGenerator ()
 			{}
 
-			public State BeginPartialClassFile (StreamWriter writer, string bindingClassName, string classNamespace, string className)
+			public State BeginPartialClassFile (StreamWriter writer, string bindingClassName, string classNamespace, string className, string androidFragmentType)
 			{
 				if (String.IsNullOrEmpty (bindingClassName))
 					throw new ArgumentException (nameof (bindingClassName));
-				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace), bindingClassName);
+				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace), androidFragmentType, bindingClassName);
 				BeginPartialClassFile (state, classNamespace, className);
 				WritePartialClassSetContentViewOverrides (state);
 				WriteOnSetContentViewPartials (state);
+				state.WriteLine ();
 				return state;
 			}
 
@@ -144,24 +153,26 @@ namespace Xamarin.Android.Tasks
 				WritePartialClassOnSetContentViewPartial_Int (state);
 			}
 
-			public State BeginBindingFile (StreamWriter writer, string layoutResourceId, string classNamespace, string className)
+			public State BeginBindingFile (StreamWriter writer, string layoutResourceId, string classNamespace, string className, string androidFragmentType, bool linkerPreserveConstructors = true)
 			{
-				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace));
+				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace), androidFragmentType) {
+					LinkerPreserveConstructors = linkerPreserveConstructors
+				};
 				BeginBindingFile (state, layoutResourceId, classNamespace, className);
-				WriteBindingConstructor (state, className);
+				WriteBindingConstructors (state, className, state.LinkerPreserveConstructors);
 				return state;
 			}
 
 			protected abstract void BeginBindingFile (State state, string layoutResourceId, string classNamespace, string className);
 			public abstract void EndBindingFile (State state);
 
-			protected abstract void WriteBindingConstructor (State state, string className);
+			protected abstract void WriteBindingConstructors (State state, string className, bool linkerPreserve);
 			protected abstract void WriteBindingViewProperty (State state, LayoutWidget widget, string resourceNamespace);
 			protected abstract void WriteBindingFragmentProperty (State state, LayoutWidget widget, string resourceNamespace);
 			protected abstract void WriteBindingMixedProperty (State state, LayoutWidget widget, string resourceNamespace);
 			protected abstract void WriteLocationDirective (State state, LayoutWidget widget);
 			protected abstract void WriteResetLocation (State state);
-			protected abstract string GetBindingPropertyBackingField (LayoutWidget widget);
+			protected abstract string GetBindingPropertyBackingField (State state, LayoutWidget widget);
 
 			public void WriteBindingProperty (State state, LayoutWidget widget, string resourceNamespace)
 			{
@@ -199,10 +210,10 @@ namespace Xamarin.Android.Tasks
 						break;
 
 					case LayoutWidgetType.Unknown:
-						throw new InvalidOperationException ($"Widget must have a known type (ID: {widget.Id})");
+						throw new InvalidOperationException ($"Widget must have a known type (ID: {GetWidgetId (widget)})");
 
 					default:
-						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {widget.Id})");
+						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {GetWidgetId (widget)})");
 				}
 				WriteResetLocation (state);
 				state.WriteLine ();
@@ -244,10 +255,10 @@ namespace Xamarin.Android.Tasks
 						break;
 
 					case LayoutWidgetType.Unknown:
-						throw new InvalidOperationException ($"Widget must have a known type (ID: {widget.Id})");
+						throw new InvalidOperationException ($"Widget must have a known type (ID: {GetWidgetId (widget)})");
 
 					default:
-						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {widget.Id})");
+						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {GetWidgetId (widget)})");
 				}
 
 				return $"{widget.Name}_{suffix}";
@@ -270,7 +281,7 @@ namespace Xamarin.Android.Tasks
 				EnsureArgument (state, nameof (state));
 				EnsureArgument (widget, nameof (widget));
 				WriteLocationDirective (state, widget);
-				WriteLineIndent (state, GetBindingPropertyBackingField (widget));
+				WriteLineIndent (state, GetBindingPropertyBackingField (state, widget));
 				WriteResetLocation (state);
 			}
 
@@ -324,6 +335,25 @@ namespace Xamarin.Android.Tasks
 			{
 				if (parameter == null)
 					throw new ArgumentNullException (name);
+			}
+
+			protected string GetWidgetId (LayoutWidget widget)
+			{
+				return GetWidgetId (widget, out _);
+			}
+
+			protected string GetWidgetId (LayoutWidget widget, out bool isGlobal)
+			{
+				if (String.IsNullOrEmpty (widget?.Id)) {
+					isGlobal = false;
+					return String.Empty;
+				}
+
+				isGlobal = widget.Id.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
+				if (!isGlobal)
+					return widget.Id;
+
+				return widget.Id.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
 			}
 		}
 	}

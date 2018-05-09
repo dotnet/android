@@ -12,7 +12,8 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 			base.OnCreate (savedInstanceState);
 
 			// Set our view from the "main" layout resource
-			Binding.onboarding_intro items = SetContentView <Binding.onboarding_intro> ();
+			SetContentView (Resource.Layout.onboarding_intro);
+			var items = new Binding.onboarding_intro (this);
 
 			// Compile time: check by assignment if properties have correct types
 

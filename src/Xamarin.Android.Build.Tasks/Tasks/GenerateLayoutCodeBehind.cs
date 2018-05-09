@@ -90,6 +90,9 @@ namespace Xamarin.Android.Tasks {
 		[Required]
 		public ITaskItem [] ResourceFiles { get; set; }
 
+		[Required]
+		public string AndroidFragmentType { get; set; }
+
 		public string MonoAndroidCodeBehindDir { get; set; }
 
 		[Output]
