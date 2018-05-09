@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tasks
 		CodeTypeDeclaration resources;
 		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays;
 		Dictionary<string, string> map;
+		bool app;
 
 		void SortMembers (CodeTypeDeclaration decl)
 		{
@@ -28,6 +29,7 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (resourceDirectory))
 				throw new ArgumentException ("Specified resource directory was not found: " + resourceDirectory);
 
+			app = isApp;
 			map = resourceMap ?? new Dictionary<string, string> ();
 			resources = CreateResourceClass ();
 			animation = CreateClass ("Animation");
@@ -274,7 +276,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var f = new CodeMemberField (type, name) {
 				// pity I can't make the member readonly...
-				Attributes = MemberAttributes.Public | MemberAttributes.Static,
+				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 			};
 			parentType.Members.Add (f);
 		}
@@ -286,7 +288,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			var f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
-				Attributes = MemberAttributes.Static | MemberAttributes.Public,
+				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 				InitExpression = new CodePrimitiveExpression (value),
 				Comments = {
 						new CodeCommentStatement ($"aapt resource value: {value}"),
@@ -302,7 +304,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			var f = new CodeMemberField (typeof (int []), name) {
 				// pity I can't make the member readonly...
-				Attributes = MemberAttributes.Public | MemberAttributes.Static,
+				Attributes = MemberAttributes.Static | MemberAttributes.Public,
 			};
 			CodeArrayCreateExpression c = (CodeArrayCreateExpression)f.InitExpression;
 			if (c == null) {
