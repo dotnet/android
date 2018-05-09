@@ -1,12 +1,12 @@
 
-### andXXxxxx
+### andXXxxxx Generic Android Tooling
 
 + [andas0000](andas0000.md)
 + [andjs0000](andjs0000.md)
 + [andkt0000](andkt0000.md)
 + [andza0000](andza0000.md)
 
-### aptxxxx
+### aptxxxx Aapt Tooling
 
 + [apt0000](apt0000.md)
 
