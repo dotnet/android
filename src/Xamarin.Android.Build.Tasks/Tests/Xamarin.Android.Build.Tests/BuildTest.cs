@@ -588,7 +588,7 @@ namespace UnnamedProject {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_StripEmbeddedLibraries"),
 					"the _StripEmbeddedLibraries target should not run");
-				proj.AndroidResources.First ().Timestamp = null;
+				proj.AndroidResources.Last ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_Sign"),

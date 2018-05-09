@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				proj.AndroidResources.First ().Timestamp = null; // means "always build"
+				proj.AndroidResources.Last ().Timestamp = null; // means "always build"
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
@@ -468,8 +468,21 @@ namespace UnnamedProject
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
 					"{0} should be read only", designerPath);
-				var mainAxml = Path.Combine (Root, b.ProjectDirectory, "Resources", "layout", "Main.axml");
-				File.SetLastWriteTimeUtc (mainAxml, DateTime.UtcNow);
+				var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
+				main.Timestamp = DateTime.UtcNow;
+				main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	android:orientation=""vertical""
+	android:layout_width=""fill_parent""
+	android:layout_height=""fill_parent""
+	>
+<Button  
+	android:id=""@+id/myButton""
+	android:layout_width=""fill_parent"" 
+	android:layout_height=""wrap_content"" 
+	android:text=""Hello""
+	/>
+</LinearLayout>";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) != FileAttributes.ReadOnly,
 					"{0} should be writable", designerPath);

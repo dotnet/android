@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -23,6 +24,11 @@ namespace Xamarin.Android.Tasks
 
 		public bool KeepDestinationDates { get; set; }
 
+		[Output]
+		public ITaskItem[] ModifiedFiles { get; set; }
+
+		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
+
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("CopyIfChanged Task");
@@ -37,13 +43,27 @@ namespace Xamarin.Android.Tasks
 				if (!File.Exists (src))
 					continue;
 				var dest = DestinationFiles [i].ItemSpec;
-				var lastWriteTime = File.GetLastWriteTimeUtc (File.Exists (dest) ? dest : src);
-				MonoAndroidHelper.SetWriteable (dest);
-				if (!MonoAndroidHelper.CopyIfChanged (src, dest))
+				var srcmodifiedDate = File.GetLastWriteTimeUtc (src);
+				var dstmodifiedDate = File.Exists (dest) ? File.GetLastAccessTimeUtc (dest) : srcmodifiedDate;
+				if (dstmodifiedDate > srcmodifiedDate) {
+					Log.LogDebugMessage ($"  Skipping {src} its up to date");
 					continue;
+				}
+				if (!MonoAndroidHelper.CopyIfChanged (src, dest)) {
+					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
+					MonoAndroidHelper.SetWriteable (dest);
+					continue;
+				}
+				MonoAndroidHelper.SetWriteable (dest);
+				modifiedFiles.Add (new TaskItem (dest));
 				if (KeepDestinationDates)
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, lastWriteTime, Log);
+					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, dstmodifiedDate, Log);
 			}
+
+			ModifiedFiles = modifiedFiles.ToArray ();
+
+			Log.LogDebugTaskItems (" ModifiedFiles:", ModifiedFiles);
+
 			return true;
 		}
 	}
