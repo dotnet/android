@@ -5,7 +5,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 {
 	public class Adjuster
 	{
-		public void Process (string inputXmlFile, GenBase [] gens, string outputXmlFile, int reportVerbosity)
+		public void Process (string inputXmlFile, CodeGenerationOptions opt, GenBase [] gens, string outputXmlFile, int reportVerbosity)
 		{
 			switch (reportVerbosity) {
 			case 0:
@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				break;
 			}
 			var api = new JavaApi ();
-			api.LoadReferences (gens);
+			api.LoadReferences (opt, gens);
 			api.Load (inputXmlFile);
 			api.StripNonBindables ();
 			api.Resolve ();
