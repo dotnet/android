@@ -15,6 +15,12 @@
 + [XA0000](xa0000.md)
 + [XA0001](xa0001.md)
 
++ [XA0030](xa0030.md)
++ [XA0031](xa0031.md)
++ [XA0032](xa0032.md)
++ [XA0033](xa0033.md)
++ [XA0034](xa0034.md)
+
 + [XA0100](xa0100.md)
 + [XA0101](xa0101.md)
 + [XA0102](xa0102.md)
@@ -44,11 +50,12 @@
 
 ### XA4xxx Code Generation
 
-+ [XA4000](xa4000.md)
++ [XA4301](xa4301.md)
 
 ### XA5xxx GCC and toolchain
 
-+ [XA5000](xa5000.md)
++ [XA5205](xa5205.md)
++ [XA5300](xa5300.md)
 
 ### XA6xxx Internal Tools
 
