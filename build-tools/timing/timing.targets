@@ -39,6 +39,7 @@
         InputFiles="@(_TimingResults)"
         ResultsFilename="$(_TopDir)TestResult-MSBuild-times.csv"
         LabelSuffix="-$(Configuration)"
+        AddResults="True"
     />
   </Target>
   <Target Name="MSBuildPrep" DependsOnTargets="GetXAVersionInfo;AcquireAndroidTarget">
