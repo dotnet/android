@@ -28,7 +28,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int slide_in_bottom = 0;
+			public const int slide_in_bottom = 0;
 			
 			static Animator()
 			{
@@ -44,7 +44,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int ic_menu_preferences = 0;
+			public const int ic_menu_preferences = 0;
 			
 			static Drawable()
 			{
@@ -60,7 +60,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int arial = 0;
+			public const int arial = 0;
 			
 			static Font()
 			{
@@ -76,7 +76,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int menu_settings = 0;
+			public const int menu_settings = 0;
 			
 			static Id()
 			{
@@ -92,7 +92,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int Options = 0;
+			public const int Options = 0;
 			
 			static Menu()
 			{
@@ -108,7 +108,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int icon = 0;
+			public const int icon = 0;
 			
 			static Mipmap()
 			{
@@ -124,7 +124,7 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int num_locations_reported = 0;
+			public const int num_locations_reported = 0;
 			
 			static Plurals()
 			{
@@ -140,16 +140,16 @@ namespace Foo.Foo
 		{
 			
 			// aapt resource value: 0
-			public static int app_name = 0;
+			public const int app_name = 0;
 			
 			// aapt resource value: 0
-			public static int foo = 0;
+			public const int foo = 0;
 			
 			// aapt resource value: 0
-			public static int hello = 0;
+			public const int hello = 0;
 			
 			// aapt resource value: 0
-			public static int menu_settings = 0;
+			public const int menu_settings = 0;
 			
 			static String()
 			{
