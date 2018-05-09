@@ -155,7 +155,9 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     `DebugSymbols` property controls whether or not th Application is
     debuggable.
 
-
+    - **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](LayoutCodeBehind.md)
+	  if set to `true` (the default) or disables it completely if set to `false`
+	
 ### Install Properties
 
 Install properties control the behavior of the `Install` and
@@ -644,6 +646,23 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.2.
 
+-  **AndroidLintEnabled** &ndash; A bool property which allows the developer to 
+    run the android `lint` tool as part of the packaging process.
+
+    -   **AndroidLintEnabledIssues** &ndash; A comma seperated list of lint issues to enable.
+
+    -   **AndroidLintDisabledIssues** &ndash; A comma seperated list of lint issues to disable.
+
+    -   **AndroidLintCheckIssues** &ndash; A comma seperated list of lint issues to check. 
+       Note: only these issues will be checked.
+
+    -   **AndroidLintConfig** &ndash; This is a Build action for a lint style config file. This
+       can be used to enabled/disable issues to check. Multiple files can use this build
+       action as their contents will be merged.
+
+    See [Lint Help](http://www.androiddocs.com/tools/help/lint.html) for more details on
+    the android `lint` tooling.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with
@@ -890,6 +909,16 @@ distinct resource names.
 </ItemGroup>
 ```
 
+### AndroidBoundLayout
+
+Indicates that the layout file is to have code-behind generated for it in case when
+the `AndroidGenerateLayoutBindings` property is set to `false`. In all other aspects
+it is identical to `AndroidResource` described above. This action can be used **only**
+with layout files:
+
+```xml
+<AndroidBoundLayout Include="Resources\layout\Main.axml" />
+```
 
 ### AndroidNativeLibrary
 
@@ -933,7 +962,18 @@ which are required to get Google Play and other services working.
 Files with this Build action will be treated in a similar fashion too
 the embedded resources found in Library projects. The .aar will be 
 extracted into the intermediate directory. Then any assets, resource
-and .jar files will be included in the appropriate item groups.  
+and .jar files will be included in the appropriate item groups. 
+
+### AndroidLintConfig
+
+The Build action 'AndroidLintConfig' should be used in conjunction with 
+the `AndroidLintEnabled` build property. Files with this build action
+will be merged together and passed to the android `lint` tooling. They
+should be xml files which contain information on which tests to 
+enabled/disabled.
+
+See the [lint documentation](http://www.androiddocs.com/tools/help/lint.html)
+for more details.
 
 ### Content
 

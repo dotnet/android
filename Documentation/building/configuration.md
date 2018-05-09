@@ -142,3 +142,9 @@ Overridable MSBuild properties include:
 
       * `4`: Mono 4.6 support.
       * `5`: Mono 4.8 and above support. This is the default.
+
+  * `$(XAIncludeProprietaryBits)`: Defaults to `False`. When enabled, this flag
+    signals `proprietary.csproj` to copy proprietary assemblies from your system's
+    Xamarin.Android install to the local build output. This enables proprietary
+    features such as debugging and fast deployment. Since a "normal" OSS build would
+    not include proprietary files, this flag also emits a warning when enabled.

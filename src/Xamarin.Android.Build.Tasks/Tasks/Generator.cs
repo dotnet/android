@@ -49,6 +49,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
 
+		protected override string DefaultErrorCode => "BG0000";
+
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
 		public override bool Execute ()

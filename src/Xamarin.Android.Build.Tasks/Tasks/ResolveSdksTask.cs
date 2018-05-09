@@ -62,6 +62,7 @@ namespace Xamarin.Android.Tasks
 		public bool   AotAssemblies               { get; set; }
 
 		public string JavaToolExe { get; set; }
+		public string JavacToolExe { get; set; }
 
 		public string LatestSupportedJavaVersion { get; set; }
 
@@ -161,19 +162,35 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
-			MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+
+			try {
+				MonoAndroidHelper.RefreshAndroidSdk (AndroidSdkPath, AndroidNdkPath, JavaSdkPath, Log);
+			}
+			catch (InvalidOperationException e) {
+				if (e.Message.Contains (" Android ")) {
+					Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+				}
+				if (e.Message.Contains (" Java ")) {
+					Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+				}
+				return false;
+			}
 
 			this.AndroidNdkPath = MonoAndroidHelper.AndroidSdk.AndroidNdkPath;
 			this.AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
 			this.JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
 
-			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
-				return false;
-
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
-				Log.LogCodedError ("XA5205", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+				Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
 				return false;
 			}
+			if (string.IsNullOrEmpty (JavaSdkPath)) {
+				Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+				return false;
+			}
+
+			if (!ValidateJavaVersion (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
+				return false;
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
@@ -332,7 +349,12 @@ namespace Xamarin.Android.Tasks
 		// `java -version` will produce values such as:
 		//  java version "9.0.4"
 		//  java version "1.8.0_77"
-		static readonly Regex javaVersionRegex = new Regex (@"version ""(?<version>[\d\.]+)(_d+)?[^""]*""");
+		static  readonly  Regex JavaVersionRegex  = new Regex (@"version ""(?<version>[\d\.]+)(_d+)?[^""]*""");
+
+		// `javac -version` will produce values such as:
+		//  javac 9.0.4
+		//  javac 1.8.0_77
+		static  readonly  Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_d+)?");
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
@@ -358,6 +380,15 @@ namespace Xamarin.Android.Tasks
 
 		bool ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion)
 		{
+			var java  = JavaToolExe   ?? (OS.IsWindows ? "java.exe" : "java");
+			var javac = JavacToolExe  ?? (OS.IsWindows ? "javac.exe" : "javac");
+
+			return ValidateJavaVersion (java, JavaVersionRegex, targetFrameworkVersion, buildToolsVersion) &&
+				ValidateJavaVersion (javac, JavacVersionRegex, targetFrameworkVersion, buildToolsVersion);
+		}
+
+		bool ValidateJavaVersion (string javaExe, Regex versionRegex, string targetFrameworkVersion, string buildToolsVersion)
+		{
 			Version requiredJavaForFrameworkVersion = GetJavaVersionForFramework (targetFrameworkVersion);
 			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
 
@@ -367,7 +398,7 @@ namespace Xamarin.Android.Tasks
 			
 			var sb = new StringBuilder ();
 			
-			var javaTool = Path.Combine (JavaSdkPath, "bin", JavaToolExe ?? (OS.IsWindows ? "java.exe" : "java"));
+			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
 			try {
 				MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
 						if (!string.IsNullOrEmpty (e.Data))
@@ -379,26 +410,26 @@ namespace Xamarin.Android.Tasks
 				);
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
-				Log.LogWarning ($"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
+				Log.LogCodedWarning ("XA0034", $"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
 				return false;
 			}
 			var versionInfo = sb.ToString ();
-			var versionNumberMatch = javaVersionRegex.Match (versionInfo);
+			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
 				JdkVersion  = versionNumberMatch.Groups ["version"].Value;
 				Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
 				if (versionNumber < requiredJavaForFrameworkVersion) {
-					Log.LogError ($"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVerison {targetFrameworkVersion}.");
+					Log.LogCodedError ("XA0031", $"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.");
 				}
 				if (versionNumber < requiredJavaForBuildTools) {
-					Log.LogError ($"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
+					Log.LogCodedError ("XA0032", $"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
 				}
 				if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
 					Log.LogCodedError ("XA0030", $"Building with JDK Version `{versionNumber}` is not supported. Please install JDK version `{LatestSupportedJavaVersion}`. See https://aka.ms/xamarin/jdk9-errors");
 				}
 			} else
-				Log.LogWarning ($"Failed to get the Java SDK version as it does not appear to contain a valid version number. `javac -version` returned: ```{versionInfo}```");
+				Log.LogCodedWarning ("XA0033", $"Failed to get the Java SDK version as it does not appear to contain a valid version number. `{javaExe} -version` returned: ```{versionInfo}```");
 			return !Log.HasLoggedErrors;
 		}
 

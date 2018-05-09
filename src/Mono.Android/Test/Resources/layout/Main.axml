@@ -3,9 +3,8 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    xmlns:tools="http://schemas.xamarin.com/android/tools"
-    tools:class="Xamarin.Android.RuntimeTests.MainActivity"
-    >
+    xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+    xamarin:classes="Xamarin.Android.RuntimeTests.MainActivity">
   <TextView
       android:id="@+id/first_text_view"
       android:layout_width="wrap_content"

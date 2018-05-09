@@ -13,6 +13,7 @@
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -36,8 +37,6 @@
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw</AndroidGeneratedClassDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -237,7 +236,11 @@
     <Compile Include="Tasks\ReadAdditionalResourcesFromAssemblyCache.cs" />
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.BindingGenerator.cs" />
+    <Compile Include="Tasks\GenerateLayoutBindings.CSharpBindingGenerator.cs" />
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
+    <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
@@ -318,7 +321,6 @@
       <Link>pdb2mdb\SourceLocationProvider.cs</Link>
     </Compile>
     <Compile Include="Tasks\Lint.cs" />
-    <Compile Include="Tasks\ReadResolvedSdksCache.cs" />
     <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
     <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
     <Compile Include="Utilities\XDocumentExtensions.cs" />
@@ -558,6 +560,10 @@
     <Compile Include="Tasks\AndroidApkSigner.cs" />
     <Compile Include="Tasks\Desugar.cs" />
     <Compile Include="Utilities\NuGetLogger.cs" />
+    <Compile Include="Tasks\LayoutWidgetType.cs" />
+    <Compile Include="Tasks\LayoutLocationInfo.cs" />
+    <Compile Include="Tasks\LayoutTypeFixup.cs" />
+    <Compile Include="Tasks\LayoutWidget.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

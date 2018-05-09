@@ -25,7 +25,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ReadResolvedSdksCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -49,7 +48,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Crunch" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateCodeBehindForLayout" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -168,6 +168,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AvailableItemName Include="AndroidLintConfig" />
   <AvailableItemName Include="AndroidNativeLibrary" />
   <AvailableItemName Include="AndroidResource" />
+  <AvailableItemName Include="AndroidBoundLayout" />
   <AvailableItemName Include="EmbeddedNativeLibrary" />
   <AvailableItemName Include="LinkDescription" />
   <AvailableItemName Include="MultiDexMainDexList" />
@@ -194,6 +195,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
+	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">True</AndroidGenerateLayoutBindings>
+
+	<!-- Currently only C# is supported -->
+	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
 
 	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
 
@@ -252,6 +257,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'==''">library_project_imports</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'==''">native_library_imports</_NativeLibraryImportsDirectoryName>
+	<_AndroidLayoutBindingsDependencyCache>$(IntermediateOutputPath)layout-binding-deps.cache</_AndroidLayoutBindingsDependencyCache>
 	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
@@ -661,6 +667,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 			JavaToolExe="$(JavaToolExe)"
+			JavacToolExe="$(JavacToolExe)"
 			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
 			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
 			LintToolPath="$(LintToolPath)"
@@ -937,7 +944,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckTargetFramework">
-	<Warning Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
 </Target>
 
 <Target Name="_CheckForContent">
@@ -1043,6 +1050,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
+	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
 	<_AndroidComponentResgenFlagFile>$(IntermediateOutputPath)Component.R.cs.flag</_AndroidComponentResgenFlagFile>
 	<_AndroidStripFlag>$(IntermediateOutputPath)strip.flag</_AndroidStripFlag>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
@@ -1114,6 +1122,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_ManagedUpdateAndroidResgenInputs>
 		$(MSBuildAllProjects);
 		@(AndroidResource);
+		@(AndroidBoundLayout);
 		@(ReferencePath);
 		@(_LibraryResourceDirectoryStamps);
 		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
@@ -1135,7 +1144,7 @@ because xbuild doesn't support framework reference assemblies.
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		Namespace="$(AndroidResgenNamespace)"
 		ProjectDir="$(ProjectDir)"
-		Resources="@(AndroidResource)"
+		Resources="@(AndroidResource);@(AndroidBoundLayout)"
 		ResourceDirectory="$(MonoAndroidResourcePrefix)"
 		AdditionalResourceDirectories="@(LibraryResourceDirectories);@(_AdditionalAndroidResourcePaths->'%(Identity)\res')"
 		IsApplication="$(AndroidApplication)"
@@ -1167,7 +1176,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
   
 <Target Name="_ComputeAndroidResourcePaths">
-	<AndroidComputeResPaths ResourceFiles="@(AndroidResource)" IntermediateDir="$(MonoAndroidResDirIntermediate)" Prefixes="$(MonoAndroidResourcePrefix)" LowercaseFilenames="True" ProjectDir="$(ProjectDir)">
+	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)" IntermediateDir="$(MonoAndroidResDirIntermediate)" Prefixes="$(MonoAndroidResourcePrefix)" LowercaseFilenames="True" ProjectDir="$(ProjectDir)">
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output PropertyName="_AndroidResourceNameCaseMap" TaskParameter="ResourceNameCaseMap" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
@@ -1178,7 +1187,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateAndroidResourceDir"
 	Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
-	Outputs="@(_AndroidResourceDest)"
+	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CopyAndConvertResources SourceFiles="@(_AndroidResolvedResources)"
 			DestinationFiles="@(_AndroidResourceDest)"
@@ -1197,9 +1206,10 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
 		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
 	</RemoveUnknownFiles>
-	<Touch Files="@(_AndroidResourceDest)"
-		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"
-	/>
+	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidResFlagFile)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_ResolveLibraryProjectImports"
@@ -1366,28 +1376,53 @@ because xbuild doesn't support framework reference assemblies.
  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_FindLayoutsWithCodeBehind">
-  <CalculateLayoutCodeBehind ResourceFiles="@(AndroidResource)" SpecificFile="$(_ExplicitCodeBehindLayout)">
-    <Output ItemName="_LayoutWithCodeBehind" TaskParameter="CodeBehindFiles" />
+<Target Name="_FindLayoutsForBinding" Condition=" '$(Language)' == 'C#' ">
+  <FindLayoutsToBind
+      GenerateLayoutBindings="$(AndroidGenerateLayoutBindings)"
+      BoundLayouts="@(AndroidBoundLayout)"
+      BindingDependenciesCacheFile="$(_AndroidLayoutBindingsDependencyCache)"
+      ResourceFiles="@(AndroidResource)">
+    <Output ItemName="_AndroidBoundLayout" TaskParameter="LayoutsToBind" />
+  </FindLayoutsToBind>
+  <CalculateLayoutCodeBehind
+      BoundLayouts="@(_AndroidBoundLayout);@(AndroidBoundLayout)"
+      BaseNamespace="Binding"
+      OutputLanguage="$(Language)"
+      OutputFileExtension="$(DefaultLanguageSourceExtension)"
+      BindingDependenciesCacheFile="$(_AndroidLayoutBindingsDependencyCache)">
+    <Output ItemName="_LayoutForBinding" TaskParameter="LayoutBindingFiles" />
+    <Output ItemName="_LayoutPartialClass" TaskParameter="LayoutPartialClassFiles" />
   </CalculateLayoutCodeBehind>
 </Target>
 
-<Target Name="_GenerateCodeBehindForLayout"
-    Inputs="@(_LayoutWithCodeBehind)"
-    Outputs="@(_LayoutWithCodeBehind->'$(MonoAndroidCodeBehindDir)\%(CodeBehindFileName)')"
-    DependsOnTargets="_FindLayoutsWithCodeBehind">
+<Target Name="_GenerateLayoutBindings" Condition=" '$(Language)' == 'C#' "
+    Inputs="@(_LayoutForBinding);@(_LayoutPartialClass)"
+    Outputs="@(_LayoutForBinding->'$(MonoAndroidCodeBehindDir)\%(LayoutBindingFileName)');@(_LayoutPartialClass->'$(MonoAndroidCodeBehindDir)\%(LayoutPartialClassFileName)')"
+    DependsOnTargets="_FindLayoutsForBinding">
   <MakeDir Directories="$(MonoAndroidCodeBehindDir)" Condition="!Exists('$(MonoAndroidCodeBehindDir)')"/>
-  <GenerateCodeBehindForLayout ResourceFiles="@(_LayoutWithCodeBehind)" MonoAndroidCodeBehindDir="$(MonoAndroidCodeBehindDir)">
+  <GenerateLayoutBindings
+      ResourceFiles="@(_LayoutForBinding)"
+      PartialClassFiles="@(_LayoutPartialClass)"
+      MonoAndroidCodeBehindDir="$(MonoAndroidCodeBehindDir)"
+      AppNamespace="$(AndroidResgenNamespace)"
+      OutputLanguage="$(Language)">
 	<Output ItemName="_GeneratedCodeBehindFiles" TaskParameter="GeneratedFiles"/>
-  </GenerateCodeBehindForLayout>
+  </GenerateLayoutBindings>
 </Target>
 
-<Target Name="_IncludeLayoutsCodeBehindSources" DependsOnTargets="_GenerateCodeBehindForLayout">
+<Target Name="_IncludeLayoutBindingSources" DependsOnTargets="_GenerateLayoutBindings" Condition=" '$(Language)' == 'C#' ">
 	<ItemGroup>
-		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
-			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
-		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)"
-			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutWithCodeBehind.CodeBehindFileName)')"/>
+		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)')"/>
+		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"
+			    Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)')"/>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '@(_LayoutPartialClass)' != '' ">
+	        <Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)"
+			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)')"/>
+		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)"
+		            Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)')"/>
 	</ItemGroup>
 </Target>
 
@@ -1400,7 +1435,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
 		_GenerateAndroidResourceDir;
-		_IncludeLayoutsCodeBehindSources;
+		_IncludeLayoutBindingSources;
 		_DefineBuildTargetAbis;
 	</_UpdateAndroidResgenDependsOnTargets>
 	<_UpdateAndroidResgenInputs>
@@ -1798,7 +1833,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
   Inputs="@(ResolvedUserAssemblies)"
-  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateDir)%(Filename)%(Extension)')">
+  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
@@ -1925,7 +1960,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
-  Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+  Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
   Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml;$(_AcwMapFile);$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2740,6 +2775,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)__AndroidNativeLibraries__.zip" />
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
+	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidStripFlag)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />

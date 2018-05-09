@@ -7,9 +7,10 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>Full</DebugType>
@@ -29,8 +30,6 @@
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Net.Http" />
@@ -48,8 +47,10 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\ProcessMSBuildTiming.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RenameTestCases.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\TimingLogger.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />

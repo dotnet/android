@@ -29,7 +29,9 @@ package-oss $(ZIP_OUTPUT):
 	if [ ! -d $(ZIP_OUTPUT_BASENAME) ] ; then mkdir $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -L $(ZIP_OUTPUT_BASENAME)/bin ] ; then ln -s ../bin $(ZIP_OUTPUT_BASENAME) ; fi
 	if [ ! -f $(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt ] ; then \
-		cp -n $(firstword $(wildcard bin/*/lib/xamarin.android/ThirdPartyNotices.txt)) $(ZIP_OUTPUT_BASENAME) ; \
+		for f in bin/*/lib/xamarin.android/ThirdPartyNotices.txt ; do \
+			cp -n "$$f" $(ZIP_OUTPUT_BASENAME) || true; \
+		done; \
 	fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
@@ -40,6 +42,8 @@ package-oss $(ZIP_OUTPUT):
 			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
 		done; \
 	done
+	echo "Exclude List:"
+	cat ".__exclude_list.txt"
 ifeq ($(ZIP_EXTENSION),zip)
 	zip -r "$(ZIP_OUTPUT)" \
 		`ls -1d $(_BUNDLE_ZIPS_INCLUDE) 2>/dev/null` \

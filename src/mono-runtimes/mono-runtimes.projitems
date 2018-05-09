@@ -175,6 +175,7 @@
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
+      <PackageOptions>CC="$(HostCc32)" CXX="$(HostCxx32)"</PackageOptions>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
@@ -182,6 +183,7 @@
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
+      <PackageOptions>CC="$(HostCc64)" CXX="$(HostCxx64)"</PackageOptions>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))) ">

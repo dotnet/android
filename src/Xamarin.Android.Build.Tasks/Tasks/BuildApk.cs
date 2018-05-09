@@ -143,7 +143,7 @@ namespace Xamarin.Android.Tasks
 					var item = Path.Combine (file.Item2, Path.GetFileName (file.Item1))
 						.Replace (Path.DirectorySeparatorChar, '/');
 					if (apk.Archive.ContainsEntry (item)) {
-						Log.LogWarning (null, "XA4301", null, file.Item1, 0, 0, 0, 0, "Apk already contains the item {0}; ignoring.", item);
+						Log.LogCodedWarning ("XA4301", file.Item1, 0, "Apk already contains the item {0}; ignoring.", item);
 						continue;
 					}
 					apk.Archive.AddFile (file.Item1, item);
@@ -264,7 +264,7 @@ namespace Xamarin.Android.Tasks
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
 
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
 				// Add assembly
 				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
@@ -530,7 +530,7 @@ namespace Xamarin.Android.Tasks
 										continue;
 									var key = e.FullName.Replace ("native_library_imports", "lib");
 									if (apk.Archive.Any (k => k.FullName == key)) {
-										Log.LogCodedWarning ("4301", "Apk already contains the item {0}; ignoring.", key);
+										Log.LogCodedWarning ("XA4301", "Apk already contains the item {0}; ignoring.", key);
 										continue;
 									}
 									using (var s = new MemoryStream ()) {
@@ -565,7 +565,7 @@ namespace Xamarin.Android.Tasks
 			var lib_abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
 			
 			if (string.IsNullOrWhiteSpace (lib_abi)) {
-				Log.LogError ("Cannot determine abi of native library {0}.", lib);
+				Log.LogCodedError ("XA4301", lib.ItemSpec, 0, "Cannot determine abi of native library {0}.", lib.ItemSpec);
 				return null;
 			}
 
@@ -576,7 +576,7 @@ namespace Xamarin.Android.Tasks
 		{
 			if (libs.Any (lib => lib.Abi == null))
 				Log.LogCodedWarning (
-						"4301",
+						"XA4301",
 						"Could not determine abi of some native libraries, ignoring those: " +
 				                    string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
 			libs = libs.Where (lib => lib.Abi != null);

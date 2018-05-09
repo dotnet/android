@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="timing.projitems" />
+  <Import Project="..\scripts\TestApks.targets" />
+  <Import Project="..\scripts\XAVersionInfo.targets" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Git" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
+  <Target Name="LogcatTiming">
+    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > tmp-logcat-timing.log" />
+    <ProcessLogcatTiming
+        InputFilename="tmp-logcat-timing.log"
+        ApplicationPackageName="$(Package)"
+        PID="$(PID)"
+        ResultsFilename="tmp-timing-results.csv"
+        DefinitionsFilename="..\scripts\TimingDefinitions.txt"
+        AddResults="true"
+        Activity="$(Activity)" />
+  </Target>
+  <PropertyGroup>
+    <_MSBuildTimingDependsOn>
+      ResolveReferences;
+      MSBuildPrep;
+      FreshBuild;
+      FreshInstall;
+      SecondBuild;
+      SecondInstall;
+      TouchCSharpBuild;
+      TouchCSharpInstall;
+      TouchAndroidResourceBuild;
+      TouchAndroidResourceInstall;
+    </_MSBuildTimingDependsOn>
+  </PropertyGroup>
+  <Target Name="MSBuildTiming" DependsOnTargets="$(_MSBuildTimingDependsOn)">
+    <ItemGroup>
+      <_TimingResults Include="$(_OutputDir)Timing_*.xml" />
+    </ItemGroup>
+    <ProcessMSBuildTiming
+        InputFiles="@(_TimingResults)"
+        ResultsFilename="$(_TopDir)TestResult-MSBuild-times.csv"
+        LabelSuffix="-$(Configuration)"
+    />
+  </Target>
+  <Target Name="MSBuildPrep" DependsOnTargets="GetXAVersionInfo;AcquireAndroidTarget">
+    <PropertyGroup>
+      <_OutputDir>$(_TopDir)bin\Test$(Configuration)\</_OutputDir>
+      <_XABuild>$(_TopDir)bin\Debug\bin\xabuild</_XABuild>
+      <_TimingLogger>Xamarin.Android.Tools.BootstrapTasks.TimingLogger,$(_TopDir)bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll</_TimingLogger>
+    </PropertyGroup>
+    <ItemGroup>
+      <_FilesToDelete Include="$(_OutputDir)Timing_*" />
+    </ItemGroup>
+    <Delete Files="@(_FilesToDelete)"/>
+  </Target>
+  <Target Name="FreshBuild"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_FreshBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-FreshBuild</_ID>
+      <_Description>A fresh build after a clean checkout for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>SignAndroidPackage</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <!--Simulate a clean checkout with git commands-->
+    <Git
+        Arguments="rm -r --cached %(XACaptureBuildTimingProject.DirectoryToClean)"
+        WorkingDirectory="$(_TopDir)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)" />
+    <Git
+        Arguments="checkout HEAD %(XACaptureBuildTimingProject.DirectoryToClean)"
+        WorkingDirectory="$(_TopDir)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="FreshInstall"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_FreshInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-FreshInstall</_ID>
+      <_Description>An install after a fresh build for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>Install</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="SecondBuild"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_SecondBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-SecondBuild</_ID>
+      <_Description>A second build after a fresh build for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>SignAndroidPackage</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="SecondInstall"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_SecondInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-SecondInstall</_ID>
+      <_Description>An install after a second build for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>Install</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="TouchCSharpBuild"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchCSharpBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-TouchCSharpBuild</_ID>
+      <_Description>A build after a fresh build that touches a C# file for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>SignAndroidPackage</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Touch Files="%(XACaptureBuildTimingProject.CSharpFile)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="TouchCSharpInstall"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchCSharpInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-TouchCSharpInstall</_ID>
+      <_Description>An install after touching a C# file for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>Install</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="TouchAndroidResourceBuild"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchAndroidResourceBuild_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-TouchAndroidResourceBuild</_ID>
+      <_Description>A build after a fresh build that touches an Android resource XML file for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>SignAndroidPackage</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Touch Files="%(XACaptureBuildTimingProject.AndroidResourceFile)" />
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+  <Target Name="TouchAndroidResourceInstall"
+      Outputs="$(_TopDir)bin\Test$(Configuration)\Timing_TouchAndroidResourceInstall_$(Configuration)_%(XACaptureBuildTimingProject.Name).xml">
+    <PropertyGroup>
+      <_ID>@(XACaptureBuildTimingProject->'%(ShortName)')-TouchAndroidResourceInstall</_ID>
+      <_Description>An install after touching an Android resource XML file for @(XACaptureBuildTimingProject->'%(Name)')</_Description>
+      <_Target>Install</_Target>
+      <_OutputFile>$(_OutputDir)Timing_$(_ID)_$(Configuration)_@(XACaptureBuildTimingProject->'%(Name)')</_OutputFile>
+    </PropertyGroup>
+    <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
+  </Target>
+</Project>

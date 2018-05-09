@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class KeyTool : AndroidToolTask
 	{
+		string previousLine;
+
 		[Required]
 		public string KeyStore { get; set; }
 
@@ -24,6 +26,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Verbose { get; set; }
 
+		protected override string DefaultErrorCode => "ANDKT0000";
+
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("KeyTool : {0}", Command);
@@ -35,6 +39,22 @@ namespace Xamarin.Android.Tasks
 				Directory.CreateDirectory (store_dir);
 
 			return base.Execute ();
+		}
+
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			//NOTE: keytool tends to print "Warning:" followed by the actual warning on the next line
+			//  The goal here is to combine these two lines into a single message
+			string text = singleLine.Trim ();
+			if (!string.IsNullOrEmpty (text) && !text.EndsWith (":", StringComparison.Ordinal)) {
+				if (previousLine != null && previousLine.EndsWith (":", StringComparison.Ordinal)) {
+					text = previousLine + " " + text;
+				}
+				Log.LogFromStandardError (DefaultErrorCode, text);
+			}
+
+			previousLine = text;
 		}
 
 		protected virtual CommandLineBuilder CreateCommandLine()

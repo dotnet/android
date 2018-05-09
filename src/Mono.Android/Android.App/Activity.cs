@@ -1,10 +1,16 @@
 using System;
+using System.Reflection;
 
+using Android.Content;
 using Android.Runtime;
+using Android.Views;
+using Xamarin.Android.Design;
 
 namespace Android.App {
 
-	partial class Activity {
+	partial class Activity : ILayoutBindingClient {
+
+		Context ILayoutBindingClient.Context => this;
 
 		public T FindViewById<T> (int id)
 			where T : Android.Views.View
@@ -22,6 +28,28 @@ namespace Android.App {
 		{
 			RunOnUiThread (new Java.Lang.Thread.RunnableImplementor (action));
 		}
+
+		protected T SetContentView <T> () where T: LayoutBinding
+		{
+			T items = (T)Activator.CreateInstance (
+				type: typeof (T),
+				bindingAttr: BindingFlags.CreateInstance | BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public,
+				binder: null,
+				args: new Object[] {this}, // ILayoutBindingClient constructor should be looked up
+				culture: null
+			);
+
+			SetContentView (items.ResourceLayoutID);
+			return items;
+		}
+
+		public virtual void OnLayoutViewNotFound <T> (int resourceId, ref T view) where T: View
+		{}
+
+#if ANDROID_11
+		public virtual void OnLayoutFragmentNotFound <T> (int resourceId, ref T fragment) where T: Fragment
+		{}
+#endif  // ANDROID_11
 	}
 }
 

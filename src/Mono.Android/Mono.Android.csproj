@@ -84,6 +84,8 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
+    <Compile Include="Xamarin.Android.Design\LayoutBinding.cs" />
+    <Compile Include="Xamarin.Android.Design\ILayoutBindingClient.cs" />
   </ItemGroup>
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -366,5 +368,8 @@
       <Name>mono-runtimes</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Xamarin.Android.Design\" />
   </ItemGroup>
 </Project>

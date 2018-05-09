@@ -323,12 +323,12 @@ namespace Xamarin.Android.Tasks
 				if (!string.IsNullOrEmpty (file))
 					Log.LogWarning ("", "XA0102", "", file, line, column, 0, 0, text.Replace ("Warning:", ""));
 				else 
-					Log.LogWarning (text.Replace ("Warning:", ""));
+					Log.LogCodedWarning ("XA0102", text.Replace ("Warning:", ""));
 			} else {
 				if (!string.IsNullOrEmpty (file))
 					Log.LogError ("", "XA0103", "", file, line, column, 0, 0, text.Replace ("Error:", ""));
 				else
-					Log.LogError (text.Replace ("Error:", ""));
+					Log.LogCodedError ("XA0103", text.Replace ("Error:", ""));
 			}
 		}
 
@@ -360,8 +360,23 @@ namespace Xamarin.Android.Tasks
 			});
 			var versionInfo = sb.ToString ();
 			if (result != 0 || versionInfo.Contains ("unknown")) {
-				Log.LogWarning ($"Could not get version from '{tool}'");
-				return new Version ();
+				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version
+				var libPath = Path.Combine (Path.GetDirectoryName (tool), "..", "lib");
+				if (Directory.Exists (libPath)) {
+					Version v;
+					foreach (var file in Directory.EnumerateFiles (libPath, "lint-??.?.?-dev.jar")) {
+						var split = Path.GetFileName (file).Split ('-');
+						if (split.Length != 3)
+							continue;
+						if (!string.IsNullOrEmpty (split [1])) {
+							if (Version.TryParse (split [1], out v)) {
+								return v;
+							}
+						}
+					}
+				}
+				Log.LogCodedWarning ("XA0108", $"Could not get version from '{tool}'. Defaulting to 1.0");
+				return new Version (1, 0);
 			}
 			// lint: version 26.0.2
 			var versionNumberMatch = lintVersionRegex.Match (versionInfo);
@@ -369,7 +384,7 @@ namespace Xamarin.Android.Tasks
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
 				return versionNumber;
 			}
-			return new Version ();
+			return new Version (1, 0);
 		}
 	}
 }

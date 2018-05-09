@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -8,9 +8,14 @@
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <_MSBuildExtension Condition=" '$(OS)' == 'Windows_NT' ">exe</_MSBuildExtension>
+    <_MSBuildExtension Condition=" '$(OS)' != 'Windows_NT' ">dll</_MSBuildExtension>
+    <_MSBuildToolsPath Condition=" !$(MSBuildToolsPath.Contains('xbuild')) ">$(MSBuildToolsPath)</_MSBuildToolsPath>
+    <_MSBuildToolsPath Condition=" $(MSBuildToolsPath.Contains('xbuild')) ">$([System.IO.Path]::GetFullPath ('$(MSBuildToolsPath)\..\..\..\msbuild\15.0\bin'))</_MSBuildToolsPath>
   </PropertyGroup>
   <Import Project="Xamarin.Android.Build.Tests.Shared.projitems" Label="Shared" Condition="Exists('Xamarin.Android.Build.Tests.Shared.projitems')" />
   <Import Project="..\..\..\..\Configuration.props" />
+  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -31,8 +36,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Microsoft.Build" />
-    <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
@@ -43,9 +46,6 @@
       <HintPath>$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
     </Reference>
     -->
-    <Reference Include="Microsoft.Build.Engine" />
-    <Reference Include="Microsoft.Build.Tasks.v4.0" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -61,13 +61,16 @@
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Name>Xamarin.Android.Build.Tasks</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <Project>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</Project>
+      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
-    <Folder Include="Expected\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTest.OSS.cs" />
@@ -77,10 +80,14 @@
     <Compile Include="ResolveSdksTaskTests.cs" />
     <Compile Include="AndroidResourceTests.cs" />
     <Compile Include="ManagedResourceParserTests.cs" />
+    <Compile Include="Tasks\KeyToolTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
 </Project>

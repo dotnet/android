@@ -155,7 +155,8 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine ("temp", "UseLatestAndroidSdk_" + Guid.NewGuid ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
 			string javaExe = string.Empty;
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe);
+			string javacExe;
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe, out javacExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apis);
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
@@ -178,6 +179,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.CacheFile = Path.Combine (Root, path, "sdk.xml");
 			task.SequencePointsMode = "None";
 			task.JavaToolExe = javaExe;
+			task.JavacToolExe = javacExe;
 			Assert.AreEqual (expectedTaskResult, task.Execute (), $"Task should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
 			Assert.AreEqual (expectedTargetFramework, task.TargetFrameworkVersion, $"TargetFrameworkVersion should be {expectedTargetFramework} but was {targetFrameworkVersion}");
 			if (!string.IsNullOrWhiteSpace (expectedError)) {
@@ -194,7 +196,8 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
 			string javaExe = string.Empty;
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe);
+			string javacExe;
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe, out javacExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
@@ -219,6 +222,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.CacheFile = Path.Combine (Root, path, "sdk.xml");
 			task.SequencePointsMode = "None";
 			task.JavaToolExe = javaExe;
+			task.JavacToolExe = javacExe;
 			var start = DateTime.UtcNow;
 			Assert.IsTrue (task.Execute ());
 			var executionTime = DateTime.UtcNow - start;

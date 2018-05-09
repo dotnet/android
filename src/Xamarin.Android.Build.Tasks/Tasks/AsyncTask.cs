@@ -152,6 +152,11 @@ namespace Xamarin.Android.Tasks
 			LogCodedError (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
 		}
 
+		public void LogCodedError (string code, string file, int lineNumber, string message, params object [] messageArgs)
+		{
+			LogCodedError (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
+		}
+
 		public void LogCodedError (string code, string message, string file, int lineNumber)
 		{
 			if (UIThreadId == Thread.CurrentThread.ManagedThreadId) {
@@ -204,6 +209,11 @@ namespace Xamarin.Android.Tasks
 		public void LogCodedWarning (string code, string message, params object [] messageArgs)
 		{
 			LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
+		}
+
+		public void LogCodedWarning (string code, string file, int lineNumber, string message, params object [] messageArgs)
+		{
+			LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
 		}
 
 		public void LogCodedWarning (string code, string message, string file, int lineNumber)

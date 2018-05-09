@@ -224,8 +224,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"));
 				proj.AndroidResources.First ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"));
 			}
 		}
 

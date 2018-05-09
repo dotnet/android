@@ -79,6 +79,7 @@
     <XABuildToolsVersion>28-rc1</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">28.0.0-rc1</XABuildToolsFolder>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
+    <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</TestsAotName>
   </PropertyGroup>

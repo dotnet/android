@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:id="@+id/settings_container">
+    <LinearLayout>
+	<TextView android:id="@+id/title" />
+	<LinearLayout>
+	    <TextView android:id="@+id/account_type" />
+	    <TextView android:id="@+id/account_type_subtitle" />
+	    <TextView android:id="@+id/account_email" />
+	    <Button android:id="@+id/subscribe_button" />
+
+	    <include android:id="@+id/subscribe_progress_indicator" layout="@layout/loading" />
+	</LinearLayout>
+
+	<TextView android:id="@+id/title" />
+	<RelativeLayout>
+	    <TextView android:id="@+id/stream_quality_item_title" />
+	    <TextView android:id="@+id/title" />
+	    <ImageButton android:id="@+id/streaming_options_button" />
+	</RelativeLayout>
+
+	<TextView android:id="@+id/title" />
+	<RelativeLayout>
+	    <TextView android:id="@+id/auto_sync_status" />
+	</RelativeLayout>
+
+	<TextView android:id="@+id/title" />
+
+	<include layout="@layout/item_separator" />
+	<include layout="@layout/item_separator" />
+    </LinearLayout>
+</ScrollView>

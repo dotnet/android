@@ -162,11 +162,12 @@
   </Target>
   
   <Target Name="_BuildLlvm"
-          DependsOnTargets="_PrepareLlvmItems"
-          Outputs="@(_LlvmSourceBinary)"
-          Condition=" '@(_LlvmRuntime)' != '' ">
+      Condition=" '@(_LlvmRuntime)' != '' "
+      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
+      Inputs="$(LlvmSourceFullPath)\Makefile.config.in"
+      Outputs="@(_LlvmSourceBinary)">
     <Exec
-        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
+        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters) %(_LlvmRuntime.PackageOptions)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -839,6 +840,7 @@
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
+        Condition=" '@(_LlvmRuntime)' != '' "
         Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
