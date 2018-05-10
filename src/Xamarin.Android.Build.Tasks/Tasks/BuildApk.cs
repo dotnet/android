@@ -299,7 +299,7 @@ namespace Xamarin.Android.Tasks
 			// Add framework assemblies
 			foreach (ITaskItem assembly in ResolvedFrameworkAssemblies) {
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogWarning ($"{assembly.ItemSpec} is a reference assembly!");
+					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
 				apk.Archive.AddFile (assembly.ItemSpec, "assemblies/" + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");

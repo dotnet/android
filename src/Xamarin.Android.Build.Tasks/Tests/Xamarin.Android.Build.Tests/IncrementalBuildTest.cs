@@ -13,6 +13,31 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void CheckResourceDirectoryDoesNotGetHosed ()
+		{
+			// do a release build
+			// change one of the properties (say AotAssemblies) 
+			// do another build. it should NOT hose the resource directory.
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+			};
+			using (var b = CreateApkBuilder (path, false, false)) {
+				Assert.IsTrue(b.Build (proj), "First should have succeeded");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
+					"the _GenerateAndroidResourceDir target should not be skipped");
+				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "build.props"),
+					DateTime.UtcNow);
+				Assert.IsTrue(b.Build (proj), "Second should have succeeded");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
+					"the _GenerateAndroidResourceDir target should not be skipped");
+			}
+		}
+
+		[Test]
 		public void IncrementalCleanDuringClean ()
 		{
 			var path = Path.Combine ("temp", TestName);

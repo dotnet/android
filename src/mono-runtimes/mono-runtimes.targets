@@ -656,6 +656,15 @@
         SourceFiles="@(_MonoUtilitySource)"
         DestinationFiles="@(_MonoUtilityDest)"
     />
+    <ItemGroup>
+      <_MonoUtilityExe Include="@(_MonoUtility)">
+        <Source>$(_MonoOutputDir)\%(Identity)</Source>
+        <Dest>$(_MSBuildDir)\%(Identity)</Dest>
+      </_MonoUtilityExe>
+    </ItemGroup>
+    <Exec
+        Command="$(RemapAssemblyRefTool) &quot;%(_MonoUtilityExe.Source)&quot; &quot;%(_MonoUtilityExe.Dest)&quot; Mono.Cecil &quot;..\..\bin\Build$(Configuration)\Xamarin.Android.Cecil.dll&quot;"
+    />
   </Target>
   <Target Name="_InstallBcl"
       Inputs="@(_BclProfileItems)"

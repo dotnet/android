@@ -542,6 +542,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    <CompileDependsOn>
      _SetupDesignTimeBuildForCompile;
      _AddAndroidDefines;
+     _IncludeLayoutBindingSources;
      $(CompileDependsOn);
    </CompileDependsOn>
  </PropertyGroup>
@@ -1193,20 +1194,21 @@ because xbuild doesn't support framework reference assemblies.
 			DestinationFiles="@(_AndroidResourceDest)"
 			AcwMapFile="$(_AcwMapFile)"
 			CacheFile="$(_AndroidResourcesCacheFile)"
-			Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
+			Condition="  '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
 		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
 	</CopyAndConvertResources>
 	<Crunch SourceFiles="@(_ModifiedResources)" ToolPath="$(AaptToolPath)" ToolExe="$(AaptToolExe)"
 			Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)" />
-	<Copy SourceFiles="@(_AndroidResolvedResources)"
+	<CopyIfChanged SourceFiles="@(_AndroidResolvedResources)"
 		DestinationFiles="@(_AndroidResourceDest)"
-		SkipUnchangedFiles="true"
 		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"
-	/>
+	>
+		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
+	</CopyIfChanged>
 	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
 		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
 	</RemoveUnknownFiles>
-	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" />
+	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" Condition=" !Exists ('$(_AndroidResFlagFile)') Or  '@(_ModifiedResources)' != '' Or '@(_AndroidResourceDestRemovedFiles)' != '' " />
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidResFlagFile)" />
 	</ItemGroup>

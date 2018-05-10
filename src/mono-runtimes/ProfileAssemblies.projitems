@@ -27,6 +27,7 @@
     <MonoFacadeAssembly Include="System.Diagnostics.TraceEvent.dll" />
     <MonoFacadeAssembly Include="System.Diagnostics.TraceSource.dll" />
     <MonoFacadeAssembly Include="System.Diagnostics.Tracing.dll" />
+    <MonoFacadeAssembly Include="System.Drawing.Common.dll" />
     <MonoFacadeAssembly Include="System.Dynamic.Runtime.dll" />
     <MonoFacadeAssembly Include="System.Globalization.Calendars.dll" />
     <MonoFacadeAssembly Include="System.Globalization.dll" />
@@ -72,8 +73,10 @@
     <MonoFacadeAssembly Include="System.Reflection.Extensions.dll" />
     <MonoFacadeAssembly Include="System.Reflection.Primitives.dll" />
     <MonoFacadeAssembly Include="System.Reflection.TypeExtensions.dll" />
+    <MonoFacadeAssembly Include="System.Resources.Reader.dll" />
     <MonoFacadeAssembly Include="System.Resources.ReaderWriter.dll" />
     <MonoFacadeAssembly Include="System.Resources.ResourceManager.dll" />
+    <MonoFacadeAssembly Include="System.Resources.Writer.dll" />
     <MonoFacadeAssembly Include="System.Runtime.CompilerServices.VisualC.dll" />
     <MonoFacadeAssembly Include="System.Runtime.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Extensions.dll" />
