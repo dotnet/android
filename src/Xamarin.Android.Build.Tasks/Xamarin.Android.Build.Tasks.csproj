@@ -715,6 +715,14 @@
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj">
+      <Project>{B501D075-6183-4E1D-92C9-F7B5002475B1}</Project>
+      <Name>Java.Interop.Export</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="pdb2mdb\" />
