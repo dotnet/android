@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 {
 	public static class JavaApiDllLoaderExtensions
 	{
-		public static void LoadReferences (this JavaApi api, IEnumerable<GenBase> gens)
+		public static void LoadReferences (this JavaApi api, CodeGenerationOptions opt, IEnumerable<GenBase> gens)
 		{
 			JavaPackage pkg = null;
 			foreach (var gen in gens.Where (_ => _.IsAcw)) {
@@ -21,14 +21,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					var iface = new JavaInterface (pkg);
 					pkg.Types.Add (iface);
 					iface.Load ((InterfaceGen) gen);
-				} else if (gen is ClassGen) {
+				} else if (gen is ClassGen c) {
 					var kls = new JavaClass (pkg);
 					pkg.Types.Add (kls);
-					kls.Load ((ClassGen) gen);
+					kls.Load (opt, c);
 				}
 				else
 					throw new InvalidOperationException ();
-				api.LoadReferences (gen.NestedTypes);
+				api.LoadReferences (opt, gen.NestedTypes);
 			}
 		}
 
