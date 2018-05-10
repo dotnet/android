@@ -24,7 +24,12 @@ namespace Java.Interop.Expressions {
 		public  Collection<Expression>                          CreationStatements  {get;}  = new Collection<Expression> ();
 		public  Collection<Expression>                          CleanupStatements   {get;}  = new Collection<Expression> ();
 
-		public JniValueMarshalerContext (Expression runtime, Expression vm = null)
+		public JniValueMarshalerContext (Expression runtime)
+			: this (runtime, null)
+		{
+		}
+
+		public JniValueMarshalerContext (Expression runtime, Expression vm)
 		{
 			Runtime        = runtime ?? throw new ArgumentNullException (nameof (runtime));
 			ValueManager   = vm;
