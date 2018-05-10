@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static public bool Debug;
 		static public bool Verbose;
 		static bool keepTemporary;
+		static bool forceRegeneration;
 		static List<Regex> typeNameRegexes = new List<Regex> ();
 		List<string> FilesToDelete = new List<string> ();
 
@@ -58,6 +59,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "d|debug",
 				  "Inject debug messages",
 				  v => Debug = true },
+				{ "f",
+				  "Force regeneration of marshal methods",
+				  v => forceRegeneration = true },
 				{ "keeptemp",
 				  "Keep temporary *-JniMarshalMethod.dll files.",
 				  v => keepTemporary = true },
@@ -193,6 +197,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				}
 				if (!td.ImplementsInterface ("Java.Interop.IJavaPeerable"))
 					continue;
+
+				var existingMarshalMethodsType = td.GetNestedType (TypeMover.NestedName);
+				if (existingMarshalMethodsType != null && !forceRegeneration) {
+					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName ()}' already exists. Skipped generation of marshal methods. Use -f to force regeneration when desired.");
+
+					continue;
+				}
 
 				var registrationElements    = new List<Expression> ();
 				var targetType              = Expression.Variable (typeof(Type), "targetType");

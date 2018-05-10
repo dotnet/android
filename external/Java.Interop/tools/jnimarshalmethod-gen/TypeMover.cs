@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				App.ColorWriteLine ($"Wrote updated {Destination.MainModule.FileName} assembly", ConsoleColor.Cyan);
 		}
 
-		static readonly string nestedName = "__<$>_jni_marshal_methods";
+		public static readonly string NestedName = "__<$>_jni_marshal_methods";
 
 		Dictionary<string, MethodReference> newHelperMethods;
 
@@ -65,7 +65,25 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		{
 			var typeSrc = Source.MainModule.GetType (type.GetCecilName ());
 			var typeDst = Destination.MainModule.GetType (type.GetCecilName ());
-			var jniType = new TypeDefinition ("", nestedName, TypeAttributes.NestedPrivate | TypeAttributes.Sealed);
+
+			List<TypeDefinition> toRemove = null;
+			foreach (var nestedType in typeDst.NestedTypes) {
+				if (nestedType.Name == NestedName) {
+					if (toRemove == null)
+						toRemove = new List<TypeDefinition> ();
+
+					toRemove.Add (nestedType);
+				}
+			}
+
+			if (toRemove != null) {
+				foreach (var t in toRemove) {
+					App.ColorWriteLine ($"Removing original '{t.GetAssemblyQualifiedName ()}' type. (forced)", ConsoleColor.Cyan);
+					typeDst.NestedTypes.Remove (t);
+				}
+			}
+
+			var jniType = new TypeDefinition ("", NestedName, TypeAttributes.NestedPrivate | TypeAttributes.Sealed);
 
 			if (TypeIsEmptyOrHasOnlyDefaultConstructor (typeSrc))
 				return;
