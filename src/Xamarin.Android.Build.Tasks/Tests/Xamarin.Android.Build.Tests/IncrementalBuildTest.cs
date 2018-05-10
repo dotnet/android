@@ -25,7 +25,15 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var b = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue(b.Build (proj), "First should have succeeded");
-				Assert.IsTrue(b.Build (proj,  parameters: new [] { "AotAssemblies=True" }), "Second should have succeeded");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
+					"the _GenerateAndroidResourceDir target should not be skipped");
+				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "build.props"),
+					DateTime.UtcNow);
+				Assert.IsTrue(b.Build (proj), "Second should have succeeded");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
+					"the _GenerateAndroidResourceDir target should not be skipped");
 			}
 		}
 
