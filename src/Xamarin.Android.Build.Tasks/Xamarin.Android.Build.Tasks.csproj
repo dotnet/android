@@ -355,6 +355,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
       <Link>Linker\Linker\Pipeline.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
+      <Link>Linker\Linker\TypeNameParser.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypePreserve.cs">
       <Link>Linker\Linker\TypePreserve.cs</Link>
     </Compile>
