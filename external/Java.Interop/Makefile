@@ -161,9 +161,6 @@ run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/
 	$(RUNTIME) bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe -v -L $(JI_MONO_LIB_PATH)mono/4.5 -L $(JI_MONO_LIB_PATH)mono/4.5/Facades "$<"
 	$(call RUN_TEST,$<)
 
-
-GENERATOR_EXPECTED_TARGETS  = tools/generator/Tests/expected.targets
-
 # $(call GEN_CORE_OUTPUT, outdir, suffix, extra)
 define GEN_CORE_OUTPUT
 	-$(RM) -Rf $(1)
@@ -176,11 +173,11 @@ endef
 
 run-test-generator-core: bin/Test$(CONFIGURATION)/generator.exe
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core)
-	diff -rup tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,,--codegen-target=JavaInterop1)
-	diff -rup tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,-cp)
-	diff -rup tools/generator/Tests-Core/expected.cp bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected.cp bin/Test$(CONFIGURATION)/generator-core
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`
@@ -202,13 +199,3 @@ update-test-generator-nunit:
 		mkdir -p `dirname $$f`; \
 		cp -f "$$source" "$$f" ; \
 	done
-	echo '<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' > $(GENERATOR_EXPECTED_TARGETS)
-	echo '  <ItemGroup>' >> $(GENERATOR_EXPECTED_TARGETS)
-	for f in `find tools/generator/Tests/expected* -type f | sort -i` ; do \
-		include=`echo $$f | sed 's#^tools/generator/Tests/##' | tr / \\\\` ; \
-		echo "    <Content Include='$$include'>" >> $(GENERATOR_EXPECTED_TARGETS); \
-		echo "      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>" >> $(GENERATOR_EXPECTED_TARGETS); \
-		echo "    </Content>" >> $(GENERATOR_EXPECTED_TARGETS); \
-	done
-	echo '  </ItemGroup>' >> $(GENERATOR_EXPECTED_TARGETS)
-	echo '</Project>' >> $(GENERATOR_EXPECTED_TARGETS)
