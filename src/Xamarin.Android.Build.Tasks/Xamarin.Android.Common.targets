@@ -270,7 +270,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
 	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
 	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
-		
+	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
+
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
 	<AndroidEnableMultiDex Condition="'$(AndroidEnableMultiDex)'==''">False</AndroidEnableMultiDex>
@@ -697,6 +698,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="ApkSignerJar"              PropertyName="ApkSignerJar"               Condition="'$(ApkSignerJar)' == ''" />
 		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
 		<Output TaskParameter="AndroidUseAapt2"           PropertyName="AndroidUseAapt2"            Condition="'$(AndroidUseAapt2)' == ''" />
+		<Output TaskParameter="Aapt2Version"              PropertyName="_Aapt2Version" />
 		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
 	</ResolveSdks>
@@ -719,10 +721,37 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateItem Include="$(_JavaInteropReferences)">
 		<Output TaskParameter="Include" ItemName="Reference" />
 	</CreateItem>
-	<Warning Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false." Condition="  '$(AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' " />
+	<Warning Code="XA0000"
+		Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false."
+		Condition="  '$(AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
+	/>
 	<PropertyGroup>
 		<AndroidExplicitCrunch Condition=" '$(AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
 	</PropertyGroup>
+</Target>
+
+<Target Name="_ReadAapt2VersionCache">
+	<ReadLinesFromFile File="$(_AndroidAapt2VersionFile)"
+			Condition="Exists('$(_AndroidAapt2VersionFile)')">
+		<Output TaskParameter="Lines" ItemName="_Aapt2VersionCache"/>
+	</ReadLinesFromFile>
+</Target>
+
+<Target Name="_CreateAapt2VersionCache"
+		DependsOnTargets="_ReadAapt2VersionCache"
+		AfterTargets="_SetLatestTargetFrameworkVersion"
+	>
+	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
+	<WriteLinesToFile
+		Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" 
+		File="$(_AndroidAapt2VersionFile)"
+		Lines="$(_Aapt2Version)"
+		Overwrite="true"/>
+	<ItemGroup>
+        <_CompiledFlataArchive Include="$(IntermediateOutputPath)\**\*.flata"/>
+		<_CompiledFlataStamp Include="$(IntermediateOutputPath)\**\compiled.stamp"/>
+    </ItemGroup>
+	<Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 </Target>
 
 <Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks" DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">

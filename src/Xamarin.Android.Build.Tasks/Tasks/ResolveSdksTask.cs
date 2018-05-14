@@ -121,6 +121,9 @@ namespace Xamarin.Android.Tasks
 		public bool AndroidUseAapt2 { get; set; }
 
 		[Output]
+		public string Aapt2Version { get; set; }
+
+		[Output]
 		public string JdkVersion { get; set; }
 
 		[Output]
@@ -254,6 +257,11 @@ namespace Xamarin.Android.Tasks
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
 			AndroidUseAapt2 = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+			if (AndroidUseAapt2) {
+				if (!GetAapt2Version ()) {
+					AndroidUseAapt2 = false;
+				}
+			}
 
 			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {
 				ZipAlignPath = new[]{
@@ -321,6 +329,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LintToolPath: {0}", LintToolPath);
 			Log.LogDebugMessage ("  AndroidUseApkSigner: {0}", AndroidUseApkSigner);
 			Log.LogDebugMessage ("  AndroidUseAapt2: {0}", AndroidUseAapt2);
+			Log.LogDebugMessage ("  Aapt2Version: {0}", Aapt2Version);
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (CacheFile));
@@ -363,6 +372,9 @@ namespace Xamarin.Android.Tasks
 		//  javac 9.0.4
 		//  javac 1.8.0_77
 		static  readonly  Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_d+)?");
+
+		//  Android Asset Packaging Tool (aapt) 2:19
+		static readonly Regex Aapt2VersionRegex = new Regex (@"(?<version>[\d\:]+)(\d+)?");
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
 		{
@@ -438,6 +450,35 @@ namespace Xamarin.Android.Tasks
 				}
 			} else
 				Log.LogCodedWarning ("XA0033", $"Failed to get the Java SDK version as it does not appear to contain a valid version number. `{javaExe} -version` returned: ```{versionInfo}```");
+			return !Log.HasLoggedErrors;
+		}
+
+		bool GetAapt2Version ()
+		{
+			var sb = new StringBuilder ();
+			var aapt2Tool = Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2);
+			try {
+				MonoAndroidHelper.RunProcess (aapt2Tool, "version",  (s, e) => {
+						if (!string.IsNullOrEmpty (e.Data))
+							sb.AppendLine (e.Data);
+					}, (s, e) => {
+						if (!string.IsNullOrEmpty (e.Data))
+							sb.AppendLine (e.Data);
+					}
+				);
+			} catch (Exception ex) {
+				Log.LogWarningFromException (ex);
+				Log.LogCodedWarning ("XA0034", $"Failed to get the Aapt2 version. Disabling Aapt2 Support.");
+				return false;
+			}
+			var versionInfo = sb.ToString ();
+			var versionNumberMatch = Aapt2VersionRegex.Match (versionInfo);
+			Version versionNumber;
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out versionNumber)) {
+				Aapt2Version = versionNumber.ToString ();
+			} else {
+				Log.LogCodedWarning ("XA0033", $"Failed to get the Aapt2 version as it does not appear to contain a valid version number. `{aapt2Tool} version` returned: ```{versionInfo}```");
+			}
 			return !Log.HasLoggedErrors;
 		}
 
