@@ -1671,7 +1671,7 @@ because xbuild doesn't support framework reference assemblies.
 		ExtraArgs="$(AndroidResgenExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' == 'True'"
+		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)\compiled.flata')"
 		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	<ItemGroup>

@@ -179,7 +179,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
-			if (CompiledResourceFlatArchive != null)
+			if (CompiledResourceFlatArchive != null && File.Exists (CompiledResourceFlatArchive.ItemSpec))
 				cmd.AppendSwitchIfNotNull ("-R ", CompiledResourceFlatArchive.ItemSpec);
 			
 			cmd.AppendSwitch ("--auto-add-overlay");
