@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 	class ManagedResourceParser : ResourceParser
 	{
 		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays;
+		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml;
 		Dictionary<string, string> map;
 		bool app;
 
@@ -54,6 +54,7 @@ namespace Xamarin.Android.Tasks
 			plurals = CreateClass ("Plurals");
 			styleable = CreateClass ("Styleable");
 			style = CreateClass ("Style");
+			xml = CreateClass ("Xml");
 
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
@@ -100,6 +101,7 @@ namespace Xamarin.Android.Tasks
 			SortMembers (strings);
 			SortMembers (style);
 			SortMembers (styleable);
+			SortMembers (xml);
 
 
 			if (animation.Members.Count > 1)
@@ -142,6 +144,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (style);
 			if (styleable.Members.Count > 1)
 				resources.Members.Add (styleable);
+			if (xml.Members.Count > 1)
+				resources.Members.Add (xml);
 
 			return resources;
 		}
@@ -237,6 +241,9 @@ namespace Xamarin.Android.Tasks
 							arrayValues.Select (x => string.IsNullOrEmpty (x) ? 0 : Convert.ToInt32 (x, 16)).ToArray ());
 						break;
 					}
+					break;
+				case "xml":
+					CreateIntField (xml, itemName, value);
 					break;
 				}
 			}
@@ -419,6 +426,9 @@ namespace Xamarin.Android.Tasks
 				break;
 			case "style":
 				CreateIntField (style, fieldName.Replace (".", "_"));
+				break;
+			case "xml":
+				CreateIntField (xml, fieldName);
 				break;
 			default:
 				break;
