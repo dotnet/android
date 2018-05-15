@@ -39,5 +39,7 @@ namespace Xamarin.ProjectTools
 		public bool UseLatestPlatformSdk { get; set; }
 
 		public string TargetFrameworkVersion { get; set; }
+
+		public string TargetFrameworkMoniker { get { return "MonoAndroid" + TargetFrameworkVersion.TrimStart ('v').Replace (".", ""); } }
 	}
 }
