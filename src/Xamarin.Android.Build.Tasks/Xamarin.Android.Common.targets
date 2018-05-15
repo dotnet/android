@@ -1287,7 +1287,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
-		Condition="'$(AndroidUseAapt2)' == 'True'"
+		Condition="'$(AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True'"
 		Inputs="%(_LibraryResourceDirectories.FileFound)"
 		Outputs="%(_LibraryResourceDirectories.Identity)\..\compiled.stamp"
 	>
@@ -1295,6 +1295,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectories="@(_LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
 		AndroidConversionFlagFile="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	<Aapt2Compile
 		ResourceDirectory="%(_LibraryResourceDirectories.Identity)"
@@ -1302,6 +1303,7 @@ because xbuild doesn't support framework reference assemblies.
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	<Touch Files="@(_LibraryResourceDirectories->'%(Identity)\..\compiled.stamp')" AlwaysCreate="True" />
 	<ItemGroup>
@@ -1320,6 +1322,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		AcwMapFile="$(_AcwMapFile)"
 		AndroidConversionFlagFile="$(IntermediateOutputPath)\compiled.flata"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	<Aapt2Compile
 		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -1328,6 +1331,7 @@ because xbuild doesn't support framework reference assemblies.
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
+		ContinueOnError="$(DesignTimeBuild)"
 	/>
 	<ItemGroup>
 		<FileWrites Include="$(IntermediateOutputPath)\compiled.flata" />
@@ -2998,6 +3002,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
+	<Delete Files="$(_AndroidAapt2VersionFile)" />
 	<Delete Files="$(MonoAndroidIntermediate)R.txt" />
 </Target>
 
