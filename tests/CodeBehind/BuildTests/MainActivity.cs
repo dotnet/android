@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 #endif
 			CommonSampleLibrary.LogFragment log3 = tertiary_log_fragment;
 
+			TextView t = Text1;
+
 			Button button = myButton;
 			button.Click += delegate { button.Text = $"{count++} clicks!"; };
 		}

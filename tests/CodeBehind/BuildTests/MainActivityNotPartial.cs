@@ -14,7 +14,8 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 			base.OnCreate (savedInstanceState);
 
 			// Set our view from the "main" layout resource
-			Binding.Main items = SetContentView <Binding.Main> ();
+			SetContentView (Resource.Layout.Main);
+			var items = new Binding.Main (this);
 
 			// Compile time: check if `myButton` is of correct type
 			Button button = items.myButton;

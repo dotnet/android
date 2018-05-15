@@ -19,6 +19,9 @@ namespace Xamarin.Android.Tasks
 			{
 				EnsureArgument (state, nameof (state));
 
+				if (!state.ExtraImportNamespaces.Contains ("System.Reflection"))
+					state.ExtraImportNamespaces.Add ("System.Reflection");
+
 				WriteFilePreamble (state, classNamespace);
 				WriteClassOpen (state, $"partial class {className}");
 				WriteLineIndent (state, $"{state.BindingClassName} {BindingPartialClassBackingFieldName};");
@@ -38,30 +41,37 @@ namespace Xamarin.Android.Tasks
 
 			protected override void WritePartialClassSetContentView_View (State state)
 			{
-				WriteMethodStart (state, "public override void", "SetContentView", "global::Android.Views.View view");
-				WriteCommonSetContentViewBody (state, "view", "view");
+				WriteSetContentView (state, "global::Android.Views.View view", "view", "view");
 			}
 
 			protected override void WritePartialClassSetContentView_View_LayoutParams (State state)
 			{
-				WriteMethodStart (state, "public override void", "SetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params");
-				WriteCommonSetContentViewBody (state, "view, @params", "view");
+				WriteSetContentView (state, "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params", "view, @params", "view");
 			}
 
 			protected override void WritePartialClassSetContentView_Int (State state)
 			{
-				WriteMethodStart (state, "public override void", "SetContentView", "int layoutResID");
-				WriteCommonSetContentViewBody (state, "layoutResID", "this");
+				WriteSetContentView (state, "int layoutResID", "layoutResID", "this");
 			}
 
-			void WriteCommonSetContentViewBody (State state, string setContentViewParams, string bindingConstructorParams)
+			void WriteSetContentView (State state, string declarationParams, string callParams, string bindingConstructorParams)
 			{
-				WriteBindingInstantiation (state, bindingConstructorParams);
+				WriteMethodStart (state, $"public override void", "SetContentView", declarationParams);
+				WriteCommonSetContentViewBody (state, callParams, bindingConstructorParams, true, false);
+
+				WriteMethodStart (state, "void", "SetContentView", $"{declarationParams}, global::{ItemNotFoundHandlerType} onLayoutItemNotFound");
+				WriteCommonSetContentViewBody (state, callParams, bindingConstructorParams, false, true);
+			}
+
+			void WriteCommonSetContentViewBody (State state, string setContentViewParams, string bindingConstructorParams, bool baseCall, bool outputNotFoundHandlers)
+			{
+				string notFoundHandlers = outputNotFoundHandlers ? ", onLayoutItemNotFound" : String.Empty;
+				WriteBindingInstantiation (state, $"{bindingConstructorParams}{notFoundHandlers}");
 				WriteLineIndent (state, "bool callBase = true;");
 				WriteLineIndent (state, $"OnSetContentView ({setContentViewParams}, ref callBase);");
 				WriteLineIndent (state, "if (callBase) {");
 				state.IncreaseIndent ();
-				WriteCallBase (state, "SetContentView", setContentViewParams);
+				WriteLineIndent (state, $"base.SetContentView ({setContentViewParams});");
 				state.DecreaseIndent ();
 				WriteLineIndent (state, "}");
 				WriteMethodEnd (state);
@@ -69,17 +79,17 @@ namespace Xamarin.Android.Tasks
 
 			protected override void WritePartialClassOnSetContentViewPartial_View (State state)
 			{
-				WriteMethodStart (state, "partial void", "OnSetContentView", "global::Android.Views.View view, ref bool callBaseAfterReturn", false);
+				WriteMethodStart (state, "partial void", "OnSetContentView", "global::Android.Views.View view, ref bool callBaseAfterReturn", startBody: false);
 			}
 
 			protected override void WritePartialClassOnSetContentViewPartial_View_LayoutParams (State state)
 			{
-				WriteMethodStart (state, "partial void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn", false);
+				WriteMethodStart (state, "partial void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn", startBody: false);
 			}
 
 			protected override void WritePartialClassOnSetContentViewPartial_Int (State state)
 			{
-				WriteMethodStart (state, "partial void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn", false);
+				WriteMethodStart (state, "partial void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn", startBody: false);
 			}
 
 			void WriteBindingInstantiation (State state, string parameters)
@@ -87,14 +97,11 @@ namespace Xamarin.Android.Tasks
 				WriteLineIndent (state, $"{BindingPartialClassBackingFieldName} = new global::{state.BindingClassName} ({parameters});");
 			}
 
-			void WriteCallBase (State state, string methodName, string parameters)
-			{
-				WriteLineIndent (state, $"base.{methodName} ({parameters});");
-			}
-
-			void WriteMethodStart (State state, string lead, string name, string parameters, bool startBody = true)
+			void WriteMethodStart (State state, string lead, string name, string parameters, string genericConstraint = null, bool startBody = true)
 			{
 				string declaration = $"{lead} {name} ({parameters})";
+				if (!String.IsNullOrEmpty (genericConstraint))
+					declaration = $"{declaration} where {genericConstraint}";
 				if (startBody) {
 					WriteLineIndent (state, declaration);
 					WriteLineIndent (state, "{");
@@ -126,7 +133,6 @@ namespace Xamarin.Android.Tasks
 				// Perhaps we need a way to communicate that the class should/should not be public?
 				//
 				WriteClassOpen (state, $"sealed class {className} : global::{BindingBaseTypeFull}");
-				WriteLineIndent (state, $"public override int ResourceLayoutID => {layoutResourceId};");
 				state.WriteLine ();
 			}
 
@@ -172,15 +178,47 @@ namespace Xamarin.Android.Tasks
 			void WriteUsings (State state)
 			{
 				foreach (string ns in ImportNamespaces)
-					state.WriteLine ($"using global::{ns};");
+					WriteUsing (state, ns);
+
+				if (state.ExtraImportNamespaces.Count == 0)
+					return;
+
+				foreach (string ns in state.ExtraImportNamespaces)
+					WriteUsing (state, ns);
 			}
 
-			protected override void WriteBindingConstructor (State state, string className)
+			void WriteUsing (State state, string ns)
 			{
-				WriteLineIndent (state, $"[global::Android.Runtime.PreserveAttribute (Conditional=true)]");
-				WriteLineIndent (state, $"public {className} (global::{BindingClientInterfaceFull} client) : base (client)");
+				state.WriteLine ($"using global::{ns};");
+			}
+
+			protected override void WriteBindingConstructors (State state, string className, bool linkerPreserve)
+			{
+				WriteConstructor (state, className, "Android.App.Activity", linkerPreserve);
+				WriteConstructor (state, className, "Android.Views.View", linkerPreserve);
+			}
+
+			void WriteConstructor (State state, string className, string clientType, bool linkerPreserve)
+			{
+				WritePreserveAtribute (state, linkerPreserve);
+				WriteLineIndent (state, $"public {className} (");
+				state.IncreaseIndent ();
+				WriteLineIndent (state, $"global::{clientType} client,");
+				WriteLineIndent (state, $"global::{ItemNotFoundHandlerType} itemNotFoundHandler = null)");
+				state.IncreaseIndent ();
+				WriteLineIndent (state, ": base (client, itemNotFoundHandler)");
+				state.DecreaseIndent ();
+				state.DecreaseIndent ();
 				WriteLineIndent (state, "{}");
 				state.WriteLine ();
+			}
+
+			void WritePreserveAtribute (State state, bool linkerPreserve)
+			{
+				if (!linkerPreserve)
+					return;
+
+				WriteLineIndent (state, $"[global::Android.Runtime.PreserveAttribute (Conditional=true)]");
 			}
 
 			public override void EndBindingFile (State state)
@@ -213,7 +251,7 @@ namespace Xamarin.Android.Tasks
 				WriteLineIndent (state, "#line hidden");
 			}
 
-			protected override string GetBindingPropertyBackingField (LayoutWidget widget)
+			protected override string GetBindingPropertyBackingField (State state, LayoutWidget widget)
 			{
 				EnsureArgument (widget, nameof (widget));
 				return $"{widget.Type} {GetBindingBackingFieldName (widget)};";
@@ -232,7 +270,7 @@ namespace Xamarin.Android.Tasks
 				EnsureArgument (state, nameof (state));
 				EnsureArgument (widget, nameof (widget));
 
-				WriteBindingLambdaPropertyGetter (state, widget, resourceNamespace, "FindFragment");
+				WriteBindingLambdaPropertyGetter (state, widget, resourceNamespace, "FindFragment", true);
 			}
 
 			void WritePropertyDeclaration (State state, LayoutWidget widget, bool isLambda)
@@ -244,15 +282,27 @@ namespace Xamarin.Android.Tasks
 					state.WriteLine ("{");
 			}
 
-			void WriteBindingFinderCall (State state, LayoutWidget widget, string resourceNamespace, string finderMethodName)
+			void WriteBindingFinderCall (State state, LayoutWidget widget, string resourceNamespace, string finderMethodName, bool isFragment = false)
 			{
-				state.Write ($"{finderMethodName} (global::{resourceNamespace}{widget.Id}, ref {GetBindingBackingFieldName (widget)})");
+				bool isIdGlobal;
+				string id = GetWidgetId (widget, out isIdGlobal);
+
+				if (!isIdGlobal)
+					id = $"{resourceNamespace}{id}";
+
+				string backingFieldName = GetBindingBackingFieldName (widget);
+				string extraParam;
+				if (isFragment)
+					extraParam = $" {backingFieldName},";
+				else
+					extraParam = null;
+				state.Write ($"{finderMethodName} (global::{id},{extraParam} ref {backingFieldName})");
 			}
 
-			void WriteBindingLambdaPropertyGetter (State state, LayoutWidget widget, string resourceNamespace, string finderMethodName)
+			void WriteBindingLambdaPropertyGetter (State state, LayoutWidget widget, string resourceNamespace, string finderMethodName, bool isFragment = false)
 			{
 				WritePropertyDeclaration (state, widget, true);
-				WriteBindingFinderCall (state, widget, resourceNamespace, finderMethodName);
+				WriteBindingFinderCall (state, widget, resourceNamespace, finderMethodName, isFragment);
 				state.WriteLine (";");
 			}
 
@@ -271,7 +321,7 @@ namespace Xamarin.Android.Tasks
 				state.WriteLine (";");
 				WriteLineIndent (state, "if (ret != null) return ret;");
 				WriteIndent (state, "return ");
-				WriteBindingFinderCall (state, widget, resourceNamespace, "FindFragment");
+				WriteBindingFinderCall (state, widget, resourceNamespace, "FindFragment", true);
 				state.WriteLine (";");
 				state.DecreaseIndent ();
 				WriteLineIndent (state, "}");
