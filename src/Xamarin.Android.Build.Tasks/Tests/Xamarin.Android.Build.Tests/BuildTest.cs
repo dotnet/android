@@ -740,7 +740,7 @@ namespace App1
 						File.Exists (linkSrc),
 						"Library1.pdb must be copied to linksrc directory");
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + ".apk"))) {
+					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
 						if (data == null)
 							data = File.ReadAllBytes (assetsPdb);
