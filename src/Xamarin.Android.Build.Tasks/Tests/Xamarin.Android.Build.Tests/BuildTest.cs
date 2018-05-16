@@ -121,6 +121,31 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void CheckTimestamps ()
+		{
+			var start = DateTime.UtcNow.AddSeconds (-1);
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ("temp/CheckTimestamps")) {
+				//To be sure we are at a clean state, delete bin/obj
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				if (Directory.Exists (intermediate))
+					Directory.Delete (intermediate, true);
+				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				if (Directory.Exists (output))
+					Directory.Delete (output, true);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				//Absolutely non of these files should be *older* than the starting time of this test!
+				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
+				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
+				foreach (var file in files) {
+					var info = new FileInfo (file);
+					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+				}
+			}
+		}
+
+		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
