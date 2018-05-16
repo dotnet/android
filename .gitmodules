@@ -41,3 +41,6 @@
 	path = external/xamarin-android-tools
 	url = https://github.com/xamarin/xamarin-android-tools
 	branch = master
+[submodule "external/MSBuildLocator"]
+	path = external/MSBuildLocator
+	url = https://github.com/Microsoft/MSBuildLocator.git

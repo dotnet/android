@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Locator;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -39,18 +40,12 @@ namespace Xamarin.ProjectTools
 
 		string GetVisualStudio2017Directory ()
 		{
-			var editions = new [] {
-				"Enterprise",
-				"Professional",
-				"Community",
-				"BuildTools"
-			};
+			var vsInstallDir = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
+			if (!string.IsNullOrEmpty (vsInstallDir))
+				return vsInstallDir;
 
-			var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-			foreach (var edition in editions) {
-				var dir = Path.Combine (x86, "Microsoft Visual Studio", "2017", edition);
-				if (Directory.Exists (dir))
-					return dir;
+			foreach (var visualStudioInstance in MSBuildLocator.QueryVisualStudioInstances ().OrderByDescending (v => v.Version)) {
+				return visualStudioInstance.VisualStudioRootPath;
 			}
 
 			return null;
