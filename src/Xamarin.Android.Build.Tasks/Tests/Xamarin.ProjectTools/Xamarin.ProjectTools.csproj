@@ -140,7 +140,7 @@
       <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
       <Name>libZipSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\tools\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj">
+    <ProjectReference Include="..\..\..\..\src\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj">
       <Project>{158e7760-6f87-446c-b782-18e23bf54da6}</Project>
       <Name>Microsoft.Build.Locator</Name>
     </ProjectReference>

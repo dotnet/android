@@ -121,7 +121,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Andro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proprietary", "build-tools\proprietary\proprietary.csproj", "{D93CAC27-3893-42A3-99F1-2BCA72E186F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Build.Locator", "tools\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj", "{158E7760-6F87-446C-B782-18E23BF54DA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Build.Locator", "src\Microsoft.Build.Locator\Microsoft.Build.Locator.csproj", "{158E7760-6F87-446C-B782-18E23BF54DA6}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
