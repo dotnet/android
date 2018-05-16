@@ -8,8 +8,27 @@ override_dh_auto_configure:
 override_dh_auto_build:
 override_dh_auto_test:
 override_dh_strip_nondeterminism:
-override_dh_shlibdeps:
+override_dh_makeclilibs:
 	echo "noop"
 
+override_dh_shlibdeps:
+	dh_shlibdeps -X/usr/lib/xamarin.android/xbuild-frameworks/ -X/usr/lib/xamarin.android/xbuild/Xamarin/Android/lib/
+
+override_dh_clideps:
+	dh_clideps -X/usr/lib/xamarin.android/xbuild-frameworks/ \
+		--exclude-moduleref=clr.dll \
+		--exclude-moduleref=crypt32.dll \
+		--exclude-moduleref=dbghelp.dll \
+		--exclude-moduleref=fusion \
+		--exclude-moduleref=fusion.dll \
+		--exclude-moduleref=lzo.dll \
+		--exclude-moduleref=mscoree.dll \
+		--exclude-moduleref=mscorwks.dll \
+		--exclude-moduleref=msvcrt \
+		--exclude-moduleref=NTDLL.DLL \
+		--exclude-moduleref=ole32.dll \
+		--exclude-moduleref=sfc.dll \
+		--exclude-moduleref=wintrust.dll
+
 %:
-	dh $@ 
+	dh $@ --with cli
