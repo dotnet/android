@@ -763,12 +763,12 @@ resources.
     By default we will use `aapt2` if it is installed. If the developer wishes
     to revert back to legacy behaviour they can set
         
-        `<AndroidUseAapt2>false</AndroidUseAapt2>`
+        <AndroidUseAapt2>false</AndroidUseAapt2>
         
     in their csproj. Alternatively provide the property on the command line 
     via
 
-        `/p:AndroidUseAapt2=false`
+        /p:AndroidUseAapt2=false
 
     Added in Xamarin.Android 8.3.
 
