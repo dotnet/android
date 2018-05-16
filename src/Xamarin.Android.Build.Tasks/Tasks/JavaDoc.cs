@@ -17,6 +17,12 @@ namespace Xamarin.Android.Tasks
 
 		public string [] DestinationDirectories { get; set; }
 
+		public string [] ReferenceJars { get; set; }
+
+		public string JavaPlatformJar { get; set; }
+
+		public string [] ExtraArgs { get; set; }
+
 		protected override string ToolName {
 			get { return OS.IsWindows ? "javadoc.exe" : "javadoc"; }
 		}
@@ -26,18 +32,21 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("JavaDoc Task");
 			Log.LogDebugTaskItems ("  SourceDirectories: ", SourceDirectories);
 			Log.LogDebugTaskItems ("  DestinationDirectories: ", DestinationDirectories);
+			Log.LogDebugMessage ("  JavaPlatformJar: {0}", JavaPlatformJar);
+			Log.LogDebugTaskItems ("  ReferenceJars: ", ReferenceJars);
+			Log.LogDebugTaskItems ("  ExtraArgs: ", ExtraArgs);
 
 			foreach (var dir in DestinationDirectories)
 				if (!Directory.Exists (dir))
 					Directory.CreateDirectory (dir);
 
-			bool retval = true;
+			// Basically, javadoc will return non-zero return code with those expected errors. We have to ignore them.
 			foreach (var pair in SourceDirectories.Zip (DestinationDirectories, (src, dst) => new { Source = src, Destination = dst })) {
 				context_src = pair.Source;
 				context_dst = pair.Destination;
-				retval &= base.Execute ();
+				base.Execute ();
 			}
-			return retval;
+			return true;
 		}
 
 		string context_src;
@@ -53,8 +62,26 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendFileNameIfNotNull (context_src);
 			cmd.AppendSwitch ("-subpackages");
 			cmd.AppendSwitch (".");
+			var cps = ReferenceJars?.ToList () ?? new List<string> ();
+			if (JavaPlatformJar != null)
+				cps.Add (JavaPlatformJar);
+			if (cps.Any ()) {
+				if (OS.IsWindows)
+					cmd.AppendSwitch ("-cp " + string.Join (";", cps.Select (cp => '"' + cp + '"')));
+				else 
+					cmd.AppendSwitch ("-cp " + '"' + string.Join (":", cps) + '"');
+			}
+			if (ExtraArgs != null)
+				foreach (var extraArg in ExtraArgs)
+					cmd.AppendSwitch (extraArg);
 
 			return cmd.ToString ();
+		}
+
+		// log them as is, regardless of message importance. Javadoc compilation errors should never be reported as errors.
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			Log.LogDebugMessage (singleLine);
 		}
 	}
 	
