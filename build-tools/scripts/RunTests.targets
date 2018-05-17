@@ -22,6 +22,7 @@
     <_ApkTestProject Include="$(_TopDir)\tests\BCL-Tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
+    <_ApkTestProjectBundle Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
   </ItemGroup>
   <Target Name="RunNUnitTests">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
@@ -81,6 +82,16 @@
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Condition=" '$(Configuration)' == 'Release' "
         Properties="AotAssemblies=True"
+    />
+    <Exec
+        Command="$(_XABuild) %(_ApkTestProjectBundle.Identity) /t:SignAndroidPackage $(_XABuildProperties) /p:BundleAssemblies=True /p:EmbedAssembliesIntoApk=True"
+        Condition=" '$(Configuration)' == 'Release' "
+    />
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Condition=" '$(Configuration)' == 'Release' "
+        Properties="BundleAssemblies=True"
     />
   </Target>
   <Target Name="RunAllTests" DependsOnTargets="RunNUnitTests;RunJavaInteropTests;RunApkTests" />
