@@ -263,7 +263,7 @@ namespace Lib2
 						builder.Verbosity = LoggerVerbosity.Diagnostic;
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
-						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + ".apk"),
+						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
@@ -278,10 +278,10 @@ namespace Lib2
 						Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
 							useShortFileNames ? "nl" : "native_library_imports", "armeabi-v7a", "libfoo.so")).Length,
 							"intermediate size mismatch");
-						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + ".apk"),
+						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
-						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + ".apk"),
+						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo2.so");
 						Assert.IsNotNull (libfoo2, "libfoo2.so should exist in the .apk");
 						Directory.Delete (path, recursive: true);
