@@ -303,9 +303,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
-
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
-
+	<MakeBundleKeepTemporaryFiles Condition=" '$(MakeBundleKeepTemporaryFiles)' == '' ">False</MakeBundleKeepTemporaryFiles>
 </PropertyGroup>
 
 <Choose>
@@ -2688,12 +2687,14 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Bundle the assemblies into native libraries in the apk -->
   <MakeBundleNativeCodeExternal
 		Condition="'$(BundleAssemblies)' == 'True'"
+		KeepTemp="$(MakeBundleKeepTemporaryFiles)"
 		AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 		Assemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
 		IncludePath="$(MonoAndroidIncludeDirectory)"
 		SupportedAbis="$(_BuildTargetAbis)"
 		TempOutputPath="$(IntermediateOutputPath)"
-		ToolPath="$(_MonoAndroidToolsDirectory)">
+		ToolPath="$(_MonoAndroidToolsDirectory)"
+		BundleApiPath="$(MSBuildThisFileDirectory)\mkbundle-api.h">
  	<Output TaskParameter="OutputNativeLibraries" PropertyName="_BundleResultNativeLibraries" />
   </MakeBundleNativeCodeExternal>
   <!-- Put the assemblies and native libraries in the apk -->

@@ -139,7 +139,7 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_thread_create)
 	LOAD_SYMBOL(mono_thread_current)
 	LOAD_SYMBOL(mono_use_llvm)
-
+	LOAD_SYMBOL(mono_aot_register_module)
 
 	if (symbols_missing) {
 		log_fatal (LOG_DEFAULT, "Failed to load some Mono symbols, aborting...");
