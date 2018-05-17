@@ -60,6 +60,7 @@ typedef void MonoObject;
 typedef void MonoProfiler;
 typedef void MonoProperty;
 typedef void MonoString;
+typedef void MonoThread;
 typedef void MonoType;
 typedef void (*MonoDomainFunc) (MonoDomain *domain, void* user_data);
 
@@ -190,12 +191,12 @@ typedef void*           (*monodroid_mono_assembly_name_new_fptr) (const char *na
 typedef void            (*monodroid_mono_assembly_name_free_fptr) (MonoAssemblyName *aname);
 typedef void*           (*monodroid_mono_assembly_open_full_fptr) (const char *filename, MonoImageOpenStatus *status, mono_bool refonly);
 typedef char*           (*monodroid_mono_check_corlib_version_fptr) ();
-typedef void*           (*monodroid_mono_class_from_mono_type_fptr) (void *arg0);
+typedef MonoClass*      (*monodroid_mono_class_from_mono_type_fptr) (MonoType *arg0);
 typedef void*           (*monodroid_mono_class_from_name_fptr) (MonoImage *image, const char *name_space, const char *name);
 typedef char*           (*monodroid_mono_class_get_name_fptr) (MonoClass *arg0);
 typedef char*           (*monodroid_mono_class_get_namespace_fptr) (MonoClass *arg0);
 typedef mono_bool       (*monodroid_mono_class_is_subclass_of_fptr) (MonoClass *klass, MonoClass *klassc, mono_bool use_interfaces);
-typedef void*           (*monodroid_mono_class_get_field_from_name_fptr) (MonoClass *arg0, char *arg1);
+typedef void*           (*monodroid_mono_class_get_field_from_name_fptr) (MonoClass *arg0, const char *arg1);
 typedef MonoClassField* (*monodroid_mono_class_get_fields_fptr) (MonoClass *arg0, void **arg1);
 typedef void*           (*monodroid_mono_class_get_method_from_name_fptr) (MonoClass *arg0, char *arg1, int arg2);
 typedef MonoProperty*   (*monodroid_mono_class_get_property_from_name_fptr) (MonoClass *klass, const char *name);
@@ -249,6 +250,7 @@ typedef void            (*monodroid_mono_set_signal_chaining_fptr)(mono_bool cha
 typedef MonoString*     (*monodroid_mono_string_new_fptr)(MonoDomain *domain, const char *text);
 typedef void*           (*monodroid_mono_thread_attach_fptr) (MonoDomain *domain);
 typedef void            (*monodroid_mono_thread_create_fptr) (MonoDomain *domain, void* func, void* arg);
+typedef MonoThread*     (*monodroid_mono_thread_current_fptr) (void);
 typedef void            (*monodroid_mono_gc_disable_fptr) (void);
 typedef void*           (*monodroid_mono_install_assembly_refonly_preload_hook_fptr) (MonoAssemblyPreLoadFunc func, void *user_data);
 typedef int             (*monodroid_mono_runtime_set_main_args_fptr) (int argc, char* argv[]);
@@ -339,6 +341,7 @@ struct DylibMono {
 	monodroid_mono_property_set_value_fptr                  mono_property_set_value;
 	monodroid_mono_class_get_property_from_name_fptr        mono_class_get_property_from_name;
 	monodroid_mono_domain_from_appdomain_fptr               mono_domain_from_appdomain;
+	monodroid_mono_thread_current_fptr                      mono_thread_current;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
