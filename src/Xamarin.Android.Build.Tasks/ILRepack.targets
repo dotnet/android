@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+	<Target Name="ILRepacker" AfterTargets="Build">
 		<ItemGroup>
-			<InputAssemblies Include="$(OutputPath)\$(AssemblyName).dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
 			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
@@ -19,10 +18,11 @@
 			Internalize="true"
 			Verbose="true"
 			InternalizeExclude="@(DoNotInternalizeAssemblies)"
-			InputAssemblies="@(InputAssemblies)"
+			InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(InputAssemblies)"
 			LibraryPath="$(OutputPath)"
 			TargetKind="Dll"
 			OutputFile="$(OutputPath)\$(AssemblyName).dll"
 		/>
+		<Delete Files="@(InputAssemblies)" />
 	</Target>
 </Project>
