@@ -17,6 +17,7 @@
 		<ILRepack Parallel="true"
 			Internalize="true"
 			Verbose="true"
+			DebugInfo="true"
 			InternalizeExclude="@(DoNotInternalizeAssemblies)"
 			InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(InputAssemblies)"
 			LibraryPath="$(OutputPath)"
