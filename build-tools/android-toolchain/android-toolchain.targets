@@ -29,7 +29,7 @@
       DependsOnTargets="_PrepareAndroidToolchainItems"
       Outputs="@(_AndroidSdkStampFiles);@(_AndroidNdkStampFiles);@(_AntStampFiles)">
     <Exec
-        Command="make $(MakeConcurrency) provision-android ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot;"
+        Command="make $(MakeConcurrency) provision-android DISABLE_IOS=1 ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot;"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
@@ -50,7 +50,7 @@
         Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
     />
     <Exec
-        Command="make $(MakeConcurrency) provision-mxe MXE_SRC=&quot;$(MSBuildThisFileDirectory)\..\..\external\mxe&quot; MXE_PREFIX_DIR=&quot;$(AndroidToolchainDirectory)&quot;"
+        Command="make $(MakeConcurrency) provision-mxe DISABLE_IOS=1 MXE_SRC=&quot;$(MSBuildThisFileDirectory)\..\..\external\mxe&quot; MXE_PREFIX_DIR=&quot;$(AndroidToolchainDirectory)&quot;"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
