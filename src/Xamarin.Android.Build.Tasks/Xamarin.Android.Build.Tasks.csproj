@@ -585,6 +585,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Xamarin.Android.Build.Tasks.targets" />
+    <None Include="ILRepack.targets" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -733,4 +734,5 @@
     <Folder Include="Linker\Linker\" />
     <Folder Include="utils\" />
   </ItemGroup>
+  <Import Project="..\..\packages\ILRepack.Lib.MSBuild.Task.2.0.15.4\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\..\packages\ILRepack.Lib.MSBuild.Task.2.0.15.4\build\ILRepack.Lib.MSBuild.Task.targets')" />
 </Project>

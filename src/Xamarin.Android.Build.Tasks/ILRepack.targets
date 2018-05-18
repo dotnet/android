@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Target Name="ILRepacker" AfterTargets="Build">
+		<ItemGroup>
+			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
+			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Frameworks.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.LibraryModel.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Versioning.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.Core.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.DependencyResolver.Core.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Configuration.dll" />
+		</ItemGroup>
+		<ILRepack Parallel="true"
+			Internalize="true"
+			Verbose="true"
+			DebugInfo="true"
+			InternalizeExclude="@(DoNotInternalizeAssemblies)"
+			InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(InputAssemblies)"
+			LibraryPath="$(OutputPath)"
+			TargetKind="Dll"
+			OutputFile="$(OutputPath)\$(AssemblyName).dll"
+		/>
+		<Delete Files="@(InputAssemblies)" />
+	</Target>
+</Project>
