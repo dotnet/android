@@ -136,7 +136,6 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_string_new)
 	LOAD_SYMBOL(mono_thread_attach)
 	LOAD_SYMBOL(mono_thread_create)
-	LOAD_SYMBOL(mono_thread_current)
 	LOAD_SYMBOL(mono_use_llvm)
 
 

@@ -20,9 +20,6 @@
     <_CFile Include="jni\util.c" />
     <_CFile Include="jni\zip\ioapi.c" />
     <_CFile Include="jni\zip\unzip.c" />
-    <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop.c" />
-    <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-mono.c" />
-    <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-gc-bridge-mono.c" />
   </ItemGroup>
   <!-- These are referenced in %(_HostRuntime.ExtraSource) -->
   <ItemGroup>
