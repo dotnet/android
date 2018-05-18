@@ -59,7 +59,6 @@
   <ItemGroup>
     <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
     <TestJarNoParameters Include="java\java\util\Collection.java" />
-    <TestJar Include="java\com\xamarin\NestedInterface.java" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
