@@ -39,7 +39,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
-      <HintPath>..\..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>..\..\..\..\packages\NUnit.3.8.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <!-- Because Xamarin.Android.Build.Tasks.csproj doesn't build in VsForMac :(
     <Reference Include="Xamarin.Android.Build.Tasks" Condition="Exists('$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll')">
