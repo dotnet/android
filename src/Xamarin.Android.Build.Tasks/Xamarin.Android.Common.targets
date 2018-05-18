@@ -1704,6 +1704,7 @@ because xbuild doesn't support framework reference assemblies.
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
     SkipUnchangedFiles="true" />
+  <Touch Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
   
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
 </Target>
@@ -1730,7 +1731,7 @@ because xbuild doesn't support framework reference assemblies.
 		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
 		SkipUnchangedFiles="true"
 	/>
-	<Touch Files="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+	<Touch Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
 	<Touch Files="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')" />
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
 </Target>
