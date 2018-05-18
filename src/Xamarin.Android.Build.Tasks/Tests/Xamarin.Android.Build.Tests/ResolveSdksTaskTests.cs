@@ -190,7 +190,7 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void ResolveSdkTiming ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -226,7 +226,7 @@ namespace Xamarin.Android.Build.Tests {
 			var start = DateTime.UtcNow;
 			Assert.IsTrue (task.Execute ());
 			var executionTime = DateTime.UtcNow - start;
-			Assert.LessOrEqual (executionTime, TimeSpan.FromSeconds(1), "Task should not take more than 1 second to run.");
+			Assert.LessOrEqual (executionTime, TimeSpan.FromSeconds(2), "Task should not take more than 2 seconds to run.");
 			Assert.AreEqual (task.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
 			Assert.AreEqual (task.TargetFrameworkVersion, "v8.0", "TargetFrameworkVersion should be v8.0");
 			Assert.AreEqual (task.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
