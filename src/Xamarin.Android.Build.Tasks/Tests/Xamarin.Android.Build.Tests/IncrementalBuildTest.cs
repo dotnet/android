@@ -187,6 +187,7 @@ public class TestMe {
 		{
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
+				IsRelease = true,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
@@ -217,6 +218,7 @@ namespace Lib
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
+				IsRelease = true,
 				OtherBuildItems = {
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
 						TextContent = () => string.Empty,
@@ -254,6 +256,7 @@ namespace Lib2
 					Assert.IsTrue (libbuilder2.Build (lib2), "lib 1st. build failed");
 
 					var app = new XamarinAndroidApplicationProject () { ProjectName = "App",
+						IsRelease = true,
 						OtherBuildItems = {
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
