@@ -14,15 +14,16 @@
     <_CFile Include="jni\dylib-mono.c" />
     <_CFile Include="jni\embedded-assemblies.c" />
     <_CFile Include="jni\jni.c" />
-    <_CFile Include="jni\logger.c" />
     <_CFile Include="jni\monodroid-glue.c" />
     <_CFile Include="jni\timezones.c" />
     <_CFile Include="jni\util.c" />
     <_CFile Include="jni\zip\ioapi.c" />
     <_CFile Include="jni\zip\unzip.c" />
     <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop.c" />
+    <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-logger.c" />
     <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-mono.c" />
     <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-gc-bridge-mono.c" />
+    <_CFile Include="$(JavaInteropSourceDirectory)\src\java-interop\java-interop-util.c" />
   </ItemGroup>
   <!-- These are referenced in %(_HostRuntime.ExtraSource) -->
   <ItemGroup>

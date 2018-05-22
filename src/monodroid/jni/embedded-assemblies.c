@@ -8,8 +8,9 @@
 #include <ctype.h>
 #include <libgen.h>
 
+#include "java-interop-util.h"
+
 #include "monodroid.h"
-#include "logger.h"
 #include "dylib-mono.h"
 #include "util.h"
 #include "unzip.h"

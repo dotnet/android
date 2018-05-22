@@ -14,13 +14,13 @@
 
 #ifdef WINDOWS
 #include <direct.h>
-#include <stringapiset.h>
 #endif
+
+#include "java-interop-util.h"
 
 #include "monodroid.h"
 #include "dylib-mono.h"
 #include "util.h"
-#include "logger.h"
 #include "monodroid-glue.h"
 
 int
@@ -500,29 +500,3 @@ monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension)
 	return result;
 #endif
 }
-
-#ifdef WINDOWS
-char*
-utf16_to_utf8 (const wchar_t *widestr)
-{
-	int required_size = WideCharToMultiByte (CP_UTF8, 0, widestr, -1, NULL, 0, NULL, NULL);
-	char *mbstr = calloc (required_size, sizeof (char));
-	int converted_size = WideCharToMultiByte (CP_UTF8, 0, widestr, -1, mbstr, required_size, NULL, NULL);
-
-	assert (converted_size == required_size);
-
-	return mbstr;
-}
-
-wchar_t*
-utf8_to_utf16 (const char *mbstr)
-{
-	int required_chars = MultiByteToWideChar (CP_UTF8, 0, mbstr, -1, NULL, 0);
-	wchar_t *widestr = calloc (required_chars, sizeof (wchar_t));
-	int converted_chars = MultiByteToWideChar (CP_UTF8, 0, mbstr, -1, widestr, required_chars);
-
-	assert (converted_chars == required_chars);
-
-	return widestr;
-}
-#endif // def WINDOWS

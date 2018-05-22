@@ -1,5 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
+JAVA_INTEROP_SRC_PATH=../../../external/Java.Interop/src/java-interop
+
 include $(CLEAR_VARS)
 
 ifeq ($(CONFIGURATION),Debug)
@@ -39,7 +41,8 @@ LOCAL_C_INCLUDES	:= \
 	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include \
 	$(LOCAL_PATH)/../../../bin/$(CONFIGURATION)/include/$(TARGET_ARCH_ABI)/eglib \
 	"$(MONO_PATH)/mono/eglib" \
-	$(LOCAL_PATH)/zip
+	$(LOCAL_PATH)/zip \
+	$(LOCAL_PATH)/$(JAVA_INTEROP_SRC_PATH)
 
 LOCAL_LDLIBS    := -llog -lz -lstdc++
 
@@ -50,6 +53,7 @@ LOCAL_MODULE    := monodroid
 #   Android NDK: ".../mono/support/nl.c" ".../mono/support/zlib-helper.c"
 #   Android NDK: WARNING: Unsupported source file extensions in jni/Android.mk for module monodroid
 LOCAL_SRC_FILES := \
+	$(JAVA_INTEROP_SRC_PATH)/java-interop-logger.c \
 	$(MONO_PATH)/support/nl.c \
 	$(MONO_PATH)/support/zlib-helper.c \
 	dylib-mono.c \
@@ -57,7 +61,6 @@ LOCAL_SRC_FILES := \
 	jni.c \
 	monodroid-glue.c \
 	util.c \
-	logger.c \
 	debug.c \
 	timezones.c \
 	zip/ioapi.c \

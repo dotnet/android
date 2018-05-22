@@ -7,10 +7,11 @@
 #include <memory.h>
 #endif
 
+#include "java-interop-util.h"
+
 #include "monodroid.h"
 #include "dylib-mono.h"
 #include "util.h"
-#include "logger.h"
 
 struct DylibMono* monodroid_dylib_mono_new (const char *libmono_path)
 {
