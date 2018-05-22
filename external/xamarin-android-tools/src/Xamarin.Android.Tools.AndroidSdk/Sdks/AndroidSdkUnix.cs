@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -9,6 +11,23 @@ namespace Xamarin.Android.Tools
 {
 	class AndroidSdkUnix : AndroidSdkBase
 	{
+		// See comments above UnixConfigPath for explanation on why these are needed
+		static readonly string sudo_user;
+		static readonly string user;
+		static readonly bool need_chown;
+
+		static AndroidSdkUnix ()
+		{
+			sudo_user = Environment.GetEnvironmentVariable ("SUDO_USER");
+			if (String.IsNullOrEmpty (sudo_user))
+				return;
+
+			user = Environment.GetEnvironmentVariable ("USER");
+			if (String.IsNullOrEmpty (user) || String.Compare (user, sudo_user, StringComparison.Ordinal) == 0)
+				return;
+			need_chown = true;
+		}
+
 		public AndroidSdkUnix (Action<TraceLevel, string> logger)
 			: base (logger)
 		{
@@ -166,7 +185,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			androidEl.SetAttributeValue ("path", path);
-			doc.Save (UnixConfigPath);
+			SaveConfig (doc);
 		}
 
 		public override void SetPreferredJavaSdkPath (string path)
@@ -182,7 +201,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			javaEl.SetAttributeValue ("path", path);
-			doc.Save (UnixConfigPath);
+			SaveConfig (doc);
 		}
 
 		public override void SetPreferredAndroidNdkPath (string path)
@@ -198,9 +217,57 @@ namespace Xamarin.Android.Tools
 			}
 
 			androidEl.SetAttributeValue ("path", path);
-			doc.Save (UnixConfigPath);
+			SaveConfig (doc);
 		}
 
+		void SaveConfig (XDocument doc)
+		{
+			string cfg = UnixConfigPath;
+			List <string> created = null;
+
+			if (!File.Exists (cfg)) {
+				string dir = Path.GetDirectoryName (cfg);
+				if (!Directory.Exists (dir)) {
+					Directory.CreateDirectory (dir);
+					AddToList (dir);
+				}
+				AddToList (cfg);
+			}
+			doc.Save (cfg);
+			FixOwnership (created);
+
+			void AddToList (string path)
+			{
+				if (created == null)
+					created = new List <string> ();
+				created.Add (path);
+			}
+		}
+
+		// There's a small problem with the code below. Namely, if it runs under `sudo` the folder location
+		// returned by Environment.GetFolderPath will depend on how sudo was invoked:
+		//
+		//   1. `sudo command` will not reset the environment and while the user running the command will be
+		//      `root` (or any other user specified in the command), the `$HOME` environment variable will point
+		//      to the original user's home. The effect will be that any files/directories created in this
+		//      session will be owned by `root` (or any other user as above) and not the original user. Thus, on
+		//      return, the original user will not have write (or read/write) access to the directory/file
+		//      created. This causes https://devdiv.visualstudio.com/DevDiv/_workitems/edit/597752
+		//
+		//   2. `sudo -i command` starts an "interactive" session which resets the environment (by reading shell
+		//      startup scripts among other steps) and the above problem doesn't occur.
+		//
+		// The behavior of 1. is, arguably, a bug in Mono fixing of which may bring unknown side effects,
+		// however. Therefore we'll do our best below to work around the issue. `sudo` puts the original user's
+		// login name in the `SUDO_USER` environment variable and we can use its presence to both detect 1.
+		// above and work around the issue. We will do it in the simplest possible manner, by invoking chown(1)
+		// to set the proper ownership.
+		// Note that it will NOT fix situations when a mechanism other than `sudo`, but with similar effects, is
+		// used! The generic fix would require a number of more complicated checks as well as a number of
+		// p/invokes (with quite a bit of data marshaling) and it is likely that it would be mostly wasted
+		// effort, as the sudo situation appears to be the most common (while happening few and far between in
+		// general)
+		//
 		private static string UnixConfigPath {
 			get {
 				var p = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
@@ -212,11 +279,7 @@ namespace Xamarin.Android.Tools
 		{
 			var file = UnixConfigPath;
 			XDocument doc = null;
-			if (!File.Exists (file)) {
-				string dir = Path.GetDirectoryName (file);
-				if (!Directory.Exists (dir))
-					Directory.CreateDirectory (dir);
-			} else {
+			if (File.Exists (file)) {
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
@@ -238,6 +301,39 @@ namespace Xamarin.Android.Tools
 				doc = new XDocument (new XElement ("monodroid"));
 			}
 			return doc;
+		}
+
+		void FixOwnership (List<string> paths)
+		{
+			if (!need_chown || paths == null || paths.Count == 0)
+				return;
+
+			var stdout = new StringWriter ();
+			var stderr = new StringWriter ();
+			var args = new List <string> {
+				QuoteString (sudo_user)
+			};
+
+			foreach (string p in paths)
+				args.Add (QuoteString (p));
+
+			var psi = new ProcessStartInfo (OS.IsMac ? "/usr/sbin/chown" : "/bin/chown") {
+				CreateNoWindow = true,
+				Arguments = String.Join (" ", args),
+			};
+			Logger (TraceLevel.Verbose, $"Changing filesystem object ownership: {psi.FileName} {psi.Arguments}");
+			Task<int> chown_task = ProcessUtils.StartProcess (psi, stdout, stderr, System.Threading.CancellationToken.None);
+
+			if (chown_task.Result != 0) {
+				Logger (TraceLevel.Warning, $"Failed to change ownership of filesystem object(s)");
+				Logger (TraceLevel.Verbose, $"standard output: {stdout}");
+				Logger (TraceLevel.Verbose, $"standard error: {stderr}");
+			}
+
+			string QuoteString (string p)
+			{
+				return $"\"{p}\"";
+			}
 		}
 
 	}
