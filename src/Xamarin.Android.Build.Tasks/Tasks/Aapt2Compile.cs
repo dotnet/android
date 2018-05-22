@@ -37,9 +37,7 @@ namespace Xamarin.Android.Tasks {
 			LoadResourceCaseMap ();
 
 			var output = new List<OutputLine> ();
-			//var task = ThreadingTasks.Task.Run (() => ), Token);
-			//task.ContinueWith ((obj) => { Complete (); });
-			var success = RunAapt (GenerateCommandLineCommands (), output);//base.Execute ();
+			var success = RunAapt (GenerateCommandLineCommands (), output);
 			foreach (var line in output) {
 				if (line.StdError) {
 					LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success);

@@ -752,7 +752,7 @@ resources.
     property is set, the build process pre-crunches the .png files.
 
     Note: This option is not compatible with the `$(AndroidUseAapt2)`
-    option. If `$(AndroidUseAapt2)` is enabled, tnis functionality
+    option. If `$(AndroidUseAapt2)` is enabled, this functionality
     will be disabled. If you wish to continue to use this feature
     please set `$(AndroidUseAapt2)` to `False`.
 
@@ -760,15 +760,16 @@ resources.
 
 -  **AndroidUseAapt2** &ndash; A bool property which allows the developer to
     control the use of the `aapt2` tool for packaging.
-    By default we will use `aapt2` if it is installed. If the developer wishes
-    to revert back to legacy behaviour they can set
+    By default this will be set to false and we will use `aapt`.
+    If the developer wishes too use the new `aapt2` functionality
+    they can set
         
-        <AndroidUseAapt2>false</AndroidUseAapt2>
+        <AndroidUseAapt2>True</AndroidUseAapt2>
         
     in their csproj. Alternatively provide the property on the command line 
     via
 
-        /p:AndroidUseAapt2=false
+        /p:AndroidUseAapt2=True
 
     Added in Xamarin.Android 8.3.
 
