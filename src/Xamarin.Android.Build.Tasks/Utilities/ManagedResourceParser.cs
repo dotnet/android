@@ -155,9 +155,9 @@ namespace Xamarin.Android.Tasks
 			var lines = System.IO.File.ReadLines (file);
 			foreach (var line in lines) {
 				var items = line.Split (new char [] { ' ' }, 4);
-				int value = items[0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
+				int value = items [0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
 				string itemName = items [2];
-				switch (item) {
+				switch (items [1]) {
 				case "anim":
 					CreateIntField (animation, itemName, value);
 					break;
