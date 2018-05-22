@@ -8,6 +8,7 @@ using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -57,16 +58,19 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
-			cmd.AppendSwitchIfNotNull ("-d ", ClassesOutputDirectory);
-
-			cmd.AppendSwitchIfNotNull ("-classpath ", Jars == null || !Jars.Any () ? null : string.Join (Path.PathSeparator.ToString (), Jars.Select (i => i.ItemSpec)));
-			cmd.AppendSwitchIfNotNull ("-bootclasspath ", JavaPlatformJarPath);
-			cmd.AppendSwitchIfNotNull ("-encoding ", "UTF-8");
 			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
 			cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 			cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
 
 			return cmd.ToString ();
+		}
+
+		protected override void WriteOptionsToResponseFile (StreamWriter sw)
+		{
+			sw.WriteLine ($"-d \"{ClassesOutputDirectory.Replace (@"\", @"\\")}\"");
+			sw.WriteLine ("-classpath \"{0}\"", Jars == null || !Jars.Any () ? null : string.Join (Path.PathSeparator.ToString (), Jars.Select (i => i.ItemSpec.Replace (@"\", @"\\"))));
+			sw.WriteLine ("-bootclasspath \"{0}\"", JavaPlatformJarPath.Replace (@"\", @"\\"));
+			sw.WriteLine ($"-encoding UTF8");
 		}
 	}
 }
