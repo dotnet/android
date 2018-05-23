@@ -231,7 +231,6 @@ set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${MONO_PATH}/support/zlib-helper.c
-  ${SOURCES_DIR}/cpu-arch-detect.c
   ${SOURCES_DIR}/dylib-mono.c
   ${SOURCES_DIR}/embedded-assemblies.c
   ${SOURCES_DIR}/jni.c
@@ -251,8 +250,6 @@ if(UNIX)
     ${MONODROID_SOURCES}
     ${MONO_PATH}/support/nl.c
     ${SOURCES_DIR}/debug.c
-    ${SOURCES_DIR}/monodroid-networkinfo.c
-    ${SOURCES_DIR}/xamarin_getifaddrs.c
     )
 endif()
 

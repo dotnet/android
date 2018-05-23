@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <jni.h>
+
 enum {
 	MONO_COUNTER_INT,    /* 32 bit int */
 	MONO_COUNTER_UINT,    /* 32 bit uint */
@@ -255,6 +257,10 @@ typedef void            (*monodroid_mono_gc_disable_fptr) (void);
 typedef void*           (*monodroid_mono_install_assembly_refonly_preload_hook_fptr) (MonoAssemblyPreLoadFunc func, void *user_data);
 typedef int             (*monodroid_mono_runtime_set_main_args_fptr) (int argc, char* argv[]);
 typedef void            (*mono_aot_register_module_fptr) (void* aot_info);
+typedef void            (*monodroid_mono_jvm_initialize_fptr) (JavaVM *jvm);
+typedef void            (*monodroid_monodroid_add_system_property_fptr) (const char *name, const char *value);
+typedef int             (*monodroid_monodroid_get_system_property_fptr) (const char *name, char **value);
+typedef void            (*monodroid_monodroid_free_fptr) (void *ptr);
 
 /* NOTE: structure members MUST NOT CHANGE ORDER. */
 struct DylibMono {
@@ -343,7 +349,14 @@ struct DylibMono {
 	monodroid_mono_class_get_property_from_name_fptr        mono_class_get_property_from_name;
 	monodroid_mono_domain_from_appdomain_fptr               mono_domain_from_appdomain;
 	monodroid_mono_thread_current_fptr                      mono_thread_current;
+
 	mono_aot_register_module_fptr                           mono_aot_register_module;
+
+	monodroid_mono_jvm_initialize_fptr                      mono_jvm_initialize;
+
+	monodroid_monodroid_add_system_property_fptr            monodroid_add_system_property;
+	monodroid_monodroid_get_system_property_fptr            monodroid_get_system_property;
+	monodroid_monodroid_free_fptr                           monodroid_free;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
