@@ -317,7 +317,51 @@ using System.Runtime.CompilerServices;
 		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool isRelease)
 		{
 			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", isRelease);
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
+
+			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Classlibrary1",
+			};
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	android:orientation = ""vertical""
+	android:layout_width = ""fill_parent""
+	android:layout_height = ""fill_parent"">
+	<classlibrary1.CustomTextView
+		android:id = ""@+id/myText1""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_lower"" />
+	<ClassLibrary1.CustomTextView
+		android:id = ""@+id/myText2""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_proper"" />
+</LinearLayout>"
+			});
+			lib.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
+				TextContent = () => @"using Android.Widget;
+using Android.Content;
+using Android.Util;
+namespace ClassLibrary1
+{
+	public class CustomTextView : TextView
+	{
+		public CustomTextView(Context context, IAttributeSet attributes) : base(context, attributes)
+		{
+		}
+	}
+}"
+			});
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
+					},
+				}
+			};
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\UPPER_image.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
@@ -383,12 +427,23 @@ namespace UnnamedProject
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
 			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath))) {
+			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName)))
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var preferencesPath = Path.Combine (Root, projectPath, proj.IntermediateOutputPath, "res","xml","preferences.xml");
+				var customViewPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", "0", "jl", "res", "layout", "custom_text.xml");
+				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
+				var doc = XDocument.Load (customViewPath);
+				Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
+				Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
+					"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
+					"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				
+				var preferencesPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
-				var doc = XDocument.Load (preferencesPath);
+				doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
 					"UnamedProject.CustomPreference should have been replaced with an $(MD5Hash).CustomPreference");
