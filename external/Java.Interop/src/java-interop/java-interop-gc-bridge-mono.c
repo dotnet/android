@@ -7,6 +7,11 @@
 #include "java-interop.h"
 #include "java-interop-gc-bridge.h"
 #include "java-interop-mono.h"
+#include "java-interop-util.h"
+
+#ifdef WINDOWS
+#include <FileAPI.h>
+#endif
 
 #ifdef __linux__
 	#include <sys/syscall.h>
@@ -149,17 +154,73 @@ java_interop_gc_bridge_destroy (JavaInteropGCBridge *bridge)
 	return 0;
 }
 
+#ifdef WINDOWS
+static char*
+_ji_realpath_win_loop (wchar_t* wpath, DWORD len)
+{
+	DWORD retval;
+	char* fullpath = NULL;
+	wchar_t *allocated_buffer = xmalloc (sizeof (wchar_t)*len);;
+
+	while (1) {
+		retval = GetFullPathNameW (wpath, len, allocated_buffer, NULL);
+
+		if (retval == 0)
+			break;
+
+		if (retval < len && allocated_buffer [retval] == '\0') {
+			fullpath = utf16_to_utf8 (allocated_buffer);
+			break;
+		}
+
+		// other thread probably called chdir ()
+		// be on the safe side and allocate more space in case it will happen again
+		len = retval*2;
+		allocated_buffer = xrealloc (allocated_buffer, sizeof (wchar_t)*len);
+	}
+
+	free (allocated_buffer);
+
+	return fullpath;
+}
+#endif
+
 static char*
 ji_realpath (const char *path)
 {
 	if (path == NULL)
 		return NULL;
 
+#ifndef WINDOWS
 	char   *rp = realpath (path, NULL);
 	if (rp == NULL) {
 		return strdup (path);
 	}
 	return rp;
+#else
+#define BUFSIZE 512
+
+	wchar_t *wpath = utf8_to_utf16 (path);
+	char *fullpath = NULL;
+	wchar_t buffer [BUFSIZE];
+	DWORD retval = GetFullPathNameW (wpath, BUFSIZE, buffer, NULL);
+
+	do {
+		if (retval == 0)
+			break;
+
+		if (retval < BUFSIZE) {
+			fullpath = utf16_to_utf8 (buffer);
+			break;
+		}
+
+		fullpath = _ji_realpath_win_loop (wpath, retval);
+	} while (0);
+
+	free (wpath);
+
+	return fullpath;
+#endif
 }
 
 static FILE *
