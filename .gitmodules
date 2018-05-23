@@ -4,7 +4,7 @@
 	branch = master
 [submodule "external/mono"]
 	path = external/mono
-	url = https://github.com/mono/mono.git
+	url = https://github.com/luhenry/mono.git
 	branch = 2018-02
 [submodule "external/mxe"]
 	path = external/mxe
