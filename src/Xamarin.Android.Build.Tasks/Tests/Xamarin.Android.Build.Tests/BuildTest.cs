@@ -532,6 +532,7 @@ namespace Xamarin.Android.Tests
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();

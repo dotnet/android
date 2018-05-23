@@ -10,7 +10,8 @@
 		<IntermediateOutputPath Condition=" '$(PlatformName)' != 'AnyCPU' ">$(BaseIntermediateOutputPath)$(PlatformName)\$(Configuration)\</IntermediateOutputPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(AndroidUseLatestPlatformSdk)' != 'true'">
-		<AppendTargetFrameworkToIntermediateOutputPath Condition="'$(AppendTargetFrameworkToIntermediateOutputPath)' == ''">true</AppendTargetFrameworkToIntermediateOutputPath>
+		<!-- We don't change the IntermediateOutputPath by default to avoid backward compatibility issues -->
+		<AppendTargetFrameworkToIntermediateOutputPath Condition="'$(AppendTargetFrameworkToIntermediateOutputPath)' == ''">False</AppendTargetFrameworkToIntermediateOutputPath>
 		<!-- We don't change the OutputPath by default to avoid backward compatibility issues -->
 		<AppendTargetFrameworkToOutputPath Condition="'$(AppendTargetFrameworkToOutputPath)' == ''">false</AppendTargetFrameworkToOutputPath>
 		<TargetFrameworkToOutputPath>$(TargetFrameworkIdentifier)$(TargetFrameworkVersion.TrimStart('v').Replace('.', ''))</TargetFrameworkToOutputPath>
