@@ -1994,7 +1994,7 @@ because xbuild doesn't support framework reference assemblies.
 	AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
   <ConvertResourcesCases 
-	ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	AcwMapFile="$(_AcwMapFile)" />
 </Target>
 
