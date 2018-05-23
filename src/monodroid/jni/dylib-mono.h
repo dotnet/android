@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <jni.h>
+
 enum {
 	MONO_COUNTER_INT,    /* 32 bit int */
 	MONO_COUNTER_UINT,    /* 32 bit uint */
@@ -172,6 +174,16 @@ typedef enum {
 	MONO_AOT_MODE_FULL
 } MonoAotMode;
 
+typedef enum {
+	MONO_TRACE_ANDROID_DEFAULT    = 1 << 18,
+	MONO_TRACE_ANDROID_NET        = 1 << 19,
+	MONO_TRACE_ANDROID_NETLINK    = 1 << 20,
+} MonoTraceMask;
+
+typedef enum {
+	G_LOG_LEVEL_DEBUG             = 1 << 7,
+} GLogLevelFlags;
+
 typedef MonoAssembly*   (*MonoAssemblyPreLoadFunc) (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 typedef void            (*MonoProfileJitResult) (MonoProfiler *prof, MonoMethod   *method,   MonoJitInfo* jinfo,   int result);
 
@@ -255,6 +267,12 @@ typedef void            (*monodroid_mono_gc_disable_fptr) (void);
 typedef void*           (*monodroid_mono_install_assembly_refonly_preload_hook_fptr) (MonoAssemblyPreLoadFunc func, void *user_data);
 typedef int             (*monodroid_mono_runtime_set_main_args_fptr) (int argc, char* argv[]);
 typedef void            (*mono_aot_register_module_fptr) (void* aot_info);
+typedef void            (*monodroid_mono_jvm_initialize_fptr) (JavaVM *jvm);
+typedef void            (*monodroid_monodroid_add_system_property_fptr) (const char *name, const char *value);
+typedef int             (*monodroid_monodroid_get_system_property_fptr) (const char *name, char **value);
+typedef void            (*monodroid_monodroid_free_fptr) (void *ptr);
+typedef void            (*monodroid_mono_trace_set_level_fptr) (GLogLevelFlags level);
+typedef void            (*monodroid_mono_trace_set_mask_fptr) (MonoTraceMask mask);
 
 /* NOTE: structure members MUST NOT CHANGE ORDER. */
 struct DylibMono {
@@ -343,7 +361,17 @@ struct DylibMono {
 	monodroid_mono_class_get_property_from_name_fptr        mono_class_get_property_from_name;
 	monodroid_mono_domain_from_appdomain_fptr               mono_domain_from_appdomain;
 	monodroid_mono_thread_current_fptr                      mono_thread_current;
+
 	mono_aot_register_module_fptr                           mono_aot_register_module;
+
+	monodroid_mono_jvm_initialize_fptr                      mono_jvm_initialize;
+
+	monodroid_monodroid_add_system_property_fptr            monodroid_add_system_property;
+	monodroid_monodroid_get_system_property_fptr            monodroid_get_system_property;
+	monodroid_monodroid_free_fptr                           monodroid_free;
+
+	monodroid_mono_trace_set_level_fptr                     mono_trace_set_level;
+	monodroid_mono_trace_set_mask_fptr                      mono_trace_set_mask;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
