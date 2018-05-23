@@ -231,25 +231,6 @@ namespace Android.Runtime {
 			x_dpi = metrics.Xdpi;
 			y_dpi = metrics.Ydpi;
 		}
-		
-		// This is invoked by
-		// System.Core!System.AndroidPlatform.GetDefaultTimeZone ()
-		// DO NOT REMOVE
-		static string GetDefaultTimeZone ()
-		{
-			IntPtr id = _monodroid_timezone_get_default_id ();
-			try {
-				return Marshal.PtrToStringAnsi (id);
-			} finally {
-				monodroid_free (id);
-			}
-		}
-
-		[DllImport ("__Internal")]
-		static extern IntPtr _monodroid_timezone_get_default_id ();
-
-		[DllImport ("__Internal")]
-		static extern void monodroid_free (IntPtr ptr);
 
 		// This is invoked by
 		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
@@ -260,43 +241,6 @@ namespace Android.Runtime {
 			if (Android.OS.Looper.MyLooper() == looper)
 				return Android.App.Application.SynchronizationContext;
 			return null;
-		}
-
-		// These are invoked by
-		// System.dll!System.AndroidPlatform.getifaddrs
-		// DO NOT REMOVE
-		[DllImport ("__Internal")]
-		static extern int _monodroid_getifaddrs (out IntPtr ifap);
-
-		static int GetInterfaceAddresses (out IntPtr ifap)
-		{
-			return _monodroid_getifaddrs (out ifap);
-		}
-		
-		// These are invoked by
-		// System.dll!System.AndroidPlatform.freeifaddrs
-		// DO NOT REMOVE
-		[DllImport ("__Internal")]
-                static extern void _monodroid_freeifaddrs (IntPtr ifap);
-
-		static void FreeInterfaceAddresses (IntPtr ifap)
-		{
-			_monodroid_freeifaddrs (ifap);
-		}
-
-		[DllImport ("__Internal")]
-		static extern void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);
-
-		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
-		{
-			ushort built_for_cpu = 0;
-			ushort running_on_cpu = 0;
-			byte _is64bit = 0;
-
-			_monodroid_detect_cpu_and_architecture (ref built_for_cpu, ref running_on_cpu, ref _is64bit);
-			builtForCPU = built_for_cpu;
-			runningOnCPU = running_on_cpu;
-			is64bit = _is64bit != 0;
 		}
 
 		// This is invoked by

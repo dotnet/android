@@ -10,7 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <_CFile Include="$(MonoSourceFullPath)\support\zlib-helper.c" />
-    <_CFile Include="jni\cpu-arch-detect.c" />
     <_CFile Include="jni\dylib-mono.c" />
     <_CFile Include="jni\embedded-assemblies.c" />
     <_CFile Include="jni\jni.c" />
@@ -25,8 +24,6 @@
   <ItemGroup>
     <_UnixCFile Include="$(MonoSourceFullPath)\support\nl.c" />
     <_UnixCFile Include="jni\debug.c" />
-    <_UnixCFile Include="jni\monodroid-networkinfo.c" />
-    <_UnixCFile Include="jni\xamarin_getifaddrs.c" />
   </ItemGroup>
   <ItemGroup>
     <_EmbeddedBlobSource Include="config.xml" />

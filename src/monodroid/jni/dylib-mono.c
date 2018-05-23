@@ -137,6 +137,11 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_thread_attach)
 	LOAD_SYMBOL(mono_thread_create)
 	LOAD_SYMBOL(mono_use_llvm)
+	LOAD_SYMBOL(mono_jvm_initialize)
+	LOAD_SYMBOL(mono_jvm_get_jnienv)
+	LOAD_SYMBOL(monodroid_add_system_property)
+	LOAD_SYMBOL(monodroid_get_system_property)
+	LOAD_SYMBOL(monodroid_free)
 
 
 	if (symbols_missing) {

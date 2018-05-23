@@ -61,10 +61,7 @@ LOCAL_SRC_FILES := \
 	debug.c \
 	timezones.c \
 	zip/ioapi.c \
-	zip/unzip.c \
-	xamarin_getifaddrs.c \
-	cpu-arch-detect.c \
-	monodroid-networkinfo.c
+	zip/unzip.c
 
 include $(BUILD_SHARED_LIBRARY)
 
