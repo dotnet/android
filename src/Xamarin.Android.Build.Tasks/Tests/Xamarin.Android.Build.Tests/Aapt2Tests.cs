@@ -39,13 +39,13 @@ namespace Xamarin.Android.Build.Tests {
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
-				OutputFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
-				ResourceDirectory = resPath,
+				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 			};
 			Assert.True (task.Execute (), "task should have succeeded.");
-			Assert.True (File.Exists (task.OutputFlatArchive.ItemSpec), $"{task.OutputFlatArchive.ItemSpec} should have been created.");
-			using (var apk = ZipHelper.OpenZip (task.OutputFlatArchive.ItemSpec)) {
-				Assert.AreEqual (2, apk.EntryCount, $"{task.OutputFlatArchive.ItemSpec} should have 2 entries.");
+			var flatArchive = Path.Combine (path, "compiled.flata");
+			Assert.True (File.Exists (flatArchive), $"{flatArchive} should have been created.");
+			using (var apk = ZipHelper.OpenZip (flatArchive)) {
+				Assert.AreEqual (2, apk.EntryCount, $"{flatArchive} should have 2 entries.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
@@ -80,8 +80,7 @@ namespace Xamarin.Android.Build.Tests {
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
-				OutputFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
-				ResourceDirectory = resPath,
+				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				ResourceNameCaseMap = $"Layout{directorySeperator}Main.xml|layout{directorySeperator}main.axml;Values{directorySeperator}Strings.xml|values{directorySeperator}strings.xml",
 			};
 			Assert.False (task.Execute (), "task should not have succeeded.");
