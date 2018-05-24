@@ -190,7 +190,7 @@
       Inputs="$(MonoSourceFullPath)\autogen.sh"
       Outputs="$(MonoSourceFullPath)\configure">
     <Exec
-        Command="make configure-mono"
+        Command="make DISABLE_IOS=1 configure-mono"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
@@ -390,19 +390,19 @@
       Outputs="@(_RuntimeSource);@(_MonoBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
     <Exec
         Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' And '%(_MonoRuntime.DoBuild)' == 'true' "
-        Command="make $(MakeConcurrency) package-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) package-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
         Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' And '%(_MonoRuntime.BuildTests)' == 'True' "
-        Command="make $(MakeConcurrency) -C android-%(_MonoRuntime.Identity)-$(_MonoSdksConfiguration) -C runtime test"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) -C android-%(_MonoRuntime.Identity)-$(_MonoSdksConfiguration) -C runtime test"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
         Condition=" '%(MonoTestAssembly.TestType)' == 'xunit' "
-        Command="make -C $(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath) xunit-test-local"
+        Command="make DISABLE_IOS=1 -C $(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath) xunit-test-local"
         WorkingDirectory="$(MonoSourceFullPath)"
     />
   </Target>
