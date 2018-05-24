@@ -76,8 +76,8 @@
     <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <XABuildToolsVersion>28-rc1</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">28.0.0-rc1</XABuildToolsFolder>
+    <XABuildToolsVersion>28-rc2</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">28.0.0-rc2</XABuildToolsFolder>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
