@@ -2994,7 +2994,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
 	<Delete Files="$(_AndroidAapt2VersionFile)" />
-	<Delete Files="$(MonoAndroidIntermediate)R.txt" />
+	<Delete Files="$(IntermediateOutputPath)R.txt" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
