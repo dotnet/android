@@ -743,14 +743,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
-		Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" 
-		File="$(_AndroidAapt2VersionFile)"
-		Lines="$(_Aapt2Version)"
-		Overwrite="true"/>
+			Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" 
+			File="$(_AndroidAapt2VersionFile)"
+			Lines="$(_Aapt2Version)"
+			Overwrite="true"
+	/>
 	<ItemGroup>
-        <_CompiledFlataArchive Include="$(IntermediateOutputPath)\**\*.flata"/>
+		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\**\*.flata"/>
 		<_CompiledFlataStamp Include="$(IntermediateOutputPath)\**\compiled.stamp"/>
-    </ItemGroup>
+	</ItemGroup>
 	<Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 </Target>
 
