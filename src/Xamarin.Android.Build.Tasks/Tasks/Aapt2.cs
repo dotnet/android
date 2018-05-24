@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks {
 					return;
 				}
 				if (message.Contains ("warn:")) {
-					LogWarning (singleLine);
+					LogCodedWarning ("APT0000", singleLine);
 					return;
 				}
 				if (level.Contains ("note")) {
@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 					return;
 				}
 				if (level.Contains ("warning")) {
-					LogWarning (singleLine);
+					LogCodedWarning ("APT0000", singleLine);
 					return;
 				}
 
