@@ -79,11 +79,11 @@ namespace Xamarin.Android.Tasks {
 			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
 			Log.LogDebugMessage ("  AssetsDirectory: {0}", AssetsDirectory);
 			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
-			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
 			Log.LogDebugMessage ("  JavaDesignerOutputDirectory: {0}", JavaDesignerOutputDirectory);
 			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
 			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
 			Log.LogDebugMessage ("  ExtraPackages: {0}", ExtraPackages);
+			Log.LogDebugTaskItems ("  ResourceDirectories: ", ResourceDirectories);
 			Log.LogDebugTaskItems ("  AdditionalResourceDirectories: ", AdditionalResourceDirectories);
 			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
 			Log.LogDebugTaskItems ("  LibraryProjectJars: ", LibraryProjectJars);
@@ -93,6 +93,7 @@ namespace Xamarin.Android.Tasks {
 			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
 			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
 			Log.LogDebugMessage ("  ResourceSymbolsTextFile: {0}", ResourceSymbolsTextFile);
+			Log.LogDebugMessage ("  CompiledResourceFlatArchive: {0}", CompiledResourceFlatArchive);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			

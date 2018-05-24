@@ -20,8 +20,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected Dictionary<string, string> resource_name_case_map = new Dictionary<string, string> ();
 
-		[Required]
-		public string ResourceDirectory { get; set; }
+		public ITaskItem [] ResourceDirectories { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
 
@@ -33,10 +32,9 @@ namespace Xamarin.Android.Tasks {
 
 		public string ToolExe { get; set; }
 
-		protected string ResourceDirectoryFullPath {
-			get {
-				return (Path.IsPathRooted (ResourceDirectory) ? ResourceDirectory : Path.Combine (WorkingDirectory, ResourceDirectory)).TrimEnd ('\\');
-			}
+		protected string ResourceDirectoryFullPath (string resourceDirectory)
+		{
+			return (Path.IsPathRooted (resourceDirectory) ? resourceDirectory : Path.Combine (WorkingDirectory, resourceDirectory)).TrimEnd ('\\');
 		}
 
 		protected string GenerateFullPathToTool ()
@@ -131,10 +129,19 @@ namespace Xamarin.Android.Tasks {
 
 				// Try to map back to the original resource file, so when the user
 				// double clicks the error, it won't take them to the obj/Debug copy
-				if (file.StartsWith (ResourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-					file = file.Substring (ResourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-					file = resource_name_case_map.ContainsKey (file) ? resource_name_case_map [file] : file;
-					file = Path.Combine ("Resources", file);
+				if (ResourceDirectories != null) {
+					foreach (var dir in ResourceDirectories) {
+						var resourceDirectoryFullPath = ResourceDirectoryFullPath (dir.ItemSpec);
+						if (file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
+							var newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
+							newfile = resource_name_case_map.ContainsKey (file) ? resource_name_case_map [file] : file;
+							newfile = Path.Combine ("Resources", file);
+							if (File.Exists (Path.Combine (WorkingDirectory, newfile))) {
+								file = newfile;
+								break;
+							}
+						}
+					}
 				}
 
 				// Strip any "Error:" text from aapt's output

@@ -1288,28 +1288,36 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
-		Condition="'$(AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' And '@(_LibraryResourceDirectories)' != '' "
+		Condition="'$(AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' "
 		Inputs="%(_LibraryResourceDirectories.FileFound)"
 		Outputs="%(_LibraryResourceDirectories.Identity)\..\compiled.stamp"
 	>
 	<ConvertResourcesCases
+		Condition=" '@(_LibraryResourceDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="@(_LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
 		AndroidConversionFlagFile="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
 	/>
 	<Aapt2Compile
+		Condition=" '@(_LibraryResourceDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
-		ResourceDirectory="%(_LibraryResourceDirectories.Identity)"
-		OutputFlatArchive="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
+		ResourceDirectories="@(_LibraryResourceDirectories)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
-	<Touch Files="@(_LibraryResourceDirectories->'%(Identity)\..\compiled.stamp')" AlwaysCreate="True" />
+	<Touch
+			Files="@(_LibraryResourceDirectories->'%(Identity)\..\compiled.stamp')"
+			AlwaysCreate="True"
+	/>
 	<ItemGroup>
-		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.flata')" />
-		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.stamp')" />
+		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.flata')"
+				Condition="Exists ('@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.flata')')"
+		/>
+		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.stamp')"
+				Condition="Exists ('@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.stamp')')"
+		/>
 	</ItemGroup>
 </Target>
 
@@ -1327,8 +1335,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 	<Aapt2Compile
 		ContinueOnError="$(DesignTimeBuild)"
-		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-		OutputFlatArchive="$(IntermediateOutputPath)\compiled.flata"
+		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ToolPath="$(Aapt2ToolPath)"
@@ -1499,8 +1506,8 @@ because xbuild doesn't support framework reference assemblies.
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+   ResourceDirectories="$(MonoAndroidResDirIntermediate)"
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-   ResourceDirectory="$(MonoAndroidResDirIntermediate)"
    ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
    ToolPath="$(Aapt2ToolPath)"
@@ -1665,12 +1672,12 @@ because xbuild doesn't support framework reference assemblies.
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		JavaDesignerOutputDirectory="$(ResgenTemporaryDirectory)"
 		CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
-		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
 		ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
+		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		ExtraArgs="$(AndroidResgenExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
@@ -1698,7 +1705,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <PropertyGroup>
     <_UseManagedResourceGenerator Condition=" '$(AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
-    <_UseManagedResourceGenerator Condition=" '$(_UseManagedGen)' == '' ">False</_UseManagedResourceGenerator>
+    <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">False</_UseManagedResourceGenerator>
   </PropertyGroup>
 
   <!-- Parse primary R.java and create Resources.Designer.cs -->
@@ -2266,6 +2273,7 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(AndroidUseAapt2)' == 'True'"
     CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
     AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     UseShortFileNames="$(UseShortFileNames)"
     ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
@@ -2284,7 +2292,6 @@ because xbuild doesn't support framework reference assemblies.
     AssetsDirectory="$(MonoAndroidAssetsDirIntermediate)"
     AndroidSdkPlatform="$(_AndroidApiLevel)"
     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
-    ResourceDirectory="$(MonoAndroidResDirIntermediate)"
     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
     ToolPath="$(Aapt2ToolPath)"
     ToolExe="$(Aapt2ToolExe)"
