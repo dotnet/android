@@ -41,3 +41,11 @@
 	path = external/xamarin-android-tools
 	url = https://github.com/xamarin/xamarin-android-tools
 	branch = master
+[submodule "external/dlfcn-win32"]
+	path = external/dlfcn-win32
+	url = https://github.com/dlfcn-win32/dlfcn-win32.git
+	branch = v1.1.1
+[submodule "external/mman-win32"]
+	path = external/mman-win32
+	url = https://github.com/witwall/mman-win32.git
+	branch = master

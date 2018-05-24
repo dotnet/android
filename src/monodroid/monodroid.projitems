@@ -23,8 +23,8 @@
     </_HostRuntime>
     <_HostRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
       <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild)</CFlags>
-      <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild) $(_LinuxMingwCflags64)</CFlags>
+      <LdFlags>$(_HostCommonWinLdFlags) $(_LinuxMingwLdflags64)</LdFlags>
       <ExtraSource></ExtraSource>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputDirectory>host-mxe-Win64</OutputDirectory>
@@ -33,8 +33,8 @@
     </_HostRuntime>
     <_HostRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
       <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc"</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin32CFlags) $(_LinuxFlatPakBuild)</CFlags>
-      <LdFlags>$(_HostCommonWinLdFlags)</LdFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin32CFlags) $(_LinuxFlatPakBuild) $(_LinuxMingwCflags32)</CFlags>
+      <LdFlags>$(_HostCommonWinLdFlags) $(_LinuxMingwLdflags32)</LdFlags>
       <ExtraSource></ExtraSource>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputDirectory>host-mxe-Win32</OutputDirectory>

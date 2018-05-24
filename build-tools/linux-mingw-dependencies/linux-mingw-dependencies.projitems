@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_CommonCmakeProjectFlags>-DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF</_CommonCmakeProjectFlags>
+  </PropertyGroup>
+  <ItemGroup>
+    <_LinuxCmakeMingwDependency Include="dlfcn-win32-64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Submodule>dlfcn-win32</Submodule>
+      <CMakeToolchainFile>mingw-linux-64.cmake</CMakeToolchainFile>
+      <CMakeExtraFlags>$(_CommonCmakeProjectFlags)</CMakeExtraFlags>
+      <OutputLibrary>x86_64/lib/libdl.a</OutputLibrary>
+      <OutputLibraryPath>libdl.a</OutputLibraryPath>
+      <OutputIncludePath>x86_64/include</OutputIncludePath>
+      <InstallHeaders>dlfcn.h</InstallHeaders>
+    </_LinuxCmakeMingwDependency>
+
+    <_LinuxCmakeMingwDependency Include="dlfcn-win32-32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
+      <Submodule>dlfcn-win32</Submodule>
+      <CMakeToolchainFile>mingw-linux-32.cmake</CMakeToolchainFile>
+      <CMakeExtraFlags>$(_CommonCmakeProjectFlags)</CMakeExtraFlags>
+      <OutputLibrary>x86/lib/libdl.a</OutputLibrary>
+      <OutputLibraryPath>libdl.a</OutputLibraryPath>
+      <OutputIncludePath>x86/include</OutputIncludePath>
+      <InstallHeaders>dlfcn.h</InstallHeaders>
+    </_LinuxCmakeMingwDependency>
+
+    <_LinuxCmakeMingwDependency Include="mman-win32-64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <Submodule>mman-win32</Submodule>
+      <CMakeToolchainFile>mingw-linux-64.cmake</CMakeToolchainFile>
+      <CMakeExtraFlags>$(_CommonCmakeProjectFlags)</CMakeExtraFlags>
+      <OutputLibrary>x86_64/lib/libmman.a</OutputLibrary>
+      <OutputLibraryPath>libmman.a</OutputLibraryPath>
+      <OutputIncludePath>x86_64/include</OutputIncludePath>
+      <InstallHeaders>mman.h:sys/mman.h</InstallHeaders>
+    </_LinuxCmakeMingwDependency>
+
+    <_LinuxCmakeMingwDependency Include="mman-win32-32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
+      <Submodule>mman-win32</Submodule>
+      <CMakeToolchainFile>mingw-linux-32.cmake</CMakeToolchainFile>
+      <CMakeExtraFlags>$(_CommonCmakeProjectFlags)</CMakeExtraFlags>
+      <OutputLibrary>x86/lib/libmman.a</OutputLibrary>
+      <OutputLibraryPath>libmman.a</OutputLibraryPath>
+      <OutputIncludePath>x86/include</OutputIncludePath>
+      <InstallHeaders>mman.h:sys/mman.h</InstallHeaders>
+    </_LinuxCmakeMingwDependency>
+  </ItemGroup>
+
+  <ItemGroup>
+    <RequiredProgram Include="cmake" />
+    <RequiredProgram Include="make" Condition=" '$(HostOS)' != 'Windows' " />
+  </ItemGroup>
+</Project>
