@@ -220,26 +220,25 @@ monodroid_get_namespaced_system_property (const char *name, char **value)
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
 		char *propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
 		if (propname) {
-			result = monodroid_get_system_property (propname, &local_value);
+			result = monodroid_get_dylib ()->monodroid_get_system_property (propname, &local_value);
 			free (propname);
 		}
 	}
 
 	if (result <= 0 || !local_value)
-		result = monodroid_get_system_property (name, &local_value);
+		result = monodroid_get_dylib ()->monodroid_get_system_property (name, &local_value);
 
 	if (result > 0) {
 		if (strlen (local_value) == 0) {
-			free (local_value);
+			monodroid_get_dylib ()->monodroid_free (local_value);
 			return 0;
 		}
 
 		log_info (LOG_DEFAULT, "Property '%s' has value '%s'.", name, local_value);
 
 		if (value)
-			*value = local_value;
-		else
-			free (local_value);
+			*value = monodroid_strdup_printf ("%s", local_value);
+		monodroid_get_dylib ()->monodroid_free (local_value);
 		return result;
 	}
 
