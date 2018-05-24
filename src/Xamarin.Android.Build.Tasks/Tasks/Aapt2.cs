@@ -134,12 +134,10 @@ namespace Xamarin.Android.Tasks {
 						var resourceDirectoryFullPath = ResourceDirectoryFullPath (dir.ItemSpec);
 						if (file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
 							var newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-							newfile = resource_name_case_map.ContainsKey (file) ? resource_name_case_map [file] : file;
-							newfile = Path.Combine ("Resources", file);
-							if (File.Exists (Path.Combine (WorkingDirectory, newfile))) {
-								file = newfile;
-								break;
-							}
+							newfile = resource_name_case_map.ContainsKey (newfile) ? resource_name_case_map [newfile] : newfile;
+							newfile = Path.Combine ("Resources", newfile);
+							file = newfile;
+							break;
 						}
 					}
 				}
