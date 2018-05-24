@@ -15,6 +15,7 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <AndroidUseAapt2>True</AndroidUseAapt2>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
