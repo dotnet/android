@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask  TaskName="Java.Interop.BootstrapTasks.JdkInfo"  AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" />
+  <Target Name="GetPreferredJdkRoot">
+    <JdkInfo
+        JdksRoot="$(JdksRoot)"
+        MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
+        MaximumJdkVersion="$(MaximumJdkVersion)"
+        PropertyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props">
+      <Output TaskParameter="JavaHomePath" PropertyName="_JavaHome"/>
+    </JdkInfo>
+  </Target>
+</Project>

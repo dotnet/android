@@ -53,7 +53,15 @@ xa-all: $(PACKAGES) $(XA_INTEGRATION_OUTPUTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
-prepare:: prepare-external
+include build-tools/scripts/msbuild.mk
+
+prepare:: prepare-bootstrap prepare-external
+
+prepare-bootstrap: bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
+
+bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj \
+		$(wildcard src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
+	$(MSBUILD) $(MSBUILD_FLAGS) src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj
 
 prepare-external: $(PACKAGES) $(NUNIT_CONSOLE)
 	git submodule update --init --recursive
@@ -65,7 +73,6 @@ clean:
 
 include build-tools/scripts/mono.mk
 include build-tools/scripts/jdk.mk
-include build-tools/scripts/msbuild.mk
 
 $(PACKAGES) $(NUNIT_CONSOLE):
 	nuget restore

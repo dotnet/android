@@ -19,8 +19,12 @@
         DestinationFiles="$(_NuGet)"
     />
     <Exec Command="$(_NuGet) restore Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
-    <JdkInfo Output="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
-      <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
+    <JdkInfo
+        JdksRoot="$(ProgramFiles)\Java"
+        MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
+        MaximumJdkVersion="$(JI_MAX_MDK)"
+        PropertyFile="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
+      <Output TaskParameter="JavaHomePath" PropertyName="_JavaSdkDirectory" />
     </JdkInfo>
   </Target>
 </Project>
