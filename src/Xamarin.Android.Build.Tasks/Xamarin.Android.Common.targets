@@ -1696,8 +1696,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Value" PropertyName="AndroidResgenFilename"/>
   </CreateProperty>
 
+  <PropertyGroup>
+    <_UseManagedResourceGenerator Condition=" '$(AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
+    <_UseManagedResourceGenerator Condition=" '$(_UseManagedGen)' == '' ">False</_UseManagedResourceGenerator>
+  </PropertyGroup>
+
   <!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
+		Condition="'$(_AndroidResourceDesignerFile)' != ''"
 		ContinueOnError="$(DesignTimeBuild)"
 		NetResgenOutputFile="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
@@ -1708,24 +1714,8 @@ because xbuild doesn't support framework reference assemblies.
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		IsApplication="$(AndroidApplication)"
 		References="@(ReferencePath)"
-		UseManagedResourceGenerator="False"
+		UseManagedResourceGenerator="$(_UseManagedResourceGenerator)"
 		DesignTimeBuild="$(DesignTimeBuild)"
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' != 'True'"
-	/>
-	<GenerateResourceDesigner
-		ContinueOnError="$(DesignTimeBuild)"
-		NetResgenOutputFile="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
-		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
-		Namespace="$(AndroidResgenNamespace)"
-		ProjectDir="$(ProjectDir)"
-		Resources="@(_AndroidResourceDest)"
-		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-		IsApplication="$(AndroidApplication)"
-		References="@(ReferencePath)"
-		UseManagedResourceGenerator="True"
-		DesignTimeBuild="$(DesignTimeBuild)"
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' == 'True'"
 	/>
 
 	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
