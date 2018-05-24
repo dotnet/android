@@ -30,6 +30,7 @@
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
++ [XA0110](xa0110.md): Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false.
 
 ### XA1xxx Project Related
 

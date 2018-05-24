@@ -721,7 +721,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateItem Include="$(_JavaInteropReferences)">
 		<Output TaskParameter="Include" ItemName="Reference" />
 	</CreateItem>
-	<Warning Code="XA0000"
+	<Warning Code="XA0110"
 		Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false."
 		Condition="  '$(AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
 	/>
