@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks {
 			if (!apptResult) {
 				LogCodedError ("APT0000", string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1)), ToolName);
 			} else {
-				LogWarning (singleLine);
+				LogCodedWarning ("APT0000", singleLine);
 			}
 		}
 
