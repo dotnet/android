@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tasks
 		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays;
 		Dictionary<string, string> map;
 		bool app;
+		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
+		const string itemPackageId = "0x7f";
 
 		void SortMembers (CodeTypeDeclaration decl)
 		{
@@ -281,17 +283,30 @@ namespace Xamarin.Android.Tasks
 			parentType.Members.Add (f);
 		}
 
+		int CreateResourceId (CodeTypeDeclaration parentType)
+		{
+			
+			int typeid = declarationIds.IndexOf (parentType) + 1;
+			if (typeid == 0) {
+				declarationIds.Add (parentType);
+				typeid = declarationIds.Count;
+			}
+			int itemid = parentType.Members.Count + 1;
+			return Convert.ToInt32(itemPackageId + typeid.ToString ().PadLeft (2, '0') + itemid.ToString ().PadLeft (4, '0'), 16); 
+		}
+
 		void CreateIntField (CodeTypeDeclaration parentType, string name, int value = 0)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
 			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.OrdinalIgnoreCase) == 0))
 				return;
+			int id = value == 0 ? CreateResourceId (parentType): value;
 			var f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
 				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
-				InitExpression = new CodePrimitiveExpression (value),
+				InitExpression = new CodePrimitiveExpression (id),
 				Comments = {
-						new CodeCommentStatement ($"aapt resource value: {value}"),
+						new CodeCommentStatement ($"aapt resource value: 0x{id.ToString("X")}"),
 					},
 			};
 			parentType.Members.Add (f);
