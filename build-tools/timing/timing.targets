@@ -45,7 +45,7 @@
   <Target Name="MSBuildPrep" DependsOnTargets="GetXAVersionInfo;AcquireAndroidTarget">
     <PropertyGroup>
       <_OutputDir>$(_TopDir)bin\Test$(Configuration)\</_OutputDir>
-      <_XABuild>$(_TopDir)bin\Debug\bin\xabuild</_XABuild>
+      <_XABuild>$(_TopDir)bin\$(Configuration)\bin\xabuild</_XABuild>
       <_TimingLogger>Xamarin.Android.Tools.BootstrapTasks.TimingLogger,$(_TopDir)bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll</_TimingLogger>
     </PropertyGroup>
     <ItemGroup>
@@ -63,15 +63,35 @@
     </PropertyGroup>
     <!--Simulate a clean checkout with git commands-->
     <Git
-        Arguments="rm -r --cached %(XACaptureBuildTimingProject.DirectoryToClean)"
+        Condition=" '%(XACaptureBuildTimingProject.Repo)' == '' "
+        Arguments="clean -dxf &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
         WorkingDirectory="$(_TopDir)"
         ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)" />
+        ToolExe="$(GitToolExe)"
+    />
+    <!--If the XACaptureBuildTimingProject defines Repo, we need to clone it-->
+    <RemoveDir
+        Condition=" '%(XACaptureBuildTimingProject.Repo)' != '' And Exists('%(XACaptureBuildTimingProject.DirectoryFullPath)')"
+        Directories="%(XACaptureBuildTimingProject.DirectoryFullPath)"
+    />
     <Git
-        Arguments="checkout HEAD %(XACaptureBuildTimingProject.DirectoryToClean)"
+        Condition=" '%(XACaptureBuildTimingProject.Repo)' != '' "
+        Arguments="clone &quot;%(XACaptureBuildTimingProject.Repo)&quot; --depth=1 &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
         WorkingDirectory="$(_TopDir)"
         ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)" />
+        ToolExe="$(GitToolExe)"
+    />
+    <Git
+        Condition=" '%(XACaptureBuildTimingProject.Repo)' != '' And '%(XACaptureBuildTimingProject.Commit)' != '' "
+        Arguments="checkout &quot;%(XACaptureBuildTimingProject.Commit)&quot;"
+        WorkingDirectory="%(XACaptureBuildTimingProject.DirectoryFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)"
+    />
+    <Exec 
+        Condition=" '%(XACaptureBuildTimingProject.Restore)' != '' "
+        Command="$(_TopDir).nuget\NuGet.exe restore &quot;%(XACaptureBuildTimingProject.Restore)&quot;"
+    />
     <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
   </Target>
   <Target Name="FreshInstall"
