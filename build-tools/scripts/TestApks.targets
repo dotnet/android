@@ -22,7 +22,8 @@
         Condition=" '$(RequireNewEmulator)' != 'True' "
         AdbTarget="$(AdbTarget)"
         ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)">
+        ToolPath="$(AdbToolPath)"
+        Timeout="60000">
       <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
@@ -53,6 +54,7 @@
         Arguments="$(_AdbTarget) wait-for-device"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="120000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         EnvironmentVariables="ADB_TRACE=all"
@@ -60,16 +62,19 @@
         Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
-	/>
+        Timeout="120000"
+    />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) shell setprop debug.mono.log timing"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="60000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) logcat -G 4M"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="60000"
     />
     <Message
         Condition=" '$(_EmuTarget)' != '' "
@@ -84,6 +89,7 @@
         Arguments="$(_EmuTarget) logcat -d"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="120000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '$(_EmuTarget)' != '' "
@@ -91,6 +97,7 @@
         Arguments="$(_EmuTarget) emu kill"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="60000"
     />
     <KillProcess
         Condition=" '$(_EmuTarget)' != '' "
@@ -102,6 +109,7 @@
         ContinueOnError="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="60000"
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
@@ -141,6 +149,7 @@
         Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(TestApk.Identity)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="120000"
     />
   </Target>
 
@@ -150,6 +159,7 @@
         Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(TestApk.Package)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="120000"
     />
   </Target>
 
@@ -160,6 +170,7 @@
         Arguments="$(_AdbTarget) $(AdbOptions) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
+        Timeout="60000"
     />
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
@@ -176,7 +187,8 @@
         InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)">
+        ToolPath="$(AdbToolPath)"
+        Timeout="1800000">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
     <RunUITests
@@ -186,7 +198,8 @@
         Activity="%(TestApk.Activity)"
         LogcatFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
         ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)">
+        ToolPath="$(AdbToolPath)"
+        Timeout="300000">
     </RunUITests>
     <ProcessLogcatTiming
         Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' And Exists ('$(_LogcatFilenameBase)-%(TestApk.Package).txt')"
