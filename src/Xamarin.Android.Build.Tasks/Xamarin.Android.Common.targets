@@ -665,6 +665,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
+			AndroidUseAapt2="$(Aapt2Version)"
 			AotAssemblies="$(AotAssemblies)"
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
@@ -697,7 +698,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
 		<Output TaskParameter="ApkSignerJar"              PropertyName="ApkSignerJar"               Condition="'$(ApkSignerJar)' == ''" />
 		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
-		<Output TaskParameter="AndroidUseAapt2"           PropertyName="AndroidUseAapt2"            Condition="'$(AndroidUseAapt2)' == ''" />
+		<Output TaskParameter="AndroidUseAapt2"           PropertyName="_AndroidUseAapt2" />
 		<Output TaskParameter="Aapt2Version"              PropertyName="_Aapt2Version" />
 		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
@@ -723,10 +724,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateItem>
 	<Warning Code="XA0110"
 		Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false."
-		Condition="  '$(AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
+		Condition="  '$(_AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
 	/>
 	<PropertyGroup>
-		<AndroidExplicitCrunch Condition=" '$(AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
+		<AndroidExplicitCrunch Condition=" '$(_AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
 	</PropertyGroup>
 </Target>
 
@@ -1237,7 +1238,7 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
-		Condition=" '$(AndroidUseAapt2)' == 'True' "
+		Condition=" '$(_AndroidUseAapt2)' == 'True' "
 		Resources="@(_AndroidResolvedResources)"
 	/>
 	<CopyAndConvertResources SourceFiles="@(_AndroidResolvedResources)"
@@ -1288,7 +1289,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
-		Condition="'$(AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' "
+		Condition="'$(_AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' "
 		Inputs="%(_LibraryResourceDirectories.FileFound)"
 		Outputs="%(_LibraryResourceDirectories.Identity)\..\compiled.stamp"
 	>
@@ -1322,7 +1323,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileResources"
-		Condition="'$(AndroidUseAapt2)' == 'True'"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
 		Inputs="@(AndroidResource)"
 		Outputs="$(IntermediateOutputPath)\compiled.flata"
 	>
@@ -1470,7 +1471,7 @@ because xbuild doesn't support framework reference assemblies.
 
  <!-- Run aapt to generate R.java for additional Android resources-->
  <Aapt
-   Condition="'$(AndroidUseAapt2)' != 'True'"
+   Condition="'$(_AndroidUseAapt2)' != 'True'"
    ContinueOnError="$(DesignTimeBuild)"
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -1494,7 +1495,7 @@ because xbuild doesn't support framework reference assemblies.
    ExplicitCrunch="$(AndroidExplicitCrunch)"
  />
  <Aapt2Link
-   Condition="'$(AndroidUseAapt2)' == 'True'"
+   Condition="'$(_AndroidUseAapt2)' == 'True'"
    ContinueOnError="$(DesignTimeBuild)"
    AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    UseShortFileNames="$(UseShortFileNames)"
@@ -1616,7 +1617,7 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Change cases so we support mixed case resource names -->
 	<ConvertResourcesCases
-		Condition="'$(AndroidUseAapt2)' != 'True'"
+		Condition="'$(_AndroidUseAapt2)' != 'True'"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
 		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
@@ -1629,7 +1630,7 @@ because xbuild doesn't support framework reference assemblies.
 	</GetExtraPackages>
   
 	<!-- Run aapt to generate R.java -->
-	<Aapt Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' != 'True'"
+	<Aapt Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' != 'True'"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 		UseShortFileNames="$(UseShortFileNames)"
@@ -1659,7 +1660,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 
 	<Aapt2Link
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)\compiled.flata')"
+		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)\compiled.flata')"
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -1683,7 +1684,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(Aapt2ToolExe)"
 	/>
 	<ItemGroup>
-		<FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" '$(AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)R.txt') " />
+		<FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" '$(_AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)R.txt') " />
 	</ItemGroup>
 	
 	<CopyGeneratedJavaResourceClasses
@@ -1704,7 +1705,7 @@ because xbuild doesn't support framework reference assemblies.
   </CreateProperty>
 
   <PropertyGroup>
-    <_UseManagedResourceGenerator Condition=" '$(AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
+    <_UseManagedResourceGenerator Condition=" '$(_AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
     <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">False</_UseManagedResourceGenerator>
   </PropertyGroup>
 
@@ -2238,7 +2239,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Create the base .apk with resources and assets -->
   <Aapt
-	Condition="'$(AndroidUseAapt2)' != 'True'"
+	Condition="'$(_AndroidUseAapt2)' != 'True'"
 	ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 	OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 	UseShortFileNames="$(UseShortFileNames)"
@@ -2270,7 +2271,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSdkPlatform="$(_AndroidApiLevel)"
   />
   <Aapt2Link
-    Condition="'$(AndroidUseAapt2)' == 'True'"
+    Condition="'$(_AndroidUseAapt2)' == 'True'"
     CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
     ResourceDirectories="$(MonoAndroidResDirIntermediate)"

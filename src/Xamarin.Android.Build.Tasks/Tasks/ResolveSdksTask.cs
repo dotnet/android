@@ -256,10 +256,18 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
-			AndroidUseAapt2 = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
-			if (AndroidUseAapt2) {
+			aapt2Installed = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+			if (aapt2Installed) {
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
+					aapt2Installed = false;
+					Log.LogCodedWarning ("XA0111", "Could not get the `aapt2` version. Please check it is installed correctly.");
+				}
+			}
+			if (AndroidUseAapt2) {
+				if (!aapt2Installed) {
+					AndroidUseAapt2 = false;
+					Log.LogCodedWarning ("XA0112", "`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.");
 				}
 			}
 
