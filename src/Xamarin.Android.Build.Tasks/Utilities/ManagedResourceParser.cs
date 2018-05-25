@@ -306,7 +306,7 @@ namespace Xamarin.Android.Tasks
 				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 				InitExpression = new CodePrimitiveExpression (id),
 				Comments = {
-						new CodeCommentStatement ($"aapt resource value: {id}"),
+						new CodeCommentStatement ($"aapt resource value: 0x{id.ToString("X")}"),
 					},
 			};
 			parentType.Members.Add (f);
