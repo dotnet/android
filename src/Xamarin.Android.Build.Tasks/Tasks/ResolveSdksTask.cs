@@ -256,7 +256,7 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
-			aapt2Installed = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+			bool aapt2Installed = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
 			if (aapt2Installed && AndroidUseAapt2) {
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
