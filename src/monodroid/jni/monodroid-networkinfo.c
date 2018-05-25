@@ -29,8 +29,9 @@
 #include <pthread.h>
 #include <string.h>
 
+#include "java-interop-logger.h"
+
 #include "monodroid.h"
-#include "logger.h"
 #include "monodroid-glue.h"
 #include "util.h"
 #include "dylib-mono.h"

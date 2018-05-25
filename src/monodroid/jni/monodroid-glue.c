@@ -53,8 +53,9 @@
 #include <dirent.h>
 #include <pthread.h>
 
+#include "java-interop-util.h"
+
 #include "monodroid.h"
-#include "logger.h"
 #include "dylib-mono.h"
 #include "util.h"
 #include "debug.h"

@@ -32,7 +32,6 @@ typedef struct dirent monodroid_dirent_t;
 
 #include "dylib-mono.h"
 #include "monodroid.h"
-#include "logger.h"
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
 
@@ -52,50 +51,6 @@ int monodroid_stat (const char *path, monodroid_stat_t *s);
 monodroid_dir_t* monodroid_opendir (const char *filename);
 int monodroid_closedir (monodroid_dir_t *dirp);
 int monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
-
-static inline void*
-_assert_valid_pointer (void *p, size_t size)
-{
-	if (!p) {
-		if (size == 0) {
-			/* In this case it's "ok" to return NULL, although a malloc
-			 * implementation may choose to do something else
-			 */
-			return p;
-		}
-
-		log_fatal (LOG_DEFAULT, "Out of memory!");
-		exit (FATAL_EXIT_OUT_OF_MEMORY);
-	}
-
-	return p;
-}
-
-static inline void*
-xmalloc (size_t size)
-{
-	return _assert_valid_pointer (malloc (size), size);
-}
-
-static inline void*
-xrealloc (void *ptr, size_t size)
-{
-	return _assert_valid_pointer (realloc (ptr, size), size);
-}
-
-static inline void*
-xcalloc (size_t nmemb, size_t size)
-{
-	return _assert_valid_pointer (calloc (nmemb, size), nmemb * size);
-}
-
-#ifdef WINDOWS
-/* Those two conversion functions are only properly implemented on Windows
- * because that's the only place where they should be useful.
- */
-char* utf16_to_utf8 (const wchar_t *widestr);
-wchar_t* utf8_to_utf16 (const char *mbstr);
-#endif // def WINDOWS
 
 void create_public_directory (const char *dir);
 int create_directory (const char *pathname, int mode);

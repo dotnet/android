@@ -22,7 +22,8 @@
 #include <android/log.h>
 #endif
 
-#include "logger.h"
+#include "java-interop-logger.h"
+
 #include "xamarin_getifaddrs.h"
 
 /* Some of these aren't defined in android's rtnetlink.h (as of ndk 16). We define values for all of
