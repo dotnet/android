@@ -10,7 +10,7 @@
 #include "java-interop-util.h"
 
 #ifdef WINDOWS
-#include <FileAPI.h>
+#include <fileapi.h>
 #endif
 
 #ifdef __linux__
