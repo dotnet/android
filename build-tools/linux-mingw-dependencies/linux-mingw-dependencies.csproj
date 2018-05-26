@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}</ProjectGuid>
+    <ForceBuildProjectFilePath>$(MSBuildThisFileFullPath)</ForceBuildProjectFilePath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>$(LinuxMingwDependenciesRootDirectory)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>$(LinuxMingwDependenciesRootDirectory)</OutputPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <BuildDependsOnLocal Condition=" '$(HostOS)' == 'Linux' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')))">
+      ResolveReferences;
+      _BuildUnlessCached
+    </BuildDependsOnLocal>
+  </PropertyGroup>
+  <Import Project="linux-mingw-dependencies.props" />
+  <Import Project="linux-mingw-dependencies.projitems" />
+  <Import Project="linux-mingw-dependencies.targets" />
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
+  <Target Name="Clean" />
+</Project>

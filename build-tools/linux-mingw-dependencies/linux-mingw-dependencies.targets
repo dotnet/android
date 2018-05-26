@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.CreateFilePaths" />
+  <PropertyGroup>
+    <ForceBuildDependsOn>
+      CheckForRequiredPrograms;
+      _Configure;
+      _Make
+    </ForceBuildDependsOn>
+    <_LibZipOutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</_LibZipOutputPath>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="Clean" />
+
+  <Target Name="_SetCMakeListsTxtTimeToLastCommitTimestamp">
+    <GitCommitTime
+        WorkingDirectory="$(_SubmoduleTopDir)\%(_LinuxCmakeMingwDependency.Submodule)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Time" PropertyName="_LinuxMingwDepCommitTime" />
+    </GitCommitTime>
+    <Touch Files="@(_LinuxCmakeMingwDependency->'$(_SubmoduleTopDir)\%(Submodule)\CMakeLists.txt')" Time="$(_LinuxMingwDepCommitTime)" />
+  </Target>
+
+  <Target Name="_Configure"
+      Condition=" '@(_LinuxCmakeMingwDependency)' != '' "
+      DependsOnTargets="_SetCMakeListsTxtTimeToLastCommitTimestamp"
+      Inputs="@(_LinuxCmakeMingwDependency->'$(_SubmoduleTopDir)\%(Submodule)\CMakeLists.txt')"
+      Outputs="$(IntermediateOutputPath)\%(_LinuxCmakeMingwDependency.Identity)\Makefile">
+    <MakeDir Directories="@(_LinuxCmakeMingwDependency->'$(IntermediateOutputPath)\%(Identity)')" />
+    <Exec
+        Command="$(_CMake) -DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\%(_LinuxCmakeMingwDependency.CMakeToolchainFile) %(_LinuxCmakeMingwDependency.CMakeExtraFlags) $(_SubmoduleTopDir)\%(_LinuxCmakeMingwDependency.Submodule)"
+        WorkingDirectory="$(IntermediateOutputPath)\%(_LinuxCmakeMingwDependency.Identity)"
+    />
+  </Target>
+
+  <ItemGroup>
+    <_LinuxCmakeMingwDependencyMakefile Include="@(_LinuxCmakeMingwDependency->'$(IntermediateOutputPath)\%(Identity)\Makefile')" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="@(_LinuxCmakeMingwDependency->'$(LinuxMingwDependenciesRootDirectory)\%(OutputLibrary)')" />
+  </ItemGroup>
+
+  <Target Name="GetLinuxMingwDepExtraFiles"
+      Condition=" '@(_LinuxCmakeMingwDependency)' != '' ">
+    <CreateFilePaths
+        SourceFileNames="@(_LinuxCmakeMingwDependency->'%(InstallHeaders)')"
+        SourceDirectories="@(_LinuxCmakeMingwDependency->'$(_SubmoduleTopDir)\%(Submodule)')"
+        DestinationDirectories="@(_LinuxCmakeMingwDependency->'$(LinuxMingwDependenciesRootDirectory)\%(OutputIncludePath)')">
+      <Output TaskParameter="FullSourceFilePaths" ItemName="_LinuxMingwDepSourceFile" />
+      <Output TaskParameter="FullDestinationFilePaths" ItemName="_LinuxMingwDepDestFile" />
+    </CreateFilePaths>
+    <ItemGroup>
+      <Content Include="@(_LinuxMingwDepDestFile)"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_Make"
+      Condition=" '@(_LinuxCmakeMingwDependency)' != '' "
+      DependsOnTargets="GetLinuxMingwDepExtraFiles"
+      Inputs="@(_LinuxCmakeMingwDependencyMakefile)"
+      Outputs="@(Content)">
+    <Exec
+        Command="make"
+        WorkingDirectory="$(IntermediateOutputPath)\%(_LinuxCmakeMingwDependency.Identity)"
+    />
+    <Copy
+        SourceFiles="@(_LinuxMingwDepSourceFile)"
+        DestinationFiles="@(_LinuxMingwDepDestFile)"
+    />
+    <Copy
+        SourceFiles="@(_LinuxCmakeMingwDependency->'$(IntermediateOutputPath)\%(Identity)\%(OutputLibraryPath)')"
+        DestinationFiles="@(_LinuxCmakeMingwDependency->'$(LinuxMingwDependenciesRootDirectory)\%(OutputLibrary)')"
+    />
+    <Touch Files="@(Content)" />
+  </Target>
+
+  <Target Name="GetLinuxMingwDepsBundleItems">
+    <ItemGroup>
+      <BundleItem Include="@(Content)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ForceBuild"
+      DependsOnTargets="GetLinuxMingwDepsBundleItems;$(ForceBuildDependsOn)"
+      Inputs="@(_LinuxCmakeMingwDependency->'$(_SubmoduleTopDir)\%(Submodule)\CMakeLists.txt"
+      Outputs="@(BundleItem)">
+  </Target>
+
+  <Target Name="_BuildUnlessCached"
+      DependsOnTargets="_SetCMakeListsTxtTimeToLastCommitTimestamp;GetLinuxMingwDepsBundleItems"
+      Inputs="@(_LinuxCmakeMingwDependency->'$(_SubmoduleTopDir)\%(Submodule)\CMakeLists.txt"
+      Outputs="@(BundleItem)">
+    <PropertyGroup>
+      <_Now>$([System.DateTime]::Now.Ticks)</_Now>
+    </PropertyGroup>
+    <MSBuild
+        Projects="$(ForceBuildProjectFilePath)"
+        Properties="_ForceXbuildToNotCacheTargets=$(_Now)"
+        Targets="ForceBuild"
+    />
+  </Target>
+
+  <Target Name="_CleanBinaries"
+      AfterTargets="Clean">
+    <RemoveDir Directories="$(IntermediateOutputPath)\%(_LinuxCmakeMingwDependency.Identity)" />
+    <Delete Files="@(_LinuxCmakeMingwDependency->'$(LinuxMingwDependenciesRootDirectory)\%(OutputLibrary)')" />
+  </Target>
+  <Target Name="CoreCompile"
+      DependsOnTargets="_BuildUnlessCached">
+  </Target>
+</Project>
