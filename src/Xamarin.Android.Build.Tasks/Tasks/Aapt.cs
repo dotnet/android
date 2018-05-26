@@ -96,17 +96,6 @@ namespace Xamarin.Android.Tasks
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		string resourceDirectory;
 
-		struct OutputLine {
-			public string Line;
-			public bool StdError;
-
-			public OutputLine (string line, bool stdError)
-			{
-				Line = line;
-				StdError = stdError;
-			}
-		}
-
 		bool ManifestIsUpToDate (string manifestFile)
 		{
 			return !String.IsNullOrEmpty (AndroidComponentResgenFlagFile) &&

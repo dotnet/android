@@ -108,10 +108,15 @@
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
     <Compile Include="Tasks\Aapt.cs" />
+    <Compile Include="Tasks\Aapt2.cs" />
+    <Compile Include="Tasks\Aapt2Compile.cs" />
+    <Compile Include="Tasks\Aapt2Link.cs" />
     <Compile Include="Tasks\AndroidZipAlign.cs" />
     <Compile Include="Tasks\BuildApk.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
+    <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
+    <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
     <Compile Include="Tasks\CopyMdbFiles.cs" />
     <Compile Include="Tasks\Generator.cs" />

@@ -1652,7 +1652,7 @@ namespace App1
 		}
 
 		[Test]
-		public void AarContentExtraction ()
+		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
@@ -1662,6 +1662,7 @@ namespace App1
 					aar,
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));

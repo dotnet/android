@@ -65,6 +65,11 @@ namespace Xamarin.Android.Tasks
 					subdirInfo.Create ();
 			}
 
+			var compiledArchive = Path.Combine (ResourceDirectory, "..", "compiled.flata");
+			if (File.Exists (compiledArchive)) {
+				MonoAndroidHelper.CopyIfChanged (compiledArchive, Path.Combine (outDirInfo.FullName, "compiled.flata"));
+			}
+
 			var dir_sep = new char [] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
 			if (AndroidAssets != null) {
 				var dstsub = Path.Combine (outDirInfo.FullName, "assets");

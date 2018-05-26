@@ -10,6 +10,7 @@
 		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
+		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">False</AndroidUseAapt2>
 	</PropertyGroup>
 	<ItemDefinitionGroup>
 		<AndroidResource>

@@ -26,8 +26,8 @@ namespace Xamarin.Android.Build.Tests
 	<application android:label=""CheckElementReOrdering"">
 	</application>
 	<permission android:name=""com.xamarin.test.TEST"" android:label=""Test Permission"" />
-	<permissionTree android:name=""com.xamarin.test"" />
-	<permissionGroup android:name=""group1"" />
+	<permission-tree android:name=""com.xamarin.test"" />
+	<permission-group android:name=""group1"" />
 	<uses-feature android:name=""android.hardware.camera"" />
 	<supports-gl-texture android:name=""GL_OES_compressed_ETC1_RGB8_texture"" />
 	<uses-permission android:name=""android.permission.CAMERA"" />
@@ -64,13 +64,14 @@ namespace Bug12935
 ";
 
 		[Test]
-		public void Bug12935 ()
+		public void Bug12935 ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			var directory = "temp/Bug12935";
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			var directory = $"temp/Bug12935_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 
 				proj.TargetFrameworkVersion = "v4.2";
@@ -120,13 +121,14 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void CheckElementReOrdering ()
+		public void CheckElementReOrdering ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			var directory = "temp/CheckElementReOrdering";
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			var directory = $"temp/CheckElementReOrdering_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 				proj.AndroidManifest = ElementOrderManifest;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");

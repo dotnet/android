@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
 				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
-			Log.LogDebugMessage ("  AndroidResgenFlagFile modified: {0}", lastUpdate);
+			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
 			// Fix up each file
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);

@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
 	class ManagedResourceParser : ResourceParser
 	{
 		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays;
+		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml;
 		Dictionary<string, string> map;
 		bool app;
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
@@ -28,6 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		public CodeTypeDeclaration Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
 		{
+			app = isApp;
 			if (!Directory.Exists (resourceDirectory))
 				throw new ArgumentException ("Specified resource directory was not found: " + resourceDirectory);
 
@@ -54,6 +56,7 @@ namespace Xamarin.Android.Tasks
 			plurals = CreateClass ("Plurals");
 			styleable = CreateClass ("Styleable");
 			style = CreateClass ("Style");
+			xml = CreateClass ("Xml");
 
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
@@ -100,6 +103,7 @@ namespace Xamarin.Android.Tasks
 			SortMembers (strings);
 			SortMembers (style);
 			SortMembers (styleable);
+			SortMembers (xml);
 
 
 			if (animation.Members.Count > 1)
@@ -142,6 +146,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (style);
 			if (styleable.Members.Count > 1)
 				resources.Members.Add (styleable);
+			if (xml.Members.Count > 1)
+				resources.Members.Add (xml);
 
 			return resources;
 		}
@@ -151,7 +157,7 @@ namespace Xamarin.Android.Tasks
 			var lines = System.IO.File.ReadLines (file);
 			foreach (var line in lines) {
 				var items = line.Split (new char [] { ' ' }, 4);
-				int value = items[0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
+				int value = items [0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
 				string itemName = items [2];
 				switch (items [1]) {
 				case "anim":
@@ -218,6 +224,9 @@ namespace Xamarin.Android.Tasks
 							arrayValues.Select (x => string.IsNullOrEmpty (x) ? 0 : Convert.ToInt32 (x, 16)).ToArray ());
 						break;
 					}
+					break;
+				case "xml":
+					CreateIntField (xml, itemName, value);
 					break;
 				}
 			}
@@ -413,6 +422,9 @@ namespace Xamarin.Android.Tasks
 				break;
 			case "style":
 				CreateIntField (style, fieldName.Replace (".", "_"));
+				break;
+			case "xml":
+				CreateIntField (xml, fieldName);
 				break;
 			default:
 				break;
