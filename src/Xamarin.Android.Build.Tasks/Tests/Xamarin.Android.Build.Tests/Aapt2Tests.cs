@@ -135,18 +135,21 @@ namespace Xamarin.Android.Build.Tests {
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var directorySeperator = Path.DirectorySeparatorChar;
 			var current = Directory.GetCurrentDirectory ();
-			Directory.SetCurrentDirectory (path);
-			var task = new Aapt2Compile {
-				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
-				ResourceNameCaseMap = $"Layout{directorySeperator}Main.xml|layout{directorySeperator}main.axml;Values{directorySeperator}Strings.xml|values{directorySeperator}strings.xml",
-			};
-			Assert.False (task.Execute (), "task should not have succeeded.");
+			try {
+				Directory.SetCurrentDirectory (path);
+				var task = new Aapt2Compile {
+					BuildEngine = engine,
+					ToolPath = GetPathToAapt2 (),
+					ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+					ResourceNameCaseMap = $"Layout{directorySeperator}Main.xml|layout{directorySeperator}main.axml;Values{directorySeperator}Strings.xml|values{directorySeperator}strings.xml",
+				};
+				Assert.False (task.Execute (), "task should not have succeeded.");
+			} finally {
+				Directory.SetCurrentDirectory (current);
+			}
 			Assert.AreEqual (1, errors.Count, "One Error should have been raised.");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors[0].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
-			Directory.SetCurrentDirectory (current);
 		}
 	}
 }
