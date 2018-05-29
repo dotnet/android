@@ -45,7 +45,7 @@
       Inputs="@(_LibZipTargetMakefile)"
       Outputs="@(Content)">
     <Exec
-        Command="make"
+        Command="make VERBOSE=1"
         WorkingDirectory="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)"
      /> 
     <Copy

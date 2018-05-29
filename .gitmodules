@@ -20,7 +20,7 @@
 [submodule "external/libzip"]
 	path = external/libzip
 	url = https://github.com/nih-at/libzip.git
-	branch = master
+	branch = rel-1-5-1
 [submodule "external/LibZipSharp"]
 	path = external/LibZipSharp
 	url = https://github.com/grendello/LibZipSharp.git
