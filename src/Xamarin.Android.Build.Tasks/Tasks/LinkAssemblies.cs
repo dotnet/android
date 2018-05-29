@@ -167,14 +167,24 @@ namespace Xamarin.Android.Tasks
 					else if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
 						continue;
 
-					MonoAndroidHelper.CopyIfChanged (copysrc, Path.Combine (copydst, filename));
+					var assemblyDestination = Path.Combine (copydst, filename);
+					if (MonoAndroidHelper.CopyIfChanged (copysrc, assemblyDestination)) {
+						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (assemblyDestination, DateTime.UtcNow, Log);
+					}
 					try {
-						MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", Path.Combine (copydst, filename + ".mdb"));
+						var mdbDestination = assemblyDestination + ".mdb";
+						if (MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", mdbDestination)) {
+							MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (mdbDestination, DateTime.UtcNow, Log);
+						}
 					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
 					}
 					var pdb = Path.ChangeExtension (copysrc, "pdb");
-					if (File.Exists (pdb) && Files.IsPortablePdb (pdb))
-						MonoAndroidHelper.CopyIfChanged (pdb, Path.ChangeExtension (Path.Combine (copydst, filename), "pdb"));
+					if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
+						var pdbDestination = Path.ChangeExtension (Path.Combine (copydst, filename), "pdb");
+						if (MonoAndroidHelper.CopyIfChanged (pdb, pdbDestination)) {
+							MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (pdbDestination, DateTime.UtcNow, Log);
+						}
+					}
 				}
 			} catch (ResolutionException ex) {
 				Diagnostic.Error (2006, ex, "Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.", ex.Member, ex.Member.Module.Assembly, ex.Scope);

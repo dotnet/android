@@ -34,6 +34,17 @@ namespace Xamarin.Android.Tasks
 			Completed,
 		}
 
+		protected struct OutputLine {
+			public string Line;
+			public bool StdError;
+
+			public OutputLine (string line, bool stdError)
+			{
+				Line = line;
+				StdError = stdError;
+			}
+		}
+
 		public CancellationToken Token { get { return tcs.Token; } }
 
 		public bool YieldDuringToolExecution { get; set; }

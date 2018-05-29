@@ -751,8 +751,27 @@ resources.
     including this property and setting it to `True`. When this
     property is set, the build process pre-crunches the .png files.
 
+    Note: This option is not compatible with the `$(AndroidUseAapt2)`
+    option. If `$(AndroidUseAapt2)` is enabled, this functionality
+    will be disabled. If you wish to continue to use this feature
+    please set `$(AndroidUseAapt2)` to `False`.
+
     **Experimental**. Added in Xamarin.Android 7.0.
 
+-  **AndroidUseAapt2** &ndash; A bool property which allows the developer to
+    control the use of the `aapt2` tool for packaging.
+    By default this will be set to false and we will use `aapt`.
+    If the developer wishes too use the new `aapt2` functionality
+    they can set
+        
+        <AndroidUseAapt2>True</AndroidUseAapt2>
+        
+    in their csproj. Alternatively provide the property on the command line 
+    via
+
+        /p:AndroidUseAapt2=True
+
+    Added in Xamarin.Android 8.3.
 
 <a name="Signing_Properties" />
 
@@ -919,6 +938,13 @@ with layout files:
 ```xml
 <AndroidBoundLayout Include="Resources\layout\Main.axml" />
 ```
+
+### AndroidFragmentType
+
+Specifies the default fully qualified type to be used for all `<fragment>` layout 
+elements when generating the layout bindings code. The property defaults to the standard
+Android `Android.App.Fragment` type.
+
 
 ### AndroidNativeLibrary
 

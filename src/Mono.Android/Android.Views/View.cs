@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Android.AccessibilityServices;
 using Android.OS;
 using Android.Runtime;
-using Xamarin.Android.Design;
 
 namespace Android.Views {
 
@@ -12,9 +11,7 @@ namespace Android.Views {
 	}
 #endif
 
-	public partial class View : ILayoutBindingClient {
-
-		global::Android.Content.Context ILayoutBindingClient.Context => ((View)this).Context;
+	public partial class View {
 
 #if ANDROID_16
 		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
@@ -78,18 +75,5 @@ namespace Android.Views {
 			return InvokeFitsSystemWindows ();
 		}
 #endif
-		public virtual void OnLayoutViewNotFound <T> (int resourceId, ref T view) where T: View
-		{
-			var activity = Context as global::Android.App.Activity;
-			activity?.OnLayoutViewNotFound <T> (resourceId, ref view);
-		}
-
-#if ANDROID_11
-		public virtual void OnLayoutFragmentNotFound <T> (int resourceId, ref T fragment) where T: global::Android.App.Fragment
-		{
-			var activity = Context as global::Android.App.Activity;
-			activity?.OnLayoutFragmentNotFound <T> (resourceId, ref fragment);
-		}
-#endif  // ANDROID_11
 	}
 }

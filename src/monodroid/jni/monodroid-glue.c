@@ -53,8 +53,9 @@
 #include <dirent.h>
 #include <pthread.h>
 
+#include "java-interop-util.h"
+
 #include "monodroid.h"
-#include "logger.h"
 #include "dylib-mono.h"
 #include "util.h"
 #include "debug.h"
@@ -682,7 +683,7 @@ get_libmonosgen_path ()
 	return libmonoso;
 }
 
-typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml));
+typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
 mono_mkbundle_init_ptr mono_mkbundle_init;
 
 static void
@@ -2633,7 +2634,7 @@ mono_runtime_init (char *runtime_args)
 	register_gc_hooks ();
 
 	if (mono_mkbundle_init)
-		mono_mkbundle_init (mono.mono_register_bundled_assemblies, mono.mono_register_config_for_assembly);
+		mono_mkbundle_init (mono.mono_register_bundled_assemblies, mono.mono_register_config_for_assembly, mono.mono_jit_set_aot_mode);
 
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.

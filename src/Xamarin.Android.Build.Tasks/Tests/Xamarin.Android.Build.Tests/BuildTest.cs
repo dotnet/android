@@ -121,6 +121,31 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void CheckTimestamps ()
+		{
+			var start = DateTime.UtcNow.AddSeconds (-1);
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ("temp/CheckTimestamps")) {
+				//To be sure we are at a clean state, delete bin/obj
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				if (Directory.Exists (intermediate))
+					Directory.Delete (intermediate, true);
+				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				if (Directory.Exists (output))
+					Directory.Delete (output, true);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				//Absolutely non of these files should be *older* than the starting time of this test!
+				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
+				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
+				foreach (var file in files) {
+					var info = new FileInfo (file);
+					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+				}
+			}
+		}
+
+		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -507,13 +532,14 @@ namespace Xamarin.Android.Tests
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/classes.dex")),
+				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkMoniker,  "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
-				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep");
+				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkMoniker, "multidex.keep");
 				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
 				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
@@ -740,7 +766,7 @@ namespace App1
 						File.Exists (linkSrc),
 						"Library1.pdb must be copied to linksrc directory");
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + ".apk"))) {
+					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
 						if (data == null)
 							data = File.ReadAllBytes (assetsPdb);
@@ -1626,7 +1652,7 @@ namespace App1
 		}
 
 		[Test]
-		public void AarContentExtraction ()
+		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
@@ -1636,6 +1662,7 @@ namespace App1
 					aar,
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));

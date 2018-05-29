@@ -67,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 				extension = IsWindows ? "dll.mdb" : "pdb";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
 				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-" + abi + ".apk"))) {
+					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-" + abi + "-Signed.apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "environment");
 						var env = Encoding.ASCII.GetString (data);
 						var lines = env.Split (new char [] { '\n' });

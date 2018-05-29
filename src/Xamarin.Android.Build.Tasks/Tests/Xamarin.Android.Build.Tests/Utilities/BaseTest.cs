@@ -303,12 +303,14 @@ namespace Xamarin.Android.Build.Tests
 		public void TestSetup ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
+			TestContext.Out.Flush ();
 		}
 
 		[TearDown]
 		protected virtual void CleanupTest ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			TestContext.Out.Flush ();
 			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
 			// find the "root" directory just below "temp" and clean from there because

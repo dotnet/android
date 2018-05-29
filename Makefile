@@ -9,6 +9,10 @@ SOLUTION      = Xamarin.Android.sln
 TEST_TARGETS  = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
 
+ifeq ($(OS_NAME),Darwin)
+export MACOSX_DEPLOYMENT_TARGET := 10.11
+endif
+
 ifneq ($(V),0)
 MONO_OPTIONS += --debug
 endif
@@ -45,6 +49,7 @@ install::
 	-mkdir -p "$(prefix)/lib/xamarin.android"
 	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
+	-rm -rf "$(prefix)/lib/mono/xbuild/Novell"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"

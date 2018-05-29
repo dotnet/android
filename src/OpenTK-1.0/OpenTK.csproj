@@ -21,6 +21,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <AppendTargetFrameworkToIntermediateOutputPath>False</AppendTargetFrameworkToIntermediateOutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />

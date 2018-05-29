@@ -23,4 +23,6 @@
     android:id="@+id/secondary_log_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
+<TextView
+        android:id="@android:id/text1" />
 </LinearLayout>

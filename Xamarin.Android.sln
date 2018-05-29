@@ -5,13 +5,13 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools", "{E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "android-toolchain", "build-tools\android-toolchain\android-toolchain.csproj", "{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "android-toolchain", "build-tools\android-toolchain\android-toolchain.csproj", "{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "mono-runtimes", "src\mono-runtimes\mono-runtimes.csproj", "{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mono-runtimes", "src\mono-runtimes\mono-runtimes.csproj", "{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "libzip", "src\libzip\libzip.csproj", "{900A0F71-BAAD-417A-8D1A-8D330297CDD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libzip", "src\libzip\libzip.csproj", "{900A0F71-BAAD-417A-8D1A-8D330297CDD0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "build-tools\jnienv-gen\jnienv-gen.csproj", "{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{04E3E11E-B47D-4599-8AFC-50515A95E715}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export", "external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj", "{B501D075-6183-4E1D-92C9-F7B5002475B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator", "external\Java.Interop\tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
 EndProject
@@ -49,7 +51,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Diagnost
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Cecil", "external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "monodroid", "src\monodroid\monodroid.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "monodroid", "src\monodroid\monodroid.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.NUnitLite", "src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj", "{4D603AA3-3BFD-43C8-8050-0CD6C2601126}"
 EndProject
@@ -61,7 +63,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.EnterpriseServices", "src\System.EnterpriseServices\System.EnterpriseServices.csproj", "{2868FC32-A4E7-4008-87C8-2C7879CACB58}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "unix-distribution-setup", "build-tools\unix-distribution-setup\unix-distribution-setup.csproj", "{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unix-distribution-setup", "build-tools\unix-distribution-setup\unix-distribution-setup.csproj", "{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Posix", "src\Mono.Posix\Mono.Posix.csproj", "{1A4B041A-842F-40B3-A50D-49E01D30BD18}"
 EndProject
@@ -71,7 +73,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logcat-parse", "external\Ja
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Data.Sqlite", "src\Mono.Data.Sqlite\Mono.Data.Sqlite.csproj", "{26781D3A-FF20-4F55-9824-C8A06AA9E484}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "sqlite-xamarin", "src\sqlite-xamarin\sqlite-xamarin.csproj", "{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sqlite-xamarin", "src\sqlite-xamarin\sqlite-xamarin.csproj", "{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "src\OpenTK-1.0\OpenTK.csproj", "{5EB9E888-E357-417E-9F39-DDEC195CE47F}"
 EndProject
@@ -79,9 +81,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libZipSharp", "external\Lib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Primitives", "src\System.Drawing.Primitives\System.Drawing.Primitives.csproj", "{C9FF2E4D-D927-479E-838B-647C16763F64}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "libzip-windows", "src\libzip-windows\libzip-windows.csproj", "{0DE278D6-000F-4001-BB98-187C0AF58A61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libzip-windows", "src\libzip-windows\libzip-windows.csproj", "{0DE278D6-000F-4001-BB98-187C0AF58A61}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "bundle", "build-tools\bundle\bundle.csproj", "{1640725C-4DB8-4D8D-BC96-74E688A06EEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "linux-mingw-dependencies", "build-tools\linux-mingw-dependencies\linux-mingw-dependencies.csproj", "{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bundle", "build-tools\bundle\bundle.csproj", "{1640725C-4DB8-4D8D-BC96-74E688A06EEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xa-prep-tasks", "build-tools\xa-prep-tasks\xa-prep-tasks.csproj", "{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}"
 EndProject
@@ -89,9 +93,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "ex
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj", "{C0487169-8F81-497F-919E-EB42B1D0243F}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "dependencies", "build-tools\dependencies\dependencies.csproj", "{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dependencies", "build-tools\dependencies\dependencies.csproj", "{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "proguard", "src\proguard\proguard.csproj", "{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proguard", "src\proguard\proguard.csproj", "{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-xml-adjuster", "build-tools\api-xml-adjuster\api-xml-adjuster.csproj", "{8A6CB07C-E493-4A4F-AB94-038645A27118}"
 EndProject
@@ -103,7 +107,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "create-vsix", "build-tools\create-vsix\create-vsix.csproj", "{94756FEB-1F64-411D-A18E-81B5158F776A}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "netstandard", "src\netstandard\netstandard.csproj", "{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netstandard", "src\netstandard\netstandard.csproj", "{93614CB8-4564-43B9-93B0-4AF4B3B16AAE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "setup-windows", "tools\setup-windows\setup-windows.csproj", "{73DF9E10-E933-4222-B8E1-F4536FFF9FAD}"
 EndProject
@@ -262,6 +266,10 @@ Global
 		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{0DE278D6-000F-4001-BB98-187C0AF58A61}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{1640725C-4DB8-4D8D-BC96-74E688A06EEF}.Release|AnyCPU.ActiveCfg = Release|Any CPU
@@ -334,6 +342,10 @@ Global
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -346,6 +358,7 @@ Global
 		{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{C876DA71-8573-4CEF-9149-716D72455ED4} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{D14A1B5C-2060-4930-92BE-F7190256C735} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F} = {04E3E11E-B47D-4599-8AFC-50515A95E715}

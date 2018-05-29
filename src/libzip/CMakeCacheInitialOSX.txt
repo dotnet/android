@@ -1,0 +1,13 @@
+# Force minimum macOS version to be 10.11 as this is the oldest version of the OS we support.
+# Setting this on command line won't work, for some reason, so we override the value her
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version" FORCE)
+
+# This is necessary when cmake runs on a 10.11 system with Xcode 8.x installed in which case
+# the headers (and SDK libraries) target a later version of macOS but the host OS might not
+# have some functions found. `clonefile` is one of them - it was added in 10.12. Cmake will
+# happily "detect" clonefile even though the *host* OS doesn't have it which results in the
+# library being build but failing to load.
+#
+# Forcing a cache entry here will override the detection result, even though cmake will *still*
+# show clonefile as found in the detection output.
+set(HAVE_CLONEFILE "" CACHE INTERNAL "Force 10.11 compatibility on XA build bots" FORCE)

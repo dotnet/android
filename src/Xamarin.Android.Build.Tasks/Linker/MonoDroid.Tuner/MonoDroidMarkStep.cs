@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 using Java.Interop.Tools.Cecil;
 
+using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
 
@@ -12,16 +15,202 @@ namespace MonoDroid.Tuner
 	class MonoDroidMarkStep : MarkStep
 	{
 		const string ICustomMarshalerName = "System.Runtime.InteropServices.ICustomMarshaler";
+		HashSet<TypeDefinition> marshalTypes = new HashSet<TypeDefinition> ();
+
+		public override void Process (LinkContext context)
+		{
+			marshalTypes.Clear ();
+			base.Process (context);
+
+			if (UpdateMarshalTypes ())
+				base.Process (context);
+		}
+
+		bool UpdateMarshalTypes ()
+		{
+			MethodDefinition registerMethod;
+			HashSet<string> markedMethods = new HashSet<string> ();
+			var updated = false;
+
+			foreach (var type in marshalTypes) {
+				registerMethod = null;
+				markedMethods.Clear ();
+
+				foreach (var method in type.Methods) {
+					if (method.Name == "__RegisterNativeMembers") {
+						registerMethod = method;
+
+						continue;
+					}
+
+					if (_context.Annotations.IsMarked (method))
+						markedMethods.Add (method.Name);
+				}
+
+				if (registerMethod == null || markedMethods.Count <= 0)
+					continue;
+
+				updated |= UpdateMarshalRegisterMethod (registerMethod, markedMethods);
+			}
+
+			return updated;
+		}
+
+		static bool IsLdcI4 (Instruction instruction, out int intValue)
+		{
+			intValue = 0;
+
+			if (instruction.OpCode == OpCodes.Ldc_I4_0)
+				intValue = 0;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_1)
+				intValue = 1;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_2)
+				intValue = 2;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_3)
+				intValue = 3;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_4)
+				intValue = 4;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_5)
+				intValue = 5;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_6)
+				intValue = 6;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_7)
+				intValue = 7;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_8)
+				intValue = 8;
+			else if (instruction.OpCode == OpCodes.Ldc_I4)
+				intValue = (int) instruction.Operand;
+			else if (instruction.OpCode == OpCodes.Ldc_I4_S)
+				intValue = (sbyte) instruction.Operand;
+			else
+				return false;
+
+			return true;
+		}
+
+		static Instruction CreateLoadArraySizeOrOffsetInstruction (int intValue)
+		{
+			if (intValue < 0)
+				throw new ArgumentException ($"{nameof (intValue)} cannot be negative");
+
+			if (intValue < 9) {
+				switch (intValue) {
+				case 0:
+					return Instruction.Create (OpCodes.Ldc_I4_0);
+				case 1:
+					return Instruction.Create (OpCodes.Ldc_I4_1);
+				case 2:
+					return Instruction.Create (OpCodes.Ldc_I4_2);
+				case 3:
+					return Instruction.Create (OpCodes.Ldc_I4_3);
+				case 4:
+					return Instruction.Create (OpCodes.Ldc_I4_4);
+				case 5:
+					return Instruction.Create (OpCodes.Ldc_I4_5);
+				case 6:
+					return Instruction.Create (OpCodes.Ldc_I4_6);
+				case 7:
+					return Instruction.Create (OpCodes.Ldc_I4_7);
+				case 8:
+					return Instruction.Create (OpCodes.Ldc_I4_8);
+				}
+			}
+
+			if (intValue < 128)
+				return Instruction.Create (OpCodes.Ldc_I4_S, (sbyte)intValue);
+
+			return Instruction.Create (OpCodes.Ldc_I4, intValue);
+		}
+
+		bool UpdateMarshalRegisterMethod (MethodDefinition method, HashSet<string> markedMethods)
+		{
+			var instructions = method.Body.Instructions;
+			var arraySizeUpdated = false;
+			var idx = 0;
+			var arrayOffset = 0;
+
+			while (idx < instructions.Count) {
+				if (!arraySizeUpdated && idx + 1 < instructions.Count) {
+					int length;
+					if (IsLdcI4 (instructions [idx++], out length) && instructions [idx].OpCode == OpCodes.Newarr) {
+						instructions [idx - 1] = CreateLoadArraySizeOrOffsetInstruction (markedMethods.Count);
+						idx++;
+						arraySizeUpdated = true;
+						continue;
+					}
+				} else if (idx + 9 < instructions.Count) {
+					var chunkStart = idx;
+					if (instructions [idx++].OpCode != OpCodes.Dup)
+						continue;
+
+					int offset;
+					var offsetIdx = idx;
+					if (!IsLdcI4 (instructions [idx++], out offset))
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Ldstr)
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Ldstr)
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Ldnull)
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Ldftn)
+						continue;
+
+					if (!(instructions [idx - 1].Operand is MethodReference mr))
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Newobj)
+						continue;
+
+					if (instructions [idx++].OpCode != OpCodes.Newobj)
+						continue;
+
+					var chunkEnd = idx;
+					if (instructions [idx++].OpCode != OpCodes.Stelem_Any)
+						continue;
+
+					if (markedMethods.Contains (mr.Name)) {
+						instructions [offsetIdx] = CreateLoadArraySizeOrOffsetInstruction (arrayOffset++);
+						continue;
+					}
+
+					for (int i = 0; i <= chunkEnd - chunkStart; i++)
+						instructions.RemoveAt (chunkStart);
+
+					idx = chunkStart;
+				} else
+					break;
+			}
+
+			if (!arraySizeUpdated || arrayOffset != markedMethods.Count) {
+				_context.LogMessage ($"Unable to update {method} size updated {arraySizeUpdated} counts {arrayOffset} {markedMethods.Count}");
+				return false;
+			}
+
+			MarkMethod (method);
+
+			return true;
+		}
 
 		// If this is one of our infrastructure methods that has [Register], like:
 		// [Register ("hasWindowFocus", "()Z", "GetHasWindowFocusHandler")],
 		// we need to preserve the "GetHasWindowFocusHandler" method as well.
 		protected override void DoAdditionalMethodProcessing (MethodDefinition method)
 		{
-			string member;
+			string member, nativeMethod, signature;
 
-			if (!method.TryGetRegisterMember (out member))
+			if (!method.TryGetRegisterMember (out member, out nativeMethod, out signature))
 				return;
+
+			MethodDefinition marshalMethod;
+			if (method.TryGetMarshalMethod (nativeMethod, signature, out marshalMethod)) {
+				MarkMethod (marshalMethod);
+				marshalTypes.Add (marshalMethod.DeclaringType);
+			}
 
 			PreserveRegisteredMethod (method.DeclaringType, member);
 		}

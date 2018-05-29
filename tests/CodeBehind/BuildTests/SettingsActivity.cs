@@ -12,7 +12,8 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 			base.OnCreate (savedInstanceState);
 
 			// Set our view from the "main" layout resource
-			Binding.settings items = SetContentView <Binding.settings> ();
+			SetContentView (Resource.Layout.settings);
+			var items = new Binding.settings (this);
 
 			// Compile time: check by assignment if properties have correct types
 			ScrollView scroll = items.settings_container;

@@ -63,6 +63,10 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string MonoAndroidCodeBehindDir { get; set; }
+
+		[Required]
+		public string AndroidFragmentType { get; set; }
+
 		public string AppNamespace { get; set; }
 
 		[Required]
@@ -331,10 +335,10 @@ namespace Xamarin.Android.Tasks
 
 			if (havePartialClasses) {
 				string fullBindingClassName = $"{classNamespace}.{className}";
-				WriteToPartialClasses (pc => pc.State = generator.BeginPartialClassFile (pc.Writer, fullBindingClassName, pc.Namespace, pc.Name));
+				WriteToPartialClasses (pc => pc.State = generator.BeginPartialClassFile (pc.Writer, fullBindingClassName, pc.Namespace, pc.Name, AndroidFragmentType));
 			}
 
-			var state = generator.BeginBindingFile (writer, $"global::{ns}Resource.Layout.{className}", classNamespace, className);
+			var state = generator.BeginBindingFile (writer, $"global::{ns}Resource.Layout.{className}", classNamespace, className, AndroidFragmentType);
 			foreach (LayoutWidget widget in widgets) {
 				DetermineWidgetType (widget, widget.Type == null);
 				if (widget.Type == null) {
@@ -346,7 +350,7 @@ namespace Xamarin.Android.Tasks
 							break;
 
 						case LayoutWidgetType.Fragment:
-							decayedType = "global::Android.App.Fragment";
+							decayedType = $"global::{AndroidFragmentType}";
 							break;
 
 						case LayoutWidgetType.Mixed:

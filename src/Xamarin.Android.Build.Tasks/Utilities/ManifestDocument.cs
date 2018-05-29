@@ -170,6 +170,16 @@ namespace Xamarin.Android.Tasks {
 				e.Remove ();
 				app.AddBeforeSelf (e);
 			}
+			elements = app.ElementsAfterSelf ("permission-group");
+			foreach (var e in elements) {
+				e.Remove ();
+				app.AddBeforeSelf (e);
+			}
+			elements = app.ElementsAfterSelf ("permission-tree");
+			foreach (var e in elements) {
+				e.Remove ();
+				app.AddBeforeSelf (e);
+			}
 			elements = app.ElementsAfterSelf ("uses-feature");
 			foreach (var e in elements) {
 				e.Remove ();

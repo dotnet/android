@@ -36,11 +36,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
+		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
 
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}");
+			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
 			var cachePath = Path.Combine (path, "Cache");
 			var envVar = new Dictionary<string, string> () {
 				{ "XAMARIN_CACHEPATH", cachePath },
@@ -67,6 +67,8 @@ using System.Runtime.CompilerServices;
 	Version=""1"", PackageName=""Lib1"")]
 ",
 			};
+			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {
@@ -75,6 +77,7 @@ using System.Runtime.CompilerServices;
 			};
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			if (useManagedParser)
 				proj.SetProperty ("BuildingInsideVisualStudio", "True");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
@@ -189,15 +192,16 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
-		public void ReportAaptWarningsForBlankLevel ()
+		public void ReportAaptWarningsForBlankLevel ([Values (false, true)] bool useAapt2)
 		{
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
 			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
-			using (var b = CreateApkBuilder ("temp/ReportAaptWarningsForBlankLevel")) {
+			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
@@ -206,10 +210,11 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
-		public void RepetiviteBuildUpdateSingleResource ()
+		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetiviteBuildUpdateSingleResource", cleanupAfterSuccessfulBuild:false)) {
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder ($"temp/{TestName}", false, false)) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				BuildItem image1, image2;
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
@@ -317,7 +322,51 @@ using System.Runtime.CompilerServices;
 		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool isRelease)
 		{
 			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", isRelease);
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
+
+			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Classlibrary1",
+			};
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	android:orientation = ""vertical""
+	android:layout_width = ""fill_parent""
+	android:layout_height = ""fill_parent"">
+	<classlibrary1.CustomTextView
+		android:id = ""@+id/myText1""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_lower"" />
+	<ClassLibrary1.CustomTextView
+		android:id = ""@+id/myText2""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_proper"" />
+</LinearLayout>"
+			});
+			lib.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
+				TextContent = () => @"using Android.Widget;
+using Android.Content;
+using Android.Util;
+namespace ClassLibrary1
+{
+	public class CustomTextView : TextView
+	{
+		public CustomTextView(Context context, IAttributeSet attributes) : base(context, attributes)
+		{
+		}
+	}
+}"
+			});
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
+					},
+				}
+			};
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\UPPER_image.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
@@ -383,12 +432,23 @@ namespace UnnamedProject
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
 			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath))) {
+			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName)))
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var preferencesPath = Path.Combine (Root, projectPath, proj.IntermediateOutputPath, "res","xml","preferences.xml");
+				var customViewPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", "0", "jl", "res", "layout", "custom_text.xml");
+				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
+				var doc = XDocument.Load (customViewPath);
+				Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
+				Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
+					"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
+					"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				
+				var preferencesPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
-				var doc = XDocument.Load (preferencesPath);
+				doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
 					"UnamedProject.CustomPreference should have been replaced with an $(MD5Hash).CustomPreference");
@@ -629,13 +689,14 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ()
+		public void CheckAaptErrorRaisedForInvalidFileName ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidFileName");
+			var projectPath = string.Format ($"temp/{TestName}");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
@@ -1190,6 +1251,7 @@ namespace Lib1 {
 			};
 
 			string name = "test";
+			proj.SetProperty ("AndroidUseAapt2", "False");
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-fr\\Strings.xml") {
 				TextContent = () => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1240,7 +1302,8 @@ namespace UnnamedProject
 			protected override void OnCreate (Bundle bundle)
 			{
 				base.OnCreate (bundle);
-				var widgets = SetContentView <Binding.Main> ();
+				SetContentView (Resource.Layout.Main);
+				var widgets = new Binding.Main (this);
 				widgets.myButton.Click += delegate {
 					widgets.myButton.Text = string.Format (""{0} clicks!"", count++);
 				};
@@ -1249,6 +1312,7 @@ namespace UnnamedProject
 	}
 ",
 			};
+			proj.SetProperty ("AndroidGenerateLayoutBindings", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));

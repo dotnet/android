@@ -108,10 +108,15 @@
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
     <Compile Include="Tasks\Aapt.cs" />
+    <Compile Include="Tasks\Aapt2.cs" />
+    <Compile Include="Tasks\Aapt2Compile.cs" />
+    <Compile Include="Tasks\Aapt2Link.cs" />
     <Compile Include="Tasks\AndroidZipAlign.cs" />
     <Compile Include="Tasks\BuildApk.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
+    <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
+    <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
     <Compile Include="Tasks\CopyMdbFiles.cs" />
     <Compile Include="Tasks\Generator.cs" />
@@ -571,6 +576,10 @@
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\LayoutBinding.cs">
+      <Link>LayoutBinding.cs</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Tasks\JavaDoc.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -587,6 +596,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Xamarin.Android.Build.Tasks.targets" />
+    <None Include="ILRepack.targets" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -721,10 +731,19 @@
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj">
+      <Project>{B501D075-6183-4E1D-92C9-F7B5002475B1}</Project>
+      <Name>Java.Interop.Export</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj">
+      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
+      <Name>Java.Interop</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="pdb2mdb\" />
     <Folder Include="Linker\Linker\" />
     <Folder Include="utils\" />
   </ItemGroup>
+  <Import Project="ILRepack.targets" />
 </Project>

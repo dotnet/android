@@ -16,7 +16,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
-    <BuildDependsOnLocal Condition=" '$(HostOS)' == 'Darwin' ">
+    <BuildDependsOnLocal Condition=" '$(HostOS)' == 'Darwin' Or '$(HostOS)' == 'Linux' ">
       ResolveReferences;
       _BuildUnlessCached
     </BuildDependsOnLocal>

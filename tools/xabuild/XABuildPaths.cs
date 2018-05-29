@@ -143,18 +143,19 @@ namespace Xamarin.Android.Build
 				MSBuildPath              = Path.Combine (mono, "msbuild");
 				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "bin");
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
-				DotNetSdkPath            =
-					MSBuildSdksPath      = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
+				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
+				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
 				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
 				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
 
-				string nuget = Path.Combine(mono, "xbuild", "Microsoft", "NuGet");
-				if (Directory.Exists(nuget)) {
+				string nuget = Path.Combine (mono, "xbuild", "Microsoft", "NuGet");
+				if (Directory.Exists (nuget)) {
 					NuGetTargets = Path.Combine (nuget, "Microsoft.NuGet.targets");
 					NuGetProps   = Path.Combine (nuget, "Microsoft.NuGet.props");
 				}
-				if (!string.IsNullOrEmpty (DotNetSdkPath)) {
+				NuGetRestoreTargets = Path.Combine (MSBuildBin, "NuGet.targets");
+				if (!File.Exists (NuGetRestoreTargets) && !string.IsNullOrEmpty (DotNetSdkPath)) {
 					NuGetRestoreTargets  = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
 				}
 			}

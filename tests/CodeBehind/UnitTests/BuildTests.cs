@@ -314,8 +314,8 @@ namespace CodeBehindUnitTests
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 32, "Android.Views.View", "Android.Widget.TextView");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 32);
 
-			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 26, "Android.Views.View", "Android.Widget.TextView");
-			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 26);
+			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 27, "Android.Views.View", "Android.Widget.TextView");
+			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 27);
 		}
 
 		[Test]
@@ -342,8 +342,8 @@ namespace CodeBehindUnitTests
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 34, "Android.Views.View", "Android.Widget.Button");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 34);
 
-			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 28, "Android.Views.View", "Android.Widget.Button");
-			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 28);
+			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 29, "Android.Views.View", "Android.Widget.Button");
+			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 29);
 		}
 
 		[Test]
@@ -370,8 +370,8 @@ namespace CodeBehindUnitTests
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 41, "Android.Views.View", "Android.Widget.LinearLayout");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 41);
 
-			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 35, "Android.Views.View", "Android.Widget.LinearLayout");
-			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 35);
+			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 36, "Android.Views.View", "Android.Widget.LinearLayout");
+			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 36);
 		}
 
 		[Test]
@@ -398,13 +398,15 @@ namespace CodeBehindUnitTests
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 43, "Android.Views.View", "Android.Widget.RelativeLayout");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 43);
 
-			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 37, "Android.Views.View", "Android.Widget.RelativeLayout");
-			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 37);
+			haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivity.cs", 38, "Android.Views.View", "Android.Widget.RelativeLayout");
+			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 38);
 		}
 
 		string[] GetBuildProperties (bool manyBuild, params string[] extraConstants)
 		{
-			var ret = new List <string> ();
+			var ret = new List <string> {
+				"AndroidGenerateLayoutBindings=true"
+			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
 

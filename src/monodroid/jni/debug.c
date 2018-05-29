@@ -27,9 +27,10 @@
 #include <android/log.h>
 #endif
 
+#include "java-interop-util.h"
+
 #include "monodroid.h"
 #include "debug.h"
-#include "logger.h"
 #include "util.h"
 
 //

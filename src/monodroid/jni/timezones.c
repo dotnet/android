@@ -2,9 +2,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "java-interop-util.h"
+
 #include "mono_android_Runtime.h"
 #include "monodroid.h"
-#include "logger.h"
 #include "dylib-mono.h"
 #include "debug.h"
 #include "embedded-assemblies.h"
