@@ -51,6 +51,8 @@ namespace Xamarin.Android.Tasks
 
 		public string TlsProvider { get; set; }
 
+		public bool PreserveJniMarshalMethods { get; set; }
+
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
@@ -83,6 +85,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LinkOnlyNewerThan: {0}", LinkOnlyNewerThan);
 			Log.LogDebugMessage ("  HttpClientHandlerType: {0}", HttpClientHandlerType);
 			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
+			Log.LogDebugMessage ("  PreserveJniMarshalMethods: {0}", PreserveJniMarshalMethods);
 
 			var rp = new ReaderParameters {
 				InMemory    = true,
@@ -115,6 +118,7 @@ namespace Xamarin.Android.Tasks
 			options.DumpDependencies = DumpDependencies;
 			options.HttpClientHandlerType = HttpClientHandlerType;
 			options.TlsProvider = TlsProvider;
+			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
 			
 			var skiplist = new List<string> ();
 

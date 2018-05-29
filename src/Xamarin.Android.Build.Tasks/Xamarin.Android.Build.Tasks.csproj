@@ -575,6 +575,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Tasks\JavaDoc.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />

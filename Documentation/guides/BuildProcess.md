@@ -663,6 +663,23 @@ when packaing Release applications.
     See [Lint Help](http://www.androiddocs.com/tools/help/lint.html) for more details on
     the android `lint` tooling.
 
+-  **AndroidGenerateJniMarshalMethods** &ndash; A bool property which
+   enables generating of JNI marshal methods as part of the build
+   process. This greatly reduces the System.Reflection usage in the
+   binding helper code.
+
+   By default this will be set to False. If the developers wish to use
+   the new JNI marshal methods feature, they can set
+
+        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
+
+    in their csproj. Alternatively provide the property on the command
+    line via
+
+        /p:AndroidGenerateJniMarshalMethods=True
+
+    **Experimental**. Added in Xamarin.Android 8.3.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with
@@ -761,7 +778,7 @@ resources.
 -  **AndroidUseAapt2** &ndash; A bool property which allows the developer to
     control the use of the `aapt2` tool for packaging.
     By default this will be set to false and we will use `aapt`.
-    If the developer wishes too use the new `aapt2` functionality
+    If the developer wishes to use the new `aapt2` functionality
     they can set
         
         <AndroidUseAapt2>True</AndroidUseAapt2>
