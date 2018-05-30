@@ -37,7 +37,7 @@ namespace MonoDroid.Tuner
 
 		static LinkContext CreateLinkContext (LinkerOptions options, Pipeline pipeline, ILogger logger)
 		{
-			var context = new LinkContext (pipeline, options.Resolver);
+			var context = new AndroidLinkContext (pipeline, options.Resolver);
 			if (options.DumpDependencies) {
 				var prepareDependenciesDump = context.Annotations.GetType ().GetMethod ("PrepareDependenciesDump", new Type[] {});
 				if (prepareDependenciesDump != null)
@@ -51,6 +51,7 @@ namespace MonoDroid.Tuner
 			context.SymbolReaderProvider = new DefaultSymbolReaderProvider (true);
 			context.SymbolWriterProvider = new DefaultSymbolWriterProvider ();
 			context.OutputDirectory = options.OutputDirectory;
+			context.PreserveJniMarshalMethods = options.PreserveJniMarshalMethods;
 			return context;
 		}
 

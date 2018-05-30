@@ -303,6 +303,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 
+	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
+
 </PropertyGroup>
 
 <Choose>
@@ -2057,6 +2059,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkSkip="$(AndroidLinkSkip)"
       LinkDescriptions="@(LinkDescription)"
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
+      PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
