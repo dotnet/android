@@ -741,6 +741,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CreateAapt2VersionCache"
 		DependsOnTargets="_ReadAapt2VersionCache"
 		AfterTargets="_SetLatestTargetFrameworkVersion"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
 	>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
