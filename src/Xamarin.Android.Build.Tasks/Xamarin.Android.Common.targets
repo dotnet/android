@@ -665,7 +665,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
-			AndroidUseAapt2="$(Aapt2Version)"
+			AndroidUseAapt2="$(AndroidUseAapt2)"
 			AotAssemblies="$(AotAssemblies)"
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"

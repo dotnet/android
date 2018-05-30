@@ -111,6 +111,8 @@ prepare-deps: prepare-external
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.csproj
 
 prepare-props: prepare-deps
+	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
+	cp "$(call GetPath,JavaInterop)/product.snk" "$(call GetPath,MonoSource)"
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	cp $(call GetPath,MonoSource)/mcs/class/msfinal.pub .
 
