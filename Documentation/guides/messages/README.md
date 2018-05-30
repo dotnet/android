@@ -1,4 +1,8 @@
 
+### adbxxxx Adb Tooling
+
++ [adb0000](adb0000.md): Generic `adb` Error/Warning.
+
 ### andXXxxxx Generic Android Tooling
 
 + [andas0000](andas0000.md): Generic `apksigner` Error/Warning.
