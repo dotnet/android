@@ -14,6 +14,10 @@
       Condition="Exists('$(MSBuildThisFileDirectory)bin\Build$(Configuration)\MonoInfo.props')"
   />
   <PropertyGroup>
+    <CecilSourceDirectory   Condition=" '$(CecilSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\cecil</CecilSourceDirectory>
     <UtilityOutputFullPath  Condition=" '$(UtilityOutputFullPath)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\</UtilityOutputFullPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CecilFullPath>$([System.IO.Path]::GetFullPath ('$(CecilSourceDirectory)'))</CecilFullPath>
   </PropertyGroup>
 </Project>

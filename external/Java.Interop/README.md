@@ -70,6 +70,8 @@ it within other project files.
 
 Overridable MSBuild properties include:
 
+* `$(CecilSourceDirectory)`: Directory for the `cecil` sources.
+    Defaults to `external/cecil`.
 * `$(JdkJvmPath)`: Full path name to the JVM native library to link
     [`java-interop`](src/java-interop) against. By default this is
     probed for from numerious locations within

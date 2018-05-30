@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <CecilDirectory>$(MSBuildThisFileDirectory)\..\..\external\cecil</CecilDirectory>
     <CecilPreparedFlag>prepared.flag</CecilPreparedFlag>
     <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\bin\$(Configuration)</OutputPath>
     <CecilOutputPath>$([System.IO.Path]::Combine ($(MSBuildThisFileDirectory), $(OutputPath)))</CecilOutputPath>
@@ -9,9 +8,9 @@
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <_CecilProject  Include="$(CecilDirectory)\Mono.Cecil.csproj" />
-    <_CecilProject  Include="$(CecilDirectory)\symbols\mdb\Mono.Cecil.Mdb.csproj" />
-    <_CecilSource   Include="$(CecilDirectory)\**\*.cs" />
+    <_CecilProject  Include="$(CecilFullPath)\Mono.Cecil.csproj" />
+    <_CecilProject  Include="$(CecilFullPath)\symbols\mdb\Mono.Cecil.Mdb.csproj" />
+    <_CecilSource   Include="$(CecilFullPath)\**\*.cs" />
   </ItemGroup>
   <Target Name="BuildCecil"
       Inputs="@(_CecilSource)"
