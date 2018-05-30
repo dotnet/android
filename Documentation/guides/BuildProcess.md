@@ -678,7 +678,8 @@ when packaing Release applications.
 
         /p:AndroidGenerateJniMarshalMethods=True
 
-    **Experimental**. Added in Xamarin.Android 8.3.
+    **Experimental**. Added in Xamarin.Android 8.4.  
+    The default value is False.
 
 ### Binding Project Build Properties
 
