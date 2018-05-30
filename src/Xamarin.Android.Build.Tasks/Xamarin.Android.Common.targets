@@ -1102,6 +1102,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidComponentResgenFlagFile>$(IntermediateOutputPath)Component.R.cs.flag</_AndroidComponentResgenFlagFile>
 	<_AndroidStripFlag>$(IntermediateOutputPath)strip.flag</_AndroidStripFlag>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
+	<_AndroidJniMarshalMethodsFlag>$(IntermediateOutputPath)jnimarshalmethods.flag</_AndroidJniMarshalMethodsFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssetsDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -2012,7 +2013,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_LinkAssemblies"
-  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
+  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
 
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
@@ -2035,6 +2036,19 @@ because xbuild doesn't support framework reference assemblies.
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
 </Target>
 	
+<Target Name="_GenerateJniMarshalMethods"
+  Condition="'$(JniMarshalMethods)' == 'True' And '$(Configuration)' == 'Release' And '$(AndroidLinkMode)' != 'None'"
+  DependsOnTargets="_GetReferenceAssemblyPaths"
+  Inputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+  Outputs="$(_AndroidJniMarshalMethodsFlag)">
+
+    <Exec
+       Command="MONO_PATH=$(_XATargetFrameworkDirectories) $(MonoAndroidBinDirectory)\mono $(MonoAndroidBinDirectory)\..\jnimarshalmethod-gen.exe @(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+    />
+    <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
+
+</Target>
+
 <Target Name="_LinkAssembliesShrink"
   Condition="'$(AndroidLinkMode)' != 'None'"
   Inputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)');$(_AndroidBuildPropertiesCache)"
