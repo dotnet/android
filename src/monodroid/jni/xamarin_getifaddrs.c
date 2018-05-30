@@ -994,8 +994,10 @@ get_link_info (const struct nlmsghdr *message)
 				break;
 
 			default:
+#if DEBUG
 				log_debug (LOG_NETLINK, "     rta_type: ");
 				print_ifla_name (attribute->rta_type);
+#endif // DEBUG
 				break;
 		}
 
