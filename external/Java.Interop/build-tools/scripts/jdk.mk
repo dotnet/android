@@ -27,7 +27,8 @@
 
 OS           ?= $(shell uname)
 
-_INCLUDE_MK = bin/Build$(CONFIGURATION)/JdkInfo.mk
+_INCLUDE_MK     = bin/Build$(CONFIGURATION)/JdkInfo.mk
+_INCLUDE_PROPS  = bin/Build$(CONFIGURATION)/JdkInfo.props
 
 prepare:: $(_INCLUDE_MK)
 
@@ -41,7 +42,7 @@ ifeq ($(OS),Linux)
 _JDKS_ROOT  := /usr/lib/jvm
 endif # $(OS)=Linux
 
-$(_INCLUDE_MK): bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
+$(_INCLUDE_MK) $(_INCLUDE_PROPS): bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/jdk.targets /t:GetPreferredJdkRoot \
 		/p:JdksRoot="$(_JDKS_ROOT)" \
 		$(if $(JI_MAX_JDK),"/p:MaximumJdkVersion=$(JI_MAX_JDK)")

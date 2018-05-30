@@ -40,41 +40,46 @@ namespace Java.Interop.BootstrapTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (MaximumJdkVersion)}: {MaximumJdkVersion}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (PropertyFile)}: {PropertyFile}");
 
-			var maxVersion  = GetMaxJdkVersion ();
-			var java_home   = GetJavaHomePathFromEnvironment ();
-			if (java_home != null) {
-				var java_home_v = GetVersionFromPath (java_home);
-				if (maxVersion != null && java_home_v != null && java_home_v > maxVersion) {
-					Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME default value of `{java_home}` as it exceeds MaximumJdkVersion={MaximumJdkVersion}.");
-					java_home = null;
-				}
-				if (java_home != null && !Directory.Exists (Path.Combine (java_home, "include"))) {
-					Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME default value of `{java_home}` as it does not contain an `include` subdirectory.");
-					java_home = null;
-				}
-			}
-			java_home = java_home ?? GetJavaHomePathFromMachine (maxVersion);
+			var maxVersion      = GetVersion (MaximumJdkVersion);
 
-			if (string.IsNullOrEmpty (java_home)) {
+			string jarPath      = null;
+			string javacPath    = null;
+			string jdkJvmPath   = null;
+			string includePath  = null;
+
+			var java_home   = GetJavaHomePathFromEnvironment ();
+			if (!ValidateJdkPath (maxVersion, java_home, out jarPath, out javacPath, out jdkJvmPath, out includePath)) {
+				java_home = null;
+			}
+
+			if (java_home == null &&
+					(java_home = GetJavaHomePathFromLibexec ()) != null &&
+					!ValidateJdkPath (maxVersion, java_home, out jarPath, out javacPath, out jdkJvmPath, out includePath)) {
+				java_home = null;
+			}
+
+			if (java_home == null &&
+					(java_home = GetJavaHomePathFromAlternatives ()) != null &&
+					!ValidateJdkPath (maxVersion, java_home, out jarPath, out javacPath, out jdkJvmPath, out includePath)) {
+				java_home = null;
+			}
+
+			if (java_home == null &&
+					(java_home = GetJavaHomePathFromMachine (maxVersion)) != null &&
+					!ValidateJdkPath (maxVersion, java_home, out jarPath, out javacPath, out jdkJvmPath, out includePath)) {
+				java_home = null;
+			}
+
+			if (java_home == null) {
 				Log.LogError ("Could not determine JAVA_HOME location. Please set JdksRoot or export the JAVA_HOME environment variable.");
 				return false;
 			}
 
 			var includes    = new List<string> () {
-				Path.Combine (java_home, "include"),
+				includePath,
 			};
-			includes.AddRange (Directory.GetDirectories (includes [0]));
+			includes.AddRange (Directory.GetDirectories (includePath));
 
-			var jarPath     = FindExecutablesInDirectory (Path.Combine (java_home, "bin"), "jar").First ();
-			var javacPath   = FindExecutablesInDirectory (Path.Combine (java_home, "bin"), "javac").First ();
-			var jdkJvmPaths = OS.IsMacOS
-				? FindLibrariesInDirectory (java_home, "jli")
-				: FindLibrariesInDirectory (Path.Combine (java_home, "jre"), "jvm");
-			var jdkJvmPath  = jdkJvmPaths.First ();
-
-			FileExists (jarPath);
-			FileExists (javacPath);
-			FileExists (jdkJvmPath);
 			if (Log.HasLoggedErrors) {
 				return false;
 			}
@@ -92,14 +97,17 @@ namespace Java.Interop.BootstrapTasks
 			return !Log.HasLoggedErrors;
 		}
 
-		Version GetMaxJdkVersion ()
+		Version GetVersion (string value)
 		{
-			if (string.IsNullOrEmpty (MaximumJdkVersion))
+			if (string.IsNullOrEmpty (value))
 				return null;
-			if (!MaximumJdkVersion.Contains (".")) {
-				MaximumJdkVersion += ".0";
+			if (!value.Contains (".")) {
+				value += ".0";
 			}
-			return new Version (MaximumJdkVersion);
+			Version v;
+			if (Version.TryParse (value, out v))
+				return v;
+			return null;
 		}
 
 		Version GetVersionFromPath (string path)
@@ -107,11 +115,7 @@ namespace Java.Interop.BootstrapTasks
 			var m = VersionExtractor.Match (path);
 			if (!m.Success)
 				return null;
-			Version v;
-			if (!Version.TryParse (m.Groups ["version"].Value, out v)) {
-				return null;
-			}
-			return v;
+			return GetVersion (m.Groups ["version"].Value);
 		}
 
 		void FileExists (string path)
@@ -150,6 +154,56 @@ namespace Java.Interop.BootstrapTasks
 			}
 		}
 
+		bool ValidateJdkPath (Version maxVersion, string java_home)
+		{
+			return ValidateJdkPath (maxVersion, java_home,
+					out _, out _, out _, out _);
+		}
+
+		bool ValidateJdkPath (Version maxVersion, string java_home,
+				out string jarPath, out string javacPath, out string jdkJvmPath, out string includePath)
+		{
+			jarPath = javacPath = jdkJvmPath = includePath = null;
+
+			if (string.IsNullOrEmpty (java_home) || !Directory.Exists (java_home))
+				return false;
+
+			var pathVersion = GetVersionFromPath (java_home);
+			if (maxVersion != null && pathVersion != null && pathVersion > maxVersion) {
+				Log.LogMessage (MessageImportance.Low,
+						$"  Skipping JAVA_HOME value of `{java_home}` as it exceeds MaximumJdkVersion={MaximumJdkVersion}.");
+				return false;
+			}
+
+			jarPath         = FindExecutablesInDirectory (Path.Combine (java_home, "bin"), "jar").FirstOrDefault ();
+			javacPath       = FindExecutablesInDirectory (Path.Combine (java_home, "bin"), "javac").FirstOrDefault ();
+			var jdkJvmPaths = OS.IsMacOS
+				? FindLibrariesInDirectory (java_home, "jli")
+				: FindLibrariesInDirectory (Path.Combine (java_home, "jre"), "jvm");
+			jdkJvmPath      = jdkJvmPaths.FirstOrDefault ();
+			includePath     = Path.Combine (java_home, "include");
+
+			if (jarPath == null) {
+				Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME value of `{java_home}` as `jar` could not be found.");
+				return false;
+			}
+			if (javacPath == null) {
+				Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME value of `{java_home}` as `javac` could not be found.");
+				return false;
+			}
+			if (jdkJvmPath == null) {
+				var jvm = OS.IsMacOS ? "libjli.dylib" : string.Format (OS.NativeLibraryFormat, "jvm");
+				Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME value of `{java_home}` as `{jvm} could not be found.");
+				return false;
+			}
+			if (!Directory.Exists (includePath)) {
+				Log.LogMessage (MessageImportance.Low, $"  Skipping JAVA_HOME value of `{java_home}` as the `include` directory could not be found.");
+				return false;
+			}
+
+			return true;
+		}
+
 		string GetJavaHomePathFromEnvironment ()
 		{
 			var java_home = Environment.GetEnvironmentVariable ("JAVA_HOME");
@@ -158,24 +212,74 @@ namespace Java.Interop.BootstrapTasks
 			return null;
 		}
 
+		// macOS
+		string GetJavaHomePathFromLibexec ()
+		{
+			var java_home	= Path.GetFullPath ("/usr/libexec/java_home");
+			if (!File.Exists (java_home)) {
+				return null;
+			}
+			string path = null;
+			Exec (java_home, "", (o, e) => {
+					if (string.IsNullOrEmpty (e.Data))
+						return;
+					Log.LogMessage (MessageImportance.Low, $"    {e.Data}");
+					path = e.Data;
+			});
+			return path;
+		}
+
+		// Linux
+		string GetJavaHomePathFromAlternatives ()
+		{
+			var alternatives  = Path.GetFullPath ("/etc/alternatives/java");
+			if (!File.Exists (alternatives))
+				return null;
+			string targetJava = null;
+			Exec ("readlink", $"\"{alternatives}\"", (o, e) => {
+					if (string.IsNullOrEmpty (e.Data))
+						return;
+					Log.LogMessage (MessageImportance.Low, $"    {e.Data}");
+					targetJava = e.Data;
+			});
+			if (string.IsNullOrEmpty (targetJava))
+				return null;
+			return GetJavaHomePathFromJava (targetJava);
+		}
+
 		string GetJavaHomePathFromMachine (Version maxVersion)
 		{
 			var java_homes  = GetJavaHomePathsFromDirectory (JdksRoot)
 				.Concat (GetJavaHomePathsFromJava ())
 				.Concat (GetJavaHomePathsFromWindowsRegistry ())
-				.Distinct ()
 				.Where (d => Directory.Exists (d))
-				.Select (jh => new {
-					Path    = jh,
-					Version = GetVersionFromPath (jh),
-				})
-				.Where (v => maxVersion == null ? true : v.Version <= maxVersion)
-				.OrderByDescending (v => v.Version)
-				.Select (v => v.Path)
+				.Distinct ()
 				.ToList ();
 
 			foreach (var p in java_homes) {
 				Log.LogMessage (MessageImportance.Low, $"  Possible JAVA_HOME location: {p}");
+			}
+
+			var versionComparer = new ComparisonComparer<JdkComparisonInfo>((x, y) => {
+					int r = 0;
+					if (x.Version != null && y.Version != null)
+						r = x.Version.CompareTo (y.Version);
+					return r;
+			});
+
+			java_homes  = java_homes.Where (d => ValidateJdkPath (maxVersion, d))
+				.Select (jh => new JdkComparisonInfo {
+					Path    = jh,
+					Version = GetVersionFromPath (jh),
+				})
+				.Where (v => (maxVersion == null || v.Version == null) ? true : v.Version <= maxVersion)
+				.OrderByDescending (v => v, versionComparer)
+				.ThenByDescending (v => Directory.GetLastWriteTimeUtc (v.Path))
+				.Select (v => v.Path)
+				.ToList ();
+
+			foreach (var p in java_homes) {
+				Log.LogMessage (MessageImportance.Low, $"  Filtered JAVA_HOME location: {p}");
 			}
 
 			return java_homes.FirstOrDefault ();
@@ -201,24 +305,30 @@ namespace Java.Interop.BootstrapTasks
 				.SelectMany (p => FindExecutablesInDirectory (p, "java"));
 
 			foreach (var exe in javas) {
-				const string JavaHome = "java.home = ";
-				string java_home = null;
-				Exec (exe, "-XshowSettings:properties -version", (o, e) => {
-						int i = e.Data?.IndexOf (JavaHome) ?? -1;
-						if (i < 0)
-							return;
-						Log.LogMessage (MessageImportance.Low, $"    {e.Data}");
-						java_home = e.Data.Substring (JavaHome.Length + i);
-						// `java -XshowSettings:properties -version | grep java.home` ends with `/jre` on macOS.
-						// We need the parent dir so we can properly lookup the `include` directories
-						if (java_home.EndsWith ("jre", StringComparison.OrdinalIgnoreCase)) {
-							java_home = Path.GetDirectoryName (java_home);
-						}
-				});
+				var java_home = GetJavaHomePathFromJava (exe);
 				if (string.IsNullOrEmpty (java_home))
 					continue;
 				yield return java_home;
 			}
+		}
+
+		string GetJavaHomePathFromJava (string java)
+		{
+			const string JavaHome = "java.home = ";
+			string java_home = null;
+			Exec (java, "-XshowSettings:properties -version", (o, e) => {
+					int i = e.Data?.IndexOf (JavaHome) ?? -1;
+					if (i < 0)
+						return;
+					Log.LogMessage (MessageImportance.Low, $"    {e.Data}");
+					java_home = e.Data.Substring (JavaHome.Length + i);
+					// `java -XshowSettings:properties -version 2>&1 | grep java.home` ends with `/jre` on macOS.
+					// We need the parent dir so we can properly lookup the `include` directories
+					if (java_home.EndsWith ("jre", StringComparison.OrdinalIgnoreCase)) {
+						java_home = Path.GetDirectoryName (java_home);
+					}
+			});
+			return java_home;
 		}
 
 		void Exec (string java, string arguments, DataReceivedEventHandler output)
@@ -345,6 +455,26 @@ namespace Java.Interop.BootstrapTasks
 		{
 			var library = string.Format (OS.NativeLibraryFormat, libraryName);
 			return Directory.EnumerateFiles (dir, library, SearchOption.AllDirectories);
+		}
+
+		class JdkComparisonInfo {
+			public  string    Path;
+			public  Version   Version;
+		}
+	}
+
+	class ComparisonComparer<T> : IComparer<T> {
+
+		Comparison<T> comparison;
+
+		public ComparisonComparer (Comparison<T> comparison)
+		{
+			this.comparison = comparison;
+		}
+
+		public int Compare (T x, T y)
+		{
+			return comparison (x, y);
 		}
 	}
 }
