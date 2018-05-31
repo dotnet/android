@@ -359,6 +359,14 @@ when packaing Release applications.
     <AndroidLinkSkip>Assembly1;Assembly2</AndroidLinkSkip>
     ```
 
+-   **LinkerDumpDependencies** &ndash; A bool property which enables
+    generating of linker dependencies file. This file can be used as
+    input for
+    [illinkanalyzer](https://github.com/mono/linker/tree/master/analyzer)
+    tool.
+
+    The default value is False.
+
 -   **AndroidManagedSymbols** &ndash; A boolean property that controls
     whether sequence points are generated so that file name and line
     number information can be extracted from `Release` stack traces.
