@@ -27,6 +27,10 @@
 
 #include "mono_android_Runtime.h"
 
+#if defined (LINUX)
+#include <sys/syscall.h>
+#endif
+
 #if defined (DEBUG)
 #include <fcntl.h>
 #include <arpa/inet.h>
@@ -1121,18 +1125,20 @@ monodroid_disable_gc_hooks ()
 	gc_disabled = 1;
 }
 
-#ifndef LINUX
+#ifndef ANDROID
 static pid_t gettid ()
 {
 #ifdef WINDOWS
 	return GetCurrentThreadId ();
-#else
+#elif defined (LINUX) // WINDOWS
+	return syscall (SYS_gettid);
+#else // LINUX
 	uint64_t tid;
 	pthread_threadid_np (NULL, &tid);
 	return (pid_t)tid;
 #endif
 }
-#endif
+#endif // ANDROID
 
 typedef mono_bool (*MonodroidGCTakeRefFunc) (JNIEnv *env, MonoObject *obj);
 
