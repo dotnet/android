@@ -20,6 +20,10 @@
         SourceFiles="@(Assembly)"
         DestinationFolder="$(OutputPath)\..\v1.0"
     />
+    <Exec
+        Condition="Exists ('$(OutputPath)\..\v1.0\Java.Runtime.Environment.dll.config') And !Exists ('$(OutputPath)\..\v1.0\Java.Runtime.Environment.dll.config.in.bak')"
+        Command="sed -i .in.bak -e '/&lt;configuration&gt;/r $(MSBuildThisFileDirectory)\..\..\build-tools\scripts\java-interop.dllmap' $(OutputPath)\..\v1.0\Java.Runtime.Environment.dll.config"
+    />
   </Target>
   <Target Name="_BuildAssemblyInfo_cs"
       DependsOnTargets="GetXAVersionInfo"
