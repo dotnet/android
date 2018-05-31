@@ -130,6 +130,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var type_decls = DefaultNonTerminal ("type_decls");
 			var type_decl = DefaultNonTerminal ("type_decl");
 			var enum_decl = DefaultNonTerminal ("enum_decl");
+			var enum_body = DefaultNonTerminal ("enum_body");
 			var class_decl = DefaultNonTerminal ("class_decl");
 			var opt_generic_arg_decl = DefaultNonTerminal ("opt_generic_arg_decl");
 			var opt_extends_decl = DefaultNonTerminal ("opt_extends_decl");
@@ -146,7 +147,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var field_decl = DefaultNonTerminal ("field_decl");
 			var opt_field_assignment = DefaultNonTerminal ("opt_field_assignment");
 			var static_ctor_decl = DefaultNonTerminal ("static_ctor_decl");
-			var opt_enum_member_initializers = DefaultNonTerminal ("opt_enum_member_initializers");
+			var enum_members_decl = DefaultNonTerminal ("enum_members_decl");
 			var enum_member_initializers = DefaultNonTerminal ("enum_member_initializers");
 			var enum_member_initializer = DefaultNonTerminal ("enum_member_initializer");
 			var terminate_decl_or_body = DefaultNonTerminal ("terminate_decl_or_body");
@@ -209,14 +210,15 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 
 			compile_unit.Rule = opt_package_decl + imports + type_decls;
 			opt_package_decl.Rule = package_decl | Empty;
-			package_decl.Rule = keyword_package + type_name + ";";
+			package_decl.Rule = keyword_package + dotted_identifier + ";";
 			imports.Rule = MakeStarRule (imports, import);
-			import.Rule = keyword_import + type_name + ";";
+			import.Rule = keyword_import + dotted_identifier + ";";
 			type_decls.Rule = MakeStarRule (type_decls, type_decl);
 
 			type_decl.Rule = class_decl | interface_decl | enum_decl;
 			// FIXME: those modifiers_then_opt_generic_arg should be actually just modifiers... see modifiers_then_opt_generic_arg.Rule below.
-			enum_decl.Rule = annotations + modifiers_then_opt_generic_arg + keyword_enum + identifier + opt_implements_decl + "{" + opt_enum_member_initializers + type_members + "}";
+			enum_decl.Rule = annotations + modifiers_then_opt_generic_arg + keyword_enum + identifier + opt_implements_decl + "{" + enum_body + "}";
+			enum_body.Rule = Empty | enum_members_decl + type_members;
 			class_decl.Rule = annotations + modifiers_then_opt_generic_arg + keyword_class + identifier + opt_generic_arg_decl + opt_extends_decl + opt_implements_decl + type_body;
 			interface_decl.Rule = annotations + modifiers_then_opt_generic_arg + iface_or_at_iface + identifier + opt_generic_arg_decl + opt_extends_decl + opt_implements_decl + type_body;
 			iface_or_at_iface.Rule = keyword_interface | keyword_at_interface;
@@ -227,7 +229,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			implements_decl.Rule = MakePlusRule (implements_decl, ToTerm (","), type_name);
 			type_body.Rule = T ("{") + type_members + T ("}");
 			annotations.Rule = MakeStarRule (annotations, annotation);
-			annotation.Rule = T ("@") + type_name + opt_annotation_args;
+			annotation.Rule = T ("@") + dotted_identifier + opt_annotation_args;
 			opt_annotation_args.Rule = Empty | T ("(") + annotation_value_assignments + T (")");
 			annotation_value_assignments.Rule = MakeStarRule (annotation_value_assignments, ToTerm (","), annot_assign_expr);
 			annot_assign_expr.Rule = assign_expr;// | identifier + "=" + "{" + inner_annotations + "}";
@@ -243,9 +245,9 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			type_members.Rule = MakeStarRule (type_members, type_member);
 			type_member.Rule = nested_type_decl | ctor_decl | method_decl | field_decl | static_ctor_decl;
 			nested_type_decl.Rule = type_decl;
-			opt_enum_member_initializers.Rule = Empty | enum_member_initializers + ";";
+			enum_members_decl.Rule = enum_member_initializers + ";";
 			enum_member_initializers.Rule = MakeStarRule (enum_member_initializers, ToTerm (","), enum_member_initializer);
-			enum_member_initializer.Rule = identifier + "(" + ")";
+			enum_member_initializer.Rule = annotations + identifier + "(" + ")";
 			static_ctor_decl.Rule = annotations + keyword_static + "{" + assignments + "}";
 			assignments.Rule = MakeStarRule (assignments, assignment);
 			assignment.Rule = assign_expr + ";";
@@ -345,7 +347,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 				type.Name = (string)node.ChildNodes [3].AstNode;
 				type.Deprecated = ((IEnumerable<string>)node.ChildNodes [0].AstNode).Any (v => v == "java.lang.Deprecated" || v == "Deprecated") ? "deprecated" : "not deprecated";
 				type.TypeParameters = isEnum ? null : (JavaTypeParameters) node.ChildNodes [4].AstNode;
-				type.Members = (IList<JavaMember>) node.ChildNodes [7].AstNode;
+				type.Members = (IList<JavaMember>)node.ChildNodes [isEnum ? 6 : 7].AstNode;
 			};
 			enum_decl.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
@@ -369,21 +371,6 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 					}
 				};
 				fillType (node, type);
-				var ml = new List<JavaMember> (methods);
-				if (node.ChildNodes [6].ChildNodes.Count > 0)
-					ml.AddRange (
-						((IEnumerable<string>)node.ChildNodes [6].AstNode)
-						.Select (s => new JavaField (null) {
-							Name = s,
-							Final = true,
-							Deprecated = "not deprecated",
-							Static = true,
-							// Type needs to be filled later, with full package name.
-							Visibility = "public"
-						})
-						.Concat (type.Members)
-					);
-				type.Members = ml;
 				node.AstNode = type;
 			};
 			class_decl.AstConfig.NodeCreator = (ctx, node) => {
@@ -485,13 +472,28 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			};
 			opt_field_assignment.AstConfig.NodeCreator = (ctx, node) => node.AstNode = node.ChildNodes.Count > 0 ? node.ChildNodes [1].AstNode : null;
 			static_ctor_decl.AstConfig.NodeCreator = DoNothing; // static constructors are ignorable.
-			opt_enum_member_initializers.AstConfig.NodeCreator = (ctx, node) => {
+			enum_body.AstConfig.NodeCreator = (ctx, node) => {
+				ProcessChildren (ctx, node);
+				var ml = new List<JavaMember> ();
+				foreach (var c in node.ChildNodes)
+					ml.AddRange ((IEnumerable<JavaMember>) c.AstNode);
+				node.AstNode = ml;
+			};
+			enum_members_decl.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
 				if (node.ChildNodes.Count > 0)
-					node.AstNode = node.ChildNodes [0].AstNode;
+					node.AstNode = ((IEnumerable<string>) node.ChildNodes [0].AstNode)
+						.Select (s => new JavaField (null) {
+							Name = s,
+							Final = true,
+							Deprecated = "not deprecated",
+							Static = true,
+							// Type needs to be filled later, with full package name.
+							Visibility = "public"
+						});
 			};
 			enum_member_initializers.AstConfig.NodeCreator = CreateArrayCreator<string> ();
-			enum_member_initializer.AstConfig.NodeCreator = SelectChildValueAt (0);
+			enum_member_initializer.AstConfig.NodeCreator = SelectChildValueAt (1);
 			terminate_decl_or_body.AstConfig.NodeCreator = DoNothing; // method/ctor body doesn't matter.
 			assignments.AstConfig.NodeCreator = CreateArrayCreator<object> ();
 			assignment.AstConfig.NodeCreator = SelectChildValueAt (0);
