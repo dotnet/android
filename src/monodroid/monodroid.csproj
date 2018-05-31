@@ -32,6 +32,11 @@
       <Name>dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj">
+      <Project>{D1295A8F-4F42-461D-A046-564476C10002}</Project>
+      <Name>jnimarshalmethod-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\mono-runtimes\mono-runtimes.csproj">
       <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
       <Name>mono-runtimes</Name>

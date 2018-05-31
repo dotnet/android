@@ -5,6 +5,7 @@
   <Import Project="monodroid.projitems" />
   <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <_Conf>$(Configuration.ToLowerInvariant())</_Conf>
   </PropertyGroup>
@@ -116,7 +117,7 @@
     </ItemGroup>
   </Target>
   <Target Name="_BuildHostRuntimes"
-      DependsOnTargets="_GetBuildHostRuntimes;_CreateJavaInteropDllConfig"
+      DependsOnTargets="_GetBuildHostRuntimes;_CreateJavaInteropDllConfigs"
       Inputs="@(_CFile);@(_UnixCFile)"
       Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)')">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
@@ -143,20 +144,29 @@
         Command="%(_HostRuntime.Strip) %(_HostRuntime.StripFlags) &quot;$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.%(_HostRuntime.NativeLibraryExtension)&quot;"
     />
   </Target>
-  <Target Name="_CreateJavaInteropDllConfig"
-      Inputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll"
-      Outputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config">
+  <Target Name="_CreateJavaInteropDllConfigs"
+      Inputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll;$(JavaInteropSourceDirectory)\src\Java.Runtime.Environment\Java.Runtime.Environment.dll.config"
+      Outputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config;$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Runtime.Environment.dll.config">
+    <ReadLinesFromFile
+        File="../../build-tools/scripts/java-interop.dllmap">
+        <Output
+            TaskParameter="Lines"
+            ItemName="_JavaInteropDllMapContent" />
+    </ReadLinesFromFile>
     <WriteLinesToFile
         File="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config"
-        Lines="&lt;configuration&gt;
-  &lt;dllmap dll=&quot;java-interop&quot; os=&quot;osx&quot; target=&quot;lib/host-Darwin/libmono-android.debug.dylib&quot; /&gt;
-  &lt;dllmap dll=&quot;java-interop&quot; os=&quot;linux&quot; target=&quot;lib/host-Linux/libmono-android.debug.so&quot; /&gt;
-  &lt;dllmap dll=&quot;java-interop&quot; os=&quot;windows&quot; wordsize=&quot;64&quot; target=&quot;lib/host-mxe-Win64/libmono-android.debug.dll&quot; /&gt;
-  &lt;dllmap dll=&quot;java-interop&quot; os=&quot;windows&quot; wordsize=&quot;32&quot; target=&quot;lib/host-mxe-Win32/libmono-android.debug.dll&quot; /&gt;
-&lt;/configuration&gt;"
+        Lines="&lt;configuration&gt;;@(_JavaInteropDllMapContent);&lt;/configuration&gt;"
         Overwrite="True"
-	/>
-    </Target>
+    />
+    <PropertyGroup>
+        <_DllMaps>@(_JavaInteropDllMapContent->'%(Identity)', '%0a  ')</_DllMaps>
+    </PropertyGroup>
+    <ReplaceFileContents
+        SourceFile="$(JavaInteropSourceDirectory)\src\Java.Runtime.Environment\Java.Runtime.Environment.dll.config"
+        DestinationFile="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Runtime.Environment.dll.config"
+        Replacements="&lt;configuration&gt;=&lt;configuration&gt;%0a  $(_DllMaps)"
+    />
+  </Target>
   <Target Name="CoreCompile"
       DependsOnTargets="Build">
   </Target>
