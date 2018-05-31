@@ -115,6 +115,7 @@ prepare-props: prepare-deps
 	cp "$(call GetPath,JavaInterop)/product.snk" "$(call GetPath,MonoSource)"
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
 	cp $(call GetPath,MonoSource)/mcs/class/msfinal.pub .
+	cp build-tools/scripts/java-interop.dllmap external/Java.Interop/Java.Runtime.Environment.Override.dllmap
 
 prepare-msbuild: prepare-props
 ifeq ($(USE_MSBUILD),1)
