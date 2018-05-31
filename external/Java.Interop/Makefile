@@ -84,6 +84,8 @@ else
 	JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD = '/@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@/ {' -e 'r $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)' -e 'd' -e '}'
 endif
 
+prepare:: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+
 src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
 		bin/Build$(CONFIGURATION)/JdkInfo.props
 	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' -e $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD) < $< > $@
