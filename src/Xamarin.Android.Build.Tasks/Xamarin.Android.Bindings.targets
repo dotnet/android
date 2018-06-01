@@ -64,6 +64,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <UseShortFileNames Condition="'$(UseShortFileNames)' == ''">True</UseShortFileNames>
     <UseShortGeneratorFileNames Condition="'$(UseShortGeneratorFileNames)' == ''">False</UseShortGeneratorFileNames>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
   </PropertyGroup>
   
   <!-- Get our Build Actions to show up in VS -->

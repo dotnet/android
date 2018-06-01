@@ -736,9 +736,7 @@ The following MSBuild properties are used with
       - `jmethodID` caching of Java Callable Wrapper constructors for
         managed subclasses.
 
-    The default value is `XamarinAndroid`.
-
-    The default value will change in a future release.
+    The default value is `XAJavaInterop1`.
 
 
 ### Resource Properties
