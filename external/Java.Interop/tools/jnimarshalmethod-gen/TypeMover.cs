@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				return;
 			}
 
-			Destination.Write (new WriterParameters () { WriteSymbols = true });
+			Destination.Write (new WriterParameters () { WriteSymbols = Destination.MainModule.HasSymbols });
 
 			if (App.Verbose)
 				App.ColorWriteLine ($"Wrote updated {Destination.MainModule.FileName} assembly", ConsoleColor.Cyan);

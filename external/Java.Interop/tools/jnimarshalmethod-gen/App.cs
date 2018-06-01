@@ -103,6 +103,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				ReadSymbols        = true,
 				ReadWrite          = true,
 			};
+			var readWriteParametersNoSymbols    = new ReaderParameters {
+				AssemblyResolver   = resolver,
+				ReadSymbols        = false,
+				ReadWrite          = true,
+			};
 
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
@@ -111,9 +116,18 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				}
 
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
-				var ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParameters);
-				resolver.AddToCache (ad);
+				AssemblyDefinition ad;
+				try {
+					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParameters);
+					resolver.AddToCache (ad);
+				} catch (Exception) {
+					Warning ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
+					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParametersNoSymbols);
+					resolver.AddToCache (ad);
+				}
+			}
 
+			foreach (var assembly in assemblies) {
 				try {
 					CreateMarshalMethodAssembly (assembly);
 				} catch (Exception e) {
@@ -280,6 +294,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			if (!keepTemporary)
 				FilesToDelete.Add (dstAssembly.MainModule.FileName);
+
+			definedTypes.Clear ();
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
