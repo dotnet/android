@@ -393,7 +393,15 @@ namespace Xamarin.ProjectTools
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+					//NOTE: on Windows I've had various issues when the full build log is in the error:
+					// - VS IDE hangs for a very long time in the test results window
+					// - Builds on VSTS hang when writing NUnit results to disk
+					//We have build artifacts of these logs on VSTS anyway
+					throw new FailedBuildException (message, null);
+				} else {
+					throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				}
 			}
 
 			return result;
