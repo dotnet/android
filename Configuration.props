@@ -12,7 +12,7 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>8.3.99</ProductVersion>
+    <ProductVersion>8.4.99</ProductVersion>
     <!-- Used by the `build-tools/create-vsix` build so that `Mono.Android.Export.dll`/etc. are only included *once* -->
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/scripts/BuildEverything.mk` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v2.3</AndroidFirstFrameworkVersion>
