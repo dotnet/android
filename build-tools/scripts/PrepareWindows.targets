@@ -34,6 +34,19 @@
         DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
         Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
     />
+    <ItemGroup>
+      <_CecilFiles Include="$(_TopDir)\external\Java.Interop\external\Mono.Cecil*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_CecilFiles)"
+        DestinationFolder="$(_TopDir)\external\mono\external"
+        SkipUnchangedFiles="True"
+    />
+    <Copy
+        SourceFiles="$(_TopDir)\external\Java.Interop\product.snk"
+        DestinationFolder="$(_TopDir)\external\mono"
+        SkipUnchangedFiles="True"
+    />
     <MakeDir Directories="$(_TopDir)\bin\Test$(Configuration)" />
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)XABuildPaths.cs.in"
