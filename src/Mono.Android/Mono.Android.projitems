@@ -140,10 +140,10 @@
       <Stable>True</Stable>
     </AndroidApiInfo>
     <AndroidApiInfo Include="v8.1.99">
-      <Name>P Preview UNSTABLE</Name>
+      <Name>P</Name>
       <Level>28</Level>
-      <Id>P</Id>
-      <Stable>False</Stable>
+      <Id>28</Id>
+      <Stable>True</Stable>
     </AndroidApiInfo>
   </ItemGroup>
 

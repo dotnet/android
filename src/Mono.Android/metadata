@@ -1407,5 +1407,6 @@
   <attr path="/api/package[@name='android.view.textclassifier.logging']" name="managedName">Android.Views.TextClassifiers.Logging</attr>
   <!-- okay you are NOT documented. Wasn't Google going to kill nonpublic classes? -->
   <remove-node path="/api/package[@name='android.text']/class[@name='PrecomputedText']" />
+  <attr path="/api/package[@name='android.provider']/class[@name='Telephony.CarrierId']/field[@name='CARRIER_ID']" name="managedName">CarrierIdField</attr>
 
 </metadata>
