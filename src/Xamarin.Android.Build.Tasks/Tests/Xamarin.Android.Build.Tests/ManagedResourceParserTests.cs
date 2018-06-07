@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "animator", "slide_in_bottom.xml"), Animator);
 			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "font", "arial.ttf"), "");
 			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "values", "strings.xml"), StringsXml2);
-			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "values", "dimen.xml"), DesignTimeBuild);
+			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "values", "dimen.xml"), Dimen);
 			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
 				var icon_binary_mdpi = new byte [stream.Length];
 				stream.Read (icon_binary_mdpi, 0, (int)stream.Length);
