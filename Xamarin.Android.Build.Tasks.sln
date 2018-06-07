@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tests", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.csproj", "{53E4ABF0-1085-45F9-B964-DCAE4B819998}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests.Shared", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.shproj", "{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 4
+		src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.projitems*{53e4abf0-1085-45f9-b964-dcae4b819998}*SharedItemsImports = 4
+		src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.projitems*{bd1d66bf-5ac7-4926-8ebe-b2198a112eb0}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F32556C5-6FD4-4F1D-884A-DEDF2EE865F6}
+	EndGlobalSection
+EndGlobal
