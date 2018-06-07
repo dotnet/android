@@ -17,13 +17,22 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem[] Resources { get; set; }
 
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
+		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
 		public override bool Execute ()
 		{
 			foreach (var resource in Resources) {
-				var match = fileNameCheck.Match (Path.GetFileName (resource.ItemSpec));
-				if (match.Success) {
-					Log.LogCodedError ("APT0000", resource.ItemSpec, 0, "Invalid file name: It must contain only [a-zA-Z0-9_.].");
+				var fileName = Path.GetFileName (resource.ItemSpec);
+				if (string.Compare (Directory.GetParent (resource.ItemSpec).Name, "values", StringComparison.OrdinalIgnoreCase) == 0) {
+					var match = fileNameWithHyphenCheck.Match (fileName);
+					if (match.Success) {
+						Log.LogCodedError ("APT0000", resource.ItemSpec, 0, "Invalid file name: It must contain only [a-zA-Z0-9_.-].");
+					}
+				} else {
+					var match = fileNameCheck.Match (fileName);
+					if (match.Success) {
+						Log.LogCodedError ("APT0000", resource.ItemSpec, 0, "Invalid file name: It must contain only [a-zA-Z0-9_.].");
+					}
 				}
 			}
 			return !Log.HasLoggedErrors;
