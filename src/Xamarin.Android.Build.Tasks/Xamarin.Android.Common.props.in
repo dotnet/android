@@ -11,7 +11,7 @@
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">False</AndroidUseAapt2>
-		<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' And '$(OS)' == 'Unix' ">False</AndroidUseManagedDesignTimeResourceGenerator>
+		<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' And '$(OS)' != 'Windows_NT' ">False</AndroidUseManagedDesignTimeResourceGenerator>
 	</PropertyGroup>
 	<ItemDefinitionGroup>
 		<AndroidResource>
