@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -122,12 +123,16 @@ namespace Xamarin.ProjectTools
 		public bool Deleted { get; set; }
 		public FileAttributes Attributes { get; set;}
 
+		static readonly ConcurrentDictionary<string, object> locks = new ConcurrentDictionary<string, object> ();
+
 		public string WebContent {
 			get { throw new NotSupportedException (); }
 			set {
 				BinaryContent = () => {
-					var file = new DownloadedCache ().GetAsFile (value);
-					return File.ReadAllBytes (file);
+					lock (locks.GetOrAdd (value, _ => new object ())) {
+						var file = new DownloadedCache ().GetAsFile (value);
+						return File.ReadAllBytes (file);
+					}
 				};
 			}
 		}
