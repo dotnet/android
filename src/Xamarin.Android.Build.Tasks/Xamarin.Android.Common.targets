@@ -3051,7 +3051,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_Deploy">
-  <Exec Command="&quot;$(AdbToolPath)\adb&quot; install -r &quot;$(ApkFileSigned)&quot;" />
+  <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" />
 </Target>
 
 <Target Name="Install"
