@@ -2405,6 +2405,7 @@ static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", NULL
 };
 
+#ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
 {
@@ -2438,6 +2439,7 @@ enable_soft_breakpoints (void)
 	log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	return 1;
 }
+#endif /* DEBUG */
 
 void
 set_world_accessable (const char *path)
@@ -2489,11 +2491,13 @@ copy_file_to_internal_location(char *to, char *from, char* file)
 	free (to_file);
 }
 #else
+#ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
 {
 	return 0;
 }
+#endif /* DEBUG */
 
 void
 set_world_accessable (const char *path)
