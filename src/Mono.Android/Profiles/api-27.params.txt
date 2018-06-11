@@ -9129,6 +9129,8 @@ package android.net.wifi.aware
     onSubscribeStarted(android.net.wifi.aware.SubscribeDiscoverySession session)
   class IdentityChangedListener
     onIdentityChanged(byte[] mac)
+  class PeerHandle
+    equals(java.lang.Object o)
   class PublishConfig
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
