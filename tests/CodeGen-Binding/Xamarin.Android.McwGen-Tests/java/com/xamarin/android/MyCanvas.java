@@ -10,9 +10,9 @@ public class MyCanvas extends Canvas {
   }
 
   @Override
-  public int save (int saveFlags)
+  public int save ()
   {
-    return super.save (saveFlags);
+    return super.save ();
   }
 }
 

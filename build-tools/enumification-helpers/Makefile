@@ -1,7 +1,7 @@
 topdir = ../..
 
-API_LEVEL = 27
-API_LEVEL_NAME = 27
+API_LEVEL = 28
+API_LEVEL_NAME = 28
 
 CSCOMPILE = csc -debug:portable
 
@@ -17,8 +17,8 @@ all:: map.ext.csv remaining-int-consts.txt remaining-int-methods-filtered.txt
 generate-const-list-2.exe: generate-const-list-2.cs
 	$(CSCOMPILE) generate-const-list-2.cs
 
-const-list-$(API_LEVEL).xml: generate-const-list-2.exe ../../src/Mono.Android/Profiles/*.xml.in
-	mono --debug generate-const-list-2.exe ../../src/Mono.Android/Profiles > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
+const-list-$(API_LEVEL).xml: generate-const-list-2.exe ../../bin/Build$(CONFIGURATION)/api/*.xml.in
+	mono --debug generate-const-list-2.exe ../../bin/Build$(CONFIGURATION)/api > const-list-$(API_LEVEL).xml || rm const-list-$(API_LEVEL).xml
 
 generate-const-mapping.exe: $(CONST_MAPPER_SOURCES)
 	$(CSCOMPILE) $(CONST_MAPPER_SOURCES)
