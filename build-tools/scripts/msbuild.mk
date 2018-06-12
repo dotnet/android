@@ -40,6 +40,13 @@ export USE_MSBUILD  = 1
 endif   # $(MSBUILD) == msbuild
 
 ifeq ($(USE_MSBUILD),1)
+
+# $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD),conf=$(CONFIGURATION))
+define MSBUILD_BINLOG
+	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS) /v:normal \
+		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(if $(3),$(3),$(CONFIGURATION))/msbuild-`date +%s`-$(1).binlog"
+endef
+
 else    # $(MSBUILD) != 1
 _CSC_EMITS_PDB  := $(shell if $(_PKG_CONFIG) --atleast-version=4.9 mono ; then echo Pdb; fi )
 ifeq ($(_CSC_EMITS_PDB),Pdb)
@@ -47,4 +54,10 @@ MSBUILD_FLAGS += /p:_DebugFileExt=.pdb
 else    # $(_CSC_EMITS_PDB) == ''
 MSBUILD_FLAGS += /p:_DebugFileExt=.mdb
 endif   # $(_CSC_EMITS_PDB) == Pdb
+
+# $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD),conf=$(CONFIGURATION))
+define MSBUILD_BINLOG
+	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS)
+endef
+
 endif   # $(USE_MSBUILD) == 1
