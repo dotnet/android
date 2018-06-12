@@ -2490,7 +2490,7 @@ copy_file_to_internal_location(char *to, char *from, char* file)
 	free (from_file);
 	free (to_file);
 }
-#else
+#else  /* !defined (ANDROID) */
 #ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
@@ -2503,7 +2503,7 @@ void
 set_world_accessable (const char *path)
 {
 }
-#endif
+#endif /* !defined (ANDROID) */
 
 static void
 mono_runtime_init (char *runtime_args)
