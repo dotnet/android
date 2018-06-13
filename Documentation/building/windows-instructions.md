@@ -66,6 +66,20 @@ All `.apk`-based unit tests can be executed via
 
 	msbuild Xamarin.Android.sln /t:RunApkTests
 
+## Listing Nunit Tests
+
+In order to get a list of the tests you can use the `ListNUnitTests` target
+
+    msbuild Xamarin.Android.sln /t:ListNUnitTests
+
+This will produce a list of the tests in all of the test assemblies.
+
+## Running Specific Nunit Tests
+
+You can run then a single (or a group) of tests using the `$(TEST)` msbuild property.
+
+    msbuild Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+
 ## Running Individual `.apk` Projects
 
 See also the [`tests/RunApkTests.targets`](../../tests/RunApkTests.targets) and
