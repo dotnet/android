@@ -370,6 +370,8 @@ namespace Xamarin.Android.Tasks
 				CreateIntField (drawable, fieldName);
 				break;
 			case "dimen":
+				CreateIntField (dimension, fieldName);
+				break;
 			case "font":
 				CreateIntField (font, fieldName);
 				break;
