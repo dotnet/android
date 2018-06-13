@@ -1121,11 +1121,18 @@ namespace Lib1 {
 	<color name=""SomeColor"">#ffffffff</color>
 </resources>",
 			};
+			var dimen = new AndroidItem.AndroidResource ("Resources\\values\\dimen.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<dimen name=""main_text_item_size"">17dp</dimen>
+</resources>",
+			};
 			var libProj = new XamarinAndroidLibraryProject () {
 				IsRelease = true,
 				ProjectName = "Lib1",
 				AndroidResources = {
 					theme,
+					dimen,
 				},
 			};
 			libProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
@@ -1172,6 +1179,7 @@ namespace Lib1 {
 					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
 					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
 					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					StringAssert.DoesNotContain ("main_text_item_size", designerContents, $"{designerFile} should not contain Resources.Dimension.main_text_item_size");
 					StringAssert.DoesNotContain ("theme_devicedefault_background", designerContents, $"{designerFile} should not contain Resources.Color.theme_devicedefault_background");
 					libBuilder.Target = "Build";
 					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
@@ -1191,7 +1199,9 @@ namespace Lib1 {
 					StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
 					StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
 					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
+					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
 					StringAssert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
+					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
 					StringAssert.Contains ("SomeColor", designerContents, $"{designerFile} should contain Resources.Color.SomeColor");
 
 					appBuilder.Target = "SignAndroidPackage";

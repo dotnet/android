@@ -40,6 +40,22 @@ namespace Foo.Foo
 			}
 		}
 		
+		public partial class Dimension
+		{
+			
+			// aapt resource value: 0x7F090002
+			public const int main_text_item_size = 2131296258;
+			
+			static Dimension()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Dimension()
+			{
+			}
+		}
+		
 		public partial class Drawable
 		{
 			
