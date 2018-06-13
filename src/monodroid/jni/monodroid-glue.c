@@ -40,6 +40,10 @@
 #include <errno.h>
 #endif
 
+#if defined (LINUX)
+#include <sys/syscall.h>
+#endif
+
 #ifndef WINDOWS
 #include <sys/mman.h>
 #include <sys/utsname.h>

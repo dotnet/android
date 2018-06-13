@@ -69,6 +69,13 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-10</DestDir>
     </AndroidSdkItem>
+
+    <!-- Note: if the version is changed here (which forces the change of path), make sure to update Configure.props! -->
+    <AndroidSdkItem Include="cmake-3.6.4111459-windows-x86_64.zip">
+      <HostOS>Windows</HostOS>
+      <DestDir>cmake\3.6.4111459</DestDir>
+    </AndroidSdkItem>
+
     <AndroidSdkItem Include="android-15_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-15</DestDir>
