@@ -210,4 +210,7 @@ run-apk-tests:
 run-performance-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunPerformanceTests
 
+list-nunit-tests:
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests
+
 include build-tools/scripts/runtime-helpers.mk

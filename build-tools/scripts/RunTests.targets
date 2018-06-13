@@ -26,6 +26,13 @@
     <_ApkTestProjectAot Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
     <_ApkTestProjectBundle Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
   </ItemGroup>
+  <Target Name="ListNUnitTests">
+    <Exec
+        Command="$(_NUnit) $(NUNIT_EXTRA) --explore %(_TestAssembly.Identity)"
+        WorkingDirectory="$(_TopDir)"
+        ContinueOnError="ErrorAndContinue"
+    />
+  </Target>
   <Target Name="RunNUnitTests">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <Exec
