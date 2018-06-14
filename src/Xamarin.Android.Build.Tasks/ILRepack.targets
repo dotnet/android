@@ -6,7 +6,7 @@
 			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
 			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
+			<InputAssemblies Include="$(OutputPath)\NuGet.Protocol.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.Frameworks.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.LibraryModel.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.Versioning.dll" />
