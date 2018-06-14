@@ -258,7 +258,6 @@ namespace Xamarin.Android.Tasks
 								outfs.Write (data, 0, data.Length);
 							updated = true;
 						}
-						jars.Add (outjarFile);
 					}
 
 					// embedded AndroidResourceLibrary archive

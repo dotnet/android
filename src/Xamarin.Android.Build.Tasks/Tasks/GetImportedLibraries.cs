@@ -37,7 +37,13 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 			// there could be ./AndroidManifest.xml and bin/AndroidManifest.xml, which will be the same. So, ignore "bin" ones.
-			ManifestDocuments = Directory.GetFiles (TargetDirectory, "AndroidManifest.xml", SearchOption.AllDirectories).Where (f => !Path.GetDirectoryName (f).EndsWith ("bin")).Select (p => new TaskItem (p)).ToArray ();
+			ManifestDocuments = Directory.GetFiles (TargetDirectory, "AndroidManifest.xml", SearchOption.AllDirectories)
+				.Where (f => {
+					var directory = Path.GetFileName (Path.GetDirectoryName (f));
+					return directory != "bin" && directory != "manifest";
+				})
+				.Select (p => new TaskItem (p))
+				.ToArray ();
 			NativeLibraries = Directory.GetFiles (TargetDirectory, "*.so", SearchOption.AllDirectories)
 				.Where (p => MonoAndroidHelper.GetNativeLibraryAbi (p) != null)
 				.Select (p => new TaskItem (p)).ToArray ();
