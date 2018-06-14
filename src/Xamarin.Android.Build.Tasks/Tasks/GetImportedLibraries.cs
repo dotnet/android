@@ -41,7 +41,9 @@ namespace Xamarin.Android.Tasks
 				.Where (f => {
 					var directory = Path.GetFileName (Path.GetDirectoryName (f));
 					return directory != "bin" && directory != "manifest";
-				}).Select (p => new TaskItem (p)).ToArray ();
+				})
+				.Select (p => new TaskItem (p))
+				.ToArray ();
 			NativeLibraries = Directory.GetFiles (TargetDirectory, "*.so", SearchOption.AllDirectories)
 				.Where (p => MonoAndroidHelper.GetNativeLibraryAbi (p) != null)
 				.Select (p => new TaskItem (p)).ToArray ();
