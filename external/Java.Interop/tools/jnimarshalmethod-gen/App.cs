@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var domain = AppDomain.CreateDomain ("workspace");
 			var app = (App)domain.CreateInstanceAndUnwrap (typeof (App).Assembly.FullName, typeof (App).FullName);
 
+			app.AddMonoPathToResolverSearchDirectories ();
+
 			var assemblies = app.ProcessArguments (args);
 			app.ProcessAssemblies (assemblies);
 			var filesToDelete = app.FilesToDelete;
@@ -43,6 +45,21 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				File.Delete (path);
 
 			return 0;
+		}
+
+		void AddMonoPathToResolverSearchDirectories ()
+		{
+			var monoPath = Environment.GetEnvironmentVariable ("MONO_PATH");
+			if (string.IsNullOrWhiteSpace (monoPath))
+				return;
+
+			foreach (var path in monoPath.Split (new char [] { Path.PathSeparator })) {
+				resolver.SearchDirectories.Add (path);
+
+				var facadesDirectory = Path.Combine (path, "Facades");
+				if (Directory.Exists (facadesDirectory))
+					resolver.SearchDirectories.Add (facadesDirectory);
+			}
 		}
 
 		List<string> ProcessArguments (string [] args)
