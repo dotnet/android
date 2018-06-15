@@ -36,7 +36,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
         <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
         <IsXBuild Condition="'$(MSBuildRuntimeVersion)' == ''">true</IsXBuild>
         <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' And '$(OS)' != 'Windows_NT' ">false</EnableDefaultOutputPaths>
-        <EnableDefaultOutputPaths Condition="'$(EnableDefaultOutputPaths)' == ''">true</EnableDefaultOutputPaths>
+        <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' ">true</EnableDefaultOutputPaths>
     </PropertyGroup>
     <!-- Force Xbuild to behave like msbuild -->
     <PropertyGroup>
