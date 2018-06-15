@@ -89,9 +89,5 @@ namespace Com.Xamarin.Android {
 			const string id = "VirtualVoidMethod.()V";
 			_jonp_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
 		}
-
-		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _jonp_members; }
-		}
 	}
 }

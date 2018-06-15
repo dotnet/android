@@ -22,5 +22,6 @@ namespace MonoDroid.Tuner
 		public bool DumpDependencies { get; set; }
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
+		public bool PreserveJniMarshalMethods { get; set; }
 	}
 }

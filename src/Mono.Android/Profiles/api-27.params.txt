@@ -3716,8 +3716,6 @@ package android.database
     #ctor(java.lang.String message)
   class CursorJoiner
     #ctor(android.database.Cursor cursorLeft, java.lang.String[] columnNamesLeft, android.database.Cursor cursorRight, java.lang.String[] columnNamesRight)
-  class CursorJoiner.Result
-    valueOf(java.lang.String name)
   class CursorWindow
     copyStringToBuffer(int row, int column, android.database.CharArrayBuffer buffer)
     #ctor(boolean localWindow)
@@ -4220,10 +4218,6 @@ package android.graphics
     setPremultiplied(boolean premultiplied)
     setWidth(int width)
     writeToParcel(android.os.Parcel p, int flags)
-  class Bitmap.CompressFormat
-    valueOf(java.lang.String name)
-  class Bitmap.Config
-    valueOf(java.lang.String name)
   class BitmapFactory
     decodeByteArray(byte[] data, int offset, int length)
     decodeByteArray(byte[] data, int offset, int length, android.graphics.BitmapFactory.Options opts)
@@ -4246,8 +4240,6 @@ package android.graphics
     #ctor(android.graphics.Bitmap bitmap, android.graphics.Shader.TileMode tileX, android.graphics.Shader.TileMode tileY)
   class BlurMaskFilter
     #ctor(float radius, android.graphics.BlurMaskFilter.Blur style)
-  class BlurMaskFilter.Blur
-    valueOf(java.lang.String name)
   class Camera
     applyToCanvas(android.graphics.Canvas canvas)
     dotWithNormal(float dx, float dy, float dz)
@@ -4343,10 +4335,6 @@ package android.graphics
     setMatrix(android.graphics.Matrix matrix)
     skew(float sx, float sy)
     translate(float dx, float dy)
-  class Canvas.EdgeType
-    valueOf(java.lang.String name)
-  class Canvas.VertexMode
-    valueOf(java.lang.String name)
   class Color
     alpha(int color)
     alpha(long color)
@@ -4423,17 +4411,9 @@ package android.graphics
     match(float[] toXYZD50, android.graphics.ColorSpace.Rgb.TransferParameters function)
     toXyz(float r, float g, float b)
     toXyz(float[] v)
-  class ColorSpace.Adaptation
-    valueOf(java.lang.String name)
   class ColorSpace.Connector
     transform(float r, float g, float b)
     transform(float[] v)
-  class ColorSpace.Model
-    valueOf(java.lang.String name)
-  class ColorSpace.Named
-    valueOf(java.lang.String name)
-  class ColorSpace.RenderIntent
-    valueOf(java.lang.String name)
   class ColorSpace.Rgb
     #ctor(java.lang.String name, float[] toXYZ, android.graphics.ColorSpace.Rgb.TransferParameters function)
     #ctor(java.lang.String name, float[] toXYZ, double gamma)
@@ -4483,8 +4463,6 @@ package android.graphics
     setRepeatMirror(float repeatCount, boolean mirror)
     timeToValues(float[] values)
     timeToValues(int msec, float[] values)
-  class Interpolator.Result
-    valueOf(java.lang.String name)
   class LightingColorFilter
     #ctor(int mul, int add)
   class LinearGradient
@@ -4534,8 +4512,6 @@ package android.graphics
     setSkew(float kx, float ky, float px, float py)
     setTranslate(float dx, float dy)
     setValues(float[] values)
-  class Matrix.ScaleToFit
-    valueOf(java.lang.String name)
   class Movie
     decodeByteArray(byte[] data, int offset, int length)
     decodeFile(java.lang.String pathName)
@@ -4627,14 +4603,6 @@ package android.graphics
     setTypeface(android.graphics.Typeface typeface)
     setUnderlineText(boolean underlineText)
     setXfermode(android.graphics.Xfermode xfermode)
-  class Paint.Align
-    valueOf(java.lang.String name)
-  class Paint.Cap
-    valueOf(java.lang.String name)
-  class Paint.Join
-    valueOf(java.lang.String name)
-  class Paint.Style
-    valueOf(java.lang.String name)
   class PaintFlagsDrawFilter
     #ctor(int clearBits, int setBits)
   class Path
@@ -4677,16 +4645,8 @@ package android.graphics
     setLastPoint(float dx, float dy)
     transform(android.graphics.Matrix matrix)
     transform(android.graphics.Matrix matrix, android.graphics.Path dst)
-  class Path.Direction
-    valueOf(java.lang.String name)
-  class Path.FillType
-    valueOf(java.lang.String name)
-  class Path.Op
-    valueOf(java.lang.String name)
   class PathDashPathEffect
     #ctor(android.graphics.Path shape, float advance, float phase, android.graphics.PathDashPathEffect.Style style)
-  class PathDashPathEffect.Style
-    valueOf(java.lang.String name)
   class PathMeasure
     getMatrix(float distance, android.graphics.Matrix matrix, int flags)
     getPosTan(float distance, float[] pos, float[] tan)
@@ -4722,8 +4682,6 @@ package android.graphics
     set(android.graphics.PointF p)
     set(float x, float y)
     writeToParcel(android.os.Parcel out, int flags)
-  class PorterDuff.Mode
-    valueOf(java.lang.String name)
   class PorterDuffColorFilter
     equals(java.lang.Object object)
     #ctor(int color, android.graphics.PorterDuff.Mode mode)
@@ -4807,16 +4765,12 @@ package android.graphics
     translate(int dx, int dy, android.graphics.Region dst)
     union(android.graphics.Rect r)
     writeToParcel(android.os.Parcel p, int flags)
-  class Region.Op
-    valueOf(java.lang.String name)
   class RegionIterator
     next(android.graphics.Rect r)
     #ctor(android.graphics.Region region)
   class Shader
     getLocalMatrix(android.graphics.Matrix localM)
     setLocalMatrix(android.graphics.Matrix localM)
-  class Shader.TileMode
-    valueOf(java.lang.String name)
   class SumPathEffect
     #ctor(android.graphics.PathEffect first, android.graphics.PathEffect second)
   class SurfaceTexture
@@ -5110,8 +5064,6 @@ package android.graphics.drawable
     setTintList(android.content.res.ColorStateList tint)
     setTintMode(android.graphics.PorterDuff.Mode tintMode)
     setUseLevel(boolean useLevel)
-  class GradientDrawable.Orientation
-    valueOf(java.lang.String name)
   class Icon
     createWithAdaptiveBitmap(android.graphics.Bitmap bits)
     createWithBitmap(android.graphics.Bitmap bits)
@@ -5864,8 +5816,6 @@ package android.icu.lang
     hasScript(int c, int sc)
     isCased(int script)
     isRightToLeft(int script)
-  class UScript.ScriptUsage
-    valueOf(java.lang.String name)
 
 package android.icu.math
 ;---------------------------------------
@@ -5935,8 +5885,6 @@ package android.icu.text
     setMaxLabelCount(int maxLabelCount)
     setOverflowLabel(java.lang.String overflowLabel)
     setUnderflowLabel(java.lang.String underflowLabel)
-  class AlphabeticIndex.Bucket.LabelType
-    valueOf(java.lang.String name)
   class AlphabeticIndex.ImmutableIndex<V>
     getBucket(int index)
     getBucketIndex(java.lang.CharSequence name)
@@ -6007,8 +5955,6 @@ package android.icu.text
     getInstance(android.icu.util.ULocale locale, android.icu.text.CompactDecimalFormat.CompactStyle style)
     getInstance(java.util.Locale locale, android.icu.text.CompactDecimalFormat.CompactStyle style)
     parse(java.lang.String text, java.text.ParsePosition parsePosition)
-  class CompactDecimalFormat.CompactStyle
-    valueOf(java.lang.String name)
   class CurrencyPluralInfo
     #ctor(android.icu.util.ULocale locale)
     #ctor(java.util.Locale locale)
@@ -6068,8 +6014,6 @@ package android.icu.text
     setLenient(boolean lenient)
     setNumberFormat(android.icu.text.NumberFormat newNumberFormat)
     setTimeZone(android.icu.util.TimeZone zone)
-  class DateFormat.BooleanAttribute
-    valueOf(java.lang.String name)
   class DateFormat.Field
     #ctor(java.lang.String name, int calendarField)
     ofCalendarField(int calendarField)
@@ -6223,18 +6167,12 @@ package android.icu.text
     setPlusSign(char plus)
     setSignificantDigit(char sigDigit)
     setZeroDigit(char zeroDigit)
-  class DisplayContext
-    valueOf(java.lang.String name)
-  class DisplayContext.Type
-    valueOf(java.lang.String name)
   class IDNA
     getUTS46Instance(int options)
     labelToASCII(java.lang.CharSequence label, java.lang.StringBuilder dest, android.icu.text.IDNA.Info info)
     labelToUnicode(java.lang.CharSequence label, java.lang.StringBuilder dest, android.icu.text.IDNA.Info info)
     nameToASCII(java.lang.CharSequence name, java.lang.StringBuilder dest, android.icu.text.IDNA.Info info)
     nameToUnicode(java.lang.CharSequence name, java.lang.StringBuilder dest, android.icu.text.IDNA.Info info)
-  class IDNA.Error
-    valueOf(java.lang.String name)
   class ListFormatter
     format(java.lang.Object... items)
     format(java.util.Collection<?> items)
@@ -6260,8 +6198,6 @@ package android.icu.text
     scriptDisplayName(int scriptCode)
     scriptDisplayName(java.lang.String script)
     variantDisplayName(java.lang.String variant)
-  class LocaleDisplayNames.DialectHandling
-    valueOf(java.lang.String name)
   class LocaleDisplayNames.UiListItem
     equals(java.lang.Object obj)
     getComparator(java.util.Comparator<java.lang.Object> comparator, boolean inSelf)
@@ -6279,8 +6215,6 @@ package android.icu.text
     getInstance(java.util.Locale locale, android.icu.text.MeasureFormat.FormatWidth formatWidth)
     getInstance(java.util.Locale locale, android.icu.text.MeasureFormat.FormatWidth formatWidth, android.icu.text.NumberFormat format)
     parseObject(java.lang.String source, java.text.ParsePosition pos)
-  class MeasureFormat.FormatWidth
-    valueOf(java.lang.String name)
   class MessageFormat
     applyPattern(java.lang.String pttrn)
     applyPattern(java.lang.String pattern, android.icu.text.MessagePattern.ApostropheMode aposMode)
@@ -6329,14 +6263,8 @@ package android.icu.text
     parseSelectStyle(java.lang.String pattern)
     partSubstringMatches(android.icu.text.MessagePattern.Part part, java.lang.String s)
     validateArgumentName(java.lang.String name)
-  class MessagePattern.ApostropheMode
-    valueOf(java.lang.String name)
-  class MessagePattern.ArgType
-    valueOf(java.lang.String name)
   class MessagePattern.Part
     equals(java.lang.Object other)
-  class MessagePattern.Part.Type
-    valueOf(java.lang.String name)
   class Normalizer
     compare(char[] s1, char[] s2, int options)
     compare(char[] s1, int s1Start, int s1Limit, char[] s2, int s2Start, int s2Limit, int options)
@@ -6360,8 +6288,6 @@ package android.icu.text
     normalizeSecondAndAppend(java.lang.StringBuilder first, java.lang.CharSequence second)
     quickCheck(java.lang.CharSequence s)
     spanQuickCheckYes(java.lang.CharSequence s)
-  class Normalizer2.Mode
-    valueOf(java.lang.String name)
   class NumberFormat
     equals(java.lang.Object obj)
     format(android.icu.math.BigDecimal number)
@@ -6450,8 +6376,6 @@ package android.icu.text
     getUniqueKeywordValue(java.lang.String keyword)
     parseDescription(java.lang.String description)
     select(double number)
-  class PluralRules.PluralType
-    valueOf(java.lang.String name)
   class RelativeDateTimeFormatter
     combineDateAndTime(java.lang.String relativeDateString, java.lang.String timeString)
     format(android.icu.text.RelativeDateTimeFormatter.Direction direction, android.icu.text.RelativeDateTimeFormatter.AbsoluteUnit unit)
@@ -6461,14 +6385,6 @@ package android.icu.text
     getInstance(android.icu.util.ULocale locale, android.icu.text.NumberFormat nf, android.icu.text.RelativeDateTimeFormatter.Style style, android.icu.text.DisplayContext capitalizationContext)
     getInstance(java.util.Locale locale)
     getInstance(java.util.Locale locale, android.icu.text.NumberFormat nf)
-  class RelativeDateTimeFormatter.AbsoluteUnit
-    valueOf(java.lang.String name)
-  class RelativeDateTimeFormatter.Direction
-    valueOf(java.lang.String name)
-  class RelativeDateTimeFormatter.RelativeUnit
-    valueOf(java.lang.String name)
-  class RelativeDateTimeFormatter.Style
-    valueOf(java.lang.String name)
   interface Replaceable
     char32At(int offset)
     charAt(int offset)
@@ -6514,8 +6430,6 @@ package android.icu.text
     setMatchLength(int length)
     setOverlapping(boolean allowOverlap)
     setTarget(java.text.CharacterIterator text)
-  class SearchIterator.ElementComparisonType
-    valueOf(java.lang.String name)
   class SelectFormat
     applyPattern(java.lang.String pattern)
     equals(java.lang.Object obj)
@@ -6597,14 +6511,6 @@ package android.icu.text
     setGMTZeroFormat(java.lang.String gmtZeroFormat)
     setTimeZoneNames(android.icu.text.TimeZoneNames tznames)
     #ctor(android.icu.util.ULocale locale)
-  class TimeZoneFormat.GMTOffsetPatternType
-    valueOf(java.lang.String name)
-  class TimeZoneFormat.ParseOption
-    valueOf(java.lang.String name)
-  class TimeZoneFormat.Style
-    valueOf(java.lang.String name)
-  class TimeZoneFormat.TimeType
-    valueOf(java.lang.String name)
   class TimeZoneNames
     getAvailableMetaZoneIDs(java.lang.String tzID)
     getDisplayName(java.lang.String tzID, android.icu.text.TimeZoneNames.NameType type, long date)
@@ -6616,8 +6522,6 @@ package android.icu.text
     getReferenceZoneID(java.lang.String mzID, java.lang.String region)
     getTimeZoneDisplayName(java.lang.String tzID, android.icu.text.TimeZoneNames.NameType type)
     getTZDBInstance(android.icu.util.ULocale locale)
-  class TimeZoneNames.NameType
-    valueOf(java.lang.String name)
   class UCharacterIterator
     getInstance(android.icu.text.Replaceable source)
     getInstance(char[] source)
@@ -6717,10 +6621,6 @@ package android.icu.text
     #ctor(java.lang.String pattern, int options)
     #ctor(java.lang.String pattern, java.text.ParsePosition pos, android.icu.text.SymbolTable symbols)
     #ctor(java.lang.String pattern, java.text.ParsePosition pos, android.icu.text.SymbolTable symbols, int options)
-  class UnicodeSet.ComparisonStyle
-    valueOf(java.lang.String name)
-  class UnicodeSet.SpanCondition
-    valueOf(java.lang.String name)
   class UnicodeSetIterator
     reset(android.icu.text.UnicodeSet uset)
     #ctor(android.icu.text.UnicodeSet set)
@@ -6738,10 +6638,6 @@ package android.icu.text
     trim(java.lang.CharSequence sequence, android.icu.text.UnicodeSetSpanner.TrimOption trimOption)
     trim(java.lang.CharSequence sequence, android.icu.text.UnicodeSetSpanner.TrimOption trimOption, android.icu.text.UnicodeSet.SpanCondition spanCondition)
     #ctor(android.icu.text.UnicodeSet source)
-  class UnicodeSetSpanner.CountMethod
-    valueOf(java.lang.String name)
-  class UnicodeSetSpanner.TrimOption
-    valueOf(java.lang.String name)
 
 package android.icu.util
 ;---------------------------------------
@@ -6900,8 +6796,6 @@ package android.icu.util
     getSymbol(android.icu.util.ULocale uloc)
     getSymbol(java.util.Locale loc)
     isAvailable(java.lang.String code, java.util.Date from, java.util.Date to)
-  class Currency.CurrencyUsage
-    valueOf(java.lang.String name)
   class CurrencyAmount
     #ctor(double number, android.icu.util.Currency currency)
     #ctor(java.lang.Number number, android.icu.util.Currency currency)
@@ -6988,8 +6882,6 @@ package android.icu.util
     #ctor(java.util.Date date)
     #ctor(java.util.Locale aLocale)
     setCalculationType(android.icu.util.IslamicCalendar.CalculationType type)
-  class IslamicCalendar.CalculationType
-    valueOf(java.lang.String name)
   class JapaneseCalendar
     getActualMaximum(int field)
     handleComputeFields(int julianDay)
@@ -7051,8 +6943,6 @@ package android.icu.util
     inDaylightTime(java.util.Date date)
     setID(java.lang.String ID)
     setRawOffset(int offsetMillis)
-  class TimeZone.SystemTimeZoneType
-    valueOf(java.lang.String name)
   class ULocale
     acceptLanguage(android.icu.util.ULocale[] acceptLanguageList, android.icu.util.ULocale[] availableLocales, boolean[] fallback)
     acceptLanguage(android.icu.util.ULocale[] acceptLanguageList, boolean[] fallback)
@@ -7129,8 +7019,6 @@ package android.icu.util
     setScript(java.lang.String script)
     setUnicodeLocaleKeyword(java.lang.String key, java.lang.String type)
     setVariant(java.lang.String variant)
-  class ULocale.Category
-    valueOf(java.lang.String name)
   class UniversalTimeScale
     bigDecimalFrom(android.icu.math.BigDecimal otherTime, int timeScale)
     bigDecimalFrom(double otherTime, int timeScale)
@@ -8830,8 +8718,6 @@ package android.net
   class LocalSocketAddress
     #ctor(java.lang.String name)
     #ctor(java.lang.String name, android.net.LocalSocketAddress.Namespace namespace)
-  class LocalSocketAddress.Namespace
-    valueOf(java.lang.String name)
   class MailTo
     isMailTo(java.lang.String url)
     parse(java.lang.String url)
@@ -8853,10 +8739,6 @@ package android.net
     writeToParcel(android.os.Parcel dest, int flags)
   class NetworkInfo
     writeToParcel(android.os.Parcel dest, int flags)
-  class NetworkInfo.DetailedState
-    valueOf(java.lang.String name)
-  class NetworkInfo.State
-    valueOf(java.lang.String name)
   class NetworkRequest
     equals(java.lang.Object obj)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -9170,7 +9052,6 @@ package android.net.wifi
     writeToParcel(android.os.Parcel dest, int flags)
   class SupplicantState
     isValidState(android.net.wifi.SupplicantState state)
-    valueOf(java.lang.String name)
     writeToParcel(android.os.Parcel dest, int flags)
   class WifiConfiguration
     setHttpProxy(android.net.ProxyInfo httpProxy)
@@ -9248,6 +9129,8 @@ package android.net.wifi.aware
     onSubscribeStarted(android.net.wifi.aware.SubscribeDiscoverySession session)
   class IdentityChangedListener
     onIdentityChanged(byte[] mac)
+  class PeerHandle
+    equals(java.lang.Object o)
   class PublishConfig
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -10570,8 +10453,6 @@ package android.os
     onPostExecute(Result result)
     onProgressUpdate(Progress... values)
     publishProgress(Progress... values)
-  class AsyncTask.Status
-    valueOf(java.lang.String name)
   class BadParcelableException
     #ctor(java.lang.Exception cause)
     #ctor(java.lang.String msg)
@@ -11947,8 +11828,6 @@ package android.renderscript
     setOnBufferAvailableListener(android.renderscript.Allocation.OnBufferAvailableListener callback)
     setSurface(android.view.Surface sur)
     syncAll(int srcLocation)
-  class Allocation.MipmapControl
-    valueOf(java.lang.String name)
   interface Allocation.OnBufferAvailableListener
     onBufferAvailable(android.renderscript.Allocation a)
   class AllocationAdapter
@@ -12055,10 +11934,6 @@ package android.renderscript
     add(android.renderscript.Element element, java.lang.String name)
     add(android.renderscript.Element element, java.lang.String name, int arraySize)
     #ctor(android.renderscript.RenderScript rs)
-  class Element.DataKind
-    valueOf(java.lang.String name)
-  class Element.DataType
-    valueOf(java.lang.String name)
   class FieldPacker
     addBoolean(boolean v)
     addF32(android.renderscript.Float2 v)
@@ -12184,10 +12059,6 @@ package android.renderscript
     setErrorHandler(android.renderscript.RenderScript.RSErrorHandler msg)
     setMessageHandler(android.renderscript.RenderScript.RSMessageHandler msg)
     setPriority(android.renderscript.RenderScript.Priority p)
-  class RenderScript.ContextType
-    valueOf(java.lang.String name)
-  class RenderScript.Priority
-    valueOf(java.lang.String name)
   class RSDriverException
     #ctor(java.lang.String string)
   class RSIllegalArgumentException
@@ -12213,8 +12084,6 @@ package android.renderscript
     setMinification(android.renderscript.Sampler.Value v)
     setWrapS(android.renderscript.Sampler.Value v)
     setWrapT(android.renderscript.Sampler.Value v)
-  class Sampler.Value
-    valueOf(java.lang.String name)
   class Script
     bindAllocation(android.renderscript.Allocation va, int slot)
     createFieldID(int slot, android.renderscript.Element e)
@@ -12478,8 +12347,6 @@ package android.renderscript
     setYuvFormat(int yuvFormat)
     setZ(int value)
     #ctor(android.renderscript.RenderScript rs, android.renderscript.Element e)
-  class Type.CubemapFace
-    valueOf(java.lang.String name)
 
 package android.sax
 ;---------------------------------------
@@ -13601,8 +13468,6 @@ package android.telephony
     getSubmitPdu(java.lang.String scAddress, java.lang.String destinationAddress, java.lang.String message, boolean statusReportRequested)
     getSubmitPdu(java.lang.String scAddress, java.lang.String destinationAddress, short destinationPort, byte[] data, boolean statusReportRequested)
     getTPLayerLengthForPDU(java.lang.String pdu)
-  class SmsMessage.MessageClass
-    valueOf(java.lang.String name)
   class SubscriptionInfo
     createIconBitmap(android.content.Context context)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -13690,8 +13555,6 @@ package android.telephony.gsm
     getSubmitPdu(java.lang.String scAddress, java.lang.String destinationAddress, java.lang.String message, boolean statusReportRequested)
     getSubmitPdu(java.lang.String scAddress, java.lang.String destinationAddress, short destinationPort, byte[] data, boolean statusReportRequested)
     getTPLayerLengthForPDU(java.lang.String pdu)
-  class SmsMessage.MessageClass
-    valueOf(java.lang.String name)
 
 package android.test
 ;---------------------------------------
@@ -14296,8 +14159,6 @@ package android.text
     increaseWidthTo(int wid)
     isRtlCharAt(int offset)
     #ctor(java.lang.CharSequence text, android.text.TextPaint paint, int width, android.text.Layout.Alignment align, float spacingMult, float spacingAdd)
-  class Layout.Alignment
-    valueOf(java.lang.String name)
   class LoginFilter
     filter(java.lang.CharSequence source, int start, int end, android.text.Spanned dest, int dstart, int dend)
     isAllowed(char c)
@@ -14472,8 +14333,6 @@ package android.text
     #ctor(char delimiter)
   interface TextUtils.StringSplitter
     setString(java.lang.String string)
-  class TextUtils.TruncateAt
-    valueOf(java.lang.String name)
   interface TextWatcher
     afterTextChanged(android.text.Editable s)
     beforeTextChanged(java.lang.CharSequence s, int start, int count, int after)
@@ -14704,8 +14563,6 @@ package android.text.method
     onSpanRemoved(android.text.Spannable s, java.lang.Object what, int start, int end)
     shouldCap(android.text.method.TextKeyListener.Capitalize cap, java.lang.CharSequence cs, int off)
     #ctor(android.text.method.TextKeyListener.Capitalize cap, boolean autotext)
-  class TextKeyListener.Capitalize
-    valueOf(java.lang.String name)
   class TimeKeyListener
     getInstance(java.util.Locale locale)
     #ctor(java.util.Locale locale)
@@ -15364,8 +15221,6 @@ package android.util
   class JsonReader
     #ctor(java.io.Reader in)
     setLenient(boolean lenient)
-  class JsonToken
-    valueOf(java.lang.String name)
   class JsonWriter
     #ctor(java.io.Writer out)
     name(java.lang.String name)
@@ -15577,8 +15432,6 @@ package android.util
     parse(java.io.InputStream in, android.util.Xml.Encoding encoding, org.xml.sax.ContentHandler contentHandler)
     parse(java.io.Reader in, org.xml.sax.ContentHandler contentHandler)
     parse(java.lang.String xml, org.xml.sax.ContentHandler contentHandler)
-  class Xml.Encoding
-    valueOf(java.lang.String name)
 
 package android.view
 ;---------------------------------------
@@ -16445,10 +16298,6 @@ package android.view
     startRecyclerTracing(java.lang.String prefix, android.view.View view)
     trace(android.view.View view, android.view.ViewDebug.HierarchyTraceType type)
     trace(android.view.View view, android.view.ViewDebug.RecyclerTraceType type, int... parameters)
-  class ViewDebug.HierarchyTraceType
-    valueOf(java.lang.String name)
-  class ViewDebug.RecyclerTraceType
-    valueOf(java.lang.String name)
   class ViewGroup
     addChildrenForAccessibility(java.util.ArrayList<android.view.View> outChildren)
     addFocusables(java.util.ArrayList<android.view.View> views, int direction, int focusableMode)
@@ -17526,8 +17375,6 @@ package android.webkit
     proceed(java.security.PrivateKey privateKey, java.security.cert.X509Certificate[] chain)
   class ConsoleMessage
     #ctor(java.lang.String message, java.lang.String sourceId, int lineNumber, android.webkit.ConsoleMessage.MessageLevel msgLevel)
-  class ConsoleMessage.MessageLevel
-    valueOf(java.lang.String name)
   class CookieManager
     acceptThirdPartyCookies(android.webkit.WebView webview)
     getCookie(java.lang.String url)
@@ -17706,16 +17553,6 @@ package android.webkit
     setTextZoom(int textZoom)
     setUserAgentString(java.lang.String ua)
     setUseWideViewPort(boolean use)
-  class WebSettings.LayoutAlgorithm
-    valueOf(java.lang.String name)
-  class WebSettings.PluginState
-    valueOf(java.lang.String name)
-  class WebSettings.RenderPriority
-    valueOf(java.lang.String name)
-  class WebSettings.TextSize
-    valueOf(java.lang.String name)
-  class WebSettings.ZoomDensity
-    valueOf(java.lang.String name)
   class WebStorage
     deleteOrigin(java.lang.String origin)
     getOrigins(android.webkit.ValueCallback<java.util.Map> callback)
@@ -18664,8 +18501,6 @@ package android.widget
     setSelected(boolean selected)
     setVisibility(int visibility)
     verifyDrawable(android.graphics.drawable.Drawable dr)
-  class ImageView.ScaleType
-    valueOf(java.lang.String name)
   class LinearLayout
     checkLayoutParams(android.view.ViewGroup.LayoutParams p)
     generateLayoutParams(android.util.AttributeSet attrs)
@@ -19607,8 +19442,6 @@ package android.widget
     #ctor(android.content.Context context, android.util.AttributeSet attrs, int defStyleAttr)
     #ctor(android.content.Context context, android.util.AttributeSet attrs, int defStyleAttr, int defStyleRes)
     verifyDrawable(android.graphics.drawable.Drawable who)
-  class TextView.BufferType
-    valueOf(java.lang.String name)
   interface TextView.OnEditorActionListener
     onEditorAction(android.widget.TextView v, int actionId, android.view.KeyEvent event)
   class TextView.SavedState
@@ -19848,8 +19681,6 @@ package java.awt.font
     shape(char[] text, int start, int count)
     shape(char[] text, int start, int count, int context)
     shape(char[] text, int start, int count, java.awt.font.NumericShaper.Range context)
-  class NumericShaper.Range
-    valueOf(java.lang.String name)
   class TextAttribute
     #ctor(java.lang.String name)
 
@@ -20577,7 +20408,6 @@ package java.lang
   class Character.UnicodeScript
     forName(java.lang.String scriptName)
     of(int codePoint)
-    valueOf(java.lang.String name)
   interface CharSequence
     charAt(int index)
     subSequence(int start, int end)
@@ -20951,8 +20781,6 @@ package java.lang
     equals(java.lang.Object obj)
     from(java.io.File file)
     to(java.io.File file)
-  class ProcessBuilder.Redirect.Type
-    valueOf(java.lang.String name)
   interface Readable
     read(java.nio.CharBuffer cb)
   class ReflectiveOperationException
@@ -21306,8 +21134,6 @@ package java.lang
     #ctor(java.lang.ThreadGroup group, java.lang.Runnable target, java.lang.String name)
     #ctor(java.lang.ThreadGroup group, java.lang.Runnable target, java.lang.String name, long stackSize)
     #ctor(java.lang.ThreadGroup group, java.lang.String name)
-  class Thread.State
-    valueOf(java.lang.String name)
   interface Thread.UncaughtExceptionHandler
     uncaughtException(java.lang.Thread t, java.lang.Throwable e)
   class ThreadGroup
@@ -21364,12 +21190,8 @@ package java.lang.annotation
     #ctor(java.lang.Throwable cause)
   class AnnotationTypeMismatchException
     #ctor(java.lang.reflect.Method element, java.lang.String foundType)
-  class ElementType
-    valueOf(java.lang.String name)
   class IncompleteAnnotationException
     #ctor(java.lang.Class<? extends java.lang.annotation.Annotation> annotationType, java.lang.String elementName)
-  class RetentionPolicy
-    valueOf(java.lang.String name)
 
 package java.lang.invoke
 ;---------------------------------------
@@ -21694,7 +21516,6 @@ package java.math
     #ctor(java.lang.String s)
   class RoundingMode
     valueOf(int mode)
-    valueOf(java.lang.String name)
 
 package java.net
 ;---------------------------------------
@@ -21703,8 +21524,6 @@ package java.net
     requestPasswordAuthentication(java.lang.String host, java.net.InetAddress addr, int port, java.lang.String protocol, java.lang.String prompt, java.lang.String scheme, java.net.URL url, java.net.Authenticator.RequestorType reqType)
     requestPasswordAuthentication(java.net.InetAddress addr, int port, java.lang.String protocol, java.lang.String prompt, java.lang.String scheme)
     setDefault(java.net.Authenticator a)
-  class Authenticator.RequestorType
-    valueOf(java.lang.String name)
   class BindException
     #ctor(java.lang.String msg)
   class ConnectException
@@ -21867,8 +21686,6 @@ package java.net
   class Proxy
     equals(java.lang.Object obj)
     #ctor(java.net.Proxy.Type type, java.net.SocketAddress sa)
-  class Proxy.Type
-    valueOf(java.lang.String name)
   class ProxySelector
     connectFailed(java.net.URI uri, java.net.SocketAddress sa, java.io.IOException ioe)
     select(java.net.URI uri)
@@ -21933,8 +21750,6 @@ package java.net
     #ctor(java.lang.String host, java.lang.String action)
   class SocketTimeoutException
     #ctor(java.lang.String msg)
-  class StandardProtocolFamily
-    valueOf(java.lang.String name)
   class UnknownHostException
     #ctor(java.lang.String host)
   class UnknownServiceException
@@ -22406,8 +22221,6 @@ package java.nio.file
   class AccessDeniedException
     #ctor(java.lang.String file)
     #ctor(java.lang.String file, java.lang.String other, java.lang.String reason)
-  class AccessMode
-    valueOf(java.lang.String name)
   class AtomicMoveNotSupportedException
     #ctor(java.lang.String source, java.lang.String target, java.lang.String reason)
   class DirectoryIteratorException
@@ -22507,20 +22320,14 @@ package java.nio.file
     newFileSystem(java.net.URI uri, java.util.Map<java.lang.String,?> env)
     newFileSystem(java.net.URI uri, java.util.Map<java.lang.String,?> env, java.lang.ClassLoader loader)
     newFileSystem(java.nio.file.Path path, java.lang.ClassLoader loader)
-  class FileVisitOption
-    valueOf(java.lang.String name)
   interface FileVisitor<T>
     postVisitDirectory(T dir, java.io.IOException exc)
     preVisitDirectory(T dir, java.nio.file.attribute.BasicFileAttributes attrs)
     visitFile(T file, java.nio.file.attribute.BasicFileAttributes attrs)
     visitFileFailed(T file, java.io.IOException exc)
-  class FileVisitResult
-    valueOf(java.lang.String name)
   class InvalidPathException
     #ctor(java.lang.String input, java.lang.String reason)
     #ctor(java.lang.String input, java.lang.String reason, int index)
-  class LinkOption
-    valueOf(java.lang.String name)
   class LinkPermission
     #ctor(java.lang.String name)
     #ctor(java.lang.String name, java.lang.String actions)
@@ -22571,10 +22378,6 @@ package java.nio.file
     preVisitDirectory(T dir, java.nio.file.attribute.BasicFileAttributes attrs)
     visitFile(T file, java.nio.file.attribute.BasicFileAttributes attrs)
     visitFileFailed(T file, java.io.IOException exc)
-  class StandardCopyOption
-    valueOf(java.lang.String name)
-  class StandardOpenOption
-    valueOf(java.lang.String name)
   interface Watchable
     register(java.nio.file.WatchService watcher, java.nio.file.WatchEvent.Kind<?>... events)
     register(java.nio.file.WatchService watcher, java.nio.file.WatchEvent.Kind<?>[] events, java.nio.file.WatchEvent.Modifier... modifiers)
@@ -22593,12 +22396,6 @@ package java.nio.file.attribute
     setPermissions(java.util.Set<java.nio.file.attribute.AclEntryPermission> perms)
     setPrincipal(java.nio.file.attribute.UserPrincipal who)
     setType(java.nio.file.attribute.AclEntryType type)
-  class AclEntryFlag
-    valueOf(java.lang.String name)
-  class AclEntryPermission
-    valueOf(java.lang.String name)
-  class AclEntryType
-    valueOf(java.lang.String name)
   interface AclFileAttributeView
     setAcl(java.util.List<java.nio.file.attribute.AclEntry> acl)
   interface BasicFileAttributeView
@@ -22620,8 +22417,6 @@ package java.nio.file.attribute
   interface PosixFileAttributeView
     setGroup(java.nio.file.attribute.GroupPrincipal group)
     setPermissions(java.util.Set<java.nio.file.attribute.PosixFilePermission> perms)
-  class PosixFilePermission
-    valueOf(java.lang.String name)
   class PosixFilePermissions
     asFileAttribute(java.util.Set<java.nio.file.attribute.PosixFilePermission> perms)
     fromString(java.lang.String perms)
@@ -22740,8 +22535,6 @@ package java.security
     #ctor(java.net.URL url, java.security.cert.Certificate[] certs)
     #ctor(java.net.URL url, java.security.CodeSigner[] signers)
     implies(java.security.CodeSource codesource)
-  class CryptoPrimitive
-    valueOf(java.lang.String name)
   class DigestException
     #ctor(java.lang.String msg)
     #ctor(java.lang.String message, java.lang.Throwable cause)
@@ -22836,8 +22629,6 @@ package java.security
     initialize(java.security.spec.AlgorithmParameterSpec params, java.security.SecureRandom random)
   class KeyRep
     #ctor(java.security.KeyRep.Type type, java.lang.String algorithm, java.lang.String format, byte[] encoded)
-  class KeyRep.Type
-    valueOf(java.lang.String name)
   class KeyStore
     containsAlias(java.lang.String alias)
     deleteEntry(java.lang.String alias)
@@ -23186,8 +22977,6 @@ package java.security.cert
     #ctor(java.lang.String msg, java.lang.Throwable cause, java.security.cert.CertPath certPath, int index)
     #ctor(java.lang.String msg, java.lang.Throwable cause, java.security.cert.CertPath certPath, int index, java.security.cert.CertPathValidatorException.Reason reason)
     #ctor(java.lang.Throwable cause)
-  class CertPathValidatorException.BasicReason
-    valueOf(java.lang.String name)
   class CertPathValidatorSpi
     engineValidate(java.security.cert.CertPath certPath, java.security.cert.CertPathParameters params)
   interface CertSelector
@@ -23216,8 +23005,6 @@ package java.security.cert
     #ctor(java.lang.String message)
     #ctor(java.lang.String message, java.lang.Throwable cause)
     #ctor(java.lang.Throwable cause)
-  class CRLReason
-    valueOf(java.lang.String name)
   interface CRLSelector
     match(java.security.cert.CRL crl)
   interface Extension
@@ -23254,16 +23041,12 @@ package java.security.cert
     setSigProvider(java.lang.String sigProvider)
     setTargetCertConstraints(java.security.cert.CertSelector selector)
     setTrustAnchors(java.util.Set<java.security.cert.TrustAnchor> trustAnchors)
-  class PKIXReason
-    valueOf(java.lang.String name)
   class PKIXRevocationChecker
     setOcspExtensions(java.util.List<java.security.cert.Extension> extensions)
     setOcspResponder(java.net.URI uri)
     setOcspResponderCert(java.security.cert.X509Certificate cert)
     setOcspResponses(java.util.Map<java.security.cert.X509Certificate,byte[]> responses)
     setOptions(java.util.Set<java.security.cert.PKIXRevocationChecker.Option> options)
-  class PKIXRevocationChecker.Option
-    valueOf(java.lang.String name)
   class PolicyQualifierInfo
     #ctor(byte[] encoded)
   class TrustAnchor
@@ -23531,8 +23314,6 @@ package java.sql
     setTimestamp(java.lang.String parameterName, java.sql.Timestamp x)
     setTimestamp(java.lang.String parameterName, java.sql.Timestamp x, java.util.Calendar cal)
     setURL(java.lang.String parameterName, java.net.URL val)
-  class ClientInfoStatus
-    valueOf(java.lang.String name)
   interface Clob
     getCharacterStream(long pos, long length)
     getSubString(long pos, int length)
@@ -23872,8 +23653,6 @@ package java.sql
     isWritable(int column)
   interface RowId
     equals(java.lang.Object obj)
-  class RowIdLifetime
-    valueOf(java.lang.String name)
   class SQLClientInfoException
     #ctor(java.lang.String reason, java.lang.String SQLState, int vendorCode, java.util.Map<java.lang.String,java.sql.ClientInfoStatus> failedProperties)
     #ctor(java.lang.String reason, java.lang.String SQLState, int vendorCode, java.util.Map<java.lang.String,java.sql.ClientInfoStatus> failedProperties, java.lang.Throwable cause)
@@ -24278,8 +24057,6 @@ package java.text
   class Normalizer
     isNormalized(java.lang.CharSequence src, java.text.Normalizer.Form form)
     normalize(java.lang.CharSequence src, java.text.Normalizer.Form form)
-  class Normalizer.Form
-    valueOf(java.lang.String name)
   class NumberFormat
     equals(java.lang.Object obj)
     format(double number)
@@ -24365,7 +24142,6 @@ package java.time
     plus(long days)
     <R> query(java.time.temporal.TemporalQuery<R> query)
     range(java.time.temporal.TemporalField field)
-    valueOf(java.lang.String name)
   class Duration
     addTo(java.time.temporal.Temporal temporal)
     between(java.time.temporal.Temporal startInclusive, java.time.temporal.Temporal endExclusive)
@@ -24607,7 +24383,6 @@ package java.time
     plus(long months)
     <R> query(java.time.temporal.TemporalQuery<R> query)
     range(java.time.temporal.TemporalField field)
-    valueOf(java.lang.String name)
   class MonthDay
     adjustInto(java.time.temporal.Temporal temporal)
     atYear(int year)
@@ -25065,7 +24840,6 @@ package java.time.chrono
   class HijrahEra
     of(int hijrahEra)
     range(java.time.temporal.TemporalField field)
-    valueOf(java.lang.String name)
   class IsoChronology
     date(int prolepticYear, int month, int dayOfMonth)
     date(java.time.chrono.Era era, int yearOfEra, int month, int dayOfMonth)
@@ -25086,7 +24860,6 @@ package java.time.chrono
     zonedDateTime(java.time.temporal.TemporalAccessor temporal)
   class IsoEra
     of(int isoEra)
-    valueOf(java.lang.String name)
   class JapaneseChronology
     date(int prolepticYear, int month, int dayOfMonth)
     date(java.time.chrono.Era era, int yearOfEra, int month, int dayOfMonth)
@@ -25161,7 +24934,6 @@ package java.time.chrono
     with(java.time.temporal.TemporalField field, long newValue)
   class MinguoEra
     of(int minguoEra)
-    valueOf(java.lang.String name)
   class ThaiBuddhistChronology
     date(int prolepticYear, int month, int dayOfMonth)
     date(java.time.chrono.Era era, int yearOfEra, int month, int dayOfMonth)
@@ -25197,7 +24969,6 @@ package java.time.chrono
     with(java.time.temporal.TemporalField field, long newValue)
   class ThaiBuddhistEra
     of(int thaiBuddhistEra)
-    valueOf(java.lang.String name)
 
 package java.time.format
 ;---------------------------------------
@@ -25260,14 +25031,6 @@ package java.time.format
     withNegativeSign(char negativeSign)
     withPositiveSign(char positiveSign)
     withZeroDigit(char zeroDigit)
-  class FormatStyle
-    valueOf(java.lang.String name)
-  class ResolverStyle
-    valueOf(java.lang.String name)
-  class SignStyle
-    valueOf(java.lang.String name)
-  class TextStyle
-    valueOf(java.lang.String name)
 
 package java.time.temporal
 ;---------------------------------------
@@ -25279,12 +25042,10 @@ package java.time.temporal
     getFrom(java.time.temporal.TemporalAccessor temporal)
     isSupportedBy(java.time.temporal.TemporalAccessor temporal)
     rangeRefinedBy(java.time.temporal.TemporalAccessor temporal)
-    valueOf(java.lang.String name)
   class ChronoUnit
     <R> addTo(R temporal, long amount)
     between(java.time.temporal.Temporal temporal1Inclusive, java.time.temporal.Temporal temporal2Exclusive)
     isSupportedBy(java.time.temporal.Temporal temporal)
-    valueOf(java.lang.String name)
   interface Temporal
     isSupported(java.time.temporal.TemporalUnit unit)
     minus(java.time.temporal.TemporalAmount amount)
@@ -25358,7 +25119,6 @@ package java.time.zone
     of(java.time.Month month, int dayOfMonthIndicator, java.time.DayOfWeek dayOfWeek, java.time.LocalTime time, boolean timeEndOfDay, java.time.zone.ZoneOffsetTransitionRule.TimeDefinition timeDefnition, java.time.ZoneOffset standardOffset, java.time.ZoneOffset offsetBefore, java.time.ZoneOffset offsetAfter)
   class ZoneOffsetTransitionRule.TimeDefinition
     createDateTime(java.time.LocalDateTime dateTime, java.time.ZoneOffset standardOffset, java.time.ZoneOffset wallOffset)
-    valueOf(java.lang.String name)
   class ZoneRules
     equals(java.lang.Object otherRules)
     getDaylightSavings(java.time.Instant instant)
@@ -25898,8 +25658,6 @@ package java.util
     #ctor(java.lang.String fileName, java.lang.String csn)
     #ctor(java.lang.String fileName, java.lang.String csn, java.util.Locale l)
     #ctor(java.util.Locale l)
-  class Formatter.BigDecimalLayoutForm
-    valueOf(java.lang.String name)
   class GregorianCalendar
     add(int field, int amount)
     equals(java.lang.Object obj)
@@ -26105,10 +25863,6 @@ package java.util
     setScript(java.lang.String script)
     setUnicodeLocaleKeyword(java.lang.String key, java.lang.String type)
     setVariant(java.lang.String variant)
-  class Locale.Category
-    valueOf(java.lang.String name)
-  class Locale.FilteringMode
-    valueOf(java.lang.String name)
   class Locale.LanguageRange
     equals(java.lang.Object obj)
     #ctor(java.lang.String range)
@@ -27289,7 +27043,6 @@ package java.util.concurrent
     toMinutes(long duration)
     toNanos(long duration)
     toSeconds(long duration)
-    valueOf(java.lang.String name)
   interface TransferQueue<E>
     transfer(E e)
     tryTransfer(E e)
@@ -27976,8 +27729,6 @@ package java.util.stream
   interface Collector<T,A,R>
     <T,A,R> of(java.util.function.Supplier<A> supplier, java.util.function.BiConsumer<A,T> accumulator, java.util.function.BinaryOperator<A> combiner, java.util.function.Function<A,R> finisher, java.util.stream.Collector.Characteristics... characteristics)
     <T,R> of(java.util.function.Supplier<R> supplier, java.util.function.BiConsumer<R,T> accumulator, java.util.function.BinaryOperator<R> combiner, java.util.stream.Collector.Characteristics... characteristics)
-  class Collector.Characteristics
-    valueOf(java.lang.String name)
   class Collectors
     <T> averagingDouble(java.util.function.ToDoubleFunction<? super T> mapper)
     <T> averagingInt(java.util.function.ToIntFunction<? super T> mapper)
@@ -28864,10 +28615,6 @@ package javax.net.ssl
     wrap(java.nio.ByteBuffer[] srcs, java.nio.ByteBuffer dst)
   class SSLEngineResult
     #ctor(javax.net.ssl.SSLEngineResult.Status status, javax.net.ssl.SSLEngineResult.HandshakeStatus handshakeStatus, int bytesConsumed, int bytesProduced)
-  class SSLEngineResult.HandshakeStatus
-    valueOf(java.lang.String name)
-  class SSLEngineResult.Status
-    valueOf(java.lang.String name)
   class SSLException
     #ctor(java.lang.String reason)
     #ctor(java.lang.String message, java.lang.Throwable cause)

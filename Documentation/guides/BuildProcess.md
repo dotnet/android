@@ -359,6 +359,14 @@ when packaing Release applications.
     <AndroidLinkSkip>Assembly1;Assembly2</AndroidLinkSkip>
     ```
 
+-   **LinkerDumpDependencies** &ndash; A bool property which enables
+    generating of linker dependencies file. This file can be used as
+    input for
+    [illinkanalyzer](https://github.com/mono/linker/tree/master/analyzer)
+    tool.
+
+    The default value is False.
+
 -   **AndroidManagedSymbols** &ndash; A boolean property that controls
     whether sequence points are generated so that file name and line
     number information can be extracted from `Release` stack traces.
@@ -663,6 +671,24 @@ when packaing Release applications.
     See [Lint Help](http://www.androiddocs.com/tools/help/lint.html) for more details on
     the android `lint` tooling.
 
+-  **AndroidGenerateJniMarshalMethods** &ndash; A bool property which
+   enables generating of JNI marshal methods as part of the build
+   process. This greatly reduces the System.Reflection usage in the
+   binding helper code.
+
+   By default this will be set to False. If the developers wish to use
+   the new JNI marshal methods feature, they can set
+
+        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
+
+    in their csproj. Alternatively provide the property on the command
+    line via
+
+        /p:AndroidGenerateJniMarshalMethods=True
+
+    **Experimental**. Added in Xamarin.Android 8.4.  
+    The default value is False.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with
@@ -718,9 +744,7 @@ The following MSBuild properties are used with
       - `jmethodID` caching of Java Callable Wrapper constructors for
         managed subclasses.
 
-    The default value is `XamarinAndroid`.
-
-    The default value will change in a future release.
+    The default value is `XAJavaInterop1`.
 
 
 ### Resource Properties
@@ -761,7 +785,7 @@ resources.
 -  **AndroidUseAapt2** &ndash; A bool property which allows the developer to
     control the use of the `aapt2` tool for packaging.
     By default this will be set to false and we will use `aapt`.
-    If the developer wishes too use the new `aapt2` functionality
+    If the developer wishes to use the new `aapt2` functionality
     they can set
         
         <AndroidUseAapt2>True</AndroidUseAapt2>

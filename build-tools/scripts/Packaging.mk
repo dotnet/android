@@ -8,7 +8,7 @@ _BUNDLE_ZIPS_EXCLUDE  = \
 
 create-vsix:
 	$(foreach conf, $(CONFIGURATIONS), \
-		MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" msbuild $(MSBUILD_FLAGS) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
+		MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-vsix) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
 			build-tools/create-vsix/create-vsix.csproj \
 			$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
 			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \

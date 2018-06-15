@@ -27,6 +27,10 @@
 
 #include "mono_android_Runtime.h"
 
+#if defined (LINUX)
+#include <sys/syscall.h>
+#endif
+
 #if defined (DEBUG)
 #include <fcntl.h>
 #include <arpa/inet.h>
@@ -1121,18 +1125,20 @@ monodroid_disable_gc_hooks ()
 	gc_disabled = 1;
 }
 
-#ifndef LINUX
+#ifndef ANDROID
 static pid_t gettid ()
 {
 #ifdef WINDOWS
 	return GetCurrentThreadId ();
-#else
+#elif defined (LINUX) // WINDOWS
+	return syscall (SYS_gettid);
+#else // LINUX
 	uint64_t tid;
 	pthread_threadid_np (NULL, &tid);
 	return (pid_t)tid;
 #endif
 }
-#endif
+#endif // ANDROID
 
 typedef mono_bool (*MonodroidGCTakeRefFunc) (JNIEnv *env, MonoObject *obj);
 
@@ -2399,6 +2405,7 @@ static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", NULL
 };
 
+#ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
 {
@@ -2432,6 +2439,7 @@ enable_soft_breakpoints (void)
 	log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	return 1;
 }
+#endif /* DEBUG */
 
 void
 set_world_accessable (const char *path)
@@ -2482,18 +2490,20 @@ copy_file_to_internal_location(char *to, char *from, char* file)
 	free (from_file);
 	free (to_file);
 }
-#else
+#else  /* !defined (ANDROID) */
+#ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
 {
 	return 0;
 }
+#endif /* DEBUG */
 
 void
 set_world_accessable (const char *path)
 {
 }
-#endif
+#endif /* !defined (ANDROID) */
 
 static void
 mono_runtime_init (char *runtime_args)

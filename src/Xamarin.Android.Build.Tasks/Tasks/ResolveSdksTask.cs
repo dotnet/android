@@ -261,7 +261,7 @@ namespace Xamarin.Android.Tasks
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
 					aapt2Installed = false;
-					Log.LogCodedWarning ("XA0111", "Could not get the `aapt2` version. Please check it is installed correctly.");
+					Log.LogCodedWarning ("XA0111", "Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.");
 				}
 			}
 			if (AndroidUseAapt2) {
@@ -476,18 +476,16 @@ namespace Xamarin.Android.Tasks
 				);
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
-				Log.LogCodedWarning ("XA0034", $"Failed to get the Aapt2 version. Disabling Aapt2 Support.");
 				return false;
 			}
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = Aapt2VersionRegex.Match (versionInfo);
-			Version versionNumber;
-			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out versionNumber)) {
+			Log.LogDebugMessage ($"`{aapt2Tool} version` returned: ```{versionInfo}```");
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out Version versionNumber)) {
 				Aapt2Version = versionNumber.ToString ();
-			} else {
-				Log.LogCodedWarning ("XA0033", $"Failed to get the Aapt2 version as it does not appear to contain a valid version number. `{aapt2Tool} version` returned: ```{versionInfo}```");
+				return true;
 			}
-			return !Log.HasLoggedErrors;
+			return false;
 		}
 
 		bool ValidateApiLevels ()

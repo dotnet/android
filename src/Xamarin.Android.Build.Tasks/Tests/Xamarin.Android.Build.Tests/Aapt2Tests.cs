@@ -151,5 +151,17 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors[0].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		public void Aapt2Disabled ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", "False");
+			using (var b = CreateApkBuilder ("temp/Aapt2Disabled")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Task \"Aapt2Link\" skipped"), "Aapt2Link task should be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_CreateAapt2VersionCache"), "_CreateAapt2VersionCache target should be skipped!");
+			}
+		}
 	}
 }

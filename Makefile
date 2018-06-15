@@ -34,10 +34,10 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all::
-	$(_SLN_BUILD) $(MSBUILD_FLAGS) $(SOLUTION)
+	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
-	MSBUILD="$(MSBUILD)" tools/scripts/xabuild $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
@@ -50,6 +50,8 @@ install::
 	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
 	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Novell"
+	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Xamarin.Android.Sdk.props"
+	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Xamarin.Android.Sdk.targets"
 	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
@@ -108,7 +110,7 @@ prepare-external:
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.csproj
+	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
 
 prepare-props: prepare-deps
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
@@ -119,12 +121,12 @@ prepare-props: prepare-deps
 prepare-msbuild: prepare-props
 ifeq ($(USE_MSBUILD),1)
 	for proj in $(MSBUILD_PREPARE_PROJS); do \
-		$(MSBUILD) $(MSBUILD_FLAGS) "$$proj" || exit 1; \
+		$(call MSBUILD_BINLOG,prepare-msbuild) "$$proj" || exit 1; \
 	done
 endif	# msbuild
 
 prepare-image-dependencies:
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
+	$(call MSBUILD_BINLOG,prepare-image-deps) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
 		/p:AndroidSupportedHostJitAbis=mxe-Win32:mxe-Win64
 	cat bin/Build$(CONFIGURATION)/prepare-image-dependencies.sh | tr -d '\r' > prepare-image-dependencies.sh
 
@@ -150,7 +152,7 @@ $(XA_BUILD_PATHS_OUT): bin/Test%/XABuildPaths.cs: build-tools/scripts/XABuildPat
 
 # Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
 define CREATE_THIRD_PARTY_NOTICES
-	$(MSBUILD) $(MSBUILD_FLAGS) $(_MSBUILD_ARGS) \
+	$(call MSBUILD_BINLOG,create-tpn,$(MSBUILD),$(1)) $(_MSBUILD_ARGS) \
 		$(topdir)/build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
 		/p:Configuration=$(1) \
 		/p:ThirdPartyNoticeFile=$(topdir)/$(2) \
@@ -181,11 +183,11 @@ $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),ThirdPartyNotices
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunAllTests
+	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
 	$(MAKE) run-api-compatibility-tests
 
 clean:
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.sln
+	$(call MSBUILD_BINLOG,clean) /t:Clean Xamarin.Android.sln
 	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
 
 distclean:
@@ -196,16 +198,19 @@ distclean:
 
 run-nunit-tests:
 ifeq ($(SKIP_NUNIT_TESTS),)
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunNUnitTests
+	$(call MSBUILD_BINLOG,run-nunit-tests) $(TEST_TARGETS) /t:RunNUnitTests
 endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunJavaInteropTests
+	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
 
 run-apk-tests:
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunApkTests
+	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests
 
 run-performance-tests:
-	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:RunPerformanceTests
+	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests
+
+list-nunit-tests:
+	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests
 
 include build-tools/scripts/runtime-helpers.mk

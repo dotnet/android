@@ -13,7 +13,7 @@
     </_HostRuntime>
     <_HostRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
       <Cc>$(HostCc)</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE</CFlags>
+      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE -DLINUX -Dlinux -D__linux__</CFlags>
       <LdFlags>$(_HostUnixLdFlags)</LdFlags>
       <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
       <NativeLibraryExtension>so</NativeLibraryExtension>

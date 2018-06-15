@@ -22,7 +22,7 @@ namespace MonoDroid.Tuner
 			marshalTypes.Clear ();
 			base.Process (context);
 
-			if (UpdateMarshalTypes ())
+			if (PreserveJniMarshalMethods () && UpdateMarshalTypes ())
 				base.Process (context);
 		}
 
@@ -196,6 +196,14 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
+		bool PreserveJniMarshalMethods ()
+		{
+			if (_context is AndroidLinkContext ac)
+				return ac.PreserveJniMarshalMethods;
+
+			return false;
+		}
+
 		// If this is one of our infrastructure methods that has [Register], like:
 		// [Register ("hasWindowFocus", "()Z", "GetHasWindowFocusHandler")],
 		// we need to preserve the "GetHasWindowFocusHandler" method as well.
@@ -207,7 +215,7 @@ namespace MonoDroid.Tuner
 				return;
 
 			MethodDefinition marshalMethod;
-			if (method.TryGetMarshalMethod (nativeMethod, signature, out marshalMethod)) {
+			if (PreserveJniMarshalMethods () && method.TryGetMarshalMethod (nativeMethod, signature, out marshalMethod)) {
 				MarkMethod (marshalMethod);
 				marshalTypes.Add (marshalMethod.DeclaringType);
 			}

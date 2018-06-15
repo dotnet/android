@@ -303,6 +303,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 
+	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
+
 </PropertyGroup>
 
 <Choose>
@@ -741,6 +743,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CreateAapt2VersionCache"
 		DependsOnTargets="_ReadAapt2VersionCache"
 		AfterTargets="_SetLatestTargetFrameworkVersion"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
 	>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
@@ -2057,6 +2060,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkSkip="$(AndroidLinkSkip)"
       LinkDescriptions="@(LinkDescription)"
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
+      PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
       EnableProguard="$(AndroidEnableProguard)"
       DumpDependencies="$(LinkerDumpDependencies)"
       ResolvedAssemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
@@ -3047,7 +3051,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_Deploy">
-  <Exec Command="&quot;$(AdbToolPath)\adb&quot; install -r &quot;$(ApkFileSigned)&quot;" />
+  <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;" />
 </Target>
 
 <Target Name="Install"
