@@ -2705,6 +2705,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
     HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"
+    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
