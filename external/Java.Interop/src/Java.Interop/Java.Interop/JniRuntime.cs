@@ -60,6 +60,7 @@ namespace Java.Interop
 
 			public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
 			public  JniTypeManager              TypeManager                 {get; set;}
+			public  string                      JvmDllPath                  {get; set;}
 
 			public CreationOptions ()
 			{
@@ -77,9 +78,16 @@ namespace Java.Interop
 
 	partial class NativeMethods {
 		const string JvmLibrary = "jvm.dll";
+		const string JavaInteropLibrary = "java-interop";
 
 		[DllImport (JvmLibrary)]
 		internal static extern int JNI_GetCreatedJavaVMs ([Out] IntPtr[] handles, int bufLen, out int nVMs);
+
+		[DllImport (JavaInteropLibrary)]
+		internal static extern int java_interop_jvm_list ([Out] IntPtr[] handles, int bufLen, out int nVMs);
+
+		[DllImport (JavaInteropLibrary, CharSet=CharSet.Ansi)]
+		internal static extern int java_interop_jvm_load (string path);
 	}
 
 	public partial class JniRuntime : IDisposable
@@ -88,6 +96,7 @@ namespace Java.Interop
 		const   int     JNI_EDETACHED   = -2;
 		const   int     JNI_EVERSION    = -3;
 
+		static public bool JvmDllLoaded  { get; private set; }
 
 		static ConcurrentDictionary<IntPtr, JniRuntime>     Runtimes = new ConcurrentDictionary<IntPtr, JniRuntime> ();
 
@@ -104,17 +113,35 @@ namespace Java.Interop
 				: null;
 		}
 
+		internal static int GetCreatedJavaVMs (IntPtr[] handles, int bufLen, out int nVMs)
+		{
+			if (JvmDllLoaded)
+				return NativeMethods.java_interop_jvm_list (handles, bufLen, out nVMs);
+
+			return NativeMethods.JNI_GetCreatedJavaVMs (handles, bufLen, out nVMs);
+		}
+
 		public static IEnumerable<IntPtr> GetAvailableInvocationPointers ()
 		{
 			int nVMs;
-			int r = NativeMethods.JNI_GetCreatedJavaVMs (null, 0, out nVMs);
+			int r = GetCreatedJavaVMs (null, 0, out nVMs);
 			if (r != 0)
 				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
 			var handles = new IntPtr [nVMs];
-			r = NativeMethods.JNI_GetCreatedJavaVMs (handles, handles.Length, out nVMs);
+			r = GetCreatedJavaVMs (handles, handles.Length, out nVMs);
 			if (r != 0)
 				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
 			return handles;
+		}
+
+		protected static bool LoadJvmDll (string path)
+		{
+			if (JvmDllLoaded)
+				return true;
+
+			JvmDllLoaded = NativeMethods.java_interop_jvm_load (path) != 0;
+
+			return JvmDllLoaded;
 		}
 
 		static JniRuntime current;

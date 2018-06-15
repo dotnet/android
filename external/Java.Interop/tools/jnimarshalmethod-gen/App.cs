@@ -26,6 +26,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static bool keepTemporary;
 		static bool forceRegeneration;
 		static List<Regex> typeNameRegexes = new List<Regex> ();
+		static string jvmDllPath;
 		List<string> FilesToDelete = new List<string> ();
 
 		public static int Main (string [] args)
@@ -79,6 +80,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "f",
 				  "Force regeneration of marshal methods",
 				  v => forceRegeneration = true },
+				{ "jvm=",
+				  "{JVM} shared library path.",
+				  v => jvmDllPath = v },
 				{ "keeptemp",
 				  "Keep temporary *-JniMarshalMethod.dll files.",
 				  v => keepTemporary = true },
@@ -113,7 +117,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		void ProcessAssemblies (List<string> assemblies)
 		{
-			CreateJavaVM ();
+			CreateJavaVM (jvmDllPath);
 
 			var readWriteParameters    = new ReaderParameters {
 				AssemblyResolver   = resolver,
@@ -154,10 +158,16 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			}
 		}
 
-		void CreateJavaVM ()
+		void CreateJavaVM (string jvmDllPath)
 		{
-			var builder = new JreRuntimeOptions ();
-			builder.CreateJreVM ();
+			var builder = new JreRuntimeOptions { JvmDllPath = jvmDllPath };
+
+			try {
+				builder.CreateJreVM ();
+			} catch (Exception e) {
+				Error ($"Unable to create Java VM\n{e}");
+				Environment.Exit (3);
+			}
 		}
 
 		static JniRuntime.JniMarshalMemberBuilder CreateExportedMemberBuilder ()

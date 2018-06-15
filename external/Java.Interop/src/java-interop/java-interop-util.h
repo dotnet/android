@@ -29,6 +29,7 @@ enum FatalExitCodes {
 	FATAL_EXIT_MISSING_TIMEZONE_MEMBERS   = 'T',
 	FATAL_EXIT_MISSING_ZIPALIGN           = 'Z',
 	FATAL_EXIT_OUT_OF_MEMORY              = 'M',
+	FATAL_EXIT_JVM_MISSING_SYMBOLS        = 'J',
 };
 
 static inline void*

@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="jni.c" />
     <Compile Include="java-interop.c" />
+    <Compile Include="java-interop-jvm.c" />
     <Compile Include="java-interop-mono.c" />
     <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>

@@ -73,10 +73,22 @@ namespace Java.Interop {
 
 	public class JreRuntime : JniRuntime
 	{
-		const string LibraryName = "jvm.dll";
+		const string JvmLibrary = "jvm.dll";
+		const string JavaInteropLibrary = "java-interop";
 
-		[DllImport (LibraryName)]
+		[DllImport (JvmLibrary)]
 		static extern int JNI_CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+
+		[DllImport (JavaInteropLibrary)]
+		static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+
+		static int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
+		{
+			if (JvmDllLoaded)
+				return java_interop_jvm_create (out javavm, out jnienv, ref args);
+
+			return JNI_CreateJavaVM (out javavm, out jnienv, ref args);
+		}
 
 		static unsafe JreRuntimeOptions CreateJreVM (JreRuntimeOptions builder)
 		{
@@ -85,6 +97,9 @@ namespace Java.Interop {
 
 			if (builder.InvocationPointer != IntPtr.Zero)
 				return builder;
+
+			if (builder.JvmDllPath != null && !LoadJvmDll (builder.JvmDllPath))
+				throw new Exception ($"Unable to load JVM library: {builder.JvmDllPath}");
 
 			var args = new JavaVMInitArgs () {
 				version             = builder.JniVersion,
@@ -101,7 +116,7 @@ namespace Java.Interop {
 					args.options = (IntPtr) popts;
 					IntPtr      javavm;
 					IntPtr      jnienv;
-					int r = JNI_CreateJavaVM (out javavm, out jnienv, ref args);
+					int r = CreateJavaVM (out javavm, out jnienv, ref args);
 					if (r != 0) {
 						var message = string.Format (
 								"The JDK supports creating at most one JVM per process, ever; " +
