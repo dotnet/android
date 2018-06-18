@@ -283,7 +283,11 @@ namespace Xamarin.Android.Tasks
 									return !jars.Contains (fileToDelete);
 								}, forceUpdate: false);
 							} catch (PathTooLongException ex) {
-								Log.LogErrorFromException (new PathTooLongException ($"Error extracting resources from \"{assemblyPath}\"", ex));
+								Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+								return;
+							} catch (NotSupportedException ex) {
+								Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+								return;
 							}
 						}
 
