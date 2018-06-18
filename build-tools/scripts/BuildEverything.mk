@@ -116,7 +116,7 @@ framework-assemblies:
 		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD),$(conf))) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
+		$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD),$(conf)) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
 			/p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
