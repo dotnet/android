@@ -500,7 +500,7 @@ namespace Bug12935
 					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
     <uses-sdk android:minSdkVersion='14'/>
-
+    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
     <application>
         <activity android:name='.signin.internal.SignInHubActivity' />
         <provider
@@ -588,6 +588,8 @@ public class TestActivity2 : FragmentActivity {
 				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 					var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
+					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.permission.C2D_MESSAGE"),
+						"${applicationId}.permission.C2D_MESSAGE was not replaced with com.xamarin.manifest.permission.C2D_MESSAGE");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
 						".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),

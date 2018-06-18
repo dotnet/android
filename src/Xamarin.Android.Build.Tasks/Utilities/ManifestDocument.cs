@@ -400,7 +400,7 @@ namespace Xamarin.Android.Tasks {
 					try {
 						MergeLibraryManifest (mergedManifest);
 					} catch (Exception ex) {
-						log.LogWarningFromException (ex);
+						log.LogCodedWarning ("XA4302", "Unhandled exception merging `AndroidManifest.xml`: {0}", ex);
 					}
 				}
 			}
@@ -441,7 +441,7 @@ namespace Xamarin.Android.Tasks {
 			foreach (var top in xdoc.XPathSelectElements ("/manifest/*")) {
 				var name = top.Attribute (AndroidXmlNamespace.GetName ("name"));
 				var existing = (name != null) ?
-					doc.XPathSelectElement (string.Format ("/manifest/{0}[@android:name='{1}']", top.Name.LocalName, XmlConvert.VerifyNCName (name.Value)), nsResolver) :
+					doc.XPathSelectElement (string.Format ("/manifest/{0}[@android:name='{1}']", top.Name.LocalName, name.Value), nsResolver) :
 					doc.XPathSelectElement (string.Format ("/manifest/{0}", top.Name.LocalName));
 				if (existing != null)
 					// if there is existing node with the same android:name, then append contents to existing node.
