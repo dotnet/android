@@ -70,6 +70,7 @@ endif # We have test error output
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \
 	Configuration.OperatingSystem.props \
+	$(wildcard bin/Build*/msbuild*.binlog) \
 	$(shell find . -name 'config.log') \
 	$(shell find . -name 'config.status') \
 	$(shell find . -name 'config.h') \
