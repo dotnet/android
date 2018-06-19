@@ -2170,6 +2170,7 @@ because xbuild doesn't support framework reference assemblies.
 	BundledWearApplicationName="$(BundledWearApplicationPackageName)"
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
 	AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
   <ConvertResourcesCases 
