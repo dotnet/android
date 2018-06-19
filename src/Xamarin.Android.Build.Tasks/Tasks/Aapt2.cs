@@ -107,6 +107,8 @@ namespace Xamarin.Android.Tasks {
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 
+				// Handle the following which is NOT an error :(
+				// W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
 				if (file.StartsWith ("W/")) {
 					LogCodedWarning ("APT0000", singleLine);
 					return;
