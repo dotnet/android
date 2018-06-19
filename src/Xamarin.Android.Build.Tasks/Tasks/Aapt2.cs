@@ -106,6 +106,11 @@ namespace Xamarin.Android.Tasks {
 					line = int.Parse (match.Groups ["line"].Value) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
+
+				if (file.StartsWith ("W/")) {
+					LogCodedWarning ("APT0000", singleLine);
+					return;
+				}
 				if (message.Contains ("fakeLogOpen")) {
 					LogMessage (singleLine, messageImportance);
 					return;
