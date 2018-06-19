@@ -2,44 +2,27 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <_HostRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
-      <Cc>$(HostCc)</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostDarwinCFlags) -DAPPLE_OS_X</CFlags>
-      <LdFlags>$(_HostUnixLdFlags)</LdFlags>
-      <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
-      <NativeLibraryExtension>dylib</NativeLibraryExtension>
+      <CmakeFlags>$(_CmakeCommonHostFlags)</CmakeFlags>
       <OutputDirectory>host-Darwin</OutputDirectory>
-      <Strip>strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <NativeLibraryExtension>dylib</NativeLibraryExtension>
     </_HostRuntime>
+
     <_HostRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
-      <Cc>$(HostCc)</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostUnixCFlags) $(_HostLinuxCFlags) -D_GNU_SOURCE -DLINUX -Dlinux -D__linux__</CFlags>
-      <LdFlags>$(_HostUnixLdFlags)</LdFlags>
-      <ExtraSource>$(_UnixAdditionalSourceFiles)</ExtraSource>
-      <NativeLibraryExtension>so</NativeLibraryExtension>
+      <CmakeFlags>$(_CmakeCommonHostFlags)</CmakeFlags>
       <OutputDirectory>host-Linux</OutputDirectory>
-      <Strip>strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <NativeLibraryExtension>so</NativeLibraryExtension>
     </_HostRuntime>
+
     <_HostRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
-      <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc"</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin64CFlags) $(_LinuxFlatPakBuild) $(_LinuxMingwCflags64)</CFlags>
-      <LdFlags>$(_HostCommonWinLdFlags) $(_LinuxMingwLdflags64)</LdFlags>
-      <ExtraSource></ExtraSource>
-      <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <CmakeFlags>$(_CmakeMxeCommonFlags64)</CmakeFlags>
       <OutputDirectory>host-mxe-Win64</OutputDirectory>
-      <Strip>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip"</Strip>
-      <StripFlags>-S</StripFlags>
-    </_HostRuntime>
-    <_HostRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
-      <Cc>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc"</Cc>
-      <CFlags>@(JdkIncludePath->'-I%(Identity)', ' ') $(_HostCommonWinCFlags) $(_HostWin32CFlags) $(_LinuxFlatPakBuild) $(_LinuxMingwCflags32)</CFlags>
-      <LdFlags>$(_HostCommonWinLdFlags) $(_LinuxMingwLdflags32)</LdFlags>
-      <ExtraSource></ExtraSource>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
+    </_HostRuntime>
+
+    <_HostRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
+      <CmakeFlags>$(_CmakeMxeCommonFlags32)</CmakeFlags>
       <OutputDirectory>host-mxe-Win32</OutputDirectory>
-      <Strip>"$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip"</Strip>
-      <StripFlags>-S</StripFlags>
+      <NativeLibraryExtension>dll</NativeLibraryExtension>
     </_HostRuntime>
   </ItemGroup>
 </Project>

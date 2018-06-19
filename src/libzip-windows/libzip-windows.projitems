@@ -3,8 +3,8 @@
   <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
     <CMakeBinary32>\usr\bin\cmake</CMakeBinary32>
     <CMakeBinary64>$(CMakeBinary32)</CMakeBinary64>
-    <CMakeFlags32>-DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\mingw-linux-32.cmake</CMakeFlags32>
-    <CMakeFlags64>-DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\mingw-linux-64.cmake</CMakeFlags64>
+    <CMakeFlags32>-DCMAKE_TOOLCHAIN_FILE=..\..\build-tools\scripts\mingw-linux-32.cmake</CMakeFlags32>
+    <CMakeFlags64>-DCMAKE_TOOLCHAIN_FILE=..\..\build-tools\scripts\mingw-linux-64.cmake</CMakeFlags64>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' ">
     <CMakeBinary64>cmake</CMakeBinary64>

@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <_DebugCFlags>-ggdb3 -O0 -fno-omit-frame-pointer</_DebugCFlags>
-    <_ReleaseCFlags>-g -O2</_ReleaseCFlags>
-    <_CommonCFlags>-Ijni -Ijni/zip "-I$(MonoSourceFullPath)\mono\eglib" "-I$(JavaInteropSourceDirectory)\src\java-interop" -std=c99 -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) -D_REENTRANT -DHAVE_CONFIG_H -DMONO_DLL_EXPORT -DJI_DLL_EXPORT -DDYLIB_MONO -fno-strict-aliasing -ffunction-sections -fvisibility=hidden -Wformat -Werror=format-security</_CommonCFlags>
-    <_HostUnixCFlags>$(_CommonCFlags) -Wa,--noexecstack</_HostUnixCFlags>
-    <_HostUnixLdFlags>-Wall -lstdc++ -lz -shared -fpic</_HostUnixLdFlags>
-    <_HostCommonWinCFlags>$(_CommonCFlags) -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer</_HostCommonWinCFlags>
-    <_HostCommonWinLdFlags>-Wall -lstdc++ -lz -shared -fpic -ldl -lmman -pthread -lwsock32 -lole32 -luuid -lshlwapi -lpsapi</_HostCommonWinLdFlags>
-    <_UnixAdditionalSourceFiles>$(MonoSourceFullPath)\support\nl.c jni\debug.c jni\monodroid-networkinfo.c jni\xamarin_getifaddrs.c</_UnixAdditionalSourceFiles>
-    <_LinuxFlatPakBuild Condition="Exists('/.flatpak-info')" >-DLINUX_FLATPAK</_LinuxFlatPakBuild>
-    <_LinuxMingwCflags32 Condition=" '$(HostOS)' == 'Linux' ">-I$(LinuxMingwDependenciesRootDirectory)/x86/include</_LinuxMingwCflags32>
-    <_LinuxMingwCflags64 Condition=" '$(HostOS)' == 'Linux' ">-I$(LinuxMingwDependenciesRootDirectory)/x86_64/include</_LinuxMingwCflags64>
-    <_LinuxMingwLdflags32 Condition=" '$(HostOS)' == 'Linux' ">-L$(LinuxMingwDependenciesRootDirectory)/x86/lib</_LinuxMingwLdflags32>
-    <_LinuxMingwLdflags64 Condition=" '$(HostOS)' == 'Linux' ">-L$(LinuxMingwDependenciesRootDirectory)/x86_64/lib</_LinuxMingwLdflags64>
+  <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <_CmakeMxeToolchainBasePath>$(MSBuildThisFileDirectory)\..\..\build-tools\scripts\mingw-linux</_CmakeMxeToolchainBasePath>
+    <_MingwDependenciesRootDirectory>$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\linux-mingw-deps</_MingwDependenciesRootDirectory>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' ">
+    <_CmakeMxeToolchainBasePath>$(IntermediateOutputPath)\mxe</_CmakeMxeToolchainBasePath>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <_HostDarwinCFlags>-I..\..\bin\$(Configuration)\include\host-Darwin -I..\..\bin\$(Configuration)\include\host-Darwin\eglib</_HostDarwinCFlags>
-    <_HostLinuxCFlags>-I..\..\bin\$(Configuration)\include\host-Linux -I..\..\bin\$(Configuration)\include\host-Linux\eglib</_HostLinuxCFlags>
-    <_HostWin64CFlags>-I..\..\bin\$(Configuration)\include\host-mxe-Win64 -I..\..\bin\$(Configuration)\include\host-mxe-Win64\eglib</_HostWin64CFlags>
+    <_CmakeCommonFlags>-GNinja -DMONO_PATH=$(MonoSourceFullPath) -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) -DCMAKE_MAKE_PROGRAM=$(NinjaPath)</_CmakeCommonFlags>
+
+    <_CmakeCommonHostFlags>$(_CmakeCommonFlags) -DENABLE_NDK=OFF -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')"</_CmakeCommonHostFlags>
+
+    <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) -DENABLE_NDK=OFF -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')"</_CmakeMxeCommonFlags>
+    <_CmakeMxeCommonFlags Condition=" '$(_MingwDependenciesRootDirectory)' != '' ">$(_CmakeMxeCommonFlags) -DMINGW_DEPENDENCIES_ROOT_DIR=$(_MingwDependenciesRootDirectory)</_CmakeMxeCommonFlags>
+    <_CmakeMxeCommonFlags32>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-32.cmake -DMINGW_TARGET_32=1</_CmakeMxeCommonFlags32>
+    <_CmakeMxeCommonFlags64>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-64.cmake -DMINGW_TARGET_64=1</_CmakeMxeCommonFlags64>
+
+    <_CmakeAndroidFlags>$(_CmakeCommonFlags) -DANDROID_TOOLCHAIN=clang -DANDROID_NATIVE_API_LEVEL=9 -DCMAKE_TOOLCHAIN_FILE=$(AndroidNdkDirectory)\build\cmake\android.toolchain.cmake -DANDROID_NDK=$(AndroidNdkDirectory)</_CmakeAndroidFlags>
   </PropertyGroup>
 </Project>
