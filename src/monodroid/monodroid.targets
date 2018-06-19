@@ -159,14 +159,15 @@
       Inputs="mxe-32.cmake.in;mxe-64.cmake.in"
       Outputs="$(IntermediateOutputPath)\mxe-32.cmake;$(IntermediateOutputPath)\mxe-64.cmake">
     <ReplaceFileContents
-	SourceFile="mxe-32.cmake.in"
-	DestinationFile="$(IntermediateOutputPath)\mxe-32.cmake"
-	Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)" />
-
+        SourceFile="mxe-32.cmake.in"
+        DestinationFile="$(IntermediateOutputPath)\mxe-32.cmake"
+        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
+    />
     <ReplaceFileContents
-	SourceFile="mxe-64.cmake.in"
-	DestinationFile="$(IntermediateOutputPath)\mxe-64.cmake"
-	Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)" />
+        SourceFile="mxe-64.cmake.in"
+        DestinationFile="$(IntermediateOutputPath)\mxe-64.cmake"
+        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
+    />
   </Target>
 
   <Target Name="CoreCompile"
