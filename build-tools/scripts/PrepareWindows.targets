@@ -11,6 +11,7 @@
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\download-bundle\download-bundle.csproj" />
     <Exec Command="$(_NuGet) restore Xamarin.Android.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore Xamarin.Android-Tests.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
