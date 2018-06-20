@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				proj.AndroidResources.Last ().Timestamp = null; // means "always build"
+				proj.AndroidResources.Last ().Timestamp = DateTime.UtcNow; // means "always build"
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}

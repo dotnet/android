@@ -5,55 +5,121 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.Text;
 
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static bool UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
+		public static bool UpdateXmlResource (string res, Stream source, Stream dest, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, bool leaveOpen = false, Action<string, string> registerCustomView = null)
 		{
-			// use a temporary file so we only update the real file if things actually changed
-			string tmpfile = filename + ".bk";
-			try {
-				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
-				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, logMessage, (e) => {
-					registerCustomView?.Invoke (e, filename);
-				});
-				using (var stream = File.OpenWrite (tmpfile))
-					using (var xw = new LinePreservedXmlWriter (new StreamWriter (stream)))
-						xw.WriteNode (doc.CreateNavigator (), false);
+			string path = string.Empty;
+			using (var writer = new LinePreservedXmlWriter (new StreamWriter (dest, System.Text.Encoding.UTF8, 4000, leaveOpen: leaveOpen))) {
+				var reader = XmlReader.Create (source);
+				while (reader.Read ()) {
+					if (reader.NodeType == XmlNodeType.Element) {
+						path += "/" + reader.LocalName;
+					}
+					WriteShallowNode (reader, writer, path, acwMap, res, additionalDirectories);
+					registerCustomView?.Invoke (reader.Prefix != String.Empty ? reader.Name : reader.LocalName, null);
+					if (reader.NodeType == XmlNodeType.Element) {
+						if (reader.HasAttributes) {
+							bool inTransition = (reader.Name == "transition");
+							string parentLocalName = reader.LocalName;
+							string parentNamespace = reader.NamespaceURI;
+							for (int attInd = 0; attInd < reader.AttributeCount; attInd++) {
+								reader.MoveToAttribute (attInd);
 
-				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
-			} catch (Exception e) {
-				logMessage?.Invoke (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");
-				return false;
-			} finally {
-				if (File.Exists (tmpfile)) {
-					File.Delete (tmpfile);
+								string value = reader.Value;
+								if (value != null)
+									registerCustomView?.Invoke (value, null);
+								Match m = r.Match (value);
+								if (m.Success)
+									value = TryLowercaseValue (value, res, additionalDirectories);
+								if (String.Compare (reader.Prefix, "xmlns", StringComparison.Ordinal) == 0) {
+									writer.WriteAttributeString (reader.Name, value);
+									continue;
+								}
+								TryFixResAuto (reader, acwMap, ref value);
+								if (reader.NamespaceURI != android && !(String.Compare (reader.LocalName, "layout", StringComparison.Ordinal) == 0 &&
+										reader.NamespaceURI == string.Empty && String.Compare (parentLocalName, "include", StringComparison.Ordinal) == 0 &&
+										parentNamespace == string.Empty)) {
+									writer.WriteAttributeString (reader.Name, value);
+									continue;
+								}
+								writer.WriteAttributeString (reader.Name, value);
+							}
+							reader.MoveToElement ();
+						}
+						if (reader.IsEmptyElement) {
+							writer.WriteEndElement ();
+							path = path.Substring (0, path.LastIndexOf ('/'));
+						}
+					}
+					if (reader.NodeType == XmlNodeType.EndElement) {
+						path = path.Substring (0, path.LastIndexOf ('/'));
+					}
+				}
+			}
+			return true;
+		}
+
+		public static XElement UpdateXmlResource (XElement e)
+		{
+			using (var ms = new MemoryStream ()) {
+				using (var source = new MemoryStream ()) {
+					e.Save (source);
+					source.Position = 0;
+					UpdateXmlResource (null, source, ms, new Dictionary<string, string> (), leaveOpen: true);
+					ms.Position = 0;
+					return XElement.Load (ms, LoadOptions.SetLineInfo);
+				}
+			}
+		}
+		public static XDocument UpdateXmlResourceAndLoad (string filename)
+		{
+			using (var ms = new MemoryStream ()) {
+				using (var source = File.OpenRead (filename)) {
+					UpdateXmlResource (null, source, ms, new Dictionary<string, string> (), leaveOpen: true);
+					ms.Position = 0;
+					return XDocument.Load (ms, LoadOptions.SetLineInfo);
 				}
 			}
 		}
 
+		public static bool UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
+		{
+			string tmpfile = filename + ".bk";
+			try {
+				using (var dest = File.Open (tmpfile, FileMode.Create))
+				using (var source = File.OpenRead (filename)) {
+					UpdateXmlResource (res, source, dest, acwMap, additionalDirectories, logMessage, registerCustomView: (e, f) => {
+						registerCustomView?.Invoke (e, filename);
+					});
+				}
+				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
+			} catch (Exception e) {
+				logMessage?.Invoke (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e}");
+			}
+			finally {
+				if (File.Exists (tmpfile)) {
+					File.Delete (tmpfile);
+				}
+			}
+			return false;
+		}
+
 		static readonly XNamespace android = "http://schemas.android.com/apk/res/android";
 		static readonly XNamespace res_auto = "http://schemas.android.com/apk/res-auto";
-		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$");
-		static readonly string[] fixResourcesAliasPaths = {
+		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$", RegexOptions.Compiled);
+		static readonly string [] fixResourcesAliasPaths = {
 			"/resources/item",
 			"/resources/integer-array/item",
 			"/resources/array/item",
 			"/resources/style/item",
 		};
-
-		public static void UpdateXmlResource (XElement e)
-		{
-			UpdateXmlResource (e, new Dictionary<string,string> ());
-		}
-
-		public static void UpdateXmlResource (XElement e, Dictionary<string, string> acwMap)
-		{
-			UpdateXmlResource (null, e, acwMap);
-		}
 
 		internal static IEnumerable<T> Prepend<T> (this IEnumerable<T> l, T another) where T : XNode
 		{
@@ -62,43 +128,6 @@ namespace Monodroid {
 				yield return e;
 		}
 		
-		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string> registerCustomView = null)
-		{
-			foreach (var elem in GetElements (e).Prepend (e)) {
-				registerCustomView?.Invoke (elem.Name.ToString ());
-			}
-
-			foreach (var path in fixResourcesAliasPaths) {
-				foreach(XElement item in e.XPathSelectElements (path).Prepend (e)) {
-					TryFixResourceAlias (item, resourcesBasePath, additionalDirectories);
-				}
-			}
-
-			foreach (XAttribute a in GetAttributes (e)) {
-				if (a.IsNamespaceDeclaration)
-					continue;
-
-				TryFixFragment (a, acwMap, registerCustomView);
-				
-				if (TryFixResAuto (a, acwMap))
-					continue;
-
-				TryFixCustomClassAttribute (a, acwMap, registerCustomView);
-
-				if (a.Name.Namespace != android &&
-						!(a.Name.LocalName == "layout" && a.Name.Namespace == XNamespace.None &&
-						  a.Parent.Name.LocalName == "include" && a.Parent.Name.Namespace == XNamespace.None))
-					continue;
-
-				Match m = r.Match (a.Value);
-				if (!m.Success)
-					continue;
-				if (m.Groups ["package"].Success)
-					continue;
-				a.Value = TryLowercaseValue (a.Value, resourcesBasePath, additionalDirectories);
-			}
-		}
-
 		static bool ResourceNeedsToBeLowerCased (string value, string resourceBasePath, IEnumerable<string> additionalDirectories)
 		{
 			// Might be a bit of an overkill, but the data comes (indirectly) from the user since it's the
@@ -127,7 +156,6 @@ namespace Monodroid {
 			// Determine the the potential definition file's path based on the resource type.
 			string dirPrefix = value.Substring (colon + 1, slash - colon - 1).ToLowerInvariant ();
 			string fileNamePattern = value.Substring (slash + 1).ToLowerInvariant () + ".*";
-			
 			if (Directory.EnumerateDirectories (resourceBasePath, dirPrefix + "*").Any (dir => Directory.EnumerateFiles (dir, fileNamePattern).Any ()))
 				return true;
 
@@ -140,7 +168,7 @@ namespace Monodroid {
 			// No need to change the reference case.
 			return false;
 		}
-		
+
 		internal static IEnumerable<XAttribute> GetAttributes (XElement e)
 		{
 			foreach (XAttribute a in e.Attributes ())
@@ -160,77 +188,90 @@ namespace Monodroid {
 			}
 		}
 
-		private static void TryFixResourceAlias (XElement elem, string resourceBasePath, IEnumerable<string> additionalDirectories)
+		static string TryFixResourceAlias (XmlReader elem, string path, string resourceBasePath, IEnumerable<string> additionalDirectories)
 		{
 			// Looks for any resources aliases:
 			//   <item type="layout" name="">@layout/Page1</item>
 			//   <item type="layout" name="">@drawable/Page1</item>
 			// and corrects the alias to be lower case.
-			if (elem.Name == "item" && !string.IsNullOrEmpty(elem.Value) ) {
-				string value = elem.Value.Trim();
+			if (!fixResourcesAliasPaths.Contains (path))
+				return elem.Value;
+			if (!string.IsNullOrEmpty (elem.Value)) {
+				string value = elem.Value.Trim ();
 				Match m = r.Match (value);
 				if (m.Success) {
-					elem.Value = TryLowercaseValue (elem.Value, resourceBasePath, additionalDirectories);
+					return TryLowercaseValue (elem.Value, resourceBasePath, additionalDirectories);
 				}
 			}
+			return elem.Value;
 		}
 
-		private static void TryFixFragment (XAttribute attr, Dictionary<string, string> acwMap, Action<string> registerCustomView = null)
+		private static bool TryFixResAuto (XmlReader attr, Dictionary<string, string> acwMap, ref string value)
 		{
-			// Looks for any: 
-			//   <fragment class="My.DotNet.Class" 
-			//   <fragment android:name="My.DotNet.Class" ...
-			// and tries to change it to the ACW name
-			if (attr.Parent.Name != "fragment")
-				return;
-
-			if (attr.Name == "class" || attr.Name == android + "name") {
-				var n = attr.Value;
-				if (n == null)
-					return;
-				if (n.Contains (',')) {
-					// attr.Value could be an assembly-qualified name that isn't in acw-map.txt;
-					// see e5b1c92c, https://github.com/xamarin/xamarin-android/issues/1296#issuecomment-365091948
-					n = attr.Value.Substring (0, attr.Value.IndexOf (','));
-				}
-				registerCustomView?.Invoke (n);
-			}
-		}
-
-		private static bool TryFixResAuto (XAttribute attr, Dictionary<string, string> acwMap)
-		{
-			if (attr.Name.Namespace != res_auto)
+			if (attr.NamespaceURI != res_auto)
 				return false;
-			switch (attr.Name.LocalName) {
-			case "rectLayout":
-			case "roundLayout":
-			case "actionLayout":
-				attr.Value = attr.Value.ToLowerInvariant ();
+			var name = attr.LocalName;
+			if (name.Equals ("rectLayout") || name.Equals ("roundLayout") || name.Equals ("actionLayout")) {
+				value = value.ToLowerInvariant ();
 				return true;
 			}
 			return false;
-		}
-
-		private static void TryFixCustomClassAttribute (XAttribute attr, Dictionary<string, string> acwMap, Action<string> registerCustomView = null)
-		{
-			/* Some attributes reference a Java class name.
-			 * try to convert those like for TryFixCustomView
-			 */
-			if (attr.Name != (res_auto + "layout_behavior")                              // For custom CoordinatorLayout behavior
-			    && (attr.Parent.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
-				return;
-
-			registerCustomView?.Invoke (attr.Value);
 		}
 
 		private static string TryLowercaseValue (string value, string resourceBasePath, IEnumerable<string> additionalDirectories)
 		{
 			int s = value.LastIndexOf ('/');
 			if (s >= 0) {
-				if (ResourceNeedsToBeLowerCased (value, resourceBasePath, additionalDirectories))
-					return value.Substring (0, s) + "/" + value.Substring (s+1).ToLowerInvariant ();
+				if (ResourceNeedsToBeLowerCased (value, resourceBasePath, additionalDirectories)) {
+					return value.Substring (0, s) + "/" + value.Substring (s + 1).ToLowerInvariant ();
+				}
 			}
 			return value;
+		}
+
+		static void WriteShallowNode (XmlReader reader, XmlWriter writer, string path, Dictionary<string, string> acwMap, string resourceBasePath, IEnumerable<string> additionalDirectories)
+		{
+			if (reader == null) {
+				throw new ArgumentNullException ("reader");
+			}
+			if (writer == null) {
+				throw new ArgumentNullException ("writer");
+			}
+
+			switch (reader.NodeType) {
+			case XmlNodeType.Element:
+				if (reader.Prefix != String.Empty)
+					writer.WriteStartElement (reader.Name);
+				else
+					writer.WriteStartElement (reader.LocalName);
+				break;
+			case XmlNodeType.Text:
+				writer.WriteString (TryFixResourceAlias (reader, path, resourceBasePath, additionalDirectories));
+				break;
+			case XmlNodeType.Whitespace:
+			case XmlNodeType.SignificantWhitespace:
+				writer.WriteWhitespace (reader.Value);
+				break;
+			case XmlNodeType.CDATA:
+				writer.WriteCData (reader.Value);
+				break;
+			case XmlNodeType.EntityReference:
+				writer.WriteEntityRef (reader.Name);
+				break;
+			case XmlNodeType.XmlDeclaration:
+			case XmlNodeType.ProcessingInstruction:
+				writer.WriteProcessingInstruction (reader.Name, reader.Value);
+				break;
+			case XmlNodeType.DocumentType:
+				writer.WriteDocType (reader.Name, reader.GetAttribute ("PUBLIC"), reader.GetAttribute ("SYSTEM"), reader.Value);
+				break;
+			case XmlNodeType.Comment:
+				writer.WriteComment (reader.Value);
+				break;
+			case XmlNodeType.EndElement:
+				writer.WriteFullEndElement ();
+				break;
+			}
 		}
 	}
 }

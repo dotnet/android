@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using Xamarin.Android.Tools;
 
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ModifiedFiles { get; set; }
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
-		Dictionary<string, HashSet<string>> customViewMap;
+		ConcurrentDictionary<string, HashSet<string>> customViewMap;
 
 		public override bool Execute ()
 		{
@@ -118,8 +119,8 @@ namespace Xamarin.Android.Tasks
 						return;
 					HashSet<string> set;
 					if (!customViewMap.TryGetValue (e, out set))
-						customViewMap.Add (e, set = new HashSet<string> ());
-					set.Add (file);
+						customViewMap.TryAdd (e, set = new HashSet<string> ());
+					set.Add (filename);
 
 				});
 				if (updated) {

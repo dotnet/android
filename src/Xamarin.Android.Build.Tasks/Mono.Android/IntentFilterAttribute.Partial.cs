@@ -90,8 +90,8 @@ namespace Android.App {
 					Actions.Select (a => new XElement ("action", new XAttribute (android + "name", ReplacePackage (a, packageName)))),
 					(Categories ?? new string[0]).Select (c => new XElement ("category", new XAttribute (android + "name", ReplacePackage (c, packageName)))),
 					GetData (packageName));
-			AndroidResource.UpdateXmlResource (r);
-			return r;
+			r.SetAttributeValue (XNamespace.Xmlns + "android", android.NamespaceName);
+			return AndroidResource.UpdateXmlResource (r);
 		}
 
 		static readonly XNamespace android = "http://schemas.android.com/apk/res/android";

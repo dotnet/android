@@ -3,15 +3,17 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
+using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ConvertResourcesCases : Task
+	public class ConvertResourcesCases : AsyncTask
 	{
 		[Required]
 		public ITaskItem[] ResourceDirectories { get; set; }
@@ -27,19 +29,35 @@ namespace Xamarin.Android.Tasks
 		public string ResourceNameCaseMap { get; set; }
 
 		Dictionary<string,string> resource_name_case_map;
-		Dictionary<string, HashSet<string>> customViewMap;
+		ConcurrentDictionary<string, HashSet<string>> customViewMap;
+		Dictionary<string, string> acw_map = new Dictionary<string, string> ();
 
 		public override bool Execute ()
 		{
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
-			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
+			acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
 
 
 			if (CustomViewMapFile != null)
 				customViewMap = Xamarin.Android.Tasks.MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 
-			// Look in the resource xml's for capitalized stuff and fix them
-			FixupResources (acw_map);
+			Yield();
+			try
+			{
+				// Look in the resource xml's for capitalized stuff and fix them
+				var task = ThreadingTasks.Task.Run(() =>
+				{
+					DoExecute();
+				}, Token);
+
+				task.ContinueWith(Complete).ConfigureAwait(false);
+
+				base.Execute();
+			}
+			finally
+			{
+				Reacquire();
+			}
 
 			if (customViewMap != null)
 				Xamarin.Android.Tasks.MonoAndroidHelper.SaveCustomViewMapFile (BuildEngine4, CustomViewMapFile, customViewMap);
@@ -47,16 +65,23 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-
-		void FixupResources (Dictionary<string, string> acwMap)
+		void DoExecute ()
 		{
-			foreach (var dir in ResourceDirectories)
-				FixupResources (dir, acwMap);
+			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
+				CancellationToken = Token,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
+			};
+
+			ThreadingTasks.Parallel.ForEach (ResourceDirectories, options, FixupResources);
 		}
 
-		void FixupResources (ITaskItem item, Dictionary<string, string> acwMap)
+		void FixupResources (ITaskItem item)
 		{
 			var resdir = item.ItemSpec;
+			if (!Path.IsPathRooted (resdir))
+			{
+				resdir = Path.Combine(WorkingDirectory, resdir);
+			}
 			// Find all the xml and axml files
 			var xmls = new List<string> ();
 			var colorDir = Path.Combine (resdir, "color");
@@ -74,26 +99,26 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
 				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
-			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
+			LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
 			
 			var resourcedirectories = ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec).ToArray();
 			// Fix up each file
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
 				if (srcmodifiedDate <= lastUpdate) {
-					Log.LogDebugMessage ("  Skipping: {0}  {1} <= {2}", file, srcmodifiedDate, lastUpdate);
+					LogDebugMessage ("  Skipping: {0}  {1} <= {2}", file, srcmodifiedDate, lastUpdate);
 					continue;
 				}
-				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
+				LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
 				MonoAndroidHelper.SetWriteable (file);
-				bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
+				bool success = AndroidResource.UpdateXmlResource (resdir, file, acw_map,
 					resourcedirectories, (level, message) => {
 						switch (level) {
 						case TraceLevel.Error:
-							Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
+							FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
 							break;
 						case TraceLevel.Warning:
-							Log.FixupResourceFilenameAndLogCodedWarning ("XA1001", message, file, resdir, resource_name_case_map);
+							FixupResourceFilenameAndLogCodedWarning ("XA1001", message, file, resdir, resource_name_case_map);
 							break;
 						default:
 							Log.LogDebugMessage (message);
@@ -104,8 +129,8 @@ namespace Xamarin.Android.Tasks
 						return;
 					HashSet<string> set;
 					if (!customViewMap.TryGetValue (e, out set))
-						customViewMap.Add (e, set = new HashSet<string> ());
-					set.Add (filename);
+						customViewMap.TryAdd (e, set = new HashSet<string> ());
+					set.Add (file);
 				});
 				if (!success) {
 					//If we failed to write the file, a warning is logged, we should skip to the next file

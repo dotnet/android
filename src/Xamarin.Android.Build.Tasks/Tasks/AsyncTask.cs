@@ -4,6 +4,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Threading;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Tasks
 {
@@ -266,6 +267,18 @@ namespace Xamarin.Android.Tasks
 				#pragma warning restore 618
 			}
 			EnqueueMessage (customMessageQueue, e, customDataAvailable);
+		}
+
+		public void FixupResourceFilenameAndLogCodedError (string code, string message, string file, string resourceDir, Dictionary<string, string> resourceNameCaseMap)
+		{
+			var targetfile = MSBuildExtensions.FixupResourceFilename (file, resourceDir, resourceNameCaseMap);
+			LogCodedError (code, file: targetfile, lineNumber: 0, message: message);
+		}
+
+		public void FixupResourceFilenameAndLogCodedWarning (string code, string message, string file, string resourceDir, Dictionary<string, string> resourceNameCaseMap)
+		{
+			var targetfile = MSBuildExtensions.FixupResourceFilename (file, resourceDir, resourceNameCaseMap);
+			LogCodedWarning (code, file: targetfile, lineNumber: 0, message: message);
 		}
 
 		public override bool Execute ()

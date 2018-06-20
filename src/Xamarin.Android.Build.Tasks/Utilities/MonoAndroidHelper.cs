@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -504,12 +505,12 @@ namespace Xamarin.Android.Tasks
 			return acw_map;
 		}
 
-		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
+		public static ConcurrentDictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
 		{
-			var cachedMap = (Dictionary<string, HashSet<string>>)engine?.GetRegisteredTaskObject (mapFile, RegisteredTaskObjectLifetime.Build);
+			var cachedMap = (ConcurrentDictionary<string, HashSet<string>>)engine?.GetRegisteredTaskObject (mapFile, RegisteredTaskObjectLifetime.Build);
 			if (cachedMap != null)
 				return cachedMap;
-			var map = new Dictionary<string, HashSet<string>> ();
+			var map = new ConcurrentDictionary<string, HashSet<string>> ();
 			if (!File.Exists (mapFile))
 				return map;
 			foreach (var s in File.ReadLines (mapFile)) {
@@ -518,13 +519,13 @@ namespace Xamarin.Android.Tasks
 				var value = items [1];
 				HashSet<string> set;
 				if (!map.TryGetValue (key, out set))
-					map.Add (key, set = new HashSet<string> ());
+					map.TryAdd (key, set = new HashSet<string> ());
 				set.Add (value);
 			}
 			return map;
 		}
 
-		public static void SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
+		public static void SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, ConcurrentDictionary<string, HashSet<string>> map)
 		{
 			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 			var temp = Path.GetTempFileName ();
