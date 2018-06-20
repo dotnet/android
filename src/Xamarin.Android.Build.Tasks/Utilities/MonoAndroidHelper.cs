@@ -31,6 +31,11 @@ namespace Xamarin.Android.Tasks
 
 		readonly static byte[] Utf8Preamble = System.Text.Encoding.UTF8.GetPreamble ();
 
+		internal static ReaderParameters DefaultInMemoryNoSymbolsReader = new ReaderParameters () {
+			InMemory = true,
+			ReadSymbols = false,
+		};
+
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
 			var psi = new ProcessStartInfo (name, args) {
@@ -308,7 +313,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsReferenceAssembly (string assembly)
 		{
-			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters () { InMemory = true, ReadSymbols = false, });
+			var a = AssemblyDefinition.ReadAssembly (assembly, DefaultInMemoryNoSymbolsReader);
 			return IsReferenceAssembly (a);
 		}
 
