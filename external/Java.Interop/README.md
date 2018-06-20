@@ -74,7 +74,7 @@ Overridable MSBuild properties include:
     Defaults to `external/cecil`.
 * `$(JdkJvmPath)`: Full path name to the JVM native library to link
     [`java-interop`](src/java-interop) against. By default this is
-    probed for from numerious locations within
+    probed for from numerous locations within
     [`build-tools/scripts/jdk.mk`](build-tools/scripts/jdk.mk).
 * `$(JavaCPath)`: Path to the `javac` command-line tool, by default set to `javac`.
 * `$(JarPath)`: Path to the `jar` command-line tool, by default set to `jar`.
