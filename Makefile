@@ -111,6 +111,7 @@ prepare-external:
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/dependencies/dependencies.csproj
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/download-bundle/download-bundle.csproj
 
 prepare-props: prepare-deps
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"

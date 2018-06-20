@@ -85,7 +85,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libzip-windows", "src\libzi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "linux-mingw-dependencies", "build-tools\linux-mingw-dependencies\linux-mingw-dependencies.csproj", "{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bundle", "build-tools\bundle\bundle.csproj", "{1640725C-4DB8-4D8D-BC96-74E688A06EEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "create-bundle", "build-tools\create-bundle\create-bundle.csproj", "{1640725C-4DB8-4D8D-BC96-74E688A06EEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xa-prep-tasks", "build-tools\xa-prep-tasks\xa-prep-tasks.csproj", "{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}"
 EndProject
@@ -122,6 +122,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proprietary", "build-tools\proprietary\proprietary.csproj", "{D93CAC27-3893-42A3-99F1-2BCA72E186F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "download-bundle", "build-tools\download-bundle\download-bundle.csproj", "{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -346,6 +348,10 @@ Global
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Debug|AnyCPU.ActiveCfg = Debug|AnyCPU
+		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Debug|AnyCPU.Build.0 = Debug|AnyCPU
+		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Release|AnyCPU.ActiveCfg = Release|AnyCPU
+		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Release|AnyCPU.Build.0 = Release|AnyCPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -406,6 +412,7 @@ Global
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{1E5501E8-49C1-4659-838D-CC9720C5208F} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
+		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
