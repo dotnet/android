@@ -15,7 +15,7 @@
       <HostOS>Linux</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-linux">
+    <AndroidSdkItem Include="platform-tools_r28.0.0-linux">
       <HostOS>Linux</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
@@ -34,7 +34,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-darwin">
+    <AndroidSdkItem Include="platform-tools_r28.0.0-darwin">
       <HostOS>Darwin</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
@@ -53,7 +53,7 @@
       <HostOS>Windows</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="platform-tools_r27.0.1-windows">
+    <AndroidSdkItem Include="platform-tools_r28.0.0-windows">
       <HostOS>Windows</HostOS>
       <DestDir>platform-tools</DestDir>
     </AndroidSdkItem>
