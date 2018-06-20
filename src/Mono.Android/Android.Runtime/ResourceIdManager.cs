@@ -10,6 +10,7 @@ namespace Android.Runtime
 		{
 			if (id_initialized)
 				return;
+			id_initialized = true;
 			var executingAssembly = Assembly.GetExecutingAssembly ();
 			var type = executingAssembly != null ? GetResourceTypeFromAssembly (executingAssembly) : null;
 			if (type == null) {
@@ -27,7 +28,6 @@ namespace Android.Runtime
 					action ();
 				}
 			}
-			id_initialized = true;
 		}
 
 		static Type GetResourceTypeFromAssembly (Assembly assembly)
