@@ -32,7 +32,7 @@
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
-    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)\bin\$(Configuration)\lib\xamarin.android\</XAInstallPrefix>
+    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\lib\xamarin.android\</XAInstallPrefix>
     <LinuxMingwDependenciesRootDirectory Condition=" '$(LinuxMingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\linux-mingw-deps</LinuxMingwDependenciesRootDirectory>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>

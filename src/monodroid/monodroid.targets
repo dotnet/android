@@ -47,13 +47,13 @@
       Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
     />
 
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release"
     />
   </Target>

@@ -12,7 +12,7 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 set(JAVA_INTEROP_SRC_PATH "../../external/Java.Interop/src/java-interop")
-set(TOP_DIR ${CMAKE_SOURCE_DIR})
+string(REPLACE "\\" "/" TOP_DIR ${CMAKE_SOURCE_DIR})
 
 if(NOT DEFINED SGEN_BRIDGE_VERSION)
   message(FATAL_ERROR "Please set the SGEN_BRIDGE_VERSION variable on command line (-DSGEN_BRIDGE_VERSION=VERSION)")
@@ -20,6 +20,8 @@ endif()
 
 if(NOT DEFINED MONO_PATH)
   message(FATAL_ERROR "Please set the MONO_PATH variable on command line (-DMONO_PATH=PATH)")
+else()
+  string(REPLACE "\\" "/" MONO_PATH ${MONO_PATH})
 endif()
 
 if(NOT ANDROID)
