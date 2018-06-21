@@ -5,20 +5,34 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Android.Runtime {
-	internal class ConstructorBuilder {
-		static AssemblyBuilder builder = AppDomain.CurrentDomain.DefineDynamicAssembly (new AssemblyName {Name = "MonoDroidConstructors"}, AssemblyBuilderAccess.Run, null, null, null,  null, null, true);
-		static ModuleBuilder module = builder.DefineDynamicModule ("Implementations", false);
+	internal static class ConstructorBuilder {
+		static AssemblyBuilder builder;
+		static ModuleBuilder module;
+		static readonly object lazyLock = new object ();
 
 		static MethodInfo newobject = typeof (System.Runtime.Serialization.FormatterServices).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static);
 		static MethodInfo gettype = typeof (System.Type).GetMethod ("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static);
 		static FieldInfo handlefld = typeof (Java.Lang.Object).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance);
 		static FieldInfo Throwable_handle = typeof (Java.Lang.Throwable).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance);
 
+		static void AssureBuilder ()
+		{
+			lock (lazyLock) {
+				if (builder == null) {
+					var tempBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly (new AssemblyName {Name = "MonoDroidConstructors"}, AssemblyBuilderAccess.Run, null, null, null,  null, null, true);
+					module = tempBuilder.DefineDynamicModule ("Implementations", false);
+					builder = tempBuilder;
+				}
+			}
+		}
+
 		internal static Action <IntPtr, object []> CreateDelegate (Type type, ConstructorInfo cinfo, Type [] parameter_types) {
 			var handle = handlefld;
 			if (typeof (Java.Lang.Throwable).IsAssignableFrom (type)) {
 				handle = Throwable_handle;
 			}
+
+			AssureBuilder ();
 
 			DynamicMethod method = new DynamicMethod (Guid.NewGuid ().ToString (), typeof (void), new Type [] {typeof (IntPtr), typeof (object []) }, module, true);
 			ILGenerator il = method.GetILGenerator ();
