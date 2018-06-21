@@ -2042,6 +2042,71 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			}
 		}
 
+		//This test validates the _CleanIntermediateIfNuGetsChange target
+		[Test]
+		public void BuildAfterUpgradingNuget ([Values (false, true)] bool usePackageReference)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+
+			var packages = usePackageReference ? proj.PackageReferences : proj.Packages;
+			packages.Add (KnownPackages.XamarinForms_2_3_4_231);
+			packages.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
+			packages.Add (KnownPackages.SupportCompat_25_4_0_1);
+			packages.Add (KnownPackages.SupportCoreUI_25_4_0_1);
+			packages.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
+			packages.Add (KnownPackages.SupportDesign_25_4_0_1);
+			packages.Add (KnownPackages.SupportFragment_25_4_0_1);
+			packages.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
+			packages.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
+			packages.Add (KnownPackages.SupportV7CardView_25_4_0_1);
+			packages.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				if (usePackageReference) {
+					b.RequiresMSBuild = true;
+					b.Target = "Restore,Build";
+				}
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
+
+				var nugetStamp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.ProjectName + ".nuget.stamp");
+				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
+
+				if (!usePackageReference) {
+					foreach (var p in proj.Packages) {
+						foreach (var r in p.References) {
+							proj.References.Remove (r);
+						}
+					}
+				}
+				packages.Clear ();
+				packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+				packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+				packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+				packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+				packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+				packages.Add (KnownPackages.SupportDesign_27_0_2_1);
+				packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+				packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+				packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+				packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+				packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+				packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
+				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Xamarin.Android.Support.v4.dll: extracted files are up to date"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v4.dll`!");
+			}
+		}
+
 		[Test]
 		public void CheckTargetFrameworkVersion ()
 		{
