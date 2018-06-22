@@ -2067,6 +2067,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					b.RequiresMSBuild = true;
 					b.Target = "Restore,Build";
 				}
+				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
+				b.CleanupAfterSuccessfulBuild =
+					b.CleanupOnDispose = false;
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);
