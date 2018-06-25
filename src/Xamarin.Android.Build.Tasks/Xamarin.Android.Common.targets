@@ -3083,6 +3083,41 @@ because xbuild doesn't support framework reference assemblies.
   </CalculateProjectDependencies>
 </Target>
 
+<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+  <EnableCleanAllFiles Condition="'$(EnableCleanAllFiles)' == ''">true</EnableCleanAllFiles>
+  <EnableCleanOnNuGetPackagesChange Condition="'$(EnableCleanOnNuGetPackagesChange)' == ''">true</EnableCleanOnNuGetPackagesChange>
+  <CoreCleanDependsOn Condition="'$(EnableCleanAllFiles)' == 'true'">
+     _CleanAllFiles;
+    $(CoreCleanDependsOn)
+  </CoreCleanDependsOn>
+  <BuildDependsOn Condition="'$(EnableCleanOnNuGetPackagesChange)' == 'true'">
+    _CleanOnNuGetPackagesChange;
+    $(BuildDependsOn)
+  </BuildDependsOn>
+</PropertyGroup>
+
+<Target Name="_CleanAllFiles">
+  <ItemGroup>
+    <Clean Include="$(OutputPath)**\*.*" />
+    <Clean Include="$(IntermediateOutputPath)**\*.*" Exclude="$(_AndroidDesignTimeResDirIntermediate)\**\*.*" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_BeforeCleanOnNuGetPackagesChange">
+  <PropertyGroup>
+    <_NuGetAssetsFile Condition="Exists('$(ProjectLockFile)')">$(ProjectLockFile)</_NuGetAssetsFile>
+    <_NuGetAssetsFile Condition="'$(_NuGetAssetsFile)' == '' and Exists('packages.config')">packages.config</_NuGetAssetsFile>
+  </PropertyGroup>
+</Target>
+
+<Target Name="_CleanOnNuGetPackagesChange" DependsOnTargets="_BeforeCleanOnNuGetPackagesChange"
+        Inputs="$(_NuGetAssetsFile)"
+        Outputs="$(ProjectLockFile).stamp">
+  <CallTarget Targets="Clean" />
+  <Touch Files="$(ProjectLockFile).stamp" AlwaysCreate="true" />
+</Target>
+
+
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets')"/>
 
