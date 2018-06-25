@@ -393,10 +393,34 @@ namespace Xamarin.ProjectTools
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				//NOTE: enormous logs will lock up IDE's UI
+				if (IsRunningInIDE) {
+					throw new FailedBuildException (message);
+				} else {
+					throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				}
 			}
 
 			return result;
+		}
+
+		bool IsRunningInIDE {
+			get {
+				//Check for Windows, process is testhost.x86 in VS 2017
+				using (var p = Process.GetCurrentProcess ()) {
+					if (p.ProcessName.IndexOf ("testhost", StringComparison.OrdinalIgnoreCase) != -1) {
+						return true;
+					}
+				}
+
+				//Check for macOS, value is normally /Applications/Visual Studio.app/Contents/Resources
+				var gac_prefix = Environment.GetEnvironmentVariable ("MONO_GAC_PREFIX", EnvironmentVariableTarget.Process);
+				if (!string.IsNullOrEmpty (gac_prefix) && gac_prefix.IndexOf ("Visual Studio", StringComparison.OrdinalIgnoreCase) != -1) {
+					return true;
+				}
+
+				return false;
+			}
 		}
 
 		string QuoteFileName (string fileName)
