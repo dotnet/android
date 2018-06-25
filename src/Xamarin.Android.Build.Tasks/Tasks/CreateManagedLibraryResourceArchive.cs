@@ -120,14 +120,14 @@ namespace Xamarin.Android.Tasks
 				Log.LogMessage ("writing __res_name_case_map.txt...");
 				foreach (var res in AndroidResourcesInThisExactProject)
 					nameCaseMap.WriteLine ("{0};{1}", res.GetMetadata ("LogicalName").Replace ('\\', '/'), Path.Combine (Path.GetFileName (Path.GetDirectoryName (res.ItemSpec)), Path.GetFileName (res.ItemSpec)).Replace ('\\', '/'));
-				File.WriteAllText (Path.Combine (OutputDirectory, "__res_name_case_map.txt"), nameCaseMap.ToString ());
+				File.WriteAllText (Path.Combine (outDirInfo.FullName, "__res_name_case_map.txt"), nameCaseMap.ToString ());
 			}
 
 			var outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidLibraryProjects__.zip");
 			var fileMode = File.Exists (outpath) ? FileMode.Open : FileMode.CreateNew;
 			if (Files.ArchiveZipUpdate (outpath, f => {
 				using (var zip = new ZipArchiveEx (f, fileMode)) {
-					zip.AddDirectory (OutputDirectory, "library_project_imports");
+					zip.AddDirectory (outDirInfo.FullName, "library_project_imports");
 					if (RemovedAndroidResourceFiles != null) {
 						foreach (var r in RemovedAndroidResourceFiles) {
 							Log.LogDebugMessage ($"Removed {r.ItemSpec} from {outpath}");

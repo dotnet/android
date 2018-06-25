@@ -2215,6 +2215,56 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			}
 		}
 
+		[Test]
+		public void ResolveLibraryImportsWithInvalidZip ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.PCLCrypto_Alpha,
+				},
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				b.RequiresMSBuild = true;
+				b.Target = "Restore";
+				Assert.IsTrue (b.Build (proj), "Restore should have succeeded.");
+				b.Target = "Build";
+				b.ThrowOnBuildFailure = false;
+				if (b.Build (proj)) {
+					//NOTE: `:` in a file path should fail on Windows, but passes on macOS
+					if (IsWindows)
+						Assert.Fail ("Build should have failed.");
+				} else {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "error XA4303: Error extracting resources from"), "Should receive XA4303 error.");
+				}
+			}
+		}
+
+		[Test]
+		public void AndroidLibraryProjectsZipWithOddPaths ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.Imports.Add (new Import ("foo.props") {
+				TextContent = () => $@"
+					<Project>
+					  <PropertyGroup>
+						<IntermediateOutputPath>$(MSBuildThisFileDirectory)../{TestContext.CurrentContext.Test.Name}/obj/$(Configuration)/foo/</IntermediateOutputPath>
+					  </PropertyGroup>
+					</Project>"
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\foo.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?><resources><string name=""foo"">bar</string></resources>",
+			});
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.IntermediateOutputPath, "foo", "__AndroidLibraryProjects__.zip");
+				FileAssert.Exists (zipFile);
+				using (var zip = ZipHelper.OpenZip (zipFile)) {
+					Assert.IsTrue (zip.ContainsEntry ("library_project_imports/res/values/foo.xml"), $"{zipFile} should contain a library_project_imports/res/values/foo.xml entry");
+				}
+			}
+		}
+
 #pragma warning disable 414
 		static object [] validateJavaVersionTestCases = new object [] {
 			new object [] {
