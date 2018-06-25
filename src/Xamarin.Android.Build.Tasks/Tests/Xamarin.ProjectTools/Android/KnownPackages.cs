@@ -395,6 +395,16 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
+		public static Package PCLCrypto_Alpha = new Package {
+			Id = "PCLCrypto",
+			Version = "2.1.17-alpha-g5b1e8dff8c",
+			TargetFramework = "monoandroid23",
+			References = {
+				new BuildItem.Reference("PCLCrypto") {
+					MetadataValues = "HintPath=..\\packages\\PCLCrypto.2.1.17-alpha-g5b1e8dff8c\\lib\\monoandroid23\\PCLCrypto.dll"
+				}
+			}
+		};
 	}
 }
 
