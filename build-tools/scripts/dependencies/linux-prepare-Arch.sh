@@ -31,8 +31,27 @@ ARCH_DEPS="autoconf
 	which
 	zip
 	"
-if [ $NO_SUDO = "false" ]; then
-	sudo pacman -S --noconfirm --needed $ARCH_DEPS
+all_installed=yes
+for pkg in $ARCH_DEPS
+do
+	if ! pacman -Qq "$pkg" > /dev/null 2>&1 
+	then
+		all_installed=no 
+		missing_pkgs+=("$pkg")
+	fi
+done
+if [ "$NO_SUDO" = "false" ]
+then
+	[ "$all_installed" = "yes" ] && exit
+	if ! sudo pacman -S --noconfirm --needed $ARCH_DEPS
+	then
+		echo "Failed to install required packages"
+		exit 1
+	fi
 else
-	echo "Sudo is required!"
+	if [ "$all_installed" = "no" ]
+	then
+		echo "Missing package(s): '${missing_pkgs[@]}'"
+		exit 1
+	fi
 fi
