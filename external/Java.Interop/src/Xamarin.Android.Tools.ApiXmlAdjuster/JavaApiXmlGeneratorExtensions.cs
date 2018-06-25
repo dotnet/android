@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					continue;
 				writer.WriteStartElement ("package");
 				writer.WriteAttributeString ("name", pkg.Name);
+				writer.WriteAttributeString ("jni-name", pkg.JniName);
 				foreach (var type in pkg.Types) {
 					if (type.IsReferenceOnly)
 						continue; // skip reference only types
@@ -44,15 +45,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		static void Save (this JavaClass cls, XmlWriter writer)
 		{
-			SaveTypeCommon (cls, writer, "class", XmlConvert.ToString (cls.Abstract), cls.Extends, cls.ExtendsGeneric);
+			SaveTypeCommon (cls, writer, "class", XmlConvert.ToString (cls.Abstract), cls.Extends, cls.ExtendsGeneric, cls.ExtendedJniExtends);
 		}
 		
 		static void Save (this JavaInterface iface, XmlWriter writer)
 		{
-			SaveTypeCommon (iface, writer, "interface", "true", null, null);
+			SaveTypeCommon (iface, writer, "interface", "true", null, null, null);
 		}
 		
-		static void SaveTypeCommon (this JavaType cls, XmlWriter writer, string elementName, string abs, string ext, string extgen)
+		static void SaveTypeCommon (this JavaType cls, XmlWriter writer, string elementName, string abs, string ext, string extgen, string jniExt)
 		{
 			writer.WriteStartElement (elementName);
 			if (abs != null)
@@ -62,15 +63,19 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				writer.WriteAttributeString ("extends", ext);
 			if (ext != null)
 				writer.WriteAttributeString ("extends-generic-aware", extgen);
+			if (jniExt != null)
+				writer.WriteAttributeString ("jni-extends", jniExt);
 			writer.WriteAttributeString ("final", XmlConvert.ToString (cls.Final));
 			writer.WriteAttributeString ("name", cls.Name);
 			writer.WriteAttributeString ("static", XmlConvert.ToString (cls.Static));
 			writer.WriteAttributeString ("visibility", cls.Visibility);
+			writer.WriteAttributeString ("jni-signature", cls.ExtendedJniSignature);
 			
 			foreach (var imp in cls.Implements.OrderBy (i => i.Name, StringComparer.Ordinal)) {
 				writer.WriteStartElement ("implements");
 				writer.WriteAttributeString ("name", imp.Name);
 				writer.WriteAttributeString ("name-generic-aware", imp.NameGeneric);
+				writer.WriteAttributeString ("jni-type", imp.ExtendedJniType);
 				writer.WriteString ("\n      ");
 				writer.WriteFullEndElement ();
 			}
@@ -94,6 +99,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			foreach (var tp in typeParameters.TypeParameters) {
 				writer.WriteStartElement ("typeParameter");
 				writer.WriteAttributeString ("name", tp.Name);
+				writer.WriteAttributeString ("classBound", tp.ExtendedClassBound);
+				writer.WriteAttributeString ("jni-classBound", tp.ExtendedJniClassBound);
+				writer.WriteAttributeString ("interfaceBounds", tp.ExtendedInterfaceBounds);
+				writer.WriteAttributeString ("jni-interfaceBounds", tp.ExtendedJniInterfaceBounds);
+
 				if (tp.GenericConstraints != null) {
 					// If there is only one generic constraint that specifies java.lang.Object,
 					// that is not really a constraint, so skip that.
@@ -133,12 +143,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				XmlConvert.ToString (field.Volatile),
 				null,
 				null,
+				null,
+				null,
+				null,
 				null);
 		}
 		
 		static void Save (this JavaConstructor ctor, XmlWriter writer)
 		{
-			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions);
+			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions, ctor.ExtendedBridge, ctor.ExtendedJniReturn, ctor.ExtendedSynthetic);
 		}
 		
 		static void Save (this JavaMethod method, XmlWriter writer)
@@ -187,7 +200,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				null,
 				method.TypeParameters,
 				method.Parameters,
-				method.Exceptions);
+				method.Exceptions,
+				method.ExtendedBridge,
+				method.ExtendedJniReturn,
+				method.ExtendedSynthetic);
 		}
 		
 		static void SaveCommon (this JavaMember m, XmlWriter writer, string elementName,
@@ -196,7 +212,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					string value, string volat,
 					JavaTypeParameters typeParameters,
 					IEnumerable<JavaParameter> parameters,
-					IEnumerable<JavaException> exceptions)
+					IEnumerable<JavaException> exceptions,
+					bool? extBridge, string jniReturn, bool? extSynthetic)
 		{
 			// If any of the parameters contain reference to non-public type, it cannot be generated.
 			if (parameters != null && parameters.Any (p => p.ResolvedType.ReferencedType != null && string.IsNullOrEmpty (p.ResolvedType.ReferencedType.Visibility)))
@@ -208,10 +225,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			writer.WriteAttributeString ("deprecated", m.Deprecated);
 			writer.WriteAttributeString ("final", XmlConvert.ToString (m.Final));
 			writer.WriteAttributeString ("name", m.Name);
+			writer.WriteAttributeString ("jni-signature", m.ExtendedJniSignature);
+			if (extBridge.HasValue)
+				writer.WriteAttributeString ("bridge", extBridge.Value ? "true" : "false");
 			if (native != null)
 				writer.WriteAttributeString ("native", native);
 			if (ret != null)
 				writer.WriteAttributeString ("return", ret);
+			if (jniReturn != null)
+				writer.WriteAttributeString ("jni-return", jniReturn);
 			writer.WriteAttributeString ("static", XmlConvert.ToString (m.Static));
 			if (sync != null)
 				writer.WriteAttributeString ("synchronized", sync);
@@ -223,6 +245,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				writer.WriteAttributeString ("type-generic-aware", typeGeneric);
 			if (value != null)
 				writer.WriteAttributeString ("value", value);
+			if (extSynthetic.HasValue)
+				writer.WriteAttributeString ("synthetic", extSynthetic.Value ? "true" : "false");
 			writer.WriteAttributeString ("visibility", m.Visibility);
 			if (volat != null)
 				writer.WriteAttributeString ("volatile", volat);
@@ -235,6 +259,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.WriteStartElement ("parameter");
 					writer.WriteAttributeString ("name", p.Name);
 					writer.WriteAttributeString ("type", p.GetVisibleTypeName ());
+					writer.WriteAttributeString ("jni-type", p.JniType);
 					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();
 				}
@@ -245,6 +270,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.WriteStartElement ("exception");
 					writer.WriteAttributeString ("name", e.Name.Substring (e.Name.LastIndexOf ('/') + 1).Replace ('$', '.'));
 					writer.WriteAttributeString ("type", e.Type);
+					writer.WriteAttributeString ("type-generic-aware", e.TypeGenericAware);
 					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();
 				}

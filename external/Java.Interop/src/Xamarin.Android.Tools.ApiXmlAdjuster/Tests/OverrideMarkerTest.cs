@@ -37,11 +37,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 		{
 			string xml = @"<api>
   <package name='XXX'>
-    <class abstract='true' deprecated='not deprecated' extends='android.app.ExpandableListActivity' extends-generic-aware='android.app.ExpandableListActivity' final='false' name='SherlockExpandableListActivity' static='false' visibility='public'>
-      <method abstract='false' deprecated='not deprecated' final='false' name='addContentView' native='false' return='void' static='false' synchronized='false' visibility='public'>
-        <parameter name = 'view' type='android.view.View'>
+    <class abstract='true' deprecated='not deprecated' extends='android.app.ExpandableListActivity' extends-generic-aware='android.app.ExpandableListActivity' final='false' name='SherlockExpandableListActivity' static='false' visibility='public' jni-signature='Landroid/app/ExpandableListActivity;'>
+      <method abstract='false' deprecated='not deprecated' final='false' name='addContentView' native='false' return='void' static='false' synchronized='false' visibility='public' jni-signature='(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V'>
+        <parameter name = 'view' type='android.view.View' jni-type='Landroid/view/View;'>
         </parameter>
-        <parameter name = 'params' type='android.view.ViewGroup.LayoutParams'>
+        <parameter name = 'params' type='android.view.ViewGroup.LayoutParams' jni-type='Landroid/view/ViewGroup$LayoutParams;'>
         </parameter>
       </method>
     </class>
@@ -63,8 +63,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 		{
 			string xml = @"<api>
   <package name='XXX'>
-    <class abstract='true' deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public'>
-      <constructor deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public'>
+    <class abstract='true' deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public' jni-signature='Landroid/app/GenericConstructors'>
+      <constructor deprecated='not deprecated' final='false' name='GenericConstructors' static='false' visibility='public' jni-signature='(LTTE;)V'>
         <typeParameters>
           <typeParameter name='E' interfaceBounds='' jni-interfaceBounds='' />
         </typeParameters>

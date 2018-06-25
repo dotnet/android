@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public JavaApi Parent { get; private set; }
 
 		public string Name { get; set; }
+		public string JniName { get; set; }
 		public IList<JavaType> Types { get; set; }
 		
 		// Content of this value is not stable.
@@ -166,6 +167,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public string Name { get; set; }
 		public bool Static { get; set; }
 		public string Visibility { get; set; }
+		public string ExtendedJniSignature { get; set; }
 	}
 
 	public partial class JavaField : JavaMember
@@ -204,7 +206,6 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public bool ExtendedBridge { get; set; }
 		public string ExtendedJniReturn { get; set; }
 		public bool ExtendedSynthetic { get; set; }
-		// We cannot get 'ExtendedJniSignature' from DLLs, so we don't have it here.
 
 		// Content of this value is not stable.
 		public string ToStringHelper (string returnType, string name, JavaTypeParameters typeParameters)
@@ -266,7 +267,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public JavaMethodBase Parent { get; private set; }
 		public string Name { get; set; }
 		public string Type { get; set; }
-		
+		public string JniType { get; set; }
+
 		// Content of this value is not stable.
 		public override string ToString ()
 		{
@@ -278,6 +280,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	{
 		public string Name { get; set; }
 		public string Type { get; set; }
+		public string TypeGenericAware { get; set; }
 	}
 
 	public partial class JavaTypeParameters

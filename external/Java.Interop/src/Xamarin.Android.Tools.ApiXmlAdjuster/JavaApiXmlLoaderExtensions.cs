@@ -49,6 +49,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			reader.MoveToContent ();
 			package.Name = XmlUtil.GetRequiredAttribute (reader, "name");
+			package.JniName = reader.GetAttribute ("jni-name");
 			if (reader.MoveToFirstAttribute ())
 				if (reader.LocalName != "name")
 					throw XmlUtil.UnexpectedAttribute (reader, "package");
@@ -203,6 +204,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			member.Name = XmlUtil.GetRequiredAttribute (reader, "name");
 			member.Static = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "static"));
 			member.Visibility = XmlUtil.GetRequiredAttribute (reader, "visibility");
+			member.ExtendedJniSignature = XmlUtil.GetRequiredAttribute (reader, "jni-signature");
 		}
 
 		public static void Load (this JavaField field, XmlReader reader)
@@ -222,7 +224,6 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			var method = methodBase as JavaMethod; // kind of ugly hack yeah...
 			
 			methodBase.LoadMemberAttributes (reader);
-			//methodBase.ExtendedJniSignature = reader.GetAttribute ("jni-signature");
 			methodBase.ExtendedJniReturn = reader.GetAttribute ("jni-return");
 			methodBase.ExtendedSynthetic = XmlConvert.ToBoolean (reader.GetAttribute ("synthetic") ?? "false");
 			methodBase.ExtendedBridge = XmlConvert.ToBoolean (reader.GetAttribute ("bridge") ?? "false");
@@ -282,6 +283,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			p.Name = XmlUtil.GetRequiredAttribute (reader, "name");
 			p.Type = XmlUtil.GetRequiredAttribute (reader, "type");
+			p.JniType = XmlUtil.GetRequiredAttribute (reader, "jni-type");
 			reader.Skip ();
 		}
 
@@ -289,6 +291,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			e.Name = XmlUtil.GetRequiredAttribute (reader, "name");
 			e.Type = XmlUtil.GetRequiredAttribute (reader, "type");
+			e.Type = XmlUtil.GetRequiredAttribute (reader, "type-generic-aware");
 			reader.Skip ();
 		}
 		
