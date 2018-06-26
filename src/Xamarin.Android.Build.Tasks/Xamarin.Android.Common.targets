@@ -271,6 +271,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
 	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
+	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -524,6 +525,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
+    _CleanIntermediateIfNuGetsChange;
     $(BuildDependsOn);
     _CompileDex;
     $(_PostBuildTargets)
@@ -542,6 +544,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
+    _CleanIntermediateIfNuGetsChange;
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
@@ -641,6 +644,23 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateProperty Value="$(OutDir)$(_AndroidPackage)-Signed.apk">
 		<Output TaskParameter="Value" PropertyName="ApkFileSigned"/>
 	</CreateProperty>
+</Target>
+
+<Target Name="_BeforeCleanIntermediateIfNuGetsChange">
+  <PropertyGroup>
+    <_NuGetAssetsFile Condition="Exists('$(ProjectLockFile)')">$(ProjectLockFile)</_NuGetAssetsFile>
+    <_NuGetAssetsFile Condition="'$(_NuGetAssetsFile)' == '' and Exists('packages.config')">packages.config</_NuGetAssetsFile>
+  </PropertyGroup>
+</Target>
+
+<Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
+    Inputs="$(_NuGetAssetsFile)"
+    Outputs="$(_AndroidNuGetStampFile)">
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" />
+  <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidNuGetStampFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
