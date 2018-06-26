@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Build.Framework;
@@ -11,7 +12,7 @@ using MTask = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.BuildTools.PrepTasks {
 
-	public class DownloadUri : MTask
+	public class DownloadUri : MTask, ICancelableTask
 	{
 		public DownloadUri ()
 		{
@@ -22,6 +23,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 		[Required]
 		public ITaskItem[]  DestinationFiles    { get; set; }
+
+		CancellationTokenSource cancellationTokenSource;
+
+		public void Cancel ()
+		{
+			cancellationTokenSource?.Cancel ();
+		}
 
 		public override bool Execute ()
 		{
@@ -40,19 +48,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 				return false;
 			}
 
+			var source  = cancellationTokenSource = new CancellationTokenSource ();
 			var tasks   = new TTask [SourceUris.Length];
 			using (var client = new HttpClient ()) {
 				client.Timeout = TimeSpan.FromHours (3);
 				for (int i = 0; i < SourceUris.Length; ++i) {
-					tasks [i] = DownloadFile (client, SourceUris [i], DestinationFiles [i].ItemSpec);
+					tasks [i] = DownloadFile (client, source, SourceUris [i], DestinationFiles [i].ItemSpec);
 				}
-				TTask.WaitAll (tasks);
+				TTask.WaitAll (tasks, source.Token);
 			}
 
 			return !Log.HasLoggedErrors;
 		}
 
-		async TTask DownloadFile (HttpClient client, string uri, string destinationFile)
+		async TTask DownloadFile (HttpClient client, CancellationTokenSource source, string uri, string destinationFile)
 		{
 			if (File.Exists (destinationFile)) {
 				Log.LogMessage (MessageImportance.Normal, $"Skipping uri '{uri}' as destination file already exists '{destinationFile}'.");
@@ -65,9 +74,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
 			try {
-				using (var s = await client.GetStreamAsync (uri))
-				using (var o = File.OpenWrite (tempPath)) {
-					await s.CopyToAsync (o);
+				using (var r = await client.GetAsync (uri, source.Token)) {
+					r.EnsureSuccessStatusCode ();
+					using (var s = await r.Content.ReadAsStreamAsync ())
+					using (var o = File.OpenWrite (tempPath)) {
+						await s.CopyToAsync (o, 4096, source.Token);
+					}
 				}
 				Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
 				File.Move (tempPath, destinationFile);
