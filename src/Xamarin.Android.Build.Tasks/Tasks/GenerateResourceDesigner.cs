@@ -10,6 +10,7 @@ using Microsoft.Build.Utilities;
 using Monodroid;
 
 using Java.Interop.Tools.Cecil;
+using Mono.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
@@ -119,7 +120,7 @@ namespace Xamarin.Android.Tasks
 			var assemblyNames = new List<string> ();
 			if (IsApplication && References != null && References.Any ()) {
 				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
-				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
+				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false, loadReaderParameters: MonoAndroidHelper.DefaultInMemoryNoSymbolsReader)) {
 					foreach (var assemblyName in References) {
 						var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
 						string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
