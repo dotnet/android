@@ -14,7 +14,9 @@ namespace Java.InteropTests
 		static JreRuntimeOptions CreateBuilder (string[] jars)
 		{
 			var dir = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location);
-			var builder = new JreRuntimeOptions ();
+			var builder = new JreRuntimeOptions () {
+				JvmLibraryPath              = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
+			};
 			if (jars != null) {
 				foreach (var jar in jars)
 					builder.ClassPath.Add (Path.Combine (dir, jar));

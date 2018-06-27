@@ -147,10 +147,10 @@ namespace Java.Interop.BootstrapTasks
 		void WriteMakeFragmentFile (string jarPath, string javacPath, string jdkJvmPath, IEnumerable<string> includes)
 		{
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {
-				o.WriteLine ($"JI_JAR_PATH          := {jarPath}");
-				o.WriteLine ($"JI_JAVAC_PATH        := {javacPath}");
-				o.WriteLine ($"JI_JDK_INCLUDE_PATHS := {string.Join (" ", includes)}");
-				o.WriteLine ($"JI_JVM_PATH          := {jdkJvmPath}");
+				o.WriteLine ($"export  JI_JAR_PATH          := {jarPath}");
+				o.WriteLine ($"export  JI_JAVAC_PATH        := {javacPath}");
+				o.WriteLine ($"export  JI_JDK_INCLUDE_PATHS := {string.Join (" ", includes)}");
+				o.WriteLine ($"export  JI_JVM_PATH          := {jdkJvmPath}");
 			}
 		}
 

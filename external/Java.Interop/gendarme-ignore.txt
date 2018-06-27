@@ -565,7 +565,6 @@ M: System.IntPtr Java.Interop.NativeMethods::java_interop_jnienv_get_direct_buff
 M: System.Int64 Java.Interop.NativeMethods::java_interop_jnienv_get_direct_buffer_capacity(System.IntPtr,System.IntPtr)
 M: Java.Interop.JniObjectReferenceType Java.Interop.NativeMethods::java_interop_jnienv_get_object_ref_type(System.IntPtr,System.IntPtr)
 M: System.Int32 Java.Interop.NativeMethods::java_interop_jvm_list(System.IntPtr[],System.Int32,System.Int32&)
-M: System.Int32 Java.Interop.NativeMethods::java_interop_jvm_load(System.String)
 
 
 R: Gendarme.Rules.Naming.UseCorrectSuffixRule

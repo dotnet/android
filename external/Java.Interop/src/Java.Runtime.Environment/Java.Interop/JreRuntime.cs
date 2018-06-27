@@ -26,6 +26,8 @@ namespace Java.Interop {
 
 		internal    List<string>    Options = new List<string> ();
 
+		public  string      JvmLibraryPath              {get; set;}
+
 		public  JniVersion  JniVersion                  {get; set;}
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 
@@ -73,21 +75,9 @@ namespace Java.Interop {
 
 	public class JreRuntime : JniRuntime
 	{
-		const string JvmLibrary = "jvm.dll";
-		const string JavaInteropLibrary = "java-interop";
-
-		[DllImport (JvmLibrary)]
-		static extern int JNI_CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
-
-		[DllImport (JavaInteropLibrary)]
-		static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
-
 		static int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
 		{
-			if (JvmDllLoaded)
-				return java_interop_jvm_create (out javavm, out jnienv, ref args);
-
-			return JNI_CreateJavaVM (out javavm, out jnienv, ref args);
+			return NativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
 		}
 
 		static unsafe JreRuntimeOptions CreateJreVM (JreRuntimeOptions builder)
@@ -98,8 +88,12 @@ namespace Java.Interop {
 			if (builder.InvocationPointer != IntPtr.Zero)
 				return builder;
 
-			if (builder.JvmDllPath != null && !LoadJvmDll (builder.JvmDllPath))
-				throw new Exception ($"Unable to load JVM library: {builder.JvmDllPath}");
+			if (!string.IsNullOrEmpty (builder.JvmLibraryPath)) {
+				int r = NativeMethods.java_interop_jvm_load (builder.JvmLibraryPath);
+				if (r != 0) {
+					throw new Exception ($"Could not load JVM path `{builder.JvmLibraryPath}` ({r})!");
+				}
+			}
 
 			var args = new JavaVMInitArgs () {
 				version             = builder.JniVersion,
@@ -159,6 +153,14 @@ namespace Java.Interop {
 			}
 			base.Dispose (disposing);
 		}
+	}
+
+	partial class NativeMethods {
+		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi)]
+		internal static extern int java_interop_jvm_load (string path);
+
+		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi)]
+		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
 	}
 }
 

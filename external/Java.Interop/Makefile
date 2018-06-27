@@ -178,10 +178,8 @@ $(JRE_DLL_CONFIG): src/Java.Runtime.Environment/Java.Runtime.Environment.csproj
 	$(MSBUILD) $(MSBUILD_FLAGS) $<
 
 run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB) $(JRE_DLL_CONFIG)
-	mv -fv "$(JRE_DLL_CONFIG)" "$(JRE_DLL_CONFIG).bak"
 	MONO_TRACE_LISTENER=Console.Out \
 	$(RUNTIME) bin/$(CONFIGURATION)/jnimarshalmethod-gen.exe -v --jvm "$(JI_JVM_PATH)" -L "$(JI_MONO_LIB_PATH)mono/4.5" -L "$(JI_MONO_LIB_PATH)mono/4.5/Facades" "$<"
-	mv -fv "$(JRE_DLL_CONFIG).bak" "$(JRE_DLL_CONFIG)"
 	$(call RUN_TEST,$<)
 
 # $(call GEN_CORE_OUTPUT, outdir, suffix, extra)
