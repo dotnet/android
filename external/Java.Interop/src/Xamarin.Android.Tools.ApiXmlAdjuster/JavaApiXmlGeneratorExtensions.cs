@@ -29,7 +29,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					continue;
 				writer.WriteStartElement ("package");
 				writer.WriteAttributeString ("name", pkg.Name);
-				writer.WriteAttributeString ("jni-name", pkg.JniName);
+				if (!string.IsNullOrEmpty (pkg.JniName)) {
+					writer.WriteAttributeString ("jni-name", pkg.JniName);
+				}
 				foreach (var type in pkg.Types) {
 					if (type.IsReferenceOnly)
 						continue; // skip reference only types
@@ -69,13 +71,17 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			writer.WriteAttributeString ("name", cls.Name);
 			writer.WriteAttributeString ("static", XmlConvert.ToString (cls.Static));
 			writer.WriteAttributeString ("visibility", cls.Visibility);
-			writer.WriteAttributeString ("jni-signature", cls.ExtendedJniSignature);
-			
+			if (!string.IsNullOrEmpty (cls.ExtendedJniSignature)) {
+				writer.WriteAttributeString ("jni-signature", cls.ExtendedJniSignature);
+			}
+
 			foreach (var imp in cls.Implements.OrderBy (i => i.Name, StringComparer.Ordinal)) {
 				writer.WriteStartElement ("implements");
 				writer.WriteAttributeString ("name", imp.Name);
 				writer.WriteAttributeString ("name-generic-aware", imp.NameGeneric);
-				writer.WriteAttributeString ("jni-type", imp.ExtendedJniType);
+				if (!string.IsNullOrEmpty (imp.ExtendedJniType)) {
+					writer.WriteAttributeString ("jni-type", imp.ExtendedJniType);
+				}
 				writer.WriteString ("\n      ");
 				writer.WriteFullEndElement ();
 			}
@@ -99,10 +105,18 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			foreach (var tp in typeParameters.TypeParameters) {
 				writer.WriteStartElement ("typeParameter");
 				writer.WriteAttributeString ("name", tp.Name);
-				writer.WriteAttributeString ("classBound", tp.ExtendedClassBound);
-				writer.WriteAttributeString ("jni-classBound", tp.ExtendedJniClassBound);
-				writer.WriteAttributeString ("interfaceBounds", tp.ExtendedInterfaceBounds);
-				writer.WriteAttributeString ("jni-interfaceBounds", tp.ExtendedJniInterfaceBounds);
+				if (!string.IsNullOrEmpty (tp.ExtendedClassBound)) {
+					writer.WriteAttributeString ("classBound", tp.ExtendedClassBound);
+				}
+				if (!string.IsNullOrEmpty (tp.ExtendedJniClassBound)) {
+					writer.WriteAttributeString ("jni-classBound", tp.ExtendedJniClassBound);
+				}
+				if (!string.IsNullOrEmpty (tp.ExtendedInterfaceBounds)) {
+					writer.WriteAttributeString ("interfaceBounds", tp.ExtendedInterfaceBounds);
+				}
+				if (!string.IsNullOrEmpty (tp.ExtendedJniInterfaceBounds)) {
+					writer.WriteAttributeString ("jni-interfaceBounds", tp.ExtendedJniInterfaceBounds);
+				}
 
 				if (tp.GenericConstraints != null) {
 					// If there is only one generic constraint that specifies java.lang.Object,
@@ -259,7 +273,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.WriteStartElement ("parameter");
 					writer.WriteAttributeString ("name", p.Name);
 					writer.WriteAttributeString ("type", p.GetVisibleTypeName ());
-					writer.WriteAttributeString ("jni-type", p.JniType);
+					if (!string.IsNullOrEmpty (p.JniType)) {
+						writer.WriteAttributeString ("jni-type", p.JniType);
+					}
 					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();
 				}
@@ -270,7 +286,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.WriteStartElement ("exception");
 					writer.WriteAttributeString ("name", e.Name.Substring (e.Name.LastIndexOf ('/') + 1).Replace ('$', '.'));
 					writer.WriteAttributeString ("type", e.Type);
-					writer.WriteAttributeString ("type-generic-aware", e.TypeGenericAware);
+					if (!string.IsNullOrEmpty (e.TypeGenericAware)) {
+						writer.WriteAttributeString ("type-generic-aware", e.TypeGenericAware);
+					}
 					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();
 				}
