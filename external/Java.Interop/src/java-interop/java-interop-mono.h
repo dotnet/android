@@ -27,6 +27,10 @@
 
 #else   /* !defined (ANDROID) && !defined (DYLIB_MONO) */
 
+	#undef MONO_API_EXPORT
+	#undef MONO_API_IMPORT
+	#undef MONO_API
+
 	#include <mono/metadata/assembly.h>
 	#include <mono/metadata/class.h>
 	#include <mono/metadata/object.h>
