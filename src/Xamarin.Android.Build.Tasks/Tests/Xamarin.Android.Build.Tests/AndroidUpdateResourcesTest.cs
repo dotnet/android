@@ -13,11 +13,14 @@ using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests
 {
+	//NOTE: entire class NonParallelizable so BuildAppWithManagedResourceParserAndLibraries can be NonParallelizable
+	// See https://github.com/nunit/docs/wiki/Framework-Parallel-Test-Execution
 	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[NonParallelizable]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
+		[Parallelizable]
 		public void RepetitiveBuild ()
 		{
 			if (Directory.Exists ("temp/RepetitiveBuild"))
@@ -36,6 +39,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Parallelizable]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
@@ -132,6 +136,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckEmbeddedSupportLibraryResources ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -155,6 +160,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void MoveResource ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -177,6 +183,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void ReportAaptErrorsInOriginalFileName ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -192,6 +199,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void ReportAaptWarningsForBlankLevel ([Values (false, true)] bool useAapt2)
 		{
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
@@ -210,6 +218,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -265,6 +274,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		public void Check9PatchFilesAreProcessed ([Values(false, true)] bool explicitCrunch)
 		{
 			var projectPath = string.Format ("temp/Check9PatchFilesAreProcessed_{0}", explicitCrunch.ToString ());
@@ -316,6 +326,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[Parallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
@@ -482,6 +493,7 @@ namespace UnnamedProject
 
 		[Test]
 		[TestCaseSource("ReleaseLanguage")]
+		[Parallelizable]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -509,6 +521,7 @@ namespace UnnamedProject
 
 		[Test]
 		[TestCaseSource("ReleaseLanguage")]
+		[Parallelizable]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -551,6 +564,7 @@ namespace UnnamedProject
 
 		[Test]
 		[TestCaseSource("ReleaseLanguage")]
+		[Parallelizable]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -582,6 +596,7 @@ namespace UnnamedProject
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
 		[TestCaseSource("ReleaseLanguage")]
+		[Parallelizable]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -612,6 +627,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void TargetGenerateJavaDesignerForComponentIsSkipped ([Values(false, true)] bool isRelease)
 		{ 
 			// build with packages... then tweak a package..
@@ -642,6 +658,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckAaptErrorRaisedForMissingResource ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -670,6 +687,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckAaptErrorRaisedForInvalidDirectoryName ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -689,6 +707,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckAaptErrorRaisedForInvalidFileName ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -713,6 +732,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -736,6 +756,7 @@ namespace UnnamedProject
 
 		[Test]
 		[Ignore ("Ignore until our own MergeResources is implemented")]
+		[Parallelizable]
 		public void CheckWarningsRaisedForDuplicateResourcesAcrossEntireProject () 
 		{
 			var lib1 = new XamarinAndroidLibraryProject () {
@@ -805,6 +826,7 @@ namespace UnnamedProject
 
 		[Test]
 		[Ignore ("Enable once Merge Resources is finished")]
+		[Parallelizable]
 		public void InternationalResourceTest ([Values (false, true)] bool explicitCrunch)
 		{
 			var library = new XamarinAndroidLibraryProject () {
@@ -884,6 +906,7 @@ namespace UnnamedProject
 
 		[Test]
 		[Ignore ("Enable once Merge Resources is finished")]
+		[Parallelizable]
 		public void MergeResources ([Values(false, true)] bool explicitCrunch)
 		{
 			var lib1 = new XamarinAndroidLibraryProject () {
@@ -970,6 +993,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckFilesAreRemoved () {
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -1006,6 +1030,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
 			var path = Path.Combine ("temp", "CheckDontUpdateResourceIfNotNeeded");
@@ -1078,6 +1103,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Parallelizable]
 		public void BuildAppWithManagedResourceParser()
 		{
 			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
@@ -1115,7 +1141,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		[NonParallelizable]
+		[NonParallelizable] //NOTE: this test must complete under a time limit
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
 			int maxBuildTimeMs = 10000;
@@ -1226,6 +1252,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckMaxResWarningIsEmittedAsAWarning()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -1255,6 +1282,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckDefaultTranslationWarnings ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -1281,6 +1309,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Parallelizable]
 		public void CheckCodeBehindIsGenerated ()
 		{
 			var path = Path.Combine ("temp", TestName);
