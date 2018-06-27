@@ -74,6 +74,7 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary <string, string> knownNamespaceFixups = new Dictionary <string, string> (StringComparer.OrdinalIgnoreCase) {
 			{"android.view", "Android.Views"},
 			{"android.support.wearable.view", "Android.Support.Wearable.Views"},
+			{"android.support.constraint", "Android.Support.Constraints"},
 			{"com.actionbarsherlock", "ABSherlock"},
 			{"com.actionbarsherlock.widget", "ABSherlock.Widget"},
 			{"com.actionbarsherlock.view", "ABSherlock.View"},
@@ -220,6 +221,13 @@ namespace Xamarin.Android.Tasks
 			bool skipFirst = false;
 
 			nav.MoveToFirstChild ();
+
+			// This is needed in case the first element after XML declaration is not an actual element but a
+			// comment, for instance
+			while (nav.NodeType != XPathNodeType.Element) {
+				nav.MoveToNext ();
+			}
+
 			string xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
 
 			if (!String.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
