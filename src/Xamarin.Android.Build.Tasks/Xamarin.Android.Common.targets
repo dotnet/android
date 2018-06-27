@@ -25,6 +25,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -684,49 +686,55 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
-			AndroidApiLevel="$(AndroidApiLevel)"
-			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
-			AndroidUseAapt2="$(AndroidUseAapt2)"
-			AotAssemblies="$(AotAssemblies)"
-			SequencePointsMode="$(_AndroidSequencePointsMode)"
-			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
 			JavaSdkPath="$(JavaSdkDirectory)"
-			ProjectFilePath="$(MSBuildProjectFullPath)"
-			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
-			TargetFrameworkVersion="$(TargetFrameworkVersion)"
-			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-			JavaToolExe="$(JavaToolExe)"
-			JavacToolExe="$(JavacToolExe)"
-			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
-			LintToolPath="$(LintToolPath)"
-			ZipAlignPath="$(ZipAlignToolPath)">
-		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
-		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
-		<Output TaskParameter="SupportedApiLevel"         PropertyName="_SupportedApiLevel"	/>
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
-		<Output TaskParameter="ReferenceAssemblyPaths"    PropertyName="_XATargetFrameworkDirectories" />
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
+			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
-		<Output TaskParameter="AndroidSdkBuildToolsPath"  PropertyName="AndroidSdkBuildToolsPath"   Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
-		<Output TaskParameter="ZipAlignPath"              PropertyName="ZipAlignToolPath"           Condition="'$(ZipAlignToolPath)' == ''" />
-		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
-		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
-		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
-		<Output TaskParameter="ApkSignerJar"              PropertyName="ApkSignerJar"               Condition="'$(ApkSignerJar)' == ''" />
-		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
-		<Output TaskParameter="AndroidUseAapt2"           PropertyName="_AndroidUseAapt2" />
-		<Output TaskParameter="Aapt2Version"              PropertyName="_Aapt2Version" />
+	</ResolveSdks>
+	<ValidateJavaVersion
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+			JavaSdkPath="$(JavaSdkDirectory)"
+			JavaToolExe="$(JavaToolExe)"
+			JavacToolExe="$(JavacToolExe)"
+			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
 		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
-	</ResolveSdks>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
+	</ValidateJavaVersion>
+	<ResolveAndroidTooling
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			AndroidApiLevel="$(AndroidApiLevel)"
+			AndroidSdkPath="$(AndroidSdkDirectory)"
+			AndroidNdkPath="$(AndroidNdkDirectory)"
+			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			AndroidUseAapt2="$(AndroidUseAapt2)"
+			AotAssemblies="$(AotAssemblies)"
+			SequencePointsMode="$(_AndroidSequencePointsMode)"
+			ProjectFilePath="$(MSBuildProjectFullPath)"			
+			LintToolPath="$(LintToolPath)"
+			ZipAlignPath="$(ZipAlignToolPath)">
+		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
+		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
+		<Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
+		<Output TaskParameter="SupportedApiLevel"           PropertyName="_SupportedApiLevel" />
+		<Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
+		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
+		<Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
+		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
+		<Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
+		<Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
+		<Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
+		<Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
+		<Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
+	</ResolveAndroidTooling>
+	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
@@ -734,7 +742,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
 	</CreateProperty>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion)">
+	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
@@ -874,7 +882,7 @@ because xbuild doesn't support framework reference assemblies.
 	
 	<Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
 	<Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
-	<Message Text="TargetFrameworkVersion: $(_TargetFrameworkVersion)"/>
+	<Message Text="TargetFrameworkVersion: $(TargetFrameworkVersion)"/>
 	<Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
 	<Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
 	<Message Text="Android SDK Build Tools: $(AndroidSdkBuildToolsPath)"/>
@@ -2219,7 +2227,7 @@ because xbuild doesn't support framework reference assemblies.
     MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
     OutputDirectory="$(IntermediateOutputPath)android\src\mono" 
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
-    TargetFrameworkVersion="$(_TargetFrameworkVersion)" 
+    TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
 </Target>
 
