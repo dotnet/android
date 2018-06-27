@@ -298,8 +298,14 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
 				}
 			}
-			//NOTE: fix for Jenkins, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
-			psi.EnvironmentVariables ["ghprbPullLongDescription"] = "";
+
+			//NOTE: commit messages can "accidentally" cause test failures
+			// Consider if you added an error message in a commit message, then wrote a test asserting the error no longer occurs.
+			// Both Jenkins and VSTS have an environment variable containing the full commit message, which will inexplicably cause your test to fail...
+			// For a Jenkins case, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
+			// For a VSTS case, see http://build.devdiv.io/1806783
+			psi.EnvironmentVariables ["ghprbPullLongDescription"] =
+				psi.EnvironmentVariables ["BUILD_SOURCEVERSIONMESSAGE"] = "";
 
 			psi.Arguments = args.ToString ();
 			
