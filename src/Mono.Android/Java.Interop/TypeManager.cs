@@ -206,25 +206,10 @@ namespace Java.Interop {
 		internal static Type GetJavaToManagedType (string class_name)
 		{
 			var t = monodroid_typemap_java_to_managed (class_name);
-			if (t != IntPtr.Zero)
-				return Type.GetType (Marshal.PtrToStringAnsi (t));
+			if (t == IntPtr.Zero)
+				return null;
 
-			var type    = (Type) null;
-			int ls      = class_name.LastIndexOf ('/');
-			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			List<Converter<string, Type>> mappers;
-			if (packageLookup.TryGetValue (package, out mappers)) {
-				foreach (Converter<string, Type> c in mappers) {
-					type = c (class_name);
-					if (type == null)
-						continue;
-					return type;
-				}
-			}
-			if ((type = Type.GetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
-				return type;
-			}
-			return null;
+			return Type.GetType (Marshal.PtrToStringAnsi (t));
 		}
 
 		internal static IJavaObject CreateInstance (IntPtr handle, JniHandleOwnership transfer)
