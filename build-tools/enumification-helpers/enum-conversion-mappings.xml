@@ -76,7 +76,7 @@
   <map package='android.app.admin' class='DevicePolicyManager' prefix='ENCRYPTION_STATUS_' enum-name='EncryptionStatus' is-transient='false' />
   <map package='android.app.admin' class='DevicePolicyManager' prefix='PASSWORD_QUALITY_' enum-name='PasswordQuality' is-transient='false' />
   <map package="android.app.admin" class="DevicePolicyManager" fields="" prefix="RESET_PASSWORD_" enum-name="ResetPasswordFlags" />
-  <map package="android.app.admin" class="DevicePolicyManager" fields="WIPE_EXTERNAL_STORAGE WIPE_RESET_PROTECTION_DATA" prefix="" enum-name="WipeDataFlags" extra-default="None" isInterface="false" api-level="9" />
+  <map package="android.app.admin" class="DevicePolicyManager" fields="WIPE_EUICC WIPE_EXTERNAL_STORAGE WIPE_RESET_PROTECTION_DATA" prefix="" enum-name="WipeDataFlags" extra-default="None" isInterface="false" api-level="9" />
   <map package="android.app.admin" class="SystemUpdateInfo" fields="" prefix="SECURITY_PATCH_" enum-name="SecurityPatchStates" is-transient="false" api-since="26" />
   <map package="android.app.backup" class="BackupAgent" fields="" prefix="TYPE_" enum-name="BackupFileType" />
   <map package="android.app.job" class="JobInfo" prefix="BACKOFF_POLICY_" enum-name="BackoffPolicy" isInterface="true" is-transient="false" api-level="21" />
@@ -113,7 +113,7 @@
   <map package="android.bluetooth" class="BluetoothHealth" fields="" prefix="CHANNEL_TYPE_" enum-name="HealthChannelType" />
   <map package="android.bluetooth" class="BluetoothHealth" fields="" prefix="STATE_" enum-name="HealthState" />
   <map package="android.bluetooth" class="BluetoothHealth" fields="SINK_ROLE SOURCE_ROLE" prefix="" enum-name="RoleType" />
-  <map package="android.bluetooth" class="BluetoothProfile" fields="A2DP GATT GATT_SERVER HEADSET HEALTH SAP" prefix="" enum-name="ProfileType" />
+  <map package="android.bluetooth" class="BluetoothProfile" fields="A2DP GATT GATT_SERVER HEADSET HEALTH HID_DEVICE SAP" prefix="" enum-name="ProfileType" />
   <map package="android.bluetooth" class="BluetoothProfile" fields="" prefix="STATE_" enum-name="ProfileState" is-transient="false" />
   <map package="android.bluetooth.le" class="AdvertiseCallback" fields="" prefix="ADVERTISE_FAILED_" enum-name="AdvertiseFailure" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_MODE_" enum-name="AdvertiseMode" is-transient="false" api-level="21" />
@@ -199,7 +199,7 @@
   <map package='android.hardware' class='Camera$CameraInfo' fields='' prefix='CAMERA_FACING_' enum-name="CameraFacing" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='FOCUS_DISTANCE_' enum-name="FocusDistance" />
   <map package='android.hardware' class='Camera$Parameters' fields='' prefix='PREVIEW_' enum-name="Preview" />
-  <map package='android.hardware' class='HardwareBuffer' fields='RGB.* BLOB' enum-name="HardwareBufferFormat" is-transient="false" api-level="26" />
+  <map package='android.hardware' class='HardwareBuffer' fields='RGB.* BLOB D_.* DS_.* S_UI8' enum-name="HardwareBufferFormat" is-transient="false" api-level="26" />
   <map package='android.hardware' class='HardwareBuffer' prefix='USAGE_' enum-name="HardwareBufferUsage" is-transient="false" api-level="26" />
   <map package='android.hardware' class='Sensor' prefix='REPORTING_MODE_' enum-name="ReportingMode" is-transient="false" api-level="21" />
   <map package='android.hardware' class='Sensor' fields='' prefix='TYPE_' enum-name="SensorType" is-transient="false" />
@@ -944,7 +944,7 @@
   <!-- New in API Level 24 -->
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="SHOW_MODE_" enum-name="AccessibilityServiceShowMode" api-level="24" />
   <map package="android.app.admin" class="DeviceAdminReceiver" fields="" prefix="BUGREPORT_FAILURE_" enum-name="BugReportFailureReason" api-level="24" />
-  <map package="android.app.admin" class="DevicePolicyManager" fields="SKIP_SETUP_WIZARD" prefix="" enum-name="UserManagementFlags" extra-default="None" api-level="24" />
+  <map package="android.app.admin" class="DevicePolicyManager" fields="LEAVE_ALL_SYSTEM_APPS_ENABLED MAKE_USER_EPHEMERAL SKIP_SETUP_WIZARD" prefix="" enum-name="UserManagementFlags" extra-default="None" api-level="24" />
   <map package="android.app.admin" class="SecurityLog" fields="" prefix="TAG_" enum-name="SecurityLogTags" api-level="24" />
   <map package="android.app.job" class="JobInfo.TriggerContentUri" fields="" prefix="FLAG_" enum-name="TriggerContentUriFlags" extra-default="None" api-level="24" />
   <map package="android.app" class="NotificationManager" fields="" prefix="IMPORTANCE_" enum-name="NotificationImportance" api-level="24" />
@@ -1062,5 +1062,78 @@
   <map package='android.telecom' class='Connection' prefix='PROPERTY_' enum-name="ConnectionProperties" extra-default="None" api-level="25" force-api-level="24" />
   <map package='android.view.inputmethod' class='InputConnection' prefix='INPUT_CONTENT_' enum-name="InputContentFlags" extra-default="None" api-level="25" />
   <map package='android.view.inputmethod' class='VoicemailContract.Status' prefix='CONFIGURATION_STATE_' enum-name="VoicemailContractConfigurationState" api-level="25" />
+
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='ID_TYPE_' enum-name="IdAttestationFlags" api-level="28" />
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='INSTALLKEY_' enum-name="InstallKeyFlags" api-level="28" />
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='LOCK_TASK_FEATURE_' enum-name="LockTaskFeatures" api-level="28" />
+  <!-- These fields are unused, not referenced from ANY of the public P API... -->
+  <map package='android.app.admin' class='SecurityLog' prefix='LEVEL_' enum-name="SecurityLogLevel" api-level="28" />
+  <map package='android.app.admin' class='SystemUpdatePolicy.ValidationFailedException' prefix='ERROR_' enum-name="SystemUpdatePolicyErrorCode" api-level="28" />
+  <map package='android.app.backup' class='BackupAgent' prefix='FLAG_' enum-name="BackupTransportFlags" api-level="28" />
+  <map package='android.app' class='Notification.Action' prefix='SEMANTIC_ACTION_' enum-name="SemanticAction" api-level="28" />
+  <map package='android.app' class='RemoteInput' prefix='SOURCE_' enum-name="RemoteInputSource" api-level="28" />
+  <map package='android.app.usage' class='NetworkStats.Bucket' prefix='DEFAULT_NETWORK_' enum-name="NetworkStatsDefault" api-level="28" />
+  <map package='android.app.usage' class='UsageStatsManager' prefix='STANDBY_BUCKET_' enum-name="StandbyBucket" api-level="28" />
+  <map package='android.appwidget' class='AppWidgetProviderInfo' prefix='WIDGET_FEATURE_' enum-name="WidgetFeatures" api-level="28" />
+  <map package='android.bluetooth' class='BluetoothHidDeviceAppQosSettings' prefix='SERVICE_' enum-name="HidDeviceAppQosSettingsServiceType" api-level="28" />
+  <map package='android.content.pm' class='PackageManager' prefix='CERT_INPUT_' enum-name="CertificateType" api-level="28" />
+  <map package='android.content.pm' class='ShortcutInfo' prefix='DISABLED_REASON_' enum-name="ShortcutDisabledReason" api-level="28" />
+  <map package='android.graphics.drawable' class='Icon' prefix='TYPE_' enum-name="IconType" api-level="28" />
+  <map package='android.graphics' class='ImageDecoder' prefix='ALLOCATOR_' enum-name="ImageDecoderAllocator" api-level="28" />
+  <map package='android.graphics' class='ImageDecoder' prefix='MEMORY_POLICY_' enum-name="ImageDecoderMemoryPolicy" api-level="28" />
+  <map package='android.graphics' class='ImageDecoder.DecodeException' fields='*' enum-name="ImageDecoderErrorType" api-level="28" />
+  <map package='android.hardware.biometrics' class='BiometricPrompt' prefix='BIOMETRIC_ACQUIRED_' enum-name="BiometricAcquiredStatus" api-level="28" />
+  <map package='android.hardware.biometrics' class='BiometricPrompt' prefix='BIOMETRIC_ERROR_' enum-name="BiometricErrorCode" api-level="28" />
+  <!-- CameraMetadata has some constants, but they are used in Key-of-Integer generic fields in CameraRequest and CameraCharacteristics (defined in earlier API) and cannot be enumified. -->
+  <map package='android.hardware.camera2.params' class='SessionConfiguration' prefix='SESSION_' enum-name="SessionType" api-level="28" />
+  <map package='android.icu.util' class='LocaleData' fields='*' enum-name="DelimiterType" api-level="28" />
+  <map package='android.media' class='AudioPresentation' fields='MASTERING* MASTERED*' enum-name="MasteringIndicationType" api-level="28" />
+  <map package='android.media.audiofx' class='DynamicsProcessing' prefix='VARIANT_' enum-name="VariantType" api-level="28" />
+  <map package='android.media' class='MediaDrm' prefix='HDCP_' enum-name="HdcpLevel" api-level="28" />
+  <!-- There is no documented method that uses these fields... -->
+  <map package='android.media' class='MediaDrm' prefix='SECURITY_LEVEL_' enum-name="SecurityLevel" api-level="28" />
+  <map package='android.media' class='MicrophoneInfo' prefix='CHANNEL_MAPPING_' enum-name="MicrophoneChannelMapping" api-level="28" />
+  <map package='android.media' class='MicrophoneInfo' prefix='DIRECTIONALITY_' enum-name="MicrophoneDirectionality" api-level="28" />
+  <map package='android.media' class='MicrophoneInfo' prefix='LOCATION_' enum-name="MicrophoneLocation" api-level="28" />
+  <map package='android.net' class='IpSecManager' prefix='DIRECTION_' enum-name="IpSecTransportDirection" api-level="28" />
+  <map package='android.net' class='MacAddress' prefix='TYPE_' enum-name="MacAddressType" api-level="28" />
+  <map package='android.net.wifi.rtt' class='RangingResult' prefix='STATUS_' enum-name="RangingStatus" api-level="28" />
+  <map package='android.net.wifi.rtt' class='RangingResultCallback' prefix='STATUS_CODE_' enum-name="RangingResultStatusCode" api-level="28" />
+  <map package='android.os' class='PowerManager' prefix='LOCATION_MODE_' enum-name="LocationPowerSaveMode" api-level="28" />
+  <!-- UserManager.USER_CREATION_* are used as Intent result code, which should be int. So they are not enumified. -->
+  <map package='android.os' class='UserManager' prefix='USER_OPERATION_' enum-name="UserOperationResultCode" api-level="28" />
+  <map package='android.service.autofill' class='FillResponse' prefix='FLAG_' enum-name="AutofillResponseFlags" api-level="28" />
+  <map package='android.service.notification' class='NotificationListenerService.Ranking' prefix='USER_SENTIMENT_' enum-name="UserSentiment" api-level="28" />
+  <!-- constants in AccessNetworkConstants.* are not documented at all and we have no clue about where they are used. For API safety they had better be preserved as ints. We cannot do anything under such circumstance. -->
+  <map package='android.telecom' class='Call.Callback' prefix='HANDOVER_FAILURE_' enum-name="HandoverFailureReason" api-level="28" />
+  <map package='android.telephony' class='CellInfo' prefix='CONNECTION_' enum-name="CellConnectionStatus" api-level="28" />
+  <map package='android.telephony.data' class='ApnSetting' prefix='AUTH_TYPE_' enum-name="AuthType" api-level="28" />
+  <map package='android.telephony.data' class='ApnSetting' prefix='MVNO_TYPE_' enum-name="MvnoType" api-level="28" />
+  <map package='android.telephony.data' class='ApnSetting' prefix='PROTOCOL_' enum-name="Protocols" api-level="28" />
+  <map package='android.telephony.data' class='ApnSetting' prefix='TYPE_' enum-name="ApnType" api-level="28" />
+  <!-- EuiccManager.EMBEDDED_SUBSCRIPTION_* aren't enumified because they are used as Intent result code -->
+  <!-- constants in MbmsError.* aren't enumified because they come from many classes to construct a single enum for various onError() methods -->
+  <map package='android.telephony.mbms' class='StreamingService' suffix='_METHOD' enum-name="StreamingMethod" api-level="28" />
+  <map package='android.telephony.mbms' class='StreamingService' prefix='REASON_' enum-name="StreamingStateChangedReason" api-level="28" />
+  <map package='android.telephony.mbms' class='StreamingService' suffix='STATE_' enum-name="StreamingState" api-level="28" />
+  <!-- MbmsDownloadSession.RESULT_* aren't enumified because they look like Intent result code. -->
+  <map package='android.telephony.mbms' class='MbmsDownloadSession' prefix='STATUS_' enum-name="DownloadStatus" api-level="28" />
+  <map package='android.telephony' class='NetworkScan' fields='*' enum-name="ScanResultCode" api-level="28" />
+  <map package='android.telephony' class='NetworkScanRequest' prefix='SCAN_TYPE_' enum-name="NetworkScanType" api-level="28" />
+  <map package='android.telephony' class='PhoneNumberUtils' prefix='BCD_EXTENDED_' enum-name="BcdExtendedType" api-level="28" />
+  <map package='android.telephony' class='ServiceState' prefix='DUPLEX_MODE_' enum-name="DuplexMode" api-level="28" />
+  <map package='android.telephony' class='SubscriptionPlan' prefix='LIMIT_BEHAVIOR_' enum-name="DataLimitBehavior" api-level="28" />
+  <!-- TelephonyManager.CDMA_ROAMING_MODE_* aren't enumified because there is no documented use of them. -->
+  <!-- android.text.style.QuoteSpan.STANDARD_* aren't enumified because there is no documented use of them. -->
+
+  <map package='android.view.accessibility' class='AccessibilityEvent' prefix='WINDOWS_CHANGE_' enum-name="WindowsChange" api-level="28" />
+  <map package='android.view' class='WindowManager.LayoutParams' prefix='LAYOUT_IN_DISPLAY_CUTOUT_MODE_' enum-name="LayoutInDisplayCutoutMode" api-level="28" />
+  <map package='android.view.textclassifier' class='SelectionEvent' prefix='ACTION_' enum-name="SelectionAction" api-level="28" />
+  <map package='android.view.textclassifier' class='SelectionEvent' prefix='EVENT_' enum-name="SelectionEventType" api-level="28" />
+  <map package='android.view.textclassifier' class='SelectionEvent' prefix='INVOCATION_' enum-name="SelectionInvocationMethod" api-level="28" />
+  <map package='android.view.textclassifier' class='TextLinks' prefix='APPLY_STRATEGY_' enum-name="ApplyStrategy" api-level="28" />
+  <map package='android.view.textclassifier' class='TextLinks' prefix='STATUS_' enum-name="ApplyStatusCode" api-level="28" />
+  <map package='android.webkit' class='TracingConfig' prefix='CATEGORIES_' enum-name="Categories" api-level="28" />
+  <map package='android.webkit' class='TracingConfig' fields='RECORD_CONTINUOUSLY RECORD_UNTIL_FULL' enum-name="TracingMode" api-level="28" />
 
 </enum-conversion-mappings>

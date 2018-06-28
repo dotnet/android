@@ -29,7 +29,7 @@ ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    
 # supported api levels
 ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0  v8.1  v9.0
 API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27    28
-STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27
+STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27    28
 
 ## The preceding values *must* use SPACE, **not** TAB, to separate values.
 

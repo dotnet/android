@@ -17,9 +17,9 @@
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/scripts/BuildEverything.mk` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v2.3</AndroidFirstFrameworkVersion>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">27</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">28</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v8.1</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v9.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* (possibly unstable) API level binding that we support; for informational purposes -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">28</AndroidLatestApiLevel>
     <AndroidLatestPlatformId Condition=" '$(AndroidLatestPlatformId)' == '' ">28</AndroidLatestPlatformId>
