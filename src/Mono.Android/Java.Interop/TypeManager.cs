@@ -294,7 +294,7 @@ namespace Java.Interop {
 
 		public static void RegisterType (string java_class, Type t)
 		{
-			string jniFromType = JavaNativeTypeManager.ToJniName (t);
+			string jniFromType = JNIEnv.GetJniName (t);
 			lock (jniToManaged) {
 				Type lookup;
 				if (!jniToManaged.TryGetValue (java_class, out lookup)) {
