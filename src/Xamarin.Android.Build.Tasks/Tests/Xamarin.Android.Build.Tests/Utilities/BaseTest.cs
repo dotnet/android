@@ -28,7 +28,15 @@ namespace Xamarin.Android.Build.Tests
 				try {
 					var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
 					int sdkVersion = -1;
-					HasDevices = int.TryParse (RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk").Trim (), out sdkVersion) && sdkVersion != -1;
+					var result = RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk");
+					if (result.Contains ("*")) {
+						//NOTE: We may get a result of:
+						//
+						//27* daemon not running; starting now at tcp:5037
+						//* daemon started successfully
+						result = result.Split ('*').First ().Trim ();
+					}
+					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
