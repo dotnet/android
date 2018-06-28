@@ -689,6 +689,26 @@ when packaing Release applications.
     **Experimental**. Added in Xamarin.Android 8.4.  
     The default value is False.
 
+- **AndroidMultiDexClassListExtraArgs** &ndash; A string property
+    which allows developers to pass additional arguments to the 
+    `com.android.multidex.MainDexListBuilder` when generating the 
+    `multidex.keep` file. 
+
+    One specific case is if you are getting the following error
+    during the `dx` compilation.
+
+        com.android.dex.DexException: Too many classes in --main-dex-list, main dex capacity exceeded
+
+    If you are getting this error you can add the following to the
+    .csproj.
+
+        <DxExtraArguments>--force-jumbo </DxExtraArguments>
+        <AndroidMultiDexClassListExtraArgs>--disable-annotation-resolution-workaround</AndroidMultiDexClassListExtraArgs>
+
+    this should allow the `dx` step to succeed.
+
+    Added in Xamarin.Android 8.3.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with

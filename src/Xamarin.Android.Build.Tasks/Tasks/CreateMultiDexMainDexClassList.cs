@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tasks
 		public string MultiDexMainDexListFile { get; set; }
 		public ITaskItem[] CustomMainDexListFiles { get; set; }
 		public string ProguardInputJarFilter { get; set; }
+		public string ExtraArgs { get; set; }
 
 		Action<CommandLineBuilder> commandlineAction;
 		string tempJar;
@@ -96,6 +97,8 @@ namespace Xamarin.Android.Tasks
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "..", "classes.zip") });
 			cmd.AppendSwitchIfNotNull ("-Djava.ext.dirs=", Path.Combine (AndroidSdkBuildToolsPath, "lib"));
 			cmd.AppendSwitch ("com.android.multidex.MainDexListBuilder");
+			if (!string.IsNullOrWhiteSpace (ExtraArgs))
+				cmd.AppendSwitch (ExtraArgs);
 			cmd.AppendSwitch ($"{enclosingDoubleQuote}{tempJar}{enclosingDoubleQuote}");
 			cmd.AppendSwitchUnquotedIfNotNull ("", $"{enclosingDoubleQuote}{enclosingQuote}" +
 				string.Join ($"{enclosingQuote}{Path.PathSeparator}{enclosingQuote}", jars) + 
