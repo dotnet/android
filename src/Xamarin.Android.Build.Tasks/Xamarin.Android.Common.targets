@@ -519,13 +519,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <BuildDependsOn>
     _ValidateLinkMode;
     _SetupDesignTimeBuildForBuild;
+    _CleanIntermediateIfNuGetsChange;
     _CreatePropertiesCache;
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
-    _CleanIntermediateIfNuGetsChange;
     $(BuildDependsOn);
     _CompileDex;
     $(_PostBuildTargets)
@@ -536,6 +536,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <BuildDependsOn>
     _ValidateLinkMode;
      _SetupDesignTimeBuildForBuild;
+    _CleanIntermediateIfNuGetsChange;
      _CreatePropertiesCache;
     _AddAndroidDefines;
     _AddNativeLibraryArchiveToCompile;
@@ -544,7 +545,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
-    _CleanIntermediateIfNuGetsChange;
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
@@ -657,6 +657,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Inputs="$(_NuGetAssetsFile)"
     Outputs="$(_AndroidNuGetStampFile)">
   <CallTarget Targets="_CleanMonoAndroidIntermediateDir" />
+  <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
   <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
   <ItemGroup>
     <FileWrites Include="$(_AndroidNuGetStampFile)" />

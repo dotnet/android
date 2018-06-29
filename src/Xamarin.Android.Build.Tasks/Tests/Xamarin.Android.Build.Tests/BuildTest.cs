@@ -2055,6 +2055,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				string build_props = b.Output.GetIntermediaryPath ("build.props");
+				FileAssert.Exists (build_props, "build.props should exist after first build.");
 				proj.Packages.Add (KnownPackages.SupportV7CardView_24_2_1);
 				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
 					reference.Timestamp = DateTimeOffset.Now;
@@ -2064,11 +2066,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				var doc = File.ReadAllText (Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcepaths.cache"));
 				Assert.IsTrue (doc.Contains (Path.Combine ("Xamarin.Android.Support.v7.CardView", "24.2.1")), "CardView should be resolved as a reference.");
+				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNuGetsChange`!");
+				FileAssert.Exists (build_props, "build.props should exist after third build.");
 			}
 		}
 
@@ -2108,6 +2112,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				var nugetStamp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.ProjectName + ".nuget.stamp");
 				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
+				string build_props = b.Output.GetIntermediaryPath ("build.props");
+				FileAssert.Exists (build_props, "build.props should exist after first build.");
 
 				if (!usePackageReference) {
 					foreach (var p in proj.Packages) {
@@ -2137,11 +2143,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
 				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Xamarin.Android.Support.v4.dll: extracted files are up to date"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v4.dll`!");
+				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNuGetsChange`!");
+				FileAssert.Exists (build_props, "build.props should exist after third build.");
 			}
 		}
 
