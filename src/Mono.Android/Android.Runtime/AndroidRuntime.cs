@@ -250,9 +250,6 @@ namespace Android.Runtime {
 
 		public override void RegisterNativeMembers (JniType jniType, Type type, string methods)
 		{
-			if (base.TryRegisterNativeMembers (jniType, type, methods))
-				return;
-
 			if (methods == null)
 				return;
 
