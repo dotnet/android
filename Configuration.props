@@ -16,6 +16,7 @@
     <!-- Used by the `build-tools/create-vsix` build so that `Mono.Android.Export.dll`/etc. are only included *once* -->
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/scripts/BuildEverything.mk` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v2.3</AndroidFirstFrameworkVersion>
+    <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">28</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
@@ -27,7 +28,8 @@
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
