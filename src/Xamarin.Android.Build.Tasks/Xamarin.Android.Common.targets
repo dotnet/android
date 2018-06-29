@@ -2511,6 +2511,7 @@ because xbuild doesn't support framework reference assemblies.
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     CustomMainDexListFiles="@(MultiDexMainDexList)"
     ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
+    ExtraArgs="$(AndroidMultiDexClassListExtraArgs)"
     >
   </CreateMultiDexMainDexClassList>
 
