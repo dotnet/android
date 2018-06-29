@@ -140,6 +140,7 @@ namespace Xamarin.ProjectTools
 		}
 
 		string project_file_contents;
+		string packages_config_contents;
 
 		public virtual List<ProjectResource> Save (bool saveProject = true)
 		{
@@ -157,11 +158,16 @@ namespace Xamarin.ProjectTools
 			}
 
 			if (Packages.Any ()) {
+				var contents = "<packages>\n" + string.Concat (Packages.Select (p => string.Format ("  <package id='{0}' version='{1}' targetFramework='{2}' />\n",
+					p.Id, p.Version, p.TargetFramework))) + "</packages>";
+				var timestamp = contents != packages_config_contents ? default (DateTimeOffset?) : DateTimeOffset.MinValue;
 				list.Add (new ProjectResource () {
+					Timestamp = timestamp,
 					Path = "packages.config",
-					Content = "<packages>\n" + string.Concat (Packages.Select (p => string.Format ("  <package id='{0}' version='{1}' targetFramework='{2}' />\n",
-						p.Id, p.Version, p.TargetFramework))) + "</packages>"
+					Content = packages_config_contents = contents,
 				});
+			} else {
+				packages_config_contents = null;
 			}
 
 			foreach (var ig in ItemGroupList)
