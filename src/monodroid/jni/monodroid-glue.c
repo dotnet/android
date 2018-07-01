@@ -71,6 +71,7 @@
 #include "unzip.h"
 #include "ioapi.h"
 #include "monodroid-glue.h"
+#include "mkbundle-api.h"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -693,6 +694,7 @@ get_libmonosgen_path ()
 
 typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
 mono_mkbundle_init_ptr mono_mkbundle_init;
+void (*mono_mkbundle_initialize_mono_api) (const BundleMonoAPI *info);
 
 static void
 setup_bundled_app (const char *libappso)
@@ -705,7 +707,11 @@ setup_bundled_app (const char *libappso)
 		log_fatal (LOG_BUNDLE, "bundled app initialization error: %s", dlerror ());
 		exit (FATAL_EXIT_CANNOT_LOAD_BUNDLE);
 	}
-	
+
+	mono_mkbundle_initialize_mono_api = dlsym (libapp, "initialize_mono_api");
+	if (!mono_mkbundle_initialize_mono_api)
+		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
+
 	mono_mkbundle_init = dlsym (libapp, "mono_mkbundle_init");
 	if (!mono_mkbundle_init)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
@@ -2646,6 +2652,20 @@ mono_runtime_init (char *runtime_args)
 		mono.mono_set_crash_chaining (1);
 
 	register_gc_hooks ();
+
+	if (mono_mkbundle_initialize_mono_api) {
+		BundleMonoAPI bundle_mono_api = {
+			.mono_register_bundled_assemblies = mono.mono_register_bundled_assemblies,
+			.mono_register_config_for_assembly = mono.mono_register_config_for_assembly,
+			.mono_jit_set_aot_mode = mono.mono_jit_set_aot_mode,
+			.mono_aot_register_module = mono.mono_aot_register_module,
+			.mono_config_parse_memory = mono.mono_config_parse_memory,
+			.mono_register_machine_config = mono.mono_register_machine_config,
+		};
+
+		/* The initialization function copies the struct */
+		mono_mkbundle_initialize_mono_api (&bundle_mono_api);
+	}
 
 	if (mono_mkbundle_init)
 		mono_mkbundle_init (mono.mono_register_bundled_assemblies, mono.mono_register_config_for_assembly, mono.mono_jit_set_aot_mode);
