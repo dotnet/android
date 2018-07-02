@@ -45,6 +45,9 @@ namespace Xamarin.Android.Build.Tests
 			[OneTimeTearDown]
 			public void AfterAllTests ()
 			{
+				if (System.Diagnostics.Debugger.IsAttached)
+					return;
+
 				//NOTE: adb.exe can cause a couple issues on Windows
 				//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
 				//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
