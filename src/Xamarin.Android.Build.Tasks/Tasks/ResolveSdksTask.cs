@@ -310,12 +310,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			int apiLevel;
-			var augustDeadline = new DateTime (2018, 8, 1);
-			var novemberDeadline = new DateTime (2018, 11, 1);
 			if (int.TryParse (AndroidApiLevel, out apiLevel)) {
-				if (apiLevel < 26 && DateTime.Now >= augustDeadline)
+				if (apiLevel < 26)
 					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
-				if (apiLevel < 26 && DateTime.Now >= novemberDeadline)
+				if (apiLevel < 26)
 					Log.LogCodedWarning ("XA0114", $"Google Play requires that application updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
 			}
 
