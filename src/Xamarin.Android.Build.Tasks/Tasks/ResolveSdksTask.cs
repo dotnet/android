@@ -309,6 +309,14 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			int apiLevel;
+			if (int.TryParse (AndroidApiLevel, out apiLevel)) {
+				if (apiLevel < 26)
+					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
+				if (apiLevel < 26)
+					Log.LogCodedWarning ("XA0114", $"Google Play requires that application updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
+			}
+
 			SequencePointsMode mode;
 			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
 				Log.LogCodedError ("XA0104", "Invalid Sequence Point mode: {0}", SequencePointsMode);
