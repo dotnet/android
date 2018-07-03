@@ -33,6 +33,10 @@ if(NOT ANDROID)
   foreach(inc in ${JDK_INCLUDE_LIST})
     include_directories(${inc})
   endforeach()
+  set(MONODROID_SOURCES
+    ${MONODROID_SOURCES}
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.c
+    )
 endif()
 
 if(MINGW)
@@ -233,6 +237,7 @@ check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
 
 set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
+  ${MONODROID_SOURCES}
   ${MONO_PATH}/support/zlib-helper.c
   ${SOURCES_DIR}/cpu-arch-detect.c
   ${SOURCES_DIR}/dylib-mono.c
