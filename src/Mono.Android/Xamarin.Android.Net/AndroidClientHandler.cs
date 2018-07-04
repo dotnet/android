@@ -302,7 +302,9 @@ namespace Xamarin.Android.Net
 		{
 			return Task.Run (() => {
 				try {
-					using (ct.Register (() => httpConnection?.Disconnect ()))
+					using (ct.Register(() => DisconnectAsync(httpConnection).ContinueWith(t => {
+							if (t.Exception != null) Logger.Log(LogLevel.Info, LOG_APP, $"Disconnection exception: {t.Exception}");
+						}, TaskScheduler.Default)))
 						httpConnection?.Connect ();
 				} catch {
 					ct.ThrowIfCancellationRequested ();
