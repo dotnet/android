@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		string keyToolPath;
 
 		[SetUp]
-		public void SetUp()
+		public void Setup()
 		{
 			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> ());
 			temp = Path.GetTempFileName ();
