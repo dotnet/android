@@ -84,7 +84,6 @@ endmacro()
 set(TEST_COMPILER_ARGS
   fno-strict-aliasing
   ffunction-sections
-  fomit-frame-pointer
   funswitch-loops
   finline-limit=300
   fvisibility=hidden
@@ -96,6 +95,19 @@ set(TEST_COMPILER_ARGS
   mindirect-branch=thunk-inline
   mfunction-return=thunk-inline
   )
+
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  if(NOT DISABLE_DEBUG)
+    add_definitions("-DDEBUG=1")
+  endif()
+  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+else()
+  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} g fomit-frame-pointer O2)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+endif()
 
 foreach(arg ${TEST_COMPILER_ARGS})
   c_compiler_has_flag(${arg})
@@ -124,26 +136,6 @@ endif()
 foreach(arg ${TEST_LINKER_ARGS})
   linker_has_flag(${arg})
 endforeach(arg)
-
-if(CMAKE_BUILD_TYPE EQUAL "Debug")
-  if(NOT DISABLE_DEBUG)
-    add_definitions("-DDEBUG=1")
-  endif()
-  check_c_compiler_flag("-ggdb3" C_FLAG_GGDB3)
-  check_cxx_compiler_flag("-ggdb3" CXX_FLAG_GGDB3)
-endif()
-
-if(NOT DEFINED CMAKE_C_FLAGS_DEBUG)
-  set(COMPILER_COMMON_FLAGS_DEBUG "${C_FLAG_GGDB3} -O0 -fno-omit-frame-pointer")
-  set(CMAKE_C_FLAGS_DEBUG ${COMPILER_COMMON_FLAGS_DEBUG})
-  set(CMAKE_CXX_FLAGS_DEBUG ${COMPILER_COMMON_FLAGS_DEBUG})
-endif()
-
-if(NOT DEFINED CMAKE_C_FLAGS_RELEASE)
-  set(COMPILER_COMMON_FLAGS_RELEASE "-g -O2")
-  set(CMAKE_C_FLAGS_RELEASE ${COMPILER_COMMON_FLAGS_RELEASE})
-  set(CMAKE_CXX_FLAGS_RELEASE ${COMPILER_COMMON_FLAGS_RELEASE})
-endif()
 
 if(STRIP_DEBUG)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-S")
