@@ -58,6 +58,8 @@ namespace Xamarin.Android.Tasks
 				modifiedFiles.Add (new TaskItem (dest));
 				if (KeepDestinationDates)
 					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, dstmodifiedDate, Log);
+				else
+					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, DateTime.UtcNow, Log);
 			}
 
 			ModifiedFiles = modifiedFiles.ToArray ();
