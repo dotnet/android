@@ -121,6 +121,31 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void BuildPropsBreaksConvertResourcesCases ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					},
+					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+						TextContent = () => {
+							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
+						}
+					}
+				}
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
+				var props = b.Output.GetIntermediaryPath("build.props");
+				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc(props, DateTime.UtcNow);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void CheckTimestamps ()
 		{
 			var start = DateTime.UtcNow.AddSeconds (-1);
