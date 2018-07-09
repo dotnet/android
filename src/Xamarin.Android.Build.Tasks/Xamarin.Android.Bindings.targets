@@ -489,6 +489,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       ToolPath="$(MonoAndroidToolsDirectory)"
       ToolExe="$(BindingsGeneratorToolExe)"
       UseShortFileNames="$(UseShortGeneratorFileNames)"
+      EnableDefaultInterfaceMethods="$(AndroidEnableDefaultInterfaceMethods)"
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
