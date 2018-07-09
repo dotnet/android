@@ -43,6 +43,9 @@ namespace MonoDroid.Tuner
 						continue;
 					}
 
+					if (method.IsConstructor)
+						continue;
+
 					if (_context.Annotations.IsMarked (method))
 						markedMethods.Add (method.Name);
 				}
@@ -211,14 +214,25 @@ namespace MonoDroid.Tuner
 		{
 			string member, nativeMethod, signature;
 
-			if (!method.TryGetRegisterMember (out member, out nativeMethod, out signature))
-				return;
+			bool preserveJniMarshalMethodOnly = false;
+			if (!method.TryGetRegisterMember (out member, out nativeMethod, out signature)) {
+				if (PreserveJniMarshalMethods () &&
+				    method.DeclaringType.GetMarshalMethodsType () != null &&
+				    method.TryGetBaseOrInterfaceRegisterMember (out member, out nativeMethod, out signature)) {
+					preserveJniMarshalMethodOnly = true;
+				} else {
+					return;
+				}
+			}
 
 			MethodDefinition marshalMethod;
 			if (PreserveJniMarshalMethods () && method.TryGetMarshalMethod (nativeMethod, signature, out marshalMethod)) {
 				MarkMethod (marshalMethod);
 				marshalTypes.Add (marshalMethod.DeclaringType);
 			}
+
+			if (preserveJniMarshalMethodOnly)
+				return;
 
 			PreserveRegisteredMethod (method.DeclaringType, member);
 		}
