@@ -446,5 +446,59 @@ AAAA==";
 				Assert.IsTrue (xml.Contains ("<param name=\"name\"> - name to display.</param>"), "missing doc");
 			}
 		}
+
+		[Test]
+		[TestCaseSource ("ClassParseOptions")]
+		public void BindDefaultInterfaceMethods (string classParser)
+		{
+			var proj = new XamarinAndroidBindingProject () {
+				IsRelease = true,
+			};
+			proj.Packages.Add (new Package { Id = "xamarin.android.csc.dim", Version = "0.1.2" });
+			// The sources for the .jar is in the jar itself.
+			string classesJarBase64 = @"
+UEsDBBQACAgIANWk6UwAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAA
+AAFBLAwQUAAgICADVpOlMAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS
+7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnEG5obKmj4FyUm56QqOOcXFeQXJZYA1WvycvFyA
+QBQSwcIFGFrLUQAAABFAAAAUEsDBAoAAAgAAK2k6UwAAAAAAAAAAAAAAAAEAAAAY29tL1BLAwQKAAAI
+AACtpOlMAAAAAAAAAAAAAAAADAAAAGNvbS94YW1hcmluL1BLAwQKAAAIAACwpOlMAAAAAAAAAAAAAAA
+AEQAAAGNvbS94YW1hcmluL3Rlc3QvUEsDBBQACAgIAJmk6UwAAAAAAAAAAAAAAAAuAAAAY29tL3hhbW
+FyaW4vdGVzdC9EZWZhdWx0SW50ZXJmYWNlTWV0aG9kcy5jbGFzc3WOvU7DMBSFjxsnKeWnXUE8QLrgh
+ScAhBSJnwHE7qQ3JVUSC8dGFc/EwsrAA/BQiOuqLKnw8Pn4+LuWv38+vwCcY5biKMVUIKqMYWbzXEBe
+mgUJTG/qju58W5B91EXDTbIkd6HtX3jj0G+DzPL5E28v3q8FJg/G25Ku6zB1ekWV9o3LO0e20iXdkns
+2i/5spV+1QFaaVq11q23dKUe9U//4ArMwoRrdLdV9saLSJQICI4QVc4ogmTGfThBugFH0zuR/MpNNE7
+x015NDL3C868VDL2XuYbL1joMTjI+BNpYC+/xcaA820uEvUEsHCIw1aijpAAAAhQEAAFBLAwQUAAgIC
+ACYpOlMAAAAAAAAAAAAAAAAHAAAAERlZmF1bHRJbnRlcmZhY2VNZXRob2RzLmphdmF1zLEOwiAQBuCd
+p7hRl0Zd2YyLgw9xwlGJFCocTWPTdxdSHarxxv///utR3bElUKFrRuwwWt8wJZZC9PnqrALrmaJBRXA
+ig9nx+RNciG9BJzEJKKeXtnowIcBmCxNE4hw97CTMP6glPmJcuf1f91y5w7cbgtWQ3rCOBnSZymJhNX
+nkPJYnUsziBVBLBwgzfz2miQAAAPUAAABQSwECFAAUAAgICADVpOlMAAAAAAIAAAAAAAAACQAEAAAAA
+AAAAAAAAAAAAAAATUVUQS1JTkYv/soAAFBLAQIUABQACAgIANWk6UwUYWstRAAAAEUAAAAUAAAAAAAA
+AAAAAAAAAD0AAABNRVRBLUlORi9NQU5JRkVTVC5NRlBLAQIKAAoAAAgAAK2k6UwAAAAAAAAAAAAAAAA
+EAAAAAAAAAAAAAAAAAMMAAABjb20vUEsBAgoACgAACAAAraTpTAAAAAAAAAAAAAAAAAwAAAAAAAAAAA
+AAAAAA5QAAAGNvbS94YW1hcmluL1BLAQIKAAoAAAgAALCk6UwAAAAAAAAAAAAAAAARAAAAAAAAAAAAA
+AAAAA8BAABjb20veGFtYXJpbi90ZXN0L1BLAQIUABQACAgIAJmk6UyMNWoo6QAAAIUBAAAuAAAAAAAA
+AAAAAAAAAD4BAABjb20veGFtYXJpbi90ZXN0L0RlZmF1bHRJbnRlcmZhY2VNZXRob2RzLmNsYXNzUEs
+BAhQAFAAICAgAmKTpTDN/PaaJAAAA9QAAABwAAAAAAAAAAAAAAAAAgwIAAERlZmF1bHRJbnRlcmZhY2
+VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
+";
+			proj.Jars.Add (new AndroidItem.EmbeddedJar ("dim.jar") {
+				BinaryContent = () => Convert.FromBase64String (classesJarBase64)
+			});
+			proj.AndroidClassParser = classParser;
+			proj.SetProperty ("CscToolPath", "$(MSBuildThisFileDirectory)\\..\\packages\\xamarin.android.csc.dim.0.1.2\\tools");
+			proj.SetProperty ("AndroidEnableDefaultInterfaceMethods", "True");
+			proj.SetProperty ("LangVersion", "latest");
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false)) {
+				proj.NuGetRestore (b.ProjectDirectory);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string asmpath = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (new Uri (GetType ().Assembly.CodeBase).LocalPath), b.ProjectDirectory, b.Output.OutputPath, (proj.AssemblyName ?? proj.ProjectName) + ".dll"));
+				Assert.IsTrue (File.Exists (asmpath), "assembly does not exist");
+				var cs = b.Output.GetIntermediaryAsText (Path.Combine ("generated", "src", "Com.Xamarin.Test.IDefaultInterfaceMethods.cs"));
+				Assert.IsTrue (cs.Contains ("int Quux ();"), "Quux not generated.");
+				Assert.IsTrue (cs.Contains ("virtual unsafe int Foo ()"), "Foo not generated.");
+				Assert.IsTrue (cs.Contains ("virtual unsafe int Bar {"), "Bar not generated.");
+				Assert.IsTrue (cs.Contains ("set {"), "(Baz) setter not generated.");
+			}
+		}
 	}
 }
