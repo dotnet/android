@@ -30,6 +30,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -165,36 +167,44 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
-<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
-	<ResolveSdks
-			AndroidApiLevel="$(AndroidApiLevel)"
-			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-			AndroidSdkPath="$(AndroidSdkDirectory)"
-			AndroidNdkPath="$(AndroidNdkDirectory)"
-			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
-			JavaSdkPath="$(JavaSdkDirectory)"
-			ProjectFilePath="$(MSBuildProjectFullPath)"
-			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
-			TargetFrameworkVersion="$(TargetFrameworkVersion)"
-			SequencePointsMode="$(AndroidSequencePointsMode)"
-			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-			JavaToolExe="$(JavaToolExe)"
-			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
-	>
-		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
-		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
-		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
-		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
-		<Output TaskParameter="AndroidSdkBuildToolsPath"  PropertyName="AndroidSdkBuildToolsPath"   Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
-		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
-		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
-		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
-		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
-		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
-	</ResolveSdks>
+  <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
+    <ResolveSdks
+        AndroidSdkPath="$(AndroidSdkDirectory)"
+        AndroidNdkPath="$(AndroidNdkDirectory)"
+        JavaSdkPath="$(JavaSdkDirectory)"
+        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
+      <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
+      <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
+    </ResolveSdks>
+    <ValidateJavaVersion
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+        JavaSdkPath="$(JavaSdkDirectory)"
+        JavaToolExe="$(JavaToolExe)"
+        JavacToolExe="$(JavacToolExe)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
+      <Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
+      <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
+    </ValidateJavaVersion>
+    <ResolveAndroidTooling
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        AndroidApiLevel="$(AndroidApiLevel)"
+        AndroidSdkPath="$(AndroidSdkDirectory)"
+        AndroidNdkPath="$(AndroidNdkDirectory)"
+        AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+        UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+        SequencePointsMode="$(AndroidSequencePointsMode)"
+        ProjectFilePath="$(MSBuildProjectFullPath)">
+      <Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
+      <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
+      <Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
+      <Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
+      <Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
+    </ResolveAndroidTooling>
     <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
       <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
           Condition="'$(TargetFrameworkProfile)' != ''"
