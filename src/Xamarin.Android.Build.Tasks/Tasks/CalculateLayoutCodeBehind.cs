@@ -251,6 +251,12 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				XPathNavigator current = nodes.Current;
+
+				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
+				// an element. Prevents https://github.com/xamarin/xamarin-android/issues/1929
+				if (String.Compare ("merge", current.LocalName, StringComparison.Ordinal) == 0)
+					continue;
+
 				bool isInclude = String.Compare ("include", current.LocalName, StringComparison.Ordinal) == 0;
 
 				if (!GetAndParseId (current, filePath, androidNS, isInclude, out id, out parsedId, out name)  && !isInclude) {

@@ -134,6 +134,11 @@ namespace CodeBehindUnitTests
 					{"public", "global::Android.App.Fragment", "secondary_log_fragment"},
 					{"public", "CommonSampleLibrary.LogFragment", "tertiary_log_fragment"},
 				},
+				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.MainMerge.g.cs")) {
+					{"public", "Button", "myButton"},
+					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
+					{"public", "CommonSampleLibrary.LogFragment", "secondary_log_fragment"},
+				},
 				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.onboarding_info.g.cs")) {
 					{"public", "LinearLayout", "onboarding_stations_info_inner"},
 					{"public", "ImageView", "icon_view"},
@@ -185,6 +190,20 @@ namespace CodeBehindUnitTests
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
 					{"public", "global::Android.App.Fragment", "secondary_log_fragment"},
 					{"public", "CommonSampleLibrary.LogFragment", "tertiary_log_fragment"},
+
+					// Methods
+					{"public override", "void", "SetContentView", "global::Android.Views.View view"},
+					{"public override", "void", "SetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params"},
+					{"public override", "void", "SetContentView", "int layoutResID"},
+					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, ref bool callBaseAfterReturn"},
+					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
+					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
+				},
+				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.MainMergeActivity.MainMerge.g.cs")) {
+					// Properties
+					{"public", "Button", "myButton"},
+					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
+					{"public", "CommonSampleLibrary.LogFragment", "secondary_log_fragment"},
 
 					// Methods
 					{"public override", "void", "SetContentView", "global::Android.Views.View view"},
