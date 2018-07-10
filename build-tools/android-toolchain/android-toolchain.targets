@@ -29,7 +29,7 @@
       DependsOnTargets="_PrepareAndroidToolchainItems"
       Outputs="@(_AndroidSdkStampFiles);@(_AndroidNdkStampFiles);@(_AntStampFiles)">
     <Exec
-        Command="make $(MakeConcurrency) provision-android DISABLE_IOS=1 ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot;"
+        Command="make $(MakeConcurrency) provision-android DISABLE_IOS=1 ANDROID_TOOLCHAIN_DIR=&quot;$(AndroidToolchainDirectory)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(AndroidToolchainCacheDirectory)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(AndroidToolchainDirectory)\toolchains&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(XABuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(XABuildToolsFolder)&quot; ANDROID_PLATFORM_TOOLS=&quot;$(XAPlatformToolsVersion)&quot;"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
