@@ -31,7 +31,7 @@
 #include <sys/syscall.h>
 #endif
 
-#if defined (DEBUG)
+#if defined (DEBUG) && !defined (WINDOWS)
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -83,7 +83,7 @@ static int sdb_fd;
 static int profiler_configured;
 static int profiler_fd;
 static char *profiler_description;
-#ifdef DEBUG
+#if DEBUG
 static int config_timedout;
 static struct timeval wait_tv;
 static struct timespec wait_ts;
@@ -2061,7 +2061,7 @@ gather_bundled_assemblies (JNIEnv *env, jobjectArray runtimeApks, mono_bool regi
 	}
 }
 
-#if DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 int monodroid_debug_connect (int sock, struct sockaddr_in addr) {
 	long flags = 0;
 	int res = 0;
@@ -2519,7 +2519,7 @@ mono_runtime_init (char *runtime_args)
 #endif
 	char *prop_val;
 
-#if DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 	memset(&options, 0, sizeof (options));
 
 	cur_time = time (NULL);
@@ -3824,7 +3824,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 	monodroid_get_namespaced_system_property (DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
-#ifdef DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 	if (connect_args) {
 		int res = start_connection (connect_args);
 		if (res != 2) {
