@@ -45,7 +45,9 @@
   <Target Name="MSBuildPrep" DependsOnTargets="GetXAVersionInfo;AcquireAndroidTarget">
     <PropertyGroup>
       <_OutputDir>$(_TopDir)bin\Test$(Configuration)\</_OutputDir>
-      <_XABuild>$(_TopDir)bin\$(Configuration)\bin\xabuild</_XABuild>
+      <!--NOTE: prefer a Release build of xamarin-android if it exists-->
+      <_XABuild Condition="Exists('$(_TopDir)bin\Release\bin\xabuild')">$(_TopDir)bin\Release\bin\xabuild</_XABuild>
+      <_XABuild Condition=" '$(_XABuild)' == '' ">$(_TopDir)bin\$(Configuration)\bin\xabuild</_XABuild>
       <_TimingLogger>Xamarin.Android.Tools.BootstrapTasks.TimingLogger,$(_TopDir)bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll</_TimingLogger>
     </PropertyGroup>
     <ItemGroup>
