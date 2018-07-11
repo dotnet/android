@@ -1722,14 +1722,15 @@ namespace App1
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v2.3")))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ($"Output Property: TargetFrameworkVersion=v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v2.3"), "TargetFrameworkVerson should be v2.3");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				StringAssertEx.Contains ($"Output Property: TargetFrameworkVersion=v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v4.4"), "TargetFrameworkVerson should be v4.4");
 
 			}
 		}
@@ -2161,14 +2162,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v2.3")))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ($"Output Property: TargetFrameworkVersion=v2.3", builder.LastBuildOutput, "TargetFrameworkVerson should be v2.3");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v2.3"), "TargetFrameworkVerson should be v2.3");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				StringAssertEx.Contains ($"Output Property: TargetFrameworkVersion=v4.4", builder.LastBuildOutput, "TargetFrameworkVerson should be v4.4");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v4.4"), "TargetFrameworkVerson should be v4.4");
 			}
 		}
 
