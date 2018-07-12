@@ -18,7 +18,7 @@ DEBIAN_COMMON_DEPS="autoconf
 	"
 
 if [ "$OS_ARCH" = "x86_64" ]; then
-UBUNTU_DEPS="$UBUNTU_DEPS
+DEBIAN_COMMON_DEPS="$DEBIAN_COMMON_DEPS
 	lib32stdc++6
 	lib32z1
 	gcc-multilib
@@ -43,6 +43,6 @@ debian_install()
 			exit 1
 		fi
 	else
-		sudo apt-get -f -u install $DISTRO_DEPS
+		sudo apt-get -f -u -y install $DISTRO_DEPS
 	fi
 }
