@@ -158,7 +158,7 @@ namespace Xamarin.Android.Tests
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				if (Directory.Exists (output))
 					Directory.Delete (output, true);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				//Absolutely non of these files should be *older* than the starting time of this test!
 				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
@@ -167,6 +167,21 @@ namespace Xamarin.Android.Tests
 					var info = new FileInfo (file);
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
+
+				//Build again after a code change, checking a few files
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
+				proj.Touch ("MainActivity.cs");
+				start = DateTime.UtcNow;
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+
+				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
+					var info = new FileInfo (Path.Combine (intermediate, "android", file));
+					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+				}
+
+				//One last build with no changes
+				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "`_LinkAssembliesNoShrink` should be skipped!");
 			}
 		}
 
