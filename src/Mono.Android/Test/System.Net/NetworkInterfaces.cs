@@ -100,7 +100,7 @@ namespace System.NetTests
 			}
 		}
 
-		[Test]
+		[Test, Ignore("See https://github.com/xamarin/xamarin-android/issues/1534")]
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
