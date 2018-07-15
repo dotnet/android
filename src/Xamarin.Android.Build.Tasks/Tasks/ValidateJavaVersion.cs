@@ -73,40 +73,59 @@ namespace Xamarin.Android.Tasks
 
 			MinimumRequiredJdkVersion = required.ToString ();
 
-			var sb = new StringBuilder ();
-
-			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
 			try {
-				MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
-						sb.AppendLine (e.Data);
-				}, (s, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
-						sb.AppendLine (e.Data);
-				});
+				var versionNumber = GetVersionFromTool (javaExe, versionRegex);
+				if (versionNumber != null) {
+					Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
+					if (versionNumber < requiredJavaForFrameworkVersion) {
+						Log.LogCodedError ("XA0031", $"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.");
+					}
+					if (versionNumber < requiredJavaForBuildTools) {
+						Log.LogCodedError ("XA0032", $"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
+					}
+					if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
+						Log.LogCodedError ("XA0030", $"Building with JDK Version `{versionNumber}` is not supported. Please install JDK version `{LatestSupportedJavaVersion}`. See https://aka.ms/xamarin/jdk9-errors");
+					}
+				}
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				Log.LogCodedWarning ("XA0034", $"Failed to get the Java SDK version. Please ensure you have Java {required} or above installed.");
 				return false;
 			}
+
+			return !Log.HasLoggedErrors;
+		}
+
+		Version GetVersionFromTool (string javaExe, Regex versionRegex)
+		{
+			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
+			var key = new Tuple<string, string> (nameof (ValidateJavaVersion), javaTool);
+			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as Version;
+			if (cached != null) {
+				Log.LogDebugMessage ($"Using cached value for `{javaTool} -version`: {cached}");
+				JdkVersion = cached.ToString ();
+				return cached;
+			}
+
+			var sb = new StringBuilder ();
+			MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			}, (s, e) => {
+				if (!string.IsNullOrEmpty (e.Data))
+					sb.AppendLine (e.Data);
+			});
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = versionRegex.Match (versionInfo);
 			Version versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
+				BuildEngine4.RegisterTaskObject (key, versionNumber, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
 				JdkVersion = versionNumberMatch.Groups ["version"].Value;
-				Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
-				if (versionNumber < requiredJavaForFrameworkVersion) {
-					Log.LogCodedError ("XA0031", $"Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.");
-				}
-				if (versionNumber < requiredJavaForBuildTools) {
-					Log.LogCodedError ("XA0032", $"Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.");
-				}
-				if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-					Log.LogCodedError ("XA0030", $"Building with JDK Version `{versionNumber}` is not supported. Please install JDK version `{LatestSupportedJavaVersion}`. See https://aka.ms/xamarin/jdk9-errors");
-				}
-			} else
+				return versionNumber;
+			} else {
 				Log.LogCodedWarning ("XA0033", $"Failed to get the Java SDK version as it does not appear to contain a valid version number. `{javaExe} -version` returned: ```{versionInfo}```");
-			return !Log.HasLoggedErrors;
+				return null;
+			}
 		}
 
 		Version GetJavaVersionForFramework (string targetFrameworkVersion)
