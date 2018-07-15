@@ -2,19 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Build.Tests {
-	public class MockBuildEngine : IBuildEngine, IBuildEngine2, IBuildEngine3, IBuildEngine4 {
-		public MockBuildEngine (TextWriter output, IList<BuildErrorEventArgs> errors = null, IList<BuildWarningEventArgs> warnings = null)
+namespace Xamarin.Android.Build.Tests
+{
+	public class MockBuildEngine : IBuildEngine, IBuildEngine2, IBuildEngine3, IBuildEngine4
+	{
+		public MockBuildEngine (TextWriter output, IList<BuildErrorEventArgs> errors = null, IList<BuildWarningEventArgs> warnings = null, IList<BuildMessageEventArgs> messages = null)
 		{
-			this.Output = output;
-			this.Errors = errors;
-			this.Warnings = warnings;
+			Output = output;
+			Errors = errors;
+			Warnings = warnings;
+			Messages = messages;
 		}
 
 		private TextWriter Output { get; }
@@ -22,6 +21,8 @@ namespace Xamarin.Android.Build.Tests {
 		private IList<BuildErrorEventArgs> Errors { get; }
 
 		private IList<BuildWarningEventArgs> Warnings { get; }
+
+		private IList<BuildMessageEventArgs> Messages { get; }
 
 		int IBuildEngine.ColumnNumberOfTaskNode => -1;
 
@@ -37,24 +38,26 @@ namespace Xamarin.Android.Build.Tests {
 
 		void IBuildEngine.LogCustomEvent (CustomBuildEventArgs e)
 		{
-			this.Output.WriteLine ($"Custom: {e.Message}");
+			Output.WriteLine ($"Custom: {e.Message}");
 		}
 
 		void IBuildEngine.LogErrorEvent (BuildErrorEventArgs e)
 		{
-			this.Output.WriteLine ($"Error: {e.Message}");
+			Output.WriteLine ($"Error: {e.Message}");
 			if (Errors != null)
 				Errors.Add (e);
 		}
 
 		void IBuildEngine.LogMessageEvent (BuildMessageEventArgs e)
 		{
-			this.Output.WriteLine ($"Message: {e.Message}");
+			Output.WriteLine ($"Message: {e.Message}");
+			if (Messages != null)
+				Messages.Add (e);
 		}
 
 		void IBuildEngine.LogWarningEvent (BuildWarningEventArgs e)
 		{
-			this.Output.WriteLine ($"Warning: {e.Message}");
+			Output.WriteLine ($"Warning: {e.Message}");
 			if (Warnings != null)
 				Warnings.Add (e);
 		}
@@ -63,19 +66,21 @@ namespace Xamarin.Android.Build.Tests {
 
 		void IBuildEngine4.RegisterTaskObject (object key, object obj, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection)
 		{
-			Tasks.Add (key, obj);
+			Tasks [key] = obj;
 		}
 
 		object IBuildEngine4.GetRegisteredTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
 		{
-			return null;
+			Tasks.TryGetValue (key, out object value);
+			return value;
 		}
 
 		object IBuildEngine4.UnregisterTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
 		{
-			var obj = Tasks [key];
-			Tasks.Remove (key);
-			return obj;
+			if (Tasks.TryGetValue (key, out object value)) {
+				Tasks.Remove (key);
+			}
+			return value;
 		}
 
 		BuildEngineResult IBuildEngine3.BuildProjectFilesInParallel (string [] projectFileNames, string [] targetNames, IDictionary [] globalProperties, IList<string> [] removeGlobalProperties, string [] toolsVersion, bool returnTargetOutputs)
