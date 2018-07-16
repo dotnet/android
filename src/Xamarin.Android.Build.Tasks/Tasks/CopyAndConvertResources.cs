@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 					var ext = Path.GetExtension (filename);
 					var destfilename = DestinationFiles [i].ItemSpec;
 					var srcmodifiedDate = File.GetLastWriteTimeUtc (filename);
-					var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastAccessTimeUtc (destfilename) : DateTime.MinValue;
+					var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastWriteTimeUtc (destfilename) : DateTime.MinValue;
 					var isXml = ext == ".xml" || ext == ".axml";
 
 					Directory.CreateDirectory (Path.GetDirectoryName (destfilename));
@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 				string filename = p.Key;
 				var destfilename = p.Value;
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (filename);
-				var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastAccessTimeUtc (destfilename) : DateTime.MinValue;
+				var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastWriteTimeUtc (destfilename) : DateTime.MinValue;
 				var tmpdest = Path.GetTempFileName ();
 				var res = Path.Combine (Path.GetDirectoryName (filename), "..");
 				MonoAndroidHelper.CopyIfChanged (filename, tmpdest);
