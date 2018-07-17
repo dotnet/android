@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -1334,6 +1334,23 @@ namespace UnnamedProject
 				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));
 				Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));
+			}
+		}
+
+		[Test]
+		public void CheckInvalidXmlInManagedResourceParser ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease       = true,
+				LayoutMain      = @"",
+			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			using (var builder = CreateApkBuilder (path)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "Compile";
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				StringAssertEx.Contains ("warning XA1000", builder.LastBuildOutput, "Build output should contain a XA1000 warning.");
 			}
 		}
 
