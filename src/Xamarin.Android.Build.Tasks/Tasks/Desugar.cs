@@ -39,12 +39,7 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (OutputDirectory))
 				Directory.CreateDirectory (OutputDirectory);
 
-			base.Execute ();
-
-			Log.LogDebugMessage ($"{nameof (Desugar)} Outputs:");
-			Log.LogDebugTaskItems ($"  {nameof (OutputJars)}:", OutputJars);
-
-			return !Log.HasLoggedErrors;
+			return base.Execute ();
 		}
 
 		protected override string GenerateCommandLineCommands ()
