@@ -221,6 +221,39 @@ namespace Xamarin.ProjectTools
 			GC.SuppressFinalize (this);
 		}
 
+		public string AndroidSdkDirectory { get; private set; }
+
+		public string AndroidNdkDirectory { get; private set; }
+
+		/// <summary>
+		/// Locates and sets AndroidSdkDirectory and AndroidNdkDirectory
+		/// </summary>
+		public void ResolveSdks ()
+		{
+			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
+			if (string.IsNullOrEmpty (AndroidSdkDirectory)) {
+				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+				if (String.IsNullOrEmpty (sdkPath))
+					sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
+				if (String.IsNullOrEmpty (sdkPath))
+					sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
+				if (Directory.Exists (sdkPath)) {
+					AndroidSdkDirectory = sdkPath;
+				}
+			}
+			if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
+				var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+				if (String.IsNullOrEmpty (ndkPath))
+					ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
+				if (String.IsNullOrEmpty (ndkPath))
+					ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+				if (Directory.Exists (ndkPath)) {
+					AndroidNdkDirectory = ndkPath;
+				}
+			}
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 		}
@@ -252,20 +285,9 @@ namespace Xamarin.ProjectTools
 				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
-			var start = DateTime.UtcNow;
-			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
- 			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
- 			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
- 			if (String.IsNullOrEmpty (sdkPath))
- 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
- 			if (String.IsNullOrEmpty (sdkPath))
- 				sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
- 			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
- 			if (String.IsNullOrEmpty (ndkPath))
- 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
- 			if (String.IsNullOrEmpty (ndkPath))
- 				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+			ResolveSdks ();
 
+			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
 			args.AppendFormat ("{0} /t:{1} {2}",
@@ -274,11 +296,11 @@ namespace Xamarin.ProjectTools
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
 				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
-			if (Directory.Exists (sdkPath)) {
-				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
+				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
 			}
-			if (Directory.Exists (ndkPath)) {
-				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
+			if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
+				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
 			}
 			if (parameters != null) {
 				foreach (var param in parameters) {
