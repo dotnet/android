@@ -246,7 +246,11 @@ namespace Xamarin.Android.Tasks
 			case ".axml":
 				if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) == 0)
 					goto default;
-				ProcessXmlFile (file);
+				try {
+					ProcessXmlFile (file);
+				} catch (XmlException ex) {
+					Log.LogCodedWarning ("XA1000", $"There was an problem parsing {file}. This is likely due to incomplete or invalid xml. Exception: {ex}");
+				}
 				break;
 			default:
 				break;

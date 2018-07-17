@@ -42,6 +42,8 @@
 
 ### XA1xxx Project Related
 
++ [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
+
 ### XA2xxx Linker
 
 ### XA3xxx AOT
