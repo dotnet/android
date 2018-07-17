@@ -750,6 +750,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
 	</CreateProperty>
+	<CreateProperty Value="$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)">
+		<Output TaskParameter="Value" PropertyName="TargetFrameworkMonikerAssemblyAttributesPath"
+				Condition="'$(TargetFrameworkMoniker)' != ''"
+		/>
+	</CreateProperty>
+	<CreateItem Include="$(TargetFrameworkMonikerAssemblyAttributesPath)">
+		<Output TaskParameter="Include" ItemName="FileWrites"
+				Condition="'$(TargetFrameworkMonikerAssemblyAttributesPath)' != ''"
+		/>
+	</CreateItem>
 	<CreateItem Include="$(_JavaInteropReferences)">
 		<Output TaskParameter="Include" ItemName="Reference" />
 	</CreateItem>
