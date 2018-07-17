@@ -61,13 +61,6 @@
     <BindingJavaSource Include="Jars\DefaultInterfaceMethods.java" />
     <BindingJavaSource Include="Jars\ImplementedClass.java" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NativeLibs\" />
-    <Folder Include="NativeLibs\x86\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedNativeLibrary Include="NativeLibs\x86\libjniexperiment.so" />
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <Import Project="..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.targets" Condition="Exists('..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.targets')" />
   <Import Project="..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.targets" Condition="Exists('..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.targets')" />
