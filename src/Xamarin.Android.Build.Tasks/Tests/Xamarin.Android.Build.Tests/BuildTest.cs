@@ -841,14 +841,14 @@ namespace App1
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
-				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
+				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
-					File.GetLastAccessTimeUtc (pdbToMdbPath),
+					File.GetLastWriteTimeUtc (pdbToMdbPath),
 					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
@@ -2119,14 +2119,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
 				b.BuildLogFile = "build2.log";
-				var lastTime = File.GetLastAccessTimeUtc (pdbToMdbPath);
+				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
-					File.GetLastAccessTimeUtc (pdbToMdbPath),
+					File.GetLastWriteTimeUtc (pdbToMdbPath),
 					"{0} should have been updated", pdbToMdbPath);
 			}
 		}

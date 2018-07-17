@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				var dest = DestinationFiles [i].ItemSpec;
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (src);
-				var dstmodifiedDate = File.Exists (dest) ? File.GetLastAccessTimeUtc (dest) : srcmodifiedDate;
+				var dstmodifiedDate = File.Exists (dest) ? File.GetLastWriteTimeUtc (dest) : srcmodifiedDate;
 				if (dstmodifiedDate > srcmodifiedDate) {
 					Log.LogDebugMessage ($"  Skipping {src} its up to date");
 					continue;
