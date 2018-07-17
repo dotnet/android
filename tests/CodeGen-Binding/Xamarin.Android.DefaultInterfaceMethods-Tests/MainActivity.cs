@@ -1,7 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 using Android.App;
 using Android.OS;
+using Android.Runtime;
+using Com.Xamarin.Test;
+using Java.Interop;
 using Xamarin.Android.NUnitLite;
 
 namespace Xamarin.Android.DefaultInterfaceMethodsTests
