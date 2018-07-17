@@ -1342,8 +1342,8 @@ namespace UnnamedProject
 		{
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				LayoutMain = @""
+				IsRelease       = true,
+				LayoutMain      = @"",
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var builder = CreateApkBuilder (path)) {
