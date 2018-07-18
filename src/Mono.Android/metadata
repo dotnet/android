@@ -1389,6 +1389,10 @@
   -->
   <attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">ColorObject</attr>
 
+  <!-- new addition to API 26 fixup due to DIM support -->
+  <attr path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" name="managedName">AnimationStart2</attr>
+  <attr path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationEnd' and count(parameter)=2]" name="managedName">AnimationEnd2</attr>
+
   <!-- API Level 27 -->
 
   <!-- detected field-property conflicts (e.g. see bug #60069)
