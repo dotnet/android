@@ -1,12 +1,12 @@
 export OS_NAME       := $(shell uname)
 export OS_ARCH       := $(shell uname -m)
-export NO_SUDO ?= false
+export NO_SUDO       ?= false
 V             ?= 0
-prefix				= /usr/local
-CONFIGURATION = Debug
-RUNTIME       := $(shell if [ -f "`which mono64`" ] ; then echo mono64 ; else echo mono; fi) --debug=casts
-SOLUTION      = Xamarin.Android.sln
-TEST_TARGETS  = build-tools/scripts/RunTests.targets
+prefix         = /usr/local
+CONFIGURATION  = Debug
+RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) --debug=casts
+SOLUTION       = Xamarin.Android.sln
+TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
 
 ifeq ($(OS_NAME),Darwin)
@@ -77,12 +77,12 @@ prepare:: prepare-paths prepare-msbuild
 linux-prepare::
 	BINFMT_MISC_TROUBLE="cli win" \
 	BINFMT_WARN=no ; \
-	for m in $BINFMT_MISC_TROUBLE; do \
-		if [ -f /proc/sys/fs/binfmt_misc/$$m ]; then \
+	for m in ${BINFMT_MISC_TROUBLE}; do \
+		if [ -f "/proc/sys/fs/binfmt_misc/$$m" ]; then \
 			BINFMT_WARN=yes ; \
 		fi ; \
 	done ; \
-	if [ "x$$BINFMT_WARN" = "xyes" ]; then \
+	if [ "x${BINFMT_WARN}" = "xyes" ]; then \
 		cat Documentation/binfmt_misc-warning-Linux.txt ; \
 	fi; \
 	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
@@ -111,6 +111,7 @@ prepare-external:
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
+	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
 
 prepare-props: prepare-deps
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"

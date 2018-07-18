@@ -211,18 +211,27 @@ namespace Xamarin.Android.Tools {
 			bool updated = false;
 			HashSet<string> files = new HashSet<string> ();
 			foreach (var entry in zip) {
+				progressCallback?.Invoke (i++, total);
 				if (entry.FullName.Contains ("/__MACOSX/") ||
 						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
 				var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 				if (entry.IsDirectory) {
-					Directory.CreateDirectory (Path.Combine (destination, fullName));
+					try {
+						Directory.CreateDirectory (Path.Combine (destination, fullName));
+					} catch (NotSupportedException ex) {
+						//NOTE: invalid paths, such as `:` on Windows can cause this
+						throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
+					}
 					continue;
 				}
-				if (progressCallback != null)
-					progressCallback (i++, total);
-				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
+				try {
+					Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
+				} catch (NotSupportedException ex) {
+					//NOTE: invalid paths, such as `:` on Windows can cause this
+					throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
+				}
 				var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
 				files.Add (outfile);
 				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;

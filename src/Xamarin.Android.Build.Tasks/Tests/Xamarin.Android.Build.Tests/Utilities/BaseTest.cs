@@ -1,30 +1,70 @@
-﻿using System;
-using System.IO;
+﻿using NUnit.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using Xamarin.ProjectTools;
-using NUnit.Framework;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
-		static BaseTest ()
+		[SetUpFixture]
+		public class SetUp
 		{
-			try {
-				var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-				int sdkVersion = -1;
-				HasDevices = int.TryParse (RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk").Trim(), out sdkVersion) && sdkVersion != -1;
-			} catch (Exception ex) {
-				Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not" + ex);
+			public static bool HasDevices {
+				get;
+				private set;
+			}
+
+			[OneTimeSetUp]
+			public void BeforeAllTests ()
+			{
+				try {
+					var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+					int sdkVersion = -1;
+					var result = RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk");
+					if (result.Contains ("*")) {
+						//NOTE: We may get a result of:
+						//
+						//27* daemon not running; starting now at tcp:5037
+						//* daemon started successfully
+						result = result.Split ('*').First ().Trim ();
+					}
+					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
+				}
+			}
+
+			[OneTimeTearDown]
+			public void AfterAllTests ()
+			{
+				if (System.Diagnostics.Debugger.IsAttached)
+					return;
+
+				//NOTE: adb.exe can cause a couple issues on Windows
+				//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
+				//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
+
+				try {
+					RunAdbCommand ("kill-server", true);
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
+				}
+
+				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
+				foreach (var p in Process.GetProcessesByName ("adb.exe"))
+					p.Kill ();
 			}
 		}
 
-		public static readonly bool HasDevices;
+		protected bool HasDevices => SetUp.HasDevices;
 
 		protected bool IsWindows {
 			get { return Environment.OSVersion.Platform == PlatformID.Win32NT; }

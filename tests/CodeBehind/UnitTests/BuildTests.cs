@@ -134,6 +134,11 @@ namespace CodeBehindUnitTests
 					{"public", "global::Android.App.Fragment", "secondary_log_fragment"},
 					{"public", "CommonSampleLibrary.LogFragment", "tertiary_log_fragment"},
 				},
+				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.MainMerge.g.cs")) {
+					{"public", "Button", "myButton"},
+					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
+					{"public", "CommonSampleLibrary.LogFragment", "secondary_log_fragment"},
+				},
 				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.onboarding_info.g.cs")) {
 					{"public", "LinearLayout", "onboarding_stations_info_inner"},
 					{"public", "ImageView", "icon_view"},
@@ -194,6 +199,20 @@ namespace CodeBehindUnitTests
 					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
 					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
 				},
+				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.MainMergeActivity.MainMerge.g.cs")) {
+					// Properties
+					{"public", "Button", "myButton"},
+					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
+					{"public", "CommonSampleLibrary.LogFragment", "secondary_log_fragment"},
+
+					// Methods
+					{"public override", "void", "SetContentView", "global::Android.Views.View view"},
+					{"public override", "void", "SetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params"},
+					{"public override", "void", "SetContentView", "int layoutResID"},
+					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, ref bool callBaseAfterReturn"},
+					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
+					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
+				},
 				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.OnboardingActivityPartial.onboarding_intro.g.cs")) {
 					// Properties
 					{"public", "LinearLayout", "onboarding_intro_View"},
@@ -230,19 +249,31 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void SuccessfulBuildFew ()
 		{
-			RunTest ("SuccessfulBuildFew", false, SuccessfulBuild_RunTest);
+			RunTest ("SuccessfulBuildFew", many: false, dtb: false, runner: SuccessfulBuild_RunTest);
 		}
 
 		[Test]
 		public void SuccessfulBuildMany ()
 		{
-			RunTest ("SuccessfulBuildMany", true, SuccessfulBuild_RunTest);
+			RunTest ("SuccessfulBuildMany", many: true, dtb: false, runner: SuccessfulBuild_RunTest);
 		}
 
-		void SuccessfulBuild_RunTest (string testName, bool many, LocalBuilder builder)
+		[Test]
+		public void SuccessfulBuildFew_DTB ()
 		{
-			string[] parameters = GetBuildProperties (many);
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			RunTest ("SuccessfulBuildFew_DTB", many: false, dtb: true, runner: SuccessfulBuild_RunTest);
+		}
+
+		[Test]
+		public void SuccessfulBuildMany_DTB ()
+		{
+			RunTest ("SuccessfulBuildMany_DTB", many: true, dtb: true, runner: SuccessfulBuild_RunTest);
+		}
+
+		void SuccessfulBuild_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		{
+			string[] parameters = GetBuildProperties (many, dtb);
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.True, "Build should have succeeded");
@@ -258,6 +289,9 @@ namespace CodeBehindUnitTests
 				}
 			}
 
+			if (dtb)
+				return; // DTB doesn't produce binaries
+
 			foreach (string binPath in produced_binaries)
 				AssertExists (testName, Path.Combine (TestProjectRootDirectory, binPath));
 		}
@@ -265,19 +299,19 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void FailedBuildFew_ConflictingFragment ()
 		{
-			RunTest ("FailedBuildFew_ConflictingFragment", false, FailedBuild_ConflictingFragment_RunTest);
+			RunTest ("FailedBuildFew_ConflictingFragment", many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
 		}
 
 		[Test]
 		public void FailedBuildMany_ConflictingFragment ()
 		{
-			RunTest ("FailedBuildMany_ConflictingFragment", true, FailedBuild_ConflictingFragment_RunTest);
+			RunTest ("FailedBuildMany_ConflictingFragment", many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
 		}
 
-		void FailedBuild_ConflictingFragment_RunTest (string testName, bool many, LocalBuilder builder)
+		void FailedBuild_ConflictingFragment_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, "NOT_CONFLICTING_FRAGMENT");
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_FRAGMENT");
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -293,19 +327,19 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void FailedBuildFew_ConflictingTextView ()
 		{
-			RunTest ("FailedBuildFew_ConflictingTextView", false, FailedBuild_ConflictingTextView_RunTest);
+			RunTest ("FailedBuildFew_ConflictingTextView", many: false, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest);
 		}
 
 		[Test]
 		public void FailedBuildMany_ConflictingTextView ()
 		{
-			RunTest ("FailedBuildMany_ConflictingTextView", true, FailedBuild_ConflictingTextView_RunTest);
+			RunTest ("FailedBuildMany_ConflictingTextView", many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest);
 		}
 
-		void FailedBuild_ConflictingTextView_RunTest (string testName, bool many, LocalBuilder builder)
+		void FailedBuild_ConflictingTextView_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, "NOT_CONFLICTING_TEXTVIEW");
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_TEXTVIEW");
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -321,19 +355,19 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void FailedBuildFew_ConflictingButton ()
 		{
-			RunTest ("FailedBuildFew_ConflictingButton", false, FailedBuild_ConflictingButton_RunTest);
+			RunTest ("FailedBuildFew_ConflictingButton", many: false, dtb: false, runner: FailedBuild_ConflictingButton_RunTest);
 		}
 
 		[Test]
 		public void FailedBuildMany_ConflictingButton ()
 		{
-			RunTest ("FailedBuildMany_ConflictingButton", true, FailedBuild_ConflictingButton_RunTest);
+			RunTest ("FailedBuildMany_ConflictingButton", many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest);
 		}
 
-		void FailedBuild_ConflictingButton_RunTest (string testName, bool many, LocalBuilder builder)
+		void FailedBuild_ConflictingButton_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, "NOT_CONFLICTING_BUTTON");
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_BUTTON");
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -349,19 +383,19 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void FailedBuildFew_ConflictingLinearLayout ()
 		{
-			RunTest ("FailedBuildFew_ConflictingLinearLayout", false, FailedBuild_ConflictingLinearLayout_RunTest);
+			RunTest ("FailedBuildFew_ConflictingLinearLayout", many: false, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest);
 		}
 
 		[Test]
 		public void FailedBuildMany_ConflictingLinearLayout ()
 		{
-			RunTest ("FailedBuildMany_ConflictingLinearLayout", true, FailedBuild_ConflictingLinearLayout_RunTest);
+			RunTest ("FailedBuildMany_ConflictingLinearLayout", many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest);
 		}
 
-		void FailedBuild_ConflictingLinearLayout_RunTest (string testName, bool many, LocalBuilder builder)
+		void FailedBuild_ConflictingLinearLayout_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, "NOT_CONFLICTING_LINEARLAYOUT");
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -377,19 +411,19 @@ namespace CodeBehindUnitTests
 		[Test]
 		public void FailedBuildFew_ConflictingRelativeLayout ()
 		{
-			RunTest ("FailedBuildFew_ConflictingRelativeLayout", false, FailedBuild_ConflictingRelativeLayout_RunTest);
+			RunTest ("FailedBuildFew_ConflictingRelativeLayout", many: false, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest);
 		}
 
 		[Test]
 		public void FailedBuildMany_ConflictingRelativeLayout ()
 		{
-			RunTest ("FailedBuildMany_ConflictingRelativeLayout", true, FailedBuild_ConflictingRelativeLayout_RunTest);
+			RunTest ("FailedBuildMany_ConflictingRelativeLayout", many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest);
 		}
 
-		void FailedBuild_ConflictingRelativeLayout_RunTest (string testName, bool many, LocalBuilder builder)
+		void FailedBuild_ConflictingRelativeLayout_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, "NOT_CONFLICTING_RELATIVELAYOUT");
-			bool success = builder.Build (TestProjectPath, "SignAndroidPackage", parameters);
+			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
+			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testName, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -402,13 +436,25 @@ namespace CodeBehindUnitTests
 			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 38);
 		}
 
-		string[] GetBuildProperties (bool manyBuild, params string[] extraConstants)
+		string GetBuildTarget (bool isDTB)
+		{
+			return isDTB ? "Compile" : "SignAndroidPackage";
+		}
+
+		string[] GetBuildProperties (bool manyBuild, bool dtbBuild, params string[] extraConstants)
 		{
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true"
 			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
+
+			if (dtbBuild) {
+				ret.Add ("DesignTimeBuild=True");
+				ret.Add ("BuildingInsideVisualStudio=True");
+				ret.Add ("SkipCompilerExecution=True");
+				ret.Add ("ProvideCommandLineArgs=True");
+			}
 
 			if (extraConstants != null && extraConstants.Length > 0) {
 				string extras = String.Join (";", extraConstants);
@@ -423,13 +469,49 @@ namespace CodeBehindUnitTests
 			Assert.That (haveError, Is.True, $"Expected compiler error CS0266 in {fileName}({line},?)");
 		}
 
-		void RunTest (string testName, bool many, Action<string, bool, LocalBuilder> runner)
+		/// <summary>
+		/// Main “driver” method of all the tests. Contains common housekeeping code. All tests must call it.
+		/// </summary>
+		/// <remarks>
+		///   <para>
+		///     The <paramref name="runner"/> parameter is an action which is passed the following arguments, in
+		///     the order of declaration:
+		///   </para>
+		///   <para>
+		///     <list type="bullet">
+		///        <item>
+		///          <term>string testName</term>
+		///          <description>name of the test being run - make it unique (log files etc are stored there)</description>
+		///        </item>
+		///
+		///        <item>
+		///          <term>bool many</term>
+		///          <description>whether the test is building more than 20 layouts to test parallel builds</description>
+		///        </item>
+		///
+		///        <item>
+		///          <term>bool dtb</term>
+		///          <description>whether the test is running a design time build (DTB)</description>
+		///        </item>
+		///
+		///        <item>
+		///          <term>LocalBuilder builder</term>
+		///          <description>the object that runs the actual build session</description>
+		///        </item>
+		///     </list>
+		///   </para>
+		/// </remarks>
+		/// <param name="testName">Name of the test being run. Must be unique</param>
+		/// <param name="many">Generate code in parallel if <c>true</c>, serially otherwise</param>
+		/// <param name="dtb">Test design-time build if <c>true</c>, regular build otherwise</param>
+		/// <param name="runner">Action consituting the main body of the test. Passed parameters are described above in the remarks section.</param>
+		void RunTest (string testName, bool many, bool dtb, Action<string, bool, bool, LocalBuilder> runner)
 		{
 			ResetProject (testName);
 			LocalBuilder builder = GetBuilder ($"{ProjectName}.{testName}");
 
 			try {
-				runner (testName, many, builder);
+				runner (testName, many, dtb, builder);
 
 				if (many) {
 					Assert.That (WasParsedInParallel (testName), Is.True, "Should have been parsed in parallel");

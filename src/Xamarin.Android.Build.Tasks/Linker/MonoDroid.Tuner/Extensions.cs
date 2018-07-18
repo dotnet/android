@@ -8,6 +8,7 @@ using Mono.Linker;
 using Mono.Tuner;
 
 using Java.Interop;
+using Java.Interop.Tools.Cecil;
 
 namespace MonoDroid.Tuner {
 
@@ -165,6 +166,66 @@ namespace MonoDroid.Tuner {
 			return true;
 		}
 
+		public static TypeDefinition GetMarshalMethodsType (this TypeDefinition type)
+		{
+			foreach (var nt in type.NestedTypes) {
+				if (nt.Name == "__<$>_jni_marshal_methods")
+					return nt;
+			}
+
+			return null;
+		}
+
+		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, out string member, out string nativeMethod, out string signature)
+		{
+			var type = method.DeclaringType;
+
+			member = nativeMethod = signature = null;
+
+			if (method.IsConstructor || type == null || !type.HasNestedTypes)
+				return false;
+
+			var m = method.GetBaseDefinition ();
+
+			while (m != null) {
+				if (m == method)
+                                        break;
+
+				method = m;
+
+				if (m.TryGetRegisterMember (out member, out nativeMethod, out signature))
+					return true;
+
+				m = m.GetBaseDefinition ();
+			}
+
+			if (!method.DeclaringType.HasInterfaces || !method.IsNewSlot)
+				return false;
+
+			foreach (var iface in method.DeclaringType.Interfaces) {
+				if (iface.InterfaceType.IsGenericInstance)
+                                        continue;
+
+				var itype = iface.InterfaceType.Resolve ();
+				if (itype == null || !itype.HasMethods)
+					continue;
+
+				foreach (var im in itype.Methods)
+					if (im.IsEqual (method))
+						return im.TryGetRegisterMember (out member, out nativeMethod, out signature);
+                        }
+
+                        return false;
+		}
+
+		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2)
+		{
+			if (m1.Name != m2.Name || m1.ReturnType.Name != m2.ReturnType.Name)
+				return false;
+
+			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters);
+		}
+
 		public static bool TryGetMarshalMethod (this MethodDefinition method, string nativeMethod, string signature, out MethodDefinition marshalMethod)
 		{
 			marshalMethod = null;
@@ -172,13 +233,7 @@ namespace MonoDroid.Tuner {
 			if (!type.HasNestedTypes)
 				return false;
 
-			TypeDefinition marshalType = null;
-			foreach (var nt in type.NestedTypes)
-				if (nt.Name == "__<$>_jni_marshal_methods") {
-					marshalType = nt;
-					break;
-				}
-
+			TypeDefinition marshalType = type.GetMarshalMethodsType ();
 			if (marshalType == null || !marshalType.HasMethods)
 				return false;
 

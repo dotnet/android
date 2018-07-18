@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This comment is here to test that the generator
+     properly skips non-element nodes preceding the
+     first element node in the layout file -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+       xamarin:classes="Xamarin.Android.Tests.CodeBehindBuildTests.MainMergeActivity">
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+<Button  
+    android:id="@+id/myButton"
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+<fragment
+    xamarin:managedType="CommonSampleLibrary.LogFragment"
+    android:name="commonsamplelibrary.LogFragment"
+    android:id="@+id/log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+<fragment
+    android:name="CommonSampleLibrary.LogFragment"
+    android:id="@+id/secondary_log_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+<TextView
+    android:id="@android:id/text1" />
+</LinearLayout>
+</merge>

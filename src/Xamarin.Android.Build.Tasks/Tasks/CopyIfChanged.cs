@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				var dest = DestinationFiles [i].ItemSpec;
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (src);
-				var dstmodifiedDate = File.Exists (dest) ? File.GetLastAccessTimeUtc (dest) : srcmodifiedDate;
+				var dstmodifiedDate = File.Exists (dest) ? File.GetLastWriteTimeUtc (dest) : srcmodifiedDate;
 				if (dstmodifiedDate > srcmodifiedDate) {
 					Log.LogDebugMessage ($"  Skipping {src} its up to date");
 					continue;
@@ -58,6 +58,8 @@ namespace Xamarin.Android.Tasks
 				modifiedFiles.Add (new TaskItem (dest));
 				if (KeepDestinationDates)
 					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, dstmodifiedDate, Log);
+				else
+					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dest, DateTime.UtcNow, Log);
 			}
 
 			ModifiedFiles = modifiedFiles.ToArray ();

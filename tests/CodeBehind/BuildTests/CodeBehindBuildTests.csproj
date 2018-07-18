@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
+    <Compile Include="MainMergeActivity.cs" />
     <Compile Include="MainActivityNotPartial.cs" />
     <Compile Include="AnotherMainActivity.cs" />
     <Compile Include="OnboardingActivity.cs" />
@@ -63,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
+    <AndroidResource Include="Resources\layout\MainMerge.axml" />
     <AndroidResource Include="Resources\layout-land\Main.axml" />
     <AndroidResource Include="Resources\layout\settings.xml" />
     <AndroidResource Include="Resources\layout\loading.xml" />

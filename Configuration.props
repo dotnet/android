@@ -16,10 +16,11 @@
     <!-- Used by the `build-tools/create-vsix` build so that `Mono.Android.Export.dll`/etc. are only included *once* -->
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/scripts/BuildEverything.mk` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v2.3</AndroidFirstFrameworkVersion>
+    <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">27</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">28</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v8.1</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v9.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* (possibly unstable) API level binding that we support; for informational purposes -->
     <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">28</AndroidLatestApiLevel>
     <AndroidLatestPlatformId Condition=" '$(AndroidLatestPlatformId)' == '' ">28</AndroidLatestPlatformId>
@@ -27,12 +28,13 @@
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
-    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
+    <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
-    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)\bin\$(Configuration)\lib\xamarin.android\</XAInstallPrefix>
+    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\lib\xamarin.android\</XAInstallPrefix>
     <LinuxMingwDependenciesRootDirectory Condition=" '$(LinuxMingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\linux-mingw-deps</LinuxMingwDependenciesRootDirectory>
     <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
@@ -56,6 +58,9 @@
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
+    <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\3.6.4111459</AndroidSdkCmakeDirectory>
+    <CmakePath Condition=" '$(CmakePath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\cmake</CmakePath>
+    <NinjaPath Condition=" '$(NinjaPath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\ninja</NinjaPath>
     <AntDirectory>$(AndroidToolchainDirectory)\ant</AntDirectory>
     <AntToolPath>$(AntDirectory)\bin</AntToolPath>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>

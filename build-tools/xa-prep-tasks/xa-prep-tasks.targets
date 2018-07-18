@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
-  <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
-  <Import Project="..\bundle\bundle-path.targets" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
-  <PropertyGroup>
-    <_AzureBaseUri>https://xamjenkinsartifact.azureedge.net/xamarin-android/xamarin-android/bin/</_AzureBaseUri>
-    <_NuGetUri>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</_NuGetUri>
-    <_NuGetPath>$(MSBuildThisFileDirectory)\..\..\.nuget</_NuGetPath>
-  </PropertyGroup>
   <Target Name="_CreateVersion"
       DependsOnTargets="GetXAVersionInfo"
       AfterTargets="Build">
@@ -58,62 +50,5 @@
         Lines="$(XAVersionCommitCount)"
         Overwrite="True"
     />
-  </Target>
-  <Target Name="_GetBundleOutputPath"
-      DependsOnTargets="GetBundleFileName">
-    <PropertyGroup>
-      <_BundlePath>$(AndroidToolchainCacheDirectory)\$(XABundleFileName)</_BundlePath>
-    </PropertyGroup>
-  </Target>
-  <Target Name="_DownloadBundle"
-      DependsOnTargets="_GetBundleOutputPath"
-      Inputs=""
-      Outputs="$(_BundlePath)">
-    <PropertyGroup>
-      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(Configuration)</XABundleDownloadPrefix>
-    </PropertyGroup>
-    <DownloadUri
-        ContinueOnError="True"
-        SourceUris="$(XABundleDownloadPrefix)/$(XABundleFileName)"
-        DestinationFiles="$(_BundlePath)"
-    />
-    <Error
-        Text="The Windows build depends on a cached mono bundle, that may not be available yet. Try going back a few commits (with git reset) to download a different bundle."
-        Condition=" '$(HostOS)' == 'Windows' And '$(MSBuildLastTaskResult)' == 'False' "
-    />
-  </Target>
-  <Target Name="_DownloadNuGet"
-	Inputs=""
-	Outputs="$(_NuGetPath)\NuGet.exe">
-    <MakeDir
-        Directories="$(_NuGetPath)"
-    />
-    <DownloadUri
-        SourceUris="$(_NuGetUri)"
-        DestinationFiles="$(_NuGetPath)\NuGet.exe"
-    />
-  </Target>
-  <Target Name="_ExtractBundle"
-      Condition=" Exists('$(_BundlePath)') "
-      Inputs="$(_BundlePath)"
-      Outputs="$(OutputPath).extracted-$(XABundleFileName)">
-    <PropertyGroup>
-      <XABundleUnzipPath Condition=" '$(XABundleUnzipPath)' == '' "></XABundleUnzipPath>
-    </PropertyGroup>
-    <SystemUnzip
-        SourceFiles="$(_BundlePath)"
-        HostOS="$(HostOS)"
-        TempUnzipDir="$(XABundleUnzipPath)"
-        DestinationFolder="..\..\bin\$(Configuration)"
-    />
-    <WriteLinesToFile
-        File="$(OutputPath).extracted-$(XABundleFileName)"
-        Lines="$(XABundleFileName)"
-        Overwrite="True"
-    />
-  </Target>
-  <Target Name="_DownloadAndExtractBundle"
-      AfterTargets="Build"
-      DependsOnTargets="_GetBundleOutputPath;_DownloadBundle;_ExtractBundle;_DownloadNuGet">
   </Target>
 </Project>
