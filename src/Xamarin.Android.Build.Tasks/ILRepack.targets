@@ -1,7 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\packages\ILRepack.Lib.MSBuild.Task.2.0.15.4\build\ILRepack.Lib.MSBuild.Task.dll" TaskName="ILRepack" />
-	<Target Name="ILRepacker" AfterTargets="Build">
+	<PropertyGroup>
+		<_ILRepacker_stamp>$(IntermediateOutputPath)ILRepacker.stamp</_ILRepacker_stamp>
+	</PropertyGroup>
+	<Target Name="ILRepacker"
+		AfterTargets="AfterBuild"
+		Inputs="$(OutputPath)\$(AssemblyName).dll"
+		Outputs="$(_ILRepacker_stamp)">
 		<ItemGroup>
 			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
 			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
@@ -26,5 +32,7 @@
 			OutputFile="$(OutputPath)\$(AssemblyName).dll"
 		/>
 		<Delete Files="@(InputAssemblies)" />
+		<Touch Files="$(_ILRepacker_stamp)"
+		       AlwaysCreate="True"/>
 	</Target>
 </Project>
