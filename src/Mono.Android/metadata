@@ -1252,6 +1252,13 @@
   and thus treated as Java.Lang.Object. It needs to be fixed.
   --> 
   <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentSkipListMap']" />
+
+  <!-- FIXME: they had better be remapped to managedReturn of Spliterator(without .OfXYZ). So far there is BaseStream#spliterator() and removing them is harmless. -->
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='DoubleStream']/method[@name='spliterator']" />
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='IntStream']/method[@name='spliterator']" />
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='LongStream']/method[@name='spliterator']" />
+
 
   <attr path="/api/package[@name='android.service.quicksettings']" name="managedName">Android.Service.QuickSettings</attr>
 
