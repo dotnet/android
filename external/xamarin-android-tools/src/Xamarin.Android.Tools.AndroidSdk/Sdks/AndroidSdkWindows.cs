@@ -104,6 +104,19 @@ namespace Xamarin.Android.Tools
 
 		protected override string GetJavaSdkPath ()
 		{
+			var preferredJdkPath = GetPreferredJdkPath ();
+			if (!string.IsNullOrEmpty (preferredJdkPath))
+				return preferredJdkPath;
+
+			var openJdkPath = GetOpenJdkPath ();
+			if (!string.IsNullOrEmpty (openJdkPath))
+				return openJdkPath;
+
+			return GetOracleJdkPath ();
+		}
+
+		private string GetPreferredJdkPath ()
+		{
 			// check the user specified path
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			const RegistryEx.Wow64 wow = RegistryEx.Wow64.Key32;
@@ -114,6 +127,26 @@ namespace Xamarin.Android.Tools
 					return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow);
 			}
 
+			return null;
+		}
+
+		private string GetOpenJdkPath ()
+		{
+			var root = RegistryEx.LocalMachine;
+			var wows = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
+			var subKey = @"SOFTWARE\Microsoft\VisualStudio\Android";
+			var valueName = "JavaHome";
+
+			foreach (var wow in wows) {
+				if (CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", JarSigner))
+					return RegistryEx.GetValueString (root, subKey, valueName, wow);
+			}
+
+			return null;
+		}
+
+		private string GetOracleJdkPath ()
+		{ 
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
 
 			Logger (TraceLevel.Info, "Looking for Java 6 SDK...");
