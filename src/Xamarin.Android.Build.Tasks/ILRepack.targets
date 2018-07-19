@@ -5,9 +5,9 @@
 		<_ILRepacker_stamp>$(IntermediateOutputPath)ILRepacker.stamp</_ILRepacker_stamp>
 	</PropertyGroup>
 	<Target Name="ILRepacker"
-		AfterTargets="AfterBuild"
-		Inputs="$(OutputPath)\$(AssemblyName).dll"
-		Outputs="$(_ILRepacker_stamp)">
+			AfterTargets="AfterBuild"
+			Inputs="$(OutputPath)\$(AssemblyName).dll"
+			Outputs="$(_ILRepacker_stamp)">
 		<ItemGroup>
 			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
 			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
@@ -22,17 +22,16 @@
 			<InputAssemblies Include="$(OutputPath)\NuGet.Configuration.dll" />
 		</ItemGroup>
 		<ILRepack Parallel="true"
-			Internalize="true"
-			Verbose="true"
-			DebugInfo="true"
-			InternalizeExclude="@(DoNotInternalizeAssemblies)"
-			InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(InputAssemblies)"
-			LibraryPath="$(OutputPath)"
-			TargetKind="Dll"
-			OutputFile="$(OutputPath)\$(AssemblyName).dll"
+				Internalize="true"
+				Verbose="true"
+				DebugInfo="true"
+				InternalizeExclude="@(DoNotInternalizeAssemblies)"
+				InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(InputAssemblies)"
+				LibraryPath="$(OutputPath)"
+				TargetKind="Dll"
+				OutputFile="$(OutputPath)\$(AssemblyName).dll"
 		/>
 		<Delete Files="@(InputAssemblies)" />
-		<Touch Files="$(_ILRepacker_stamp)"
-		       AlwaysCreate="True"/>
+		<Touch AlwaysCreate="True" Files="$(_ILRepacker_stamp)" />
 	</Target>
 </Project>
