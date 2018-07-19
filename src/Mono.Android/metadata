@@ -1420,4 +1420,23 @@
   <remove-node path="/api/package[@name='android.text']/class[@name='PrecomputedText']" />
   <attr path="/api/package[@name='android.provider']/class[@name='Telephony.CarrierId']/field[@name='CARRIER_ID']" name="managedName">CarrierIdField</attr>
 
+  <!-- FIXME: for now generator cannot "unmark" final DIM methods as *non*-sealed C# DIM methods.
+   Attempt to unmark them result in various ABI breakage, which needs non-trivial fixes. 
+   So far this is the only one in android.jar, hopefully there aren't many.
+   -->
+  <attr path="/api/package[@name='java.util']/class[@name='PriorityQueue']/method[@name='spliterator']" name="final">false</attr>
+
+  <!--
+	This should not really be required. However current generator has
+	limitation that it has to generate such methods in its {implementing
+	interfaces} that contains {{any parameter or a return value} that is
+	of generic type} as explicitly implemented,
+	regardless of whether the method contains generic parameters or not.
+	
+	This kind of problem can be workarounded by removing generic arguments from the parameters and the return type.
+	
+	Spliterator itself is not suffered from that, but Spliterators.AbstractSpliterator is.
+  -->
+  <attr path="/api/package[@name='java.util']/interface[@name='Spliterator']/method[@name='tryAdvance']/parameter[1]" name="type">java.util.function.Consumer</attr>
+
 </metadata>

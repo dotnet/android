@@ -1,4 +1,4 @@
-#if ANDROID_24
+#if false//ANDROID_24
 using System;
 using Android.Runtime;
 using Java.Interop;
@@ -6,7 +6,6 @@ using Java.Util.Functions;
 
 namespace Java.Util
 {
-	// FIXME: this should not be required to be hand-bound.
 	public partial class Spliterators
 	{
 		public partial class AbstractSpliterator
