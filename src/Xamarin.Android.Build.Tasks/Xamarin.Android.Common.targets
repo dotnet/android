@@ -274,6 +274,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
 	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
+	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -305,6 +306,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
+	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
 
@@ -426,8 +428,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidResourcePathsCache)') ">$(_AndroidResourcePathsDesignTimeCache)</_AndroidResourcePathsCache>
 		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
 		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
+		<_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
 	</PropertyGroup>
-	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
+	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
 <PropertyGroup>
@@ -1157,11 +1160,10 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
-	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
-	<_AndroidResourcePathsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
-	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
-	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
-	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
+	<_AndroidResourcePathsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
+	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
+	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
+	<_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
 <ItemGroup>
@@ -1226,7 +1228,7 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsCache);$(_AndroidLibraryProjectImportsCache);$(_AndroidLibraryImportsCache);"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
 		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_CreateAdditionalResourceCache">
-	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" />
+	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
 		ContinueOnError="$(DesignTimeBuild)"
@@ -2994,7 +2996,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanDesignTimeIntermediateDir">
-	<RemoveDirFixed Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition="Exists ('$(_AndroidDesignTimeResDirIntermediate)')" />
+	<RemoveDirFixed Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition="Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)')" />
 </Target>
 
 <Target Name="_CleanGeneratedDeploymentFiles">
