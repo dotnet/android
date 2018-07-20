@@ -227,8 +227,8 @@ namespace Xamarin.Android.Tests
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
 
-				//Build again after a code change, checking a few files
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
+				//Build again after a code change (renamed Java.Lang.Object subclass), checking a few files
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("MainActivity", "MainActivity2");
 				proj.Touch ("MainActivity.cs");
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
