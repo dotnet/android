@@ -121,6 +121,43 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void SwitchBetweenDesignTimeBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first *regular* build should have succeeded.");
+				var build_props = b.Output.GetIntermediaryPath ("build.props");
+				var designtime_build_props = b.Output.GetIntermediaryPath (Path.Combine ("designtime", "build.props"));
+				FileAssert.Exists (build_props, "build.props should exist after a first `Build`.");
+				FileAssert.DoesNotExist (designtime_build_props, "designtime/build.props should *not* exist after a first `Build`.");
+
+				b.Target = "Compile";
+				Assert.IsTrue (b.Build (proj, parameters: new [] { "DesignTimeBuild=True" }), "first design-time build should have succeeded.");
+				FileAssert.Exists (build_props, "build.props should exist after a design-time build.");
+				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after a design-time build.");
+
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "second *regular* build should have succeeded.");
+				FileAssert.Exists (build_props, "build.props should exist after the second `Build`.");
+				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after the second `Build`.");
+
+				//NOTE: none of these targets should run, since we have not actually changed anything!
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "`_UpdateAndroidResgen` should be skipped!");
+				//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
+				//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
+				//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
+				//Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "`_LinkAssembliesNoShrink` should be skipped!");
+
+				b.Target = "Clean";
+				Assert.IsTrue (b.Build (proj), "clean should have succeeded.");
+
+				FileAssert.DoesNotExist (build_props, "build.props should *not* exist after `Clean`.");
+				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after `Clean`.");
+			}
+		}
+
+		[Test]
 		public void BuildPropsBreaksConvertResourcesCases ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -190,8 +227,8 @@ namespace Xamarin.Android.Tests
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
 
-				//Build again after a code change, checking a few files
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
+				//Build again after a code change (renamed Java.Lang.Object subclass), checking a few files
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("MainActivity", "MainActivity2");
 				proj.Touch ("MainActivity.cs");
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
