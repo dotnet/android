@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
+    <ThirdPartyNotice Include="google/depot_tools">
+      <LicenseFile>$(MSBuildThisFileDirectory)\depot_tools\LICENSE</LicenseFile>
+      <SourceUrl>https://chromium.googlesource.com/chromium/tools/depot_tools.git</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>

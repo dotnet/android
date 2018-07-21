@@ -41,23 +41,17 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProguardJarOutput { get; set; }
 
-		[Required]
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
-
-		[Required]
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
-
-		[Required]
 		public string ProguardCommonXamarinConfiguration { get; set; }
 
+		[Required]
 		public string ProguardConfigurationFiles { get; set; }
 
 		public ITaskItem[] JavaLibrariesToEmbed { get; set; }
 		
-		public ITaskItem[] ExternalJavaLibraries { get; set; }
+		public ITaskItem[] JavaLibrariesToReference { get; set; }
 		
-		public ITaskItem[] DoNotPackageJavaLibraries { get; set; }
-
 		public bool UseProguard { get; set; }
 
 		public string JavaOptions { get; set; }
@@ -86,14 +80,13 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  JavaPlatformJarPath: {0}", JavaPlatformJarPath);
 			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-			Log.LogDebugMessage ("  ProguardGeneratedApplicationConfiguration: {0}", ProguardGeneratedApplicationConfiguration);
 			Log.LogDebugMessage ("  ProguardJarOutput: {0}", ProguardJarOutput);
 			Log.LogDebugTaskItems ("  ProguardGeneratedReferenceConfiguration:", ProguardGeneratedReferenceConfiguration);
 			Log.LogDebugTaskItems ("  ProguardGeneratedApplicationConfiguration:", ProguardGeneratedApplicationConfiguration);
 			Log.LogDebugTaskItems ("  ProguardCommonXamarinConfiguration:", ProguardCommonXamarinConfiguration);
 			Log.LogDebugTaskItems ("  ProguardConfigurationFiles:", ProguardConfigurationFiles);
-			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
-			Log.LogDebugTaskItems ("  DoNotPackageJavaLibraries:", DoNotPackageJavaLibraries);
+			Log.LogDebugTaskItems ("  JavaLibrariesToEmbed:", JavaLibrariesToEmbed);
+			Log.LogDebugTaskItems ("  JavaLibrariesToReference:", JavaLibrariesToReference);
 			Log.LogDebugMessage ("  UseProguard: {0}", UseProguard);
 			Log.LogDebugMessage ("  EnableLogging: {0}", EnableLogging);
 			Log.LogDebugMessage ("  DumpOutput: {0}", DumpOutput);
@@ -139,15 +132,9 @@ namespace Xamarin.Android.Tasks
 						// skip invalid lines
 					}
 
-			var injars = new List<string> ();
-			var libjars = new List<string> ();
-			injars.Add (classesZip);
-			if (JavaLibrariesToEmbed != null)
-				foreach (var jarfile in JavaLibrariesToEmbed)
-					injars.Add (jarfile.ItemSpec);
-
-			using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
-				GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
+			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
+				using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
+					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
 			
 			var configs = ProguardConfigurationFiles
 				.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
@@ -168,9 +155,15 @@ namespace Xamarin.Android.Tasks
 					Log.LogWarning ("Proguard configuration file '{0}' was not found.", file);
 			}
 
+			var injars = new List<string> ();
+			var libjars = new List<string> ();
+			injars.Add (classesZip);
+			if (JavaLibrariesToEmbed != null)
+				foreach (var jarfile in JavaLibrariesToEmbed)
+					injars.Add (jarfile.ItemSpec);
 			libjars.Add (JavaPlatformJarPath);
-			if (ExternalJavaLibraries != null)
-				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
+			if (JavaLibrariesToReference != null)
+				foreach (var jarfile in JavaLibrariesToReference.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
 			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", "\"'" + string.Join ($"'{ProguardInputJarFilter}{Path.PathSeparator}'", injars.Distinct ()) + $"'{ProguardInputJarFilter}\"");

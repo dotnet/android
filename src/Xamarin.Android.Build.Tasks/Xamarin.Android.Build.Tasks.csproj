@@ -563,11 +563,13 @@
     <Compile Include="Utilities\SatelliteAssembly.cs" />
     <Compile Include="Tasks\AndroidApkSigner.cs" />
     <Compile Include="Tasks\Desugar.cs" />
+    <Compile Include="Tasks\R8.cs" />
     <Compile Include="Utilities\NuGetLogger.cs" />
     <Compile Include="Tasks\LayoutWidgetType.cs" />
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
+    <None Include="*.targets" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -710,6 +712,11 @@
     <ProjectReference Include="..\proguard\proguard.csproj">
       <Project>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</Project>
       <Name>proguard</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\r8\r8.csproj">
+      <Project>{1bafa0cc-0377-46ce-ab7b-7bb2e7b62f63}</Project>
+      <Name>r8</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">

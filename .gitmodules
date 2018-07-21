@@ -41,6 +41,12 @@
 	path = external/xamarin-android-tools
 	url = https://github.com/xamarin/xamarin-android-tools
 	branch = master
+[submodule "external/depot_tools"]
+	path = external/depot_tools
+	url = https://chromium.googlesource.com/chromium/tools/depot_tools.git
+[submodule "external/r8"]
+	path = external/r8
+	url = https://r8.googlesource.com/r8
 [submodule "external/dlfcn-win32"]
 	path = external/dlfcn-win32
 	url = https://github.com/dlfcn-win32/dlfcn-win32.git
