@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 									new XElement ("NativeLibraries", NativeLibraries.Select(e => new XElement ("NativeLibrary", e.ItemSpec))),
 									new XElement ("Jars", Jars.Select(e => new XElement ("Jar", e.ItemSpec)))
 						));
-				document.SaveIfChanged (CacheFile);
+				document.SaveIfChanged (CacheFile, Log);
 			}
 
 			return true;

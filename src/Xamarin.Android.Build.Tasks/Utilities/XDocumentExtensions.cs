@@ -29,12 +29,13 @@ namespace Xamarin.Android.Tasks
 			return element.ToString (SaveOptions.DisableFormatting);
 		}
 
-		public static void SaveIfChanged (this XDocument document, string fileName)
+		public static void SaveIfChanged (this XDocument document, string fileName, TaskLoggingHelper log)
 		{
 			var tempFile = System.IO.Path.GetTempFileName ();
 			try {
 				document.Save (tempFile);
-				MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
+				if (MonoAndroidHelper.CopyIfChanged (tempFile, fileName))
+					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (fileName, DateTime.UtcNow, log);
 			} finally {
 				File.Delete (tempFile);
 			}
