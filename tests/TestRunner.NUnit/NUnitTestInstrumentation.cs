@@ -36,35 +36,21 @@ namespace Xamarin.Android.UnitTests.NUnit
 
 		protected override NUnitTestRunner CreateRunner (LogWriter logger, Bundle bundle)
 		{
-			SetIncludedAndExcludedCategoriesFromBundle(bundle);
-
 			return new NUnitTestRunner (Context, logger, bundle) {
 				GCAfterEachFixture = true,
 				TestsRootDirectory = TestsDirectory
 			};
 		}
 
-		void SetIncludedAndExcludedCategoriesFromBundle(Bundle bundle)
+		IEnumerable<string> GetFilterValuesFromExtras(string key)
 		{
-			string include = bundle?.GetString("include");
-			if (!string.IsNullOrEmpty(include)) {
-				var tempList = new List<string>(include.Split(':'));
-
-				if (IncludedCategories != null)
-					tempList.AddRange(IncludedCategories);
-
-				IncludedCategories = tempList;
+			Dictionary<string, string> extras = GetStringExtrasFromBundle();
+			if (extras.ContainsKey(key)) {
+				string filterValue = extras[key];
+				if (!string.IsNullOrEmpty(filterValue))
+					return filterValue.Split(':');
 			}
-
-			string exclude = bundle?.GetString("exclude");
-			if (!string.IsNullOrEmpty(exclude)) {
-				var tempList = new List<string>(exclude.Split(':'));
-
-				if (ExcludedCategories != null)
-					tempList.AddRange(ExcludedCategories);
-
-				ExcludedCategories = tempList;
-			}
+			return null;
 		}
 
 		protected override void ConfigureFilters (NUnitTestRunner runner)
@@ -79,8 +65,14 @@ namespace Xamarin.Android.UnitTests.NUnit
 			Log.Info (LogTag, "Configuring test categories to include:");
 			ChainCategoryFilter (IncludedCategories, false, ref filter);
 
+			Log.Info (LogTag, "Configuring test categories to include from extras:");
+			ChainCategoryFilter (GetFilterValuesFromExtras ("include"), false, ref filter);
+
 			Log.Info (LogTag, "Configuring test categories to exclude:");
 			ChainCategoryFilter (ExcludedCategories, true, ref filter);
+
+			Log.Info(LogTag, "Configuring test categories to exclude from extras:");
+			ChainCategoryFilter (GetFilterValuesFromExtras ("exclude"), true, ref filter);
 
 			Log.Info (LogTag, "Configuring tests to exclude (by name):");
 			ChainTestNameFilter (ExcludedTestNames?.ToArray (), ref filter);
