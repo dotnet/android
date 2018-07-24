@@ -36,10 +36,35 @@ namespace Xamarin.Android.UnitTests.NUnit
 
 		protected override NUnitTestRunner CreateRunner (LogWriter logger, Bundle bundle)
 		{
+			SetIncludedAndExcludedCategoriesFromBundle(bundle);
+
 			return new NUnitTestRunner (Context, logger, bundle) {
 				GCAfterEachFixture = true,
 				TestsRootDirectory = TestsDirectory
 			};
+		}
+
+		void SetIncludedAndExcludedCategoriesFromBundle(Bundle bundle)
+		{
+			string include = bundle?.GetString("include");
+			if (!string.IsNullOrEmpty(include)) {
+				var tempList = new List<string>(include.Split(':'));
+
+				if (IncludedCategories != null)
+					tempList.AddRange(IncludedCategories);
+
+				IncludedCategories = tempList;
+			}
+
+			string exclude = bundle?.GetString("exclude");
+			if (!string.IsNullOrEmpty(exclude)) {
+				var tempList = new List<string>(exclude.Split(':'));
+
+				if (ExcludedCategories != null)
+					tempList.AddRange(ExcludedCategories);
+
+				ExcludedCategories = tempList;
+			}
 		}
 
 		protected override void ConfigureFilters (NUnitTestRunner runner)
