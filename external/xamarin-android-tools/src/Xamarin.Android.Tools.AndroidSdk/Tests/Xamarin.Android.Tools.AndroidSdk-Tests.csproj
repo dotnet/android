@@ -46,6 +46,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AndroidSdkInfoTests.cs" />
     <Compile Include="AndroidAppManifestTests.cs" />
+    <Compile Include="JdkInfoTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

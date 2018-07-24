@@ -122,7 +122,7 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (Adb, Path.Combine (loc, "platform-tools")).Any ();
+			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb).Any ();
 		}
 
 		/// <summary>
@@ -130,7 +130,7 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public virtual bool ValidateJavaSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (JarSigner, Path.Combine (loc, "bin")).Any ();
+			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner).Any ();
 		}
 
 		/// <summary>
@@ -138,42 +138,10 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidNdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && FindExecutableInDirectory (NdkStack, loc).Any ();
+			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (loc, NdkStack).Any ();
 		}
 
-		protected IEnumerable<string> FindExecutableInPath (string executable)
-		{
-			var path = Environment.GetEnvironmentVariable ("PATH");
-			var pathDirs = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (var dir in pathDirs) {
-				foreach (var directory in FindExecutableInDirectory (executable, dir)) {
-					yield return directory;
-				}
-			}
-		}
-
-		protected IEnumerable<string> FindExecutableInDirectory (string executable, string dir)
-		{
-			foreach (var exe in Executables (executable))
-				if (File.Exists (Path.Combine (dir, exe)))
-					yield return dir;
-		}
-
-		IEnumerable<string> Executables (string executable)
-		{
-			yield return executable;
-			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
-			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-
-			if (pathExts == null)
-				yield break;
-
-			foreach (var ext in pathExts)
-				yield return Path.ChangeExtension (executable, ext);
-		}
-
-		protected string NullIfEmpty (string s)
+		protected static string NullIfEmpty (string s)
 		{
 			if (s == null || s.Length != 0)
 				return s;
@@ -181,11 +149,12 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		string GetExecutablePath (string dir, string exe)
+		static string GetExecutablePath (string dir, string exe)
 		{
 			if (string.IsNullOrEmpty (dir))
 				return exe;
-			foreach (var e in Executables (exe))
+
+			foreach (var e in ProcessUtils.ExecutableFiles (exe))
 				if (File.Exists (Path.Combine (dir, e)))
 					return e;
 			return exe;

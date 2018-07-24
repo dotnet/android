@@ -43,6 +43,7 @@
     <Compile Include="AndroidVersion.cs" />
     <Compile Include="AndroidVersions.cs" />
     <Compile Include="AndroidSdkInfo.cs" />
+    <Compile Include="JdkInfo.cs" />
     <Compile Include="Sdks\AndroidSdkBase.cs" />
     <Compile Include="Sdks\AndroidSdkUnix.cs" />
     <Compile Include="Sdks\AndroidSdkWindows.cs" />

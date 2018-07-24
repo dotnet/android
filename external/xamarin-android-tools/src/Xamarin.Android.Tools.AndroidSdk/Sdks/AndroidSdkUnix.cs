@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tools
 
 		public override string PreferedAndroidSdkPath { 
 			get {
-				var config_file = GetUnixConfigFile ();
+				var config_file = GetUnixConfigFile (Logger);
 				var androidEl = config_file.Root.Element ("android-sdk");
 
 				if (androidEl != null) {
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tools
 
 		public override string PreferedAndroidNdkPath { 
 			get {
-				var config_file = GetUnixConfigFile ();
+				var config_file = GetUnixConfigFile (Logger);
 				var androidEl = config_file.Root.Element ("android-ndk");
 
 				if (androidEl != null) {
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Tools
 
 		public override string PreferedJavaSdkPath { 
 			get {
-				var config_file = GetUnixConfigFile ();
+				var config_file = GetUnixConfigFile (Logger);
 				var javaEl = config_file.Root.Element ("java-sdk");
 
 				if (javaEl != null) {
@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tools
 				yield return preferedSdkPath;
 
 			// Look in PATH
-			foreach (var path in FindExecutableInPath (Adb)) {
+			foreach (var path in ProcessUtils.FindExecutablesInPath (Adb)) {
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);
 
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tools
 				return preferedJavaSdkPath;
 
 			// Look in PATH
-			foreach (var path in FindExecutableInPath (JarSigner)) {
+			foreach (var path in ProcessUtils.FindExecutablesInPath (JarSigner)) {
 				// Strip off "bin"
 				var dir = Path.GetDirectoryName (path);
 
@@ -160,7 +160,7 @@ namespace Xamarin.Android.Tools
 				yield return preferedNdkPath;
 
 			// Look in PATH
-			foreach (var path in FindExecutableInPath (NdkStack)) {
+			foreach (var path in ProcessUtils.FindExecutablesInPath (NdkStack)) {
 				if (ValidateAndroidNdkLocation (path))
 					yield return path;
 			}
@@ -176,7 +176,7 @@ namespace Xamarin.Android.Tools
 		{
 			path = NullIfEmpty (path);
 
-			var doc = GetUnixConfigFile ();
+			var doc = GetUnixConfigFile (Logger);
 			var androidEl = doc.Root.Element ("android-sdk");
 
 			if (androidEl == null) {
@@ -192,7 +192,7 @@ namespace Xamarin.Android.Tools
 		{
 			path = NullIfEmpty (path);
 
-			var doc = GetUnixConfigFile ();
+			var doc = GetUnixConfigFile (Logger);
 			var javaEl = doc.Root.Element ("java-sdk");
 
 			if (javaEl == null) {
@@ -208,7 +208,7 @@ namespace Xamarin.Android.Tools
 		{
 			path = NullIfEmpty (path);
 
-			var doc = GetUnixConfigFile ();
+			var doc = GetUnixConfigFile (Logger);
 			var androidEl = doc.Root.Element ("android-ndk");
 
 			if (androidEl == null) {
@@ -275,7 +275,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		private XDocument GetUnixConfigFile ()
+		internal static XDocument GetUnixConfigFile (Action<TraceLevel, string> logger)
 		{
 			var file = UnixConfigPath;
 			XDocument doc = null;
@@ -283,8 +283,8 @@ namespace Xamarin.Android.Tools
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					Logger (TraceLevel.Error, "Could not load monodroid configuration file");
-					Logger (TraceLevel.Verbose, ex.ToString ());
+					logger (TraceLevel.Error, "Could not load monodroid configuration file");
+					logger (TraceLevel.Verbose, ex.ToString ());
 
 					// move out of the way and create a new one
 					doc = new XDocument (new XElement ("monodroid"));

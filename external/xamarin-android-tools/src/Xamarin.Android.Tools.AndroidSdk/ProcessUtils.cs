@@ -1,13 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools
 {
 	public static class ProcessUtils
 	{
+		static string[] ExecutableFileExtensions;
+
+		static ProcessUtils ()
+		{
+			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
+			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+
+			ExecutableFileExtensions    = pathExts;
+		}
+
 		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter stdout, TextWriter stderr, CancellationToken cancellationToken, Action<Process> onStarted = null)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
@@ -118,6 +129,62 @@ namespace Xamarin.Android.Tools
 			}, TaskContinuationOptions.ExecuteSynchronously);
 
 			return tcs.Task;
+		}
+
+		internal static void Exec (ProcessStartInfo processStartInfo, DataReceivedEventHandler output)
+		{
+			processStartInfo.UseShellExecute         = false;
+			processStartInfo.RedirectStandardInput   = false;
+			processStartInfo.RedirectStandardOutput  = true;
+			processStartInfo.RedirectStandardError   = true;
+			processStartInfo.CreateNoWindow          = true;
+			processStartInfo.WindowStyle             = ProcessWindowStyle.Hidden;
+
+			var p = new Process () {
+				StartInfo   = processStartInfo,
+			};
+			p.OutputDataReceived    += output;
+			p.ErrorDataReceived     += output;
+
+			using (p) {
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
+				p.WaitForExit ();
+			}
+		}
+
+		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		{
+			var path        = Environment.GetEnvironmentVariable ("PATH");
+			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (var dir in pathDirs) {
+				foreach (var exe in FindExecutablesInDirectory (dir, executable)) {
+					yield return exe;
+				}
+			}
+		}
+
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
+		{
+			foreach (var exe in ExecutableFiles (executable)) {
+				var exePath = Path.Combine (dir, exe);
+				if (File.Exists (exePath))
+					yield return exePath;
+			}
+		}
+
+		internal static IEnumerable<string> ExecutableFiles (string executable)
+		{
+			if (ExecutableFileExtensions == null || ExecutableFileExtensions.Length == 0) {
+				yield return executable;
+				yield break;
+			}
+
+			foreach (var ext in ExecutableFileExtensions)
+				yield return Path.ChangeExtension (executable, ext);
+			yield return executable;
 		}
 	}
 }

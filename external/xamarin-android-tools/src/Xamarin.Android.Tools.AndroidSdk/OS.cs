@@ -12,6 +12,8 @@ namespace Xamarin.Android.Tools
 
 		internal readonly static string ProgramFilesX86;
 
+		internal readonly static string NativeLibraryFormat;
+
 		static OS ()
 		{
 			IsWindows = Path.DirectorySeparatorChar == '\\';
@@ -20,6 +22,13 @@ namespace Xamarin.Android.Tools
 			if (IsWindows) {
 				ProgramFilesX86 = GetProgramFilesX86 ();
 			}
+
+			if (IsWindows)
+				NativeLibraryFormat = "{0}.dll";
+			if (IsMac)
+				NativeLibraryFormat = "lib{0}.dylib";
+			if (!IsWindows && !IsMac)
+				NativeLibraryFormat = "lib{0}.so";
 		}
 
 		//From Managed.Windows.Forms/XplatUI
