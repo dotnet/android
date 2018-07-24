@@ -72,7 +72,6 @@
   </PropertyGroup>
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\armeabi\libsimple.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libsimple.so" />
     <AndroidNativeLibrary Include="libs\x86\libsimple.so" />
     <AndroidNativeLibrary Include="libs\x86_64\libsimple.so" />

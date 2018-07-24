@@ -39,7 +39,6 @@ STABLE_FRAMEWORKS = $(foreach a, $(STABLE_API_LEVELS), $(word $(a),$(ALL_FRAMEWO
 PLATFORM_IDS      = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_PLATFORM_IDS)))
 
 ALL_JIT_ABIS  = \
-	armeabi \
 	armeabi-v7a \
 	arm64-v8a \
 	x86 \
