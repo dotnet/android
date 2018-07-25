@@ -122,7 +122,6 @@
     </AndroidJavaLibrary>
   </ItemGroup>
   <ItemGroup>
-    <AndroidNativeLibrary Include="libs\armeabi\libNativeTiming.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNativeTiming.so" />
     <AndroidNativeLibrary Include="libs\x86\libNativeTiming.so" />
   </ItemGroup>
