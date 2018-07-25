@@ -3,6 +3,10 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="Mono.Android.projitems" />
+  <PropertyGroup>
+    <CscToolPath>..\..\packages\xamarin.android.csc.dim.0.1.2\tools\</CscToolPath>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
@@ -78,6 +82,7 @@
     <PropertyGroup>
       <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\generator.exe"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
+      <_DefaultInterfaceMethods>--default-interface-methods</_DefaultInterfaceMethods>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
@@ -92,7 +97,7 @@
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
+        Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_DefaultInterfaceMethods) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)mcw\**\*.cs" />

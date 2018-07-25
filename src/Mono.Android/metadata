@@ -1253,6 +1253,12 @@
   --> 
   <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
 
+  <!-- FIXME: they had better be remapped to managedReturn of Spliterator(without .OfXYZ). So far there is BaseStream#spliterator() and removing them is harmless. -->
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='DoubleStream']/method[@name='spliterator']" />
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='IntStream']/method[@name='spliterator']" />
+  <remove-node path="/api/package[@name='java.util.stream']/interface[@name='LongStream']/method[@name='spliterator']" />
+
+
   <attr path="/api/package[@name='android.service.quicksettings']" name="managedName">Android.Service.QuickSettings</attr>
 
   <!-- android.media.AudioRouting.OnRoutingChangedListener is a new
@@ -1389,6 +1395,10 @@
   -->
   <attr path="/api/package[@name='android.graphics']/class[@name='Color']" name="managedName">ColorObject</attr>
 
+  <!-- new addition to API 26 fixup due to DIM support -->
+  <attr path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" name="managedName">AnimationStart2</attr>
+  <attr path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationEnd' and count(parameter)=2]" name="managedName">AnimationEnd2</attr>
+
   <!-- API Level 27 -->
 
   <!-- detected field-property conflicts (e.g. see bug #60069)
@@ -1408,5 +1418,24 @@
   <!-- okay you are NOT documented. Wasn't Google going to kill nonpublic classes? -->
   <remove-node path="/api/package[@name='android.text']/class[@name='PrecomputedText']" />
   <attr path="/api/package[@name='android.provider']/class[@name='Telephony.CarrierId']/field[@name='CARRIER_ID']" name="managedName">CarrierIdField</attr>
+
+  <!-- FIXME: for now generator cannot "unmark" final DIM methods as *non*-sealed C# DIM methods.
+   Attempt to unmark them result in various ABI breakage, which needs non-trivial fixes. 
+   So far this is the only one in android.jar, hopefully there aren't many.
+   -->
+  <attr path="/api/package[@name='java.util']/class[@name='PriorityQueue']/method[@name='spliterator']" name="final">false</attr>
+
+  <!--
+	This should not really be required. However current generator has
+	limitation that it has to generate such methods in its {implementing
+	interfaces} that contains {{any parameter or a return value} that is
+	of generic type} as explicitly implemented,
+	regardless of whether the method contains generic parameters or not.
+	
+	This kind of problem can be workarounded by removing generic arguments from the parameters and the return type.
+	
+	Spliterator itself is not suffered from that, but Spliterators.AbstractSpliterator is.
+  -->
+  <attr path="/api/package[@name='java.util']/interface[@name='Spliterator']/method[@name='tryAdvance']/parameter[1]" name="type">java.util.function.Consumer</attr>
 
 </metadata>

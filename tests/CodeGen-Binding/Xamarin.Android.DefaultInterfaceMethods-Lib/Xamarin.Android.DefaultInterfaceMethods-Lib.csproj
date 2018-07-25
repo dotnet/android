@@ -1,43 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.props" Condition="Exists('..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.props')" />
+  <Import Project="..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.props" Condition="Exists('..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9553ED9D-92EA-411B-ADFF-21C5608CCD16}</ProjectGuid>
+    <ProjectGuid>{E2F0F78B-6088-4282-A49C-122EE28611FF}</ProjectGuid>
     <ProjectTypeGuids>{10368E6C-D01B-4462-8E8B-01FC667A7035};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.Android.LibraryProjectZip.LibBinding</RootNamespace>
+    <RootNamespace>Xamarin.Android.DefaultInterfaceMethodsLib</RootNamespace>
+    <AssemblyName>Xamarin.Android.DefaultInterfaceMethods-Lib</AssemblyName>
+    <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
-    <AssemblyName>AndroidLibBinding</AssemblyName>
+    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <AndroidClassParser>class-parse</AndroidClassParser>
-  </PropertyGroup>
-  <Import Project="..\..\..\Configuration.props" />
-  <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+    <AndroidEnableDefaultInterfaceMethods>True</AndroidEnableDefaultInterfaceMethods>
+    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -51,6 +50,7 @@
   <ItemGroup>
     <None Include="Additions\AboutAdditions.txt" />
     <None Include="Jars\AboutJars.txt" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <TransformFile Include="Transforms\EnumFields.xml" />
@@ -58,33 +58,10 @@
     <TransformFile Include="Transforms\Metadata.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NativeLib.cs" />
+    <BindingJavaSource Include="Jars\DefaultInterfaceMethods.java" />
+    <BindingJavaSource Include="Jars\ImplementedClass.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
-  <Import Project="Xamarin.Android.LibraryProjectZip-LibBinding.targets" />
-  <PropertyGroup>
-    <BuildDependsOn>
-      BuildNativeLibs;
-      BuildNativeLibs2;
-      BuildJavaLibs;
-      $(BuildDependsOn)
-    </BuildDependsOn>
-  </PropertyGroup>
-  <ItemGroup>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\x86\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\x86_64\libsimple.so" />
-  </ItemGroup>
-  <ItemGroup>
-    <InputJar Include="java\JavaLib\library\build\intermediates\bundles\debug\classes.jar">
-      <Link>Jars\classes.jar</Link>
-    </InputJar>
-  </ItemGroup>
-  <PropertyGroup>
-    <CleanDependsOn>
-      $(CleanDependsOn);
-      CleanLocal;
-    </CleanDependsOn>
-  </PropertyGroup>
+  <Import Project="..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.targets" Condition="Exists('..\..\..\packages\xamarin.android.csc.dim.0.1.2\build\xamarin.android.csc.dim.targets')" />
+  <Import Project="..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.targets" Condition="Exists('..\..\..\packages\name.atsushieno.xamarin.android.buildenhancer.1.1.7\build\name.atsushieno.xamarin.android.buildenhancer.targets')" />
 </Project>

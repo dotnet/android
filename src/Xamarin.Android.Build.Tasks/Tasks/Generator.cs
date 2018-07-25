@@ -41,6 +41,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseShortFileNames { get; set; }
 
+		public bool EnableDefaultInterfaceMethods { get; set; }
+
 		// apart from ReferencedManagedLibraries we need it to find mscorlib.dll.
 		[Required]
 		public string MonoAndroidFrameworkDirectories { get; set; }
@@ -64,6 +66,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  AssemblyName: {0}", AssemblyName);
 			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
 			Log.LogDebugMessage ("  UseShortFileNames: {0}", UseShortFileNames);
+			Log.LogDebugMessage ("  EnableDefaultInterfaceMethods: {0}", EnableDefaultInterfaceMethods);
 			Log.LogDebugTaskItems ("  TransformFiles:", TransformFiles);
 			Log.LogDebugTaskItems ("  ReferencedManagedLibraries:", ReferencedManagedLibraries);
 			Log.LogDebugTaskItems ("  AnnotationsZipFiles:", AnnotationsZipFiles);
@@ -119,6 +122,8 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--enumdir=", EnumDirectory);
 			cmd.AppendSwitchIfNotNull ("--enummetadata=", EnumMetadataDirectory);
 			cmd.AppendSwitchIfNotNull ("--assembly=", AssemblyName);
+			if (EnableDefaultInterfaceMethods)
+				cmd.AppendSwitch ("--default-interface-methods");
 
 			if (!NoStdlib) {
 				string fxpath = MonoAndroidFrameworkDirectories.Split (';').First (p => new DirectoryInfo (p).GetFiles ("mscorlib.dll").Any ());

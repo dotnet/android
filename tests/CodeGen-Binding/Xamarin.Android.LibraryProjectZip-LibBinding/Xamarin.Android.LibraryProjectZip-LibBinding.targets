@@ -11,7 +11,7 @@
     <Exec Command="&quot;$(NdkBuildPath)&quot;" />
     <MakeDir Directories="$(OutputPath)\native-lib-1" />
     <Exec
-        Command="&quot;$(JarPath)&quot; cf ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        Command="&quot;$(JarPath)&quot; cf ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi-v7a x86 x86_64"
         WorkingDirectory="libs"
     />
   </Target>
@@ -30,7 +30,7 @@
     <MakeDir Directories="$(OutputPath)\native-lib-2" />
     <MakeDir Directories="$(OutputPath)\native-lib-2\aar-test" />
     <Exec
-        Command="&quot;$(JarPath)&quot; cf ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi armeabi-v7a x86 x86_64"
+        Command="&quot;$(JarPath)&quot; cf ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi-v7a x86 x86_64"
         WorkingDirectory="simple2/libs"
     />
     <Exec
