@@ -1208,50 +1208,30 @@
   <attr path="/api/package[@name='java.util.concurrent']/class[@name='CompletableFuture']/method[@static='false' and starts-with (@return, 'java.util.concurrent.CompletableFuture') and @name!='toCompletableFuture']" name="managedReturn">Java.Util.Concurrent.ICompletionStage</attr>
 
   <!--
-  
-  Spliterator had brought TONS of issues that cannot really be easily resolved. Considering that those Java8 API is primarily useful
-  only for Java developers, they should not be regarded as major
-  binding blockers. So, just remove them.
-  
-  We had been removing EntityIterator for exactly same reason
-  (non-generic derived interfaces from generic interface, that has variant return values are regarded as our unsupported use of
-  generics; we slightly removed limitation by some manual metadata
-  fixes and .cs additions, but this is "unsupported" in principle.
-  
+  Spliterators brings some difficulty in generating expected methods due to
+  its conflicting overloads in erased-generic world, namely...
   -->
-
-  <remove-node path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]" />
+  <!--
+  1) The return value is generic argument and it is not respected here,
+  and thus treated as Java.Lang.Object. It needs to be fixed.
+  -->
+  <attr path="/api/package[@name='java.util']/interface[starts-with (@name, 'PrimitiveIterator.Of')]/method[@name='next']" name="managedReturn">Java.Lang.Object</attr>
+  <!--
+  2) same for these (but as ISpliterator)
+  -->
+  <attr path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
+  <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
+  <!--
+  3) tryAdvance() and trySplit() - these methods are derived by IntConsumer/LongConsumer/DoubleConsumer with respective specialized type, so they should be regarded as implemented.
+  Since these base methods result in binding to Java.Lang.Object which kills the benefit of those specialized overrides, they had better be removed. -->
+  <remove-node path="/api/package[@name='java.util']/interface[@name='Spliterator.OfPrimitive']/method[@name='tryAdvance' or @name='trySplit']" />
 
   <!--
-    This is more like a workaround for a generator issue - some
-    interface default method within generic types don't get marked
-    as override as expected. For example, some Spliterator.AbstractIntSpliterator#forEachRemaining() overload
-    (among many) isn't marked as override, while it should be.
-    
-    Here we are removing interface default method. Usually removing
-    interface method cannot be done as Java stub generator will
-    not emit required Java methods for the ACWs and then javac
-    will reject such incomplete interface implementation.
-    But here it is about default methods which don't have to be
-    necessarily implemented.
-    
-    Same goes for other spliterator methods, streams and
-    PrimitiveIterators.
-
-  <remove-node path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]/method[@name='forEachRemaining']" />
+  Stream interfaces.
   -->
-
   <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='spliterator']" name="managedReturn">Java.Util.ISpliterator</attr>
   <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='sequential' or @name='parallel']" name="managedReturn">Java.Lang.Object</attr>
   <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='iterator']" name="managedReturn">Java.Util.IIterator</attr>
-
-  <attr path="/api/package[@name='java.util']/interface[starts-with (@name, 'PrimitiveIterator.Of')]/method[@name='next']" name="managedReturn">Java.Lang.Object</attr>
-  
-  <!--
-  The return value is generic argument and it is not respected here,
-  and thus treated as Java.Lang.Object. It needs to be fixed.
-  --> 
-  <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
 
   <!-- FIXME: they had better be remapped to managedReturn of Spliterator(without .OfXYZ). So far there is BaseStream#spliterator() and removing them is harmless. -->
   <remove-node path="/api/package[@name='java.util.stream']/interface[@name='DoubleStream']/method[@name='spliterator']" />
