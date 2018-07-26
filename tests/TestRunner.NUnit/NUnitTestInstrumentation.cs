@@ -42,13 +42,13 @@ namespace Xamarin.Android.UnitTests.NUnit
 			};
 		}
 
-		IEnumerable<string> GetFilterValuesFromExtras(string key)
+		IEnumerable<string> GetFilterValuesFromExtras (string key)
 		{
-			Dictionary<string, string> extras = GetStringExtrasFromBundle();
-			if (extras.ContainsKey(key)) {
-				string filterValue = extras[key];
-				if (!string.IsNullOrEmpty(filterValue))
-					return filterValue.Split(':');
+			Dictionary<string, string> extras = GetStringExtrasFromBundle ();
+			if (extras.ContainsKey (key)) {
+				string filterValue = extras [key];
+				if (!string.IsNullOrEmpty (filterValue))
+					return filterValue.Split (':');
 			}
 			return null;
 		}
