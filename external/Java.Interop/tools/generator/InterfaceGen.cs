@@ -53,8 +53,7 @@ namespace MonoDroid.Generation {
 					AddInterface (iname);
 					break;
 				case "method":
-					if (child.XGetAttribute ("synthetic") != "true")
-						AddMethod (new XmlMethod (this, child));
+					AddMethod (new XmlMethod (this, child));
 					break;
 				case "field":
 					AddField (new XmlField (child));

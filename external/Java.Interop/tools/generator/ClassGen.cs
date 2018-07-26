@@ -83,11 +83,7 @@ namespace MonoDroid.Generation {
 					AddInterface (iname);
 					break;
 				case "method":
-					var synthetic = child.XGetAttribute ("synthetic") == "true";
-					var finalizer = child.XGetAttribute ("name") == "finalize" &&
-						child.XGetAttribute ("jni-signature") == "()V";
-					if (!(synthetic || finalizer))
-						AddMethod (new XmlMethod (this, child));
+					AddMethod (new XmlMethod (this, child));
 					break;
 				case "constructor":
 					Ctors.Add (new XmlCtor (this, child));
