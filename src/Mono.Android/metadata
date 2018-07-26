@@ -1306,8 +1306,10 @@
   <attr path="/api/package[@name='android.media']/class[@name='AudioFocusRequest']" name="managedName" api-since="26">AudioFocusRequestClass</attr>
 
   <!-- FIXME: fix build and enable these packages -->
-  <remove-node path="/api/package[@name='java.time']" api-since="26" />
   <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
+
+  <attr path="/api/package[@name='java.time']/class[implements/@name='java.time.temporal.Temporal']/method[(@name='plus' or @name='with')][ count(parameter)=2]" name="managedReturn">Java.Time.Temporal.ITemporal</attr>
+  
   
   <!-- FIXME: fix build and enable this method -->
   <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
