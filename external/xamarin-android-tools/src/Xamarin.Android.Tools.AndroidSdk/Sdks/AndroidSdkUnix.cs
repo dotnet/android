@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -108,46 +109,15 @@ namespace Xamarin.Android.Tools
 
 		protected override string GetJavaSdkPath ()
 		{
-			var preferedJavaSdkPath = PreferedJavaSdkPath;
-			if (!string.IsNullOrEmpty (preferedJavaSdkPath))
-				return preferedJavaSdkPath;
-
-			// Look in PATH
-			foreach (var path in ProcessUtils.FindExecutablesInPath (JarSigner)) {
-				// Strip off "bin"
-				var dir = Path.GetDirectoryName (path);
-
-				if (ValidateJavaSdkLocation (dir))
-					return dir;
-			}
-
-			return null;
+			return JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ()?.HomePath;
 		}
 
-		public override bool ValidateJavaSdkLocation (string loc) 
+		public override bool ValidateJavaSdkLocation (string loc)
 		{
 			var result = base.ValidateJavaSdkLocation (loc);
 
 			if (result) {
-				// handle apple's java stub
-				const string javaHomeExe = "/usr/libexec/java_home";
-
-				if (File.Exists (javaHomeExe)) {
-					// returns true if there is a java installed
-					var javaHomeTask = ProcessUtils.ExecuteToolAsync<bool> (javaHomeExe,
-						(output) => {
-							if (output.Contains ("(null)")) {
-								return false;
-							}
-
-							return true;
-						}, System.Threading.CancellationToken.None
-					);
-
-					if (!javaHomeTask.Result) {
-						return false;
-					}
-				}
+				return File.Exists (Path.Combine (loc, "bin", "javac"));
 			}
 
 			return result;
