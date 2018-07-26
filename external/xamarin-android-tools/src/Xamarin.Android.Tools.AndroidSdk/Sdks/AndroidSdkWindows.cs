@@ -22,8 +22,10 @@ namespace Xamarin.Android.Tools
 		{
 		}
 
+		static readonly string _JarSigner = "jarsigner.exe";
+
 		public override string ZipAlign { get; protected set; } = "zipalign.exe";
-		public override string JarSigner { get; protected set; } = "jarsigner.exe";
+		public override string JarSigner { get; protected set; } = _JarSigner;
 		public override string KeyTool { get; protected set; } = "keytool.exe";
 
 		public override string NdkHostPlatform32Bit { get { return "windows"; } }
@@ -58,7 +60,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		string GetMDRegistryKey ()
+		static string GetMDRegistryKey ()
 		{
 			var regKey = Environment.GetEnvironmentVariable ("XAMARIN_ANDROID_REGKEY");
 			return string.IsNullOrWhiteSpace (regKey) ? MDREG_KEY : regKey;
@@ -104,18 +106,37 @@ namespace Xamarin.Android.Tools
 
 		protected override string GetJavaSdkPath ()
 		{
-			var preferredJdkPath = GetPreferredJdkPath ();
-			if (!string.IsNullOrEmpty (preferredJdkPath))
-				return preferredJdkPath;
-
-			var openJdkPath = GetOpenJdkPath ();
-			if (!string.IsNullOrEmpty (openJdkPath))
-				return openJdkPath;
-
-			return GetOracleJdkPath ();
+			var jdk = GetJdkInfos (Logger).FirstOrDefault ();
+			return jdk?.HomePath;
 		}
 
-		private string GetPreferredJdkPath ()
+		internal static IEnumerable<JdkInfo> GetJdkInfos (Action<TraceLevel, string> logger)
+		{
+			JdkInfo TryGetJdkInfo (string path)
+			{
+				JdkInfo jdk = null;
+				try {
+					jdk = new JdkInfo (path);
+				}
+				catch (Exception e) {
+					logger (TraceLevel.Warning, e.ToString ());
+				}
+				return jdk;
+			}
+
+			IEnumerable<JdkInfo> ToJdkInfos (IEnumerable<string> paths)
+			{
+				return paths.Select (TryGetJdkInfo)
+					.Where (jdk => jdk != null)
+					.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
+			}
+
+			return ToJdkInfos (GetPreferredJdkPaths ())
+				.Concat (ToJdkInfos (GetOpenJdkPaths ()))
+				.Concat (ToJdkInfos (GetOracleJdkPaths ()));
+		}
+
+		private static IEnumerable<string> GetPreferredJdkPaths ()
 		{
 			// check the user specified path
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
@@ -123,14 +144,12 @@ namespace Xamarin.Android.Tools
 			var regKey = GetMDRegistryKey ();
 
 			foreach (var root in roots) {
-				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner))
-					return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow);
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_JAVA_SDK, wow, "bin", _JarSigner))
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow);
 			}
-
-			return null;
 		}
 
-		private string GetOpenJdkPath ()
+		private static IEnumerable<string> GetOpenJdkPaths ()
 		{
 			var root = RegistryEx.LocalMachine;
 			var wows = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
@@ -138,42 +157,32 @@ namespace Xamarin.Android.Tools
 			var valueName = "JavaHome";
 
 			foreach (var wow in wows) {
-				if (CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", JarSigner))
-					return RegistryEx.GetValueString (root, subKey, valueName, wow);
+				if (CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", _JarSigner))
+					yield return RegistryEx.GetValueString (root, subKey, valueName, wow);
 			}
-
-			return null;
 		}
 
-		private string GetOracleJdkPath ()
+		private static IEnumerable<string> GetOracleJdkPaths ()
 		{ 
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
-
-			Logger (TraceLevel.Info, "Looking for Java 6 SDK...");
 
 			foreach (var wow64 in new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 }) {
 				string key_name = string.Format (@"{0}\{1}\{2}", "HKLM", subkey, "CurrentVersion");
 				var currentVersion = RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey, "CurrentVersion", wow64);
 
 				if (!string.IsNullOrEmpty (currentVersion)) {
-					Logger (TraceLevel.Info, $"  Key {key_name} found.");
 
 					// No matter what the CurrentVersion is, look for 1.6 or 1.7 or 1.8
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", JarSigner))
-						return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64);
+					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", _JarSigner))
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64);
 
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64, "bin", JarSigner))
-						return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64);
+					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64, "bin", _JarSigner))
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64);
 
-					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64, "bin", JarSigner))
-						return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64);
+					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64, "bin", _JarSigner))
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64);
 				}
-
-				Logger (TraceLevel.Info, $"  Key {key_name} not found.");
 			}
-
-			// We ran out of things to check..
-			return null;
 		}
 
 		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
@@ -234,23 +243,19 @@ namespace Xamarin.Android.Tools
 		}
 
 		#region Helper Methods
-		private bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
+		private static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
 		{
 			string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
 
 			var path = NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
 
 			if (path == null) {
-				Logger (TraceLevel.Info, $"  Key {key_name} not found.");
 				return false;
 			}
 
-			if (!FindExecutableInDirectory (exe, Path.Combine (path, subdir)).Any ()) {
-				Logger (TraceLevel.Info, $"  Key {key_name} found:\n    Path does not contain {exe} in \\{subdir} ({path}).");
+			if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
 				return false;
 			}
-
-			Logger (TraceLevel.Info, $"  Key {key_name} found:\n    Path contains {exe} in \\{subdir} ({path}).");
 
 			return true;
 		}
