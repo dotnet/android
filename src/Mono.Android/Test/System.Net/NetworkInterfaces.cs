@@ -100,7 +100,7 @@ namespace System.NetTests
 			}
 		}
 
-		[Test]
+		[Test, Category("NetworkInterfaces")]
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
