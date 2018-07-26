@@ -315,13 +315,13 @@ namespace Xamarin.Android.UnitTests
 			return Assembly.LoadFrom (filePath);
 		}
 
-		protected Dictionary<string, string> GetStringExtrasFromBundle()
+		protected Dictionary<string, string> GetStringExtrasFromBundle ()
 		{
-			var filtersFromBundle = new Dictionary<string, string>();
-			foreach (var key in arguments.KeySet()) {
-				string value = arguments.GetString(key);
-				if (!string.IsNullOrEmpty(value))
-					filtersFromBundle.Add(key, value);
+			var filtersFromBundle = new Dictionary<string, string> ();
+			foreach (var key in arguments.KeySet ()) {
+				string value = arguments.GetString (key);
+				if (!string.IsNullOrEmpty (value))
+					filtersFromBundle.Add (key, value);
 			}
 			return filtersFromBundle;
 		}
