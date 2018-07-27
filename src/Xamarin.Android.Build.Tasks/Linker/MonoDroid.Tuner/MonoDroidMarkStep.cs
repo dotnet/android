@@ -32,6 +32,8 @@ namespace MonoDroid.Tuner
 			HashSet<string> markedMethods = new HashSet<string> ();
 			var updated = false;
 
+			marshalTypes.Add (GetType ("Mono.Android", "Java.Interop.TypeManager/JavaTypeManager/__<$>_jni_marshal_methods"));
+
 			foreach (var type in marshalTypes) {
 				registerMethod = null;
 				markedMethods.Clear ();
@@ -56,7 +58,198 @@ namespace MonoDroid.Tuner
 				updated |= UpdateMarshalRegisterMethod (registerMethod, markedMethods);
 			}
 
+			UpdateMagicRegistration ();
+
 			return updated;
+		}
+
+		MethodDefinition GetMethod (TypeDefinition td, string name)
+		{
+			MethodDefinition method = null;
+			foreach (var md in td.Methods) {
+				if (md.Name == name) {
+					method = md;
+					break;
+				}
+			}
+
+			return method;
+		}
+
+		MethodDefinition GetMethod (string ns, string typeName, string name, string[] parameters)
+		{
+			var type = GetType (ns, typeName);
+			if (type == null)
+				return null;
+
+			return GetMethod (type, name, parameters);
+		}
+
+		MethodDefinition GetMethod (TypeDefinition type, string name, string[] parameters)
+		{
+			MethodDefinition method = null;
+			foreach (var md in type.Methods) {
+				if (md.Name != name)
+					continue;
+
+				if (md.Parameters.Count != parameters.Length)
+					continue;
+
+				var equal = true;
+				for (int i = 0; i < parameters.Length; i++) {
+					if (md.Parameters [i].ParameterType.FullName != parameters [i]) {
+						equal = false;
+						break;
+					}
+				}
+
+				if (!equal)
+					continue;
+
+				method = md;
+				break;
+			}
+
+			return method;
+		}
+
+		MethodReference CreateGenericMethodReference (MethodReference method, GenericInstanceType type)
+		{
+			var genericMethod = new MethodReference (method.Name, method.ReturnType) {
+				DeclaringType = type,
+				HasThis = method.HasThis,
+				ExplicitThis = method.ExplicitThis,
+				CallingConvention = method.CallingConvention,
+			};
+
+			for (int i = 0; i < method.Parameters.Count; i++)
+				genericMethod.Parameters.Add (method.Parameters [i]);
+
+			return genericMethod;
+		}
+
+		void UpdateRegistrationSwitch (MethodDefinition method, MethodReference[] switchMethods)
+		{
+			var instructions = method.Body.Instructions;
+			var module = method.DeclaringType.Module;
+			var switchInstructions = new Instruction [switchMethods.Length];
+
+			instructions.Clear ();
+
+			for (var i = 0; i < switchMethods.Length; i++)
+				switchInstructions [i] = Instruction.Create (OpCodes.Ldtoken, switchMethods [i].DeclaringType);
+
+			var typeType = GetType ("mscorlib", "System.Type");
+			var methodGetTypeFromHandle = GetMethod ("mscorlib", "System.Type", "GetTypeFromHandle", new string[] { "System.RuntimeTypeHandle" });
+			var callDelegateStart = Instruction.Create (OpCodes.Call, module.ImportReference (methodGetTypeFromHandle));
+
+			instructions.Add (Instruction.Create (OpCodes.Ldarg_1));
+			instructions.Add (Instruction.Create (OpCodes.Switch, switchInstructions));
+
+			for (var i = 0; i < switchMethods.Length; i++) {
+				instructions.Add (switchInstructions [i]);
+				instructions.Add (Instruction.Create (OpCodes.Br, callDelegateStart));
+			}
+
+			instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
+			instructions.Add (Instruction.Create (OpCodes.Ret));
+
+			var actionType = GetType ("mscorlib", "System.Action`1");
+
+			var genericActionType = new GenericInstanceType (actionType);
+			var argsType = GetType ("Java.Interop", "Java.Interop.JniNativeMethodRegistrationArguments");
+
+			genericActionType.GenericArguments.Add (argsType);
+
+			MarkType (genericActionType);
+
+			var actionInvoke = GetMethod (actionType, "Invoke", new string[] { "T" });
+			var methodGetMethod = GetMethod ("mscorlib", "System.Type", "GetMethod", new string[] { "System.String" });
+			var typeMethodInfo = GetType ("mscorlib", "System.Reflection.MethodInfo");
+			var methodCreateDelegate = GetMethod ("mscorlib", "System.Reflection.MethodInfo", "CreateDelegate", new string[] { "System.Type" });
+
+			instructions.Add (callDelegateStart);
+
+			instructions.Add (Instruction.Create (OpCodes.Ldstr, "__RegisterNativeMembers"));
+			instructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (methodGetMethod)));
+
+			instructions.Add (Instruction.Create (OpCodes.Ldtoken, module.ImportReference (genericActionType)));
+			instructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (methodGetTypeFromHandle)));
+
+			instructions.Add (Instruction.Create (OpCodes.Callvirt, module.ImportReference (methodCreateDelegate)));
+
+			instructions.Add (Instruction.Create (OpCodes.Castclass, module.ImportReference (genericActionType)));
+
+			var genericActionInvoke = CreateGenericMethodReference (actionInvoke, genericActionType);
+
+			instructions.Add (Instruction.Create (OpCodes.Ldarg_0));
+			instructions.Add (Instruction.Create (OpCodes.Callvirt, module.ImportReference (genericActionInvoke)));
+
+			instructions.Add (Instruction.Create (OpCodes.Ldc_I4_1));
+			instructions.Add (Instruction.Create (OpCodes.Ret));
+		}
+
+		void UpdateMagicPrefill (TypeDefinition magicType)
+		{
+			var fieldTypesMap = magicType.Fields.FirstOrDefault (f => f.Name == "typesMap");
+			if (fieldTypesMap == null)
+				return;
+
+			var methodPrefill = GetMethod (magicType, "Prefill");
+			if (methodPrefill == null)
+				return;
+
+			var typeDictionary = GetType ("mscorlib", "System.Collections.Generic.Dictionary`2");
+			var methodSetItem = GetMethod (typeDictionary, "set_Item", new string[] { "TKey", "TValue" });
+			var genericTypeDictionary = new GenericInstanceType (typeDictionary);
+			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.String"));
+			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
+
+			var genericMethodDictionarySetItem = CreateGenericMethodReference (methodSetItem, genericTypeDictionary);
+			var importedMethodSetItem = magicType.Module.ImportReference (genericMethodDictionarySetItem);
+
+			var instructions = methodPrefill.Body.Instructions;
+			instructions.Clear ();
+
+			int idx = 0;
+
+			foreach (var type in marshalTypes) {
+				instructions.Add (Instruction.Create (OpCodes.Ldsfld, fieldTypesMap));
+				instructions.Add (Instruction.Create (OpCodes.Ldstr, type.FullName.Replace ("/__<$>_jni_marshal_methods", "").Replace ("/","+")));
+				instructions.Add (CreateLoadArraySizeOrOffsetInstruction (idx++));
+				instructions.Add (Instruction.Create (OpCodes.Callvirt, importedMethodSetItem));
+			}
+
+			instructions.Add (Instruction.Create (OpCodes.Ret));
+		}
+
+		void UpdateMagicRegistration ()
+		{
+			TypeDefinition magicType = GetType ("Mono.Android", "Android.Runtime.AndroidTypeManager/MagicRegistrationMap");
+			if (magicType == null)
+				return;
+
+			MethodDefinition magicCall = GetMethod (magicType, "CallRegisterMethodByIndex");
+			if (magicCall == null)
+				return;
+
+			var switchMethods = new MethodReference [marshalTypes.Count];
+			var module = magicType.Module;
+			int idx = 0;
+			foreach (var type in marshalTypes) {
+				var md = GetMethod (type, "__RegisterNativeMembers");
+				if (md == null)
+					return;
+
+				var resolved = md.Resolve ();
+				if (resolved == null)
+					return;
+
+				switchMethods [idx++] = module.ImportReference (resolved);
+			}
+
+			UpdateMagicPrefill (magicType);
+			UpdateRegistrationSwitch (magicCall, switchMethods);
 		}
 
 		static bool IsLdcI4 (Instruction instruction, out int intValue)
