@@ -41,9 +41,14 @@
     <Compile Include="Java.Interop.BootstrapTasks\DownloadUri.cs" />
     <Compile Include="Java.Interop.BootstrapTasks\JdkInfo.cs" />
     <Compile Include="Java.Interop.BootstrapTasks\OS.cs" />
-    <Compile Include="Java.Interop.BootstrapTasks\RegistryEx.cs" />
     <Compile Include="Java.Interop.BootstrapTasks\SetEnvironmentVariable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(XamarinAndroidToolsFullPath)\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
+      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

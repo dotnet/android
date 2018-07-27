@@ -12,7 +12,7 @@
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.DownloadUri" />
   <Target Name="Prepare">
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\src\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj" />
     <MakeDir Directories="$(_NuGetPath)" />
     <DownloadUri
         SourceUris="$(_NuGetUri)"

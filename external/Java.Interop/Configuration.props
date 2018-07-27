@@ -16,8 +16,10 @@
   <PropertyGroup>
     <CecilSourceDirectory   Condition=" '$(CecilSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\cecil</CecilSourceDirectory>
     <UtilityOutputFullPath  Condition=" '$(UtilityOutputFullPath)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\</UtilityOutputFullPath>
+    <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <CecilFullPath>$([System.IO.Path]::GetFullPath ('$(CecilSourceDirectory)'))</CecilFullPath>
+    <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>
 </Project>

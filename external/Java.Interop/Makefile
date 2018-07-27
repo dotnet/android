@@ -20,6 +20,9 @@ PACKAGES = \
 	packages/NUnit.3.7.1/NUnit.3.7.1.nupkg \
 	packages/NUnit.Console.3.7.0/NUnit.Console.3.7.0.nupkg
 
+PREPARE_EXTERNAL_FILES  = \
+	external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+
 DEPENDENCIES = \
 	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
 
@@ -55,16 +58,18 @@ run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
 include build-tools/scripts/msbuild.mk
 
-prepare:: prepare-bootstrap prepare-external
+prepare:: prepare-bootstrap
 
-prepare-bootstrap: bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
+prepare-bootstrap: prepare-external bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
 
-bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj \
-		$(wildcard src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
-	$(MSBUILD) $(MSBUILD_FLAGS) src/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj
+bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj \
+		external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj \
+		$(wildcard build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
+	$(MSBUILD) $(MSBUILD_FLAGS) "$<"
 
-prepare-external: $(PACKAGES) $(NUNIT_CONSOLE)
+prepare-external $(PREPARE_EXTERNAL_FILES): $(PACKAGES) $(NUNIT_CONSOLE)
 	git submodule update --init --recursive
+	(cd external/xamarin-android-tools && $(MAKE) prepare)
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
