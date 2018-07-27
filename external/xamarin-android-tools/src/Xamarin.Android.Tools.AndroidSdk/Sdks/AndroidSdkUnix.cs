@@ -112,17 +112,6 @@ namespace Xamarin.Android.Tools
 			return JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ()?.HomePath;
 		}
 
-		public override bool ValidateJavaSdkLocation (string loc)
-		{
-			var result = base.ValidateJavaSdkLocation (loc);
-
-			if (result) {
-				return File.Exists (Path.Combine (loc, "bin", "javac"));
-			}
-
-			return result;
-		}
-
 		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 			var preferedNdkPath = PreferedAndroidNdkPath;
