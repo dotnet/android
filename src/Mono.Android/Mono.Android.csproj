@@ -301,6 +301,7 @@
     <Compile Include="Java.Nio\Buffer.cs" />
     <Compile Include="Java.Nio\CharBuffer.cs" />
     <Compile Include="Java.Nio\FileChannel.cs" />
+    <Compile Include="Java.Nio.Channels\*.cs" />
     <Compile Include="Java.Security\IdentityScope.cs" />
     <Compile Include="Java.Util\Spliterators.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />

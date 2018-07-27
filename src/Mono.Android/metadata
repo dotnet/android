@@ -1173,29 +1173,13 @@
   <!-- invariant method overrides fixup -->
   <attr path="/api/package[@name='android.icu.util']/class[@name='CECalendar']" name="visibility">public</attr>
 
-  <!-- FIXME: Enable below only after we enable NetworkChannel
-    
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
-  <attr path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
-
-  Similar changed are needed for getOption() and setOption().
-  
-  At this state, it is impossible to generate bindings for
-  getOpion() and setOption() (generic methods).
-
-  "Fixing" this is either impossible by design, or impossible
-  because we cannot introduce API breakers, or impossible because
-  there are too many changes involved in generator code base.
-  
-  Manually bound API is still an option.
-
-  -->
-  
-  <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
+  <!-- attr path="/api/package[@name='java.nio.channels']/class[implements/@name='java.nio.channels.NetworkChannel']/method[@name='setOption']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr -->
+  <!-- Those classes don't have getOptions() implementation. Problem here is that the method only exists in NetworkChannel interface and it is not bound by design because it is a generic method.
+  As a workaround, remove the generic argument and redefine it as it's returning JLO. Note that we cannot just specify managedReturn because 'T' is still unknown type for generator. -->
+  <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']/method/typeParameters" />
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']/method/parameter[@type='java.net.SocketOption&lt;T&gt;']" name="type">java.net.SocketOption</attr>
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']/method[@name='getOption']" name="return">Java.Lang.Object</attr>
+  <attr path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']/method[@name='setOption']/parameter[@type='T']" name="type">Java.Lang.Object</attr>
 
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='Striped64']" name="visibility">public</attr>
 
