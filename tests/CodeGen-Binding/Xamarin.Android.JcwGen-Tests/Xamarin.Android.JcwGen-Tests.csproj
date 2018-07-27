@@ -82,6 +82,7 @@
   </PropertyGroup>
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libtiming.so" />
+    <AndroidNativeLibrary Include="libs\armeabi\libtiming.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libtiming.so" />
     <AndroidNativeLibrary Include="libs\x86\libtiming.so" />
     <AndroidNativeLibrary Include="libs\x86_64\libtiming.so" />

@@ -2,6 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="libs\armeabi\libreuse-threads.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libreuse-threads.so" />
     <AndroidNativeLibrary Include="libs\x86\libreuse-threads.so" />
     <AndroidNativeLibrary Include="libs\x86_64\libreuse-threads.so" />

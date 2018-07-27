@@ -78,6 +78,7 @@
     </CleanDependsOn>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedNativeLibrary Include="libs\armeabi\libtiming4.so" />
     <EmbeddedNativeLibrary Include="libs\armeabi-v7a\libtiming4.so" />
     <EmbeddedNativeLibrary Include="libs\x86\libtiming4.so" />
   </ItemGroup>
