@@ -38,10 +38,16 @@ namespace Xamarin.Android.Tools.Tests
 			Action<TraceLevel, string> logger = (level, message) => {
 				logs.WriteLine ($"[{level}] {message}");
 			};
-			var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, javaSdkPath: jdk, androidNdkPath: null);
 
-			Assert.AreEqual (sdk, info.AndroidSdkPath,  "AndroidSdkPath not preserved!");
-			Assert.AreEqual (jdk, info.JavaSdkPath,     "JavaSdkPath not preserved!");
+			try {
+				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, javaSdkPath: jdk, androidNdkPath: null);
+
+				Assert.AreEqual (sdk, info.AndroidSdkPath,  "AndroidSdkPath not preserved!");
+				Assert.AreEqual (jdk, info.JavaSdkPath,     "JavaSdkPath not preserved!");
+			}
+			finally {
+				Directory.Delete (root, recursive: true);
+			}
 		}
 
 		static  bool    IsWindows   => OS.IsWindows;
