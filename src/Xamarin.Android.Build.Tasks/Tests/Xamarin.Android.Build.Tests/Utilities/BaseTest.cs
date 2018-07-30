@@ -91,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public string Root {
 			get {
-				return XABuildPaths.TestOutputDirectory;
+				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 			}
 		}
 
