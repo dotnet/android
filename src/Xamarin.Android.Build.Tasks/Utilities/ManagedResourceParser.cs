@@ -173,6 +173,9 @@ namespace Xamarin.Android.Tasks
 				case "attr":
 					CreateIntField (attrib, itemName, value);
 					break;
+				case "array":
+					CreateIntField (arrays, itemName, value);
+					break;
 				case "bool":
 					CreateIntField (boolean, itemName, value);
 					break;
