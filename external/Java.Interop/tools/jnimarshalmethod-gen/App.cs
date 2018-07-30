@@ -21,6 +21,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		internal const string Name = "jnimarshalmethod-gen";
 		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true });
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
+		static Dictionary<string, TypeDefinition> typeMap = new Dictionary<string, TypeDefinition> ();
 		static public bool Debug;
 		static public bool Verbose;
 		static bool keepTemporary;
@@ -217,6 +218,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			var ad = resolver.GetAssembly (path);
 
+			PrepareTypeMap (ad.MainModule);
+
 			foreach (var type in assembly.DefinedTypes) {
 				if (matchType) {
 					var matched = false;
@@ -231,7 +234,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				if (type.IsGenericType || type.IsGenericTypeDefinition)
 					continue;
 
-				var td                      = ad.MainModule.FindType (type);
+				var td = FindType (type);
 
 				if (td == null) {
 					if (Verbose)
@@ -387,6 +390,35 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		public static void Error (string message) => ColorMessage ($"Error: {Name}: {message}", ConsoleColor.Red, Console.Error);
 
 		public static void Warning (string message) => ColorMessage ($"Warning: {Name}: {message}", ConsoleColor.Yellow, Console.Error);
+
+		static void AddToTypeMap (TypeDefinition type)
+		{
+			typeMap [type.FullName] = type;
+
+			if (!type.HasNestedTypes)
+				return;
+
+			foreach (var nested in type.NestedTypes)
+				AddToTypeMap (nested);
+		}
+
+		static void PrepareTypeMap (ModuleDefinition md)
+		{
+			typeMap.Clear ();
+
+			foreach (var type in md.Types)
+				AddToTypeMap (type);
+		}
+
+		static TypeDefinition FindType (Type type)
+		{
+			TypeDefinition rv;
+			string cecilName = type.GetCecilName ();
+
+			typeMap.TryGetValue (cecilName, out rv);
+
+			return rv;
+		}
 	}
 
 	static class Extensions
@@ -510,24 +542,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			}
 
 			return false;
-		}
-
-		static TypeDefinition FindType (Collection<TypeDefinition> types, string name)
-		{
-			foreach (var type in types) {
-				if (type.FullName == name)
-					return type;
-
-				if (name.StartsWith (type.FullName + '/', StringComparison.InvariantCulture))
-					return FindType (type.NestedTypes, name);
-			}
-
-			return null;
-		}
-
-		public static TypeDefinition FindType (this ModuleDefinition md, Type type)
-		{
-			return FindType (md.Types, type.GetCecilName ());
 		}
 	}
 }
