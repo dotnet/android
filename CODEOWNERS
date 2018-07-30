@@ -13,17 +13,17 @@
 
 # Order is important. The last matching pattern has the most precedence.
 
-/build-tools/api-merge @atsushieno @jonpryor
-/build-tools/api-xml-adjuster @atsushieno @jonpryor
+/build-tools/api-merge @jonpryor
+/build-tools/api-xml-adjuster @jonpryor
 /build-tools/debian-metadata @directhex
-/build-tools/enumification-helpers @atsushieno @jonpryor
-/build-tools/manifest-attribute-codegen @atsushieno @jonpryor
+/build-tools/enumification-helpers @jonpryor
+/build-tools/manifest-attribute-codegen @jonpryor
 
 /src/OpenTK-1.0 @radekdoulik @jonpryor
-/src/Mono.Android.Export @atsushieno @jonpryor
+/src/Mono.Android.Export @jonpryor
 /src/Xamarin.Android.Build.Tasks @dellis1972
-/src/Xamarin.Android.NamingCustomAttributes @atsushieno @jonpryor
-/src/Xamarin.Android.Tools.Aidl @atsushieno @jonpryor
+/src/Xamarin.Android.NamingCustomAttributes @jonpryor
+/src/Xamarin.Android.Tools.Aidl @jonpryor
 
 # Android Designer team relies on the files in this directory,
 # any changes there should be ran past them
