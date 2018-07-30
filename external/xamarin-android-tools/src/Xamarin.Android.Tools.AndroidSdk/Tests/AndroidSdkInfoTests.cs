@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Xml.Linq;
 
 using NUnit.Framework;
 
@@ -158,6 +159,57 @@ namespace Xamarin.Android.Tools.Tests
 			if (!proc.WaitForExit ((int) TimeSpan.FromSeconds(30).TotalMilliseconds)) {
 				proc.Kill ();
 				proc.WaitForExit ();
+			}
+		}
+
+		[Test]
+		public void DetectAndSetPreferredJavaSdkPathToLatest ()
+		{
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine ($"[{level}] {message}");
+			};
+			var jdks    = Path.GetTempFileName ();
+			File.Delete (jdks);
+			Directory.CreateDirectory (jdks);
+			AppDomain.CurrentDomain.SetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}", jdks);
+
+			var backupConfig    = UnixConfigPath + "." + Path.GetRandomFileName ();
+			try {
+				if (OS.IsWindows) {
+					Assert.Throws<NotImplementedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
+					return;
+				}
+				Assert.Throws<NotSupportedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
+				var newJdkPath  = Path.Combine (jdks, "microsoft_dist_openjdk_1.8.999");
+				JdkInfoTests.CreateFauxJdk (newJdkPath, "1.8.999");
+
+				if (File.Exists (UnixConfigPath))
+					File.Move (UnixConfigPath, backupConfig);
+
+				AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger);
+				AssertJdkPath (newJdkPath);
+			}
+			finally {
+				AppDomain.CurrentDomain.SetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}", null);
+				Directory.Delete (jdks, recursive: true);
+				if (File.Exists (backupConfig))
+					File.Move (backupConfig, UnixConfigPath);
+			}
+		}
+
+		static void AssertJdkPath (string expectedJdkPath)
+		{
+			var config_file     = XDocument.Load (UnixConfigPath);
+			var javaEl          = config_file.Root.Element ("java-sdk");
+			var actualJdkPath   = (string) javaEl.Attribute ("path");
+
+			Assert.AreEqual (expectedJdkPath, actualJdkPath);
+		}
+
+		static string UnixConfigPath {
+			get {
+				var p = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
+				return Path.Combine (Path.Combine (p, "xbuild"), "monodroid-config.xml");
 			}
 		}
 	}

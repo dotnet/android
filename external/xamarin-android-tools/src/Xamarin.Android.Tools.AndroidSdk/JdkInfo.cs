@@ -236,7 +236,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		static IEnumerable<JdkInfo> GetMacOSMicrosoftJdks (Action<TraceLevel, string> logger)
+		internal static IEnumerable<JdkInfo> GetMacOSMicrosoftJdks (Action<TraceLevel, string> logger)
 		{
 			return GetMacOSMicrosoftJdkPaths ()
 				.Select (p => TryGetJdkInfo (p, logger))
@@ -246,8 +246,12 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> GetMacOSMicrosoftJdkPaths ()
 		{
-			var home    = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-			var jdks    = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
+			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
+				?.ToString ();
+			if (jdks == null) {
+				var home    = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
+				jdks        = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
+			}
 			if (!Directory.Exists (jdks))
 				return Enumerable.Empty <string> ();
 

@@ -34,10 +34,18 @@ namespace Xamarin.Android.Tools.Tests
 		{
 			var dir = Path.GetTempFileName();
 			File.Delete (dir);
+
+			CreateFauxJdk (dir, "1.2.3.4");
+
+			FauxJdkDir = dir;
+		}
+
+		internal static void CreateFauxJdk (string dir, string version)
+		{
 			Directory.CreateDirectory (dir);
 
 			using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
-				release.WriteLine ("JAVA_VERSION=\"1.2.3.4\"");
+				release.WriteLine ($"JAVA_VERSION=\"{version}\"");
 			}
 
 			var bin = Path.Combine (dir, "bin");
@@ -56,8 +64,6 @@ namespace Xamarin.Android.Tools.Tests
 			CreateShellScript (Path.Combine (dir, "jli", "libjli.dylib"), "");
 			CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
 			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
-
-			FauxJdkDir = dir;
 		}
 
 		[OneTimeTearDown]

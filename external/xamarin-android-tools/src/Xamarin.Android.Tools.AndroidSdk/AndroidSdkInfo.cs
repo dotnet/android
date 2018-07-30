@@ -171,5 +171,20 @@ namespace Xamarin.Android.Tools
 			var sdk = CreateSdk (logger);
 			sdk.SetPreferredJavaSdkPath (path);
 		}
+
+		public static void DetectAndSetPreferredJavaSdkPathToLatest (Action<TraceLevel, string> logger = null)
+		{
+			if (OS.IsWindows)
+				throw new NotImplementedException ("Windows is not supported at this time.");
+
+			logger          = logger ?? DefaultConsoleLogger;
+
+			var latestJdk   = JdkInfo.GetMacOSMicrosoftJdks (logger).FirstOrDefault ();
+			if (latestJdk == null)
+				throw new NotSupportedException ("No Microsoft OpenJDK could be found.  Please re-run the Visual Studio installer or manually specify the JDK path in settings.");
+
+			var sdk = CreateSdk (logger);
+			sdk.SetPreferredJavaSdkPath (latestJdk.HomePath);
+		}
 	}
 }
