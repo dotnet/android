@@ -11,8 +11,6 @@ namespace Android.Runtime {
 		static MethodInfo exception_handler_method;
 		static MethodInfo wait_for_bridge_processing_method;
 
-		static int dynamicMethodNameCounter;
-
 		static void get_runtime_types ()
 		{
 			if (mono_unhandled_exception_method != null)
@@ -51,7 +49,7 @@ namespace Android.Runtime {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			var dynamic = new DynamicMethod (Interlocked.Increment (ref dynamicMethodNameCounter).ToString (), ret_type, param_types, typeof (object), true);
+			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
 			var ig = dynamic.GetILGenerator ();
 
 			LocalBuilder retval = null;
