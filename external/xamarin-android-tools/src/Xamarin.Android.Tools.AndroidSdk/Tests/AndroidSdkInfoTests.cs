@@ -192,8 +192,10 @@ namespace Xamarin.Android.Tools.Tests
 			finally {
 				AppDomain.CurrentDomain.SetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}", null);
 				Directory.Delete (jdks, recursive: true);
-				if (File.Exists (backupConfig))
+				if (File.Exists (backupConfig)) {
+					File.Delete (UnixConfigPath);
 					File.Move (backupConfig, UnixConfigPath);
+				}
 			}
 		}
 
