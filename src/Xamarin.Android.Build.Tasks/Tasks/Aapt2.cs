@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		protected bool LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
+		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
 			if (string.IsNullOrEmpty (singleLine))
 				return true;
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks {
 					LogCodedWarning ("APT0000", singleLine);
 					return true;
 				}
-				if (message.StartsWith ("unknown option")) {
+				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
 					// we need to filter out the remailing help lines somehow. 
 					LogCodedError ("APT0001", $"{message}. This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.");
 					return false;
