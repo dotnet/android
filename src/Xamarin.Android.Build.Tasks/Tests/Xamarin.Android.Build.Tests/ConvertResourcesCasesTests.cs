@@ -80,7 +80,7 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.DoesNotContain ("ClassLibrary1.CustomView", output, "ClassLibrary1.CustomView should have been replaced.");
 			StringAssert.Contains ("classLibrary1.CustomView", output, "classLibrary1.CustomView should have been replaced.");
 			Assert.AreEqual (1, errors.Count, "One Error should have been raised.");
-			Assert.AreEqual ("XA1000", errors [0].Code, "XA1000 should have been raised.");
+			Assert.AreEqual ("XA1002", errors [0].Code, "XA1002 should have been raised.");
 			Directory.Delete (path, recursive: true);
 		}
 	}
