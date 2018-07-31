@@ -192,6 +192,7 @@ namespace Xamarin.Android.Build.Tests {
 				ExtraArgs = "--no-crunch "
 			};
 			Assert.False (task.Execute (), "task should have failed.");
+			Assert.AreEqual (1, errors.Count, "One error should have been raised.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}
