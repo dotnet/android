@@ -31,6 +31,13 @@ namespace Xamarin.Android.Build.Tests {
 		const string StringsXml2 = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
   <string name = ""foo"" > Hello World, Click Me!</string>
+  <string-array name=""widths_array"">
+    <item>Thin</item>
+    <item>Thinish</item>
+    <item>Medium</item>
+    <item>Thickish</item>
+    <item>Thick</item>
+  </string-array>
 </resources>
 ";
 		const string Menu = @"<menu xmlns:android=""http://schemas.android.com/apk/res/android"">
@@ -54,13 +61,22 @@ namespace Xamarin.Android.Build.Tests {
 	<dimen name=""main_text_item_size"">17dp</dimen>
 </resources>";
 
+		const string Transition = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<changeBounds
+  xmlns:android=""http://schemas.android.com/apk/res/android""
+  android:duration=""5000""
+  android:interpolator=""@android:anim/overshoot_interpolator"" />
+";
+
 		[Test]
 		public void GenerateDesignerFile ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
+			Directory.CreateDirectory (Path.Combine (Root, path, "res", "transition"));
 
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "strings.xml"), StringsXml);
+			File.WriteAllText (Path.Combine (Root, path, "res", "transition", "transition.xml"), Transition);
 
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "animator"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "font"));
