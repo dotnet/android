@@ -22,6 +22,8 @@ namespace Xamarin.Android.Tasks {
 
 		public bool ExplicitCrunch { get; set; }
 
+		public string ExtraArgs { get; set; }
+
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
@@ -73,7 +75,8 @@ namespace Xamarin.Android.Tasks {
 			}
 			foreach (var line in output) {
 				if (line.StdError) {
-					LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success);
+					if (!LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success))
+						break;
 				} else {
 					LogMessage (line.Line, MessageImportance.Normal);
 				}
@@ -90,6 +93,8 @@ namespace Xamarin.Android.Tasks {
 			cmd.AppendSwitchIfNotNull ("--dir ", ResourceDirectoryFullPath (dir.ItemSpec));
 			if (ExplicitCrunch)
 				cmd.AppendSwitch ("--no-crunch");
+			if (!string.IsNullOrEmpty (ExtraArgs))
+				cmd.AppendSwitch (ExtraArgs);
 			if (MonoAndroidHelper.LogInternalExceptions)
 				cmd.AppendSwitch ("-v");
 			return cmd.ToString ();

@@ -163,5 +163,36 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_CreateAapt2VersionCache"), "_CreateAapt2VersionCache target should be skipped!");
 			}
 		}
+
+		[Test]
+		public void Aapt2AndroidResgenExtraArgsAreInvalid ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var resPath = Path.Combine (path, "res");
+			Directory.CreateDirectory (resPath);
+			Directory.CreateDirectory (Path.Combine (resPath, "values"));
+			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
+			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
+			File.WriteAllText (Path.Combine (resPath, "layout", "main.xml"), @"<?xml version='1.0' ?><LinearLayout xmlns:android='http://schemas.android.com/apk/res/android' />");
+			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), @"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' />");
+			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
+			var errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			CallAapt2Compile (engine, resPath);
+			var outputFile = Path.Combine (path, "resources.apk");
+			var task = new Aapt2Link {
+				BuildEngine = engine,
+				ToolPath = GetPathToAapt2 (),
+				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (path, "AndroidManifest.xml")) },
+				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
+				OutputFile = outputFile,
+				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
+				ExtraArgs = "--no-crunch "
+			};
+			Assert.False (task.Execute (), "task should have failed.");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }
