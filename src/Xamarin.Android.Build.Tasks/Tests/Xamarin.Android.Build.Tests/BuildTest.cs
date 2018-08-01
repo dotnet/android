@@ -205,11 +205,13 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
-		public void CheckTimestamps ()
+		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
 			var start = DateTime.UtcNow.AddSeconds (-1);
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/CheckTimestamps")) {
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//To be sure we are at a clean state, delete bin/obj
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				if (Directory.Exists (intermediate))
@@ -240,7 +242,8 @@ namespace Xamarin.Android.Tests
 
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "`_LinkAssembliesNoShrink` should be skipped!");
+				string targetName = isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink";
+				Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
 			}
 		}
 
