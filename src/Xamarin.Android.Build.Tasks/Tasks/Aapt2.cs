@@ -92,10 +92,10 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
+		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
 			if (string.IsNullOrEmpty (singleLine))
-				return;
+				return true;
 
 			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
@@ -111,27 +111,32 @@ namespace Xamarin.Android.Tasks {
 				// W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
 				if (file.StartsWith ("W/")) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
+				}
+				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
+					// we need to filter out the remailing help lines somehow. 
+					LogCodedError ("APT0001", $"{message}. This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.");
+					return false;
 				}
 				if (message.Contains ("fakeLogOpen")) {
 					LogMessage (singleLine, messageImportance);
-					return;
+					return true;
 				}
 				if (message.Contains ("note:")) {
 					LogMessage (singleLine, messageImportance);
-					return;
+					return true;
 				}
 				if (message.Contains ("warn:")) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
 				}
 				if (level.Contains ("note")) {
 					LogMessage (message, messageImportance);
-					return;
+					return true;
 				}
 				if (level.Contains ("warning")) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
 				}
 
 				// Try to map back to the original resource file, so when the user
@@ -155,7 +160,7 @@ namespace Xamarin.Android.Tasks {
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
 					LogCodedError ("APT0000", message, file, line);
-					return;
+					return true;
 				}
 			}
 
@@ -164,6 +169,7 @@ namespace Xamarin.Android.Tasks {
 			} else {
 				LogCodedWarning ("APT0000", singleLine);
 			}
+			return true;
 		}
 
 		protected void LoadResourceCaseMap ()
