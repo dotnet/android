@@ -414,7 +414,7 @@ namespace Xamarin.Android.Tasks
 				var file = match.Groups["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
-					line = int.Parse (match.Groups["line"].Value) + 1;
+					line = int.Parse (match.Groups["line"].Value.Trim ()) + 1;
 				var level = match.Groups["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 				if (message.Contains ("fakeLogOpen")) {

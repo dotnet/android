@@ -91,9 +91,9 @@ namespace Xamarin.Android.Tasks
  (?<path>
   (?<file>.+[\\/][^:\(]+)
   (
-   ([:](?<line>\d+))
+   ([:](?<line>[\d ]+))
    |
-   (\((?<line>\d+)\))
+   (\((?<line>[\d ]+)\))
   )?
  )
  \s*

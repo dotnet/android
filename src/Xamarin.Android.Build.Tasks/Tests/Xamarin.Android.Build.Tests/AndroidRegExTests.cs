@@ -130,6 +130,22 @@ namespace Xamarin.Android.Build.Tests
 					/*expectedLevel*/	"",
 					/*expectedMessage*/	"invalid resource directory name: bar-55"
 				};
+				yield return new object [] {
+					/*message*/		"W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"W/ResourceType",
+					/*expectedLine*/	"23681",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)"
+				};
+				yield return new object [] {
+					/*message*/		"W/ResourceType( 5536): For resource 0x0101053d, entry index(1341) is beyond type entryCount(1155)",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"W/ResourceType",
+					/*expectedLine*/	" 5536",
+					/*expectedLevel*/	"",
+					/*expectedMessage*/	"For resource 0x0101053d, entry index(1341) is beyond type entryCount(1155)"
+				};
 			}
 		}
 
