@@ -46,6 +46,8 @@ namespace Xamarin.Android.Tools.Tests
 
 			using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
 				release.WriteLine ($"JAVA_VERSION=\"{version}\"");
+				release.WriteLine ($"BUILD_NUMBER=42");
+				release.WriteLine ($"JUST_A_KEY");
 			}
 
 			var bin = Path.Combine (dir, "bin");
@@ -135,8 +137,10 @@ namespace Xamarin.Android.Tools.Tests
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
 
-			Assert.AreEqual (1,         jdk.ReleaseProperties.Count);
+			Assert.AreEqual (3,         jdk.ReleaseProperties.Count);
 			Assert.AreEqual ("1.2.3.4", jdk.ReleaseProperties ["JAVA_VERSION"]);
+			Assert.AreEqual ("42",      jdk.ReleaseProperties ["BUILD_NUMBER"]);
+			Assert.AreEqual ("",        jdk.ReleaseProperties ["JUST_A_KEY"]);
 		}
 
 		[Test]

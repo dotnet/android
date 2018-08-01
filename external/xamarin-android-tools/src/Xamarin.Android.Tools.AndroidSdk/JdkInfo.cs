@@ -144,21 +144,26 @@ namespace Xamarin.Android.Tools
 
 		ReadOnlyDictionary<string, string> GetReleaseProperties ()
 		{
+			var props       = new Dictionary<string, string> ();
 			var releasePath = Path.Combine (HomePath, "release");
 			if (!File.Exists (releasePath))
-				return new ReadOnlyDictionary<string, string> (new Dictionary<string, string> ());
+				return new ReadOnlyDictionary<string, string>(props);
 
-			var props   = new Dictionary<string, string> ();
 			using (var release = File.OpenText (releasePath)) {
 				string line;
 				while ((line = release.ReadLine ()) != null) {
-					const string PropertyDelim  = "=\"";
+					line            = line.Trim ();
+					const string PropertyDelim  = "=";
 					int delim = line.IndexOf (PropertyDelim, StringComparison.Ordinal);
 					if (delim < 0) {
 						props [line] = "";
+						continue;
 					}
-					string  key     = line.Substring (0, delim);
-					string  value   = line.Substring (delim + PropertyDelim.Length, line.Length - delim - PropertyDelim.Length - 1);
+					string  key     = line.Substring (0, delim).Trim ();
+					string  value   = line.Substring (delim + PropertyDelim.Length).Trim ();
+					if (value.StartsWith ("\"", StringComparison.Ordinal) && value.EndsWith ("\"", StringComparison.Ordinal)) {
+						value       = value.Substring (1, value.Length - 2);
+					}
 					props [key] = value;
 				}
 			}
