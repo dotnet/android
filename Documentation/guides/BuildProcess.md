@@ -821,9 +821,14 @@ resources.
     command-line options to pass to the **aapt2 compile** command when
     processing Android assets and resources.
 
+    Added in Xamarin.Android 9.1.
+
 -   **AndroidAapt2LinkExtraArgs** &ndash; Specifies additional
     command-line options to pass to the **aapt2 link** command when
     processing Android assets and resources.
+
+    Added in Xamarin.Android 9.1.
+
 <a name="Signing_Properties" />
 
 ### Signing Properties
