@@ -93,7 +93,8 @@ namespace Xamarin.Android.Tools
 				yield return preferedSdkPath;
 
 			// Look in PATH
-			foreach (var path in ProcessUtils.FindExecutablesInPath (Adb)) {
+			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb)) {
+				var path = Path.GetDirectoryName (adb);
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);
 
@@ -119,9 +120,10 @@ namespace Xamarin.Android.Tools
 				yield return preferedNdkPath;
 
 			// Look in PATH
-			foreach (var path in ProcessUtils.FindExecutablesInPath (NdkStack)) {
-				if (ValidateAndroidNdkLocation (path))
-					yield return path;
+			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
+				var ndkDir  = Path.GetDirectoryName (ndkStack);
+				if (ValidateAndroidNdkLocation (ndkDir))
+					yield return ndkDir;
 			}
 		}
 
