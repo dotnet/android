@@ -144,7 +144,7 @@ namespace Xamarin.Android.Tools
 			sdk.SetPreferredAndroidNdkPath(path);
 		}
 
-		static void DefaultConsoleLogger (TraceLevel level, string message)
+		internal static void DefaultConsoleLogger (TraceLevel level, string message)
 		{
 			switch (level) {
 			case TraceLevel.Error:

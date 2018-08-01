@@ -58,8 +58,18 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.CreateDirectory (jli);
 			Directory.CreateDirectory (jre);
 
+
+			string java =
+				$"echo Property settings:{Environment.NewLine}" +
+				$"echo \"    java.home = {dir}\"{Environment.NewLine}" +
+				$"echo \"    java.vendor = Xamarin.Android Unit Tests\"{Environment.NewLine}" +
+				$"echo \"    java.version = 100.100.100\"{Environment.NewLine}" +
+				$"echo \"    xamarin.multi-line = line the first\"{Environment.NewLine}" +
+				$"echo \"        line the second\"{Environment.NewLine}" +
+				$"echo \"        .\"{Environment.NewLine}";
+
 			CreateShellScript (Path.Combine (bin, "jar"), "");
-			CreateShellScript (Path.Combine (bin, "java"), JavaScript);
+			CreateShellScript (Path.Combine (bin, "java"), java);
 			CreateShellScript (Path.Combine (bin, "javac"), "");
 			CreateShellScript (Path.Combine (dir, "jli", "libjli.dylib"), "");
 			CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
@@ -71,14 +81,6 @@ namespace Xamarin.Android.Tools.Tests
 		{
 			Directory.Delete (FauxJdkDir, recursive: true);
 		}
-
-		static readonly string JavaScript =
-			$"echo Property settings:{Environment.NewLine}" +
-			$"echo \"    java.vendor = Xamarin.Android Unit Tests\"{Environment.NewLine}" +
-			$"echo \"    java.version = 100.100.100\"{Environment.NewLine}" +
-			$"echo \"    xamarin.multi-line = line the first\"{Environment.NewLine}" +
-			$"echo \"        line the second\"{Environment.NewLine}" +
-			$"echo \"        .\"{Environment.NewLine}";
 
 		static void CreateShellScript (string path, string contents)
 		{
@@ -142,10 +144,13 @@ namespace Xamarin.Android.Tools.Tests
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
 
-			Assert.AreEqual (3, jdk.JavaSettingsPropertyKeys.Count ());
+			Assert.AreEqual (4, jdk.JavaSettingsPropertyKeys.Count ());
 
 			Assert.IsFalse(jdk.GetJavaSettingsPropertyValue ("does-not-exist", out var _));
 			Assert.IsFalse(jdk.GetJavaSettingsPropertyValues ("does-not-exist", out var _));
+
+			Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.home", out var home));
+			Assert.AreEqual (FauxJdkDir, home);
 
 			Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
 			Assert.AreEqual ("100.100.100", version);

@@ -205,6 +205,8 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+		static  readonly    string  GetUnixConfigDirOverrideName            = $"UnixConfigPath directory override! {typeof (AndroidSdkInfo).AssemblyQualifiedName}";
+
 		// There's a small problem with the code below. Namely, if it runs under `sudo` the folder location
 		// returned by Environment.GetFolderPath will depend on how sudo was invoked:
 		//
@@ -231,8 +233,12 @@ namespace Xamarin.Android.Tools
 		//
 		private static string UnixConfigPath {
 			get {
-				var p = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
-				return Path.Combine (Path.Combine (p, "xbuild"), "monodroid-config.xml");
+				var p   = AppDomain.CurrentDomain.GetData (GetUnixConfigDirOverrideName)?.ToString ();
+				if (string.IsNullOrEmpty (p)) {
+					p   = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
+					p   = Path.Combine (p, "xbuild");
+				}
+				return Path.Combine (p, "monodroid-config.xml");
 			}
 		}
 

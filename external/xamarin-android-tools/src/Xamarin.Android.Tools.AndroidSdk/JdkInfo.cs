@@ -207,14 +207,16 @@ namespace Xamarin.Android.Tools
 			return props;
 		}
 
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string> logger)
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string> logger = null)
 		{
+			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
+
 			return GetWindowsJdks (logger)
 				.Concat (GetConfiguredJdks (logger))
 				.Concat (GetMacOSMicrosoftJdks (logger))
 				.Concat (GetJavaHomeEnvironmentJdks (logger))
-				.Concat (GetLibexecJdks (logger))
 				.Concat (GetPathEnvironmentJdks (logger))
+				.Concat (GetLibexecJdks (logger))
 				.Concat (GetJavaAlternativesJdks (logger))
 				;
 		}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -12,6 +13,35 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class AndroidSdkInfoTests
 	{
+		string      UnixConfigDirOverridePath;
+		string      PreferredJdksOverridePath;
+
+		static  readonly    string  GetMacOSMicrosoftJdkPathsOverrideName   = $"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}";
+		static  readonly    string  GetUnixConfigDirOverrideName            = $"UnixConfigPath directory override! {typeof (AndroidSdkInfo).AssemblyQualifiedName}";
+
+		[OneTimeSetUp]
+		public void FixtureSetUp ()
+		{
+			UnixConfigDirOverridePath   = Path.GetTempFileName ();
+			File.Delete (UnixConfigDirOverridePath);
+			Directory.CreateDirectory (UnixConfigDirOverridePath);
+			AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, UnixConfigDirOverridePath);
+
+			PreferredJdksOverridePath   = Path.GetTempFileName ();
+			File.Delete (PreferredJdksOverridePath);
+			Directory.CreateDirectory (PreferredJdksOverridePath);
+			AppDomain.CurrentDomain.SetData (GetMacOSMicrosoftJdkPathsOverrideName, PreferredJdksOverridePath);
+		}
+
+		[OneTimeTearDown]
+		public void FixtureTearDown ()
+		{
+			AppDomain.CurrentDomain.SetData (GetMacOSMicrosoftJdkPathsOverrideName, null);
+			AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, null);
+			Directory.Delete (UnixConfigDirOverridePath, recursive: true);
+			Directory.Delete (PreferredJdksOverridePath, recursive: true);
+		}
+
 		[Test]
 		public void Constructor_NullLogger ()
 		{
@@ -22,18 +52,7 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void Constructor_Paths ()
 		{
-			var root    = Path.GetTempFileName ();
-			File.Delete (root);
-			Directory.CreateDirectory (root);
-
-			var sdk     = Path.Combine (root, "sdk");
-			var jdk     = Path.Combine (root, "jdk");
-
-			Directory.CreateDirectory (sdk);
-			Directory.CreateDirectory (jdk);
-
-			CreateFauxAndroidSdkDirectory (sdk, "26.0.0");
-			CreateFauxJavaSdkDirectory (jdk, "1.8.0", out var _, out var _);
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
 
 			var logs    = new StringWriter ();
 			Action<TraceLevel, string> logger = (level, message) => {
@@ -41,8 +60,9 @@ namespace Xamarin.Android.Tools.Tests
 			};
 
 			try {
-				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, javaSdkPath: jdk, androidNdkPath: null);
+				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
 
+				Assert.AreEqual (ndk, info.AndroidNdkPath,  "AndroidNdkPath not preserved!");
 				Assert.AreEqual (sdk, info.AndroidSdkPath,  "AndroidSdkPath not preserved!");
 				Assert.AreEqual (jdk, info.JavaSdkPath,     "JavaSdkPath not preserved!");
 			}
@@ -51,7 +71,57 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
+		[Test]
+		public void Constructor_SetValuesFromPath ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+			JdkInfoTests.CreateFauxJdk (jdk, "1.8.0");
+
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine ($"[{level}] {message}");
+			};
+			var oldPath = Environment.GetEnvironmentVariable ("PATH");
+			try {
+				var paths   = new List<string> () {
+					Path.Combine (jdk, "bin"),
+					ndk,
+					Path.Combine (sdk, "platform-tools"),
+				};
+				paths.AddRange (oldPath.Split (new[]{Path.PathSeparator}, StringSplitOptions.RemoveEmptyEntries));
+				Environment.SetEnvironmentVariable ("PATH", string.Join (Path.PathSeparator.ToString (), paths));
+
+				var info    = new AndroidSdkInfo (logger);
+
+				Assert.AreEqual (ndk, info.AndroidNdkPath,  "AndroidNdkPath not set from $PATH!");
+				Assert.AreEqual (sdk, info.AndroidSdkPath,  "AndroidSdkPath not set from $PATH!");
+				Assert.AreEqual (jdk, info.JavaSdkPath,     "JavaSdkPath not set from $PATH!");
+			}
+			finally {
+				Environment.SetEnvironmentVariable ("PATH", oldPath);
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
 		static  bool    IsWindows   => OS.IsWindows;
+
+		static void CreateSdks (out string root, out string jdk, out string ndk, out string sdk)
+		{
+			root    = Path.GetTempFileName ();
+			File.Delete (root);
+			Directory.CreateDirectory (root);
+
+			ndk     = Path.Combine (root, "ndk");
+			sdk     = Path.Combine (root, "sdk");
+			jdk     = Path.Combine (root, "jdk");
+
+			Directory.CreateDirectory (sdk);
+			Directory.CreateDirectory (ndk);
+			Directory.CreateDirectory (jdk);
+
+			CreateFauxAndroidSdkDirectory (sdk, "26.0.0");
+			CreateFauxAndroidNdkDirectory (ndk);
+			CreateFauxJavaSdkDirectory (jdk, "1.8.0", out var _, out var _);
+		}
 
 		static void CreateFauxAndroidSdkDirectory (string androidSdkDirectory, string buildToolsVersion, ApiInfo [] apiLevels = null)
 		{
@@ -90,7 +160,28 @@ namespace Xamarin.Android.Tools.Tests
 			public  string      Id;
 		}
 
-		protected string CreateFauxJavaSdkDirectory (string javaPath, string javaVersion, out string javaExe, out string javacExe)
+		static void CreateFauxAndroidNdkDirectory (string androidNdkDirectory)
+		{
+			File.WriteAllText (Path.Combine (androidNdkDirectory, "ndk-stack"),     "");
+			File.WriteAllText (Path.Combine (androidNdkDirectory, "ndk-stack.cmd"), "");
+
+			string prebuiltHostName = "";
+			if (OS.IsWindows)
+				prebuiltHostName    = "windows-x86_64";
+			else if (OS.IsMac)
+				prebuiltHostName    = "darwin-x86_64";
+			else
+				prebuiltHostName    = "linux-x86_64";
+
+
+			var toolchainsDir   = Path.Combine (androidNdkDirectory, "toolchains");
+			var armToolchainDir = Path.Combine (toolchainsDir, "arm-linux-androideabi-4.9");
+			var armPrebuiltDir  = Path.Combine (armToolchainDir, "prebuilt", prebuiltHostName);
+
+			Directory.CreateDirectory (armPrebuiltDir);
+		}
+
+		static string CreateFauxJavaSdkDirectory (string javaPath, string javaVersion, out string javaExe, out string javacExe)
 		{
 			javaExe             = IsWindows ? "Java.cmd" : "java.bash";
 			javacExe            = IsWindows ? "Javac.cmd" : "javac.bash";
@@ -106,7 +197,7 @@ namespace Xamarin.Android.Tools.Tests
 			return javaPath;
 		}
 
-		void CreateFauxJavaExe (string javaExeFullPath, string version)
+		static void CreateFauxJavaExe (string javaExeFullPath, string version)
 		{
 			var sb  = new StringBuilder ();
 			if (IsWindows) {
@@ -126,7 +217,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		void CreateFauxJavacExe (string javacExeFullPath, string version)
+		static void CreateFauxJavacExe (string javacExeFullPath, string version)
 		{
 			var sb  = new StringBuilder ();
 			if (IsWindows) {
@@ -142,7 +233,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		protected void Exec (string exe, string args)
+		static void Exec (string exe, string args)
 		{
 			var psi     = new ProcessStartInfo {
 				FileName                = exe,
@@ -168,10 +259,6 @@ namespace Xamarin.Android.Tools.Tests
 			Action<TraceLevel, string> logger = (level, message) => {
 				Console.WriteLine ($"[{level}] {message}");
 			};
-			var jdks    = Path.GetTempFileName ();
-			File.Delete (jdks);
-			Directory.CreateDirectory (jdks);
-			AppDomain.CurrentDomain.SetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}", jdks);
 
 			var backupConfig    = UnixConfigPath + "." + Path.GetRandomFileName ();
 			try {
@@ -180,7 +267,7 @@ namespace Xamarin.Android.Tools.Tests
 					return;
 				}
 				Assert.Throws<NotSupportedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
-				var newJdkPath  = Path.Combine (jdks, "microsoft_dist_openjdk_1.8.999");
+				var newJdkPath  = Path.Combine (PreferredJdksOverridePath, "microsoft_dist_openjdk_1.8.999");
 				JdkInfoTests.CreateFauxJdk (newJdkPath, "1.8.999");
 
 				if (File.Exists (UnixConfigPath))
@@ -190,8 +277,6 @@ namespace Xamarin.Android.Tools.Tests
 				AssertJdkPath (newJdkPath);
 			}
 			finally {
-				AppDomain.CurrentDomain.SetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}", null);
-				Directory.Delete (jdks, recursive: true);
 				if (File.Exists (backupConfig)) {
 					File.Delete (UnixConfigPath);
 					File.Move (backupConfig, UnixConfigPath);
@@ -199,7 +284,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		static void AssertJdkPath (string expectedJdkPath)
+		void AssertJdkPath (string expectedJdkPath)
 		{
 			var config_file     = XDocument.Load (UnixConfigPath);
 			var javaEl          = config_file.Root.Element ("java-sdk");
@@ -208,10 +293,9 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (expectedJdkPath, actualJdkPath);
 		}
 
-		static string UnixConfigPath {
+		string UnixConfigPath {
 			get {
-				var p = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
-				return Path.Combine (Path.Combine (p, "xbuild"), "monodroid-config.xml");
+				return Path.Combine (UnixConfigDirOverridePath, "monodroid-config.xml");
 			}
 		}
 	}
