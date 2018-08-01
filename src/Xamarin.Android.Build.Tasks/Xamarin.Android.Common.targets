@@ -1349,6 +1349,7 @@ because xbuild doesn't support framework reference assemblies.
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="@(_LibraryResourceDirectories)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
+		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -1383,6 +1384,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
+		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -1555,6 +1557,7 @@ because xbuild doesn't support framework reference assemblies.
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
    ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
+   ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
    ToolPath="$(Aapt2ToolPath)"
    ToolExe="$(Aapt2ToolExe)"
  />
@@ -1723,7 +1726,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-		ExtraArgs="$(AndroidResgenExtraArgs)"
+		ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -2340,6 +2343,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSdkPlatform="$(_AndroidApiLevel)"
     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
     ToolPath="$(Aapt2ToolPath)"
     ToolExe="$(Aapt2ToolExe)"
   />

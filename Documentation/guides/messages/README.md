@@ -13,6 +13,7 @@
 ### aptxxxx Aapt Tooling
 
 + [apt0000](apt0000.md): Generic `aapt` Error/Warning.
++ [apt0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
 
 ### XA0xxx Environment/Missing Tooling
 
