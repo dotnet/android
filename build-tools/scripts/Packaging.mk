@@ -66,10 +66,8 @@ package-deb: $(ZIP_OUTPUT)
 _TEST_ERRORS_BASENAME   = xa-test-errors-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
 
 "$(_TEST_ERRORS_BASENAME).zip" package-test-errors:
-ifneq ($(wildcard bin/Test*/temp),)
-	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp
+	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp TestResult-*.xml bin/Test*/TestOutput-*.txt
 	zip -r "$(_TEST_ERRORS_BASENAME).zip" "$(_TEST_ERRORS_BASENAME)"
-endif # We have test error output
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \
 	Configuration.OperatingSystem.props \
