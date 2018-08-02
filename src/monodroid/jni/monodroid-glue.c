@@ -662,8 +662,16 @@ get_libmonosgen_path ()
 			create_public_directory (links_dir);
 		}
 		free (links_dir);
-		if (!file_exists (link))
-			symlink (libmonoso, link);
+		if (!file_exists (link)) {
+			int result = symlink (libmonoso, link);
+			if (result != 0 && errno == EEXIST) {
+				log_warn (LOG_DEFAULT, "symlink exists, recreating: %s -> %s", link, libmonoso);
+				unlink (link);
+				result = symlink (libmonoso, link);
+			}
+			if (result != 0)
+				log_warn (LOG_DEFAULT, "symlink failed with errno=%i %s", errno, strerror (errno));
+		}
 		free (libmonoso);
 		libmonoso = link;
 	}
