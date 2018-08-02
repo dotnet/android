@@ -1,6 +1,7 @@
 ﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,13 +21,19 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidConversionFlagFile { get; set; }
 
+		public string ResourceNameCaseMap { get; set; }
+
+		Dictionary<string,string> resource_name_case_map;
+
 		public override bool Execute ()
 		{
 			Log.LogDebugMessage ("ConvertResourcesCases Task");
 			Log.LogDebugMessage ("  ResourceDirectories: {0}", ResourceDirectories);
 			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
 			Log.LogDebugMessage ("  AndroidConversionFlagFile: {0}", AndroidConversionFlagFile);
+			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
 
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
 
 			// Look in the resource xml's for capitalized stuff and fix them
@@ -71,7 +78,26 @@ namespace Xamarin.Android.Tasks
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
 					AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
-						ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec));
+						ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec), (t, m) => {
+							string targetfile = file;
+							if (targetfile.StartsWith (resdir, StringComparison.InvariantCultureIgnoreCase)) {
+								targetfile = file.Substring (resdir.Length).TrimStart (Path.DirectorySeparatorChar);
+								if (resource_name_case_map.TryGetValue (targetfile, out string temp))
+									targetfile = temp;
+								targetfile = Path.Combine ("Resources", targetfile);
+							}
+							switch (t) {
+								case TraceLevel.Error:
+									Log.LogCodedError ("XA1002", file: targetfile, lineNumber: 0, message: m);
+									break;
+								case TraceLevel.Warning:
+									Log.LogCodedWarning ("XA1001", file: targetfile, lineNumber: 0, message: m);
+									break;
+								default:
+									Log.LogDebugMessage (m);
+									break;
+							}
+						});
 
 					// We strip away an eventual UTF-8 BOM from the XML file.
 					// This is a requirement for the Android designer because the desktop Java renderer

@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2 : AsyncTask {
 
-		protected Dictionary<string, string> resource_name_case_map = new Dictionary<string, string> ();
+		protected Dictionary<string, string> resource_name_case_map;
 
 		public ITaskItem [] ResourceDirectories { get; set; }
 
@@ -174,9 +174,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected void LoadResourceCaseMap ()
 		{
-			if (ResourceNameCaseMap != null)
-				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 		}
 	}
 }

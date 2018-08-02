@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -9,14 +11,14 @@ using System.Xml.XPath;
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static void UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null)
+		public static void UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null)
 		{
 			// use a temporary file so we only update the real file if things actually changed
 			string tmpfile = filename + ".bk";
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
 
-				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories);
+				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, logMessage);
 				using (var stream = File.OpenWrite (tmpfile))
 					using (var xw = new LinePreservedXmlWriter (new StreamWriter (stream)))
 						xw.WriteNode (doc.CreateNavigator (), false);
@@ -27,7 +29,8 @@ namespace Monodroid {
 				if (File.Exists (tmpfile)) {
 					File.Delete (tmpfile);
 				}
-				Console.Error.WriteLine ("AndroidResgen: Warning while updating Resource XML '{0}': {1}", filename, e.Message);
+				if (logMessage != null)
+					logMessage (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");
 				return;
 			}
 		}
@@ -59,10 +62,10 @@ namespace Monodroid {
 				yield return e;
 		}
 		
-		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null)
+		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
-				TryFixCustomView (elem, acwMap);
+				TryFixCustomView (elem, acwMap, logMessage);
 			}
 
 			foreach (var path in fixResourcesAliasPaths) {
@@ -184,8 +187,8 @@ namespace Monodroid {
 				return false;
 
 			if (attr.Name == "class" || attr.Name == android + "name") {
-				if (acwMap.ContainsKey (attr.Value)) {
-					attr.Value = acwMap[attr.Value];
+				if (acwMap.TryGetValue (attr.Value, out string mappedValue)) {
+					attr.Value = mappedValue;
 
 					return true;
 				}
@@ -193,8 +196,8 @@ namespace Monodroid {
 					// attr.Value could be an assembly-qualified name that isn't in acw-map.txt;
 					// see e5b1c92c, https://github.com/xamarin/xamarin-android/issues/1296#issuecomment-365091948
 					var n = attr.Value.Substring (0, attr.Value.IndexOf (','));
-					if (acwMap.ContainsKey (n)) {
-						attr.Value = acwMap [n];
+					if (acwMap.TryGetValue (n, out mappedValue)) {
+						attr.Value = mappedValue;
 						return true;
 					}
 				}
@@ -217,15 +220,23 @@ namespace Monodroid {
 			return false;
 		}
 
-		private static bool TryFixCustomView (XElement elem, Dictionary<string, string> acwMap)
+		private static bool TryFixCustomView (XElement elem, Dictionary<string, string> acwMap, Action<TraceLevel, string> logMessage = null)
 		{
 			// Looks for any <My.DotNet.Class ...
 			// and tries to change it to the ACW name
-			if (acwMap.ContainsKey (elem.Name.ToString ())) {
-				elem.Name = acwMap[elem.Name.ToString ()];
+			string name = elem.Name.ToString ();
+			if (acwMap.TryGetValue (name, out string mappedValue)) {
+				elem.Name = mappedValue;
 				return true;
 			}
-
+			if (logMessage == null)
+				return false;
+			var matchingKey = acwMap.FirstOrDefault(x => String.Equals(x.Key, name, StringComparison.OrdinalIgnoreCase));
+			if (matchingKey.Key != null) {
+				// we have elements with slightly different casing.
+				// lets issue a error.
+				logMessage (TraceLevel.Error, $"We found a matching key '{matchingKey.Key}' for '{name}'. But the casing was incorrect. Please correct the casing");
+			}
 			return false;
 		}
 
@@ -238,8 +249,7 @@ namespace Monodroid {
 			    && (attr.Parent.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
 				return false;
 
-			string mappedValue;
-			if (!acwMap.TryGetValue (attr.Value, out mappedValue))
+			if (!acwMap.TryGetValue (attr.Value, out string mappedValue))
 				return false;
 
 			attr.Value = mappedValue;

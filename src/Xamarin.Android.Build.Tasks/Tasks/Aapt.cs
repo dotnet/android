@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceSymbolsTextFileDirectory { get; set; }
 
-		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
+		Dictionary<string,string> resource_name_case_map;
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		string resourceDirectory;
 
@@ -251,9 +251,7 @@ namespace Xamarin.Android.Tasks
 
 		void DoExecute ()
 		{
-			if (ResourceNameCaseMap != null)
-				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
