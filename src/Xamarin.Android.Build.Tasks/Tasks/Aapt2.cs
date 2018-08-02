@@ -103,13 +103,14 @@ namespace Xamarin.Android.Tasks {
 				var file = match.Groups ["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups ["line"]?.Value))
-					line = int.Parse (match.Groups ["line"].Value) + 1;
+					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 
 				// Handle the following which is NOT an error :(
 				// W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
-				if (file.StartsWith ("W/")) {
+				// W/ResourceType( 3681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
+				if (file.StartsWith ("W/", StringComparison.OrdinalIgnoreCase)) {
 					LogCodedWarning ("APT0000", singleLine);
 					return true;
 				}
