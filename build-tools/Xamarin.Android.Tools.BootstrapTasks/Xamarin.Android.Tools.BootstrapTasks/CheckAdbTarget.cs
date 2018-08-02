@@ -36,10 +36,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
-			Log.LogMessage (MessageImportance.Low, $"Task {nameof (CheckAdbTarget)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AdbTarget)}: {AdbTarget}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (SdkVersion)}: {SdkVersion}");
-
 			state = CommandState.CheckSdk;
 			base.Execute ();
 
@@ -47,9 +43,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				state = CommandState.CheckPM;
 				base.Execute ();
 			}
-
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (AdbTarget)}: {AdbTarget}");
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (IsValidTarget)}: {IsValidTarget}");
 
 			return true;
 		}
@@ -73,7 +66,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			Log.LogMessage (MessageImportance.Low, singleLine);
 			if (string.IsNullOrEmpty (singleLine))
 				return;
 
