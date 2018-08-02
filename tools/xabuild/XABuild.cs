@@ -1,7 +1,7 @@
-﻿using Microsoft.Build.CommandLine;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Xml;
 
@@ -9,6 +9,17 @@ namespace Xamarin.Android.Build
 {
 	class XABuild
 	{
+		static Assembly Load (AssemblyName name, string path)
+		{
+			Console.WriteLine ($"[xabuild] custom assembly resolution '{name.FullName}' -> '{path}'");
+
+			//NOTE: may/may not be more correct?
+			//name.CodeBase = path;
+			//return Assembly.Load (name);
+
+			return Assembly.LoadFrom (path);
+		}
+
 		[MTAThread]
 		static int Main ()
 		{
@@ -18,6 +29,25 @@ namespace Xamarin.Android.Build
 					Console.WriteLine ($"Unable to find Xamarin.Android build output at {paths.XamarinAndroidBuildOutput}");
 					return 1;
 				}
+
+				AppDomain.CurrentDomain.AssemblyResolve += (sender, e) => {
+					var name = new AssemblyName (e.Name);
+					var path = Path.Combine (paths.MSBuildBin, name.Name + ".dll");
+					if (File.Exists (path)) {
+						return Load (name, path);
+					}
+					path = Path.Combine (paths.MSBuildBin, name.Name + ".exe");
+					if (File.Exists (path)) {
+						return Load (name, path);
+					}
+
+					if (e.RequestingAssembly != null) {
+						Console.WriteLine ($"[xabuild] assembly `{e.Name}` requested by `{e.RequestingAssembly.FullName}` not found at path `{paths.MSBuildBin}`, using default runtime behavior...");
+					} else {
+						Console.WriteLine ($"[xabuild] assembly `{e.Name}` not found at path `{paths.MSBuildBin}`, using default runtime behavior...");
+					}
+					return null; //Let the default runtime behavior occur
+				};
 
 				//Create a custom xabuild.exe.config
 				var xml = CreateConfig (paths);
@@ -45,7 +75,22 @@ namespace Xamarin.Android.Build
 					}
 				}
 
-				int exitCode = MSBuildApp.Main ();
+				//NOTE: Using Reflection to call MSBuildApp.Main allows us to wire up AppDomain.AssemblyResolve.
+				//      Running on Mono, I could not even get a static ctor to work. It was loading MSBuild.dll up front.
+				var typeName = "Microsoft.Build.CommandLine.MSBuildApp, MSBuild";
+				var type = Type.GetType (typeName);
+				if (type == null) {
+					Console.WriteLine ($"Unable to load type `{typeName}`!");
+					return 1;
+				}
+				var method = type.GetMethod ("Main", BindingFlags.Static | BindingFlags.Public);
+				if (method == null) {
+					Console.WriteLine ($"Unable to find method `Main` on type `{type.FullName}`!");
+					return 1;
+				}
+
+				var main = (Func<int>)method.CreateDelegate (typeof (Func<int>));
+				int exitCode = main ();
 				if (exitCode != 0) {
 					Console.WriteLine ($"MSBuildApp.Main exited with {exitCode}, xabuild configuration is:");
 
