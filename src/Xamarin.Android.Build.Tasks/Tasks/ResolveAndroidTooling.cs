@@ -294,10 +294,10 @@ namespace Xamarin.Android.Tasks
 
 				for (int apiLevel = maxSupported; apiLevel >= MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel; apiLevel--) {
 					var id = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiLevel);
-					var apiPlatformDir = Path.Combine (AndroidSdkPath, "platforms", "android-" + id);
-					if (Directory.Exists (apiPlatformDir)) {
+					var apiPlatformDir = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (id, MonoAndroidHelper.SupportedVersions);
+					if (apiPlatformDir != null && Directory.Exists (apiPlatformDir)) {
 						var targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (id);
-						if (targetFramework != null && MonoAndroidHelper.SupportedVersions.FrameworkDirectories.Any (p => Directory.Exists (Path.Combine (p, targetFramework)))) {
+						if (targetFramework != null && MonoAndroidHelper.SupportedVersions.InstalledBindingVersions.Any (b => b.FrameworkVersion == targetFramework)) {
 							AndroidApiLevel = apiLevel.ToString ();
 							TargetFrameworkVersion = targetFramework;
 							break;
