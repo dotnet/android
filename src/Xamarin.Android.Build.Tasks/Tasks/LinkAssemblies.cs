@@ -160,10 +160,8 @@ namespace Xamarin.Android.Tasks
 							// We cannot just copy the linker output from *current* run output, because
 							// it always renew the assemblies, in *different* binary values, whereas
 							// the dll in the OptionalDestinationDirectory must retain old and unchanged.
-							if (File.Exists (assemblyDestination)) {
-								MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (assemblyDestination, DateTime.UtcNow, Log);
+							if (File.Exists (assemblyDestination))
 								continue;
-							}
 						} else {
 							// Prefer fixup assemblies if exists, otherwise just copy the original.
 							copysrc = Path.Combine (OutputDirectory, filename);
