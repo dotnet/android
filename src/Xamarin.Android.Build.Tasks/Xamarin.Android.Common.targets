@@ -2078,7 +2078,13 @@ because xbuild doesn't support framework reference assemblies.
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
-	<!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
+    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
+    <ItemGroup>
+      <_FilesToTouch Include="$(MonoAndroidIntermediateAssemblyTempDir)*" />
+    </ItemGroup>
+    <Touch Files="@(_FilesToTouch)" />
+
+    <!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
 </Target>
 	
