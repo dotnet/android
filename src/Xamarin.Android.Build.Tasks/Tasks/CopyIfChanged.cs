@@ -49,6 +49,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!MonoAndroidHelper.CopyIfChanged (src, dest)) {
 					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
+					MonoAndroidHelper.SetWriteable (dest);
 					continue;
 				}
 				modifiedFiles.Add (new TaskItem (dest));
