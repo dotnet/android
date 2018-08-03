@@ -112,28 +112,29 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<JdkInfo> GetJdkInfos (Action<TraceLevel, string> logger)
 		{
-			JdkInfo TryGetJdkInfo (string path)
+			JdkInfo TryGetJdkInfo (string path, string locator)
 			{
 				JdkInfo jdk = null;
 				try {
-					jdk = new JdkInfo (path);
+					jdk = new JdkInfo (path, locator);
 				}
 				catch (Exception e) {
-					logger (TraceLevel.Warning, e.ToString ());
+					logger (TraceLevel.Warning, $"Not a valid JDK directory: `{path}`; via category: {locator}");
+					logger (TraceLevel.Verbose, e.ToString ());
 				}
 				return jdk;
 			}
 
-			IEnumerable<JdkInfo> ToJdkInfos (IEnumerable<string> paths)
+			IEnumerable<JdkInfo> ToJdkInfos (IEnumerable<string> paths, string locator)
 			{
-				return paths.Select (TryGetJdkInfo)
+				return paths.Select (p => TryGetJdkInfo (p, locator))
 					.Where (jdk => jdk != null)
 					.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 			}
 
-			return ToJdkInfos (GetPreferredJdkPaths ())
-				.Concat (ToJdkInfos (GetOpenJdkPaths ()))
-				.Concat (ToJdkInfos (GetOracleJdkPaths ()));
+			return ToJdkInfos (GetPreferredJdkPaths (), "Preferred Registry")
+				.Concat (ToJdkInfos (GetOpenJdkPaths (), "OpenJDK"))
+				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"));
 		}
 
 		private static IEnumerable<string> GetPreferredJdkPaths ()
