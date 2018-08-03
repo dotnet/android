@@ -61,6 +61,7 @@ namespace Xamarin.Android.Tools {
 
 				if (!Directory.Exists (source)) {
 					File.Copy (source, destination, true);
+					MonoAndroidHelper.SetWriteable (destination);
 					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
 					File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 					return true;
