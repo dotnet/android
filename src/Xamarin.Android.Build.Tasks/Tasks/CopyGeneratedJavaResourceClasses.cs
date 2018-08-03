@@ -38,10 +38,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				var date = File.GetLastWriteTimeUtc (src);
-				if (MonoAndroidHelper.CopyIfChanged (src, dst)) {
-					MonoAndroidHelper.SetWriteable (dst);
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dst, date, Log);
-				}
+				MonoAndroidHelper.CopyIfChanged (src, dst);
 				list.Add (dst);
 			}
 			// so far we only need the package's R.java for GenerateResourceDesigner input.
