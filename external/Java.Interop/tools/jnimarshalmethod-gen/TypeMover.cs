@@ -36,6 +36,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		{
 			int movedTypesCount = 0;
 
+			typeMap.Clear ();
+			resolvedTypeMap.Clear ();
+
 			foreach (var type in Types.Values) {
 				Move (type);
 				movedTypesCount++;
@@ -327,7 +330,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 				if (App.Debug) {
 					newInstructions.Add (Instruction.Create (OpCodes.Ldstr, $"Registering JNI marshal methods in {opStr}"));
-					newInstructions.Add (Instruction.Create (OpCodes.Call, consoleWriteLine));
+					newInstructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (consoleWriteLine)));
 				}
 
 				return true;
