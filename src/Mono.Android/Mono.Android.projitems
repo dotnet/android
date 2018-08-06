@@ -140,7 +140,7 @@
       <Stable>True</Stable>
     </AndroidApiInfo>
     <AndroidApiInfo Include="v9.0">
-      <Name>P</Name>
+      <Name>Pie</Name>
       <Level>28</Level>
       <Id>28</Id>
       <Stable>True</Stable>
