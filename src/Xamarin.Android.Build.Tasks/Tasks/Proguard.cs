@@ -81,26 +81,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Proguard");
-			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
-			Log.LogDebugMessage ("  JavaPlatformJarPath: {0}", JavaPlatformJarPath);
-			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
-			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-			Log.LogDebugMessage ("  ProguardGeneratedApplicationConfiguration: {0}", ProguardGeneratedApplicationConfiguration);
-			Log.LogDebugMessage ("  ProguardJarOutput: {0}", ProguardJarOutput);
-			Log.LogDebugTaskItems ("  ProguardGeneratedReferenceConfiguration:", ProguardGeneratedReferenceConfiguration);
-			Log.LogDebugTaskItems ("  ProguardGeneratedApplicationConfiguration:", ProguardGeneratedApplicationConfiguration);
-			Log.LogDebugTaskItems ("  ProguardCommonXamarinConfiguration:", ProguardCommonXamarinConfiguration);
-			Log.LogDebugTaskItems ("  ProguardConfigurationFiles:", ProguardConfigurationFiles);
-			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
-			Log.LogDebugTaskItems ("  DoNotPackageJavaLibraries:", DoNotPackageJavaLibraries);
-			Log.LogDebugMessage ("  UseProguard: {0}", UseProguard);
-			Log.LogDebugMessage ("  EnableLogging: {0}", EnableLogging);
-			Log.LogDebugMessage ("  DumpOutput: {0}", DumpOutput);
-			Log.LogDebugMessage ("  PrintSeedsOutput: {0}", PrintSeedsOutput);
-			Log.LogDebugMessage ("  PrintMappingOutput: {0}", PrintMappingOutput);
-			Log.LogDebugMessage ("  ProguardInputJarFilter: {0}", ProguardInputJarFilter);
-
 			EnvironmentVariables = MonoAndroidHelper.GetProguardEnvironmentVaribles (ProguardHome);
 
 			return base.Execute ();
@@ -165,7 +145,7 @@ namespace Xamarin.Android.Tasks
 				if (File.Exists (file))
 					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{file}'{enclosingChar}");
 				else
-					Log.LogWarning ("Proguard configuration file '{0}' was not found.", file);
+					Log.LogCodedWarning ("XA4304", file, 0, "Proguard configuration file '{0}' was not found.", file);
 			}
 
 			libjars.Add (JavaPlatformJarPath);

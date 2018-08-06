@@ -242,7 +242,8 @@ namespace Xamarin.Android.Tasks {
 				: ret;
 			foreach (var line in output) {
 				if (line.StdError) {
-					LogEventsFromTextOutput (line.Line, MessageImportance.Normal, success);
+					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
+						break;
 				} else {
 					LogMessage (line.Line, MessageImportance.Normal);
 				}

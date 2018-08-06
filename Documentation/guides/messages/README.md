@@ -13,6 +13,7 @@
 ### aptxxxx Aapt Tooling
 
 + [apt0000](apt0000.md): Generic `aapt` Error/Warning.
++ [apt0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
 
 ### XA0xxx Environment/Missing Tooling
 
@@ -43,6 +44,8 @@
 ### XA1xxx Project Related
 
 + [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
++ [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
++ [XA1002](xa1002.md): We found a matching key '{Key}' for '{Item}'. But the casing was incorrect. Please correct the casing
 
 ### XA2xxx Linker
 

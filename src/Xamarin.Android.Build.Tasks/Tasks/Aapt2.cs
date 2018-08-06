@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2 : AsyncTask {
 
-		protected Dictionary<string, string> resource_name_case_map = new Dictionary<string, string> ();
+		protected Dictionary<string, string> resource_name_case_map;
 
 		public ITaskItem [] ResourceDirectories { get; set; }
 
@@ -92,10 +92,10 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
+		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
 			if (string.IsNullOrEmpty (singleLine))
-				return;
+				return true;
 
 			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
@@ -103,35 +103,41 @@ namespace Xamarin.Android.Tasks {
 				var file = match.Groups ["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups ["line"]?.Value))
-					line = int.Parse (match.Groups ["line"].Value) + 1;
+					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 
 				// Handle the following which is NOT an error :(
 				// W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
-				if (file.StartsWith ("W/")) {
+				// W/ResourceType( 3681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)
+				if (file.StartsWith ("W/", StringComparison.OrdinalIgnoreCase)) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
+				}
+				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
+					// we need to filter out the remailing help lines somehow. 
+					LogCodedError ("APT0001", $"{message}. This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.");
+					return false;
 				}
 				if (message.Contains ("fakeLogOpen")) {
 					LogMessage (singleLine, messageImportance);
-					return;
+					return true;
 				}
 				if (message.Contains ("note:")) {
 					LogMessage (singleLine, messageImportance);
-					return;
+					return true;
 				}
 				if (message.Contains ("warn:")) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
 				}
 				if (level.Contains ("note")) {
 					LogMessage (message, messageImportance);
-					return;
+					return true;
 				}
 				if (level.Contains ("warning")) {
 					LogCodedWarning ("APT0000", singleLine);
-					return;
+					return true;
 				}
 
 				// Try to map back to the original resource file, so when the user
@@ -155,7 +161,7 @@ namespace Xamarin.Android.Tasks {
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
 					LogCodedError ("APT0000", message, file, line);
-					return;
+					return true;
 				}
 			}
 
@@ -164,13 +170,12 @@ namespace Xamarin.Android.Tasks {
 			} else {
 				LogCodedWarning ("APT0000", singleLine);
 			}
+			return true;
 		}
 
 		protected void LoadResourceCaseMap ()
 		{
-			if (ResourceNameCaseMap != null)
-				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 		}
 	}
 }

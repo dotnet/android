@@ -553,5 +553,15 @@ namespace Xamarin.Android.Tasks
 			}
 			return Path.Combine (platformPath, "android.jar");
 		}
+
+		public static Dictionary<string, string> LoadResourceCaseMap (string resourceCaseMap)
+		{
+			var result = new Dictionary<string, string> ();
+			if (resourceCaseMap != null) {
+				foreach (var arr in resourceCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
+					result [arr [1]] = arr [0]; // lowercase -> original
+			}
+			return result;
+		}
 	}
 }

@@ -63,10 +63,11 @@ package-deb: $(ZIP_OUTPUT)
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
 
-package-test-errors:
-ifneq ($(wildcard bin/Test*/temp),)
-	zip -r test-errors.zip bin/Test*/temp
-endif # We have test error output
+_TEST_ERRORS_BASENAME   = xa-test-errors-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+
+"$(_TEST_ERRORS_BASENAME).zip" package-test-errors:
+	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp TestResult-*.xml bin/Test*/TestOutput-*.txt
+	zip -r "$(_TEST_ERRORS_BASENAME).zip" "$(_TEST_ERRORS_BASENAME)"
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \
 	Configuration.OperatingSystem.props \
@@ -79,16 +80,18 @@ _BUILD_STATUS_BUNDLE_INCLUDE = \
 	$(shell find . -name '.ninja_log') \
 	$(shell find . -name 'android-*.config.cache')
 
-_BUILD_STATUS_ZIP_OUTPUT = build-status-$(GIT_COMMIT).$(ZIP_EXTENSION)
+_BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+_BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)
 
 ifneq ($(wildcard Configuration.Override.props),)
 _BUILD_STATUS_BUNDLE_INCLUDE += \
 	Configuration.Override.props
 endif
 
-package-build-status:
+"$(_BUILD_STATUS_ZIP_OUTPUT)" package-build-status:
+	build-tools/scripts/ln-to.sh -r . -o "$(_BUILD_STATUS_BASENAME)" $(_BUILD_STATUS_BUNDLE_INCLUDE)
 ifeq ($(ZIP_EXTENSION),zip)
-	zip -r "$(_BUILD_STATUS_ZIP_OUTPUT)" $(_BUILD_STATUS_BUNDLE_INCLUDE)
+	zip -r "$(_BUILD_STATUS_ZIP_OUTPUT)" "$(_BUILD_STATUS_BASENAME)"
 else ifeq ($(ZIP_EXTENSION),tar.bz2)
-	tar -cjhvf "$(_BUILD_STATUS_ZIP_OUTPUT)" $(_BUILD_STATUS_BUNDLE_INCLUDE)
+	tar -cjhvf "$(_BUILD_STATUS_ZIP_OUTPUT)" "$(_BUILD_STATUS_BASENAME)"
 endif

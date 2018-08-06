@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Xamarin.ProjectTools;
+using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -90,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public string Root {
 			get {
-				return Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath);
+				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 			}
 		}
 

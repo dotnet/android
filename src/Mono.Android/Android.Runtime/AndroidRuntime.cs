@@ -248,9 +248,80 @@ namespace Android.Runtime {
 			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method });
 		}
 
+		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
+
+		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, string methods)
+		{
+			if (!MagicRegistrationMap.Filled)
+				return false;
+
+			bool lockTaken = false;
+			bool rv = false;
+
+			try {
+				Monitor.TryEnter (sharedRegistrations, ref lockTaken);
+				List<JniNativeMethodRegistration> registrations;
+				if (lockTaken) {
+					sharedRegistrations.Clear ();
+					registrations = sharedRegistrations;
+				} else {
+					registrations = new List<JniNativeMethodRegistration> ();
+				}
+				JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
+				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName);
+
+				if (registrations.Count > 0)
+					nativeClass.RegisterNativeMethods (registrations.ToArray ());
+			} finally {
+				if (lockTaken) {
+					Monitor.Exit (sharedRegistrations);
+				}
+			}
+
+			return rv;
+		}
+
+		class MagicRegistrationMap {
+			static Dictionary<string, int> typesMap;
+
+			static void Prefill ()
+			{
+				// fill code added by the linker
+			}
+
+			static MagicRegistrationMap ()
+			{
+				typesMap = new Dictionary<string, int> ();
+
+				Prefill ();
+			}
+
+			static public bool Filled {
+				get {
+					return typesMap.Count > 0;
+				}
+			}
+
+			internal static bool CallRegisterMethod (JniNativeMethodRegistrationArguments arguments, string typeName)
+			{
+				int idx;
+
+				if (typeName == null || !typesMap.TryGetValue (typeName, out idx)) 
+					return false;
+
+				return CallRegisterMethodByIndex (arguments, idx);
+			}
+
+			static bool CallRegisterMethodByIndex (JniNativeMethodRegistrationArguments arguments, int typeIdx)
+			{
+				// updated by the linker to register known types
+				return false;
+			}
+		}
+
 		public override void RegisterNativeMembers (JniType jniType, Type type, string methods)
 		{
-			if (base.TryRegisterNativeMembers (jniType, type, methods))
+			if (FastRegisterNativeMembers (jniType, type, methods))
 				return;
 
 			if (methods == null)
