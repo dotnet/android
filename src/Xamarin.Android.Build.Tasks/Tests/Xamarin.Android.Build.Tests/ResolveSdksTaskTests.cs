@@ -250,7 +250,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
 			Assert.AreEqual (androidTooling.TargetFrameworkVersion, "v8.0", "TargetFrameworkVersion should be v8.0");
 			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
-			Assert.AreEqual (androidTooling.SupportedApiLevel, "26", "SupportedApiLevel should be 26");
 			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
@@ -296,7 +295,6 @@ namespace Xamarin.Android.Build.Tests {
 				"27",   //androidApiLevel
 				"27",   //androidApiLevelName
 				"v8.1", //targetFrameworkVersion
-				"28",   //supportedApiLevel
 			},
 			//28 is installed but we only support 27
 			new object [] {
@@ -314,7 +312,6 @@ namespace Xamarin.Android.Build.Tests {
 				"27",   //androidApiLevel
 				"27",   //androidApiLevelName
 				"v8.1", //targetFrameworkVersion
-				"27",   //supportedApiLevel
 			},
 			//A paired downgrade to API 26
 			new object [] {
@@ -333,7 +330,6 @@ namespace Xamarin.Android.Build.Tests {
 				"26",   //androidApiLevel
 				"26",   //androidApiLevelName
 				"v8.0", //targetFrameworkVersion
-				"28",   //supportedApiLevel
 			},
 			//A new API level 28 is not stable yet
 			new object [] {
@@ -354,7 +350,6 @@ namespace Xamarin.Android.Build.Tests {
 				"27",   //androidApiLevel
 				"27",   //androidApiLevelName
 				"v8.1", //targetFrameworkVersion
-				"27",   //supportedApiLevel
 			},
 			//User selected a new API level 28 is not stable yet
 			new object [] {
@@ -375,13 +370,12 @@ namespace Xamarin.Android.Build.Tests {
 				"28",   //androidApiLevel
 				"28",   //androidApiLevelName
 				"v9.0", //targetFrameworkVersion
-				"28",   //supportedApiLevel
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (TargetFrameworkPairingParameters))]
-		public void TargetFrameworkPairing (string description, ApiInfo[] androidSdk, ApiInfo[] targetFrameworks, string userSelected, string androidApiLevel, string androidApiLevelName, string targetFrameworkVersion, string supportedApiLevel)
+		public void TargetFrameworkPairing (string description, ApiInfo[] androidSdk, ApiInfo[] targetFrameworks, string userSelected, string androidApiLevel, string androidApiLevelName, string targetFrameworkVersion)
 		{
 			var path = Path.Combine ("temp", $"{nameof (TargetFrameworkPairing)}_{description}");
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3", androidSdk);
@@ -411,7 +405,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidApiLevel, androidTooling.AndroidApiLevel, $"AndroidApiLevel should be {androidApiLevel}");
 			Assert.AreEqual (androidApiLevelName, androidTooling.AndroidApiLevelName, $"AndroidApiLevelName should be {androidApiLevelName}");
 			Assert.AreEqual (targetFrameworkVersion, androidTooling.TargetFrameworkVersion, $"TargetFrameworkVersion should be {targetFrameworkVersion}");
-			Assert.AreEqual (supportedApiLevel, androidTooling.SupportedApiLevel, $"SupportedApiLevel should be {supportedApiLevel}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}
