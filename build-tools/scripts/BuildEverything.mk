@@ -38,17 +38,17 @@ FRAMEWORKS        = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
 STABLE_FRAMEWORKS = $(foreach a, $(STABLE_API_LEVELS), $(word $(a),$(ALL_FRAMEWORKS)))
 PLATFORM_IDS      = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_PLATFORM_IDS)))
 
-ALL_JIT_ABIS  = \
+export ALL_JIT_ABIS  = \
 	armeabi \
 	armeabi-v7a \
 	arm64-v8a \
 	x86 \
 	x86_64
 
-ALL_HOST_ABIS = \
+export ALL_HOST_ABIS = \
 	$(shell uname)
 
-ALL_AOT_ABIS = \
+export ALL_AOT_ABIS = \
 	armeabi \
 	arm64 \
 	x86 \
