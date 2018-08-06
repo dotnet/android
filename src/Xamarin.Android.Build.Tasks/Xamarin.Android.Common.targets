@@ -684,7 +684,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
-		<Output TaskParameter="SupportedApiLevel"         PropertyName="_SupportedApiLevel"	/>
 		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
 		<Output TaskParameter="ReferenceAssemblyPaths"    PropertyName="_XATargetFrameworkDirectories" />
 		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
@@ -965,7 +964,7 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 
 	<!-- Get the defined constants for this API Level -->
-	<GetAndroidDefineConstants AndroidApiLevel="$(_SupportedApiLevel)" ProductVersion="$(MonoAndroidVersion)">
+	<GetAndroidDefineConstants AndroidApiLevel="$(_AndroidApiLevel)" ProductVersion="$(MonoAndroidVersion)">
 		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />
 	</GetAndroidDefineConstants>
 

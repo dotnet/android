@@ -624,7 +624,7 @@ when packaing Release applications.
     allows the developer to define custom items to use with the
     `AndroidVersionCodePattern`. They are in the form of a `key=value`
     pair. All items in the `value` should be integer values. For
-    example: `screen=23;target=$(_SupportedApiLevel)`. As you can see
+    example: `screen=23;target=$(_AndroidApiLevel)`. As you can see
     you can make use of existing or custom MSBuild properties in the
     string.
 
