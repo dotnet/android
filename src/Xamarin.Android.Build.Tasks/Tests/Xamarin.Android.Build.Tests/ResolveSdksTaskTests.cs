@@ -358,13 +358,14 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCaseSource (nameof (TargetFrameworkPairingParameters))]
 		public void TargetFrameworkPairing (string description, ApiInfo[] androidSdk, ApiInfo[] targetFrameworks, string userSelected, string androidApiLevel, string androidApiLevelName, string targetFrameworkVersion)
 		{
-			var path = Path.Combine ("temp", $"{nameof (TargetFrameworkPairing)}_{description}");
+			var path = Path.Combine ("temp", $"{nameof (TargetFrameworkPairing)}_{description.Replace (' ', '_')}");
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3", androidSdk);
 			string javaExe = string.Empty;
 			string javacExe;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe, out javacExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), targetFrameworks);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var log = new StringBuilder ();
+			IBuildEngine engine = new MockBuildEngine (new StringWriter (log));
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
@@ -380,7 +381,7 @@ namespace Xamarin.Android.Build.Tests {
 				LatestSupportedJavaVersion = "1.8.0",
 				MinimumSupportedJavaVersion = "1.7.0",
 			};
-			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
+			Assert.IsTrue (resolveSdks.Execute (), $"ResolveSdks should succeed! Failed with: {log}");
 			Assert.AreEqual (androidApiLevel, resolveSdks.AndroidApiLevel, $"AndroidApiLevel should be {androidApiLevel}");
 			Assert.AreEqual (androidApiLevelName, resolveSdks.AndroidApiLevelName, $"AndroidApiLevelName should be {androidApiLevelName}");
 			Assert.AreEqual (targetFrameworkVersion, resolveSdks.TargetFrameworkVersion, $"TargetFrameworkVersion should be {targetFrameworkVersion}");
