@@ -12,7 +12,6 @@ namespace Android.Runtime {
 		static FieldInfo handlefld = typeof (Java.Lang.Object).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance);
 		static FieldInfo Throwable_handle = typeof (Java.Lang.Throwable).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance);
 
-		static int dynamicMethodNameCounter;
 
 		internal static Action <IntPtr, object []> CreateDelegate (Type type, ConstructorInfo cinfo, Type [] parameter_types) {
 			var handle = handlefld;
@@ -20,7 +19,7 @@ namespace Android.Runtime {
 				handle = Throwable_handle;
 			}
 
-			DynamicMethod method = new DynamicMethod ($"{Interlocked.Increment (ref dynamicMethodNameCounter)}c", typeof (void), new Type [] {typeof (IntPtr), typeof (object []) }, typeof (object), true);
+			DynamicMethod method = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), typeof (void), new Type [] {typeof (IntPtr), typeof (object []) }, typeof (DynamicMethodNameCounter), true);
 			ILGenerator il = method.GetILGenerator ();
 
 			il.DeclareLocal (typeof (object));
