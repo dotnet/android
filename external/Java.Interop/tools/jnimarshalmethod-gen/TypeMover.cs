@@ -146,6 +146,37 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return resolved;
 		}
 
+		static TypeReference GetUpdatedArray (TypeReference type, TypeReference newReference)
+		{
+			if (!type.IsArray)
+				return type;
+
+			var t = type;
+			var stack = new Stack<ArrayType> ();
+
+			do {
+				var ta = t as ArrayType;
+
+				stack.Push (ta);
+				t = ta.ElementType;
+			} while (t.IsArray);
+
+			while (stack.Count > 0) {
+				var ta = stack.Pop ();
+				var na = new ArrayType (newReference, ta.Rank);
+
+				if (ta.Rank > 1) {
+					for (int i = 0; i < ta.Rank; i++) {
+						na.Dimensions [i] = ta.Dimensions [i];
+					}
+				}
+
+				newReference = na;
+			}
+
+			return newReference;
+		}
+
 		static TypeReference GetUpdatedType (TypeReference type, ModuleDefinition module)
 		{
 			if (typeMap.ContainsKey (type))
@@ -160,8 +191,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				? module.ImportReference (type)
 				: module.GetType (td.FullName);
 
-			if (type.IsArray)
-				tr = new ArrayType (tr);
+			if (type.IsArray && td.Module.FileName == module.FileName)
+				tr = GetUpdatedArray (type, tr);
 
 			typeMap [type] = tr;
 
@@ -189,7 +220,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				: module.GetType (newType.FullName);
 
 			if (type.IsArray)
-				tr = new ArrayType (tr);
+				tr = GetUpdatedArray (type.ElementType, tr);
 
 			typeMap [type] = tr;
 
