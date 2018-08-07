@@ -43,7 +43,6 @@ namespace Xamarin.Android.Tasks
 					var dest = Path.GetFullPath (item.ItemSpec).Replace (imageGroup.Key, tempDirectory);
 					Directory.CreateDirectory (Path.GetDirectoryName (dest));
 					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, dest);
-					MonoAndroidHelper.SetWriteable (dest);
 				}
 
 				// crunch them
@@ -58,7 +57,6 @@ namespace Xamarin.Android.Tasks
 					if (!File.Exists (dest))
 						continue;
 					MonoAndroidHelper.CopyIfChanged (dest, item.ItemSpec);
-					MonoAndroidHelper.SetWriteable (dest);
 					// reset the Dates so MSBuild/xbuild doesn't think they changed.
 					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (item.ItemSpec, srcmodifiedDate, Log);
 				}

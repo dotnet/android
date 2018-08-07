@@ -117,10 +117,7 @@ namespace Xamarin.Android.Tasks
 					// we strip those here and point the designer to use resources from obj/
 					MonoAndroidHelper.CleanBOM (tmpdest);
 
-					if (MonoAndroidHelper.CopyIfChanged (tmpdest, file)) {
-						MonoAndroidHelper.SetWriteable (file);
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, srcmodifiedDate, Log);
-					}
+					MonoAndroidHelper.CopyIfChanged (tmpdest, file);
 				} finally {
 					File.Delete (tmpdest);
 				}
