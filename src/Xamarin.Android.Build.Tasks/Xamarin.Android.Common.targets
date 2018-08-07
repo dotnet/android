@@ -308,7 +308,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
-	<MakeBundleKeepTemporaryFiles Condition=" '$(MakeBundleKeepTemporaryFiles)' == '' ">False</MakeBundleKeepTemporaryFiles>
+	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 </PropertyGroup>
 
 <Choose>
@@ -2719,7 +2719,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Bundle the assemblies into native libraries in the apk -->
   <MakeBundleNativeCodeExternal
 		Condition="'$(BundleAssemblies)' == 'True'"
-		KeepTemp="$(MakeBundleKeepTemporaryFiles)"
+		KeepTemp="$(AndroidMakeBundleKeepTemporaryFiles)"
 		AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 		Assemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
 		IncludePath="$(MonoAndroidIncludeDirectory)"
