@@ -306,9 +306,7 @@ namespace Xamarin.Android.Tasks
 			var np  = path + ".new";
 			using (var o = File.OpenWrite (np))
 				generator (o);
-			if (MonoAndroidHelper.CopyIfChanged (np, path)) {
-				MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (path, DateTime.UtcNow, Log);
-			}
+			MonoAndroidHelper.CopyIfChanged (np, path);
 			File.Delete (np);
 		}
 	}

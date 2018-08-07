@@ -171,22 +171,16 @@ namespace Xamarin.Android.Tasks
 					else if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
 						continue;
 
-					if (MonoAndroidHelper.CopyIfChanged (copysrc, assemblyDestination)) {
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (assemblyDestination, DateTime.UtcNow, Log);
-					}
+					MonoAndroidHelper.CopyIfChanged (copysrc, assemblyDestination);
 					try {
 						var mdbDestination = assemblyDestination + ".mdb";
-						if (MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", mdbDestination)) {
-							MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (mdbDestination, DateTime.UtcNow, Log);
-						}
+						MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", mdbDestination);
 					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
 					}
 					var pdb = Path.ChangeExtension (copysrc, "pdb");
 					if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
 						var pdbDestination = Path.ChangeExtension (Path.Combine (copydst, filename), "pdb");
-						if (MonoAndroidHelper.CopyIfChanged (pdb, pdbDestination)) {
-							MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (pdbDestination, DateTime.UtcNow, Log);
-						}
+						MonoAndroidHelper.CopyIfChanged (pdb, pdbDestination);
 					}
 				}
 			} catch (ResolutionException ex) {

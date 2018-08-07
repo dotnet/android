@@ -42,8 +42,6 @@ namespace Xamarin.Android.Tasks
 					var destPath = newPath.Replace (src, dest);
 					var cachedDate = File.GetLastWriteTimeUtc (src);
 					MonoAndroidHelper.CopyIfChanged (newPath, destPath);
-					MonoAndroidHelper.SetWriteable (destPath);
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (destPath, cachedDate, Log);
 					copiedResources.Add (new TaskItem (destPath));
 				}
 			}
