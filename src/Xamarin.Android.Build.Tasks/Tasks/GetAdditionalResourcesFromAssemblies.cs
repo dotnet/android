@@ -470,7 +470,7 @@ namespace Xamarin.Android.Tasks {
 					new XElement ("AdditionalNativeLibraryReferences", 
 							AdditionalNativeLibraryReferences.Select(e => new XElement ("AdditionalNativeLibraryReference", e)))
 					));
-			document.SaveIfChanged (cacheFileFullPath);
+			document.SaveIfChanged (cacheFileFullPath, Log);
 
 			LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
 			LogDebugTaskItems ("  AdditionalJavaLibraryReferences: ", AdditionalJavaLibraryReferences);
