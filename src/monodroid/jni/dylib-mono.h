@@ -254,6 +254,7 @@ typedef MonoThread*     (*monodroid_mono_thread_current_fptr) (void);
 typedef void            (*monodroid_mono_gc_disable_fptr) (void);
 typedef void*           (*monodroid_mono_install_assembly_refonly_preload_hook_fptr) (MonoAssemblyPreLoadFunc func, void *user_data);
 typedef int             (*monodroid_mono_runtime_set_main_args_fptr) (int argc, char* argv[]);
+typedef void            (*mono_aot_register_module_fptr) (void* aot_info);
 
 /* NOTE: structure members MUST NOT CHANGE ORDER. */
 struct DylibMono {
@@ -342,6 +343,7 @@ struct DylibMono {
 	monodroid_mono_class_get_property_from_name_fptr        mono_class_get_property_from_name;
 	monodroid_mono_domain_from_appdomain_fptr               mono_domain_from_appdomain;
 	monodroid_mono_thread_current_fptr                      mono_thread_current;
+	mono_aot_register_module_fptr                           mono_aot_register_module;
 };
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);

@@ -341,6 +341,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyResolver.cs">
       <Link>Linker\Linker\AssemblyResolver.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
+      <Link>Linker\Linker\AssemblyUtilities.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
@@ -358,6 +361,9 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
       <Link>Linker\Linker\Pipeline.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
+      <Link>Linker\Linker\TypeNameParser.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypePreserve.cs">
       <Link>Linker\Linker\TypePreserve.cs</Link>
@@ -574,6 +580,10 @@
     </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\monodroid\jni\mkbundle-api.h">
+      <Link>mkbundle-api.h</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Tasks\JavaDoc.cs" />
