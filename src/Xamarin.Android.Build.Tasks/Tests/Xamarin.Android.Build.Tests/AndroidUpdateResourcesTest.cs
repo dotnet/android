@@ -1336,5 +1336,41 @@ namespace UnnamedProject
 				FileAssert.Exists (Path.Combine (Root, path, proj.IntermediateOutputPath, "generated", "Binding.Main.g.cs"));
 			}
 		}
+
+		[Test]
+		public void CheckInvalidXmlInManagedResourceParser ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease       = true,
+				LayoutMain      = @"",
+			};
+			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			using (var builder = CreateApkBuilder (path)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "Compile";
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				StringAssertEx.Contains ("warning XA1000", builder.LastBuildOutput, "Build output should contain a XA1000 warning.");
+			}
+		}
+
+		//NOTE: This test was failing randomly before fixing a bug in `CopyIfChanged`.
+		//      Let's set it to run 3 times, it still completes in a reasonable time ~1.5 min.
+		[Test, Repeat(3)]
+		public void LightlyModifyLayout ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+
+				//Just change something, doesn't matter
+				var layout = Path.Combine (Root, b.ProjectDirectory, "Resources", "layout", "Main.axml");
+				FileAssert.Exists (layout);
+				File.AppendAllText (layout, " ");
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "`_UpdateAndroidResgen` should not be skipped!");
+			}
+		}
 	}
 }

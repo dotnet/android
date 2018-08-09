@@ -29,7 +29,7 @@ ALL_PLATFORM_IDS  = 1 2 3 4 5 6 7 8 9 10    11  12  13  14  15      16    17    
 # supported api levels
 ALL_FRAMEWORKS    = _ _ _ _ _ _ _ _ _ v2.3  _   _   _   _   v4.0.3  v4.1  v4.2  v4.3  v4.4  v4.4.87   v5.0  v5.1  v6.0  v7.0  v7.1  v8.0  v8.1  v9.0
 API_LEVELS        =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27    28
-STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27
+STABLE_API_LEVELS =                   10                    15      16    17    18    19    20        21    22    23    24    25    26    27    28
 
 ## The preceding values *must* use SPACE, **not** TAB, to separate values.
 
@@ -116,7 +116,7 @@ framework-assemblies:
 		PREV_VERSION=$${CUR_VERSION}; )
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-		$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD),$(conf))) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
+		$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD),$(conf)) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
 			/p:Configuration=$(conf) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )

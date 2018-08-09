@@ -590,7 +590,7 @@ namespace Xamarin.Android.NetTests {
 						client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
 						Assert.Fail ("#1");
 					} catch (AggregateException e) {
-						Assert.AreEqual (typeof (ProtocolViolationException), e.InnerException.GetType (), "#2");
+						Assert.AreEqual (typeof (InvalidOperationException), e.InnerException.GetType (), "#2");
 					}
 					Assert.IsNull (failed, "#102");
 				} finally {

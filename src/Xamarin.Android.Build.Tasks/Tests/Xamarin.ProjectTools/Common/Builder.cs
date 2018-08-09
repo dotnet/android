@@ -221,6 +221,39 @@ namespace Xamarin.ProjectTools
 			GC.SuppressFinalize (this);
 		}
 
+		public string AndroidSdkDirectory { get; private set; }
+
+		public string AndroidNdkDirectory { get; private set; }
+
+		/// <summary>
+		/// Locates and sets AndroidSdkDirectory and AndroidNdkDirectory
+		/// </summary>
+		public void ResolveSdks ()
+		{
+			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
+			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
+			if (string.IsNullOrEmpty (AndroidSdkDirectory)) {
+				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+				if (String.IsNullOrEmpty (sdkPath))
+					sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
+				if (String.IsNullOrEmpty (sdkPath))
+					sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
+				if (Directory.Exists (sdkPath)) {
+					AndroidSdkDirectory = sdkPath;
+				}
+			}
+			if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
+				var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+				if (String.IsNullOrEmpty (ndkPath))
+					ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
+				if (String.IsNullOrEmpty (ndkPath))
+					ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+				if (Directory.Exists (ndkPath)) {
+					AndroidNdkDirectory = ndkPath;
+				}
+			}
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 		}
@@ -252,20 +285,9 @@ namespace Xamarin.ProjectTools
 				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
-			var start = DateTime.UtcNow;
-			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
- 			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
- 			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
- 			if (String.IsNullOrEmpty (sdkPath))
- 				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
- 			if (String.IsNullOrEmpty (sdkPath))
- 				sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
- 			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
- 			if (String.IsNullOrEmpty (ndkPath))
- 				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
- 			if (String.IsNullOrEmpty (ndkPath))
- 				ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
+			ResolveSdks ();
 
+			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
 			args.AppendFormat ("{0} /t:{1} {2}",
@@ -274,11 +296,11 @@ namespace Xamarin.ProjectTools
 				args.Append (" /p:BuildingOutOfProcess=true");
 			else
 				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
-			if (Directory.Exists (sdkPath)) {
-				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
+				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
 			}
-			if (Directory.Exists (ndkPath)) {
-				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
+			if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
+				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
 			}
 			if (parameters != null) {
 				foreach (var param in parameters) {
@@ -298,8 +320,14 @@ namespace Xamarin.ProjectTools
 					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
 				}
 			}
-			//NOTE: fix for Jenkins, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
-			psi.EnvironmentVariables ["ghprbPullLongDescription"] = "";
+
+			//NOTE: commit messages can "accidentally" cause test failures
+			// Consider if you added an error message in a commit message, then wrote a test asserting the error no longer occurs.
+			// Both Jenkins and VSTS have an environment variable containing the full commit message, which will inexplicably cause your test to fail...
+			// For a Jenkins case, see https://github.com/xamarin/xamarin-android/pull/1049#issuecomment-347625456
+			// For a VSTS case, see http://build.devdiv.io/1806783
+			psi.EnvironmentVariables ["ghprbPullLongDescription"] =
+				psi.EnvironmentVariables ["BUILD_SOURCEVERSIONMESSAGE"] = "";
 
 			psi.Arguments = args.ToString ();
 			
@@ -393,10 +421,34 @@ namespace Xamarin.ProjectTools
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				//NOTE: enormous logs will lock up IDE's UI
+				if (IsRunningInIDE) {
+					throw new FailedBuildException (message);
+				} else {
+					throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
+				}
 			}
 
 			return result;
+		}
+
+		bool IsRunningInIDE {
+			get {
+				//Check for Windows, process is testhost.x86 in VS 2017
+				using (var p = Process.GetCurrentProcess ()) {
+					if (p.ProcessName.IndexOf ("testhost", StringComparison.OrdinalIgnoreCase) != -1) {
+						return true;
+					}
+				}
+
+				//Check for macOS, value is normally /Applications/Visual Studio.app/Contents/Resources
+				var gac_prefix = Environment.GetEnvironmentVariable ("MONO_GAC_PREFIX", EnvironmentVariableTarget.Process);
+				if (!string.IsNullOrEmpty (gac_prefix) && gac_prefix.IndexOf ("Visual Studio", StringComparison.OrdinalIgnoreCase) != -1) {
+					return true;
+				}
+
+				return false;
+			}
 		}
 
 		string QuoteFileName (string fileName)

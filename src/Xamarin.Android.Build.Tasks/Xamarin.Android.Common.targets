@@ -25,6 +25,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -271,6 +273,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
 	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
+	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
+	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -302,9 +306,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
-
+	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
-
+	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 </PropertyGroup>
 
 <Choose>
@@ -423,8 +427,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_AndroidResourcePathsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidResourcePathsCache)') ">$(_AndroidResourcePathsDesignTimeCache)</_AndroidResourcePathsCache>
 		<_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
 		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
+		<_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
 	</PropertyGroup>
-	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition=" '$(DesignTimeBuild)' == 'true' " />
+	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" '$(DesignTimeBuild)' == 'true' " />
 </Target>
 
 <PropertyGroup>
@@ -518,6 +523,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <BuildDependsOn>
     _ValidateLinkMode;
     _SetupDesignTimeBuildForBuild;
+    _CleanIntermediateIfNuGetsChange;
     _CreatePropertiesCache;
     _CheckProjectItems;
     _CheckForContent;
@@ -534,6 +540,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <BuildDependsOn>
     _ValidateLinkMode;
      _SetupDesignTimeBuildForBuild;
+    _CleanIntermediateIfNuGetsChange;
      _CreatePropertiesCache;
     _AddAndroidDefines;
     _AddNativeLibraryArchiveToCompile;
@@ -601,7 +608,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="UpdateGeneratedFiles"
-		DependsOnTargets="_RemoveLegacyDesigner;UpdateAndroidResources"
+		DependsOnTargets="ResolveAssemblyReferences;_RemoveLegacyDesigner;UpdateAndroidResources"
 	>
 </Target>
 
@@ -643,6 +650,24 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateProperty>
 </Target>
 
+<Target Name="_BeforeCleanIntermediateIfNuGetsChange">
+  <PropertyGroup>
+    <_NuGetAssetsFile Condition="Exists('$(ProjectLockFile)')">$(ProjectLockFile)</_NuGetAssetsFile>
+    <_NuGetAssetsFile Condition="'$(_NuGetAssetsFile)' == '' and Exists('packages.config')">packages.config</_NuGetAssetsFile>
+  </PropertyGroup>
+</Target>
+
+<Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
+    Inputs="$(_NuGetAssetsFile)"
+    Outputs="$(_AndroidNuGetStampFile)">
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" />
+  <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
+  <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidNuGetStampFile)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
 </Target>
 
@@ -663,49 +688,54 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
-			AndroidApiLevel="$(AndroidApiLevel)"
-			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
-			AndroidUseAapt2="$(AndroidUseAapt2)"
-			AotAssemblies="$(AotAssemblies)"
-			SequencePointsMode="$(_AndroidSequencePointsMode)"
-			BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
 			JavaSdkPath="$(JavaSdkDirectory)"
-			ProjectFilePath="$(MSBuildProjectFullPath)"
-			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
-			TargetFrameworkVersion="$(TargetFrameworkVersion)"
-			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-			JavaToolExe="$(JavaToolExe)"
-			JavacToolExe="$(JavacToolExe)"
-			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
-			LintToolPath="$(LintToolPath)"
-			ZipAlignPath="$(ZipAlignToolPath)">
-		<Output TaskParameter="AndroidApiLevel"           PropertyName="_AndroidApiLevel"           Condition="'$(_AndroidApiLevel)' == ''" />
-		<Output TaskParameter="AndroidApiLevelName"       PropertyName="_AndroidApiLevelName" />
-		<Output TaskParameter="SupportedApiLevel"         PropertyName="_SupportedApiLevel"	/>
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="_TargetFrameworkVersion" />
-		<Output TaskParameter="ReferenceAssemblyPaths"    PropertyName="_XATargetFrameworkDirectories" />
-		<Output TaskParameter="TargetFrameworkVersion"    PropertyName="TargetFrameworkVersion" />
+			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
-		<Output TaskParameter="AndroidSdkBuildToolsPath"  PropertyName="AndroidSdkBuildToolsPath"   Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
-		<Output TaskParameter="ZipAlignPath"              PropertyName="ZipAlignToolPath"           Condition="'$(ZipAlignToolPath)' == ''" />
-		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
-		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
-		<Output TaskParameter="LintToolPath"              PropertyName="LintToolPath"               Condition="'$(LintToolPath)' == ''" />
-		<Output TaskParameter="ApkSignerJar"              PropertyName="ApkSignerJar"               Condition="'$(ApkSignerJar)' == ''" />
-		<Output TaskParameter="AndroidUseApkSigner"       PropertyName="AndroidUseApkSigner"        Condition="'$(AndroidUseApkSigner)' == ''" />
-		<Output TaskParameter="AndroidUseAapt2"           PropertyName="_AndroidUseAapt2" />
-		<Output TaskParameter="Aapt2Version"              PropertyName="_Aapt2Version" />
+	</ResolveSdks>
+	<ValidateJavaVersion
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+			JavaSdkPath="$(JavaSdkDirectory)"
+			JavaToolExe="$(JavaToolExe)"
+			JavacToolExe="$(JavacToolExe)"
+			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
 		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
-	</ResolveSdks>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
+	</ValidateJavaVersion>
+	<ResolveAndroidTooling
+			TargetFrameworkVersion="$(TargetFrameworkVersion)"
+			AndroidApiLevel="$(AndroidApiLevel)"
+			AndroidSdkPath="$(AndroidSdkDirectory)"
+			AndroidNdkPath="$(AndroidNdkDirectory)"
+			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+			AndroidUseAapt2="$(AndroidUseAapt2)"
+			AotAssemblies="$(AotAssemblies)"
+			SequencePointsMode="$(_AndroidSequencePointsMode)"
+			ProjectFilePath="$(MSBuildProjectFullPath)"			
+			LintToolPath="$(LintToolPath)"
+			ZipAlignPath="$(ZipAlignToolPath)">
+		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
+		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
+		<Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
+		<Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
+		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
+		<Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
+		<Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
+		<Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
+		<Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
+		<Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
+		<Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
+		<Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
+	</ResolveAndroidTooling>
+	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
@@ -713,7 +743,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 				Condition="'$(TargetFrameworkProfile)' != ''"
 		/>
 	</CreateProperty>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(_TargetFrameworkVersion)">
+	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
@@ -721,6 +751,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 				Condition="'$(TargetFrameworkProfile)' == ''"
 		/>
 	</CreateProperty>
+	<CreateProperty Value="$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)">
+		<Output TaskParameter="Value" PropertyName="TargetFrameworkMonikerAssemblyAttributesPath"
+				Condition="'$(TargetFrameworkMoniker)' != ''"
+		/>
+	</CreateProperty>
+	<CreateItem Include="$(TargetFrameworkMonikerAssemblyAttributesPath)">
+		<Output TaskParameter="Include" ItemName="FileWrites"
+				Condition="'$(TargetFrameworkMonikerAssemblyAttributesPath)' != ''"
+		/>
+	</CreateItem>
 	<CreateItem Include="$(_JavaInteropReferences)">
 		<Output TaskParameter="Include" ItemName="Reference" />
 	</CreateItem>
@@ -730,6 +770,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	/>
 	<PropertyGroup>
 		<AndroidExplicitCrunch Condition=" '$(_AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
+		<AndroidAap2LinkExtraArgs Condition=" '$(_AndroidUseAapt2)' == 'True' And $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAap2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAap2LinkExtraArgs) </AndroidAap2LinkExtraArgs>
 	</PropertyGroup>
 </Target>
 
@@ -853,7 +894,7 @@ because xbuild doesn't support framework reference assemblies.
 	
 	<Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
 	<Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
-	<Message Text="TargetFrameworkVersion: $(_TargetFrameworkVersion)"/>
+	<Message Text="TargetFrameworkVersion: $(TargetFrameworkVersion)"/>
 	<Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
 	<Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
 	<Message Text="Android SDK Build Tools: $(AndroidSdkBuildToolsPath)"/>
@@ -965,7 +1006,7 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 
 	<!-- Get the defined constants for this API Level -->
-	<GetAndroidDefineConstants AndroidApiLevel="$(_SupportedApiLevel)" ProductVersion="$(MonoAndroidVersion)">
+	<GetAndroidDefineConstants AndroidApiLevel="$(_AndroidApiLevel)" ProductVersion="$(MonoAndroidVersion)">
 		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />
 	</GetAndroidDefineConstants>
 
@@ -1118,11 +1159,10 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
 	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
-	<_AndroidDesignTimeResDirIntermediate>$(IntermediateOutputPath)designtime\</_AndroidDesignTimeResDirIntermediate>
-	<_AndroidResourcePathsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
-	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
-	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidDesignTimeResDirIntermediate)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
-	<_AndroidManagedResourceDesignerFile>$(_AndroidDesignTimeResDirIntermediate)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
+	<_AndroidResourcePathsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)resourcepaths.cache</_AndroidResourcePathsDesignTimeCache>
+	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
+	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
+	<_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
 <ItemGroup>
@@ -1187,7 +1227,7 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsCache);$(_AndroidLibraryProjectImportsCache);$(_AndroidLibraryImportsCache);"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
 		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_CreateAdditionalResourceCache">
-	<MakeDir Directories="$(_AndroidDesignTimeResDirIntermediate)" />
+	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1308,6 +1348,7 @@ because xbuild doesn't support framework reference assemblies.
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="@(_LibraryResourceDirectories)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
+		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -1342,6 +1383,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
+		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -1514,6 +1556,7 @@ because xbuild doesn't support framework reference assemblies.
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
    ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
    YieldDuringToolExecution="$(YieldDuringToolExecution)"
+   ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
    ToolPath="$(Aapt2ToolPath)"
    ToolExe="$(Aapt2ToolExe)"
  />
@@ -1682,7 +1725,7 @@ because xbuild doesn't support framework reference assemblies.
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-		ExtraArgs="$(AndroidResgenExtraArgs)"
+		ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
@@ -2034,7 +2077,13 @@ because xbuild doesn't support framework reference assemblies.
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
-	<!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
+    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
+    <ItemGroup>
+      <_FilesToTouch Include="$(MonoAndroidIntermediateAssemblyTempDir)*" />
+    </ItemGroup>
+    <Touch Files="@(_FilesToTouch)" />
+
+    <!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
 </Target>
 	
@@ -2170,10 +2219,12 @@ because xbuild doesn't support framework reference assemblies.
 	BundledWearApplicationName="$(BundledWearApplicationPackageName)"
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
 	AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
   <ConvertResourcesCases 
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 	AcwMapFile="$(_AcwMapFile)" />
 </Target>
 
@@ -2197,7 +2248,7 @@ because xbuild doesn't support framework reference assemblies.
     MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
     OutputDirectory="$(IntermediateOutputPath)android\src\mono" 
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
-    TargetFrameworkVersion="$(_TargetFrameworkVersion)" 
+    TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
 </Target>
 
@@ -2298,6 +2349,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSdkPlatform="$(_AndroidApiLevel)"
     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
     ToolPath="$(Aapt2ToolPath)"
     ToolExe="$(Aapt2ToolExe)"
   />
@@ -2443,7 +2495,6 @@ because xbuild doesn't support framework reference assemblies.
     ToolPath="$(JavaToolPath)"
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
-    InputClassesDirectory="$(IntermediateOutputPath)android\bin\classes"
     InputJars="@(_JavaLibrariesToCompileForAppDx)"
     ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
@@ -2494,7 +2545,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
   <CreateItem
-    Include="@(_DesugaredJars)"
+    Include="$(IntermediateOutputPath)android\bin\classes.zip;@(_DesugaredJars)"
     Condition="('$(AndroidEnableProguard)' != 'True' or '$(_ProguardProjectConfiguration)' == '') and '$(AndroidEnableDesugar)' == 'True'">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
@@ -2510,6 +2561,7 @@ because xbuild doesn't support framework reference assemblies.
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     CustomMainDexListFiles="@(MultiDexMainDexList)"
     ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
+    ExtraArgs="$(AndroidMultiDexClassListExtraArgs)"
     >
   </CreateMultiDexMainDexClassList>
 
@@ -2667,12 +2719,14 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Bundle the assemblies into native libraries in the apk -->
   <MakeBundleNativeCodeExternal
 		Condition="'$(BundleAssemblies)' == 'True'"
+		KeepTemp="$(AndroidMakeBundleKeepTemporaryFiles)"
 		AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 		Assemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
 		IncludePath="$(MonoAndroidIncludeDirectory)"
 		SupportedAbis="$(_BuildTargetAbis)"
 		TempOutputPath="$(IntermediateOutputPath)"
-		ToolPath="$(_MonoAndroidToolsDirectory)">
+		ToolPath="$(_MonoAndroidToolsDirectory)"
+		BundleApiPath="$(MSBuildThisFileDirectory)\mkbundle-api.h">
  	<Output TaskParameter="OutputNativeLibraries" PropertyName="_BundleResultNativeLibraries" />
   </MakeBundleNativeCodeExternal>
   <!-- Put the assemblies and native libraries in the apk -->
@@ -2705,6 +2759,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
     HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"
+    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2953,7 +3008,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanDesignTimeIntermediateDir">
-	<RemoveDirFixed Directories="$(_AndroidDesignTimeResDirIntermediate)" Condition="Exists ('$(_AndroidDesignTimeResDirIntermediate)')" />
+	<RemoveDirFixed Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition="Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)')" />
 </Target>
 
 <Target Name="_CleanGeneratedDeploymentFiles">

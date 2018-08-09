@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -130,6 +130,7 @@
     <Compile Include="Tasks\Javac.cs" />
     <Compile Include="Tasks\LinkAssemblies.cs" />
     <Compile Include="Tasks\CopyResource.cs" />
+    <Compile Include="Tasks\ResolveAndroidTooling.cs" />
     <Compile Include="Tasks\ResolveAssemblies.cs" />
     <Compile Include="Tasks\GetAppSettingsDirectory.cs" />
     <Compile Include="Tasks\CopyIfChanged.cs" />
@@ -150,6 +151,7 @@
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
+    <Compile Include="Tasks\ValidateJavaVersion.cs" />
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
@@ -578,6 +580,10 @@
     </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\monodroid\jni\mkbundle-api.h">
+      <Link>mkbundle-api.h</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Tasks\JavaDoc.cs" />

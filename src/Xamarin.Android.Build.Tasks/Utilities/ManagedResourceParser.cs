@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 	class ManagedResourceParser : ResourceParser
 	{
 		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml;
+		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
 		Dictionary<string, string> map;
 		bool app;
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
@@ -56,6 +56,7 @@ namespace Xamarin.Android.Tasks
 			plurals = CreateClass ("Plurals");
 			styleable = CreateClass ("Styleable");
 			style = CreateClass ("Style");
+			transition = CreateClass ("Transition");
 			xml = CreateClass ("Xml");
 
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
@@ -103,6 +104,7 @@ namespace Xamarin.Android.Tasks
 			SortMembers (strings);
 			SortMembers (style);
 			SortMembers (styleable);
+			SortMembers (transition);
 			SortMembers (xml);
 
 
@@ -146,6 +148,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (style);
 			if (styleable.Members.Count > 1)
 				resources.Members.Add (styleable);
+			if (transition.Members.Count > 1)
+				resources.Members.Add (transition);
 			if (xml.Members.Count > 1)
 				resources.Members.Add (xml);
 
@@ -168,6 +172,9 @@ namespace Xamarin.Android.Tasks
 					break;
 				case "attr":
 					CreateIntField (attrib, itemName, value);
+					break;
+				case "array":
+					CreateIntField (arrays, itemName, value);
 					break;
 				case "bool":
 					CreateIntField (boolean, itemName, value);
@@ -225,6 +232,9 @@ namespace Xamarin.Android.Tasks
 						break;
 					}
 					break;
+				case "transition":
+					CreateIntField (transition, itemName, value);
+					break;
 				case "xml":
 					CreateIntField (xml, itemName, value);
 					break;
@@ -246,7 +256,11 @@ namespace Xamarin.Android.Tasks
 			case ".axml":
 				if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) == 0)
 					goto default;
-				ProcessXmlFile (file);
+				try {
+					ProcessXmlFile (file);
+				} catch (XmlException ex) {
+					Log.LogCodedWarning ("XA1000", $"There was an problem parsing {file}. This is likely due to incomplete or invalid xml. Exception: {ex}");
+				}
 				break;
 			default:
 				break;
@@ -424,6 +438,9 @@ namespace Xamarin.Android.Tasks
 				break;
 			case "style":
 				CreateIntField (style, fieldName.Replace (".", "_"));
+				break;
+			case "transition":
+				CreateIntField (transition, fieldName);
 				break;
 			case "xml":
 				CreateIntField (xml, fieldName);

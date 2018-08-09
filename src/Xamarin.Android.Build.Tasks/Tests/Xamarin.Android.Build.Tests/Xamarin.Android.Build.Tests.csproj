@@ -82,6 +82,9 @@
     <Compile Include="ManagedResourceParserTests.cs" />
     <Compile Include="Tasks\KeyToolTests.cs" />
     <Compile Include="Aapt2Tests.cs" />
+    <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
+    <Compile Include="ZipArchiveExTests.cs" />
+    <Compile Include="ConvertResourcesCasesTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

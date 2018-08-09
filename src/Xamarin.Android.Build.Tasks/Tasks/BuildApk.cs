@@ -87,6 +87,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidEmbedProfilers { get; set; }
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
+		public string UncompressedFileExtensions { get; set; }
 
 
 		static  readonly    string          MSBuildXamarinAndroidDirectory      = Path.GetDirectoryName (typeof (BuildApk).Assembly.Location);
@@ -108,6 +109,7 @@ namespace Xamarin.Android.Tasks
 		Guid buildId = Guid.NewGuid ();
 		
 		public ITaskItem[] LibraryProjectJars { get; set; }
+		string [] uncompressedFileExtensions;
 
 		void ExecuteWithAbi (string supportedAbis, string apkInputPath, string apkOutputPath)
 		{
@@ -146,7 +148,7 @@ namespace Xamarin.Android.Tasks
 						Log.LogCodedWarning ("XA4301", file.Item1, 0, "Apk already contains the item {0}; ignoring.", item);
 						continue;
 					}
-					apk.Archive.AddFile (file.Item1, item);
+					apk.Archive.AddFile (file.Item1, item, compressionMethod: GetCompressionMethod (file.Item1));
 					count++;
 					if (count == ZipArchiveEx.ZipFlushLimit) {
 						apk.Flush();
@@ -209,6 +211,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
 			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
 			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
+			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
 			Log.LogDebugTaskItems ("  Environments:", Environments);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
 			Log.LogDebugTaskItems ("  ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
@@ -229,6 +232,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var outputFiles = new List<string> ();
+			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
 
 			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath);
 			outputFiles.Add (ApkOutputPath);
@@ -457,6 +461,13 @@ namespace Xamarin.Android.Tasks
 			return results;
 		}
 
+		CompressionMethod GetCompressionMethod (string fileName)
+		{
+			if (uncompressedFileExtensions.Any (x => string.Compare (x, Path.GetExtension (fileName), StringComparison.OrdinalIgnoreCase) == 0))
+				return CompressionMethod.Store;
+			return CompressionMethod.Default;
+		}
+
 		void AddNativeLibrary (ZipArchiveEx apk, string abi, string filename, string inArchiveFileName = null)
 		{
 			string libPath = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi);
@@ -469,7 +480,7 @@ namespace Xamarin.Android.Tasks
 
 			string archivePath = string.Format ("lib/{0}/{1}", abi, inArchiveFileName ?? filename);
 			Log.LogDebugMessage ($"Adding native library: {path} (APK path: {archivePath})");
-			apk.Archive.AddEntry (archivePath, File.OpenRead (path));
+			apk.Archive.AddEntry (archivePath, File.OpenRead (path), compressionMethod: GetCompressionMethod (archivePath));
 		}
 
 		void AddProfilers (ZipArchiveEx apk, string abi)
@@ -536,7 +547,7 @@ namespace Xamarin.Android.Tasks
 									using (var s = new MemoryStream ()) {
 										e.Extract (s);
 										s.Position = 0;
-										apk.Archive.AddEntry (s.ToArray (), key);
+										apk.Archive.AddEntry (s.ToArray (), key, compressionMethod: GetCompressionMethod (key));
 									}
 								}
 							}

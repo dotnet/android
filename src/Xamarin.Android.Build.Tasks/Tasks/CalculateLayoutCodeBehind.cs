@@ -74,6 +74,7 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary <string, string> knownNamespaceFixups = new Dictionary <string, string> (StringComparer.OrdinalIgnoreCase) {
 			{"android.view", "Android.Views"},
 			{"android.support.wearable.view", "Android.Support.Wearable.Views"},
+			{"android.support.constraint", "Android.Support.Constraints"},
 			{"com.actionbarsherlock", "ABSherlock"},
 			{"com.actionbarsherlock.widget", "ABSherlock.Widget"},
 			{"com.actionbarsherlock.view", "ABSherlock.View"},
@@ -220,6 +221,13 @@ namespace Xamarin.Android.Tasks
 			bool skipFirst = false;
 
 			nav.MoveToFirstChild ();
+
+			// This is needed in case the first element after XML declaration is not an actual element but a
+			// comment, for instance
+			while (nav.NodeType != XPathNodeType.Element) {
+				nav.MoveToNext ();
+			}
+
 			string xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
 
 			if (!String.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
@@ -243,6 +251,12 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				XPathNavigator current = nodes.Current;
+
+				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
+				// an element. Prevents https://github.com/xamarin/xamarin-android/issues/1929
+				if (String.Compare ("merge", current.LocalName, StringComparison.Ordinal) == 0)
+					continue;
+
 				bool isInclude = String.Compare ("include", current.LocalName, StringComparison.Ordinal) == 0;
 
 				if (!GetAndParseId (current, filePath, androidNS, isInclude, out id, out parsedId, out name)  && !isInclude) {

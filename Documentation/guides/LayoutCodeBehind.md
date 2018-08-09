@@ -465,6 +465,7 @@ a number of very simple adjustments to try to match the code, such as:
 
       * `android.view` -> `Android.Views`
       * `android.support.wearable.view` -> `Android.Support.Wearable.Views`
+      * `android.support.constraint` -> `Android.Support.Constraints`
       * `com.actionbarsherlock` -> `ABSherlock`
       * `com.actionbarsherlock.widget` -> `ABSherlock.Widget`
       * `com.actionbarsherlock.view` -> `ABSherlock.View`

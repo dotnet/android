@@ -49,6 +49,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v4.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v4.dll" }
 			}
 		};
+		public static Package AndroidSupportV4_27_0_2_1 = new Package () {
+			Id = "Xamarin.Android.Support.v4",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v4") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v4.27.0.2.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v4.dll" }
+			}
+		};
 		public static Package AndroidSupportV4Beta = new Package () {
 			Id = "Xamarin.Android.Support.v4",
 			Version = "21.0.0.0-beta1",
@@ -103,6 +112,16 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.RecyclerView.21.0.0.0-beta1\\lib\\MonoAndroid\\Xamarin.Android.Support.v7.RecyclerView.dll" }
 				}
 		};
+		public static Package SupportV7RecyclerView_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.RecyclerView",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.V7.RecyclerView") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.RecyclerView.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.RecyclerView.dll"
+				}
+			}
+		};
 		public static Package SupportV7CardView = new Package {
 			Id = "Xamarin.Android.Support.v7.Cardview",
 			Version = "21.0.3.0",
@@ -128,6 +147,15 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Support.v7.CardView") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.CardView.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v7.CardView.dll" }
+			}
+		};
+		public static Package SupportV7CardView_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.Cardview",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.CardView") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.CardView.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.CardView.dll" }
 			}
 		};
 		public static Package SupportV7AppCompat_21_0_3_0 = new Package {
@@ -211,6 +239,60 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Media.Compat.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Media.Compat.dll" }
 			}
 		};
+		public static Package SupportV7AppCompat_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.AppCompat",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.AppCompat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.AppCompat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.AppCompat.dll" }
+			}
+		};
+		public static Package SupportCompat_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Compat",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Compat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Compat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Compat.dll" }
+			}
+		};
+		public static Package SupportCoreUI_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Core.UI",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Core.UI") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.UI.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Core.UI.dll" }
+			}
+		};
+		public static Package SupportCoreUtils_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Core.Utils",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Core.Utils") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.Utils.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Core.Utils.dll" }
+			}
+		};
+		public static Package SupportFragment_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Fragment",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Fragment") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Fragment.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Fragment.dll" }
+			}
+		};
+		public static Package SupportMediaCompat_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Media.Compat",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Media.Compat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Media.Compat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Media.Compat.dll" }
+			}
+		};
 		public static Package SupportV7MediaRouter_21_0_3_0 = new Package {
 			Id = "Xamarin.Android.Support.v7.MediaRouter",
 			Version = "21.0.3.0",
@@ -218,6 +300,24 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Support.v7.MediaRouter") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.21.0.3.0\\lib\\MonoAndroid403\\Xamarin.Android.Support.v7.MediaRouter.dll" }
+			}
+		};
+		public static Package SupportV7MediaRouter_25_4_0_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.MediaRouter",
+			Version = "25.4.0.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.MediaRouter") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v7.MediaRouter.dll" }
+			}
+		};
+		public static Package SupportV7MediaRouter_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.v7.MediaRouter",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.v7.MediaRouter") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.MediaRouter.dll" }
 			}
 		};
 		public static Package SupportV7Palette_22_1_1_1 = new Package {
@@ -236,6 +336,15 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Support.Design") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Design.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Design.dll" }
+				}
+		};
+		public static Package SupportDesign_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Design",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Design") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Design.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Design.dll" }
 				}
 		};
 		public static Package GooglePlayServices_22_0_0_2 = new Package {
@@ -318,6 +427,28 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+		public static Package XamarinForms_3_0_0_561731 = new Package {
+			Id = "Xamarin.Forms",
+			Version = "3.0.0.561731",
+			TargetFramework = "MonoAndroid10",
+			References =  {
+				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.Android.dll"
+				},
+				new BuildItem.Reference ("FormsViewGroup") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\FormsViewGroup.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Core") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Core.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Xaml.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Platform") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.dll"
+				},
+			}
+		};
 		public static Package CocosSharp_PCL_Shared_1_5_0_0 = new Package {
 			Id = "CocosSharp.PCL.Shared", 
 			Version = "1.5.0.0",
@@ -392,6 +523,46 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference("Microsoft.Azure.EventHubs") {
 					MetadataValues = "HintPath=..\\packages\\Microsoft.Azure.EventHubs.2.0.0\\lib\\netstandard2.0\\Microsoft.Azure.EventHubs.dll"
+				}
+			}
+		};
+		public static Package PCLCrypto_Alpha = new Package {
+			Id = "PCLCrypto",
+			Version = "2.1.17-alpha-g5b1e8dff8c",
+			TargetFramework = "monoandroid23",
+			References = {
+				new BuildItem.Reference("PCLCrypto") {
+					MetadataValues = "HintPath=..\\packages\\PCLCrypto.2.1.17-alpha-g5b1e8dff8c\\lib\\monoandroid23\\PCLCrypto.dll"
+				}
+			}
+		};
+		public static Package Android_Arch_Core_Common_26_1_0 = new Package {
+			Id = "Xamarin.Android.Arch.Core.Common",
+			Version = "26.1.0",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Arch.Core.Common") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Core.Common.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Core.Common.dll"
+				}
+			}
+		};
+		public static Package Android_Arch_Lifecycle_Common_26_1_0 = new Package {
+			Id = "Xamarin.Android.Arch.Lifecycle.Common",
+			Version = "26.1.0",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Arch.Lifecycle.Common") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Lifecycle.Common.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Lifecycle.Common.dll"
+				}
+			}
+		};
+		public static Package Android_Arch_Lifecycle_Runtime_26_1_0 = new Package {
+			Id = "Xamarin.Android.Arch.Lifecycle.Runtime",
+			Version = "26.1.0",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Arch.Lifecycle.Runtime") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Lifecycle.Runtime.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Lifecycle.Runtime.dll"
 				}
 			}
 		};

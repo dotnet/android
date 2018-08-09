@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceSymbolsTextFileDirectory { get; set; }
 
-		Dictionary<string,string> resource_name_case_map = new Dictionary<string,string> ();
+		Dictionary<string,string> resource_name_case_map;
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		string resourceDirectory;
 
@@ -251,9 +251,7 @@ namespace Xamarin.Android.Tasks
 
 		void DoExecute ()
 		{
-			if (ResourceNameCaseMap != null)
-				foreach (var arr in ResourceNameCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					resource_name_case_map [arr [1]] = arr [0]; // lowercase -> original
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
@@ -414,7 +412,7 @@ namespace Xamarin.Android.Tasks
 				var file = match.Groups["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups["line"]?.Value))
-					line = int.Parse (match.Groups["line"].Value) + 1;
+					line = int.Parse (match.Groups["line"].Value.Trim ()) + 1;
 				var level = match.Groups["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 				if (message.Contains ("fakeLogOpen")) {

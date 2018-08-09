@@ -79,8 +79,8 @@ function getInfo_Linux()
     fi
 
     case "$OS_NAME" in
-      Ubuntu|Debian) HOST_OS_FLAVOR=Debian ;;
-      *) OS_FLAVOR=Generic ;;
+      Ubuntu|Debian|LinuxMint) HOST_OS_FLAVOR=Debian ;;
+      *) HOST_OS_FLAVOR=Generic ;;
     esac
 
     HOST_CPUS="`nproc`"

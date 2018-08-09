@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 
 namespace Android.Runtime {
 	public static class JNINativeWrapper {
@@ -48,7 +49,7 @@ namespace Android.Runtime {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			var dynamic = new DynamicMethod (Guid.NewGuid ().ToString (), ret_type, param_types, typeof (object), true);
+			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
 			var ig = dynamic.GetILGenerator ();
 
 			LocalBuilder retval = null;

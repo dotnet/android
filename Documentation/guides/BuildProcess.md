@@ -624,7 +624,7 @@ when packaing Release applications.
     allows the developer to define custom items to use with the
     `AndroidVersionCodePattern`. They are in the form of a `key=value`
     pair. All items in the `value` should be integer values. For
-    example: `screen=23;target=$(_SupportedApiLevel)`. As you can see
+    example: `screen=23;target=$(_AndroidApiLevel)`. As you can see
     you can make use of existing or custom MSBuild properties in the
     string.
 
@@ -688,6 +688,26 @@ when packaing Release applications.
 
     **Experimental**. Added in Xamarin.Android 8.4.  
     The default value is False.
+
+- **AndroidMultiDexClassListExtraArgs** &ndash; A string property
+    which allows developers to pass additional arguments to the 
+    `com.android.multidex.MainDexListBuilder` when generating the 
+    `multidex.keep` file. 
+
+    One specific case is if you are getting the following error
+    during the `dx` compilation.
+
+        com.android.dex.DexException: Too many classes in --main-dex-list, main dex capacity exceeded
+
+    If you are getting this error you can add the following to the
+    .csproj.
+
+        <DxExtraArguments>--force-jumbo </DxExtraArguments>
+        <AndroidMultiDexClassListExtraArgs>--disable-annotation-resolution-workaround</AndroidMultiDexClassListExtraArgs>
+
+    this should allow the `dx` step to succeed.
+
+    Added in Xamarin.Android 8.3.
 
 ### Binding Project Build Properties
 
@@ -796,6 +816,18 @@ resources.
         /p:AndroidUseAapt2=True
 
     Added in Xamarin.Android 8.3.
+
+-   **AndroidAapt2CompileExtraArgs** &ndash; Specifies additional
+    command-line options to pass to the **aapt2 compile** command when
+    processing Android assets and resources.
+
+    Added in Xamarin.Android 9.1.
+
+-   **AndroidAapt2LinkExtraArgs** &ndash; Specifies additional
+    command-line options to pass to the **aapt2 link** command when
+    processing Android assets and resources.
+
+    Added in Xamarin.Android 9.1.
 
 <a name="Signing_Properties" />
 

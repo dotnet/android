@@ -68,6 +68,8 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 
 	pthread_once (&java_classes_once_control, java_classes_init);
 
+	JNIEnv *env = NULL;
+	jobject networkInterface = NULL;
 	if (!NetworkInterface_class || !NetworkInterface_getByName) {
 		if (!NetworkInterface_class)
 			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface' Java class");
@@ -77,10 +79,16 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 		goto leave;
 	}
 
-	JNIEnv *env = get_jnienv ();
+	env = get_jnienv ();
 	jstring NetworkInterface_nameArg = (*env)->NewStringUTF (env, ifname);
-	jobject networkInterface = (*env)->CallStaticObjectMethod (env, NetworkInterface_class, NetworkInterface_getByName, NetworkInterface_nameArg);
+	networkInterface = (*env)->CallStaticObjectMethod (env, NetworkInterface_class, NetworkInterface_getByName, NetworkInterface_nameArg);
 	(*env)->DeleteLocalRef (env, NetworkInterface_nameArg);
+	if ((*env)->ExceptionOccurred (env)) {
+		log_warn (LOG_NET, "Java exception occurred while looking up the interface '%s'", ifname);
+		(*env)->ExceptionDescribe (env);
+		(*env)->ExceptionClear (env);
+		goto leave;
+	}
 
 	if (!networkInterface) {
 		log_warn (LOG_NET, "Failed to look up interface '%s' using Java API", ifname);
@@ -107,6 +115,11 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
   leave:
 	if (!ret)
 		log_warn (LOG_NET, "Unable to determine interface '%s' state using Java API", ifname);
+
+	if (networkInterface != NULL && env != NULL) {
+		(*env)->DeleteLocalRef (env, networkInterface);
+	}
+
 	return ret;
 }
 
@@ -128,11 +141,11 @@ _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bo
 MONO_API int
 _monodroid_get_dns_servers (void **dns_servers_array)
 {
-	*dns_servers_array = NULL;
 	if (!dns_servers_array) {
 		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in");
 		return -1;
 	}
+	*dns_servers_array = NULL;
 
 	size_t  len;
 	char   *dns;
@@ -142,7 +155,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
 		len = monodroid_get_system_property (prop_name, &dns);
-		if (len <= 0) {
+		if (len == 0) {
 			dns_servers [i] = NULL;
 			continue;
 		}

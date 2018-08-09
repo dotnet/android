@@ -64,6 +64,7 @@
     <Compile Include="Android\KnownProperties.cs" />
     <Compile Include="Android\AndroidLinkMode.cs" />
     <Compile Include="Common\FailedBuildException.cs" />
+    <Compile Include="Utilities\DexUtils.cs" />
     <Compile Include="Utilities\PNGChecker.cs" />
     <Compile Include="Utilities\ZipHelper.cs" />
     <Compile Include="Common\XamarinPCLProject.cs" />
@@ -79,16 +80,8 @@
     <Compile Include="Common\DotNetStandard.cs" />
     <Compile Include="Common\DotNetXamarinProject.cs" />
     <Compile Include="..\..\..\..\bin\Test$(CONFIGURATION)\XABuildPaths.cs">
-       <Link>XABuildPaths.cs</Link>
+      <Link>XABuildPaths.cs</Link>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Android\" />
-    <Folder Include="Resources\" />
-    <Folder Include="Resources\Wear\" />
-    <Folder Include="Resources\Base\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
@@ -139,8 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content
-        Include="..\..\..\..\.nuget\NuGet.exe">
+    <Content Include="..\..\..\..\.nuget\NuGet.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

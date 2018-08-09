@@ -61,6 +61,9 @@ namespace Xamarin.Android.Tools {
 
 				if (!Directory.Exists (source)) {
 					File.Copy (source, destination, true);
+					MonoAndroidHelper.SetWriteable (destination);
+					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 					return true;
 				}
 			}/* else
@@ -78,6 +81,8 @@ namespace Xamarin.Android.Tools {
 				using (var f = File.Create (destination)) {
 					source.CopyTo (f);
 				}
+				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
@@ -96,6 +101,8 @@ namespace Xamarin.Android.Tools {
 				Directory.CreateDirectory (Path.GetDirectoryName (destination));
 
 				File.Copy (source, destination, true);
+				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
@@ -211,18 +218,27 @@ namespace Xamarin.Android.Tools {
 			bool updated = false;
 			HashSet<string> files = new HashSet<string> ();
 			foreach (var entry in zip) {
+				progressCallback?.Invoke (i++, total);
 				if (entry.FullName.Contains ("/__MACOSX/") ||
 						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 					continue;
 				var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 				if (entry.IsDirectory) {
-					Directory.CreateDirectory (Path.Combine (destination, fullName));
+					try {
+						Directory.CreateDirectory (Path.Combine (destination, fullName));
+					} catch (NotSupportedException ex) {
+						//NOTE: invalid paths, such as `:` on Windows can cause this
+						throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
+					}
 					continue;
 				}
-				if (progressCallback != null)
-					progressCallback (i++, total);
-				Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
+				try {
+					Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
+				} catch (NotSupportedException ex) {
+					//NOTE: invalid paths, such as `:` on Windows can cause this
+					throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
+				}
 				var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
 				files.Add (outfile);
 				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;

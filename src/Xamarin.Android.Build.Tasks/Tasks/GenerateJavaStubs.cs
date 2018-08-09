@@ -33,6 +33,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AcwMapFile { get; set; }
 
+		[Required]
+		public ITaskItem [] FrameworkDirectories { get; set; }
+
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
 
@@ -78,6 +81,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
 			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
+			Log.LogDebugTaskItems ("  FrameworkDirectories: ", FrameworkDirectories);
 			Log.LogDebugMessage ("  BundledWearApplicationName: {0}", BundledWearApplicationName);
 			Log.LogDebugTaskItems ("  MergedManifestDocuments:", MergedManifestDocuments);
 			Log.LogDebugMessage ("  PackageNamingPolicy: {0}", PackageNamingPolicy);
@@ -115,6 +119,11 @@ namespace Xamarin.Android.Tasks
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
 			var temp = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (temp);
+
+			foreach (var dir in FrameworkDirectories) {
+				if (Directory.Exists (dir.ItemSpec))
+					res.SearchDirectories.Add (dir.ItemSpec);
+			}
 
 			var selectedWhitelistAssemblies = new List<string> ();
 			
@@ -297,7 +306,7 @@ namespace Xamarin.Android.Tasks
 			var np  = path + ".new";
 			using (var o = File.OpenWrite (np))
 				generator (o);
-			Files.CopyIfChanged (np, path);
+			MonoAndroidHelper.CopyIfChanged (np, path);
 			File.Delete (np);
 		}
 	}

@@ -86,12 +86,20 @@ namespace Xamarin.Android.Tasks
 
 		public void AddDirectory (string folder, string folderInArchive)
 		{
+			if (!string.IsNullOrEmpty (folder)) {
+				folder = folder.Replace ('/', Path.DirectorySeparatorChar).Replace ('\\', Path.DirectorySeparatorChar);
+				folder = Path.GetFullPath (folder);
+				if (folder [folder.Length - 1] == Path.DirectorySeparatorChar) {
+					folder = folder.Substring (0, folder.Length - 1);
+				}
+			}
+
 			AddFiles (folder, folderInArchive);
 			foreach (string dir in Directory.GetDirectories (folder, "*", SearchOption.AllDirectories)) {
 				var di = new DirectoryInfo (dir);
 				if ((di.Attributes & FileAttributes.Hidden) != 0)
 					continue;
-				var internalDir = dir.Replace ("./", string.Empty).Replace (folder, string.Empty);
+				var internalDir = dir.Replace (folder, string.Empty);
 				string fullDirPath = folderInArchive + internalDir;
 				try {
 					zip.CreateDirectory (fullDirPath);

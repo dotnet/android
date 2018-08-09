@@ -26,8 +26,6 @@ namespace Xamarin.Android.Tasks
 				var date = DateTime.Now;
 				if (File.Exists (src)) {
 					MonoAndroidHelper.CopyIfChanged (src, dst);
-					MonoAndroidHelper.SetWriteable (dst);
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dst, date, Log);
 				}
 			}
 			return true;

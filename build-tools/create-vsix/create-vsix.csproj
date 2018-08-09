@@ -19,6 +19,7 @@
     <IncludeDebugSymbolsInVSIXContainer>False</IncludeDebugSymbolsInVSIXContainer>
     <IsExperimental Condition=" '$(IsExperimental)' == '' ">true</IsExperimental>
     <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">True</IsProductComponent>
+    <ZipPackageCompressionLevel Condition=" '$(ZipPackageCompressionLevel)' == '' ">Normal</ZipPackageCompressionLevel>
     <_BuildVsix Condition=" '$(CreateVsixContainer)' == 'True' And Exists ('$(VsSDKInstall)') ">True</_BuildVsix>
     <_BuildVsix Condition=" '$(_BuildVsix)' == '' ">False</_BuildVsix>
     <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
