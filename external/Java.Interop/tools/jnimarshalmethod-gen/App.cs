@@ -251,6 +251,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					continue;
 				}
 
+				if (Verbose)
+					ColorWriteLine ($"Processing {type} type", ConsoleColor.Yellow);
+
 				var registrationElements    = new List<Expression> ();
 				var targetType              = Expression.Variable (typeof(Type), "targetType");
 				TypeBuilder dt = null;
@@ -490,6 +493,15 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					}
 
 				}
+
+				if ((string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature)) && constructorArguments.Length != 3)
+					continue;
+
+				if (string.IsNullOrEmpty (name))
+					name = constructorArguments [0].Value.ToString ();
+
+				if (string.IsNullOrEmpty (signature))
+					signature = constructorArguments [1].Value.ToString ();
 
 				if (string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature))
 					continue;
