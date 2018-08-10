@@ -35,25 +35,25 @@ namespace Xamarin.Android.Tools.Tests
 			var dir = Path.GetTempFileName();
 			File.Delete (dir);
 
-			CreateFauxJdk (dir, "1.2.3.4");
+			CreateFauxJdk (dir, releaseVersion: "1.2.3", releaseBuildNumber: "42", javaVersion: "100.100.100-100");
 
 			FauxJdkDir = dir;
 		}
 
-		internal static void CreateFauxJdk (string dir, string version)
+		internal static void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion)
 		{
 			Directory.CreateDirectory (dir);
 
 			using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
-				release.WriteLine ($"JAVA_VERSION=\"{version}\"");
-				release.WriteLine ($"BUILD_NUMBER=42");
+				release.WriteLine ($"JAVA_VERSION=\"{releaseVersion}\"");
+				release.WriteLine ($"BUILD_NUMBER={releaseBuildNumber}");
 				release.WriteLine ($"JUST_A_KEY");
 			}
 
 			var bin = Path.Combine (dir, "bin");
 			var inc = Path.Combine (dir, "include");
-			var jli = Path.Combine (dir, "jli");
 			var jre = Path.Combine (dir, "jre");
+			var jli = Path.Combine (jre, "lib", "jli");
 
 			Directory.CreateDirectory (bin);
 			Directory.CreateDirectory (inc);
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.Tests
 				$"echo Property settings:{Environment.NewLine}" +
 				$"echo \"    java.home = {dir}\"{Environment.NewLine}" +
 				$"echo \"    java.vendor = Xamarin.Android Unit Tests\"{Environment.NewLine}" +
-				$"echo \"    java.version = 100.100.100\"{Environment.NewLine}" +
+				$"echo \"    java.version = {javaVersion}\"{Environment.NewLine}" +
 				$"echo \"    xamarin.multi-line = line the first\"{Environment.NewLine}" +
 				$"echo \"        line the second\"{Environment.NewLine}" +
 				$"echo \"        .\"{Environment.NewLine}";
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tools.Tests
 			CreateShellScript (Path.Combine (bin, "jar"), "");
 			CreateShellScript (Path.Combine (bin, "java"), java);
 			CreateShellScript (Path.Combine (bin, "javac"), "");
-			CreateShellScript (Path.Combine (dir, "jli", "libjli.dylib"), "");
+			CreateShellScript (Path.Combine (jli, "libjli.dylib"), "");
 			CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
 			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
 		}
@@ -127,9 +127,9 @@ namespace Xamarin.Android.Tools.Tests
 		public void VersionPrefersRelease ()
 		{
 			var jdk     = new JdkInfo (FauxJdkDir);
-			// Note: `release` has JAVA_VERSION=1.2.3.4, while `java` prints java.version=100.100.100.
-			// We prefer the value within `releas`.
-			Assert.AreEqual (jdk.Version, new Version ("1.2.3.4"));
+			// Note: `release` has JAVA_VERSION=1.2.3 + BUILD_NUMBER=42, while `java` prints java.version=100.100.100.
+			// We prefer the value constructed from `release`.
+			Assert.AreEqual (jdk.Version, new Version ("1.2.3.42"));
 		}
 
 		[Test]
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tools.Tests
 			var jdk     = new JdkInfo (FauxJdkDir);
 
 			Assert.AreEqual (3,         jdk.ReleaseProperties.Count);
-			Assert.AreEqual ("1.2.3.4", jdk.ReleaseProperties ["JAVA_VERSION"]);
+			Assert.AreEqual ("1.2.3",   jdk.ReleaseProperties ["JAVA_VERSION"]);
 			Assert.AreEqual ("42",      jdk.ReleaseProperties ["BUILD_NUMBER"]);
 			Assert.AreEqual ("",        jdk.ReleaseProperties ["JUST_A_KEY"]);
 		}
@@ -157,7 +157,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (FauxJdkDir, home);
 
 			Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
-			Assert.AreEqual ("100.100.100", version);
+			Assert.AreEqual ("100.100.100-100", version);
 
 			Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.vendor", out var vendor));
 			Assert.AreEqual ("Xamarin.Android Unit Tests", vendor);
@@ -169,6 +169,86 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("line the first",      lines.ElementAt (0));
 			Assert.AreEqual ("line the second",     lines.ElementAt (1));
 			Assert.AreEqual (".",                   lines.ElementAt (2));
+		}
+
+		[Test]
+		public void ParseOracleReleaseVersion ()
+		{
+			var dir = Path.GetTempFileName();
+			File.Delete (dir);
+
+			try {
+				CreateFauxJdk (dir, releaseVersion: "1.2.3_4", releaseBuildNumber: "", javaVersion: "100.100.100_100");
+				var jdk     = new JdkInfo (dir);
+				Assert.AreEqual (new Version (1, 2, 3, 4),  jdk.Version);
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ParseOracleJavaVersion ()
+		{
+			var dir = Path.GetTempFileName();
+			File.Delete (dir);
+
+			try {
+				CreateFauxJdk (dir, releaseVersion: "", releaseBuildNumber: "", javaVersion: "101.102.103_104");
+				var jdk     = new JdkInfo (dir);
+				Assert.AreEqual (new Version (101, 102, 103, 104), jdk.Version);
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ParseMicrosoftReleaseVersion ()
+		{
+			var dir = Path.GetTempFileName();
+			File.Delete (dir);
+
+			try {
+				CreateFauxJdk (dir, releaseVersion: "1.2.3", releaseBuildNumber: "4", javaVersion: "100.100.100_100");
+				var jdk     = new JdkInfo (dir);
+				Assert.AreEqual (new Version (1, 2, 3, 4),  jdk.Version);
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ParseMicrosoftJavaVersion()
+		{
+			var dir = Path.GetTempFileName();
+			File.Delete (dir);
+
+			try {
+				CreateFauxJdk (dir, releaseVersion: "", releaseBuildNumber: "", javaVersion: "1.2.3-4");
+				var jdk     = new JdkInfo (dir);
+				Assert.AreEqual (new Version (1, 2, 3, 4),  jdk.Version);
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
+		}
+
+		[Test]
+		public void Version_ThrowsNotSupportedException ()
+		{
+			var dir = Path.GetTempFileName();
+			File.Delete (dir);
+
+			try {
+				CreateFauxJdk (dir, releaseVersion: "", releaseBuildNumber: "", javaVersion: "");
+				var jdk     = new JdkInfo (dir);
+				Assert.Throws<NotSupportedException> (() => { var _ = jdk.Version; });
+			}
+			finally {
+				Directory.Delete (dir, recursive: true);
+			}
 		}
 	}
 }

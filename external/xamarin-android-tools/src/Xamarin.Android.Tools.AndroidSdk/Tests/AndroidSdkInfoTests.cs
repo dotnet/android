@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools.Tests
 		public void Constructor_SetValuesFromPath ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
-			JdkInfoTests.CreateFauxJdk (jdk, "1.8.0");
+			JdkInfoTests.CreateFauxJdk (jdk, releaseVersion: "1.8.0", releaseBuildNumber: "42", javaVersion: "100.100.100_100");
 
 			Action<TraceLevel, string> logger = (level, message) => {
 				Console.WriteLine ($"[{level}] {message}");
@@ -267,8 +267,8 @@ namespace Xamarin.Android.Tools.Tests
 					return;
 				}
 				Assert.Throws<NotSupportedException>(() => AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest (logger));
-				var newJdkPath  = Path.Combine (PreferredJdksOverridePath, "microsoft_dist_openjdk_1.8.999");
-				JdkInfoTests.CreateFauxJdk (newJdkPath, "1.8.999");
+				var newJdkPath  = Path.Combine (PreferredJdksOverridePath, "microsoft_dist_openjdk_1.8.999.9");
+				JdkInfoTests.CreateFauxJdk (newJdkPath, releaseVersion: "1.8.999", releaseBuildNumber: "9", javaVersion: "1.8.999-9");
 
 				if (File.Exists (UnixConfigPath))
 					File.Move (UnixConfigPath, backupConfig);

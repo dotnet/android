@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tools
 				Console.Error.WriteLine (message);
 				break;
 			default:
-				Console.WriteLine (message);
+				Console.WriteLine ($"[{level}] {message}");
 				break;
 			}
 		}

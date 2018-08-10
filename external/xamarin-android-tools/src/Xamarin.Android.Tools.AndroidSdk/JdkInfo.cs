@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tools
 			JavaPath            = ProcessUtils.FindExecutablesInDirectory (binPath, "java").FirstOrDefault ();
 			JavacPath           = ProcessUtils.FindExecutablesInDirectory (binPath, "javac").FirstOrDefault ();
 			JdkJvmPath = OS.IsMac
-				? FindLibrariesInDirectory (HomePath, "jli").FirstOrDefault ()
+				? FindLibrariesInDirectory (Path.Combine (HomePath, "jre"), "jli").FirstOrDefault ()
 				: FindLibrariesInDirectory (Path.Combine (HomePath, "jre"), "jvm").FirstOrDefault ();
 
 			ValidateFile ("jar",    JarPath);
@@ -115,6 +115,8 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> FindLibrariesInDirectory (string dir, string libraryName)
 		{
+			if (!Directory.Exists (dir))
+				return Enumerable.Empty<string> ();
 			var library = string.Format (OS.NativeLibraryFormat, libraryName);
 			return Directory.EnumerateFiles (dir, library, SearchOption.AllDirectories);
 		}
@@ -125,29 +127,44 @@ namespace Xamarin.Android.Tools
 				throw new ArgumentException ($"Could not find required file `{name}` within `{HomePath}`; is this a valid JDK?", "homePath");
 		}
 
-		static  Regex   VersionExtractor  = new Regex (@"(?<version>[\d]+(\.\d+)+)(_(?<patch>\d+))?", RegexOptions.Compiled);
+		static  Regex   NonDigitMatcher     = new Regex (@"[^\d]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 		Version GetJavaVersion ()
 		{
 			string version = null;
-			if (!ReleaseProperties.TryGetValue ("JAVA_VERSION", out version)) {
-				if (GetJavaSettingsPropertyValue ("java.version", out string vs))
-					version = vs;
+			if (ReleaseProperties.TryGetValue ("JAVA_VERSION", out version) && !string.IsNullOrEmpty (version)) {
+				version = GetParsableVersion (version);
+				if (ReleaseProperties.TryGetValue ("BUILD_NUMBER", out var build) && !string.IsNullOrEmpty (build))
+					version += "." + build;
 			}
-			if (version == null)
-				throw new NotSupportedException ("Could not determine Java version");
-			var m = VersionExtractor.Match (version);
-			if (!m.Success)
+			else if (GetJavaSettingsPropertyValue ("java.version", out version) && !string.IsNullOrEmpty (version)) {
+				version = GetParsableVersion (version);
+			}
+			if (string.IsNullOrEmpty (version))
+				throw new NotSupportedException ("Could not determine Java version.");
+			var normalizedVersion   = NonDigitMatcher.Replace (version, ".");
+			var versionParts        = normalizedVersion.Split (new[]{"."}, StringSplitOptions.RemoveEmptyEntries);
+
+			try {
+				if (versionParts.Length < 2)
+					return null;
+				if (versionParts.Length == 2)
+					return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]));
+				if (versionParts.Length == 3)
+					return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]), build: int.Parse (versionParts [2]));
+				// We just ignore elements 4+
+				return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]), build: int.Parse (versionParts [2]), revision: int.Parse (versionParts [3]));
+			}
+			catch (Exception) {
 				return null;
-			version   = m.Groups ["version"].Value;
-			var patch = m.Groups ["patch"].Value;
-			if (!string.IsNullOrEmpty (patch))
-				version += "." + patch;
+			}
+		}
+
+		static string GetParsableVersion (string version)
+		{
 			if (!version.Contains ("."))
 				version += ".0";
-			if (Version.TryParse (version, out Version v))
-				return v;
-			return null;
+			return version;
 		}
 
 		ReadOnlyDictionary<string, string> GetReleaseProperties ()
