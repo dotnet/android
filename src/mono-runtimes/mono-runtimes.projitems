@@ -10,7 +10,7 @@
       runtime's build
   -->
   <PropertyGroup>
-    <_ArmeabiRuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:'))">true</_ArmeabiRuntimeConfigure>
+    <_ArmeabiRuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) ">true</_ArmeabiRuntimeConfigure>
     <_ArmeabiRuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:'))">true</_ArmeabiRuntimeBuild>
   </PropertyGroup>
   <ItemGroup>
@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_Arm64RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">true</_Arm64RuntimeConfigure>
+    <_Arm64RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">true</_Arm64RuntimeConfigure>
     <_Arm64RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:'))">true</_Arm64RuntimeBuild>
   </PropertyGroup>
   <ItemGroup>
@@ -58,7 +58,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_X86RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">true</_X86RuntimeConfigure>
+    <_X86RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">true</_X86RuntimeConfigure>
     <_X86RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:'))">true</_X86RuntimeBuild>
   </PropertyGroup>
   <ItemGroup>
@@ -75,7 +75,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_X8664RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">true</_X8664RuntimeConfigure>
+    <_X8664RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">true</_X8664RuntimeConfigure>
     <_X8664RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:'))">true</_X8664RuntimeBuild>
   </PropertyGroup>
   <ItemGroup>
