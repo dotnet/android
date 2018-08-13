@@ -2413,6 +2413,10 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource);@(AddOnPlatformLibraries)"
   Outputs="$(IntermediateOutputPath)_javac.stamp">
 
+  <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
+  <RemoveDir Directories="$(IntermediateOutputPath)android\bin\classes" />
+  <Delete Files="$(IntermediateOutputPath)android\bin\classes.zip" />
+
   <!-- Compile java code -->
   <Javac
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
@@ -2566,7 +2570,10 @@ because xbuild doesn't support framework reference assemblies.
   </CreateMultiDexMainDexClassList>
 
   <!-- remove existing dex files that may be previous multidex outputs. -->
-  <Delete Files="$(IntermediateOutputPath)android\bin\classes\*.dex" />
+  <ItemGroup>
+    <_DexesToDelete Include="$(IntermediateOutputPath)android\bin\*.dex" />
+  </ItemGroup>
+  <Delete Files="@(_DexesToDelete)" />
 
   <!-- Compile java code to dalvik -->
   <CompileToDalvik 
