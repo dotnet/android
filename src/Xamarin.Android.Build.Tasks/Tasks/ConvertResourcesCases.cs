@@ -74,10 +74,10 @@ namespace Xamarin.Android.Tasks
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
 				var tmpdest = Path.GetTempFileName ();
-				MonoAndroidHelper.CopyIfChanged (file, tmpdest);
+				File.Copy (file, tmpdest, overwrite: true);
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
-					AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
+					bool success = AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
 						ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec), (t, m) => {
 							string targetfile = file;
 							if (targetfile.StartsWith (resdir, StringComparison.InvariantCultureIgnoreCase)) {
@@ -98,6 +98,10 @@ namespace Xamarin.Android.Tasks
 									break;
 							}
 						});
+					if (!success) {
+						//If we failed to write the file, a warning is logged, we should skip to the next file
+						continue;
+					}
 
 					// We strip away an eventual UTF-8 BOM from the XML file.
 					// This is a requirement for the Android designer because the desktop Java renderer
