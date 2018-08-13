@@ -656,6 +656,47 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void BuildAfterMultiDexIsNotRequired ()
+		{
+			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				string androidBinDir = Path.Combine (intermediateDir, "android", "bin");
+				string apkPath = Path.Combine (androidBinDir, "UnnamedProject.UnnamedProject.apk");
+
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes3.dex"));
+
+				using (var zip = ZipHelper.OpenZip (apkPath)) {
+					var entries = zip.Select (e => e.FullName).ToList ();
+					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
+					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
+					Assert.IsTrue (entries.Contains ("classes3.dex"), "APK must contain `classes3.dex`.");
+				}
+
+				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
+				while (proj.OtherBuildItems.Count > 1)
+					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
+
+				using (var zip = ZipHelper.OpenZip (apkPath)) {
+					var entries = zip.Select (e => e.FullName).ToList ();
+					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
+					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
+					Assert.IsFalse (entries.Contains ("classes3.dex"), "APK must *not* contain `classes3.dex`.");
+				}
+			}
+		}
+
+		[Test]
 		public void MultiDexCustomMainDexFileList ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
