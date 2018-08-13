@@ -93,6 +93,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "h|help|?",
 				  "Show this message and exit",
 				  v => help = v != null },
+				{ "types=",
+				  "Generate marshaling methods only for types whose names match regex patterns listed {FILE}.\n" +
+				  "One regex pattern per line.\n" +
+				  "Empty lines and lines starting with '#' character are ignored as comments.",
+				  v => LoadTypes (v) },
 				{ "t|type=",
 				  "Generate marshaling methods only for types whose names match {TYPE-REGEX}.",
 				  v => typeNameRegexes.Add (new Regex (v)) },
@@ -114,6 +119,24 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			}
 
 			return assemblies;
+		}
+
+		void LoadTypes (string typesPath)
+		{
+			try {
+				foreach (var line in File.ReadLines (typesPath)) {
+					if (string.IsNullOrWhiteSpace (line))
+						continue;
+
+					if (line [0] == '#')
+						continue;
+
+					typeNameRegexes.Add (new Regex (line));
+				}
+			} catch (Exception e) {
+				Error ($"Unable to read profile '{typesPath}'.{Environment.NewLine}{e}");
+				Environment.Exit (4);
+			}
 		}
 
 		void ProcessAssemblies (List<string> assemblies)
@@ -153,7 +176,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				try {
 					CreateMarshalMethodAssembly (assembly);
 				} catch (Exception e) {
-					Error ($"Unable to process assembly '{assembly}'\n{e.Message}\n{e}");
+					Error ($"Unable to process assembly '{assembly}'{Environment.NewLine}{e.Message}{Environment.NewLine}{e}");
 					Environment.Exit (1);
 				}
 			}
@@ -168,7 +191,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			try {
 				builder.CreateJreVM ();
 			} catch (Exception e) {
-				Error ($"Unable to create Java VM\n{e}");
+				Error ($"Unable to create Java VM{Environment.NewLine}{e}");
 				Environment.Exit (3);
 			}
 		}
