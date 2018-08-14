@@ -122,7 +122,9 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb).Any ();
+			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb).Any ();
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: `{loc}`, result={result}");
+			return result;
 		}
 
 		/// <summary>
@@ -130,7 +132,9 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public virtual bool ValidateJavaSdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner).Any ();
+			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner).Any ();
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: `{loc}`, result={result}");
+			return result;
 		}
 
 		/// <summary>
@@ -138,7 +142,9 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidNdkLocation (string loc)
 		{
-			return !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (loc, NdkStack).Any ();
+			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (loc, NdkStack).Any ();
+			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: `{loc}`, result={result}");
+			return result;
 		}
 
 		protected static string NullIfEmpty (string s)
