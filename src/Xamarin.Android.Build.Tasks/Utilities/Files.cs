@@ -243,10 +243,16 @@ namespace Xamarin.Android.Tools {
 				files.Add (outfile);
 				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;
 				if (forceUpdate || entry.ModificationTime > dt) {
+					var temp = Path.GetTempFileName ();
 					try {
-						entry.Extract (destination, fullName, FileMode.Create);
+						using (var stream = File.Create (temp)) {
+							entry.Extract (stream);
+						}
+						MonoAndroidHelper.CopyIfChanged (temp, outfile);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
+					} finally {
+						File.Delete (temp);
 					}
 					updated = true;
 				}
