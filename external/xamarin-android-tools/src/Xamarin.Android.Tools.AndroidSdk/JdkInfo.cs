@@ -345,7 +345,7 @@ namespace Xamarin.Android.Tools
 					if (string.IsNullOrEmpty (e.Data))
 						return;
 					xml.Append (e.Data);
-			});
+			}, includeStderr: false);
 			var plist   = XElement.Parse (xml.ToString ());
 			foreach (var info in plist.Elements ("array").Elements ("dict")) {
 				var JVMHomePath = (XNode) info.Elements ("key").FirstOrDefault (e => e.Value == "JVMHomePath");

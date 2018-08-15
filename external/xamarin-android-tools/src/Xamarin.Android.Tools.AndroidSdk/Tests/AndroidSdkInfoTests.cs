@@ -43,13 +43,6 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
-		public void Constructor_NullLogger ()
-		{
-			Action<TraceLevel, string> logger = null;
-			Assert.Throws<ArgumentNullException> (() => new AndroidSdkInfo (logger));
-		}
-
-		[Test]
 		public void Constructor_Paths ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);

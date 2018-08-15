@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tools
 			return tcs.Task;
 		}
 
-		internal static void Exec (ProcessStartInfo processStartInfo, DataReceivedEventHandler output)
+		internal static void Exec (ProcessStartInfo processStartInfo, DataReceivedEventHandler output, bool includeStderr = true)
 		{
 			processStartInfo.UseShellExecute         = false;
 			processStartInfo.RedirectStandardInput   = false;
@@ -144,7 +144,9 @@ namespace Xamarin.Android.Tools
 				StartInfo   = processStartInfo,
 			};
 			p.OutputDataReceived    += output;
-			p.ErrorDataReceived     += output;
+			if (includeStderr) {
+				p.ErrorDataReceived   += output;
+			}
 
 			using (p) {
 				p.Start ();

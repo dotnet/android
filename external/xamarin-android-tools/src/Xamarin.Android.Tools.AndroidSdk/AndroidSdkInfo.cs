@@ -10,10 +10,9 @@ namespace Xamarin.Android.Tools
 	{
 		AndroidSdkBase sdk;
 
-		public AndroidSdkInfo (Action<TraceLevel, string> logger, string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
+		public AndroidSdkInfo (Action<TraceLevel, string> logger = null, string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
 		{
-			if (logger == null)
-				throw new ArgumentNullException (nameof (logger));
+			logger  = logger ?? DefaultConsoleLogger;
 
 			sdk = CreateSdk (logger);
 			sdk.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
