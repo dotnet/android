@@ -574,6 +574,7 @@
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
+    <Compile Include="Tasks\CancelableTask.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
