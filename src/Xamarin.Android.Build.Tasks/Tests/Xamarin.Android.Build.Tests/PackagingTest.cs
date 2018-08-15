@@ -224,14 +224,17 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				proj.RemoveProperty ("AndroidUseApkSigner");
 			}
+			var supportedAbis = "armeabi-v7a;x86";
+			var apkCount = perAbiApk ? supportedAbis.Split(';').Count() + 1 : 1;
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
 						"First build should not contain warnings!  Contains\n" +
 						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+				Assert.AreEqual(apkCount, b.LastBuildOutput.Count(l => l.StartsWith("  Signed android package")), "First build must sign all APKs!");
 				proj.AndroidResources.First ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Second build should not contain warnings!");
