@@ -37,7 +37,7 @@
     <AndroidSupportedTargetAotAbis>armeabi:win-armeabi:arm64:win-arm64:x86:win-x86:x86_64:win-x86_64</AndroidSupportedTargetAotAbis>
     <!--
       Colon-separated list of ABIs to build a "host" mono JIT for.
-      The host JIT is used for the Xamarin Studio Designer, among other things.
+      The host JIT is used for the designer in Visual Studio, among other things.
       Supported ABIs include:
       - Darwin
       - Linux
