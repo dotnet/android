@@ -74,9 +74,11 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "transition"));
+			Directory.CreateDirectory (Path.Combine (Root, path, "res", "raw"));
 
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "strings.xml"), StringsXml);
 			File.WriteAllText (Path.Combine (Root, path, "res", "transition", "transition.xml"), Transition);
+			File.WriteAllText (Path.Combine (Root, path, "res", "raw", "foo.txt"), "Foo");
 
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "animator"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "font"));

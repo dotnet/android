@@ -56,6 +56,55 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildInParallel ()
+		{
+			if (!IsWindows) {
+				//TODO: one day we should fix the problems here, various MSBuild tasks step on each other when built in parallel
+				Assert.Ignore ("Currently ignoring this test on non-Windows platforms.");
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+
+			var packages = proj.Packages;
+			packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+			packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			packages.Add (KnownPackages.SupportDesign_27_0_2_1);
+			packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+			packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				//We don't want these things stepping on each other
+				b.BuildLogFile = null;
+				b.Save (proj, saveProject: true);
+				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
+
+				Parallel.For (0, 5, i => {
+					try {
+						//NOTE: things are going to break here
+						b.Build (proj);
+					} catch (Exception exc) {
+						TestContext.WriteLine ("Expected error in {0}: {1}", nameof (BuildInParallel), exc);
+					}
+				});
+
+				//The key here, is a build afterward should work
+				b.BuildLogFile = "after.log";
+				Assert.IsTrue (b.Build (proj), "The build after a parallel failed build should succeed!");
+			}
+		}
+
+		[Test]
 		public void CheckKeystoreIsCreated ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -652,6 +701,47 @@ namespace Xamarin.Android.Tests
 				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
+			}
+		}
+
+		[Test]
+		public void BuildAfterMultiDexIsNotRequired ()
+		{
+			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				string androidBinDir = Path.Combine (intermediateDir, "android", "bin");
+				string apkPath = Path.Combine (androidBinDir, "UnnamedProject.UnnamedProject.apk");
+
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes3.dex"));
+
+				using (var zip = ZipHelper.OpenZip (apkPath)) {
+					var entries = zip.Select (e => e.FullName).ToList ();
+					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
+					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
+					Assert.IsTrue (entries.Contains ("classes3.dex"), "APK must contain `classes3.dex`.");
+				}
+
+				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
+				while (proj.OtherBuildItems.Count > 1)
+					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
+
+				using (var zip = ZipHelper.OpenZip (apkPath)) {
+					var entries = zip.Select (e => e.FullName).ToList ();
+					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
+					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
+					Assert.IsFalse (entries.Contains ("classes3.dex"), "APK must *not* contain `classes3.dex`.");
+				}
 			}
 		}
 

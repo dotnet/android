@@ -11,7 +11,7 @@ using System.Xml.XPath;
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static void UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null)
+		public static bool UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null)
 		{
 			// use a temporary file so we only update the real file if things actually changed
 			string tmpfile = filename + ".bk";
@@ -24,14 +24,13 @@ namespace Monodroid {
 						xw.WriteNode (doc.CreateNavigator (), false);
 				Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
 				File.Delete (tmpfile);
-			}
-			catch (Exception e) {
+				return true;
+			} catch (Exception e) {
 				if (File.Exists (tmpfile)) {
 					File.Delete (tmpfile);
 				}
-				if (logMessage != null)
-					logMessage (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");
-				return;
+				logMessage?.Invoke (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");
+				return false;
 			}
 		}
 

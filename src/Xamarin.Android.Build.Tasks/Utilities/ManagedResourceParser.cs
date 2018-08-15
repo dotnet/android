@@ -212,6 +212,9 @@ namespace Xamarin.Android.Tasks
 				case "plurals":
 					CreateIntField (plurals, itemName, value);
 					break;
+				case "raw":
+					CreateIntField (raw, itemName, value);
+					break;
 				case "string":
 					CreateIntField (strings, itemName, value);
 					break;
