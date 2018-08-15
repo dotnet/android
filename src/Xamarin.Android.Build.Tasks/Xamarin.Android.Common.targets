@@ -2937,12 +2937,12 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(ZipalignToolExe)"
 	/>
 	<ItemGroup>
-		<ApkAbiFilesSigned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
-		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
+		<ApkAbiFilesAligned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
+		<ApkAbiFilesAligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' == 'true' " Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
 	</ItemGroup>
 	<AndroidApkSigner Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		ApkSignerJar="$(ApkSignerJar)"
-		ApkToSign="%(ApkAbiFilesSigned.FullPath)"
+		ApkToSign="%(ApkAbiFilesAligned.FullPath)"
 		KeyStore="$(_ApkKeyStore)"
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
@@ -2952,7 +2952,7 @@ because xbuild doesn't support framework reference assemblies.
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
 	/>
-	<Message Text="Signed android package '%(ApkAbiFilesSigned.Identity)'" />
+	<Message Text="Signed android package '%(ApkAbiFilesAligned.Identity)'" />
 	<ItemGroup>
 		<ApkAbiFilesSigned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' != 'true'" />
 		<ApkAbiFilesSigned Condition="'$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidUseApkSigner)' != 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed.apk" />
