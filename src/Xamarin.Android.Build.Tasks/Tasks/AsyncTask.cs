@@ -7,9 +7,8 @@ using System.Collections;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AsyncTask : Task, ICancelableTask {
+	public class AsyncTask : CancelableTask {
 
-		CancellationTokenSource tcs = new CancellationTokenSource ();
 		Queue logMessageQueue =new Queue ();
 		Queue warningMessageQueue = new Queue ();
 		Queue errorMessageQueue = new Queue ();
@@ -45,8 +44,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public CancellationToken Token { get { return tcs.Token; } }
-
 		public bool YieldDuringToolExecution { get; set; }
 
 		protected string WorkingDirectory { get; private set; } 
@@ -64,7 +61,7 @@ namespace Xamarin.Android.Tasks
 			WorkingDirectory = Directory.GetCurrentDirectory ();
 		}
 
-		public void Cancel ()
+		public override void Cancel ()
 		{
 			taskCancelled.Set ();
 		}
@@ -354,7 +351,7 @@ namespace Xamarin.Android.Tasks
 						}, customDataAvailable);
 						break;
 					case WaitHandleIndex.TaskCancelled:
-						tcs.Cancel ();
+						base.Cancel ();
 						isRunning = false;
 						break;
 					case WaitHandleIndex.Completed:
