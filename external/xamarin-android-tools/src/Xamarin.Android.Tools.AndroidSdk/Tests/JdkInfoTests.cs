@@ -60,15 +60,19 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.CreateDirectory (jli);
 			Directory.CreateDirectory (jre);
 
-
+			string quote = OS.IsWindows ? "" : "\"";
 			string java =
 				$"echo Property settings:{Environment.NewLine}" +
-				$"echo \"    java.home = {dir}\"{Environment.NewLine}" +
-				$"echo \"    java.vendor = Xamarin.Android Unit Tests\"{Environment.NewLine}" +
-				$"echo \"    java.version = {javaVersion}\"{Environment.NewLine}" +
-				$"echo \"    xamarin.multi-line = line the first\"{Environment.NewLine}" +
-				$"echo \"        line the second\"{Environment.NewLine}" +
-				$"echo \"        .\"{Environment.NewLine}";
+				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
+				$"echo {quote}    java.vendor = Xamarin.Android Unit Tests{quote}{Environment.NewLine}" +
+				$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
+				$"echo {quote}    xamarin.multi-line = line the first{quote}{Environment.NewLine}" +
+				$"echo {quote}        line the second{quote}{Environment.NewLine}" +
+				$"echo {quote}        .{quote}{Environment.NewLine}";
+
+			if (OS.IsWindows) {
+				java = $"@echo off{Environment.NewLine}{java}";
+			}
 
 			CreateShellScript (Path.Combine (bin, "jar"), "");
 			CreateShellScript (Path.Combine (bin, "java"), java);
@@ -86,7 +90,7 @@ namespace Xamarin.Android.Tools.Tests
 
 		static void CreateShellScript (string path, string contents)
 		{
-			if (OS.IsWindows)
+			if (OS.IsWindows && string.Compare (Path.GetExtension (path), ".dll", true) != 0)
 				path += ".cmd";
 			using (var script = new StreamWriter (path)) {
 				if (!OS.IsWindows) {

@@ -67,6 +67,9 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void Constructor_SetValuesFromPath ()
 		{
+			if (OS.IsWindows)
+				Assert.Ignore ("Windows does not look for values in %PATH%");
+
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
 			JdkInfoTests.CreateFauxJdk (jdk, releaseVersion: "1.8.0", releaseBuildNumber: "42", javaVersion: "100.100.100_100");
 
