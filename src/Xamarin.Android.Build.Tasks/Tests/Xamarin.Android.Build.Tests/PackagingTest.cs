@@ -227,12 +227,31 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "build failed");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"));
+
+				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				Assert.IsTrue (b.Build (proj), "First build failed");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
+						"First build should not contain warnings!  Contains\n" +
+						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+				//Make sure the APKs are signed
+				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+					using (var zip = ZipHelper.OpenZip (apk)) {
+						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+					}
+				}
+
 				proj.AndroidResources.First ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"));
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
+						"Second build should not contain warnings!  Contains\n" +
+						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+
+				//Make sure the APKs are signed
+				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+					using (var zip = ZipHelper.OpenZip (apk)) {
+						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+					}
+				}
 			}
 		}
 
