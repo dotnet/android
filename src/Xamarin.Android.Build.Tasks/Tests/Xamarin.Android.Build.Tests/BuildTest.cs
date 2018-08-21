@@ -691,7 +691,7 @@ namespace Xamarin.Android.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				if (IsWindows) {
-					intermediateDir = Path.Combine (intermediateDir, proj.TargetFrameworkMoniker);
+					intermediateDir = Path.Combine (intermediateDir, proj.TargetFrameworkAbbreviated);
 				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir,  "android/bin/classes.dex")),
