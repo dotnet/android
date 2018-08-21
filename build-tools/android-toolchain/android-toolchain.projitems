@@ -23,7 +23,7 @@
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-linux-4773671">
+    <AndroidSdkItem Include="emulator-linux-4266726">
       <HostOS>Linux</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
@@ -42,7 +42,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-darwin-4773671">
+    <AndroidSdkItem Include="emulator-darwin-4266726">
       <HostOS>Darwin</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
@@ -61,22 +61,32 @@
       <HostOS>Windows</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-windows-4773671">
+    <AndroidSdkItem Include="emulator-windows-4266726">
       <HostOS>Windows</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="android-2.3.3_r02-linux">
-      <HostOS></HostOS>
-      <DestDir>platforms\android-10</DestDir>
-    </AndroidSdkItem>
 
     <!-- Note: if the version is changed here (which forces the change of path), make sure to update Configuration.props! -->
+    <AndroidSdkItem Include="cmake-3.6.4111459-linux-x86_64">
+      <HostOS>Linux</HostOS>
+      <DestDir>cmake\3.6.4111459</DestDir>
+      <NoSubdirectory>True</NoSubdirectory>
+    </AndroidSdkItem>
+    <AndroidSdkItem Include="cmake-3.6.4111459-darwin-x86_64">
+      <HostOS>Darwin</HostOS>
+      <DestDir>cmake\3.6.4111459</DestDir>
+      <NoSubdirectory>True</NoSubdirectory>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="cmake-3.6.4111459-windows-x86_64">
       <HostOS>Windows</HostOS>
       <DestDir>cmake\3.6.4111459</DestDir>
       <NoSubdirectory>True</NoSubdirectory>
     </AndroidSdkItem>
 
+    <AndroidSdkItem Include="android-2.3.3_r02-linux">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-10</DestDir>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="android-15_r03">
       <HostOS></HostOS>
       <DestDir>platforms\android-15</DestDir>
