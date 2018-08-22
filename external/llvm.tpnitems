@@ -8,10 +8,6 @@
       <LicenseFile>$(MSBuildThisFileDirectory)\llvm\LICENSE.TXT</LicenseFile>
       <SourceUrl>https://github.com/mono/llvm/</SourceUrl>
     </ThirdPartyNotice>
-    <ThirdPartyNotice Include="llvm Autoconf">
-      <LicenseFile>$(MSBuildThisFileDirectory)\llvm\autoconf\LICENSE.TXT</LicenseFile>
-      <SourceUrl>https://github.com/mono/llvm/tree/master/autoconf/</SourceUrl>
-    </ThirdPartyNotice>
     <ThirdPartyNotice Include="llvm Google Test">
       <LicenseFile>$(MSBuildThisFileDirectory)\llvm\utils\unittest\googletest\LICENSE.TXT</LicenseFile>
       <SourceUrl>https://github.com/mono/llvm/tree/master/utils/unittest/googletest/</SourceUrl>

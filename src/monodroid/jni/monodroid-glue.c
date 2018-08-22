@@ -73,10 +73,6 @@
 #include "monodroid-glue.h"
 #include "mkbundle-api.h"
 
-#ifndef WINDOWS
-#include "xamarin_getifaddrs.h"
-#endif
-
 static pthread_mutex_t process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t process_cmd_cond = PTHREAD_COND_INITIALIZER;
 static int debugging_configured;
@@ -126,6 +122,8 @@ monodroid_clear_gdb_wait (void)
 FILE  *gref_log;
 FILE  *lref_log;
 
+static int max_gref_count;
+
 /* !DO NOT REMOVE! Used by Mono BCL */
 MONO_API int
 _monodroid_get_android_api_level (void)
@@ -144,194 +142,6 @@ monodroid_getpagesize (void)
 	GetSystemInfo (&info);
 	return info.dwPageSize;
 #endif
-}
-
-/* Invoked by:
-    - System.Core.dll!System.TimeZoneInfo.Android.GetDefaultTimeZoneName
-    - Mono.Android.dll!Android.Runtime.AndroidEnvironment.GetDefaultTimeZone
-*/
-
-MONO_API void
-monodroid_free (void *ptr)
-{
-	free (ptr);
-}
-
-static int max_gref_count;
-
-struct BundledProperty {
-	char *name;
-	char *value;
-	int   value_len;
-	struct BundledProperty *next;
-};
-
-static struct BundledProperty* bundled_properties;
-
-static struct BundledProperty*
-lookup_system_property (const char *name)
-{
-	struct BundledProperty *p = bundled_properties;
-	for ( ; p ; p = p->next)
-		if (strcmp (p->name, name) == 0)
-			return p;
-	return NULL;
-}
-
-static void
-add_system_property (const char *name, const char *value)
-{
-	int name_len, value_len;
-
-	struct BundledProperty* p = lookup_system_property (name);
-	if (p) {
-		char *n = monodroid_strdup_printf ("%s", value);
-		if (!n)
-			return;
-		free (p->value);
-		p->value      = n;
-		p->value_len  = strlen (p->value);
-		return;
-	}
-
-	name_len  = strlen (name);
-	value_len = strlen (value);
-
-	p = malloc (sizeof (struct BundledProperty) + name_len + 1);
-	if (!p)
-		return;
-
-	p->name = ((char*) p) + sizeof (struct BundledProperty);
-	strncpy (p->name, name, name_len);
-	p->name [name_len] = '\0';
-
-	p->value      = monodroid_strdup_printf ("%s", value);
-	p->value_len  = value_len;
-
-	p->next             = bundled_properties;
-	bundled_properties  = p;
-}
-
-#ifndef ANDROID
-static void
-monodroid_strreplace (char *buffer, char old_char, char new_char)
-{
-	if (buffer == NULL)
-		return;
-	while (*buffer != '\0') {
-		if (*buffer == old_char)
-			*buffer = new_char;
-		buffer++;
-	}
-}
-
-static int
-_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *env_name = monodroid_strdup_printf ("__XA_%s", name);
-	monodroid_strreplace (env_name, '.', '_');
-	char *env_value = getenv (env_name);
-	free (env_name);
-
-	size_t env_value_len = env_value ? strlen (env_value) : 0;
-	if (env_value_len == 0) {
-		sp_value[0] = '\0';
-		return 0;
-	}
-
-	if (env_value_len >= sp_value_len)
-		log_warn (LOG_DEFAULT, "System property buffer size too small by %u bytes", env_value_len == sp_value_len ? 1 : env_value_len - sp_value_len);
-
-	strncpy (sp_value, env_value, sp_value_len);
-	sp_value[sp_value_len] = '\0';
-
-	return strlen (sp_value);
-}
-#elif ANDROID64
-/* __system_property_get was removed in Android 5.0/64bit
-   this is hopefully temporary replacement, until we find better
-   solution
-
-   sp_value buffer should be at least PROP_VALUE_MAX+1 bytes long
-*/
-static int
-_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *cmd = monodroid_strdup_printf ("getprop %s", name);
-	FILE* result = popen (cmd, "r");
-	int len = (int) fread (sp_value, 1, sp_value_len, result);
-	fclose (result);
-	sp_value [len] = 0;
-	if (len > 0 && sp_value [len - 1] == '\n') {
-		sp_value [len - 1] = 0;
-		len--;
-	} else {
-		if (len != 0)
-			len = 0;
-		sp_value [0] = 0;
-	}
-
-	log_info (LOG_DEFAULT, "_monodroid__system_property_get %s: '%s' len: %d", name, sp_value, len);
-
-	return len;
-}
-#else
-static int
-_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *buf = NULL;
-	if (sp_value_len < PROP_VALUE_MAX + 1) {
-		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
-		buf = xmalloc (PROP_VALUE_MAX + 1);
-	}
-
-	int len = __system_property_get (name, buf ? buf : sp_value);
-	if (buf) {
-		strncpy (sp_value, buf, sp_value_len);
-		sp_value [sp_value_len] = '\0';
-		free (buf);
-	}
-
-	return len;
-}
-#endif
-
-MONO_API int
-monodroid_get_system_property (const char *name, char **value)
-{
-	char *pvalue;
-	char  sp_value [PROP_VALUE_MAX+1] = { 0, };
-	int   len;
-	struct BundledProperty *p;
-
-	if (value)
-		*value = NULL;
-
-	pvalue  = sp_value;
-	len     = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
-
-	if (len <= 0 && (p = lookup_system_property (name)) != NULL) {
-		pvalue  = p->value;
-		len     = p->value_len;
-	}
-
-	if (len >= 0 && value) {
-		*value = malloc (len+1);
-		if (!*value)
-			return -len;
-		memcpy (*value, pvalue, len);
-		(*value)[len] = '\0';
-	}
-	return len;
 }
 
 #ifdef RELEASE
@@ -402,23 +212,6 @@ monodroid_get_system_property_from_overrides (const char *name, char ** value)
 	}
 	return 0;
 }
-
-static char*
-get_primary_override_dir (JNIEnv *env, jstring home)
-{
-	const char *v;
-	char *p;
-
-	v = (*env)->GetStringUTFChars (env, home, NULL);
-	p = path_combine (v, ".__override__");
-	(*env)->ReleaseStringUTFChars (env, home, v);
-
-	return p;
-}
-
-static char *primary_override_dir;
-static char *external_override_dir;
-static char *external_legacy_override_dir;
 
 static void
 create_update_dir (char *override_dir)
@@ -530,12 +323,11 @@ get_xamarin_android_msbuild_path (void)
 	return msbuild_folder_path;
 }
 
-static char *libmonoandroid_directory_path = NULL;
-
 // Returns the directory in which this library was loaded from
 static char*
 get_libmonoandroid_directory_path ()
 {
+	static char *libmonoandroid_directory_path = NULL;
 	wchar_t module_path[MAX_PATH];
 	HMODULE module = NULL;
 
@@ -589,7 +381,7 @@ readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent **result)
 #ifndef RELEASE
 
 static void
-copy_monosgen_to_internal_location(char *to, char *from)
+copy_monosgen_to_internal_location(const char *to, const char *from)
 {
 	char *from_libmonoso = path_combine (from, "libmonosgen-2.0.so");
 
@@ -636,21 +428,24 @@ copy_monosgen_to_internal_location(char *to, char *from)
 	}
 
 static char*
-get_libmonosgen_path ()
+get_libmonosgen_path (const char *primary_override_dir, const char *external_override_dir, const char *external_legacy_override_dir, const char *app_libdir)
 {
 	char *libmonoso;
 
 #ifndef RELEASE
+	TRY_LIBMONOSGEN (primary_override_dir)
+
 	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
 	// external storage locations so we need to file copy the shared object to an internal
 	// storage location before loading it.
-	copy_monosgen_to_internal_location (primary_override_dir, external_override_dir);
-	copy_monosgen_to_internal_location (primary_override_dir, external_legacy_override_dir);
 
-	int i;
-	for (i = 0; i < MAX_OVERRIDES; ++i)
-		TRY_LIBMONOSGEN (override_dirs [i])
+	copy_monosgen_to_internal_location (primary_override_dir, external_override_dir);
+	TRY_LIBMONOSGEN (primary_override_dir)
+
+	copy_monosgen_to_internal_location (primary_override_dir, external_legacy_override_dir);
+	TRY_LIBMONOSGEN (primary_override_dir)
 #endif
+
 	TRY_LIBMONOSGEN (app_libdir)
 
 	libmonoso = runtime_libdir ? monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR MONO_SGEN_ARCH_SO, runtime_libdir, sizeof(void*) == 8 ? "64bit" : "32bit") : NULL;
@@ -691,7 +486,7 @@ get_libmonosgen_path ()
 #ifdef RELEASE
 	log_fatal (LOG_DEFAULT, "cannot find libmonosgen-2.0.so in app_libdir: %s nor in previously printed locations.", app_libdir);
 #else
-	log_fatal (LOG_DEFAULT, "cannot find libmonosgen-2.0.so in override_dir: %s, app_libdir: %s nor in previously printed locations.", override_dirs[0], app_libdir);
+	log_fatal (LOG_DEFAULT, "cannot find libmonosgen-2.0.so in override_dir: %s, app_libdir: %s nor in previously printed locations.", primary_override_dir, app_libdir);
 #endif
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
 	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
@@ -797,10 +592,6 @@ static jmethodID weakrefGet;
 
 static jobject    Runtime_instance;
 static jmethodID  Runtime_gc;
-
-static jclass     TimeZone_class;
-static jmethodID  TimeZone_getDefault;
-static jmethodID  TimeZone_getID;
 
 static int gc_disabled = 0;
 
@@ -1289,21 +1080,19 @@ take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 }
 
 static JNIEnv*
-ensure_jnienv (void)
-{
-	JNIEnv *env;
-	(*jvm)->GetEnv (jvm, (void**)&env, JNI_VERSION_1_6);
-	if (env == NULL) {
-		mono.mono_thread_attach (mono.mono_domain_get ());
-		(*jvm)->GetEnv (jvm, (void**)&env, JNI_VERSION_1_6);
-	}
-	return env;
-}
-
-JNIEnv*
 get_jnienv (void)
 {
-	return ensure_jnienv ();
+	JNIEnv *env;
+
+	(*jvm)->GetEnv (jvm, (void**)&env, JNI_VERSION_1_6);
+	if (env)
+		return env;
+
+	(*jvm)->AttachCurrentThread(jvm, &env, NULL);
+	if (env)
+		return env;
+
+	return NULL;
 }
 
 static MonoGCBridgeObjectKind
@@ -1787,7 +1576,7 @@ gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGC
 	}
 #endif
 	
-	env = ensure_jnienv ();
+	env = get_jnienv ();
 
 	set_bridge_processing_field (domains_list, 1);
 	gc_prepare_for_java_collection (env, num_sccs, sccs, num_xrefs, xrefs);
@@ -1804,9 +1593,9 @@ platform_supports_weak_refs (void)
 	char *value;
 	int api_level = 0;
 
-	if (monodroid_get_system_property ("ro.build.version.sdk", &value) > 0) {
+	if (mono.monodroid_get_system_property ("ro.build.version.sdk", &value) > 0) {
 		api_level = atoi (value);
-		free (value);
+		mono.monodroid_free (value);
 	}
 
 	if (monodroid_get_namespaced_system_property (DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
@@ -2158,16 +1947,17 @@ static int
 get_max_gref_count (void)
 {
 	int max;
-	char value [PROP_VALUE_MAX+1];
+	char *value;
 	char *override;
 	int len;
 
-	len = _monodroid__system_property_get (HARDWARE_TYPE, value, sizeof (value));
+	len = mono.monodroid_get_system_property (HARDWARE_TYPE, &value);
 	if (len > 0 && strcmp (value, HARDWARE_EMULATOR) == 0) {
 		max = 2000;
 	} else {
 		max = 51200;
 	}
+	mono.monodroid_free (value);
 
 	if (monodroid_get_namespaced_system_property (DEBUG_MONO_MAX_GREFC, &override) > 0) {
 		char *e;
@@ -2215,24 +2005,6 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 	(*env)->DeleteLocalRef (env, lref);
 	weakrefCtor = (*env)->GetMethodID (env, weakrefClass, "<init>", "(Ljava/lang/Object;)V");
 	weakrefGet = (*env)->GetMethodID (env, weakrefClass, "get", "()Ljava/lang/Object;");
-
-	TimeZone_class      = lref_to_gref (env, (*env)->FindClass (env, "java/util/TimeZone"));
-	if (!TimeZone_class) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone class!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
-
-	TimeZone_getDefault = (*env)->GetStaticMethodID (env, TimeZone_class, "getDefault", "()Ljava/util/TimeZone;");
-	if (!TimeZone_getDefault) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone.getDefault() method!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
-
-	TimeZone_getID      = (*env)->GetMethodID (env, TimeZone_class, "getID",      "()Ljava/lang/String;");
-	if (!TimeZone_getID) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone.getDefault() method!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
 
 	/* When running on Android, as per http://developer.android.com/reference/java/lang/System.html#getProperty(java.lang.String)
 	 * the value of java.version is deemed "(Not useful on Android)" and is hardcoded to return zero. We can thus use this fact
@@ -2744,8 +2516,8 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 		// tell the IDE that the project likely need to be recompiled.
 		char* corlib_error_message = mono.mono_check_corlib_version ();
 		if (corlib_error_message == NULL) {
-			if (!monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
-				free (corlib_error_message);
+			if (!mono.monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
+				mono.monodroid_free (corlib_error_message);
 				corlib_error_message = NULL;
 			}
 		}
@@ -2803,23 +2575,6 @@ _monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 {
 	intptr_t rv = (*env)->CallStaticIntMethod (env, System, System_identityHashCode, v);
 	return (void*) rv;
-}
-
-MONO_API void*
-_monodroid_timezone_get_default_id (void)
-{
-	JNIEnv *env         = ensure_jnienv ();
-	jobject d           = (*env)->CallStaticObjectMethod (env, TimeZone_class, TimeZone_getDefault);
-	jstring id          = (*env)->CallObjectMethod (env, d, TimeZone_getID);
-	const char *mutf8   = (*env)->GetStringUTFChars (env, id, NULL);
-
-	char *def_id        = monodroid_strdup_printf ("%s", mutf8);
-
-	(*env)->ReleaseStringUTFChars (env, id, mutf8);
-	(*env)->DeleteLocalRef (env, id);
-	(*env)->DeleteLocalRef (env, d);
-
-	return def_id;
 }
 
 MONO_API void
@@ -3458,7 +3213,7 @@ setup_environment_from_line (const char *line)
 	if ((k = entry [0]) && *k &&
 			(v = entry [1]) && *v) {
 		if (islower (k [0])) {
-			add_system_property (k, v);
+			mono.monodroid_add_system_property (k, v);
 		} else {
 			setenv (k, v, 1);
 		}
@@ -3747,14 +3502,40 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 {
 	char *runtime_args = NULL;
 	char *connect_args;
-	jstring libdir_s;
 	const char *libdir, *esd;
 	char *libmonosgen_path;
 	char *libmonodroid_bundle_app_path;
+	char *primary_override_dir;
+	char *external_override_dir;
+	char *external_legacy_override_dir;
 	char *counters_path;
 	const char *pkgName;
 	char *aotMode;
 	int i;
+
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, appDirs, 0), NULL);
+	primary_override_dir = path_combine (esd, ".__override__");
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, appDirs, 0), esd);
+
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), NULL);
+	external_override_dir = strdup (esd);
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), esd);
+
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), NULL);
+	external_legacy_override_dir = strdup (esd);
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), esd);
+
+	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, appDirs, 2), NULL);
+	app_libdir = strdup (esd);
+	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, appDirs, 2), esd);
+
+	libmonosgen_path = get_libmonosgen_path (primary_override_dir, external_override_dir, external_legacy_override_dir, app_libdir);
+	if (!monodroid_dylib_mono_init (&mono, libmonosgen_path)) {
+		log_fatal (LOG_DEFAULT, "shared runtime initialization error: %s", dlerror ());
+		exit (FATAL_EXIT_CANNOT_FIND_MONO);
+	}
+
+	mono.mono_jvm_initialize (jvm);
 
 	pkgName = (*env)->GetStringUTFChars (env, packageName, NULL);
 	monodroid_store_package_name (pkgName); /* Will make a copy of the string */
@@ -3771,15 +3552,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	create_xdg_directories_and_environment (env,  homeDir);
 
 	setup_environment (env, runtimeApks);
-
-	primary_override_dir = get_primary_override_dir (env, (*env)->GetObjectArrayElement (env, appDirs, 0));
-	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), NULL);
-	external_override_dir = monodroid_strdup_printf ("%s", esd);
-	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), esd);
-
-	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), NULL);
-	external_legacy_override_dir = monodroid_strdup_printf ("%s", esd);
-	(*env)->ReleaseStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 1), esd);
 
 	init_categories (primary_override_dir);
 	create_update_dir (primary_override_dir);
@@ -3812,11 +3584,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		}
 	}
 
-	libdir_s = (*env)->GetObjectArrayElement (env, appDirs, 2);
-	libdir = (*env)->GetStringUTFChars (env, libdir_s, NULL);
-	app_libdir = monodroid_strdup_printf ("%s", libdir);
-	(*env)->ReleaseStringUTFChars (env, libdir_s, libdir);
-
 	if (runtimeNativeLibDir != NULL) {
 		const char *rd;
 		rd = (*env)->GetStringUTFChars (env, runtimeNativeLibDir, NULL);
@@ -3824,17 +3591,9 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		(*env)->ReleaseStringUTFChars (env, runtimeNativeLibDir, rd);
 	}
 
-	libmonosgen_path = get_libmonosgen_path ();
-	if (!monodroid_dylib_mono_init (&mono, libmonosgen_path)) {
-		log_fatal (LOG_DEFAULT, "shared runtime initialization error: %s", dlerror ());
-		exit (FATAL_EXIT_CANNOT_FIND_MONO);
-	}
 	setup_process_args (env, runtimeApks);
 
 	free (libmonosgen_path);
-#ifndef WINDOWS
-	_monodroid_getifaddrs_init ();
-#endif
 
 	if ((log_categories & LOG_TIMING) != 0) {
 		mono.mono_counters_enable (XA_LOG_COUNTERS);
@@ -3876,7 +3635,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 	log_info (LOG_DEFAULT, "Probing for mono.aot AOT mode\n");
 
-	if (monodroid_get_system_property ("mono.aot", &aotMode) > 0) {
+	if (mono.monodroid_get_system_property ("mono.aot", &aotMode) > 0) {
 		MonoAotMode mode = 0;
 		if (strcmp (aotMode, "normal") == 0)
 			mode = MONO_AOT_MODE_NORMAL;
@@ -3891,11 +3650,12 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 			log_info (LOG_DEFAULT, "Enabling %s AOT mode in Mono\n", aotMode);
 			mono.mono_jit_set_aot_mode (mode);
 		}
+		mono.monodroid_free (aotMode);
 	}		
 
 	log_info (LOG_DEFAULT, "Probing if we should use LLVM\n");
 
-	if (monodroid_get_system_property ("mono.llvm", NULL) > 0) {
+	if (mono.monodroid_get_system_property ("mono.llvm", NULL) > 0) {
 		char *args [1];
 		args[0] = "--llvm";
 		log_info (LOG_DEFAULT, "Found mono.llvm property, enabling LLVM mode in Mono\n");

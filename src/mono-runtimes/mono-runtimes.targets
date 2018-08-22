@@ -148,7 +148,7 @@
         ToolExe="$(GitToolExe)">
       <Output TaskParameter="Time" PropertyName="_LlvmCommitTime" />
     </GitCommitTime>
-    <Touch Files="$(LlvmSourceFullPath)\Makefile.config.in" Time="$(_LlvmCommitTime)" />
+    <Touch Files="$(LlvmSourceFullPath)\CMakeLists.txt" Time="$(_LlvmCommitTime)" />
   </Target>
 
   <Target Name="_PrepareLlvmItems">
@@ -164,7 +164,7 @@
   <Target Name="_BuildLlvm"
       Condition=" '@(_LlvmRuntime)' != '' "
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
-      Inputs="$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(_LlvmSourceBinary)">
     <Exec
         Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters) %(_LlvmRuntime.PackageOptions)"
@@ -824,12 +824,12 @@
   </Target>
   <Target Name="ForceBuild"
       DependsOnTargets="GetMonoBundleItems;$(ForceBuildDependsOn)"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(BundleItem)">
   </Target>
   <Target Name="_BuildUnlessCached"
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;GetMonoBundleItems"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(BundleItem)">
     <PropertyGroup>
       <_Now>$([System.DateTime]::Now.Ticks)</_Now>
