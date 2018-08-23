@@ -468,7 +468,7 @@ namespace Xamarin.Android.NetTests {
 					var request = l.Request;
 
 					try {
-						Assert.AreEqual ("MLK,Android,Phone,1.1.9", request.UserAgent, "#1");
+						Assert.AreEqual ("MLK Android Phone 1.1.9", request.UserAgent, "#1");
 						failed = false;
 					} catch (Exception ex) {
 						failed = true;
@@ -570,7 +570,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 #endif  // TODO
-		[Test]
+        [Test]
 		public void Send_Transfer_Encoding_Custom ()
 		{
 			bool? failed = null;

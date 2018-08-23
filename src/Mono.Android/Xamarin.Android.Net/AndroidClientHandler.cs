@@ -73,7 +73,6 @@ namespace Xamarin.Android.Net
 
 		static readonly IDictionary<string, string> headerSeparators = new Dictionary<string, string>
 		{
-			["Server"] = " ",
 			["User-Agent"] = " "
 		};
 
