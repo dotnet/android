@@ -166,8 +166,12 @@
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
       Inputs="$(LlvmSourceFullPath)\Makefile.config.in"
       Outputs="@(_LlvmSourceBinary)">
+    <ItemGroup>
+      <_PackageLlvm Include="package-llvm-%(_LlvmRuntime.Identity)" />
+      <_PackageOptionsLlvm Include="%(_LlvmRuntime.PackageOptions)" />
+    </ItemGroup>
     <Exec
-        Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters) %(_LlvmRuntime.PackageOptions)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageLlvm->'%(Identity)', ' ') $(_MonoSdksParameters) @(_PackageOptionsLlvm->'%(Identity)', ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -388,9 +392,11 @@
   <Target Name="_BuildRuntimes"
       DependsOnTargets="_BuildRuntimesWithoutMonoSdks;_GetRuntimesOutputItems"
       Outputs="@(_RuntimeSource);@(_MonoBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
+    <ItemGroup>
+      <_PackageRuntime Include="package-android-%(_MonoRuntime.Identity)" Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' And '%(_MonoRuntime.DoBuild)' == 'true' " />
+    </ItemGroup>
     <Exec
-        Condition=" '%(_MonoRuntime.UseMonoSdks)' != 'False' And '%(_MonoRuntime.DoBuild)' == 'true' "
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) package-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageRuntime->'%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
