@@ -17,8 +17,8 @@ namespace Xamarin.Android.Build.Tests {
 
 		const string StringsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
-  <string name = ""hello"" > Hello World, Click Me!</string>
-  <string name = ""app_name"" > App1 </string >
+  <string name=""hello"">Hello World, Click Me!</string>
+  <string name=""app_name"">App1</string>
   <plurals name=""num_locations_reported"">
     <item quantity=""zero"">No location reported</item>
     <item quantity=""one""> One location reported</item>
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Build.Tests {
 
 		const string StringsXml2 = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
-  <string name = ""foo"" > Hello World, Click Me!</string>
+  <string name=""foo"">Hello World, Click Me!</string>
   <string-array name=""widths_array"">
     <item>Thin</item>
     <item>Thinish</item>
@@ -67,6 +67,12 @@ namespace Xamarin.Android.Build.Tests {
   android:duration=""5000""
   android:interpolator=""@android:anim/overshoot_interpolator"" />
 ";
+		const string Main = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android"">
+	<TextView android:id=""@+id/seekBar"" />
+	<TextView android:id=""@+id/seekbar"" />
+</LinearLayout>
+";
 
 		[Test]
 		public void GenerateDesignerFile ()
@@ -74,11 +80,14 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "transition"));
+
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "raw"));
+			Directory.CreateDirectory (Path.Combine (Root, path, "res", "layout"));
 
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "strings.xml"), StringsXml);
 			File.WriteAllText (Path.Combine (Root, path, "res", "transition", "transition.xml"), Transition);
 			File.WriteAllText (Path.Combine (Root, path, "res", "raw", "foo.txt"), "Foo");
+			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main);
 
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "animator"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "lp", "res", "font"));
