@@ -9,7 +9,6 @@
       Outputs="$(JNIEnvGenPath)\jnienv-gen.exe">
     <MSBuild
         Projects="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
-        Properties="Configuration=$(Configuration.Replace('XAIntegration', ''))"
     />
   </Target>
   <Target Name="BuildJniEnvironment_g_cs"

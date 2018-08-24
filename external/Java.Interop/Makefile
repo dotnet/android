@@ -12,7 +12,7 @@ NATIVE_EXT = .so
 DLLMAP_OS_NAME = linux
 endif
 
-XA_CONFIGURATION  = XAIntegrationDebug
+XA_CONFIGURATION  = Debug
 
 GENDARME_URL = https://github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
 
@@ -73,7 +73,7 @@ prepare-external $(PREPARE_EXTERNAL_FILES): $(PACKAGES) $(NUNIT_CONSOLE)
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
-	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION) bin/XAIntegration$(CONFIGURATION)
+	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION)
 	-rm src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 include build-tools/scripts/mono.mk
