@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
   </PropertyGroup>
-  <Import Project="$(JNIEnvGenPath)\JdkInfo.props" />
   <Target Name="BuildJnienvGen"
       Inputs="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
       Outputs="$(JNIEnvGenPath)\jnienv-gen.exe">

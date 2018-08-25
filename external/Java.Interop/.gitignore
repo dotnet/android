@@ -12,3 +12,4 @@ packages
 *.userprefs
 *.user
 Resource.designer.cs
+*.binlog

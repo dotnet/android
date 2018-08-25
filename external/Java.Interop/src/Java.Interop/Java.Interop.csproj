@@ -10,7 +10,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Java.Interop</RootNamespace>
     <AssemblyName>Java.Interop</AssemblyName>
-    <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
@@ -129,7 +128,9 @@
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\GCUserPeerable.java" />
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="Java.Interop.PCL.props"   Condition=" '$(JavaInteropProfile)' != 'net45' " />
+  <Import Project="Java.Interop.Net45.props" Condition=" '$(JavaInteropProfile)' == 'net45' " />
   <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
