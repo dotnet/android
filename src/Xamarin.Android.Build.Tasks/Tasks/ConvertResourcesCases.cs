@@ -53,18 +53,25 @@ namespace Xamarin.Android.Tasks
 		{
 			var resdir = item.ItemSpec;
 			// Find all the xml and axml files
-			var xmls = new[] { resdir }
-				.Concat (Directory.EnumerateDirectories (resdir, "*", SearchOption.AllDirectories)
-					.Except (Directory.EnumerateDirectories (resdir, "color*", SearchOption.TopDirectoryOnly))
-					.Except (Directory.EnumerateDirectories (resdir, "raw*", SearchOption.TopDirectoryOnly)))
-				.SelectMany (dir => Directory.EnumerateFiles (dir, "*.xml")
-					.Concat (Directory.EnumerateFiles (dir, "*.axml")));
+			var xmls = new List<string> ();
+			var colorDir = Path.Combine (resdir, "color");
+			var rawDir = Path.Combine (resdir, "raw");
+			foreach (var file in Directory.GetFiles (resdir, "*.*xml", SearchOption.AllDirectories)) {
+				if (file.StartsWith (colorDir, StringComparison.Ordinal) || file.StartsWith (rawDir, StringComparison.Ordinal))
+					continue;
+				var ext = Path.GetExtension (file);
+				if (ext != ".xml" && ext != ".axml")
+				    continue;
+				xmls.Add (file);
+			}
 
 			var lastUpdate = DateTime.MinValue;
 			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
 				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
 			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
+			
+			var resourcedirectories = ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec).ToArray();
 			// Fix up each file
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
@@ -78,7 +85,7 @@ namespace Xamarin.Android.Tasks
 				MonoAndroidHelper.SetWriteable (tmpdest);
 				try {
 					bool success = AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
-						ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec), (t, m) => {
+						resourcedirectories, (t, m) => {
 							string targetfile = file;
 							if (targetfile.StartsWith (resdir, StringComparison.InvariantCultureIgnoreCase)) {
 								targetfile = file.Substring (resdir.Length).TrimStart (Path.DirectorySeparatorChar);
