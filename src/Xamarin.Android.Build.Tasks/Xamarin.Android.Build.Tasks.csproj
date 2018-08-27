@@ -598,6 +598,8 @@
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ActivityPersistableMode.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.DocumentLaunchMode.cs" />
     <Compile Include="@(_MonoAndroidEnum)">
       <Link>Mono.Android\%(Filename)%(Extension)</Link>
     </Compile>

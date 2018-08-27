@@ -178,22 +178,35 @@ namespace Xamarin.Android.Manifest {
 		}
 
 		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> ValueConverters = new Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> () {
-			{ typeof (bool),                (value, p, r, v) => ToString ((bool) value) },
-			{ typeof (int),                 (value, p, r, v) => value.ToString () },
-			{ typeof (string),              (value, p, r, v) => value.ToString () },
-			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
-			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
-			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
-			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
-			{ typeof (SoftInput),           (value, p, r, v) => ToString ((SoftInput) value) },
-			{ typeof (UiOptions),           (value, p, r, v) => ToString ((UiOptions) value) },
-			{ typeof (Type),                (value, p, r, v) => ToString (value.ToString (), p, r) },
+			{ typeof (bool),                    (value, p, r, v) => ToString ((bool) value) },
+			{ typeof (int),                     (value, p, r, v) => value.ToString () },
+			{ typeof (string),                  (value, p, r, v) => value.ToString () },
+            { typeof (ActivityPersistableMode), (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
+			{ typeof (ConfigChanges),           (value, p, r, v) => ToString ((ConfigChanges) value) },
+            { typeof (DocumentLaunchMode),      (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
+			{ typeof (LaunchMode),              (value, p, r, v) => ToString ((LaunchMode) value) },
+			{ typeof (Protection),              (value, p, r, v) => ToString ((Protection) value) },
+			{ typeof (ScreenOrientation),       (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
+			{ typeof (SoftInput),               (value, p, r, v) => ToString ((SoftInput) value) },
+			{ typeof (UiOptions),               (value, p, r, v) => ToString ((UiOptions) value) },
+			{ typeof (Type),                    (value, p, r, v) => ToString (value.ToString (), p, r) },
 		};
 
 		static string ToString (bool value)
 		{
 			return value ? "true" : "false";
 		}
+
+        static string ToString (ActivityPersistableMode value)
+        {
+            switch (value) {
+                case ActivityPersistableMode.AcrossReboots:   return "persistAcrossReboots";
+                case ActivityPersistableMode.Never:           return "persistNever";
+                case ActivityPersistableMode.RootOnly:        return "persistRootOnly";
+                default:
+                    throw new ArgumentException("Unsupported ActivityPersistableMode value '" + value + "'.", "ActivityPersistableMode");
+            }
+        }
 
 		static string ToString (ConfigChanges value)
 		{
@@ -232,7 +245,20 @@ namespace Xamarin.Android.Manifest {
 			return string.Join ("|", values.ToArray ());
 		}
 
-		static string ToString (LaunchMode value)
+        static string ToString(DocumentLaunchMode value)
+        {
+            switch (value)
+            {
+                case DocumentLaunchMode.Always:          return "always";
+                case DocumentLaunchMode.IntoExisting:    return "intoExisting";
+                case DocumentLaunchMode.Never:           return "never";
+                case DocumentLaunchMode.None:            return "none";
+                default:
+                    throw new ArgumentException("Unsupported DocumentLaunchMode value '" + value + "'.", "DocumentLaunchMode");
+            }
+        }
+
+        static string ToString (LaunchMode value)
 		{
 			switch (value) {
 				case LaunchMode.Multiple:         return "standard";

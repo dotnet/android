@@ -46,6 +46,16 @@ namespace Android.App {
 			  self          => self.AlwaysRetainTaskState,
 			  (self, value) => self.AlwaysRetainTaskState = (bool) value
 			}, {
+              "AutoRemoveFromRecents",
+              "autoRemoveFromRecents",
+              self          => self.AutoRemoveFromRecents,
+              (self, value) => self.AutoRemoveFromRecents = (bool) value
+            }, {
+              "Banner",
+              "banner",
+              self          => self.Banner,
+              (self, value) => self.Banner = (string) value
+            }, {
 			  "ClearTaskOnLaunch",
 			  "clearTaskOnLaunch",
 			  self          => self.ClearTaskOnLaunch,
@@ -66,11 +76,21 @@ namespace Android.App {
 			  self          => self.DirectBootAware,
 			  (self, value) => self.DirectBootAware = (bool) value
 			}, {
-			  "Enabled",
+              "DocumentLaunchMode",
+              "documentLaunchMode",
+              self          => self.DocumentLaunchMode,
+              (self, value) => self.DocumentLaunchMode = (DocumentLaunchMode) value
+            }, {
+              "Enabled",
 			  "enabled",
 			  self          => self.Enabled,
 			  (self, value) => self.Enabled = (bool) value
 			}, {
+              "EnableVrMode",
+              "enableVrMode",
+              self          => self.EnableVrMode,
+              (self, value) => self.EnableVrMode = (string) value
+            }, {
 			  "ExcludeFromRecents",
 			  "excludeFromRecents",
 			  self          => self.ExcludeFromRecents,
@@ -126,6 +146,11 @@ namespace Android.App {
 			  self          => self._MaxAspectRatio,
 			  (self, value) => self._MaxAspectRatio = (float) value
 			}, {
+              "MaxRecents",
+              "maxRecents",
+              self          => self.MaxRecents,
+              (self, value) => self.MaxRecents = (int) value
+            }, {
 			  "MultiProcess",
 			  "multiprocess",
 			  self          => self.MultiProcess,
@@ -147,7 +172,12 @@ namespace Android.App {
 			  (self, value) => self._ParentActivity = (string) value,
 			  typeof (Type)
 			}, {
-			  "Permission",
+              "PersistableMode",
+              "persistableMode",
+              self          => self.PersistableMode,
+              (self, value) => self.PersistableMode  = (ActivityPersistableMode) value
+            }, {
+              "Permission",
 			  "permission",
 			  self          => self.Permission,
 			  (self, value) => self.Permission  = (string) value
@@ -157,6 +187,11 @@ namespace Android.App {
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
 			}, {
+              "RelinquishTaskIdentity",
+              "relinquishTaskIdentity",
+              self          => self.RelinquishTaskIdentity,
+              (self, value) => self.RelinquishTaskIdentity = (bool) value
+            }, {
 			  "ResizeableActivity",
 			  "resizeableActivity",
 			  self          => self._ResizeableActivity,
@@ -177,6 +212,11 @@ namespace Android.App {
 			  self          => self.ScreenOrientation,
 			  (self, value) => self.ScreenOrientation = (ScreenOrientation) value
 			}, {
+              "SingleUser",
+              "singleUser",
+              self          => self.SingleUser,
+              (self, value) => self.SingleUser = (bool) value
+            }, {
 			  "ShowForAllUsers",
 			  "showForAllUsers",
 			  self          => self._ShowForAllUsers,
