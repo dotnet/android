@@ -227,10 +227,6 @@ down in the document:
     # of whether a cached copy was used.
     rebuild-mono
 
-    # Rebuild and install Mono runtime for the armeabi architecture only regardless
-    # of whether a cached copy was used.
-    rebuild-armeabi-mono
-
     # Rebuild and install Mono runtime for the armeabi-v7a architecture only regardless
     # of whether a cached copy was used.
     rebuild-armeabi-v7a-mono

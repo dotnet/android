@@ -1668,7 +1668,7 @@ namespace App1
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libtest1.so");
 							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
-							Assert.IsNotNull (data, "libRSSupport.so for armeabi should exist in the apk.");
+							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}
@@ -2794,7 +2794,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 <Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
 	<PropertyGroup>
 		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\armeabi\libmono-android.release.so')"">$(AndroidSupportedAbis);armeabi</AndroidSupportedAbis>
 		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
 		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
 	</PropertyGroup>

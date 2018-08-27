@@ -956,8 +956,6 @@ namespace Xamarin.Android.Tasks {
 		static int GetAbiCode (string abi)
 		{
 			switch (abi) {
-			case "armeabi":
-				return 1;
 			case "armeabi-v7a":
 				return 2;
 			case "x86":
