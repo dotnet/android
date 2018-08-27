@@ -40,13 +40,11 @@
     <_MonoSdksAndroidToolchainDir>$(AndroidToolchainDirectory)</_MonoSdksAndroidToolchainDir>
     <_MonoSdksAndroidToolchainCacheDir>$(AndroidToolchainCacheDirectory)</_MonoSdksAndroidToolchainCacheDir>
     <_MonoSdksAndroidToolchainPrefix>$(AndroidToolchainDirectory)\toolchains</_MonoSdksAndroidToolchainPrefix>
-    <_MonoSdksAndroidBuildToolsVersion>$(XABuildToolsVersion)</_MonoSdksAndroidBuildToolsVersion>
-    <_MonoSdksAndroidBuildToolsDir>$(XABuildToolsFolder)</_MonoSdksAndroidBuildToolsDir>
     <_MonoSdksLlvmSrc>$(MSBuildThisFileDirectory)..\..\external\llvm</_MonoSdksLlvmSrc>
     <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
     <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
 
-    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PACKAGE_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(_MonoSdksAndroidBuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(_MonoSdksAndroidBuildToolsDir)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PACKAGE_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
