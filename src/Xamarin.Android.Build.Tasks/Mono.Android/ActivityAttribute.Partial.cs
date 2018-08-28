@@ -9,6 +9,7 @@ using Java.Interop.Tools.Cecil;
 
 using Xamarin.Android.Manifest;
 
+using Android.App;
 using Android.Content.PM;
 using Android.Views;
 
@@ -71,7 +72,12 @@ namespace Android.App {
 			  self          => self.ConfigurationChanges,
 			  (self, value) => self.ConfigurationChanges  = (ConfigChanges) value
 			}, {
-			  "DirectBootAware",
+              "Description",
+              "description",
+              self          => self.Description,
+              (self, value) => self.Description = (string) value
+            }, {
+              "DirectBootAware",
 			  "directBootAware",
 			  self          => self.DirectBootAware,
 			  (self, value) => self.DirectBootAware = (bool) value
@@ -101,7 +107,12 @@ namespace Android.App {
 			  self          => self.Exported,
 			  (self, value) => self.Exported  = (bool) value
 			}, {
-			  "FinishOnTaskLaunch",
+              "FinishOnCloseSystemDialogs",
+              "finishOnCloseSystemDialogs",
+              self          => self.FinishOnCloseSystemDialogs,
+              (self, value) => self.FinishOnCloseSystemDialogs  = (bool) value
+            }, {
+              "FinishOnTaskLaunch",
 			  "finishOnTaskLaunch",
 			  self          => self.FinishOnTaskLaunch,
 			  (self, value) => self.FinishOnTaskLaunch  = (bool) value
@@ -131,7 +142,17 @@ namespace Android.App {
 			  self          => self.LaunchMode,
 			  (self, value) => self.LaunchMode  = (LaunchMode) value
 			}, {
-			  "LayoutDirection",
+              "LockTaskMode",
+              "lockTaskMode",
+              self          => self.LockTaskMode,
+              (self, value) => self.LockTaskMode = (LockTaskMode) value
+            }, {
+              "Logo",
+              "logo",
+              self          => self.Logo,
+              (self, value) => self.Logo = (string) value
+            }, {
+              "LayoutDirection",
 			  "layoutDirection",
 			  self          => self._LayoutDirection,
 			  (self, value) => self._LayoutDirection  = (LayoutDirection) value
@@ -187,6 +208,11 @@ namespace Android.App {
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
 			}, {
+              "RecreateOnConfigChanges",
+              "recreateOnConfigChanges",
+              self          => self.RecreateOnConfigChanges,
+              (self, value) => self.RecreateOnConfigChanges = (bool) value
+            }, {
               "RelinquishTaskIdentity",
               "relinquishTaskIdentity",
               self          => self.RelinquishTaskIdentity,
@@ -197,7 +223,17 @@ namespace Android.App {
 			  self          => self._ResizeableActivity,
 			  (self, value) => self._ResizeableActivity = (bool) value
 			}, {
-			  "RoundIcon",
+              "ResumeWhilePausing",
+              "resumeWhilePausing",
+              self          => self.ResumeWhilePausing,
+              (self, value) => self.ResumeWhilePausing = (bool) value
+            }, {
+              "RotationAnimation",
+              "rotationAnimation",
+              self          => self.RotationAnimation,
+              (self, value) => self.RotationAnimation = (string) value
+            }, {
+              "RoundIcon",
 			  "roundIcon",
 			  self          => self._RoundIcon,
 			  (self, value) => self._RoundIcon  = (string) value
@@ -222,7 +258,12 @@ namespace Android.App {
 			  self          => self._ShowForAllUsers,
 			  (self, value) => self._ShowForAllUsers = (bool) value
 			}, {
-			  "StateNotNeeded",
+              "ShowOnLockScreen",
+              "showOnLockScreen",
+              self          => self.ShowOnLockScreen,
+              (self, value) => self.ShowOnLockScreen = (bool) value
+            }, {
+              "StateNotNeeded",
 			  "stateNotNeeded",
 			  self          => self.StateNotNeeded,
 			  (self, value) => self.StateNotNeeded  = (bool) value
@@ -242,7 +283,12 @@ namespace Android.App {
 			  self          => self._UiOptions,
 			  (self, value) => self._UiOptions = (UiOptions) value
 			}, {
-			  "WindowSoftInputMode",
+              "VisibleToInstantApps",
+              "visibleToInstantApps",
+              self          => self.VisibleToInstantApps,
+              (self, value) => self.VisibleToInstantApps = (bool) value
+            }, {
+              "WindowSoftInputMode",
 			  "windowSoftInputMode",
 			  self          => self.WindowSoftInputMode,
 			  (self, value) => self.WindowSoftInputMode = (SoftInput) value

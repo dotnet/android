@@ -185,6 +185,7 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (ConfigChanges),           (value, p, r, v) => ToString ((ConfigChanges) value) },
             { typeof (DocumentLaunchMode),      (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
 			{ typeof (LaunchMode),              (value, p, r, v) => ToString ((LaunchMode) value) },
+            { typeof (LockTaskMode),            (value, p, r, v) => ToString ((LockTaskMode) value) },
 			{ typeof (Protection),              (value, p, r, v) => ToString ((Protection) value) },
 			{ typeof (ScreenOrientation),       (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
 			{ typeof (SoftInput),               (value, p, r, v) => ToString ((SoftInput) value) },
@@ -270,7 +271,19 @@ namespace Xamarin.Android.Manifest {
 			}
 		}
 
-		static string ToString (Protection value)
+        static string ToString (LockTaskMode value)
+        {
+            switch (value)
+            {
+                case LockTaskMode.Locked: return "locked";
+                case LockTaskMode.None: return "none";
+                case LockTaskMode.Pinned: return "pinned";
+                default:
+                    throw new ArgumentException("Unsupported LockTaskMode value '" + value + "'.", "LockTaskMode");
+            }
+        }
+
+        static string ToString (Protection value)
 		{
 			value = value & Protection.MaskBase;
 			switch (value) {

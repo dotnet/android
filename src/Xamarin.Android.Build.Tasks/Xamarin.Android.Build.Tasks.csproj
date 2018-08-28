@@ -600,6 +600,7 @@
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ActivityPersistableMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.DocumentLaunchMode.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.App.LockTaskMode.cs" />
     <Compile Include="@(_MonoAndroidEnum)">
       <Link>Mono.Android\%(Filename)%(Extension)</Link>
     </Compile>
