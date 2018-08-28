@@ -164,12 +164,8 @@
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
       Inputs="$(LlvmSourceFullPath)\Makefile.config.in"
       Outputs="@(_LlvmSourceBinary)">
-    <ItemGroup>
-      <_PackageLlvm Include="package-llvm-%(_LlvmRuntime.Identity)" />
-      <_PackageOptionsLlvm Include="%(_LlvmRuntime.PackageOptions)" />
-    </ItemGroup>
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageLlvm->'%(Identity)', ' ') $(_MonoSdksParameters) @(_PackageOptionsLlvm->'%(Identity)', ' ')"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_LlvmRuntime->'package-llvm-%(Identity)', ' ') $(_MonoSdksParameters) @(_LlvmRuntime->'%(PackageOptions)', ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -200,100 +196,91 @@
   <Target Name="_GetRuntimesOutputItems">
     <ItemGroup>
       <_RuntimeSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
       />
       <_MonoBinarySource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And 'host-$(HostOS)' == '%(Identity)' "
+          Condition=" 'host-$(HostOS)' == '%(Identity)' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\bin\mono')"
       />
       <_InstallMonoBinaryOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And 'host-$(HostOS)' == '%(Identity)' "
+          Condition=" 'host-$(HostOS)' == '%(Identity)' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\$(HostOS)\mono')"
       />
       <_InstallRuntimeOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedRuntimeOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')"
       />
       <_ProfilerSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_ProfilerSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputAotProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_InstallProfilerOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_InstallProfilerOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputAotProfilerFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedProfilerOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputProfilerFilename).d.%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedProfilerOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputAotProfilerFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputAotProfilerFilename).d.%(NativeLibraryExtension)')"
       />
       <_MonoBtlsSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
       />
       <_InstallMonoBtlsOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoBtlsFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedMonoBtlsOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoBtlsFilename).d.%(NativeLibraryExtension)')"
       />
       <_MonoPosixHelperSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
       />
       <_InstallMonoPosixHelperOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoPosixHelperFilename).%(NativeLibraryExtension)')"
       />
       <_InstallUnstrippedMonoPosixHelperOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+          Condition=" '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoPosixHelperFilename).d.%(NativeLibraryExtension)')"
       />
       <_RuntimeEglibHeaderSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\builds\android-%(Identity)-$(_MonoSdksConfiguration)\mono\eglib\eglib-config.h')"
       />
       <_RuntimeEglibHeaderOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="$(MonoSourceFullPath)\mcs\build\common\Consts.cs"
       />
       <_MonoConstsOutput
-          Condition=" '%(_MonoRuntime.DoBuild)' == 'True' "
           Include="$(_OutputIncludeDir)Consts.cs"
       />
     </ItemGroup>
   </Target>
 
   <Target Name="_BuildRuntimes"
+      Condition=" '@(_MonoRuntime)' != '' "
       DependsOnTargets="_GetRuntimesOutputItems"
       Outputs="@(_RuntimeSource);@(_MonoBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
-    <ItemGroup>
-      <_PackageRuntime Include="package-android-%(_MonoRuntime.Identity)" Condition=" '%(_MonoRuntime.DoBuild)' == 'true' " />
-    </ItemGroup>
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageRuntime->'%(Identity)', ' ') $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -369,15 +356,13 @@
     />
 
     <MakeDir
-        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Directories="$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)"
     />
     <MakeDir
-        Condition=" '%(_MonoRuntime.DoBuild)' == 'true'  And 'host-$(HostOS)' == '%(_MonoRuntime.Identity)' "
+        Condition=" 'host-$(HostOS)' == '%(_MonoRuntime.Identity)' "
         Directories="$(_MSBuildDir)\$(HostOS)"
     />
     <MakeDir
-        Condition=" '%(_MonoRuntime.DoBuild)' == 'true' "
         Directories="$(_OutputIncludeDir)%(_MonoRuntime.Identity)\eglib"
     />
     <Copy
@@ -405,7 +390,7 @@
         DestinationFiles="@(_InstallUnstrippedRuntimeOutput)"
     />
     <Exec
-        Condition=" ('$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll') And '%(_MonoRuntime.DoBuild)' == 'true' "
+        Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallRuntimeOutput);@(_InstallUnstrippedRuntimeOutput)" />
@@ -419,7 +404,7 @@
         DestinationFiles="@(_InstallUnstrippedProfilerOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputProfilerFilename)' != '' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputProfilerFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallProfilerOutput);@(_InstallUnstrippedProfilerOutput)" />
@@ -433,7 +418,7 @@
         DestinationFiles="@(_InstallUnstrippedMonoBtlsOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoBtlsFilename)' != '' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoBtlsFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoBtlsOutput);@(_InstallUnstrippedMonoBtlsOutput)" />
@@ -447,7 +432,7 @@
         DestinationFiles="@(_InstallUnstrippedMonoPosixHelperOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.DoBuild)' == 'true' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
@@ -691,13 +676,14 @@
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <Exec
-        Command="make $(MakeConcurrency) clean-android-%(_MonoRuntime.Identity) $(_MonoSdksParameters)"
+        Condition=" '@(_MonoRuntime)' != '' "
+        Command="make $(MakeConcurrency) @(_MonoRuntime->'clean-android-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Exec
         Condition=" '@(_LlvmRuntime)' != '' "
-        Command="make $(MakeConcurrency) clean-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters)"
+        Command="make $(MakeConcurrency) @(_LlvmRuntime->'clean-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
