@@ -110,6 +110,8 @@ prepare-external:
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
+	$(foreach conf, $(CONFIGURATIONS), \
+		mkdir -p bin/Build$(conf) ; )
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
 	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
 
