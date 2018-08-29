@@ -71,9 +71,8 @@ namespace Xamarin.Android.Net
 		const string DEFLATE_ENCODING = "deflate";
 		const string IDENTITY_ENCODING = "identity";
 
-		static readonly IDictionary<string, string> headerSeparators = new Dictionary<string, string>
-		{
-			["User-Agent"] = " "
+		static readonly IDictionary<string, string> headerSeparators = new Dictionary<string, string> {
+			["User-Agent"] = " ",
 		};
 
 		static readonly HashSet <string> known_content_headers = new HashSet <string> (StringComparer.OrdinalIgnoreCase) {
@@ -873,7 +872,7 @@ namespace Xamarin.Android.Net
 			httpConnection.SetRequestProperty (data.UseProxyAuthentication ? "Proxy-Authorization" : "Authorization", authorization.Message);
 		}
 
-		static string GetHeaderSeparator(string name) => headerSeparators.TryGetValue(name, out var value) ? value : ",";
+		static string GetHeaderSeparator (string name) => headerSeparators.TryGetValue (name, out var value) ? value : ",";
 
 		void AddHeaders (HttpURLConnection conn, HttpHeaders headers)
 		{
@@ -881,7 +880,7 @@ namespace Xamarin.Android.Net
 				return;
 
 			foreach (KeyValuePair<string, IEnumerable<string>> header in headers) {
-				conn.SetRequestProperty (header.Key, header.Value != null ? String.Join (GetHeaderSeparator(header.Key), header.Value) : String.Empty);
+				conn.SetRequestProperty (header.Key, header.Value != null ? String.Join (GetHeaderSeparator (header.Key), header.Value) : String.Empty);
 			}
 		}
 		
