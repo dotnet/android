@@ -254,7 +254,7 @@ namespace Xamarin.Android.Manifest {
 				case DocumentLaunchMode.Never:           return "never";
 				case DocumentLaunchMode.None:            return "none";
 				default:
-					throw new ArgumentException("Unsupported DocumentLaunchMode value '" + value + "'.", "DocumentLaunchMode");
+					throw new ArgumentException ($"Unsupported DocumentLaunchMode value '{value}'.", "DocumentLaunchMode");
 			}
 		}
 
