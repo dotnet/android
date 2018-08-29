@@ -30,16 +30,13 @@ namespace Android.App
 		public string                 ColorMode               {get; set;}
 #endif
 		public ConfigChanges          ConfigurationChanges    {get; set;}
-		public string                 Description             {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
 #endif
-		public DocumentLaunchMode     DocumentLaunchMode      {get; set;}
 		public string                 EnableVrMode            {get; set;}
 		public bool                   Enabled                 {get; set;}
 		public bool                   ExcludeFromRecents      {get; set;}
 		public bool                   Exported                {get; set;}
-		public bool                   FinishOnCloseSystemDialogs    {get; set;}
 		public bool                   FinishOnTaskLaunch      {get; set;}
 #if ANDROID_11
 		public bool                   HardwareAccelerated     {get; set;}
@@ -47,8 +44,6 @@ namespace Android.App
 		public string                 Icon                    {get; set;}
 		public string                 Label                   {get; set;}
 		public LaunchMode             LaunchMode              {get; set;}
-		public LockTaskMode           LockTaskMode            {get; set;}
-		public string                 Logo                    {get; set;}
 #if ANDROID_17
 		[Obsolete ("There is no //activity/@android:layoutDirection attribute. This was a mistake. " +
 				"Perhaps you wanted ConfigurationChanges=ConfigChanges.LayoutDirection?")]
@@ -67,32 +62,26 @@ namespace Android.App
 		public ActivityPersistableMode      PersistableMode   {get; set;}
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
-		public bool                   RecreateOnConfigChanges {get; set;} 
 		public bool                   RelinquishTaskIdentity  {get; set;}
 #if ANDROID_24
 		public bool                   ResizeableActivity      {get;set;}
 #endif
-		public bool                   ResumeWhilePausing      {get; set;}
-		public string                 RotationAnimation       {get; set;}
 #if ANDROID_25
 		public string                 RoundIcon               {get; set;}
 #endif
 #if ANDROID_23
 		public bool                   ShowForAllUsers         {get; set;}
 #endif
-		public bool                   ShowOnLockScreen        {get; set;}
 #if ANDROID_24
 		public bool                   SupportsPictureInPicture {get;set;}
 #endif
 		public ScreenOrientation      ScreenOrientation       {get; set;}
-		public bool                   SingleUser              {get; set;}
 		public bool                   StateNotNeeded          {get; set;}
 		public string                 TaskAffinity            {get; set;}
 		public string                 Theme                   {get; set;}
 #if ANDROID_14
 		public UiOptions              UiOptions               {get; set;}
 #endif
-		public bool                   VisibleToInstantApps    {get; set;}
 		public SoftInput              WindowSoftInputMode     {get; set;}
 #if ANDROID_15 // this is not documented on http://developer.android.com/guide/topics/manifest/activity-element.html but on https://developers.google.com/glass/develop/gdk/immersions
 		public bool                   Immersive               {get; set;}

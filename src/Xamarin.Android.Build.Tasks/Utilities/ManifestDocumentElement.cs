@@ -183,9 +183,7 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (string),              (value, p, r, v) => value.ToString () },
 			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
 			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
-			{ typeof (DocumentLaunchMode),  (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
 			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
-			{ typeof (LockTaskMode),        (value, p, r, v) => ToString ((LockTaskMode) value) },
 			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
 			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
 			{ typeof (SoftInput),           (value, p, r, v) => ToString ((SoftInput) value) },
@@ -246,18 +244,6 @@ namespace Xamarin.Android.Manifest {
 			return string.Join ("|", values.ToArray ());
 		}
 
-		static string ToString (DocumentLaunchMode value)
-		{
-			switch (value) {
-				case DocumentLaunchMode.Always:          return "always";
-				case DocumentLaunchMode.IntoExisting:    return "intoExisting";
-				case DocumentLaunchMode.Never:           return "never";
-				case DocumentLaunchMode.None:            return "none";
-				default:
-					throw new ArgumentException ($"Unsupported DocumentLaunchMode value '{value}'.", "DocumentLaunchMode");
-			}
-		}
-
 		static string ToString (LaunchMode value)
 		{
 			switch (value) {
@@ -267,17 +253,6 @@ namespace Xamarin.Android.Manifest {
 				case LaunchMode.SingleTop:        return "singleTop";
 				default:
 					throw new ArgumentException ("Unsupported LaunchMode value '" + value + "'.", "LaunchMode");
-			}
-		}
-
-		static string ToString (LockTaskMode value)
-		{
-			switch (value) {
-				case LockTaskMode.Locked: return "locked";
-				case LockTaskMode.None: return "none";
-				case LockTaskMode.Pinned: return "pinned";
-				default:
-					throw new ArgumentException ($"Unsupported LockTaskMode value '{value}'.", "LockTaskMode");
 			}
 		}
 
