@@ -47,16 +47,16 @@ namespace Android.App {
 			  self          => self.AlwaysRetainTaskState,
 			  (self, value) => self.AlwaysRetainTaskState = (bool) value
 			}, {
-              "AutoRemoveFromRecents",
-              "autoRemoveFromRecents",
-              self          => self.AutoRemoveFromRecents,
-              (self, value) => self.AutoRemoveFromRecents = (bool) value
-            }, {
-              "Banner",
-              "banner",
-              self          => self.Banner,
-              (self, value) => self.Banner = (string) value
-            }, {
+			  "AutoRemoveFromRecents",
+			  "autoRemoveFromRecents",
+			  self          => self.AutoRemoveFromRecents,
+			  (self, value) => self.AutoRemoveFromRecents = (bool) value
+			}, {
+			  "Banner",
+			  "banner",
+			  self          => self.Banner,
+			  (self, value) => self.Banner = (string) value
+			}, {
 			  "ClearTaskOnLaunch",
 			  "clearTaskOnLaunch",
 			  self          => self.ClearTaskOnLaunch,
@@ -72,31 +72,33 @@ namespace Android.App {
 			  self          => self.ConfigurationChanges,
 			  (self, value) => self.ConfigurationChanges  = (ConfigChanges) value
 			}, {
-              "Description",
-              "description",
-              self          => self.Description,
-              (self, value) => self.Description = (string) value
-            }, {
-              "DirectBootAware",
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "Description",
+			  "description",
+			  self          => self.Description,
+			  (self, value) => self.Description = (string) value
+			}, {
+			  "DirectBootAware",
 			  "directBootAware",
 			  self          => self.DirectBootAware,
 			  (self, value) => self.DirectBootAware = (bool) value
 			}, {
-              "DocumentLaunchMode",
-              "documentLaunchMode",
-              self          => self.DocumentLaunchMode,
-              (self, value) => self.DocumentLaunchMode = (DocumentLaunchMode) value
-            }, {
-              "Enabled",
+			  "DocumentLaunchMode",
+			  "documentLaunchMode",
+			  self          => self.DocumentLaunchMode,
+			  (self, value) => self.DocumentLaunchMode = (DocumentLaunchMode) value
+			}, {
+			  "Enabled",
 			  "enabled",
 			  self          => self.Enabled,
 			  (self, value) => self.Enabled = (bool) value
 			}, {
-              "EnableVrMode",
-              "enableVrMode",
-              self          => self.EnableVrMode,
-              (self, value) => self.EnableVrMode = (string) value
-            }, {
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "EnableVrMode",
+			  "enableVrMode",
+			  self          => self.EnableVrMode,
+			  (self, value) => self.EnableVrMode = (string) value
+			}, {
 			  "ExcludeFromRecents",
 			  "excludeFromRecents",
 			  self          => self.ExcludeFromRecents,
@@ -107,12 +109,13 @@ namespace Android.App {
 			  self          => self.Exported,
 			  (self, value) => self.Exported  = (bool) value
 			}, {
-              "FinishOnCloseSystemDialogs",
-              "finishOnCloseSystemDialogs",
-              self          => self.FinishOnCloseSystemDialogs,
-              (self, value) => self.FinishOnCloseSystemDialogs  = (bool) value
-            }, {
-              "FinishOnTaskLaunch",
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "FinishOnCloseSystemDialogs",
+			  "finishOnCloseSystemDialogs",
+			  self          => self.FinishOnCloseSystemDialogs,
+			  (self, value) => self.FinishOnCloseSystemDialogs  = (bool) value
+			}, {
+			  "FinishOnTaskLaunch",
 			  "finishOnTaskLaunch",
 			  self          => self.FinishOnTaskLaunch,
 			  (self, value) => self.FinishOnTaskLaunch  = (bool) value
@@ -142,17 +145,19 @@ namespace Android.App {
 			  self          => self.LaunchMode,
 			  (self, value) => self.LaunchMode  = (LaunchMode) value
 			}, {
-              "LockTaskMode",
-              "lockTaskMode",
-              self          => self.LockTaskMode,
-              (self, value) => self.LockTaskMode = (LockTaskMode) value
-            }, {
-              "Logo",
-              "logo",
-              self          => self.Logo,
-              (self, value) => self.Logo = (string) value
-            }, {
-              "LayoutDirection",
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "LockTaskMode",
+			  "lockTaskMode",
+			  self          => self.LockTaskMode,
+			  (self, value) => self.LockTaskMode = (LockTaskMode) value
+			}, {
+			  "Logo",
+			  "logo",
+			  self          => self.Logo,
+			  (self, value) => self.Logo = (string) value
+			}, {
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "LayoutDirection",
 			  "layoutDirection",
 			  self          => self._LayoutDirection,
 			  (self, value) => self._LayoutDirection  = (LayoutDirection) value
@@ -167,11 +172,11 @@ namespace Android.App {
 			  self          => self._MaxAspectRatio,
 			  (self, value) => self._MaxAspectRatio = (float) value
 			}, {
-              "MaxRecents",
-              "maxRecents",
-              self          => self.MaxRecents,
-              (self, value) => self.MaxRecents = (int) value
-            }, {
+			  "MaxRecents",
+			  "maxRecents",
+			  self          => self.MaxRecents,
+			  (self, value) => self.MaxRecents = (int) value
+			}, {
 			  "MultiProcess",
 			  "multiprocess",
 			  self          => self.MultiProcess,
@@ -193,12 +198,12 @@ namespace Android.App {
 			  (self, value) => self._ParentActivity = (string) value,
 			  typeof (Type)
 			}, {
-              "PersistableMode",
-              "persistableMode",
-              self          => self.PersistableMode,
-              (self, value) => self.PersistableMode  = (ActivityPersistableMode) value
-            }, {
-              "Permission",
+			  "PersistableMode",
+			  "persistableMode",
+			  self          => self.PersistableMode,
+			  (self, value) => self.PersistableMode  = (ActivityPersistableMode) value
+			}, {
+			  "Permission",
 			  "permission",
 			  self          => self.Permission,
 			  (self, value) => self.Permission  = (string) value
@@ -208,32 +213,34 @@ namespace Android.App {
 			  self          => self.Process,
 			  (self, value) => self.Process = (string) value
 			}, {
-              "RecreateOnConfigChanges",
-              "recreateOnConfigChanges",
-              self          => self.RecreateOnConfigChanges,
-              (self, value) => self.RecreateOnConfigChanges = (bool) value
-            }, {
-              "RelinquishTaskIdentity",
-              "relinquishTaskIdentity",
-              self          => self.RelinquishTaskIdentity,
-              (self, value) => self.RelinquishTaskIdentity = (bool) value
-            }, {
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "RecreateOnConfigChanges",
+			  "recreateOnConfigChanges",
+			  self          => self.RecreateOnConfigChanges,
+			  (self, value) => self.RecreateOnConfigChanges = (bool) value
+			}, {
+			  "RelinquishTaskIdentity",
+			  "relinquishTaskIdentity",
+			  self          => self.RelinquishTaskIdentity,
+			  (self, value) => self.RelinquishTaskIdentity = (bool) value
+			}, {
 			  "ResizeableActivity",
 			  "resizeableActivity",
 			  self          => self._ResizeableActivity,
 			  (self, value) => self._ResizeableActivity = (bool) value
 			}, {
-              "ResumeWhilePausing",
-              "resumeWhilePausing",
-              self          => self.ResumeWhilePausing,
-              (self, value) => self.ResumeWhilePausing = (bool) value
-            }, {
-              "RotationAnimation",
-              "rotationAnimation",
-              self          => self.RotationAnimation,
-              (self, value) => self.RotationAnimation = (string) value
-            }, {
-              "RoundIcon",
+			  "ResumeWhilePausing",
+			  "resumeWhilePausing",
+			  self          => self.ResumeWhilePausing,
+			  (self, value) => self.ResumeWhilePausing = (bool) value
+			}, {
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "RotationAnimation",
+			  "rotationAnimation",
+			  self          => self.RotationAnimation,
+			  (self, value) => self.RotationAnimation = (string) value
+			}, {
+			  "RoundIcon",
 			  "roundIcon",
 			  self          => self._RoundIcon,
 			  (self, value) => self._RoundIcon  = (string) value
@@ -248,22 +255,23 @@ namespace Android.App {
 			  self          => self.ScreenOrientation,
 			  (self, value) => self.ScreenOrientation = (ScreenOrientation) value
 			}, {
-              "SingleUser",
-              "singleUser",
-              self          => self.SingleUser,
-              (self, value) => self.SingleUser = (bool) value
-            }, {
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "SingleUser",
+			  "singleUser",
+			  self          => self.SingleUser,
+			  (self, value) => self.SingleUser = (bool) value
+			}, {
 			  "ShowForAllUsers",
 			  "showForAllUsers",
 			  self          => self._ShowForAllUsers,
 			  (self, value) => self._ShowForAllUsers = (bool) value
 			}, {
-              "ShowOnLockScreen",
-              "showOnLockScreen",
-              self          => self.ShowOnLockScreen,
-              (self, value) => self.ShowOnLockScreen = (bool) value
-            }, {
-              "StateNotNeeded",
+			  "ShowOnLockScreen",
+			  "showOnLockScreen",
+			  self          => self.ShowOnLockScreen,
+			  (self, value) => self.ShowOnLockScreen = (bool) value
+			}, {
+			  "StateNotNeeded",
 			  "stateNotNeeded",
 			  self          => self.StateNotNeeded,
 			  (self, value) => self.StateNotNeeded  = (bool) value
@@ -283,12 +291,13 @@ namespace Android.App {
 			  self          => self._UiOptions,
 			  (self, value) => self._UiOptions = (UiOptions) value
 			}, {
-              "VisibleToInstantApps",
-              "visibleToInstantApps",
-              self          => self.VisibleToInstantApps,
-              (self, value) => self.VisibleToInstantApps = (bool) value
-            }, {
-              "WindowSoftInputMode",
+			  // TODO: Not currently documented at: https://developer.android.com/guide/topics/manifest/activity-element
+			  "VisibleToInstantApps",
+			  "visibleToInstantApps",
+			  self          => self.VisibleToInstantApps,
+			  (self, value) => self.VisibleToInstantApps = (bool) value
+			}, {
+			  "WindowSoftInputMode",
 			  "windowSoftInputMode",
 			  self          => self.WindowSoftInputMode,
 			  (self, value) => self.WindowSoftInputMode = (SoftInput) value
