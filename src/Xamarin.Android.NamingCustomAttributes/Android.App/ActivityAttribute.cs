@@ -32,8 +32,8 @@ namespace Android.App
 		public ConfigChanges          ConfigurationChanges    {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
-#endif
 		public string                 EnableVrMode            {get; set;}
+#endif
 		public bool                   Enabled                 {get; set;}
 		public bool                   ExcludeFromRecents      {get; set;}
 		public bool                   Exported                {get; set;}
