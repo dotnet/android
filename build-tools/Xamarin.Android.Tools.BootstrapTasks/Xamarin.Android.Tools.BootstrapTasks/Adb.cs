@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			Log.LogMessage (MessageImportance.Low, singleLine);
 			Lines.Add (singleLine);
 		}
 	}

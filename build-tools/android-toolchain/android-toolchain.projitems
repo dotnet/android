@@ -23,7 +23,7 @@
       <HostOS>Linux</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-linux-4266726">
+    <AndroidSdkItem Include="emulator-linux-4969155">
       <HostOS>Linux</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
@@ -42,7 +42,7 @@
       <HostOS>Darwin</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-darwin-4266726">
+    <AndroidSdkItem Include="emulator-darwin-4969155">
       <HostOS>Darwin</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
@@ -61,7 +61,7 @@
       <HostOS>Windows</HostOS>
       <DestDir>tools</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="emulator-windows-4266726">
+    <AndroidSdkItem Include="emulator-windows-4969155">
       <HostOS>Windows</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
@@ -151,10 +151,10 @@
       <HostOS></HostOS>
       <DestDir>extras\android\m2repository</DestDir>
     </AndroidSdkItem>
-    <AndroidSdkItem Include="x86-21_r05">
+    <AndroidSdkItem Include="x86-28_r04">
       <HostOS></HostOS>
       <RelUrl>sys-img/android/</RelUrl>
-      <DestDir>system-images\android-21\default\x86</DestDir>
+      <DestDir>system-images\android-28\default\x86</DestDir>
     </AndroidSdkItem>
   </ItemGroup>
   <ItemGroup>
