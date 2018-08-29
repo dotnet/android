@@ -70,7 +70,7 @@ namespace Android.App
 		public bool                   RecreateOnConfigChanges {get; set;} 
 		public bool                   RelinquishTaskIdentity  {get; set;}
 #if ANDROID_24
-		public bool                   ResizeableActivity      {get; set;}
+		public bool                   ResizeableActivity      {get;set;}
 #endif
 		public bool                   ResumeWhilePausing      {get; set;}
 		public string                 RotationAnimation       {get; set;}
@@ -82,7 +82,7 @@ namespace Android.App
 #endif
 		public bool                   ShowOnLockScreen        {get; set;}
 #if ANDROID_24
-		public bool                   SupportsPictureInPicture  {get;set;}
+		public bool                   SupportsPictureInPicture {get;set;}
 #endif
 		public ScreenOrientation      ScreenOrientation       {get; set;}
 		public bool                   SingleUser              {get; set;}
@@ -96,6 +96,6 @@ namespace Android.App
 		public SoftInput              WindowSoftInputMode     {get; set;}
 #if ANDROID_15 // this is not documented on http://developer.android.com/guide/topics/manifest/activity-element.html but on https://developers.google.com/glass/develop/gdk/immersions
 		public bool                   Immersive               {get; set;}
-#endif      
+#endif
 	}
 }
