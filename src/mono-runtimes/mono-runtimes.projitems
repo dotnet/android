@@ -10,7 +10,7 @@
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="arm64-v8a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) ">
+    <_MonoRuntime Include="arm64-v8a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\arm64-v8a-clang\bin\aarch64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -19,7 +19,7 @@
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="x86" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:')) ">
+    <_MonoRuntime Include="x86" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -28,7 +28,7 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="x86_64" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:')) ">
+    <_MonoRuntime Include="x86_64" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -94,7 +94,7 @@
       <PackageOptions>llvm-llvm32_CC="$(HostCc32)" llvm-llvm32_CXX="$(HostCxx32)"</PackageOptions>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
+    <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(HostBits)' == '64' ">
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
@@ -108,7 +108,7 @@
       <InstallPath></InstallPath>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))) And '$(_LlvmCanBuild64)' == 'yes' ">
+    <_LlvmRuntime Include="llvmwin64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))) And '$(HostBits)' == '64' ">
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>false</InstallBinaries>
       <InstallPath></InstallPath>
@@ -118,189 +118,77 @@
   <ItemGroup>
     <!-- cross compilers -->
     <_MonoCrossRuntime Include="cross-arm" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
-      <JitArch>armeabi-v7a</JitArch>
-      <Ar>ar</Ar>
-      <As>as</As>
-      <Cc>$(HostCc32)</Cc>
-      <CFlags>$(_CrossCFlags)</CFlags>
-      <Cxx>$(HostCxx32)</Cxx>
-      <CxxCpp>cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlags)</CxxFlags>
-      <Ld>ld</Ld>
-      <LdFlags></LdFlags>
-      <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>armv7-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv7-linux-androideabi --with-cross-offsets=armv7-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
+      <ExePrefix>armv7-linux-android-</ExePrefix>
       <ExeSuffix></ExeSuffix>
-      <BuildEnvironment></BuildEnvironment>
-      <ConfigureEnvironment></ConfigureEnvironment>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm64" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:'))">
-      <JitArch>arm64-v8a</JitArch>
-      <Ar>ar</Ar>
-      <As>as</As>
-      <Cc>$(HostCc)</Cc>
-      <CFlags>$(_CrossCFlags)</CFlags>
-      <Cxx>$(HostCxx)</Cxx>
-      <CxxCpp>cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlags)</CxxFlags>
-      <Ld>ld</Ld>
-      <LdFlags></LdFlags>
-      <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
-      <ConfigureFlags>--target=aarch64-v8a-linux-android --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
+      <ExePrefix>aarch64-v8a-linux-android-</ExePrefix>
       <ExeSuffix></ExeSuffix>
-      <BuildEnvironment></BuildEnvironment>
-      <ConfigureEnvironment></ConfigureEnvironment>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))">
-      <JitArch>x86</JitArch>
-      <Ar>ar</Ar>
-      <As>as</As>
-      <Cc>$(HostCc32)</Cc>
-      <CFlags>$(_CrossCFlags)</CFlags>
-      <Cxx>$(HostCxx32)</Cxx>
-      <CxxCpp>cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlags)</CxxFlags>
-      <Ld>ld</Ld>
-      <LdFlags></LdFlags>
-      <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>i686-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=i686-linux-android --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32)  --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
+      <ExePrefix>i686-linux-android-</ExePrefix>
       <ExeSuffix></ExeSuffix>
-      <BuildEnvironment></BuildEnvironment>
-      <ConfigureEnvironment></ConfigureEnvironment>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86_64" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))">
-      <JitArch>x86_64</JitArch>
-      <Ar>ar</Ar>
-      <As>as</As>
-      <Cc>$(HostCc)</Cc>
-      <CFlags>$(_CrossCFlags)</CFlags>
-      <Cxx>$(HostCxx)</Cxx>
-      <CxxCpp>cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlags)</CxxFlags>
-      <Ld>ld</Ld>
-      <LdFlags></LdFlags>
-      <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>x86_64-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=x86_64-linux-android --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags)  --with-llvm=$(_CrossDefaultLlvmPrefix)</ConfigureFlags>
+      <ExePrefix>x86_64-linux-android-</ExePrefix>
       <ExeSuffix></ExeSuffix>
-      <BuildEnvironment></BuildEnvironment>
-      <ConfigureEnvironment></ConfigureEnvironment>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:'))">
-      <JitArch>armeabi-v7a</JitArch>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
-      <CFlags>$(_CrossCFlagsWin) -static -static-libgcc</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
-      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlagsWin) -static -static-libgcc -static-libstdc++</CxxFlags>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
-      <LdFlags>-static -static-libgcc</LdFlags>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>armv7-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv7-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=armv7-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <ExePrefix>armv7-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-arm</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-arm64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
-      <JitArch>arm64-v8a</JitArch>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
-      <CFlags>$(_CrossCFlagsWin) -static -static-libgcc</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++</Cxx>
-      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlagsWin) -static -static-libgcc</CxxFlags>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
-      <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
-      <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin64)" --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
+      <ExePrefix>aarch64-v8a-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-arm64</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">
-      <JitArch>x86</JitArch>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
-      <CFlags>$(_CrossCFlagsWin) -static -static-libgcc</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
-      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlagsWin) -static -static-libgcc</CxxFlags>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
-      <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>i686-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <ExePrefix>i686-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-x86</CrossMonoName>
     </_MonoCrossRuntime>
 
     <_MonoCrossRuntime Include="cross-x86_64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">
-      <JitArch>x86_64</JitArch>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
-      <CFlags>$(_CrossCFlagsWin) -static -static-libgcc</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++</Cxx>
-      <CxxCpp>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-cpp</CxxCpp>
-      <CxxFlags>$(_CrossCXXFlagsWin) -static -static-libgcc</CxxFlags>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
-      <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>x86_64-none-linux-android</TargetAbi>
-      <ConfigureFlags>--target=x86_64-linux-android --host="$(_CrossConfigureBuildHostWin64)" --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
+      <ExePrefix>x86_64-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
-      <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
-      <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
       <InstallPath></InstallPath>
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
