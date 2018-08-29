@@ -178,7 +178,7 @@ namespace Xamarin.Android.Manifest {
 		}
 
 		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> ValueConverters = new Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> () {
-			{ typeof (bool),                (value, p, r, v) => ToString ((bool) value) }
+			{ typeof (bool),                (value, p, r, v) => ToString ((bool) value) },
 			{ typeof (int),                 (value, p, r, v) => value.ToString () },
 			{ typeof (string),              (value, p, r, v) => value.ToString () },
 			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
