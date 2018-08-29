@@ -7,12 +7,13 @@ namespace Android.App
 {
 
 	[Serializable]
-	[AttributeUsage (AttributeTargets.Class, 
-			AllowMultiple=false, 
-			Inherited=false)]
-	public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
+	[AttributeUsage(AttributeTargets.Class,
+			AllowMultiple = false,
+			Inherited = false)]
+	public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	{
 
-		public ActivityAttribute ()
+		public ActivityAttribute()
 		{
 		}
 
@@ -23,8 +24,12 @@ namespace Android.App
 #endif
 		public bool                   AllowTaskReparenting    {get; set;}
 		public bool                   AlwaysRetainTaskState   {get; set;}
+#if ANDROID_21
 		public bool                   AutoRemoveFromRecents   {get; set;}
+#endif
+#if ANDROID_20
 		public string                 Banner                  {get; set;}
+#endif
 		public bool                   ClearTaskOnLaunch       {get; set;}
 #if ANDROID_26
 		public string                 ColorMode               {get; set;}
@@ -53,16 +58,22 @@ namespace Android.App
 #if ANDROID_26
 		public float                  MaxAspectRatio          {get; set;}
 #endif
+#if ANDROID_21
 		public int                    MaxRecents              {get; set;}
+#endif
 		public bool                   MultiProcess            {get; set;}
 		public bool                   NoHistory               {get; set;}
 #if ANDROID_16
 		public Type                   ParentActivity          {get; set;}
 #endif
+#if ANDROID_21
 		public ActivityPersistableMode      PersistableMode   {get; set;}
+#endif
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
+#if ANDROID_21
 		public bool                   RelinquishTaskIdentity  {get; set;}
+#endif
 #if ANDROID_24
 		public bool                   ResizeableActivity      {get;set;}
 #endif
