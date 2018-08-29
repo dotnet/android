@@ -87,7 +87,6 @@ namespace Xamarin.Android.Tasks
 				case "aarch64":
 					arch = AndroidTargetArch.Arm64;
 					break;
-				case "armeabi":
 				case "armeabi-v7a":
 					arch = AndroidTargetArch.Arm;
 					break;

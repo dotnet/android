@@ -10,25 +10,12 @@
       runtime's build
   -->
   <PropertyGroup>
-    <_ArmeabiRuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) ">true</_ArmeabiRuntimeConfigure>
-    <_ArmeabiRuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:'))">true</_ArmeabiRuntimeBuild>
+    <_ArmeabiV7aRuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:')) ">true</_ArmeabiV7aRuntimeConfigure>
+    <_ArmeabiV7aRuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">true</_ArmeabiV7aRuntimeBuild>
   </PropertyGroup>
-  <ItemGroup>
-    <_MonoRuntime Include="armeabi" Condition=" '$(_ArmeabiRuntimeConfigure)' == 'true' ">
-      <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-clang\bin\arm-linux-androideabi-strip</Strip>
-      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
-      <NativeLibraryExtension>so</NativeLibraryExtension>
-      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
-      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
-      <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
-      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>$(_ArmeabiRuntimeBuild)</DoBuild>
-    </_MonoRuntime>
-  </ItemGroup>
 
-  <!-- Cross compiler doesn't need this one, it uses the 'armeabi' build above. Thus no PropertyGroup here. -->
   <ItemGroup>
-    <_MonoRuntime Include="armeabi-v7a" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
+    <_MonoRuntime Include="armeabi-v7a" Condition=" '$(_ArmeabiV7aRuntimeConfigure)' == 'true' ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-v7a-clang\bin\arm-linux-androideabi-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -36,7 +23,7 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>true</DoBuild>
+      <DoBuild>$(_ArmeabiV7aRuntimeBuild)</DoBuild>
     </_MonoRuntime>
   </ItemGroup>
 
@@ -170,7 +157,7 @@
 
   <ItemGroup>
     <!-- LLVM -->
-    <_LlvmRuntime Include="llvm32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))) ">
+    <_LlvmRuntime Include="llvm32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:'))) ">
       <ExeSuffix></ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
@@ -186,7 +173,7 @@
       <PackageOptions>llvm-llvm64_CC="$(HostCc64)" llvm-llvm64_CXX="$(HostCxx64)"</PackageOptions>
     </_LlvmRuntime>
 
-    <_LlvmRuntime Include="llvmwin32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))) ">
+    <_LlvmRuntime Include="llvmwin32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))) ">
       <ExeSuffix>.exe</ExeSuffix>
       <InstallBinaries>true</InstallBinaries>
       <InstallPath></InstallPath>
@@ -201,8 +188,8 @@
 
   <ItemGroup>
     <!-- cross compilers -->
-    <_MonoCrossRuntime Include="cross-arm" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi:'))">
-      <JitArch>armeabi</JitArch>
+    <_MonoCrossRuntime Include="cross-arm" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
+      <JitArch>armeabi-v7a</JitArch>
       <Ar>ar</Ar>
       <As>as</As>
       <Cc>$(HostCc32)</Cc>
@@ -215,8 +202,8 @@
       <RanLib>ranlib</RanLib>
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv5-linux-androideabi --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
+      <TargetAbi>armv7-none-linux-androideabi</TargetAbi>
+      <ConfigureFlags>--target=armv7-linux-androideabi --with-cross-offsets=armv7-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefix32)</ConfigureFlags>
       <ExeSuffix></ExeSuffix>
       <BuildEnvironment></BuildEnvironment>
       <ConfigureEnvironment></ConfigureEnvironment>
@@ -297,8 +284,8 @@
       <CrossMonoName>cross-x86_64</CrossMonoName>
     </_MonoCrossRuntime>
 
-    <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi:'))">
-      <JitArch>armeabi</JitArch>
+    <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:'))">
+      <JitArch>armeabi-v7a</JitArch>
       <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
       <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
       <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
@@ -311,8 +298,8 @@
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
       <StripFlags>-S</StripFlags>
-      <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
-      <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
+      <TargetAbi>armv7-none-linux-androideabi</TargetAbi>
+      <ConfigureFlags>--target=armv7-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=armv7-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
       <BuildEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</BuildEnvironment>
       <ConfigureEnvironment>PATH="$(AndroidMxeFullPath)\bin:$(PATH)"</ConfigureEnvironment>
