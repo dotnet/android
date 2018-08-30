@@ -32,10 +32,12 @@
         AndroidAbi="x86"
         AndroidSdkHome="$(AndroidSdkDirectory)"
         JavaSdkHome="$(JavaSdkDirectory)"
-        SdkVersion="21"
+        SdkVersion="28"
         ImageName="$(_TestImageName)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(AndroidToolsBinPath)"
+        RamSizeMB="2048"
+        DataPartitionSizeMB="2048"
     />
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
