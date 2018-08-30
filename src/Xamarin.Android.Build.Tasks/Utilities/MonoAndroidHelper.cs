@@ -97,13 +97,13 @@ namespace Xamarin.Android.Tasks
 					if (log == null)
 						Console.Error.Write (value);
 					else
-						log.LogError ("{0}", value);
+						log.LogCodedError ("XA5300", "{0}", value);
 					break;
 				case TraceLevel.Warning:
 					if (log == null)
 						Console.WriteLine (value);
 					else
-						log.LogWarning ("{0}", value);
+						log.LogCodedWarning ("XA5300", "{0}", value);
 					break;
 				default:
 					if (log == null)
