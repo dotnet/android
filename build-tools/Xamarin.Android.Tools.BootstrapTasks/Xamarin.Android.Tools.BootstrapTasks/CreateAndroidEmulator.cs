@@ -22,7 +22,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string          TargetId        {get; set;}
 
-		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner";
+		public                  string          ImageName           {get; set;} = "XamarinAndroidTestRunner";
+
+		public                  string          DataPartitionSizeMB {get; set;} = "2048";
+		public                  string          RamSizeMB           {get; set;} = "2048";
+
 
 		public override bool Execute ()
 		{
@@ -68,6 +72,29 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			var arguments   = $"create avd --abi {AndroidAbi} -f -n {ImageName} --package \"{TargetId}\"";
 			Exec (android, arguments);
+
+			string configPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), ".android", "avd", $"{ImageName}.avd", "config.ini");
+			if (!File.Exists (configPath)) {
+				Log.LogWarning ($"Config file for AVD '{ImageName}' not found at {configPath}");
+				Log.LogWarning ($"AVD '{ImageName}' will use default emulator settings (memory and data partition size)");
+				return;
+			}
+
+			ulong diskSize;
+			if (!UInt64.TryParse (DataPartitionSizeMB, out diskSize))
+				Log.LogError ($"Invalid data partition size '{DataPartitionSizeMB}' - must be a positive integer value expressing size in megabytes");
+
+			ulong ramSize;
+			if (!UInt64.TryParse (RamSizeMB, out ramSize))
+				Log.LogError ($"Invalid RAM size '{RamSizeMB}' - must be a positive integer value expressing size in megabytes");
+
+			if (Log.HasLoggedErrors)
+				return;
+
+			File.AppendAllLines (configPath, new string[] {
+				$"disk.dataPartition.size={diskSize}M",
+				$"hw.ramSize={ramSize}"
+			});
 		}
 
 		StreamWriter stdin;
