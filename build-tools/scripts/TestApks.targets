@@ -181,6 +181,7 @@
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
+        LogLevel="Verbose"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
         LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package).txt"
