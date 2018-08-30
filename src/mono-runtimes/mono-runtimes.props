@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <_HostWinCFlags Condition=" '$(Configuration)' == 'Debug' ">-ggdb3 -O0 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
-    <_HostWinCFlags Condition=" '$(Configuration)' == 'Release' ">-g -O2 -DXAMARIN_PRODUCT_VERSION=0</_HostWinCFlags>
-  </PropertyGroup>
-
   <!-- LLVM+cross common -->
   <PropertyGroup>
     <_CrossOutputDirTop>$([System.IO.Path]::GetFullPath ('$(IntermediateOutputPath)'))</_CrossOutputDirTop>
-    <_MingwCc32>$(MingwCommandPrefix32)-gcc</_MingwCc32>
-    <_MingwCxx32>$(MingwCommandPrefix32)-g++</_MingwCxx32>
-    <_MingwCc64>$(MingwCommandPrefix64)-gcc</_MingwCc64>
-    <_MingwCxx64>$(MingwCommandPrefix64)-g++</_MingwCxx64>
     <_MingwTriplet32>i686-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet32>
     <_MingwTriplet64>x86_64-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet64>
 
@@ -70,10 +61,5 @@
     <_CrossConfigureFlags64>--build=$(_CrossConfigureBuildHost64) $(_CrossCommonConfigureFlags)</_CrossConfigureFlags64>
     <_CrossConfigureFlags Condition=" '$(HostBits)' == '64' " >$(_CrossConfigureFlags64)</_CrossConfigureFlags>
     <_CrossConfigureFlags Condition=" '$(HostBits)' == '32' " >$(_CrossConfigureFlags32)</_CrossConfigureFlags>
-  </PropertyGroup>
-
-  <!-- Mono runtimes settings -->
-  <PropertyGroup>
-    <_HostWin64CFlags>$(_HostWinCFlags)</_HostWin64CFlags>
   </PropertyGroup>
 </Project>

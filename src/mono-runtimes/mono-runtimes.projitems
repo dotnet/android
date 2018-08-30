@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!--
-      Each _MonoRuntime is placed in its own ItemGroup to keep it together with the associated PropertyGroup that
-      creates properties which determine whether the runtime is to be only configured or also built. The distinction
-      is necessary because of the cross compiled runtime requirements. Namely, the cross compiled ones need to have a C
-      header with structure offsets generated and in order to do so, they need the runtime's config.h file. But if the
-      runtime is not enabled by the user it would be a waste of time to build it when the configuration stage is all
-      we need. The PropertyGroup is kept in this file so that it's clear what set of conditions triggers the given
-      runtime's build
-  -->
-  <PropertyGroup>
-    <_ArmeabiV7aRuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:')) ">true</_ArmeabiV7aRuntimeConfigure>
-    <_ArmeabiV7aRuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">true</_ArmeabiV7aRuntimeBuild>
-  </PropertyGroup>
-
   <ItemGroup>
-    <_MonoRuntime Include="armeabi-v7a" Condition=" '$(_ArmeabiV7aRuntimeConfigure)' == 'true' ">
+    <_MonoRuntime Include="armeabi-v7a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-v7a-clang\bin\arm-linux-androideabi-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -23,16 +9,8 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>$(_ArmeabiV7aRuntimeBuild)</DoBuild>
     </_MonoRuntime>
-  </ItemGroup>
-
-  <PropertyGroup>
-    <_Arm64RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">true</_Arm64RuntimeConfigure>
-    <_Arm64RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:'))">true</_Arm64RuntimeBuild>
-  </PropertyGroup>
-  <ItemGroup>
-    <_MonoRuntime Include="arm64-v8a" Condition=" '$(_Arm64RuntimeConfigure)' == 'true' ">
+    <_MonoRuntime Include="arm64-v8a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\arm64-v8a-clang\bin\aarch64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -40,16 +18,8 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>$(_Arm64RuntimeBuild)</DoBuild>
     </_MonoRuntime>
-  </ItemGroup>
-
-  <PropertyGroup>
-    <_X86RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">true</_X86RuntimeConfigure>
-    <_X86RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:'))">true</_X86RuntimeBuild>
-  </PropertyGroup>
-  <ItemGroup>
-    <_MonoRuntime Include="x86" Condition=" '$(_X86RuntimeConfigure)' == 'true' ">
+    <_MonoRuntime Include="x86" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -57,16 +27,8 @@
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>$(_X86RuntimeBuild)</DoBuild>
     </_MonoRuntime>
-  </ItemGroup>
-
-  <PropertyGroup>
-    <_X8664RuntimeConfigure Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">true</_X8664RuntimeConfigure>
-    <_X8664RuntimeBuild Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:'))">true</_X8664RuntimeBuild>
-  </PropertyGroup>
-  <ItemGroup>
-    <_MonoRuntime Include="x86_64" Condition=" '$(_X8664RuntimeConfigure)' == 'true' ">
+    <_MonoRuntime Include="x86_64" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
@@ -74,60 +36,29 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>$(_X8664RuntimeBuild)</DoBuild>
     </_MonoRuntime>
   </ItemGroup>
 
   <ItemGroup>
     <_MonoRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
-      <UseMonoSdks>False</UseMonoSdks>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-gcc</Cc>
-      <Cpp></Cpp>
-      <CFlags>$(_HostWin64CFlags)</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-g++</Cxx>
-      <CxxFlags>$(_HostWin64CFlags)</CxxFlags>
-      <CxxCpp></CxxCpp>
-      <DllTool>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-dlltool</DllTool>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ld</Ld>
-      <LdFlags></LdFlags>
-      <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-objdump</Objdump>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix64) --target=$(MingwCommandPrefix64) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>True</DoBuild>
     </_MonoRuntime>
-    <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
-      <UseMonoSdks>False</UseMonoSdks>
-      <Ar>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ar</Ar>
-      <As>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-as</As>
-      <Cc>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-gcc</Cc>
-      <Cpp></Cpp>
-      <CFlags>$(_HostWin32CFlags)</CFlags>
-      <Cxx>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-g++</Cxx>
-      <CxxFlags>$(_HostWin32CFlags)</CxxFlags>
-      <CxxCpp></CxxCpp>
-      <DllTool>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-dlltool</DllTool>
-      <Ld>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ld</Ld>
-      <LdFlags></LdFlags>
-      <Objdump>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-objdump</Objdump>
-      <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
+    <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <ConfigureFlags>PATH="$PATH:$(AndroidMxeFullPath)\bin" --host=$(MingwCommandPrefix32) --target=$(MingwCommandPrefix32) --disable-boehm --enable-mcs-build=no --enable-nls=no --enable-maintainer-mode --with-monodroid --disable-llvm ac_cv_header_zlib_h=no ac_cv_search_dlopen=no</ConfigureFlags>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>True</DoBuild>
     </_MonoRuntime>
     <_MonoRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
       <Strip>strip</Strip>
@@ -138,7 +69,6 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>True</DoBuild>
       <BuildTests>True</BuildTests>
     </_MonoRuntime>
     <_MonoRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
@@ -150,7 +80,6 @@
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <DoBuild>True</DoBuild>
       <BuildTests>True</BuildTests>
     </_MonoRuntime>
   </ItemGroup>
