@@ -44,6 +44,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyAndConvertResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1150,6 +1151,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssetsDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
+	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<_AndroidTypeMappingJavaToManaged>$(IntermediateOutputPath)android\typemap.jm</_AndroidTypeMappingJavaToManaged>
 	<_AndroidTypeMappingManagedToJava>$(IntermediateOutputPath)android\typemap.mj</_AndroidTypeMappingManagedToJava>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1341,6 +1343,7 @@ because xbuild doesn't support framework reference assemblies.
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="@(_LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
+		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
 	/>
 	<Aapt2Compile
@@ -1376,6 +1379,7 @@ because xbuild doesn't support framework reference assemblies.
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
 		AcwMapFile="$(_AcwMapFile)"
+		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="$(IntermediateOutputPath)\compiled.flata"
 	/>
 	<Aapt2Compile
@@ -1666,6 +1670,7 @@ because xbuild doesn't support framework reference assemblies.
 		Condition="'$(_AndroidUseAapt2)' != 'True'"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 		AcwMapFile="$(_AcwMapFile)"
+		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
 	/>
 
@@ -2225,11 +2230,12 @@ because xbuild doesn't support framework reference assemblies.
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
 	AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
-  <ConvertResourcesCases 
+  <ConvertCustomView
+	Condition="Exists('$(_CustomViewMapFile)')"
+	CustomViewMapFile="$(_CustomViewMapFile)"
+	AcwMapFile="$(_AcwMapFile)"
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-	AcwMapFile="$(_AcwMapFile)"
-	AndroidConversionFlagFile="$(IntermediateOutputPath)_javastubs.stamp"
   />
   <Touch Files="$(IntermediateOutputPath)_javastubs.stamp;$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
   <ItemGroup>
@@ -3052,6 +3058,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
+	<Delete Files="$(MonoAndroidIntermediate)customview-map.txt" />
 	<Delete Files="$(MonoAndroidIntermediate)mergeresources.cache" />
 	<Delete Files="$(MonoAndroidIntermediate)jarlist.cache" />
 	<Delete Files="$(MonoAndroidIntermediate)resolved_assemblies.txt" />

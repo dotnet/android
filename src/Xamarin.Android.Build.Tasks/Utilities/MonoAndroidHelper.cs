@@ -496,11 +496,48 @@ namespace Xamarin.Android.Tasks
 			if (!File.Exists (acwPath))
 				return acw_map;
 			foreach (var s in File.ReadLines (acwPath)) {
-				var items = s.Split (';');
+				var items = s.Split (new char[] { ';' }, count: 2);
 				if (!acw_map.ContainsKey (items [0]))
 					acw_map.Add (items [0], items [1]);
 			}
 			return acw_map;
+		}
+
+		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
+		{
+			var cachedMap = (Dictionary<string, HashSet<string>>)engine?.GetRegisteredTaskObject (mapFile, RegisteredTaskObjectLifetime.Build);
+			if (cachedMap != null)
+				return cachedMap;
+			var map = new Dictionary<string, HashSet<string>> ();
+			if (!File.Exists (mapFile))
+				return map;
+			foreach (var s in File.ReadLines (mapFile)) {
+				var items = s.Split (new char [] { ';' }, count: 2);
+				var key = items [0];
+				var value = items [1];
+				HashSet<string> set;
+				if (!map.TryGetValue (key, out set))
+					map.Add (key, set = new HashSet<string> ());
+				set.Add (value);
+			}
+			return map;
+		}
+
+		public static void SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
+		{
+			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			var temp = Path.GetTempFileName ();
+			try {
+				using (var m = new StreamWriter (temp)) {
+					foreach (var i in map.OrderBy (x => x.Key)) {
+						foreach (var v in i.Value.OrderBy (x => x))
+							m.WriteLine ($"{i.Key};{v}");
+					}
+				}
+				CopyIfChanged (temp, mapFile);
+			} finally {
+				File.Delete (temp);
+			}
 		}
 
 		public static string [] GetProguardEnvironmentVaribles (string proguardHome)

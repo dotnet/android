@@ -249,6 +249,7 @@
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
+    <Compile Include="Tasks\ConvertCustomView.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>
