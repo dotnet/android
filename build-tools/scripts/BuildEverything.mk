@@ -48,6 +48,7 @@ ALL_HOST_ABIS = \
 	$(shell uname)
 
 ALL_AOT_ABIS = \
+	armeabi-v7a \
 	arm64 \
 	x86 \
 	x86_64 \

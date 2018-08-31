@@ -24,7 +24,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000">
-      <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
+      <Output TaskParameter="DetectedAdbTarget"     PropertyName="_AdbTarget" />
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
@@ -162,6 +162,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
+	IgnoreExitCode="true"
     />
   </Target>
 
@@ -184,6 +185,7 @@
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         LogLevel="Verbose"
+	PackageName="%(TestApkInstrumentation.Package)"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
         LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package).txt"

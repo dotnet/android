@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="Mono.Android_Tests">
-	<uses-sdk android:minSdkVersion="14" />
+	<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="22" />
 	<application android:label="Xamarin.Android.RuntimeTests" android:name="android.apptests.App">
 		<activity
 				android:name="android.apptests.RenamedActivity"
@@ -9,4 +9,6 @@
 	</application>
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.SET_TIME_ZONE" />
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 </manifest>
