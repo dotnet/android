@@ -784,18 +784,19 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CreateAapt2VersionCache"
 		DependsOnTargets="_ReadAapt2VersionCache"
 		AfterTargets="_SetLatestTargetFrameworkVersion"
-		Condition="'$(_AndroidUseAapt2)' == 'True'"
+		Condition="'$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
 	>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
-			Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" 
+			Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
 			File="$(_AndroidAapt2VersionFile)"
 			Lines="$(_Aapt2Version)"
 			Overwrite="true"
 	/>
 	<ItemGroup>
-		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\**\*.flata"/>
-		<_CompiledFlataStamp Include="$(IntermediateOutputPath)\**\compiled.stamp"/>
+		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\lp\**\*.flata" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"/>
+		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\*.flata" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"/>
+		<_CompiledFlataStamp Include="$(IntermediateOutputPath)\lp\**\compiled.stamp" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"/>
 	</ItemGroup>
 	<Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 </Target>
