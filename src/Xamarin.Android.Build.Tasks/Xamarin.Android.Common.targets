@@ -794,9 +794,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			Overwrite="true"
 	/>
 	<ItemGroup>
-		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\lp\**\*.flata" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
+		<_CompiledFlataArchive Include="$(_AndroidLibrayProjectIntermediatePath)**\*.flata" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 		<_CompiledFlataArchive Include="$(IntermediateOutputPath)\*.flata" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
-		<_CompiledFlataStamp Include="$(IntermediateOutputPath)\lp\**\compiled.stamp" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
+		<_CompiledFlataStamp Include="$(_AndroidLibrayProjectIntermediatePath)**\compiled.stamp" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 	</ItemGroup>
 	<Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 </Target>
