@@ -1943,20 +1943,15 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CreateIntermediateAssembliesDir;_CopyConfigFiles">
 	<!-- Make a copy of every assembly we need in assemblies -->
-	<Copy
+	<CopyIfChanged
 		SourceFiles="@(ResolvedAssemblies)"
 		DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-		SkipUnchangedFiles="true" />
-	<Copy
+	/>
+	<CopyIfChanged
 		SourceFiles="@(_AndroidResolvedSatellitePaths)"
 		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
-		SkipUnchangedFiles="true"
 	/>
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
-	<ItemGroup>
-		<_IntermediateAssemblyFiles Include="$(MonoAndroidLinkerInputDir)*" />
-	</ItemGroup>
-	<Touch Files="@(_IntermediateAssemblyFiles)" />
 </Target>
 
 <Target Name="_CollectConfigFiles"
