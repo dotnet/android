@@ -116,10 +116,25 @@ namespace Xamarin.Android.Tools.BootstrapTasks {
 				var start   = new ProcessStartInfo ("unzip", $"\"{sourceFile}\" -d \"{nestedTemp}\"") {
 					CreateNoWindow  = true,
 					UseShellExecute = false,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
 				};
 				Log.LogMessage (MessageImportance.Low, $"unzip \"{sourceFile}\" -d \"{nestedTemp}\"");
-				var p       = Process.Start (start);
-				p.WaitForExit ();
+				using (var p = Process.Start (start)) {
+					p.OutputDataReceived += (sender, e) => {
+						if (string.IsNullOrEmpty(e.Data))
+							return;
+						Console.Out.Write(e.Data + "\n");
+					};
+					p.ErrorDataReceived += (sender, e) => {
+						if (string.IsNullOrEmpty(e.Data))
+							return;
+						Console.Error.Write(e.Data + "\n");
+					};
+					p.BeginOutputReadLine ();
+					p.BeginErrorReadLine ();
+					p.WaitForExit ();
+				}
 
 
 				var dirs = NoSubdirectory ? new string [] { nestedTemp } : Directory.EnumerateDirectories (nestedTemp, "*");
