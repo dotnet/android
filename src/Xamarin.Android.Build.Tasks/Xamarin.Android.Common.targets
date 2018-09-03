@@ -2470,16 +2470,9 @@ because xbuild doesn't support framework reference assemblies.
   </CreateItem>
 </Target>
 
-<Target Name="_FindCompiledJavaFiles" DependsOnTargets="_CompileJava">
-  <CreateItem
-    Include="$(IntermediateOutputPath)android\bin\classes\\**\*.class">
-    <Output TaskParameter="Include" ItemName="_CompiledJavaFiles" />
-  </CreateItem>
-</Target>
-
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
-		_FindCompiledJavaFiles;
+		_CompileJava;
 		_GetMonoPlatformJarPath;
 		_GetAdditionalResourcesFromAssemblies;
 		_CreateAdditionalResourceCache;
@@ -2489,7 +2482,7 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects)
 		;@(_JavaLibrariesToCompileForAppDx)
 		;@(AndroidExternalJavaLibrary)
-		;@(_CompiledJavaFiles)
+		;$(IntermediateOutputPath)android\bin\classes.zip
 		;@(ProguardConfiguration)
 		;@(MultiDexMainDexList)
 		;$(_AndroidBuildPropertiesCache)
