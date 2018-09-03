@@ -20,6 +20,7 @@
   <Import Project="..\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.projitems" Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.projitems"  Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.projitems"  Condition=" '$(Configuration)' == 'Release' And '$(AotAssemblies)' != 'true' " />
+  <Import Project="..\tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.projitems" Condition=" '$(AotAssemblies)' != 'True' " />
   <Import Project="..\build-tools\scripts\TestApks.targets" />
   <PropertyGroup>
     <RunApkTestsDependsOn>
