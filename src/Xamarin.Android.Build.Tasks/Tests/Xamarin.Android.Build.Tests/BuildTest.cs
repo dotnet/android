@@ -1855,6 +1855,25 @@ namespace App1
 		}
 
 		[Test]
+		public void ExtraAaptManifest ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				builder.RequiresMSBuild = true;
+				builder.Target = "Restore";
+				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
+				builder.Target = "Build";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
+				Assert.IsTrue (manifest.Contains ("android:authorities=\"UnnamedProject.UnnamedProject.crashlyticsinitprovider\""), "placeholder not replaced");
+				Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
+			}
+		}
+
+		[Test]
 		public void ResourceExtraction ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
