@@ -83,8 +83,8 @@ namespace Xamarin.Android.Tasks {
 			/* Some attributes reference a Java class name.
 			 * try to convert those like for TryFixCustomView
 			 */
-			if (attr.Name != (res_auto + "layout_behavior")                              // For custom CoordinatorLayout behavior
-			    && (attr.Parent.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
+			if (attr.Name != (res_auto + "layout_behavior") &&                            // For custom CoordinatorLayout behavior
+			    		(attr.Parent.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
 				return false;
 
 			if (!acwMap.TryGetValue (attr.Value, out string mappedValue))
