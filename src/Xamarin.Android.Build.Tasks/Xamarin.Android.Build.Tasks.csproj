@@ -151,6 +151,7 @@
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
+    <Compile Include="Tasks\SetVsMonoAndroidRegistryKey.cs" />
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
