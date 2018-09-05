@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 			return pathName.Replace ("\\", "/");
 		}
 
-		void AddFiles (string folder, string folderInArchive)
+		void AddFiles (string folder, string folderInArchive, CompressionMethod method)
 		{
 			int count = 0;
 			foreach (string fileName in Directory.GetFiles (folder, "*.*", SearchOption.TopDirectoryOnly)) {
@@ -64,9 +64,9 @@ namespace Xamarin.Android.Tasks
 				if (zip.ContainsEntry (archiveFileName, out index)) {
 					var e = zip.First (x => x.FullName == archiveFileName);
 					if (e.ModificationTime < fi.LastWriteTimeUtc)
-						zip.AddFile (fileName, archiveFileName);
+						zip.AddFile (fileName, archiveFileName, compressionMethod: method);
 				} else {
-					zip.AddFile (fileName, archiveFileName);
+					zip.AddFile (fileName, archiveFileName, compressionMethod: method);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 				zip.DeleteEntry ((ulong)index);
 		}
 
-		public void AddDirectory (string folder, string folderInArchive)
+		public void AddDirectory (string folder, string folderInArchive, CompressionMethod method = CompressionMethod.Default)
 		{
 			if (!string.IsNullOrEmpty (folder)) {
 				folder = folder.Replace ('/', Path.DirectorySeparatorChar).Replace ('\\', Path.DirectorySeparatorChar);
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			AddFiles (folder, folderInArchive);
+			AddFiles (folder, folderInArchive, method);
 			foreach (string dir in Directory.GetDirectories (folder, "*", SearchOption.AllDirectories)) {
 				var di = new DirectoryInfo (dir);
 				if ((di.Attributes & FileAttributes.Hidden) != 0)
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 				} catch (ZipException) {
 					
 				}
-				AddFiles (dir, fullDirPath);
+				AddFiles (dir, fullDirPath, method);
 			}
 		}
 
