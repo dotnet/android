@@ -42,6 +42,7 @@ namespace Java.Interop.BootstrapTasks
 
 			XATInfo jdk         = XATInfo.GetKnownSystemJdkInfos (CreateLogger ())
 				.Where (j => maxVersion != null ? j.Version <= maxVersion : true)
+				.Where (j => j.IncludePath.Any ())
 				.FirstOrDefault ();
 
 			if (jdk == null) {
