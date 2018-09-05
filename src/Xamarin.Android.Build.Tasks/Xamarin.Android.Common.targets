@@ -1290,6 +1290,9 @@ because xbuild doesn't support framework reference assemblies.
 			DestinationFiles="@(_AndroidResourceDest)"
 			AcwMapFile="$(_AcwMapFile)"
 			CacheFile="$(_AndroidResourcesCacheFile)"
+			CustomViewMapFile="$(_CustomViewMapFile)"
+			ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+			ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 			Condition="  '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
 		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
 	</CopyAndConvertResources>
@@ -1342,6 +1345,7 @@ because xbuild doesn't support framework reference assemblies.
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="@(_LibraryResourceDirectories)"
+		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
@@ -1378,6 +1382,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ConvertResourcesCases
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="$(IntermediateOutputPath)\compiled.flata"
@@ -1669,6 +1674,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ConvertResourcesCases
 		Condition="'$(_AndroidUseAapt2)' != 'True'"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
 		AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"

@@ -88,26 +88,19 @@ namespace Xamarin.Android.Tasks
 				MonoAndroidHelper.SetWriteable (file);
 				try {
 					bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
-						resourcedirectories, (t, m) => {
-							string targetfile = file;
-							if (targetfile.StartsWith (resdir, StringComparison.InvariantCultureIgnoreCase)) {
-								targetfile = file.Substring (resdir.Length).TrimStart (Path.DirectorySeparatorChar);
-								if (resource_name_case_map.TryGetValue (targetfile, out string temp))
-									targetfile = temp;
-								targetfile = Path.Combine ("Resources", targetfile);
+						resourcedirectories, (level, message) => {
+							switch (level) {
+							case TraceLevel.Error:
+								Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
+								break;
+							case TraceLevel.Warning:
+								Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir, resource_name_case_map);
+								break;
+							default:
+								Log.LogDebugMessage (message);
+								break;
 							}
-							switch (t) {
-								case TraceLevel.Error:
-									Log.LogCodedError ("XA1002", file: targetfile, lineNumber: 0, message: m);
-									break;
-								case TraceLevel.Warning:
-									Log.LogCodedWarning ("XA1001", file: targetfile, lineNumber: 0, message: m);
-									break;
-								default:
-									Log.LogDebugMessage (m);
-									break;
-							}
-					}, registerCustomView : (e, filename) => {
+						}, registerCustomView : (e, filename) => {
 						if (customViewMap == null)
 							return;
 						HashSet<string> set;

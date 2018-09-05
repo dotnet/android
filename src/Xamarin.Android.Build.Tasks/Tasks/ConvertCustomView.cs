@@ -45,24 +45,17 @@ namespace Xamarin.Android.Tasks {
 						var e = document.Root;
 						bool update = false;
 						foreach (var elem in AndroidResource.GetElements (e).Prepend (e)) {
-							update |= TryFixCustomView (elem, acw_map, (t, m) => {
-								string targetfile = file;
+							update |= TryFixCustomView (elem, acw_map, (level, message) => {
 								ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
-								if (resdir != null && targetfile.StartsWith (resdir.ItemSpec, StringComparison.InvariantCultureIgnoreCase)) {
-									targetfile = file.Substring (resdir.ItemSpec.Length).TrimStart (Path.DirectorySeparatorChar);
-									if (resource_name_case_map.TryGetValue (targetfile, out string temp))
-										targetfile = temp;
-									targetfile = Path.Combine ("Resources", targetfile);
-								}
-								switch (t) {
+								switch (level) {
 								case TraceLevel.Error:
-									Log.LogCodedError ("XA1002", file: targetfile, lineNumber: 0, message: m);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir.ItemSpec, resource_name_case_map);
 									break;
 								case TraceLevel.Warning:
-									Log.LogCodedWarning ("XA1001", file: targetfile, lineNumber: 0, message: m);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir.ItemSpec, resource_name_case_map);
 									break;
 								default:
-									Log.LogDebugMessage (m);
+									Log.LogDebugMessage (message);
 									break;
 								}
 							});
