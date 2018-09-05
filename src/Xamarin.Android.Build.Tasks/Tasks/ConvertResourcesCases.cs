@@ -19,25 +19,30 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AcwMapFile { get; set; }
 
+		[Required]
+		public string CustomViewMapFile { get; set; }
+
 		public string AndroidConversionFlagFile { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
 
 		Dictionary<string,string> resource_name_case_map;
+		Dictionary<string, HashSet<string>> customViewMap;
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ConvertResourcesCases Task");
-			Log.LogDebugMessage ("  ResourceDirectories: {0}", ResourceDirectories);
-			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-			Log.LogDebugMessage ("  AndroidConversionFlagFile: {0}", AndroidConversionFlagFile);
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
 
+
+			if (CustomViewMapFile != null)
+				customViewMap = Xamarin.Android.Tasks.MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
+
 			// Look in the resource xml's for capitalized stuff and fix them
 			FixupResources (acw_map);
+
+			if (customViewMap != null)
+				Xamarin.Android.Tasks.MonoAndroidHelper.SaveCustomViewMapFile (BuildEngine4, CustomViewMapFile, customViewMap);
 
 			return true;
 		}
@@ -80,31 +85,29 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
-				var tmpdest = Path.GetTempFileName ();
-				File.Copy (file, tmpdest, overwrite: true);
-				MonoAndroidHelper.SetWriteable (tmpdest);
+				MonoAndroidHelper.SetWriteable (file);
 				try {
-					bool success = AndroidResource.UpdateXmlResource (resdir, tmpdest, acwMap,
-						resourcedirectories, (t, m) => {
-							string targetfile = file;
-							if (targetfile.StartsWith (resdir, StringComparison.InvariantCultureIgnoreCase)) {
-								targetfile = file.Substring (resdir.Length).TrimStart (Path.DirectorySeparatorChar);
-								if (resource_name_case_map.TryGetValue (targetfile, out string temp))
-									targetfile = temp;
-								targetfile = Path.Combine ("Resources", targetfile);
+					bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
+						resourcedirectories, (level, message) => {
+							switch (level) {
+							case TraceLevel.Error:
+								Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
+								break;
+							case TraceLevel.Warning:
+								Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir, resource_name_case_map);
+								break;
+							default:
+								Log.LogDebugMessage (message);
+								break;
 							}
-							switch (t) {
-								case TraceLevel.Error:
-									Log.LogCodedError ("XA1002", file: targetfile, lineNumber: 0, message: m);
-									break;
-								case TraceLevel.Warning:
-									Log.LogCodedWarning ("XA1001", file: targetfile, lineNumber: 0, message: m);
-									break;
-								default:
-									Log.LogDebugMessage (m);
-									break;
-							}
-						});
+						}, registerCustomView : (e, filename) => {
+						if (customViewMap == null)
+							return;
+						HashSet<string> set;
+						if (!customViewMap.TryGetValue (e, out set))
+							customViewMap.Add (e, set = new HashSet<string> ());
+						set.Add (filename);
+					});
 					if (!success) {
 						//If we failed to write the file, a warning is logged, we should skip to the next file
 						continue;
@@ -115,11 +118,11 @@ namespace Xamarin.Android.Tasks
 					// doesn't support those type of BOM (it really wants the document to start
 					// with "<?"). Since there is no way to plug into the file saving mechanism in X.S
 					// we strip those here and point the designer to use resources from obj/
-					MonoAndroidHelper.CleanBOM (tmpdest);
+					MonoAndroidHelper.CleanBOM (file);
 
-					MonoAndroidHelper.CopyIfChanged (tmpdest, file);
+
 				} finally {
-					File.Delete (tmpdest);
+
 				}
 			}
 		}
