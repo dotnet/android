@@ -1447,10 +1447,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_BuildLibraryImportsCache"
 		Inputs="$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
-		Outputs="$(_AndroidLibraryImportsCache)">
+		Outputs="$(_AndroidLibraryImportsCache).stamp">
 	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
 			CacheFile="$(_AndroidLibraryImportsCache)">
 	</GetImportedLibraries>
+	<Touch Files="$(_AndroidLibraryImportsCache).stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidLibraryImportsCache).stamp" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_GetLibraryImports" DependsOnTargets="$(_GetLibraryImportsDependsOnTargets)">
@@ -3076,6 +3080,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AndroidBuildPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />
+	<Delete Files="$(_AndroidLibraryImportsCache).stamp" />
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
 	<Delete Files="$(_AndroidLibraryProjectImportsCache)" />
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />

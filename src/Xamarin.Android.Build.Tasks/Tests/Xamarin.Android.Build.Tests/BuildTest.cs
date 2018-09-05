@@ -318,6 +318,7 @@ namespace Xamarin.Android.Tests
 				var targetsToBeSkipped = new [] {
 					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
+					"_BuildLibraryImportsCache",
 				};
 				foreach (var targetName in targetsToBeSkipped) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
