@@ -710,6 +710,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
+		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath"          Condition="'$(JdkJvmPath)' == ''" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
 	</ResolveSdks>
@@ -1172,6 +1173,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
 	<_AndroidComponentResgenFlagFile>$(IntermediateOutputPath)Component.R.cs.flag</_AndroidComponentResgenFlagFile>
+	<_AndroidJniMarshalMethodsFlag>$(IntermediateOutputPath)jnimarshalmethods.flag</_AndroidJniMarshalMethodsFlag>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
@@ -2107,7 +2109,23 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_LinkAssemblies"
-  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
+  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
+
+<Target Name="_GenerateJniMarshalMethods"
+    Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None'"
+    DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
+    Inputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+    Outputs="$(_AndroidJniMarshalMethodsFlag)">
+
+  <Exec
+       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedUserAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
+  />
+  <Exec
+       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
+       Condition=" '%(ResolvedAssemblies.Filename)' == 'Mono.Android' "
+  />
+  <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
+</Target>
 
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"

@@ -30,6 +30,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
@@ -48,6 +49,9 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public string JavaSdkPath { get; set; }
+
+		[Output]
+		public string JdkJvmPath { get; set; }
 
 		[Output]
 		public string MonoAndroidToolsPath { get; set; }
@@ -92,12 +96,38 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			try {
+				Log.LogDebugMessage ($"JavaSdkPath: {JavaSdkPath}");
+				Xamarin.Android.Tools.JdkInfo info = null;
+				try {
+					info = new Xamarin.Android.Tools.JdkInfo (JavaSdkPath);
+				} catch {
+					info = Xamarin.Android.Tools.JdkInfo.GetKnownSystemJdkInfos (this.CreateTaskLogger ()).FirstOrDefault ();
+				}
+
+				JdkJvmPath = info.JdkJvmPath;
+
+				if (string.IsNullOrEmpty(JdkJvmPath)) {
+					Log.LogCodedError ("XA5300", $"{nameof (JdkJvmPath)} is blank");
+					return false;
+				}
+
+				if (!File.Exists (JdkJvmPath)) {
+					Log.LogCodedError ("XA5300", $"JdkJvmPath not found at {JdkJvmPath}");
+					return false;
+				}
+			} catch (Exception e) {
+				Log.LogCodedError ("XA5300", $"Unable to find {nameof (JdkJvmPath)}{Environment.NewLine}{e}");
+				return false;
+			}
+
 			MonoAndroidHelper.TargetFrameworkDirectories = ReferenceAssemblyPaths;
 
 			Log.LogDebugMessage ($"{nameof (ResolveSdks)} Outputs:");
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
 			Log.LogDebugMessage ($"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
+			Log.LogDebugMessage ($"  {nameof (JdkJvmPath)}: {JdkJvmPath}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidBinPath)}: {MonoAndroidBinPath}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidToolsPath)}: {MonoAndroidToolsPath}");
 
