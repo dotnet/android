@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -23,10 +24,18 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string CacheFile { get; set; }
 
+		[Required]
+		public string CustomViewMapFile { get; set; }
+
+		public ITaskItem [] ResourceDirectories { get; set; }
+
+		public string ResourceNameCaseMap { get; set; }
+
 		[Output]
 		public ITaskItem[] ModifiedFiles { get; set; }
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
+		Dictionary<string, HashSet<string>> customViewMap;
 
 		public override bool Execute ()
 		{
@@ -39,6 +48,10 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("source and destination count mismatch");
 
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
+			var resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
+
+			if (CustomViewMapFile != null)
+				customViewMap = Xamarin.Android.Tasks.MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 
 			var xmlFilesToUpdate = new Dictionary<string,string> ();
 			for (int i = 0; i < SourceFiles.Length; i++) {
@@ -85,11 +98,32 @@ namespace Xamarin.Android.Tasks
 				var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastWriteTimeUtc (destfilename) : DateTime.MinValue;
 				var tmpdest = Path.GetTempFileName ();
 				var res = Path.Combine (Path.GetDirectoryName (filename), "..");
-				MonoAndroidHelper.CopyIfChanged (filename, tmpdest);
-				MonoAndroidHelper.SetWriteable (tmpdest);
+				MonoAndroidHelper.CopyIfChanged (filename, destfilename);
+				MonoAndroidHelper.SetWriteable (destfilename);
 				try {
-					AndroidResource.UpdateXmlResource (res, tmpdest, acw_map);
-					if (MonoAndroidHelper.CopyIfChanged (tmpdest, destfilename)) {
+					var updated = AndroidResource.UpdateXmlResource (res, destfilename, acw_map, logMessage: (level, message) => {
+						ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => filename.StartsWith (x.ItemSpec)) ?? null;
+						switch (level) {
+						case TraceLevel.Error:
+							Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, filename, resdir.ItemSpec, resource_name_case_map);
+							break;
+						case TraceLevel.Warning:
+							Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, filename, resdir.ItemSpec, resource_name_case_map);
+							break;
+						default:
+							Log.LogDebugMessage (message);
+							break;
+						}
+					}, registerCustomView: (e, file) => {
+						if (customViewMap == null)
+							return;
+						HashSet<string> set;
+						if (!customViewMap.TryGetValue (e, out set))
+							customViewMap.Add (e, set = new HashSet<string> ());
+						set.Add (file);
+
+					});
+					if (updated) {
 						if (!modifiedFiles.Any (i => i.ItemSpec == destfilename))
 							modifiedFiles.Add (new TaskItem (destfilename));
 					}
@@ -101,6 +135,9 @@ namespace Xamarin.Android.Tasks
 			ModifiedFiles = modifiedFiles.ToArray ();
 
 			Log.LogDebugTaskItems (" ModifiedFiles:", ModifiedFiles);
+
+			if (customViewMap != null)
+				Xamarin.Android.Tasks.MonoAndroidHelper.SaveCustomViewMapFile (BuildEngine4, CustomViewMapFile, customViewMap);
 
 			return true;
 		}

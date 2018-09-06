@@ -291,14 +291,12 @@ namespace Android.Runtime {
 
 			static MagicRegistrationMap ()
 			{
-				typesMap = new Dictionary<string, int> ();
-
 				Prefill ();
 			}
 
 			static public bool Filled {
 				get {
-					return typesMap.Count > 0;
+					return typesMap != null && typesMap.Count > 0;
 				}
 			}
 

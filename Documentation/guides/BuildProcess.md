@@ -403,7 +403,6 @@ when packaing Release applications.
 
     Supported values include:
 
-    -   `armeabi`
     -   `armeabi-v7a`
     -   `x86`
     -   `arm64-v8a`: Requires Xamarin.Android 5.1 and later.
@@ -598,7 +597,6 @@ when packaing Release applications.
     Pre defined key items
 
     -   **abi**  &ndash; Inserts the targetted abi for the app
-        -   1 &ndash; `armeabi`
         -   2 &ndash; `armeabi-v7a`
         -   3 &ndash; `x86`
         -   4 &ndash; `arm64-v8a`
@@ -1017,8 +1015,8 @@ built for. There are two ways this can be done:
 
 With path sniffing, the parent directory name of the native library is 
 used to specify the ABI that the library targets. Thus, if you add 
-`lib/armeabi/libfoo.so` to the build, then the ABI will be "sniffed" as 
-`armeabi`. 
+`lib/armeabi-v7a/libfoo.so` to the build, then the ABI will be "sniffed" as 
+`armeabi-v7a`. 
 
 
 #### Item Attribute Name
@@ -1028,7 +1026,7 @@ used to specify the ABI that the library targets. Thus, if you add
 ```xml
 <ItemGroup>
   <AndroidNativeLibrary Include="path/to/libfoo.so">
-    <Abi>armeabi</Abi>
+    <Abi>armeabi-v7a</Abi>
   </AndroidNativeLibrary>
 </ItemGroup>
 ```

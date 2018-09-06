@@ -24,6 +24,11 @@
 /src/Xamarin.Android.Build.Tasks @dellis1972
 /src/Xamarin.Android.NamingCustomAttributes @jonpryor
 /src/Xamarin.Android.Tools.Aidl @jonpryor
+/tests/TestRunner.* @grendello
+/tests/BCL-Tests @grendello
+/tests/CodeBehind @grendello
+/src/Mono.Android/Xamarin.Android.Net @grendello
+/build-tools/scripts/dependencies @grendello
 
 # Android Designer team relies on the files in this directory,
 # any changes there should be ran past them

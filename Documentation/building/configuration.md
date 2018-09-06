@@ -95,7 +95,6 @@ Overridable MSBuild properties include:
     the Mono JIT for inclusion within apps. This is a `:`-separated list of
     ABIs to build. Supported values are:
 
-      * `armeabi`
       * `armeabi-v7a`
       * `arm64-v8a`
       * `x86`

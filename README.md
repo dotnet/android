@@ -52,8 +52,8 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 If you are interested in fixing issues and contributing directly to the code base, please see the following:
 
-  - [How to build and run from source](Documentation/README.md#building-from-Source)
-  - [The development workflow, and using your build](Documentation/README.md#development-Workflow)
+  - [How to build and run from source](Documentation/README.md#building-from-source)
+  - [The development workflow, and using your build](Documentation/README.md#development-workflow)
   - [Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/)
   - [Submitting pull requests](https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests#pull-requests)
 

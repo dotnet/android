@@ -31,7 +31,6 @@ namespace Xamarin.Android.Tasks
 		// KEEP THIS SORTED ALPHABETICALLY, CASE-INSENSITIVE
 		public static readonly string[] ValidAbis = new[]{
 			"arm64-v8a",
-			"armeabi",
 			"armeabi-v7a",
 			"x86",
 			"x86_64",

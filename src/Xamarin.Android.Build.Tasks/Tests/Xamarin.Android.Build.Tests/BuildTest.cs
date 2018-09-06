@@ -259,20 +259,44 @@ namespace Xamarin.Android.Tests
 			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
+				AndroidResources = {
+					new AndroidItem.AndroidResource ("Resources\\layout\\Tabbar.axml") {
+						TextContent = () => {
+							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<android.support.design.widget.TabLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" xmlns:app=\"http://schemas.android.com/apk/res-auto\" android:id=\"@+id/sliding_tabs\" android:background=\"?attr/colorPrimary\" android:theme=\"@style/ThemeOverlay.AppCompat.Dark.ActionBar\" app:tabIndicatorColor=\"@android:color/white\" app:tabGravity=\"fill\" app:tabMode=\"fixed\" />";
+						}
+					}
+				}
 			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+
+			var packages = proj.Packages;
+			packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+			packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			packages.Add (KnownPackages.SupportDesign_27_0_2_1);
+			packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+			packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				//To be sure we are at a clean state, delete bin/obj
-				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				if (Directory.Exists (intermediate))
-					Directory.Delete (intermediate, true);
-				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				if (Directory.Exists (output))
-					Directory.Delete (output, true);
+				//To be sure we are at a clean state
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+
+				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				//Absolutely non of these files should be *older* than the starting time of this test!
 				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
-				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
 				foreach (var file in files) {
 					var info = new FileInfo (file);
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
@@ -291,8 +315,14 @@ namespace Xamarin.Android.Tests
 
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				string targetName = isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink";
-				Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				var targetsToBeSkipped = new [] {
+					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
+					"_UpdateAndroidResgen",
+					"_BuildLibraryImportsCache",
+				};
+				foreach (var targetName in targetsToBeSkipped) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				}
 			}
 		}
 
@@ -691,7 +721,7 @@ namespace Xamarin.Android.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				if (IsWindows) {
-					intermediateDir = Path.Combine (intermediateDir, proj.TargetFrameworkMoniker);
+					intermediateDir = Path.Combine (intermediateDir, proj.TargetFrameworkAbbreviated);
 				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir,  "android/bin/classes.dex")),
@@ -1668,7 +1698,7 @@ namespace App1
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libtest1.so");
 							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
-							Assert.IsNotNull (data, "libRSSupport.so for armeabi should exist in the apk.");
+							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}
@@ -2794,7 +2824,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 <Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
 	<PropertyGroup>
 		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\armeabi\libmono-android.release.so')"">$(AndroidSupportedAbis);armeabi</AndroidSupportedAbis>
 		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
 		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
 	</PropertyGroup>

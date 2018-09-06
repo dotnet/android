@@ -104,26 +104,6 @@ namespace Xamarin.Android.Tasks
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
 		}
-
-		void ErrorHandler (string task, string message)
-		{
-			Log.LogError ($"{task} {message}");
-		}
-
-		void WarningHandler (string task, string message)
-		{
-			Log.LogWarning ($"{task} {message}");
-		}
-
-		void DebugHandler (string task, string message)
-		{
-			Log.LogDebugMessage ($"DEBUG {task} {message}");
-		}
-
-		void InfoHandler (string task, string message)
-		{
-			Log.LogMessage ($"{task} {message}");
-		}
 	}
 }
 

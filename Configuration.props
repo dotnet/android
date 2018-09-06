@@ -79,7 +79,7 @@
     <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
-    <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
+    <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>28</XABuildToolsVersion>
@@ -116,7 +116,7 @@
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\tools</EmulatorToolPath>
+    <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>

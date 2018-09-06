@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Output]
 		public                  string              FailedToRun                 { get; set; }
 
+		public                  string              LogLevel                    { get; set; }
+
 		protected   override    bool                LogTaskMessages {
 			get { return false; }
 		}
@@ -70,6 +72,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			executionState  = ExecuteState.RunInstrumentation;
 			base.Execute ();
 
+			using (logcatWriter = File.Exists (LogcatFilename) ? File.AppendText (LogcatFilename) : File.CreateText (LogcatFilename)) {
+				executionState = ExecuteState.GetLogcat;
+				base.Execute ();
+			}
+
 			if (string.IsNullOrEmpty (targetTestResultsPath)) {
 				FailedToRun = Component;
 				Log.LogError (
@@ -83,11 +90,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			executionState  = ExecuteState.PullFiles;
 			base.Execute ();
-
-			using (logcatWriter = File.Exists (LogcatFilename) ? File.AppendText (LogcatFilename) : File.CreateText (LogcatFilename)) {
-				executionState = ExecuteState.GetLogcat;
-				base.Execute ();
-			}
 
 			return !Log.HasLoggedErrors;
 		}
@@ -103,6 +105,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					args.Append (kvp.Length > 1 ? kvp [1] : "");
 					args.Append ("\"");
 				}
+
+				if (!String.IsNullOrEmpty (LogLevel)) {
+					args.Append ($" -e \"loglevel {LogLevel}\"");
+				}
+
 				if (!string.IsNullOrWhiteSpace (TestFixture)) {
 					args.Append (" -e suite \"").Append (TestFixture).Append ("\"");
 				}

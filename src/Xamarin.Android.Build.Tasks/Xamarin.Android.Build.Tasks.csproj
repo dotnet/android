@@ -151,6 +151,7 @@
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
+    <Compile Include="Tasks\SetVsMonoAndroidRegistryKey.cs" />
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
@@ -249,6 +250,7 @@
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
+    <Compile Include="Tasks\ConvertCustomView.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>
@@ -574,6 +576,7 @@
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
+    <Compile Include="Tasks\CancelableTask.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

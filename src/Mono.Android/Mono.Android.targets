@@ -8,13 +8,23 @@
   </ItemGroup>
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
-      Inputs="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
+      Inputs="$(MSBuildThisFile);$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
       Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
+    <PropertyGroup>
+      <_GlobalProperties>
+        JavaInteropProfile=Net45;
+        XAInstallPrefix=$(XAInstallPrefix);
+        TargetFrameworkIdentifier=MonoAndroid;
+        TargetFrameworkVersion=v1.0;
+        TargetFrameworkRootPath=$(XAInstallPrefix)xbuild-frameworks;
+      </_GlobalProperties>
+    </PropertyGroup>
     <MSBuild
         Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
+        Properties="$(_GlobalProperties)"
     />
     <ItemGroup>
-      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)\*.dll*" />
+      <Assembly Include="$(JavaInteropFullPath)\bin\$(Configuration)Net45\*.dll*" />
     </ItemGroup>
     <Copy
         SourceFiles="@(Assembly)"
