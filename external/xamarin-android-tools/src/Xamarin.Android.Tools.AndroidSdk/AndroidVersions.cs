@@ -168,7 +168,9 @@ namespace Xamarin.Android.Tools
 				AlternateIds = new[]{ "O" },
 			},
 			new AndroidVersion (27, "8.1",   "Oreo"),
-			new AndroidVersion (28, "9.0",   "Pie"),
+			new AndroidVersion (28, "9.0",   "Pie") {
+				AlternateIds = new[]{ "P" },
+			},
 		};
 	}
 
