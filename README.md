@@ -31,7 +31,9 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 | **Commercial Xamarin.Android 8.1 (d15-5)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 8.1, macOS+VS2017][commercial-d15-5-macOS-x86_64-icon]][commercial-d15-5-macOS-x86_64-status] |
 | **Commercial Xamarin.Android 8.2 (d15-6)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 8.2, macOS+VS2017][commercial-d15-6-macOS-x86_64-icon]][commercial-d15-6-macOS-x86_64-status] |
 | **Commercial Xamarin.Android 8.3 (d15-7)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 8.3, macOS+VS2017][commercial-d15-7-macOS-x86_64-icon]][commercial-d15-7-macOS-x86_64-status] |
-| **Commercial Xamarin.Android 8.3.99 (master)** for macOS &amp; Windows+Visual Studio 2017   | [![Commercial Xamarin.Android 8.3.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 9.0 (d15-8)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 9.0, macOS+VS2017][commercial-d15-8-macOS-x86_64-icon]][commercial-d15-8-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 9.1 (d15-9)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 9.1, macOS+VS2017][commercial-d15-9-macOS-x86_64-icon]][commercial-d15-9-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 9.1.99 (master)** for macOS &amp; Windows+Visual Studio 2017   | [![Commercial Xamarin.Android 9.1.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
 
 [commercial-d15-2-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/badge/icon
 [commercial-d15-2-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/
@@ -45,6 +47,10 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-d15-6-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-6/
 [commercial-d15-7-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-7/badge/icon
 [commercial-d15-7-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-7/
+[commercial-d15-8-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-8/badge/icon
+[commercial-d15-8-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-8/
+[commercial-d15-9-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/badge/icon
+[commercial-d15-9-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/
 [commercial-master-macOS-x86_64-icon]:    https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
 [commercial-master-macOS-x86_64-status]:  https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
 
