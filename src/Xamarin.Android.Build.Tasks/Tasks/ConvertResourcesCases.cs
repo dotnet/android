@@ -78,6 +78,7 @@ namespace Xamarin.Android.Tasks
 			
 			var resourcedirectories = ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec).ToArray();
 			// Fix up each file
+			List<string> viewList = new List<string> ();
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
 				if (srcmodifiedDate <= lastUpdate) {
@@ -99,17 +100,19 @@ namespace Xamarin.Android.Tasks
 							Log.LogDebugMessage (message);
 							break;
 						}
-					}, registerCustomView : (e, filename) => {
-					if (customViewMap == null)
-						return;
-					HashSet<string> set;
-					if (!customViewMap.TryGetValue (e, out set))
-						customViewMap.Add (e, set = new HashSet<string> ());
-					set.Add (filename);
-				});
+					}, registerCustomView : viewList);
+				if (customViewMap != null && viewList.Count > 0) {
+					foreach (var e in viewList) {
+						HashSet<string> set;
+						if (!customViewMap.TryGetValue (e, out set))
+							customViewMap.Add (e, set = new HashSet<string> ());
+						set.Add (file);
+					}
+				}
 				if (!success) {
 					//If we failed to write the file, a warning is logged, we should skip to the next file
 					continue;
+
 				}
 
 				// We strip away an eventual UTF-8 BOM from the XML file.

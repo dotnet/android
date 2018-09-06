@@ -90,6 +90,7 @@ namespace Xamarin.Android.Tasks
 				Log = Log,
 			};
 			merger.Load ();
+			List<string> viewList = new List<string> ();
 
 			foreach (var p in xmlFilesToUpdate) {
 				string filename = p.Key;
@@ -100,6 +101,8 @@ namespace Xamarin.Android.Tasks
 				var res = Path.Combine (Path.GetDirectoryName (filename), "..");
 				MonoAndroidHelper.CopyIfChanged (filename, destfilename);
 				MonoAndroidHelper.SetWriteable (destfilename);
+
+				viewList.Clear ();
 				var updated = AndroidResource.UpdateXmlResource (res, destfilename, acw_map, logMessage: (level, message) => {
 					ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => filename.StartsWith (x.ItemSpec)) ?? null;
 					switch (level) {
@@ -113,19 +116,18 @@ namespace Xamarin.Android.Tasks
 						Log.LogDebugMessage (message);
 						break;
 					}
-				}, registerCustomView: (e, file) => {
-					if (customViewMap == null)
-						return;
-					HashSet<string> set;
-					if (!customViewMap.TryGetValue (e, out set))
-						customViewMap.Add (e, set = new HashSet<string> ());
-					set.Add (file);
-
-				});
+				}, registerCustomView: viewList);
+				if (customViewMap != null && viewList.Count > 0) {
+					foreach (var e in viewList) {
+						HashSet<string> set;
+						if (!customViewMap.TryGetValue (e, out set))
+							customViewMap.Add (e, set = new HashSet<string> ());
+						set.Add (destfilename);
+					}
+				}
 				if (updated) {
 					if (!modifiedFiles.Any (i => i.ItemSpec == destfilename))
-						modifiedFiles.Add (new TaskItem (destfilename));
-				}
+							modifiedFiles.Add (new TaskItem (destfilename));
 			}
 			merger.Save ();
 			ModifiedFiles = modifiedFiles.ToArray ();
