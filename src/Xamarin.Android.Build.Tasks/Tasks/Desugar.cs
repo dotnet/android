@@ -85,6 +85,8 @@ namespace Xamarin.Android.Tasks
 			foreach (var jar in InputJars) {
 				var output = Path.Combine (OutputDirectory, BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileName (jar));
 				outputs.Add (output);
+				cmd.AppendSwitch ("--classpath_entry ");
+				cmd.AppendFileNameIfNotNull (jar);
 				cmd.AppendSwitch ("--input ");
 				cmd.AppendFileNameIfNotNull (jar);
 				cmd.AppendSwitch ("--output ");
