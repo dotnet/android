@@ -61,6 +61,10 @@
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Name>Xamarin.Android.Build.Tasks</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>

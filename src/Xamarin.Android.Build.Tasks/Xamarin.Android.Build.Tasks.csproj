@@ -107,6 +107,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\Aapt.cs" />
     <Compile Include="Tasks\Aapt2.cs" />
     <Compile Include="Tasks\Aapt2Compile.cs" />
@@ -194,7 +195,6 @@
     <Compile Include="Tasks\CreateLibraryResourceArchive.cs" />
     <Compile Include="Tasks\ResolveLibraryProjectImports.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\RemoveLibraryResourceZip.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveLinqExpressions.cs" />
     <Compile Include="Tasks\NdkUtils.cs" />
@@ -205,7 +205,6 @@
     <Compile Include="Utilities\ResourceDesignerImportGenerator.cs" />
     <Compile Include="Tasks\CreateManagedLibraryResourceArchive.cs" />
     <Compile Include="Tasks\CheckForRemovedItems.cs" />
-    <Compile Include="Tasks\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\CheckProjectItems.cs" />
     <Compile Include="Tasks\CheckDuplicateJavaLibraries.cs" />
     <Compile Include="Mono.Android\PermissionAttribute.Partial.cs" />
