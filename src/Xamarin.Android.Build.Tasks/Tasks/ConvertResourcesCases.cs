@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 							Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
 							break;
 						case TraceLevel.Warning:
-							Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir, resource_name_case_map);
+							Log.FixupResourceFilenameAndLogCodedWarning ("XA1001", message, file, resdir, resource_name_case_map);
 							break;
 						default:
 							Log.LogDebugMessage (message);
