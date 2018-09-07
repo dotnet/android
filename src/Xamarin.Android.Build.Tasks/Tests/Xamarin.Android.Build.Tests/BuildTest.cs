@@ -1861,6 +1861,7 @@ namespace App1
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.RequiresMSBuild = true;
 				builder.Target = "Restore";
