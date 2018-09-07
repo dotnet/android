@@ -58,8 +58,6 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 					if (dstmodifiedDate < srcmodifiedDate && MonoAndroidHelper.CopyIfChanged (filename, destfilename)) {
-						MonoAndroidHelper.SetWriteable (destfilename);
-
 						// If the resource is not part of a raw-folder we strip away an eventual UTF-8 BOM
 						// This is a requirement for the Android designer because the desktop Java renderer
 						// doesn't support those type of BOM (it really wants the document to start
@@ -68,7 +66,6 @@ namespace Xamarin.Android.Tasks
 						if (isXml && !MonoAndroidHelper.IsRawResourcePath (filename))
 							MonoAndroidHelper.CleanBOM (destfilename);
 
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (destfilename, srcmodifiedDate, Log);
 						modifiedFiles.Add (new TaskItem (destfilename));
 					}
 				} else
@@ -93,8 +90,6 @@ namespace Xamarin.Android.Tasks
 				try {
 					AndroidResource.UpdateXmlResource (res, tmpdest, acw_map);
 					if (MonoAndroidHelper.CopyIfChanged (tmpdest, destfilename)) {
-						MonoAndroidHelper.SetWriteable (destfilename);
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (destfilename, srcmodifiedDate, Log);
 						if (!modifiedFiles.Any (i => i.ItemSpec == destfilename))
 							modifiedFiles.Add (new TaskItem (destfilename));
 					}

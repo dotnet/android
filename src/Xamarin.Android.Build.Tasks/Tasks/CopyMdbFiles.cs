@@ -31,8 +31,6 @@ namespace Xamarin.Android.Tasks {
 					var date = DateTime.Now;
 					if (MonoAndroidHelper.CopyIfChanged (src, dst)) {
 						copiedFiles.Add (DestinationFiles [i]);
-						MonoAndroidHelper.SetWriteable (dst);
-						MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (dst, date, Log);
 					}
 				}
 			}

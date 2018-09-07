@@ -61,6 +61,9 @@ namespace Xamarin.Android.Tools {
 
 				if (!Directory.Exists (source)) {
 					File.Copy (source, destination, true);
+					MonoAndroidHelper.SetWriteable (destination);
+					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 					return true;
 				}
 			}/* else
@@ -78,6 +81,8 @@ namespace Xamarin.Android.Tools {
 				using (var f = File.Create (destination)) {
 					source.CopyTo (f);
 				}
+				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
@@ -96,6 +101,8 @@ namespace Xamarin.Android.Tools {
 				Directory.CreateDirectory (Path.GetDirectoryName (destination));
 
 				File.Copy (source, destination, true);
+				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
