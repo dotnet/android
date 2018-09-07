@@ -96,39 +96,35 @@ namespace Xamarin.Android.Tasks
 				var destfilename = p.Value;
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (filename);
 				var dstmodifiedDate = File.Exists (destfilename) ? File.GetLastWriteTimeUtc (destfilename) : DateTime.MinValue;
-				var tmpdest = Path.GetTempFileName ();
+
 				var res = Path.Combine (Path.GetDirectoryName (filename), "..");
 				MonoAndroidHelper.CopyIfChanged (filename, destfilename);
 				MonoAndroidHelper.SetWriteable (destfilename);
-				try {
-					var updated = AndroidResource.UpdateXmlResource (res, destfilename, acw_map, logMessage: (level, message) => {
-						ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => filename.StartsWith (x.ItemSpec)) ?? null;
-						switch (level) {
-						case TraceLevel.Error:
-							Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, filename, resdir.ItemSpec, resource_name_case_map);
-							break;
-						case TraceLevel.Warning:
-							Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, filename, resdir.ItemSpec, resource_name_case_map);
-							break;
-						default:
-							Log.LogDebugMessage (message);
-							break;
-						}
-					}, registerCustomView: (e, file) => {
-						if (customViewMap == null)
-							return;
-						HashSet<string> set;
-						if (!customViewMap.TryGetValue (e, out set))
-							customViewMap.Add (e, set = new HashSet<string> ());
-						set.Add (file);
-
-					});
-					if (updated) {
-						if (!modifiedFiles.Any (i => i.ItemSpec == destfilename))
-							modifiedFiles.Add (new TaskItem (destfilename));
+				var updated = AndroidResource.UpdateXmlResource (res, destfilename, acw_map, logMessage: (level, message) => {
+					ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => filename.StartsWith (x.ItemSpec)) ?? null;
+					switch (level) {
+					case TraceLevel.Error:
+						Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, filename, resdir.ItemSpec, resource_name_case_map);
+						break;
+					case TraceLevel.Warning:
+						Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, filename, resdir.ItemSpec, resource_name_case_map);
+						break;
+					default:
+						Log.LogDebugMessage (message);
+						break;
 					}
-				} finally {
-					File.Delete (tmpdest);
+				}, registerCustomView: (e, file) => {
+					if (customViewMap == null)
+						return;
+					HashSet<string> set;
+					if (!customViewMap.TryGetValue (e, out set))
+						customViewMap.Add (e, set = new HashSet<string> ());
+					set.Add (file);
+
+				});
+				if (updated) {
+					if (!modifiedFiles.Any (i => i.ItemSpec == destfilename))
+						modifiedFiles.Add (new TaskItem (destfilename));
 				}
 			}
 			merger.Save ();
