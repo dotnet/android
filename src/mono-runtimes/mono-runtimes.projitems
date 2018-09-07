@@ -159,7 +159,7 @@
 
     <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>armv7-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -168,7 +168,7 @@
 
     <_MonoCrossRuntime Include="cross-arm64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>aarch64-v8a-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -177,7 +177,7 @@
 
     <_MonoCrossRuntime Include="cross-x86-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>i686-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -186,7 +186,7 @@
 
     <_MonoCrossRuntime Include="cross-x86_64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>x86_64-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
