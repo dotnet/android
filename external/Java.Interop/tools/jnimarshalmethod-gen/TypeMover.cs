@@ -13,14 +13,16 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 	{
 		AssemblyDefinition Source { get; }
 		AssemblyDefinition Destination { get; }
+		string DestinationPath { get; }
 		Dictionary<string, System.Reflection.Emit.TypeBuilder> Types { get; }
 
 		MethodReference consoleWriteLine;
 
-		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver)
+		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, string destinationPath, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver)
 		{
 			Source = source;
 			Destination = destination;
+			DestinationPath = destinationPath;
 			Types = types;
 
 			if (App.Debug) {
@@ -49,7 +51,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				return;
 			}
 
-			Destination.Write (new WriterParameters () { WriteSymbols = Destination.MainModule.HasSymbols });
+			Destination.Write (DestinationPath, new WriterParameters () { WriteSymbols = Destination.MainModule.HasSymbols });
 
 			if (App.Verbose)
 				App.ColorWriteLine ($"Wrote updated {Destination.MainModule.FileName} assembly", ConsoleColor.Cyan);

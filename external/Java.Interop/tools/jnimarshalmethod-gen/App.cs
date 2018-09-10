@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 	{
 
 		internal const string Name = "jnimarshalmethod-gen";
-		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true });
+		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true, InMemory = true });
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static Dictionary<string, TypeDefinition> typeMap = new Dictionary<string, TypeDefinition> ();
 		static public bool Debug;
@@ -145,11 +145,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			var readWriteParameters    = new ReaderParameters {
 				AssemblyResolver   = resolver,
+				InMemory           = true,
 				ReadSymbols        = true,
 				ReadWrite          = true,
 			};
 			var readWriteParametersNoSymbols    = new ReaderParameters {
 				AssemblyResolver   = resolver,
+				InMemory           = true,
 				ReadSymbols        = false,
 				ReadWrite          = true,
 			};
@@ -347,7 +349,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 
 			var dstAssembly = resolver.GetAssembly (destPath);
-			var mover = new TypeMover (dstAssembly, ad, definedTypes, resolver);
+			var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver);
 			mover.Move ();
 
 			if (!keepTemporary)
