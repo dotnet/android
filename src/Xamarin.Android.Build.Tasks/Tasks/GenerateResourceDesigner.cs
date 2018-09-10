@@ -267,7 +267,7 @@ namespace Xamarin.Android.Tasks
 					var ext = Path.GetExtension (android);
 					var dir = Path.GetDirectoryName (user);
 
-					Log.LogWarning ("Resource target names differ; got '{0}', expected '{1}'.",
+					Log.LogDebugMessage ("Resource target names differ; got '{0}', expected '{1}'.",
 						Path.Combine (dir, Path.GetFileName (to) + ext),
 						Path.Combine (dir, Path.GetFileName (curTo) + ext));
 				}
