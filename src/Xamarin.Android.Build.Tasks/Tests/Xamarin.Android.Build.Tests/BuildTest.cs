@@ -2973,6 +2973,42 @@ namespace UnnamedProject {
 				EnableDesugar = enableDesugar,
 				EnableProguard = enableProguard,
 			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"24\" />");
+			//Okhttp and Okio
+			//https://github.com/square/okhttp
+			//https://github.com/square/okio
+			if (enableProguard) {
+				//NOTE: these are just enough rules to get it to build, not optimal
+				var rules = new [] {
+					"-dontwarn javax.annotation.**",
+					"-dontwarn org.codehaus.mojo.animal_sniffer.*",
+				};
+				//FIXME: We aren't de-BOM'ing proguard files?
+				var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
+				var bytes = encoding.GetBytes (string.Join (Environment.NewLine, rules));
+				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "okhttp3.pro") {
+					BinaryContent = () => bytes,
+				});
+			}
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
+				WebContent = "http://central.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okhttp-3.8.0.jar") {
+				WebContent = "http://central.maven.org/maven2/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "retrofit-2.3.0.jar") {
+				WebContent = "http://central.maven.org/maven2/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "converter-gson-2.3.0.jar") {
+				WebContent = "http://central.maven.org/maven2/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
+				WebContent = "http://central.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+			});
+			//Twitter SDK https://mvnrepository.com/artifact/com.twitter.sdk.android/twitter-core/3.3.0
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "twitter-core-3.3.0.aar") {
+				WebContent = "http://repo.spring.io/libs-release/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
+			});
 			/* The source is simple:
 			 * 
 				public class Lambda
