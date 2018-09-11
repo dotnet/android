@@ -68,18 +68,10 @@ namespace Xamarin.Android.Tasks
 
 		void Execute (DirectoryAssemblyResolver resolver)
 		{
-			LogDebugMessage ("ResolveAssemblies Task");
-			LogDebugMessage ("  ReferenceAssembliesDirectory: {0}", ReferenceAssembliesDirectory);
-			LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
-			LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			LogDebugTaskItems ("  Assemblies:", Assemblies);
-			LogDebugMessage ("  ProjectAssetFile: {0}", ProjectAssetFile);
-			LogDebugMessage ("  TargetMoniker: {0}", TargetMoniker);
-
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
 
-			var assemblies = new HashSet<string> ();
+			var assemblies = new Dictionary<string, string> ();
 
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
 			var logger = new NuGetLogger((s) => {
@@ -113,7 +105,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 					topAssemblyReferences.Add (assemblyDef);
-					assemblies.Add (Path.GetFullPath (assemblyDef.MainModule.FullyQualifiedName));
+					assemblies [assemblyDef.Name.Name] = Path.GetFullPath (assemblyDef.MainModule.FileName);
 				}
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
@@ -130,21 +122,30 @@ namespace Xamarin.Android.Tasks
 			// Add I18N assemblies if needed
 			AddI18nAssemblies (resolver, assemblies);
 
-			ResolvedAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray ();
-			ResolvedSymbols = assemblies.Select (a => a + ".mdb").Where (a => File.Exists (a)).Select (a => new TaskItem (a)).ToArray ();
-			ResolvedSymbols = ResolvedSymbols.Concat (
-					assemblies.Select (a => Path.ChangeExtension (a, "pdb"))
-					.Where (a => File.Exists (a) && Files.IsPortablePdb (a))
-					.Select (a => new TaskItem (a)))
-				.ToArray ();
-			ResolvedFrameworkAssemblies = ResolvedAssemblies.Where (p => MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
-			ResolvedUserAssemblies = ResolvedAssemblies.Where (p => !MonoAndroidHelper.IsFrameworkAssembly (p.ItemSpec, true)).ToArray ();
+			var resolvedAssemblies          = new List<ITaskItem> (assemblies.Count);
+			var resolvedSymbols             = new List<ITaskItem> (assemblies.Count);
+			var resolvedFrameworkAssemblies = new List<ITaskItem> (assemblies.Count);
+			var resolvedUserAssemblies      = new List<ITaskItem> (assemblies.Count);
+			foreach (var assembly in assemblies.Values) {
+				var mdb = assembly + ".mdb";
+				var pdb = Path.ChangeExtension (assembly, "pdb");
+				if (File.Exists (mdb))
+					resolvedSymbols.Add (new TaskItem (mdb));
+				if (File.Exists (pdb) && Files.IsPortablePdb (pdb))
+					resolvedSymbols.Add (new TaskItem (pdb));
+				var assemblyItem = new TaskItem (assembly);
+				resolvedAssemblies.Add (assemblyItem);
+				if (MonoAndroidHelper.IsFrameworkAssembly (assembly, checkSdkPath: true)) {
+					resolvedFrameworkAssemblies.Add (assemblyItem);
+				} else {
+					resolvedUserAssemblies.Add (assemblyItem);
+				}
+			}
+			ResolvedAssemblies = resolvedAssemblies.ToArray ();
+			ResolvedSymbols = resolvedSymbols.ToArray ();
+			ResolvedFrameworkAssemblies = resolvedFrameworkAssemblies.ToArray ();
+			ResolvedUserAssemblies = resolvedUserAssemblies.ToArray ();
 			ResolvedDoNotPackageAttributes = do_not_package_atts.ToArray ();
-
-			LogDebugTaskItems ("  [Output] ResolvedAssemblies:", ResolvedAssemblies);
-			LogDebugTaskItems ("  [Output] ResolvedUserAssemblies:", ResolvedUserAssemblies);
-			LogDebugTaskItems ("  [Output] ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
-			LogDebugTaskItems ("  [Output] ResolvedDoNotPackageAttributes:", ResolvedDoNotPackageAttributes);
 		}
 
 		readonly List<string> do_not_package_atts = new List<string> ();
@@ -185,14 +186,14 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, ICollection<string> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
+		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, Dictionary<string, string> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
 		{
-			var fqname = assembly.MainModule.FullyQualifiedName;
-			var fullPath = Path.GetFullPath (fqname);
+			var assemblyName = assembly.Name.Name;
+			var fullPath = Path.GetFullPath (assembly.MainModule.FileName);
 
 			// Don't repeat assemblies we've already done
 			bool topLevel = resolutionPath == null;
-			if (!topLevel && assemblies.Contains (fullPath))
+			if (!topLevel && assemblies.ContainsKey (assemblyName))
 				return;
 
 			if (resolutionPath == null)
@@ -210,8 +211,8 @@ namespace Xamarin.Android.Tasks
 			indent += 2;
 
 			// Add this assembly
-			if (!topLevel && assemblies.All (a => new AssemblyNameDefinition (a, null).Name != assembly.Name.Name))
-				assemblies.Add (fullPath);
+			if (!topLevel)
+				assemblies [assemblyName] = fullPath;
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
@@ -256,7 +257,7 @@ namespace Xamarin.Android.Tasks
 			return mode;
 		}
 
-		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, ICollection<string> assemblies)
+		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, Dictionary<string, string> assemblies)
 		{
 			var i18n = Linker.ParseI18nAssemblies (I18nAssemblies);
 			var link = ParseLinkMode (LinkMode);
@@ -265,28 +266,28 @@ namespace Xamarin.Android.Tasks
 			if (i18n == Mono.Linker.I18nAssemblies.None)
 				return;
 
-			assemblies.Add (ResolveI18nAssembly (resolver, "I18N"));
+			ResolveI18nAssembly (resolver, "I18N", assemblies);
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.CJK))
-				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.CJK"));
+				ResolveI18nAssembly (resolver, "I18N.CJK", assemblies);
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.MidEast))
-				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.MidEast"));
+				ResolveI18nAssembly (resolver, "I18N.MidEast", assemblies);
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.Other))
-				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.Other"));
+				ResolveI18nAssembly (resolver, "I18N.Other", assemblies);
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.Rare))
-				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.Rare"));
+				ResolveI18nAssembly (resolver, "I18N.Rare", assemblies);
 	
 			if (i18n.HasFlag (Mono.Linker.I18nAssemblies.West))
-				assemblies.Add (ResolveI18nAssembly (resolver, "I18N.West"));
+				ResolveI18nAssembly (resolver, "I18N.West", assemblies);
 		}
 
-		string ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name)
+		void ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name, Dictionary<string, string> assemblies)
 		{
 			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
-			return Path.GetFullPath (assembly.MainModule.FullyQualifiedName);
+			assemblies [name] = Path.GetFullPath (assembly.MainModule.FileName);
 		}
 	}
 }
