@@ -2973,7 +2973,6 @@ namespace UnnamedProject {
 				EnableDesugar = enableDesugar,
 				EnableProguard = enableProguard,
 			};
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"24\" />");
 			//Okhttp and Okio
 			//https://github.com/square/okhttp
 			//https://github.com/square/okio
