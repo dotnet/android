@@ -118,7 +118,7 @@
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
-        ContinueOnError="ErrorAndContinue"
+        ContinueOnError="WarnAndContinue"
         Command="kill -HUP $(_EmuPid)"
     />
     <Sleep
@@ -127,7 +127,7 @@
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
-        ContinueOnError="ErrorAndContinue"
+        ContinueOnError="WarnAndContinue"
         Command="kill -KILL $(_EmuPid)"
     />
   </Target>
@@ -174,7 +174,7 @@
       Condition=" '@(TestApk)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '@(TestApkPermission)' != '' "
-        ContinueOnError="ErrorAndContinue"
+        IgnoreExitCode="True"
         Arguments="$(_AdbTarget) $(AdbOptions) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"

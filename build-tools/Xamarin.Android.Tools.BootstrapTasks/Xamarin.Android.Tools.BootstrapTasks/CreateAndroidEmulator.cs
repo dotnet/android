@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -108,7 +109,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				UseShellExecute         = false,
 				RedirectStandardInput   = true,
 				RedirectStandardOutput  = false,
-				RedirectStandardError   = false,
+				RedirectStandardError   = true,
 				CreateNoWindow          = true,
 				WindowStyle             = ProcessWindowStyle.Hidden,
 			};
@@ -121,21 +122,50 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				psi.EnvironmentVariables ["JAVA_HOME"] = JavaSdkHome;
 				Log.LogMessage (MessageImportance.Low, $"\tJAVA_HOME=\"{JavaSdkHome}\"");
 			}
+
+			var stderr_completed = new ManualResetEvent (false);
+
 			var p = new Process () {
 				StartInfo   = psi,
 			};
+
 			stderr  = stderr ?? DefaultErrorHandler;
 			p.ErrorDataReceived     += stderr;
+			p.ErrorDataReceived     += (sender, e) => {
+				if (e.Data == null)
+					stderr_completed.Set ();
+			};
 
 			using (p) {
 				p.StartInfo = psi;
 				p.Start ();
+				p.BeginErrorReadLine ();
 				stdin = p.StandardInput;
 
+				// Relying on HasExited is racy, but we have no choice here since we need to tell
+				// avdmanager that we want to proceed in creation of the AVD by answering its question
+				// on whether to create a custom hardware profile with "Enter"...
 				while (!p.HasExited) {
-					stdin.WriteLine ();
-					p.WaitForExit (1000);
+					try {
+						stdin.WriteLine ();
+					} catch (IOException ex) {
+						Log.LogWarning ($"Failed to write the {android} process stdin. The process has probably already exited. {ex.Message}");
+					}
+
+					// Exit early if `true` is returned. It is possible that even though the process
+					// exited, the `HasExited` property will still return `false` and thus trigger
+					// exception from writing stdin of the process which has just exited. This
+					// doesn't remove the race but makes it slightly less probable
+					if (p.WaitForExit (1000))
+						break;
 				}
+
+				// We need to call the parameter-less WaitForExit only if any of the standard
+				// streams have been redirected (see
+				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
+				//
+				p.WaitForExit ();
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
 				if (p.ExitCode != 0) {
 					Log.LogError ($"Process `{android}` exited with value {p.ExitCode}.");
 				}
