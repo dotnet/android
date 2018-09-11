@@ -37,7 +37,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -485,14 +484,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
    Condition="Exists ('%(_AdditionalAndroidResourcePaths.Identity)\AndroidManifest.xml')">
   <Output TaskParameter="Include" ItemName="_AdditionalAndroidResourceManifests"/>
  </CreateItem>
-</Target>
-
-<Target Name="_CheckTargetFrameworks"
-		DependsOnTargets="_ResolveAssemblies">
-	<CheckTargetFrameworks
-		ResolvedAssemblies="@(ResolvedAssemblies)"
-		ProjectFile="$(MSBuildProjectFullPath)"
-		TargetFrameworkVersion="$(TargetFrameworkVersion)" />
 </Target>
 
 <Target Name="_StripEmbeddedLibraries"
@@ -1891,6 +1882,8 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
+		ProjectFile="$(MSBuildProjectFullPath)"
+		TargetFrameworkVersion="$(TargetFrameworkVersion)"
 		ProjectAssetFile="$(ProjectLockFile)"
 		TargetMoniker="$(NuGetTargetMoniker)"
 		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
@@ -2143,7 +2136,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_PrepareAssembliesDependsOnTargets>
 		_ResolveAssemblies
 		;_ResolveSatellitePaths
-		;_CheckTargetFrameworks
 		;_CreatePackageWorkspace
 		;_StripEmbeddedLibraries
 		;_LinkAssemblies

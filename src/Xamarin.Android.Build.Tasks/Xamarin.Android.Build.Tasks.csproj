@@ -444,7 +444,6 @@
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
     <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
-    <Compile Include="Tasks\CheckTargetFrameworks.cs" />
     <Compile Include="Tasks\Dx.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
     <Compile Include="Utilities\AndroidResource.cs">

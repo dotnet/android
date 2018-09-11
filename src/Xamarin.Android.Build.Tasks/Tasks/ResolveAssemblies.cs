@@ -28,6 +28,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ReferenceAssembliesDirectory { get; set; }
 
+		[Required]
+		public string TargetFrameworkVersion { get; set; }
+
+		[Required]
+		public string ProjectFile { get; set; }
+
 		public string ProjectAssetFile { get; set; }
 
 		public string TargetMoniker { get; set; }
@@ -122,6 +128,14 @@ namespace Xamarin.Android.Tasks
 			// Add I18N assemblies if needed
 			AddI18nAssemblies (resolver, assemblies);
 
+			var mainapiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
+			foreach (var item in api_levels.Where (x => mainapiLevel < x.Value)) {
+				var itemOSVersion = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (item.Value);
+				Log.LogCodedWarning ("XA0105", ProjectFile, 0,
+					"The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for your project ({2}). " +
+					"You need to increase the $(TargetFrameworkVersion) for your project.", Path.GetFileName (item.Key), itemOSVersion, TargetFrameworkVersion);
+			}
+
 			var resolvedAssemblies          = new List<ITaskItem> (assemblies.Count);
 			var resolvedSymbols             = new List<ITaskItem> (assemblies.Count);
 			var resolvedFrameworkAssemblies = new List<ITaskItem> (assemblies.Count);
@@ -149,6 +163,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		readonly List<string> do_not_package_atts = new List<string> ();
+		readonly Dictionary<string, int> api_levels = new Dictionary<string, int> ();
 		int indent = 2;
 
 		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, string assemblyPath)
@@ -198,13 +213,8 @@ namespace Xamarin.Android.Tasks
 
 			if (resolutionPath == null)
 				resolutionPath = new List<string>();
-			
-			foreach (var att in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "Java.Interop.DoNotPackageAttribute")) {
-				string file = (string) att.ConstructorArguments.First ().Value;
-				if (string.IsNullOrWhiteSpace (file))
-					LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.FullName);
-				do_not_package_atts.Add (Path.GetFileName (file));
-			}
+
+			CheckAssemblyAttributes (assembly);
 
 			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
 			resolutionPath.Add (assembly.Name.Name);
@@ -243,6 +253,38 @@ namespace Xamarin.Android.Tasks
 
 			indent -= 2;
 			resolutionPath.RemoveAt (resolutionPath.Count - 1);
+		}
+
+		void CheckAssemblyAttributes (AssemblyDefinition assembly)
+		{
+			foreach (var att in assembly.CustomAttributes) {
+				switch (att.AttributeType.FullName) {
+					case "Java.Interop.DoNotPackageAttribute": {
+							string file = (string)att.ConstructorArguments.First ().Value;
+							if (string.IsNullOrWhiteSpace (file))
+								LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.FullName);
+							do_not_package_atts.Add (Path.GetFileName (file));
+						}
+						break;
+					case "System.Runtime.Versioning.TargetFrameworkAttribute": {
+							foreach (var p in att.ConstructorArguments) {
+								var value = p.Value.ToString ();
+								if (value.StartsWith ("MonoAndroid")) {
+									var values = value.Split ('=');
+									var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (values [1]);
+									if (apiLevel != null) {
+										var assemblyName = assembly.Name.Name;
+										Log.LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
+										api_levels [assemblyName] = apiLevel.Value;
+									}
+								}
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
 		}
 
 		static LinkModes ParseLinkMode (string linkmode)
