@@ -12,8 +12,6 @@ NATIVE_EXT = .so
 DLLMAP_OS_NAME = linux
 endif
 
-XA_CONFIGURATION  = Debug
-
 GENDARME_URL = https://github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
 
 PACKAGES = \
@@ -25,9 +23,6 @@ PREPARE_EXTERNAL_FILES  = \
 
 DEPENDENCIES = \
 	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
-
-XA_INTEGRATION_OUTPUTS = \
-	bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
@@ -50,9 +45,7 @@ NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
 
 all: $(BUILD_PROPS)  src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
-		$(PACKAGES) $(DEPENDENCIES) $(TESTS) $(XA_INTEGRATION_OUTPUTS)
-
-xa-all: $(PACKAGES) $(XA_INTEGRATION_OUTPUTS)
+		$(PACKAGES) $(DEPENDENCIES) $(TESTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
@@ -94,9 +87,6 @@ prepare:: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
 		bin/Build$(CONFIGURATION)/JdkInfo.props
 	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' -e $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD) < $< > $@
-
-xa-fxcop: lib/gendarme-2.10/gendarme.exe bin/$(XA_CONFIGURATION)/Java.Interop.dll
-	$(RUNTIME) $< --html xa-gendarme.html $(if @(GENDARME_XML),--xml xa-gendarme.xml) --ignore gendarme-ignore.txt bin/$(XA_CONFIGURATION)/Java.Interop.dll
 
 fxcop: lib/gendarme-2.10/gendarme.exe bin/GendarmeDebug/Java.Interop.dll
 	cp src/Java.Interop/obj/Gendarme/Java.Interop.dll.mdb bin/GendarmeDebug/
@@ -142,8 +132,8 @@ bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Inter
 	$(MSBUILD) $(MSBUILD_FLAGS)
 	touch $@
 
-bin/$(XA_CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
-	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(XA_CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
+bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
+	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
 
 bin/GendarmeDebug/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` src/Java.Interop/Java.Interop.csproj
