@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitch (minApiVersion.ToString ());
 			
 			if(minApiVersion < 24) {
-				commandLineBuilder.AppendSwitch("--desugar_try_with_resources_omit_runtime_classes ");
+				cmd.AppendSwitch("--desugar_try_with_resources_omit_runtime_classes ");
 			}
 
 			//cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
