@@ -1,0 +1,10 @@
+# XA template startup, Mono.Android
+#
+Android.Runtime.UncaughtExceptionHandler
+Java.Interop.TypeManager\+JavaTypeManager
+Android.Views.View\+IOnClickListenerImplementor
+
+# XForms template, Mono.Android
+#
+Android.Animation.ValueAnimator\+IAnimatorUpdateListenerImplementor
+Java.Lang.Thread\+RunnableImplementor
