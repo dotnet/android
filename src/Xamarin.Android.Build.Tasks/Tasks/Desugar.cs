@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitch ("--min_sdk_version ");
 			cmd.AppendSwitch (minApiVersion.ToString ());
 			
-			if(minApiVersion < 24) {
+			if (minApiVersion < 24) {
 				cmd.AppendSwitch("--desugar_try_with_resources_omit_runtime_classes ");
 			}
 
