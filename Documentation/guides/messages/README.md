@@ -40,6 +40,7 @@
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Google Play requires that new applications must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
 + [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
++ [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties.
 
 ### XA1xxx Project Related
 

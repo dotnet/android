@@ -520,6 +520,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
+    _CheckSupportedAbis;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
@@ -1030,6 +1031,16 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CheckTargetFramework">
 	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+</Target>
+
+<Target Name="_CheckSupportedAbis">
+	<PropertyGroup>
+		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
+	</PropertyGroup>
+	<Error Code="XA0115"
+			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
+			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties."
+	/>
 </Target>
 
 <Target Name="_CheckForContent">
