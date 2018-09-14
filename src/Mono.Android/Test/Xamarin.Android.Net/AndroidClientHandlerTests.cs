@@ -153,7 +153,7 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Tls_1_2_Url_Works ()
 		{
-			if (((int) Build.VERSION.SdkInt) < 21) {
+			if (((int) Build.VERSION.SdkInt) < 16) {
 				Assert.Ignore ("Host platform doesn't support TLS 1.2.");
 				return;
 			}
