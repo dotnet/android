@@ -116,8 +116,8 @@ framework-assemblies:
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
 		$(_SLN_BUILD) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj /p:Configuration=$(conf) $(_MSBUILD_ARGS) \
-			/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
-			/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; )
+			/p:AndroidApiLevel=$(lastword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(lastword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
+			/p:AndroidFrameworkVersion=$(lastword $(FRAMEWORKS)) || exit 1; )
 	_latest_stable_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestStableFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	$(foreach conf, $(CONFIGURATIONS), \
 		rm -f "bin/$(conf)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/Mono.Android.Export.* ; \
