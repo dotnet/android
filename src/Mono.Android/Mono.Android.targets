@@ -159,17 +159,4 @@
       AfterTargets="Clean">
     <RemoveDir Directories="$(IntermediateOutputPath)" />
   </Target>
-  <PropertyGroup>
-    <_JniMarshalMethodsTypesFile>Mono.Android.jnimarshalmethods.types</_JniMarshalMethodsTypesFile>
-    <_JniMarshalMethodsTypesInstallDirectory>$(XAInstallPrefix)xbuild\Xamarin\Android</_JniMarshalMethodsTypesInstallDirectory>
-  </PropertyGroup>
-  <Target Name="_CopyJniMarshalMethodsTypesFile"
-      BeforeTargets="CoreCompile"
-      Inputs="$(_JniMarshalMethodsTypesFile)"
-      Outputs="$(_JniMarshalMethodsTypesInstallDirectory)\$(_JniMarshalMethodsTypesFile)">
-    <Copy
-        SourceFiles="$(_JniMarshalMethodsTypesFile)"
-        DestinationFolder="$(_JniMarshalMethodsTypesInstallDirectory)"
-    />
-  </Target>
 </Project>
