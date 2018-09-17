@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Android.OS;
 using Android.Runtime;
 using Java.IO;
 using Java.Net;
@@ -804,6 +805,13 @@ namespace Xamarin.Android.Net
 			SSLSocketFactory socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
 			if (socketFactory != null) {
 				httpsConnection.SSLSocketFactory = socketFactory;
+				return;
+			}
+
+			// Context: https://github.com/xamarin/xamarin-android/issues/1615
+			int apiLevel = (int)Build.VERSION.SdkInt;
+			if (apiLevel >= 16 && apiLevel <= 20) {
+				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
 				return;
 			}
 
