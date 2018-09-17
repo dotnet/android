@@ -348,6 +348,6 @@ struct DylibMono {
 
 MONO_API  struct  DylibMono*  monodroid_dylib_mono_new (const char *libmono_path);
 MONO_API  void                monodroid_dylib_mono_free (struct DylibMono *mono_imports);
-          int                 monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmono_path);
+          int                 monodroid_dylib_mono_init (struct DylibMono *mono_imports, void *libmono_handle);
 
 #endif /* INC_MONODROID_DYLIB_MONO_H */

@@ -14,6 +14,7 @@
 
 #ifdef WINDOWS
 #include <direct.h>
+#include <shlwapi.h>
 #endif
 
 #include "java-interop-util.h"
@@ -498,5 +499,20 @@ monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension)
 	int result = ends_with (mb_dname, extension);
 	free (mb_dname);
 	return result;
+#endif
+}
+
+mono_bool
+is_path_rooted (const char *path)
+{
+	if (path == NULL)
+		return FALSE;
+#ifdef WINDOWS
+	LPCWSTR wpath = utf8_to_utf16 (path);
+	BOOL ret = !PathIsRelativeW (wpath);
+	free (wpath);
+	return ret;
+#else
+	return path [0] == MONODROID_PATH_SEPARATOR_CHAR;
 #endif
 }
