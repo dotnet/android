@@ -2116,13 +2116,18 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
     Inputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
     Outputs="$(_AndroidJniMarshalMethodsFlag)">
-
+  <ItemGroup>
+    <_JniFrameworkAssembly Include="Mono.Android.dll" />
+    <_JniFrameworkAssembly Include="OpenTK-1.0.dll" />
+    <_JniFrameworkAssembly Include="OpenTK.dll" />
+    <_JniFrameworkAssembly Include="Xamarin.Android.NUnitLite.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />
+    <_AssembliesToProcess Include="@(ResolvedAssemblies)" Condition=" '%(Filename)' != '' And '@(_JniFrameworkAssembly)' != '' " />
+  </ItemGroup>
   <Exec
-       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedUserAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
-  />
-  <Exec
-       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
-       Condition=" '%(ResolvedAssemblies.Filename)' == 'Mono.Android' "
+       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
   />
   <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
 </Target>
