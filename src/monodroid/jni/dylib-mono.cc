@@ -59,11 +59,18 @@ int monodroid_dylib_mono_init_with_handle (struct DylibMono *mono_imports, void 
 	if (mono_imports == NULL)
 		return FALSE;
 
-	if (libmono_handle == NULL)
-		return FALSE;
-
 	memset (mono_imports, 0, sizeof (*mono_imports));
-	mono_imports->dl_handle = libmono_handle;
+
+	/*
+	 * We need to use RTLD_GLOBAL so that libmono-profiler-log.so can resolve
+	 * symbols against the Mono library we're loading.
+	 */
+	mono_imports->dl_handle = dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);
+
+	if (!mono_imports->dl_handle) {
+		return FALSE;
+	}
+
 	mono_imports->version   = sizeof (*mono_imports);
 
 	log_info (LOG_DEFAULT, "Loading Mono symbols...");

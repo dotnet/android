@@ -22,7 +22,9 @@
 #include <android/log.h>
 #endif
 
+extern "C" {
 #include "java-interop-logger.h"
+}
 
 #include "xamarin_getifaddrs.h"
 
@@ -256,7 +258,7 @@ static int get_interface_flags_by_index (int index, struct _monodroid_ifaddrs **
 static int calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net_address);
 #if DEBUG
 static void print_ifla_name (int id);
-static void print_address_list (char *title, struct _monodroid_ifaddrs *list);
+static void print_address_list (const char title[], struct _monodroid_ifaddrs *list);
 #endif
 
 /* We don't use 'struct ifaddrs' since that doesn't exist in Android's bionic, but since our
@@ -354,9 +356,9 @@ get_ifaddrs_impl (int (**getifaddrs_impl) (struct _monodroid_ifaddrs **ifap), vo
 
 	libc = dlopen ("libc.so", RTLD_NOW);
 	if (libc) {
-		*getifaddrs_impl = dlsym (libc, "getifaddrs");
+		*getifaddrs_impl = reinterpret_cast<int (*)(struct _monodroid_ifaddrs**)> (dlsym (libc, "getifaddrs"));
 		if (*getifaddrs_impl)
-			*freeifaddrs_impl = dlsym (libc, "freeifaddrs");
+			*freeifaddrs_impl = reinterpret_cast<void (*) (struct _monodroid_ifaddrs*)> (dlsym (libc, "freeifaddrs"));
 	}
 
 	if (!*getifaddrs_impl)
@@ -512,11 +514,11 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
 
 	response = (unsigned char*)malloc (sizeof (*response) * buf_size);
+	ssize_t length = 0;
 	if (!response) {
 		goto cleanup;
 	}
-
-	ssize_t length = 0;
+	
 	while (1) {
 		memset (response, 0, buf_size);
 		memset (&reply_vector, 0, sizeof (reply_vector));
@@ -659,7 +661,7 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 	assert (net_interface);
 	
 	/* Always allocate, do not free - caller may reuse the same variable */
-	*sa = calloc (1, sizeof (**sa));
+	*sa = new sockaddr_ll_extended; //calloc (1, sizeof (**sa));
 	if (!*sa)
 		return -1;
 	
@@ -671,8 +673,8 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 	log_debug (LOG_NETLINK, "rta_payload_length == %d; sizeof sll_addr == %d; hw type == 0x%X\n", rta_payload_length, sizeof ((*sa)->sll_addr), net_interface->ifi_type);
 	if (rta_payload_length > sizeof ((*sa)->sll_addr)) {
 		log_info (LOG_NETLINK, "Address is too long to place in sockaddr_ll (%d > %d)", rta_payload_length, sizeof ((*sa)->sll_addr));
-		free (*sa);
-		*sa = NULL;
+		delete *sa;
+		*sa = nullptr;
 		return -1;
 	}
 	
@@ -689,7 +691,7 @@ find_interface_by_index (int index, struct _monodroid_ifaddrs **ifaddrs_head)
 {
 	struct _monodroid_ifaddrs *cur;
 	if (!ifaddrs_head || !*ifaddrs_head)
-		return NULL;
+		return nullptr;
 
 	/* Normally expensive, but with the small amount of links in the chain we'll deal with it's not
 	 * worth the extra houskeeping and memory overhead
@@ -703,7 +705,7 @@ find_interface_by_index (int index, struct _monodroid_ifaddrs **ifaddrs_head)
 		cur = cur->ifa_next;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static char *
@@ -797,22 +799,22 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 static struct _monodroid_ifaddrs *
 get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **ifaddrs_head)
 {
-	size_t length = 0;
+	ssize_t length = 0;
 	struct rtattr *attribute;
 	struct ifaddrmsg *net_address;
-	struct _monodroid_ifaddrs *ifa = NULL;
+	struct _monodroid_ifaddrs *ifa = nullptr;
 	struct sockaddr **sa;
 	int payload_size;
 
 	assert (message);
-	net_address = NLMSG_DATA (message);
+	net_address = reinterpret_cast<ifaddrmsg*> (NLMSG_DATA (message));
 	length = IFA_PAYLOAD (message);
 	log_debug (LOG_NETLINK, "   address data length: %u", length);
 	if (length <= 0) {
 		goto error;
 	}
 	
-	ifa = calloc (1, sizeof (*ifa));
+	ifa = new _monodroid_ifaddrs; //calloc (1, sizeof (*ifa));
 	if (!ifa) {
 		goto error;
 	}
@@ -824,7 +826,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	while (RTA_OK (attribute, length)) {
 		payload_size = RTA_PAYLOAD (attribute);
 		log_debug (LOG_NETLINK, "     attribute payload_size == %u\n", payload_size);
-		sa = NULL;
+		sa = nullptr;
 		
 		switch (attribute->rta_type) {
 			case IFA_LABEL: {
@@ -949,17 +951,17 @@ get_link_info (const struct nlmsghdr *message)
 	ssize_t length;
 	struct rtattr *attribute;
 	struct ifinfomsg *net_interface;
-	struct _monodroid_ifaddrs *ifa = NULL;
-	struct sockaddr_ll_extended *sa = NULL;
+	struct _monodroid_ifaddrs *ifa = nullptr;
+	struct sockaddr_ll_extended *sa = nullptr;
 
 	assert (message);
-	net_interface = NLMSG_DATA (message);
+	net_interface = reinterpret_cast <ifinfomsg*> (NLMSG_DATA (message));
 	length = message->nlmsg_len - NLMSG_LENGTH (sizeof (*net_interface));
 	if (length <= 0) {
 		goto error;
 	}
 	
-	ifa = calloc (1, sizeof (*ifa));
+	ifa = new _monodroid_ifaddrs; //calloc (1, sizeof (*ifa));
 	if (!ifa) {
 		goto error;
 	}
@@ -969,7 +971,7 @@ get_link_info (const struct nlmsghdr *message)
 	while (RTA_OK (attribute, length)) {
 		switch (attribute->rta_type) {
 			case IFLA_IFNAME:
-				ifa->ifa_name = strdup (RTA_DATA (attribute));
+				ifa->ifa_name = strdup (reinterpret_cast<const char*> (RTA_DATA (attribute)));
 				if (!ifa->ifa_name) {
 					goto error;
 				}
@@ -1008,10 +1010,10 @@ get_link_info (const struct nlmsghdr *message)
 
   error:
 	if (sa)
-		free (sa);
+		delete sa;
 	free_single_xamarin_ifaddrs (&ifa);
 	
-	return NULL;
+	return nullptr;
 }
 #else
 void
@@ -1037,8 +1039,8 @@ void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa)
 #define ENUM_VALUE_ENTRY(enumvalue) { enumvalue, #enumvalue }
 struct enumvalue 
 {
-	int   value;
-	char *name;
+	int         value;
+	const char *name;
 };
 
 struct enumvalue iflas[] = {
@@ -1109,7 +1111,7 @@ print_ifla_name (int id)
 }
 
 static void
-print_address_list (char *title, struct _monodroid_ifaddrs *list)
+print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 {
 	struct _monodroid_ifaddrs *cur;
 	char *msg, *tmp;

@@ -21,17 +21,19 @@
 #include <errno.h>
 #include <ctype.h>
 #include <assert.h>
-#include <pthread.h>
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
 
+extern "C" {
 #include "java-interop-util.h"
+}
 
 #include "monodroid.h"
 #include "debug.h"
 #include "util.h"
+#include "globals.h"
 
 //
 // The communication between xs and the app works as follows:
@@ -46,28 +48,27 @@
 //
 //
 
-#ifdef DEBUG
-
 // monodroid-glue.c
-int process_cmd (int fd, char *cmd);
+extern int process_cmd (int fd, char *cmd);
+namespace xamarin { namespace android
+{
+	void* conn_thread (void *arg);
+}}
 
-static int conn_port;
-static pthread_t conn_thread_id;
+#ifdef DEBUG
+using namespace xamarin::android;
 
-static void* conn_thread (void *arg);
+int Debug::conn_port = 0;
+pthread_t Debug::conn_thread_id = 0;
 
-typedef struct {
-	int64_t timeout_time;
-} ConnOptions;
-
-static void
-parse_options (char *options, ConnOptions *opts)
+inline void
+Debug::parse_options (char *options, ConnOptions *opts)
 {
 	char **args, **ptr;
 
 	log_info (LOG_DEFAULT, "Connection options: '%s'", options);
 
-	args = monodroid_strsplit (options, ",", -1);
+	args = utils.monodroid_strsplit (options, ",", -1);
 
 	for (ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
@@ -99,7 +100,7 @@ parse_options (char *options, ConnOptions *opts)
  * - 2 if no connection is neccessary
  */
 int
-start_connection (char *options)
+Debug::start_connection (char *options)
 {
 	int res;
 	ConnOptions opts;
@@ -119,7 +120,7 @@ start_connection (char *options)
 	if (!conn_port)
 		return 0;
 
-	res = pthread_create (&conn_thread_id, NULL, conn_thread, NULL);
+	res = pthread_create (&conn_thread_id, NULL, xamarin::android::conn_thread, this);
 	if (res) {
 		log_error (LOG_DEFAULT, "Failed to create connection thread: %s", strerror (errno));
 		return 1;
@@ -134,8 +135,8 @@ start_connection (char *options)
  * Handle communication on the socket FD. Return TRUE if its neccessary to create more connections to handle more data.
  * Call process_cmd () with each command received.
  */
-static int
-process_connection (int fd)
+inline int
+Debug::process_connection (int fd)
 {
 	// make sure the fd/socket blocks on reads/writes
 	fcntl (fd, F_SETFL, fcntl (fd, F_GETFL, NULL) & ~O_NONBLOCK);
@@ -145,7 +146,7 @@ process_connection (int fd)
 		int rv;
 		unsigned char cmd_len;
 
-		rv = recv_uninterrupted (fd, &cmd_len, 1);
+		rv = utils.recv_uninterrupted (fd, &cmd_len, 1);
 		if (rv == 0) {
 			log_info (LOG_DEFAULT, "EOF on socket.\n");
 			return FALSE;
@@ -155,7 +156,7 @@ process_connection (int fd)
 			return FALSE;
 		}
 
-		rv = recv_uninterrupted (fd, command, cmd_len);
+		rv = utils.recv_uninterrupted (fd, command, cmd_len);
 		if (rv <= 0) {
 			log_info (LOG_DEFAULT, "Error while receiving command from XS (%s)\n", strerror (errno));
 			return FALSE;
@@ -172,8 +173,8 @@ process_connection (int fd)
 	}
 }
 
-static int
-handle_server_connection (void)
+inline int
+Debug::handle_server_connection (void)
 {
 	int listen_port = conn_port;
 	struct sockaddr_in listen_addr;
@@ -295,12 +296,18 @@ cleanup:
 	return rv;
 }
 
+// TODO: this is less than ideal. We can't use std::function or std::bind beause we
+// don't have the C++ stdlib on Android (well, we do but including it would make the
+// app huge so we don't want to involve it). To better solve it we need our own equivalent
+// to std::function
 void*
-conn_thread (void *arg)
+xamarin::android::conn_thread (void *arg)
 {
-	int res;
+	assert (arg != nullptr);
 
-	res = handle_server_connection ();
+	int res;
+	Debug *instance = static_cast<Debug*> (arg);
+	res = instance->handle_server_connection ();
 	if (res && res != 3) {
 		log_fatal (LOG_DEBUGGER, "Error communicating with the IDE, exiting...");
 		exit (FATAL_EXIT_DEBUGGER_CONNECT);
@@ -308,5 +315,4 @@ conn_thread (void *arg)
 
 	return NULL;
 }
-
 #endif /* DEBUG */
