@@ -317,6 +317,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
+	<AndroidMonoAndroidJniMarshalTypesEnabled Condition=" '$(AndroidMonoAndroidJniMarshalTypesEnabled)' == '' ">True</AndroidMonoAndroidJniMarshalTypesEnabled>
 	<AndroidMonoAndroidJniMarshalTypes Condition=" '$(AndroidMonoAndroidJniMarshalTypes)' == '' ">$(MonoAndroidToolsDirectory)\Mono.Android.jnimarshalmethods.types</AndroidMonoAndroidJniMarshalTypes>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 </PropertyGroup>
@@ -2122,7 +2123,7 @@ because xbuild doesn't support framework reference assemblies.
        Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; @(ResolvedUserAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
   />
   <PropertyGroup>
-    <_MonoAndroidJniMarshalMethodsTypesOption Condition=" '$(AndroidMonoAndroidJniMarshalTypes)' != 'All' ">--types=&quot;$(AndroidMonoAndroidJniMarshalTypes)&quot;</_MonoAndroidJniMarshalMethodsTypesOption>
+    <_MonoAndroidJniMarshalMethodsTypesOption Condition=" '$(AndroidMonoAndroidJniMarshalTypesEnabled)' == 'True' ">--types=&quot;$(AndroidMonoAndroidJniMarshalTypes)&quot;</_MonoAndroidJniMarshalMethodsTypesOption>
   </PropertyGroup>
   <Exec
        Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(_MonoAndroidJniMarshalMethodsTypesOption) @(ResolvedAssemblies->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"

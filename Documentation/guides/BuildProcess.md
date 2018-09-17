@@ -723,19 +723,6 @@ when packaing Release applications.
     **Experimental**. Added in Xamarin.Android 8.4.  
     The default value is False.
 
--  **AndroidMonoAndroidJniMarshalTypes** &ndash; A property containing
-   a path to a file with list of regular expression patterns
-   describing for which types from Mono.Android assembly to generate
-   the marshal methods.
-
-   By default it contains the path to the file with list of types
-   involved in the typical Xamarin.Android applications startup.
-
-   Special value: `All`, means generate marshal methods for all the
-   types in the Mono.Android assembly
-
-   Added in Xamarin.Android 9.2
-
 - **AndroidMultiDexClassListExtraArgs** &ndash; A string property
     which allows developers to pass additional arguments to the 
     `com.android.multidex.MainDexListBuilder` when generating the 
