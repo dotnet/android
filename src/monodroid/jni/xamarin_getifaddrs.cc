@@ -661,7 +661,7 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 	assert (net_interface);
 	
 	/* Always allocate, do not free - caller may reuse the same variable */
-	*sa = new sockaddr_ll_extended; //calloc (1, sizeof (**sa));
+	*sa = new sockaddr_ll_extended (); //calloc (1, sizeof (**sa));
 	if (!*sa)
 		return -1;
 	
@@ -814,7 +814,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 		goto error;
 	}
 	
-	ifa = new _monodroid_ifaddrs; //calloc (1, sizeof (*ifa));
+	ifa = new _monodroid_ifaddrs (); //calloc (1, sizeof (*ifa));
 	if (!ifa) {
 		goto error;
 	}
@@ -961,7 +961,7 @@ get_link_info (const struct nlmsghdr *message)
 		goto error;
 	}
 	
-	ifa = new _monodroid_ifaddrs; //calloc (1, sizeof (*ifa));
+	ifa = new _monodroid_ifaddrs (); //calloc (1, sizeof (*ifa));
 	if (!ifa) {
 		goto error;
 	}

@@ -84,7 +84,7 @@ namespace xamarin { namespace android { namespace internal
 		int  _monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len);
 		int  _monodroid_get_system_property_from_file (const char *path, char **value);
 		void  copy_native_libraries_to_internal_location ();
-		void  copy_file_to_internal_location (char *to_dir, char *from_dir, char* file);
+		void  copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 		void  add_apk_libdir (const char *apk, int index, int apk_count, void *user_data);
 		void  for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data);
 		char* get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_free);

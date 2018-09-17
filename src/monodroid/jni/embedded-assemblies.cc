@@ -200,7 +200,7 @@ extract_int (const char **header, const char *source_apk, const char *source_ent
 static void
 add_type_mapping (struct TypeMappingInfo **info, const char *source_apk, const char *source_entry, const char *addr)
 {
-	struct TypeMappingInfo  *p        = new TypeMappingInfo; // calloc (1, sizeof (struct TypeMappingInfo));
+	struct TypeMappingInfo  *p        = new TypeMappingInfo (); // calloc (1, sizeof (struct TypeMappingInfo));
 	int                      version  = 0;
 	const char              *data     = addr;
 

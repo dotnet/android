@@ -500,7 +500,7 @@ get_xamarin_android_msbuild_path (void)
 	}
 
 	// Compute the final path
-	base_path = utf16_to_utf8 (buffer);
+	base_path = utils.utf16_to_utf8 (buffer);
 	CoTaskMemFree (buffer);
 	msbuild_folder_path = utils.path_combine (base_path, suffix);
 	free (base_path);
@@ -521,7 +521,7 @@ get_libmonoandroid_directory_path ()
 		return libmonoandroid_directory_path;
 
 	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
-	wchar_t *dir_path = utf8_to_utf16 (libmonoandroid_directory_path);
+	wchar_t *dir_path = utils.utf8_to_utf16 (libmonoandroid_directory_path);
 	BOOL retval = GetModuleHandleExW (flags, dir_path, &module);
 	free (dir_path);
 	if (!retval)
@@ -529,15 +529,15 @@ get_libmonoandroid_directory_path ()
 
 	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
 	PathRemoveFileSpecW (module_path);
-	libmonoandroid_directory_path = utf16_to_utf8 (module_path);
+	libmonoandroid_directory_path = utils.utf16_to_utf8 (module_path);
 	return libmonoandroid_directory_path;
 }
 
 static int
 setenv(const char *name, const char *value, int overwrite)
 {
-	wchar_t *wname  = utf8_to_utf16 (name);
-	wchar_t *wvalue = utf8_to_utf16 (value);
+	wchar_t *wname  = utils.utf8_to_utf16 (name);
+	wchar_t *wvalue = utils.utf8_to_utf16 (value);
 
 	BOOL result = SetEnvironmentVariableW (wname, wvalue);
 	free (wname);
@@ -600,16 +600,16 @@ AndroidSystem::copy_native_libraries_to_internal_location ()
 		monodroid_dir_t *dir;
 		monodroid_dirent_t b, *e;
 
-		const char *dir_path = path_combine (override_dirs [i], "lib");
+		char *dir_path = utils.path_combine (override_dirs [i], "lib");
 		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
 
-		if (dir_path == NULL || !directory_exists (dir_path)) {
+		if (dir_path == NULL || !utils.directory_exists (dir_path)) {
 			log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
 			free (dir_path);
 			continue;
 		}
 
-		if ((dir = monodroid_opendir (dir_path)) == NULL) {
+		if ((dir = utils.monodroid_opendir (dir_path)) == NULL) {
 			log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
 			free (dir_path);
 			continue;
@@ -617,10 +617,10 @@ AndroidSystem::copy_native_libraries_to_internal_location ()
 
 		while (readdir_r (dir, &b, &e) == 0 && e) {
 			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
-			if (monodroid_dirent_hasextension (e, ".so")) {
+			if (utils.monodroid_dirent_hasextension (e, ".so")) {
 #if WINDOWS
-				char *file_name = utf16_to_utf8 (e->d_name);
-#else   /* ndef WINDOWS */
+				char *file_name = utils.utf16_to_utf8 (e->d_name);
+#else   /* def WINDOWS */
 				char *file_name = e->d_name;
 #endif  /* ndef WINDOWS */
 				copy_file_to_internal_location (primary_override_dir, dir_path, file_name);
@@ -629,7 +629,7 @@ AndroidSystem::copy_native_libraries_to_internal_location ()
 #endif  /* def WINDOWS */
 			}
 		}
-		monodroid_closedir (dir);
+		utils.monodroid_closedir (dir);
 		free (dir_path);
 	}
 }
@@ -1872,7 +1872,7 @@ MonodroidBridgeProcessingInfo *domains_list;
 static void
 add_monodroid_domain (MonoDomain *domain)
 {
-	MonodroidBridgeProcessingInfo *node = new MonodroidBridgeProcessingInfo; //calloc (1, sizeof (MonodroidBridgeProcessingInfo));
+	MonodroidBridgeProcessingInfo *node = new MonodroidBridgeProcessingInfo (); //calloc (1, sizeof (MonodroidBridgeProcessingInfo));
 
 	/* We need to prefetch all these information prior to using them in gc_cross_reference as all those functions
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
@@ -2640,21 +2640,20 @@ enable_soft_breakpoints (void)
 	return 1;
 }
 #endif /* DEBUG */
-
 void
-AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
+AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 {
-	char *from_file = path_combine (from_dir, file);
+	char *from_file = utils.path_combine (from_dir, file);
 	char *to_file   = NULL;
 	
 	do {
-		if (!from_file || !file_exists (from_file))
+		if (!from_file || !utils.file_exists (from_file))
 			break;
 
 		log_warn (LOG_DEFAULT, "Copying file `%s` from external location `%s` to internal location `%s`",
 				file, from_dir, to_dir);
 		
-		to_file = path_combine (to_dir, file);
+		to_file = utils.path_combine (to_dir, file);
 		if (!to_file)
 			break;
 		
@@ -2664,19 +2663,23 @@ AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, cha
 			break;
 		}
 		
-		if (file_copy (to_file, from_file) < 0) {
+		if (utils.file_copy (to_file, from_file) < 0) {
 			log_warn (LOG_DEFAULT, "Copy failed from `%s` to `%s`: %s", from_file, to_file, strerror (errno));
 			break;
 		}
 		
-		set_user_executable (to_file);
+		utils.set_user_executable (to_file);
 	} while (0);
 	
 	free (from_file);
 	free (to_file);
 }
-
 #else  /* !defined (ANDROID) */
+void
+AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
+{
+}
+
 #ifdef DEBUG
 #ifndef enable_soft_breakpoints
 static int
@@ -4221,7 +4224,7 @@ JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, jclas
 
 extern "C" DylibMono* monodroid_dylib_mono_new (const char *libmono_path)
 {
-	DylibMono *imports = new DylibMono;
+	DylibMono *imports = new DylibMono ();
 	if (!imports)
 		return nullptr;
 

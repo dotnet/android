@@ -108,6 +108,7 @@ namespace xamarin { namespace android
 		void             create_public_directory (const char *dir);
 		int              create_directory (const char *pathname, int mode);
 		void             set_world_accessable (const char *path);
+		void             set_user_executable (const char *path);
 		bool             file_exists (const char *file);
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
