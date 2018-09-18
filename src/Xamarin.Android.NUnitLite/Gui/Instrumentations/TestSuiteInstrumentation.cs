@@ -103,11 +103,7 @@ namespace Xamarin.Android.NUnitLite {
 
 		string GetResultsPath ()
 		{
-			Java.IO.File resultsPathFile = null;
-#if __ANDROID_19__
-			if (((int)Build.VERSION.SdkInt) >= 19)
-				resultsPathFile = Context.GetExternalFilesDir (global::Android.OS.Environment.DirectoryDocuments);
-#endif
+			Java.IO.File resultsPathFile = GetExternalFilesDir ();
 			var usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
 			var resultsPath = usePathFile
 				? resultsPathFile.AbsolutePath
@@ -115,6 +111,19 @@ namespace Xamarin.Android.NUnitLite {
 			if (!usePathFile && !Directory.Exists (resultsPath))
 				Directory.CreateDirectory (resultsPath);
 			return Path.Combine (resultsPath, "TestResults.xml");
+		}
+
+		Java.IO.File GetExternalFilesDir ()
+		{
+			if (((int)Build.VERSION.SdkInt) < 19)
+				return null;
+			string type = null;
+#if __ANDROID_19__
+			type = global::Android.OS.Environment.DirectoryDocuments;
+#else   // !__ANDROID_19__
+			type = global::Android.OS.Environment.DirectoryDownloads;
+#endif  // !__ANDROID_19__
+			return Context.GetExternalFilesDir (type);
 		}
 
 		// On some Android targets, the external storage directory is "emulated",
