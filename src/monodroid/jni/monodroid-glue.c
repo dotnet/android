@@ -112,7 +112,6 @@ static const char* android_abi_names[CPU_KIND_X86_64+1] = {
 };
 #define ANDROID_ABI_NAMES_SIZE (sizeof(android_abi_names) / sizeof (android_abi_names[0]))
 
-static void* load_dso (const char *path, int dl_flags, mono_bool skip_exists_check);
 static void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
 static void* load_dso_from_override_dirs (const char *name, int dl_flags);
 static void* load_dso_from_any_directories (const char *name, int dl_flags);
@@ -755,8 +754,8 @@ get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_
 	return full_path;
 }
 
-static void*
-load_dso (const char *path, int dl_flags, mono_bool skip_exists_check)
+void*
+monodroid_load_dso (const char *path, int dl_flags, mono_bool skip_exists_check)
 {
 	if (path == NULL)
 		return NULL;
@@ -784,7 +783,7 @@ load_dso_from_specified_dirs (const char **directories, int num_entries, const c
 	char *full_path = NULL;
 	for (int i = 0; i < num_entries; i++) {
 		full_path = get_full_dso_path (directories [i], dso_name, &needs_free);
-		void *handle = load_dso (full_path, dl_flags, FALSE);
+		void *handle = monodroid_load_dso (full_path, dl_flags, FALSE);
 		if (needs_free)
 			free (full_path);
 		if (handle != NULL)
@@ -894,7 +893,7 @@ setup_bundled_app (const char *dso_name)
 		if (bundle_path == NULL)
 			return;
 		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path);
-		libapp = load_dso (bundle_path, dlopen_flags, TRUE);
+		libapp = monodroid_load_dso (bundle_path, dlopen_flags, TRUE);
 		free (bundle_path);
 	}
 
@@ -3282,7 +3281,7 @@ monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 
 	if (libmonodroid_fallback) {
 		full_name = path_combine (SYSTEM_LIB_PATH, "libmonodroid.so");
-		h = load_dso (full_name, dl_flags, FALSE);
+		h = monodroid_load_dso (full_name, dl_flags, FALSE);
 		goto done_and_out;
 	}
 
@@ -3476,7 +3475,7 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 
 	if (!found && libmono_path != NULL) {
 		char *full_path = path_combine (libmono_path, libname);
-		handle = load_dso (full_path, dlopen_flags, FALSE);
+		handle = monodroid_load_dso (full_path, dlopen_flags, FALSE);
 		free (full_path);
 		found = load_profiler_from_handle (handle, desc, mname);
 	}
@@ -3806,7 +3805,7 @@ This is a hack to set llvm::DisablePrettyStackTrace to true and avoid this sourc
 static void
 disable_external_signal_handlers (void)
 {
-	void *llvm  = load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
+	void *llvm  = monodroid_load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
 	if (llvm) {
 		_Bool *disable_signals = dlsym (llvm, "_ZN4llvm23DisablePrettyStackTraceE");
 		if (disable_signals) {
@@ -3966,7 +3965,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	}
 
 	if (libmonosgen_handle == NULL)
-		libmonosgen_handle = load_dso (get_libmonosgen_path (), sgen_dlopen_flags, FALSE);
+		libmonosgen_handle = monodroid_load_dso (get_libmonosgen_path (), sgen_dlopen_flags, FALSE);
 
 	if (!monodroid_dylib_mono_init_with_handle (&mono, libmonosgen_handle)) {
 		log_fatal (LOG_DEFAULT, "shared runtime initialization error: %s", dlerror ());

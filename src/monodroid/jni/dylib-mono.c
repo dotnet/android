@@ -47,7 +47,9 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	 * symbols against the Mono library we're loading.
 	 */
 
-	return monodroid_dylib_mono_init_with_handle (mono_imports, dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL));
+	void* handle = libmono_path ? monodroid_load_dso (libmono_path, RTLD_LAZY | RTLD_GLOBAL, FALSE) : dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);
+
+	return monodroid_dylib_mono_init_with_handle (mono_imports, handle);
 }
 
 int monodroid_dylib_mono_init_with_handle (struct DylibMono *mono_imports, void *libmono_handle)
