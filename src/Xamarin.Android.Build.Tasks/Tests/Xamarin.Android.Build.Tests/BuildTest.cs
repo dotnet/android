@@ -2979,6 +2979,7 @@ namespace UnnamedProject {
 			if (enableProguard) {
 				//NOTE: these are just enough rules to get it to build, not optimal
 				var rules = new [] {
+					"-dontwarn com.google.devtools.build.android.desugar.**",
 					"-dontwarn javax.annotation.**",
 					"-dontwarn org.codehaus.mojo.animal_sniffer.*",
 				};
