@@ -33,7 +33,24 @@ void monodroid_dylib_mono_free (struct DylibMono *mono_imports)
 	free (mono_imports);
 }
 
-int monodroid_dylib_mono_init (struct DylibMono *mono_imports, void *libmono_handle)
+/*
+  this function is used from JavaInterop and should be treated as public API
+  https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
+*/
+int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmono_path)
+{
+	if (mono_imports == NULL)
+		return FALSE;
+
+	/*
+	 * We need to use RTLD_GLOBAL so that libmono-profiler-log.so can resolve
+	 * symbols against the Mono library we're loading.
+	 */
+
+	return monodroid_dylib_mono_init_with_handle (mono_imports, dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL));
+}
+
+int monodroid_dylib_mono_init_with_handle (struct DylibMono *mono_imports, void *libmono_handle)
 {
 	int symbols_missing = FALSE;
 
