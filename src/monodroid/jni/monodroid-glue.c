@@ -3968,7 +3968,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	if (libmonosgen_handle == NULL)
 		libmonosgen_handle = load_dso (get_libmonosgen_path (), sgen_dlopen_flags, FALSE);
 
-	if (!monodroid_dylib_mono_init (&mono, libmonosgen_handle)) {
+	if (!monodroid_dylib_mono_init_with_handle (&mono, libmonosgen_handle)) {
 		log_fatal (LOG_DEFAULT, "shared runtime initialization error: %s", dlerror ());
 		exit (FATAL_EXIT_CANNOT_FIND_MONO);
 	}
