@@ -653,7 +653,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
     Inputs="$(_NuGetAssetsFile)"
     Outputs="$(_AndroidNuGetStampFile)">
-  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" />
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition="Exists('$(_AndroidNuGetStampFile)')" />
   <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
   <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
   <ItemGroup>
