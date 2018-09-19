@@ -2574,6 +2574,31 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void ResolveLibraryImportsWithReadonlyFiles ()
+		{
+			//NOTE: doesn't need to be a full Android Wear app
+			var proj = new XamarinAndroidApplicationProject {
+				Packages = {
+					KnownPackages.AndroidWear_2_2_0,
+					KnownPackages.Android_Arch_Core_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportPercent_27_0_2_1,
+					KnownPackages.SupportV7RecyclerView_27_0_2_1,
+				},
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.RequiresMSBuild = true;
+				b.Target = "Restore";
+				Assert.IsTrue (b.Build (proj), "Restore should have succeeded.");
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void AndroidLibraryProjectsZipWithOddPaths ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
