@@ -59,14 +59,16 @@
   </ItemGroup>
 
   <Target Name="Prepare"
-	  BeforeTargets="CoreCompile">
+      BeforeTargets="CoreCompile"
+      Inputs="$(MSBuildThisFileDirectory)Config.cs.in"
+      Outputs="$(IntermediateOutputPath)Config.cs">
     <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
       <ExecutableExtension>.exe</ExecutableExtension>
     </PropertyGroup>
 
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Config.cs.in"
-        DestinationFile="$(IntermediateOutputPath)\Config.cs"
+        DestinationFile="$(IntermediateOutputPath)Config.cs"
         Replacements="@ANDROID_SDK_DIRECTORY@=$(AndroidSdkDirectory);@BUILD_TOOLS_FOLDER@=$(XABuildToolsFolder);@EXECUTABLE_EXTENSION@=$(ExecutableExtension)"
     />
   </Target>

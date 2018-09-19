@@ -5,6 +5,6 @@ namespace EmbeddedDSOUnitTests
 {
 	public static class Config
 	{
-		public static readonly string ZipAlignPath = Path.Combine ("@ANDROID_SDK_DIRECTORY@", "build-tools", "@BUILD_TOOLS_FOLDER@", "zipalign@EXECUTABLE_EXTENSION@");
+		public static readonly string ZipAlignPath = Path.Combine (@"@ANDROID_SDK_DIRECTORY@", "build-tools", "@BUILD_TOOLS_FOLDER@", "zipalign@EXECUTABLE_EXTENSION@");
 	}
 }
