@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 				Log.LogDebugTaskItems ("  DexOutputs: ", DexOutputs);
 			} catch (FileNotFoundException ex) {
-				Log.LogCodedError ("XA1003", ex);
+				Log.LogCodedError ("XA1003", ex.ToString ());
 			} finally {
 				if (File.Exists (inputListFile) && !Log.HasLoggedErrors)
 					File.Delete (inputListFile);
