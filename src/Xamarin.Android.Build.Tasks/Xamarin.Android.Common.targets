@@ -1526,7 +1526,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_GenerateJavaDesignerForComponent"
-  Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps)"
+  Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps);$(_AndroidResgenFlagFile)"
   Outputs="$(_AndroidComponentResgenFlagFile)"
   DependsOnTargets="$(_GenerateJavaDesignerForComponentDependsOnTargets)">
 
@@ -1545,7 +1545,6 @@ because xbuild doesn't support framework reference assemblies.
    ResourceDirectory="$(MonoAndroidResDirIntermediate)"
    AdditionalResourceDirectories="@(LibraryResourceDirectories)"
    AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
-   AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    ToolPath="$(AaptToolPath)"
    ToolExe="$(AaptToolExe)"
    ApiLevel="$(_AndroidTargetSdkVersion)"
@@ -1558,7 +1557,6 @@ because xbuild doesn't support framework reference assemblies.
  <Aapt2Link
    Condition="'$(_AndroidUseAapt2)' == 'True'"
    ContinueOnError="$(DesignTimeBuild)"
-   AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    UseShortFileNames="$(UseShortFileNames)"
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -1567,6 +1565,7 @@ because xbuild doesn't support framework reference assemblies.
    ApplicationName="$(_AndroidPackage)"
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
+   CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
