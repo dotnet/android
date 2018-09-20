@@ -24,7 +24,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000">
-      <Output TaskParameter="AdbTarget"     PropertyName="_AdbTarget" />
+      <Output TaskParameter="DetectedAdbTarget"     PropertyName="_AdbTarget" />
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
@@ -61,6 +61,7 @@
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
+        ContinueOnError="ErrorAndContinue"
         Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -68,12 +69,14 @@
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) shell setprop debug.mono.log timing"
+        IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) logcat -G 4M"
+        IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
@@ -87,7 +90,7 @@
   <Target Name="ReleaseAndroidTarget">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition="'@(_FailedComponent)' != ''"
-        ContinueOnError="True"
+        ContinueOnError="ErrorAndContinue"
         Arguments="$(_EmuTarget) logcat -d"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -95,7 +98,7 @@
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '$(_EmuTarget)' != '' "
-        ContinueOnError="True"
+        ContinueOnError="ErrorAndContinue"
         Arguments="$(_EmuTarget) emu kill"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -103,19 +106,19 @@
     />
     <KillProcess
         Condition=" '$(_EmuTarget)' != '' "
-        ContinueOnError="True"
+        ContinueOnError="ErrorAndContinue"
         ProcessId="$(_EmuPid)"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="kill-server"
-        ContinueOnError="True"
+        ContinueOnError="ErrorAndContinue"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
-        ContinueOnError="True"
+        ContinueOnError="WarnAndContinue"
         Command="kill -HUP $(_EmuPid)"
     />
     <Sleep
@@ -124,7 +127,7 @@
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
-        ContinueOnError="True"
+        ContinueOnError="WarnAndContinue"
         Command="kill -KILL $(_EmuPid)"
     />
   </Target>
@@ -149,6 +152,7 @@
       Condition=" '@(TestApk)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(TestApk.Identity)&quot;"
+        ContinueOnError="ErrorAndContinue"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
@@ -162,6 +166,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
+	IgnoreExitCode="true"
     />
   </Target>
 
@@ -169,6 +174,7 @@
       Condition=" '@(TestApk)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '@(TestApkPermission)' != '' "
+        IgnoreExitCode="True"
         Arguments="$(_AdbTarget) $(AdbOptions) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -181,9 +187,11 @@
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
+        ContinueOnError="ErrorAndContinue"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         LogLevel="Verbose"
+        PackageName="%(TestApkInstrumentation.Package)"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
         LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package).txt"
@@ -196,6 +204,7 @@
     </RunInstrumentationTests>
     <RunUITests
         Condition=" '%(TestApk.Activity)' != '' "
+        ContinueOnError="ErrorAndContinue"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
         Activity="%(TestApk.Activity)"
@@ -206,6 +215,7 @@
     </RunUITests>
     <ProcessLogcatTiming
         Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' And Exists ('$(_LogcatFilenameBase)-%(TestApk.Package).txt')"
+        ContinueOnError="ErrorAndContinue"
         InputFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
         ApplicationPackageName="%(TestApk.Package)"
         ResultsFilename="%(TestApk.TimingResultsFilename)"
@@ -258,14 +268,17 @@
     <Exec
         Condition=" '$(HostOS)' == 'Darwin' And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
         Command="stat -f &quot;stat: %z %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        ContinueOnError="ErrorAndContinue"
     />
     <Exec
         Condition=" '$(HostOS)' == 'Linux'  And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
         Command="stat -c &quot;stat: %s %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        ContinueOnError="ErrorAndContinue"
     />
     <Exec
         Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
-        Command="unzip -l &quot;%(TestApk.Identity)&quot; >> &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;" />
+        Command="unzip -l &quot;%(TestApk.Identity)&quot; >> &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        ContinueOnError="ErrorAndContinue" />
     <ProcessPlotInput
         Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
         InputFilename="$(OutputPath)%(TestApk.ApkSizesInputFilename)"
@@ -274,6 +287,7 @@
         DefinitionsFilename="%(TestApk.ApkSizesDefinitionFilename)"
         AddResults="True"
         LabelSuffix="-$(Configuration)$(TestsAotName)"
+        ContinueOnError="ErrorAndContinue"
     />
   </Target>
 </Project>

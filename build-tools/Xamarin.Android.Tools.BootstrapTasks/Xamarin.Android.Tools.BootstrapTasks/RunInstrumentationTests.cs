@@ -11,8 +11,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class RunInstrumentationTests : Adb
 	{
-		public                  string              AdbTarget                   { get; set; }
-		public                  string              AdbOptions                  { get; set; }
+		const                   string              TestResultsPathResult       = "INSTRUMENTATION_RESULT: nunit2-results-path=";
+		const                   int                 StateRunInstrumentation     = 0;
+		const                   int                 StateGetLogcat              = 1;
+		const                   int                 StatePullFiles              = 2;
+		const                   int                 MaxState                    = StatePullFiles;
 
 		public                  string              TestFixture                 { get; set; }
 
@@ -26,22 +29,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public                  string              LogcatFilename              { get; set; }
 
+		[Required]
+		public                  string              PackageName                 { get; set; }
+
 		[Output]
 		public                  string              FailedToRun                 { get; set; }
 
 		public                  string              LogLevel                    { get; set; }
 
-		protected   override    bool                LogTaskMessages {
-			get { return false; }
-		}
-
-		enum ExecuteState {
-			RunInstrumentation,
-			PullFiles,
-			GetLogcat,
-		}
-
-		ExecuteState            executionState;
+		int                     currentState = -1;
 		string                  targetTestResultsPath;
 		TextWriter              logcatWriter;
 
@@ -57,88 +53,77 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				NUnit2TestResultsFile   = n.ToString ();
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"Task {nameof (RunInstrumentationTests)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AdbTarget)}: {AdbTarget}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AdbOptions)}: {AdbOptions}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (Component)}: {Component}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (InstrumentationArguments)}:");
-			foreach (var a in InstrumentationArguments) {
-				Log.LogMessage (MessageImportance.Low, $"    {a}:");
-			}
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (NUnit2TestResultsFile)}: {NUnit2TestResultsFile}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (LogcatFilename)}: {LogcatFilename}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (TestFixture)}: {TestFixture}");
-
-			executionState  = ExecuteState.RunInstrumentation;
 			base.Execute ();
 
-			using (logcatWriter = File.Exists (LogcatFilename) ? File.AppendText (LogcatFilename) : File.CreateText (LogcatFilename)) {
-				executionState = ExecuteState.GetLogcat;
-				base.Execute ();
-			}
-
-			if (string.IsNullOrEmpty (targetTestResultsPath)) {
+			if (String.IsNullOrEmpty (targetTestResultsPath)) {
 				FailedToRun = Component;
 				Log.LogError (
 						"Could not find NUnit2 results file after running component `{0}`: " +
 						"no `nunit2-results-path` bundle value found in command output!",
 						Component);
-				// Can return false once we use MSBuild and not xbuild
-				// return false;
-				return true;
+				return false;
 			}
-
-			executionState  = ExecuteState.PullFiles;
-			base.Execute ();
 
 			return !Log.HasLoggedErrors;
 		}
 
-		protected override string GenerateCommandLineCommands ()
+		protected override List <CommandInfo> GenerateCommandArguments ()
 		{
-			switch (executionState) {
-			case ExecuteState.RunInstrumentation:
-				var args = new StringBuilder ();
-				foreach (var a in InstrumentationArguments) {
-					var kvp = a.Split (new [] { '=' }, 2);
-					args.Append (" -e \"").Append (kvp [0]).Append ("\" \"");
-					args.Append (kvp.Length > 1 ? kvp [1] : "");
-					args.Append ("\"");
-				}
+			return new List <CommandInfo> {
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} {AdbOptions} shell am instrument {GetRunInstrumentationArguments ()} -w \"{Component}\"",
+				},
 
-				if (!String.IsNullOrEmpty (LogLevel)) {
-					args.Append ($" -e \"loglevel {LogLevel}\"");
-				}
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -v threadtime -d",
+				},
 
-				if (!string.IsNullOrWhiteSpace (TestFixture)) {
-					args.Append (" -e suite \"").Append (TestFixture).Append ("\"");
-				}
-				return $"{AdbTarget} {AdbOptions} shell am instrument {args.ToString ()} -w \"{Component}\"";
-			case ExecuteState.PullFiles:
-				return $"{AdbTarget} {AdbOptions} pull \"{targetTestResultsPath}\" \"{NUnit2TestResultsFile}\"";
-			case ExecuteState.GetLogcat:
-				return $"{AdbTarget} {AdbOptions} logcat -v threadtime -d";
-			}
-			throw new InvalidOperationException ($"Invalid state `{executionState}`!");
+				new CommandInfo {
+					ArgumentsGenerator = () => $"{AdbTarget} {AdbOptions} pull \"{targetTestResultsPath}\" \"{NUnit2TestResultsFile}\"",
+					ShouldRun = () => !String.IsNullOrEmpty (targetTestResultsPath)
+				},
+			};
 		}
 
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		string GetRunInstrumentationArguments ()
 		{
-			if (executionState == ExecuteState.GetLogcat) {
-				logcatWriter.WriteLine (singleLine);
-				return;
+			var args = new StringBuilder ();
+			foreach (string a in InstrumentationArguments) {
+				string[] kvp = a.Split (new [] { '=' }, 2);
+				args.Append (" -e \"").Append (kvp [0]).Append ("\" \"");
+				args.Append (kvp.Length > 1 ? kvp [1] : "");
+				args.Append ("\"");
 			}
 
-			const string TestResultsPathResult  = "INSTRUMENTATION_RESULT: nunit2-results-path=";
+			if (!String.IsNullOrEmpty (LogLevel)) {
+				args.Append ($" -e \"loglevel {LogLevel}\"");
+			}
 
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			if (!String.IsNullOrWhiteSpace (TestFixture)) {
+				args.Append (" -e suite \"").Append (TestFixture).Append ("\"");
+			}
 
-			if (string.IsNullOrEmpty (singleLine))
+			return args.ToString ();
+		}
+
+		protected override void BeforeCommand (int commandIndex, CommandInfo info)
+		{
+			if (commandIndex < 0 || commandIndex > MaxState)
+				throw new ArgumentOutOfRangeException (nameof (commandIndex));
+
+			currentState = commandIndex;
+		}
+
+		protected override void ProcessStdout (string line)
+		{
+			if (currentState != StateRunInstrumentation || String.IsNullOrEmpty (line))
 				return;
-			if (!singleLine.Contains (TestResultsPathResult))
+
+			int i = line.IndexOf (TestResultsPathResult, StringComparison.OrdinalIgnoreCase);
+			if (i < 0)
 				return;
-			var i = singleLine.IndexOf (TestResultsPathResult);
-			targetTestResultsPath   = singleLine.Substring (i + TestResultsPathResult.Length).Trim ();
+
+			targetTestResultsPath = line.Substring (i + TestResultsPathResult.Length).Trim ();
 		}
 	}
 }

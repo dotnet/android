@@ -1855,6 +1855,26 @@ namespace App1
 		}
 
 		[Test]
+		public void ExtraAaptManifest ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics_2_9_4);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				builder.RequiresMSBuild = true;
+				builder.Target = "Restore";
+				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
+				builder.Target = "Build";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
+				Assert.IsTrue (manifest.Contains ("android:authorities=\"UnnamedProject.UnnamedProject.crashlyticsinitprovider\""), "placeholder not replaced");
+				Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
+			}
+		}
+
+		[Test]
 		public void ResourceExtraction ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2554,6 +2574,31 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void ResolveLibraryImportsWithReadonlyFiles ()
+		{
+			//NOTE: doesn't need to be a full Android Wear app
+			var proj = new XamarinAndroidApplicationProject {
+				Packages = {
+					KnownPackages.AndroidWear_2_2_0,
+					KnownPackages.Android_Arch_Core_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportPercent_27_0_2_1,
+					KnownPackages.SupportV7RecyclerView_27_0_2_1,
+				},
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.RequiresMSBuild = true;
+				b.Target = "Restore";
+				Assert.IsTrue (b.Build (proj), "Restore should have succeeded.");
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void AndroidLibraryProjectsZipWithOddPaths ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
@@ -3001,6 +3046,20 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				}
 			}
 		}
+
+		[Test]
+		public void XA0115 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi;armeabi-v7a");
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA0115.");
+				StringAssertEx.Contains ($"error XA0115", builder.LastBuildOutput, "Error should be XA0115");
+				Assert.IsTrue (builder.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
 	}
 }
 

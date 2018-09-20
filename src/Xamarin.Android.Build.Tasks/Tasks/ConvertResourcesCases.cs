@@ -86,44 +86,38 @@ namespace Xamarin.Android.Tasks
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
 				MonoAndroidHelper.SetWriteable (file);
-				try {
-					bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
-						resourcedirectories, (level, message) => {
-							switch (level) {
-							case TraceLevel.Error:
-								Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
-								break;
-							case TraceLevel.Warning:
-								Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir, resource_name_case_map);
-								break;
-							default:
-								Log.LogDebugMessage (message);
-								break;
-							}
-						}, registerCustomView : (e, filename) => {
-						if (customViewMap == null)
-							return;
-						HashSet<string> set;
-						if (!customViewMap.TryGetValue (e, out set))
-							customViewMap.Add (e, set = new HashSet<string> ());
-						set.Add (filename);
-					});
-					if (!success) {
-						//If we failed to write the file, a warning is logged, we should skip to the next file
-						continue;
-					}
-
-					// We strip away an eventual UTF-8 BOM from the XML file.
-					// This is a requirement for the Android designer because the desktop Java renderer
-					// doesn't support those type of BOM (it really wants the document to start
-					// with "<?"). Since there is no way to plug into the file saving mechanism in X.S
-					// we strip those here and point the designer to use resources from obj/
-					MonoAndroidHelper.CleanBOM (file);
-
-
-				} finally {
-
+				bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
+					resourcedirectories, (level, message) => {
+						switch (level) {
+						case TraceLevel.Error:
+							Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir, resource_name_case_map);
+							break;
+						case TraceLevel.Warning:
+							Log.FixupResourceFilenameAndLogCodedWarning ("XA1001", message, file, resdir, resource_name_case_map);
+							break;
+						default:
+							Log.LogDebugMessage (message);
+							break;
+						}
+					}, registerCustomView : (e, filename) => {
+					if (customViewMap == null)
+						return;
+					HashSet<string> set;
+					if (!customViewMap.TryGetValue (e, out set))
+						customViewMap.Add (e, set = new HashSet<string> ());
+					set.Add (filename);
+				});
+				if (!success) {
+					//If we failed to write the file, a warning is logged, we should skip to the next file
+					continue;
 				}
+
+				// We strip away an eventual UTF-8 BOM from the XML file.
+				// This is a requirement for the Android designer because the desktop Java renderer
+				// doesn't support those type of BOM (it really wants the document to start
+				// with "<?"). Since there is no way to plug into the file saving mechanism in X.S
+				// we strip those here and point the designer to use resources from obj/
+				MonoAndroidHelper.CleanBOM (file);
 			}
 		}
 	}

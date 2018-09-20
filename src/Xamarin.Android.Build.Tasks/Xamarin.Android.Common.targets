@@ -37,7 +37,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckTargetFrameworks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -487,14 +486,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
  </CreateItem>
 </Target>
 
-<Target Name="_CheckTargetFrameworks"
-		DependsOnTargets="_ResolveAssemblies">
-	<CheckTargetFrameworks
-		ResolvedAssemblies="@(ResolvedAssemblies)"
-		ProjectFile="$(MSBuildProjectFullPath)"
-		TargetFrameworkVersion="$(TargetFrameworkVersion)" />
-</Target>
-
 <Target Name="_StripEmbeddedLibraries"
   Inputs="@(ResolvedAssemblies)" 
   Outputs="$(_AndroidStripFlag)"
@@ -529,6 +520,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
+    _CheckSupportedAbis;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
@@ -661,7 +653,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
     Inputs="$(_NuGetAssetsFile)"
     Outputs="$(_AndroidNuGetStampFile)">
-  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" />
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition="Exists('$(_AndroidNuGetStampFile)')" />
   <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
   <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
   <ItemGroup>
@@ -1039,6 +1031,16 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CheckTargetFramework">
 	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+</Target>
+
+<Target Name="_CheckSupportedAbis">
+	<PropertyGroup>
+		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
+	</PropertyGroup>
+	<Error Code="XA0115"
+			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
+			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties."
+	/>
 </Target>
 
 <Target Name="_CheckForContent">
@@ -1524,7 +1526,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_GenerateJavaDesignerForComponent"
-  Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps)"
+  Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps);$(_AndroidResgenFlagFile)"
   Outputs="$(_AndroidComponentResgenFlagFile)"
   DependsOnTargets="$(_GenerateJavaDesignerForComponentDependsOnTargets)">
 
@@ -1543,7 +1545,6 @@ because xbuild doesn't support framework reference assemblies.
    ResourceDirectory="$(MonoAndroidResDirIntermediate)"
    AdditionalResourceDirectories="@(LibraryResourceDirectories)"
    AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
-   AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    ToolPath="$(AaptToolPath)"
    ToolExe="$(AaptToolExe)"
    ApiLevel="$(_AndroidTargetSdkVersion)"
@@ -1556,7 +1557,6 @@ because xbuild doesn't support framework reference assemblies.
  <Aapt2Link
    Condition="'$(_AndroidUseAapt2)' == 'True'"
    ContinueOnError="$(DesignTimeBuild)"
-   AndroidComponentResgenFlagFile="$(_AndroidComponentResgenFlagFile)"
    UseShortFileNames="$(UseShortFileNames)"
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -1565,6 +1565,7 @@ because xbuild doesn't support framework reference assemblies.
    ApplicationName="$(_AndroidPackage)"
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
+   CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -1891,6 +1892,8 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
+		ProjectFile="$(MSBuildProjectFullPath)"
+		TargetFrameworkVersion="$(TargetFrameworkVersion)"
 		ProjectAssetFile="$(ProjectLockFile)"
 		TargetMoniker="$(NuGetTargetMoniker)"
 		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
@@ -2143,7 +2146,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_PrepareAssembliesDependsOnTargets>
 		_ResolveAssemblies
 		;_ResolveSatellitePaths
-		;_CheckTargetFrameworks
 		;_CreatePackageWorkspace
 		;_StripEmbeddedLibraries
 		;_LinkAssemblies

@@ -72,6 +72,7 @@
 #include "ioapi.h"
 #include "monodroid-glue.h"
 #include "mkbundle-api.h"
+#include "cpu-arch.h"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -99,6 +100,21 @@ static MonoMethod* registerType;
 static int wait_for_gdb;
 static volatile int monodroid_gdb_wait = TRUE;
 static int android_api_level = 0;
+
+// Values correspond to the CPU_KIND_* macros
+static const char* android_abi_names[CPU_KIND_X86_64+1] = {
+	"unknown",
+	[CPU_KIND_ARM]      = "armeabi-v7a",
+	[CPU_KIND_ARM64]    = "arm64-v8a",
+	[CPU_KIND_MIPS]     = "mips",
+	[CPU_KIND_X86]      = "x86",
+	[CPU_KIND_X86_64]   = "x86_64",
+};
+#define ANDROID_ABI_NAMES_SIZE (sizeof(android_abi_names) / sizeof (android_abi_names[0]))
+
+static void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
+static void* load_dso_from_override_dirs (const char *name, int dl_flags);
+static void* load_dso_from_any_directories (const char *name, int dl_flags);
 
 /* Can be called by a native debugger to break the wait on startup */
 MONO_API void
@@ -467,7 +483,9 @@ monodroid_get_dylib (void)
 	return &mono;
 }
 
-static const char *app_libdir;
+static const char **app_lib_directories;
+static size_t app_lib_directories_size = 0;
+static int embedded_dso_mode = 0;
 
 int file_copy(const char *to, const char *from)
 {
@@ -639,6 +657,7 @@ static char*
 get_libmonosgen_path ()
 {
 	char *libmonoso;
+	int i;
 
 #ifndef RELEASE
 	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
@@ -647,11 +666,16 @@ get_libmonosgen_path ()
 	copy_monosgen_to_internal_location (primary_override_dir, external_override_dir);
 	copy_monosgen_to_internal_location (primary_override_dir, external_legacy_override_dir);
 
-	int i;
-	for (i = 0; i < MAX_OVERRIDES; ++i)
-		TRY_LIBMONOSGEN (override_dirs [i])
+	if (!embedded_dso_mode) {
+		for (i = 0; i < MAX_OVERRIDES; ++i)
+			TRY_LIBMONOSGEN (override_dirs [i]);
+	}
 #endif
-	TRY_LIBMONOSGEN (app_libdir)
+	if (!embedded_dso_mode) {
+		for (i = 0; i < app_lib_directories_size; i++) {
+			TRY_LIBMONOSGEN (app_lib_directories [i]);
+		}
+	}
 
 	libmonoso = runtime_libdir ? monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR MONO_SGEN_ARCH_SO, runtime_libdir, sizeof(void*) == 8 ? "64bit" : "32bit") : NULL;
 	if (libmonoso && file_exists (libmonoso)) {
@@ -686,13 +710,22 @@ get_libmonosgen_path ()
 	TRY_LIBMONOSGEN (get_libmonoandroid_directory_path ())
 #endif
 
-	TRY_LIBMONOSGEN (SYSTEM_LIB_PATH)
-	
-#ifdef RELEASE
-	log_fatal (LOG_DEFAULT, "cannot find libmonosgen-2.0.so in app_libdir: %s nor in previously printed locations.", app_libdir);
-#else
-	log_fatal (LOG_DEFAULT, "cannot find libmonosgen-2.0.so in override_dir: %s, app_libdir: %s nor in previously printed locations.", override_dirs[0], app_libdir);
+	TRY_LIBMONOSGEN (SYSTEM_LIB_PATH);
+	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", MONO_SGEN_SO);
+
+#ifndef RELEASE
+	if (!embedded_dso_mode) {
+		for (i = 0; i < MAX_OVERRIDES; ++i) {
+			if (override_dirs [i] == NULL)
+				continue;
+			log_fatal (LOG_DEFAULT, "  %s", override_dirs [i]);
+		}
+	}
 #endif
+	for (i = 0; i < app_lib_directories_size; i++) {
+		log_fatal (LOG_DEFAULT, "  %s", app_lib_directories [i]);
+	}
+
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
 	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
 	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
@@ -704,16 +737,175 @@ typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **),
 mono_mkbundle_init_ptr mono_mkbundle_init;
 void (*mono_mkbundle_initialize_mono_api) (const BundleMonoAPI *info);
 
-static void
-setup_bundled_app (const char *libappso)
+static char*
+get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_free)
 {
-	void *libapp;
+	assert (needs_free);
 
-	libapp = dlopen (libappso, RTLD_LAZY);
+	*needs_free = FALSE;
+	if (!dso_path)
+		return NULL;
 
-	if (!libapp) {
-		log_fatal (LOG_BUNDLE, "bundled app initialization error: %s", dlerror ());
-		exit (FATAL_EXIT_CANNOT_LOAD_BUNDLE);
+	if (base_dir == NULL || is_path_rooted (dso_path))
+		return (char*)dso_path; // Absolute path or no base path, can't do much with it
+
+	char *full_path = path_combine (base_dir, dso_path);
+	*needs_free = TRUE;
+	return full_path;
+}
+
+void*
+monodroid_load_dso (const char *path, int dl_flags, mono_bool skip_exists_check)
+{
+	if (path == NULL)
+		return NULL;
+
+	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
+	if (!skip_exists_check && !embedded_dso_mode && !file_exists (path)) {
+		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
+		return NULL;
+	}
+
+	void *handle = dlopen (path, dl_flags);
+	if (handle == NULL)
+		log_info (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
+	return handle;
+}
+
+static void*
+load_dso_from_specified_dirs (const char **directories, int num_entries, const char *dso_name, int dl_flags)
+{
+	assert (directories);
+	if (dso_name == NULL)
+		return NULL;
+
+	mono_bool needs_free = FALSE;
+	char *full_path = NULL;
+	for (int i = 0; i < num_entries; i++) {
+		full_path = get_full_dso_path (directories [i], dso_name, &needs_free);
+		void *handle = monodroid_load_dso (full_path, dl_flags, FALSE);
+		if (needs_free)
+			free (full_path);
+		if (handle != NULL)
+			return handle;
+	}
+
+	return NULL;
+}
+
+static void*
+load_dso_from_app_lib_dirs (const char *name, int dl_flags)
+{
+	return load_dso_from_specified_dirs (app_lib_directories, app_lib_directories_size, name, dl_flags);
+}
+
+static void*
+load_dso_from_override_dirs (const char *name, int dl_flags)
+{
+#ifdef RELEASE
+	return NULL;
+#else
+	return load_dso_from_specified_dirs (override_dirs, MAX_OVERRIDES, name, dl_flags);
+#endif
+}
+
+static void* load_dso_from_any_directories (const char *name, int dl_flags)
+{
+	void *handle = load_dso_from_override_dirs (name, dl_flags);
+	if (handle == NULL)
+		handle = load_dso_from_app_lib_dirs (name, dl_flags);
+	return handle;
+}
+
+static char*
+get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, mono_bool *needs_free)
+{
+	assert (needs_free);
+
+	*needs_free = FALSE;
+	char *dso_path = get_full_dso_path (base_dir, dso_name, needs_free);
+	if (file_exists (dso_path))
+		return dso_path;
+
+	*needs_free = FALSE;
+	free (dso_path);
+	return NULL;
+}
+
+
+static void
+dso_alloc_cleanup (char **dso_path, mono_bool *needs_free)
+{
+	assert (needs_free);
+	if (dso_path != NULL) {
+		if (*needs_free)
+			free (*dso_path);
+		*dso_path = NULL;
+	}
+	*needs_free = FALSE;
+}
+
+static char*
+get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs_free)
+{
+	assert (needs_free);
+
+	*needs_free = FALSE;
+	if (embedded_dso_mode)
+		return NULL;
+#ifndef RELEASE
+	char *dso_path = NULL;
+	for (int i = 0; i < MAX_OVERRIDES; i++) {
+		if (override_dirs [i] == NULL)
+			continue;
+		dso_path = get_existing_dso_path_on_disk (override_dirs [i], dso_name, needs_free);
+		if (dso_path != NULL)
+			return dso_path;
+		dso_alloc_cleanup (&dso_path, needs_free);
+	}
+#endif
+	for (int i = 0; i < app_lib_directories_size; i++) {
+		dso_path = get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, needs_free);
+		if (dso_path != NULL)
+			return dso_path;
+		dso_alloc_cleanup (&dso_path, needs_free);
+	}
+
+	return NULL;
+}
+
+// This function could be improved if we somehow marked an apk containing just the bundled app as
+// such - perhaps another __XA* environment variable? Would certainly make code faster.
+static void
+setup_bundled_app (const char *dso_name)
+{
+	static int dlopen_flags = RTLD_LAZY;
+	void *libapp = NULL;
+
+	if (embedded_dso_mode) {
+		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
+		libapp = load_dso_from_any_directories (dso_name, dlopen_flags);
+	} else {
+		mono_bool needs_free = FALSE;
+		log_info (LOG_DEFAULT, "bundle app: normal mode");
+		char *bundle_path = get_full_dso_path_on_disk (dso_name, &needs_free);
+		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<NULL>");
+		if (bundle_path == NULL)
+			return;
+		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path);
+		libapp = monodroid_load_dso (bundle_path, dlopen_flags, TRUE);
+		free (bundle_path);
+	}
+
+	if (libapp == NULL) {
+		log_info (LOG_DEFAULT, "No libapp!");
+		if (!embedded_dso_mode) {
+			log_fatal (LOG_BUNDLE, "bundled app initialization error");
+			exit (FATAL_EXIT_CANNOT_LOAD_BUNDLE);
+		} else {
+			log_info (LOG_BUNDLE, "bundled app not found in the APK, ignoring.");
+			return;
+		}
 	}
 
 	mono_mkbundle_initialize_mono_api = dlsym (libapp, "initialize_mono_api");
@@ -723,34 +915,7 @@ setup_bundled_app (const char *libappso)
 	mono_mkbundle_init = dlsym (libapp, "mono_mkbundle_init");
 	if (!mono_mkbundle_init)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
-	log_info (LOG_BUNDLE, "Bundled app loaded: %s", libappso);
-}
-
-static char*
-get_bundled_app (JNIEnv *env, jstring dir)
-{
-	const char *v;
-	char *libapp;
-
-#ifndef RELEASE
-	libapp = path_combine (override_dirs [0], "libmonodroid_bundle_app.so");
-
-	if (file_exists (libapp))
-		return libapp;
-
-	free (libapp);
-#endif
-
-	if (dir) {
-		v = (*env)->GetStringUTFChars (env, dir, NULL);
-		if (v) {
-			libapp = path_combine (v, "libmonodroid_bundle_app.so");
-			(*env)->ReleaseStringUTFChars (env, dir, v);
-			if (file_exists (libapp))
-				return libapp;
-		}
-	}
-	return NULL;
+	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
 }
 
 static JavaVM *jvm;
@@ -2922,7 +3087,6 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	void *args [1];
 	args [0] = &init;
 
-	android_api_level = GetAndroidSdkVersion (env, loader);
 	init.javaVm                 = jvm;
 	init.env                    = env;
 	init.logCategories          = log_categories;
@@ -3098,48 +3262,51 @@ convert_dl_flags (int flags)
 static void*
 monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 {
-	/* name is NULL when we're P/Invoking __Internal, so remap to libmonodroid */
-	char *full_name = path_combine (app_libdir, name ? name : "libmonodroid.so");
-	if (!name && !file_exists (full_name)) {
-		log_info (LOG_ASSEMBLY, "Trying to load library '%s'", full_name);
-		free (full_name);
-		full_name = path_combine (SYSTEM_LIB_PATH, "libmonodroid.so");
-	}
 	int dl_flags = convert_dl_flags (flags);
-	void *h = dlopen (full_name, dl_flags);
-	log_info (LOG_ASSEMBLY, "Trying to load library '%s'", full_name);
+	void *h = NULL;
+	char *full_name = NULL;
+	char *basename = NULL;
+	mono_bool libmonodroid_fallback = FALSE;
 
-	if (!h && name && (strstr (name, ".dll.so") || strstr (name, ".exe.so"))) {
-		char *full_name2;
-		const char *basename;
-
-		if (strrchr (name, '/'))
-			basename = strrchr (name, '/') + 1;
-		else
-			basename = name;
-
-		/* Try loading AOT modules from the override dir */
-		if (override_dirs [0]) {
-			full_name2 = monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR "libaot-%s", override_dirs [0], basename);
-			h = dlopen (full_name2, dl_flags);
-			free (full_name2);
-		}
-
-		/* Try loading AOT modules from the lib dir */
-		if (!h) {
-			full_name2 = monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR "libaot-%s", app_libdir, basename);
-			h = dlopen (full_name2, dl_flags);
-			free (full_name2);			
-		}
-
-		if (h)
-			log_info (LOG_ASSEMBLY, "Loaded AOT image '%s'", full_name2);
+	/* name is NULL when we're P/Invoking __Internal, so remap to libmonodroid */
+	if (name == NULL) {
+		name = "libmonodroid.so";
+		libmonodroid_fallback = TRUE;
 	}
 
+	h = load_dso_from_any_directories (name, dl_flags);
+	if (h != NULL) {
+		goto done_and_out;
+	}
+
+	if (libmonodroid_fallback) {
+		full_name = path_combine (SYSTEM_LIB_PATH, "libmonodroid.so");
+		h = monodroid_load_dso (full_name, dl_flags, FALSE);
+		goto done_and_out;
+	}
+
+	if (!strstr (name, ".dll.so") && !strstr (name, ".exe.so")) {
+		goto done_and_out;
+	}
+
+	basename = strrchr (name, '/');
+	if (basename != NULL)
+		basename++;
+	else
+		basename = (char*)name;
+
+	basename = monodroid_strdup_printf ("libaot-%s", basename);
+	h = load_dso_from_any_directories (basename, dl_flags);
+
+	if (h != NULL)
+		log_info (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename);
+
+  done_and_out:
 	if (!h && err) {
 		*err = monodroid_strdup_printf ("Could not load library: Library '%s' not found.", full_name);
 	}
 
+	free (basename);
 	free (full_name);
 
 	return h;
@@ -3272,57 +3439,18 @@ load_profiler (void *handle, const char *desc, const char *symbol)
 }
 
 static mono_bool
-load_embedded_profiler (const char *desc, const char *name)
+load_profiler_from_handle (void *dso_handle, const char *desc, const char *name)
 {
-	mono_bool result;
-
-	char *full_name = path_combine (app_libdir, "libmonodroid.so");
-	void *h         = dlopen (full_name, RTLD_LAZY);
-	const char *e   = dlerror ();
-
-	log_warn (LOG_DEFAULT, "looking for embedded profiler within '%s': dlopen=%p error=%s",
-			full_name,
-			h,
-			h != NULL ? "<none>" : e);
-
-	free (full_name);
-
-	if (!h) {
-		return 0;
-	}
+	if (!dso_handle)
+		return FALSE;
 
 	char *symbol = monodroid_strdup_printf ("%s_%s", INITIALIZER_NAME, name);
-	if (!(result = load_profiler (h, desc, symbol)))
-		dlclose (h);
+	mono_bool result = load_profiler (dso_handle, desc, symbol);
 	free (symbol);
-
-	return result;
-}
-
-static mono_bool
-load_profiler_from_directory (const char *directory, const char *libname, const char *desc, const char *name)
-{
-	char *full_name = path_combine (directory, libname);
-	int  exists     = file_exists (full_name);
-	void *h         = exists ? dlopen (full_name, RTLD_LAZY) : NULL;
-	const char *e   = exists ? dlerror () : "No such file or directory";
-
-	log_warn (LOG_DEFAULT, "Trying to load profiler: %s: dlopen=%p error=%s",
-			full_name,
-			h,
-			h != NULL ? "<none>" : e);
-
-	free (full_name);
-
-	if (h) {
-		char *symbol = monodroid_strdup_printf ("%s_%s", INITIALIZER_NAME, name);
-		mono_bool result = load_profiler (h, desc, symbol);
-		free (symbol);
-		if (result)
-			return 1;
-		dlclose (h);
-	}
-	return 0;
+	if (result)
+		return TRUE;
+	dlclose (dso_handle);
+	return FALSE;
 }
 
 static void
@@ -3330,7 +3458,6 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 {
 	const char* col = strchr (desc, ':');
 	char *mname;
-	int oi;
 
 	if (col != NULL) {
 		mname = xmalloc (col - desc + 1);
@@ -3340,28 +3467,18 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 		mname = monodroid_strdup_printf ("%s", desc);
 	}
 
+	int dlopen_flags = RTLD_LAZY;
 	char *libname = monodroid_strdup_printf ("libmono-profiler-%s.so", mname);
-
 	mono_bool found = 0;
+	void *handle = load_dso_from_any_directories (libname, dlopen_flags);
+	found = load_profiler_from_handle (handle, desc, mname);
 
-	for (oi = 0; oi < MAX_OVERRIDES; ++oi) {
-		if (!directory_exists (override_dirs [oi]))
-			continue;
-		if ((found = load_profiler_from_directory (override_dirs [oi], libname, desc, mname)))
-			break;
+	if (!found && libmono_path != NULL) {
+		char *full_path = path_combine (libmono_path, libname);
+		handle = monodroid_load_dso (full_path, dlopen_flags, FALSE);
+		free (full_path);
+		found = load_profiler_from_handle (handle, desc, mname);
 	}
-
-	do {
-		if (found)
-			break;
-		if ((found = load_profiler_from_directory (app_libdir, libname, desc, mname)))
-			break;
-		if ((found = load_embedded_profiler (desc, mname)))
-			break;
-		if (libmono_path != NULL && (found = load_profiler_from_directory (libmono_path, libname, desc, mname)))
-			break;
-	} while (0);
-
 
 	if (found && logfile != NULL)
 		set_world_accessable (logfile);
@@ -3468,7 +3585,7 @@ setup_environment_from_line (const char *line)
 }
 
 static void
-setup_environment_from_file (const char *apk, int index, int apk_count)
+setup_environment_from_file (const char *apk, int index, int apk_count, void *user_data)
 {
 	unzFile file;
 	if ((file = unzOpen (apk)) == NULL)
@@ -3510,7 +3627,7 @@ setup_environment_from_file (const char *apk, int index, int apk_count)
 }
 
 static void
-for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (*handler) (const char *apk, int index, int apk_count))
+for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data)
 {
 	int i;
 	jsize apksLength = (*env)->GetArrayLength (env, runtimeApks);
@@ -3518,7 +3635,7 @@ for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (*handler) (const char
 		jstring e       = (*env)->GetObjectArrayElement (env, runtimeApks, i);
 		const char *apk = (*env)->GetStringUTFChars (env, e, NULL);
 
-		handler (apk, i, apksLength);
+		handler (apk, i, apksLength, user_data);
 		(*env)->ReleaseStringUTFChars (env, e, apk);
 	}
 }
@@ -3526,11 +3643,11 @@ for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (*handler) (const char
 static void
 setup_environment (JNIEnv *env, jobjectArray runtimeApks)
 {
-	for_each_apk (env, runtimeApks, setup_environment_from_file);
+	for_each_apk (env, runtimeApks, setup_environment_from_file, NULL);
 }
 
 static void
-setup_process_args_apk (const char *apk, int index, int apk_count)
+setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data)
 {
 	if (!apk || index != apk_count - 1)
 		return;
@@ -3542,7 +3659,7 @@ setup_process_args_apk (const char *apk, int index, int apk_count)
 static void
 setup_process_args (JNIEnv *env, jobjectArray runtimeApks)
 {
-	for_each_apk (env, runtimeApks, setup_process_args_apk);
+	for_each_apk (env, runtimeApks, setup_process_args_apk, NULL);
 }
 
 /*
@@ -3688,7 +3805,7 @@ This is a hack to set llvm::DisablePrettyStackTrace to true and avoid this sourc
 static void
 disable_external_signal_handlers (void)
 {
-	void *llvm  = dlopen ("libLLVM.so", RTLD_LAZY);
+	void *llvm  = monodroid_load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
 	if (llvm) {
 		_Bool *disable_signals = dlsym (llvm, "_ZN4llvm23DisablePrettyStackTraceE");
 		if (disable_signals) {
@@ -3742,6 +3859,14 @@ create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArra
 	return domain;
 }
 
+static void
+add_apk_libdir (const char *apk, int index, int apk_count, void *user_data)
+{
+	assert (user_data);
+	assert (index >= 0 && index < app_lib_directories_size);
+	app_lib_directories [index] = monodroid_strdup_printf ("%s!/lib/%s", apk, (const char*)user_data);
+}
+
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
 {
@@ -3749,12 +3874,12 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	char *connect_args;
 	jstring libdir_s;
 	const char *libdir, *esd;
-	char *libmonosgen_path;
-	char *libmonodroid_bundle_app_path;
 	char *counters_path;
 	const char *pkgName;
 	char *aotMode;
 	int i;
+
+	android_api_level = GetAndroidSdkVersion (env, loader);
 
 	pkgName = (*env)->GetStringUTFChars (env, packageName, NULL);
 	monodroid_store_package_name (pkgName); /* Will make a copy of the string */
@@ -3771,6 +3896,26 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	create_xdg_directories_and_environment (env,  homeDir);
 
 	setup_environment (env, runtimeApks);
+
+	if (android_api_level < 23 || getenv ("__XA_DSO_IN_APK") == NULL) {
+		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
+		libdir_s = (*env)->GetObjectArrayElement (env, appDirs, 2);
+		libdir = (*env)->GetStringUTFChars (env, libdir_s, NULL);
+		app_lib_directories_size = 1;
+		app_lib_directories = (const char**) xcalloc (app_lib_directories_size, sizeof(char*));
+		app_lib_directories [0] = monodroid_strdup_printf ("%s", libdir);
+		(*env)->ReleaseStringUTFChars (env, libdir_s, libdir);
+	} else {
+		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
+		embedded_dso_mode = 1;
+		app_lib_directories_size = (*env)->GetArrayLength (env, runtimeApks);
+		app_lib_directories = (const char**) xcalloc (app_lib_directories_size, sizeof(char*));
+
+		unsigned short built_for_cpu = 0, running_on_cpu = 0;
+		unsigned char is64bit = 0;
+		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
+		for_each_apk (env, runtimeApks, add_apk_libdir, android_abi_names [running_on_cpu]);
+	}
 
 	primary_override_dir = get_primary_override_dir (env, (*env)->GetObjectArrayElement (env, appDirs, 0));
 	esd = (*env)->GetStringUTFChars (env, (*env)->GetObjectArrayElement (env, externalStorageDirs, 0), NULL);
@@ -3799,23 +3944,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		log_warn (LOG_DEFAULT, "Using override path: %s", p);
 	}
 #endif
-
-	jsize appDirsLength = (*env)->GetArrayLength (env, appDirs);
-
-	for (i = 0; i < appDirsLength; ++i) {
-		jstring appDir = (*env)->GetObjectArrayElement (env, appDirs, i);
-		libmonodroid_bundle_app_path = get_bundled_app (env, appDir);
-		if (libmonodroid_bundle_app_path) {
-			setup_bundled_app (libmonodroid_bundle_app_path);
-			free (libmonodroid_bundle_app_path);
-			break;
-		}
-	}
-
-	libdir_s = (*env)->GetObjectArrayElement (env, appDirs, 2);
-	libdir = (*env)->GetStringUTFChars (env, libdir_s, NULL);
-	app_libdir = monodroid_strdup_printf ("%s", libdir);
-	(*env)->ReleaseStringUTFChars (env, libdir_s, libdir);
+	setup_bundled_app ("libmonodroid_bundle_app.so");
 
 	if (runtimeNativeLibDir != NULL) {
 		const char *rd;
@@ -3824,14 +3953,25 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		(*env)->ReleaseStringUTFChars (env, runtimeNativeLibDir, rd);
 	}
 
-	libmonosgen_path = get_libmonosgen_path ();
-	if (!monodroid_dylib_mono_init (&mono, libmonosgen_path)) {
+	void *libmonosgen_handle = NULL;
+
+	/*
+	 * We need to use RTLD_GLOBAL so that libmono-profiler-log.so can resolve
+	 * symbols against the Mono library we're loading.
+	 */
+	int sgen_dlopen_flags = RTLD_LAZY | RTLD_GLOBAL;
+	if (embedded_dso_mode) {
+		libmonosgen_handle = load_dso_from_any_directories (MONO_SGEN_SO, sgen_dlopen_flags);
+	}
+
+	if (libmonosgen_handle == NULL)
+		libmonosgen_handle = monodroid_load_dso (get_libmonosgen_path (), sgen_dlopen_flags, FALSE);
+
+	if (!monodroid_dylib_mono_init_with_handle (&mono, libmonosgen_handle)) {
 		log_fatal (LOG_DEFAULT, "shared runtime initialization error: %s", dlerror ());
 		exit (FATAL_EXIT_CANNOT_FIND_MONO);
 	}
 	setup_process_args (env, runtimeApks);
-
-	free (libmonosgen_path);
 #ifndef WINDOWS
 	_monodroid_getifaddrs_init ();
 #endif

@@ -156,7 +156,8 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     debuggable.
 
     - **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](LayoutCodeBehind.md)
-	  if set to `true` (the default) or disables it completely if set to `false`
+	  if set to `true` or disables it completely if set to `false`. The
+	  default value is `false`.
 	
 ### Install Properties
 

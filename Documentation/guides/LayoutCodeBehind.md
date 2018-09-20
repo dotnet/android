@@ -69,6 +69,21 @@ with Android resources when using C#:
  1. [Bindings](#resource-bindings)
  2. [Code-Behind](#resource-codebehind)
 
+To enable these new features, set the `$(AndroidGenerateLayoutBindings)`
+MSBuild property to `True` either on the msbuild command line:
+
+```
+msbuild /p:AndroidGenerateLayoutBindings=true MyProject.csproj
+```
+
+or in your .csproj file:
+
+```xml
+<PropertyGroup>
+    <AndroidGenerateLayoutBindings>true</AndroidGenerateLayoutBindings>
+</PropertyGroup>
+```
+
 <a name="resource-bindings" />
 
 # Bindings
@@ -537,27 +552,27 @@ fragment in question.
 
 ## Selection
 
-By default all the layouts in any of the `Resource\layout*` directories are
-considered for code-behind generation as long as they contain at least a
-single element with the `//*/@android:id` attribute. You can disable processing
-of all the layouts by setting the `$(AndroidGenerateLayoutBindings)` MSBuild
-property to `False` either on the msbuild command line:
+By default code-behind generation is disabled. To enable processing for all
+layouts in any of the `Resource\layout*` directories that contain at least a
+single element with the `//*/@android:id` attribute, set the
+`$(AndroidGenerateLayoutBindings)` MSBuild property to `True` either on the
+msbuild command line:
 
 ```
-msbuild /p:AndroidGenerateLayoutBindings=false MyProject.csproj
+msbuild /p:AndroidGenerateLayoutBindings=true MyProject.csproj
 ```
 
 or in your .csproj file:
 
 ```xml
 <PropertyGroup>
-   <AndroidGenerateLayoutBindings>false</AndroidGenerateLayoutBindings>
-</PropertyGroup
+    <AndroidGenerateLayoutBindings>true</AndroidGenerateLayoutBindings>
+</PropertyGroup>
 ```
 
-This disables any processing of layouts as far as code-behind is concerned.
-If you want to enable Code-Behind for specific files, change the `.axml`
-file to have a **Build action** of `@(AndroidBoundLayout)` by editing your
+Alternatively, you can leave code-behind disabled globally and enable it only
+for specific files. To enable Code-Behind for a particular `.axml` file, change
+the file to have a **Build action** of `@(AndroidBoundLayout)` by editing your
 `.csproj` file and replacing `AndroidResource` with `AndroidBoundLayout`:
 
 ```xml

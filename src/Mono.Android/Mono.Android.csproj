@@ -335,6 +335,7 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleBasic.cs" />
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
+    <Compile Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">

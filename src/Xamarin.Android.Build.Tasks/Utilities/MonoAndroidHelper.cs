@@ -307,8 +307,9 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsReferenceAssembly (string assembly)
 		{
-			var a = AssemblyDefinition.ReadAssembly (assembly, new ReaderParameters () { InMemory = true, ReadSymbols = false, });
-			return IsReferenceAssembly (a);
+			var rp = new ReaderParameters { ReadSymbols = false };
+			using (var a = AssemblyDefinition.ReadAssembly (assembly, rp))
+				return IsReferenceAssembly (a);
 		}
 
 		public static bool IsReferenceAssembly (AssemblyDefinition assembly)

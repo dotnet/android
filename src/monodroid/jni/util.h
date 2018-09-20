@@ -10,9 +10,11 @@
 #endif
 
 #if WINDOWS
-#define MONODROID_PATH_SEPARATOR "\\"
+#define MONODROID_PATH_SEPARATOR      "\\"
+#define MONODROID_PATH_SEPARATOR_CHAR '\\'
 #else
-#define MONODROID_PATH_SEPARATOR "/"
+#define MONODROID_PATH_SEPARATOR      "/"
+#define MONODROID_PATH_SEPARATOR_CHAR '/'
 #endif
 
 #if WINDOWS
@@ -63,5 +65,6 @@ void            *monodroid_runtime_invoke (struct DylibMono *mono, MonoDomain *d
 MonoClass       *monodroid_get_class_from_name (struct DylibMono *mono, MonoDomain *domain, const char* assembly, const char *namespace, const char *type);
 MonoDomain      *monodroid_create_appdomain (struct DylibMono *mono, MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);
 MonoClass       *monodroid_get_class_from_image (struct DylibMono *mono, MonoDomain *domain, MonoImage* image, const char *namespace, const char *type);
+mono_bool        is_path_rooted (const char *path);
 
 #endif /* __MONODROID_UTIL_H__ */
