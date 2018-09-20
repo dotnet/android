@@ -182,7 +182,6 @@ namespace Xamarin.Android.Build.Tests {
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
 				TargetFrameworkVersion = targetFrameworkVersion,
 				AndroidSdkBuildToolsVersion = buildtools,
 				UseLatestAndroidPlatformSdk = useLatestAndroidSdk,
@@ -234,7 +233,6 @@ namespace Xamarin.Android.Build.Tests {
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
 				TargetFrameworkVersion = "v8.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
 				UseLatestAndroidPlatformSdk = false,
@@ -396,7 +394,6 @@ namespace Xamarin.Android.Build.Tests {
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
 				UseLatestAndroidPlatformSdk = true,
 				TargetFrameworkVersion = userSelected,
 			};

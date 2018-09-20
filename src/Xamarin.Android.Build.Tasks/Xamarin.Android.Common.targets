@@ -613,7 +613,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<Error Text="Could not determine package name." Condition="'$(_AndroidPackage)' == ''" />
 
 	<GetJavaPlatformJar
-		AndroidSdkDirectory="$(AndroidSdkDirectory)"
 		AndroidSdkPlatform="$(_AndroidApiLevel)"
 		AndroidManifest="$(_AndroidManifestAbs)">
 			<Output TaskParameter="JavaPlatformJarPath" PropertyName="JavaPlatformJarPath" />
@@ -673,16 +672,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			AndroidNdkPath="$(AndroidNdkDirectory)"
 			JavaSdkPath="$(JavaSdkDirectory)"
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
-		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
-		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
-		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
+		<Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
+		<Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
+		<Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
 	</ResolveSdks>
 	<ValidateJavaVersion
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-			JavaSdkPath="$(JavaSdkDirectory)"
+			JavaSdkPath="$(_JavaSdkDirectory)"
 			JavaToolExe="$(JavaToolExe)"
 			JavacToolExe="$(JavacToolExe)"
 			LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
@@ -693,8 +692,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<ResolveAndroidTooling
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidApiLevel="$(AndroidApiLevel)"
-			AndroidSdkPath="$(AndroidSdkDirectory)"
-			AndroidNdkPath="$(AndroidNdkDirectory)"
+			AndroidSdkPath="$(_AndroidSdkDirectory)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 			AndroidUseAapt2="$(AndroidUseAapt2)"
@@ -807,8 +805,8 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
 
 	<Error Text="Could not locate MonoAndroid SDK." Condition="'$(MonoAndroidToolsDirectory)'==''" />
-	<Error Text="Could not locate Android SDK. Please set via /p:AndroidSdkDirectory." Condition="'$(AndroidSdkDirectory)'==''" />
-	<Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(JavaSdkDirectory)'==''" />
+	<Error Text="Could not locate Android SDK. Please set via /p:AndroidSdkDirectory." Condition="'$(_AndroidSdkDirectory)'==''" />
+	<Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
 
 	<!-- AppData for Mono for Android-->
 	<GetAppSettingsDirectory>
@@ -837,18 +835,12 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"
 			Condition="!HasTrailingSlash('$(_MonoAndroidToolsDirectory)')" />
 	</CreateProperty>
-	
-	<CreateProperty Value="$(AndroidNdkDirectory)">
-		<Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"/>
-	</CreateProperty>
+
 	<CreateProperty Value="$(_AndroidNdkDirectory)\">
 		<Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"
 			Condition="!HasTrailingSlash('$(_AndroidNdkDirectory)')" />
 	</CreateProperty>
-	
-	<CreateProperty Value="$(AndroidSdkDirectory)">
-		<Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"/>
-	</CreateProperty>
+
 	<CreateProperty Value="$(_AndroidSdkDirectory)\">
 		<Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"
 			Condition="!HasTrailingSlash('$(_AndroidSdkDirectory)')" />
@@ -865,10 +857,7 @@ because xbuild doesn't support framework reference assemblies.
 				Condition="!HasTrailingSlash('$(AndroidSdkBuildToolsBinPath)')"
 		/>
 	</CreateProperty>
-	
-	<CreateProperty Value="$(JavaSdkDirectory)">
-		<Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"/>
-	</CreateProperty>
+
 	<CreateProperty Value="$(_JavaSdkDirectory)\">
 		<Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"
 			Condition="!HasTrailingSlash('$(_JavaSdkDirectory)')" />
@@ -957,25 +946,25 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+	<CreateProperty Value="$(_JavaSdkDirectory)bin">
 		<Output TaskParameter="Value" PropertyName="JarsignerToolPath"
 				Condition="'$(JarsignerToolPath)' == ''"
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+	<CreateProperty Value="$(_JavaSdkDirectory)bin">
 		<Output TaskParameter="Value" PropertyName="JavaToolPath"
 				Condition="'$(JavaToolPath)' == ''"
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+	<CreateProperty Value="$(_JavaSdkDirectory)bin">
 		<Output TaskParameter="Value" PropertyName="JavacToolPath"
 				Condition="'$(JavacToolPath)' == ''"
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+	<CreateProperty Value="$(_JavaSdkDirectory)bin">
 		<Output TaskParameter="Value" PropertyName="KeytoolToolPath"
 				Condition="'$(KeytoolToolPath)' == ''"
 		/>
@@ -1058,7 +1047,7 @@ because xbuild doesn't support framework reference assemblies.
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
-		JavaSdkPath="$(JavaSdkDirectory)"
+		JavaSdkPath="$(_JavaSdkDirectory)"
 	/>
 </Target>
 
@@ -1157,48 +1146,40 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
-<ItemGroup>
-	<!--- List of items we want to trigger a build if changed -->
-	<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
-	<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
-	<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
-	<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
-	<_PropertyCacheItems Include="EnableProguard=$(AndroidEnableProguard)" />
-	<_PropertyCacheItems Include="UseSharedRuntime=$(AndroidUseSharedRuntime)" />
-	<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
-	<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
-	<_PropertyCacheItems Include="AndroidLinkSkip=$(AndroidLinkSkip)" />
-	<_PropertyCacheItems Include="AndroidSdkBuildToolsVersion=$(AndroidSdkBuildToolsVersion)" />
-	<_PropertyCacheItems Include="AndroidSdkPath=$(AndroidSdkDirectory)" />
-	<_PropertyCacheItems Include="AndroidNdkPath=$(AndroidNdkDirectory)" />
-	<_PropertyCacheItems Include="JavaSdkPath=$(JavaSdkDirectory)" />
-	<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
-	<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" />
-	<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
-	<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
-	<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
-	<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
-	<_PropertyCacheItems Include="OS=$(OS)" />
-	<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
-	<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
-	<_PropertyCacheItems Include="AdbTarget=$(AdbTarget)" />
-	<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
-</ItemGroup>
-
-<Target Name="_ReadPropertiesCache">
-	<ReadLinesFromFile File="$(_AndroidBuildPropertiesCache)"
-			Condition="Exists('$(_AndroidBuildPropertiesCache)')">
-		<Output TaskParameter="Lines" ItemName="_PropertiesCache"/>
-	</ReadLinesFromFile>
-</Target>
-
-<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_ReadPropertiesCache">
+<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion">
+	<ItemGroup>
+		<!--- List of items we want to trigger a build if changed -->
+		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
+		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
+		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
+		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
+		<_PropertyCacheItems Include="EnableProguard=$(AndroidEnableProguard)" />
+		<_PropertyCacheItems Include="UseSharedRuntime=$(AndroidUseSharedRuntime)" />
+		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
+		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
+		<_PropertyCacheItems Include="AndroidLinkSkip=$(AndroidLinkSkip)" />
+		<_PropertyCacheItems Include="AndroidSdkBuildToolsVersion=$(AndroidSdkBuildToolsVersion)" />
+		<_PropertyCacheItems Include="AndroidSdkPath=$(_AndroidSdkDirectory)" />
+		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
+		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
+		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
+		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" />
+		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
+		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
+		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
+		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
+		<_PropertyCacheItems Include="OS=$(OS)" />
+		<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
+		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
+		<_PropertyCacheItems Include="AdbTarget=$(AdbTarget)" />
+		<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
+	</ItemGroup>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
-		Condition="'@(_PropertiesCache)' != '@(_PropertyCacheItems)'" 
 		File="$(_AndroidBuildPropertiesCache)"
 		Lines="@(_PropertyCacheItems)"
-		Overwrite="true"/>
+		Overwrite="true"
+		WriteOnlyWhenDifferent="true" />
 </Target>
 
 <PropertyGroup>
@@ -1425,7 +1406,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_AddMultiDexDependencyJars">
-	<CreateItem Include="$(AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)"
+	<CreateItem Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)"
 		Condition="'$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != ''">
       <Output TaskParameter="Include" ItemName="AndroidJavaLibrary" />
 	</CreateItem>
