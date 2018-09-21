@@ -45,19 +45,7 @@ namespace Xamarin.Android.Build
 					}
 				}
 
-				int exitCode = MSBuildApp.Main ();
-				if (exitCode != 0) {
-					Console.WriteLine ($"MSBuildApp.Main exited with {exitCode}, xabuild configuration is:");
-
-					var settings = new XmlWriterSettings {
-						Indent = true,
-						NewLineOnAttributes = true,
-					};
-					using (var writer = XmlTextWriter.Create (Console.Out, settings)) {
-						xml.WriteTo (writer);
-					}
-				}
-				return exitCode;
+				return MSBuildApp.Main ();
 			} finally {
 				//NOTE: these are temporary files
 				foreach (var file in new [] { paths.MSBuildExeTempPath, paths.XABuildConfig }) {
