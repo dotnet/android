@@ -47,6 +47,7 @@
 + [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
 + [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
 + [XA1002](xa1002.md): We found a matching key '{Key}' for '{Item}'. But the casing was incorrect. Please correct the casing
++ [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
 
 ### XA2xxx Linker
 
