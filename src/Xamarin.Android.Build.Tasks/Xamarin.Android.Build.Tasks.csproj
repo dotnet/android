@@ -346,6 +346,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
       <Link>Linker\Linker\AssemblyUtilities.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
+      <Link>Linker\Linker\AssemblyUtilities.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
@@ -438,6 +441,9 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
+      <Link>Linker\Linker\TypeNameParser.cs</Link>
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
