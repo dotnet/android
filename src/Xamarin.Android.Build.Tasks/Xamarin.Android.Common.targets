@@ -2250,7 +2250,7 @@ because xbuild doesn't support framework reference assemblies.
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
-  <Touch Files="$(IntermediateOutputPath)_javastubs.stamp;$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
+  <Touch Files="$(IntermediateOutputPath)_javastubs.stamp" AlwaysCreate="True" />
   <ItemGroup>
 	<FileWrites Include="$(IntermediateOutputPath)_javastubs.stamp" />
   </ItemGroup>

@@ -192,11 +192,19 @@ namespace Xamarin.Android.Tests
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after the second `Build`.");
 
 				//NOTE: none of these targets should run, since we have not actually changed anything!
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "`_UpdateAndroidResgen` should be skipped!");
-				//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
-				//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
-				//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
-				//Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "`_LinkAssembliesNoShrink` should be skipped!");
+				var targetsToBeSkipped = new [] {
+					//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
+					//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
+					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
+					//"_LinkAssembliesNoShrink",
+					"_UpdateAndroidResgen",
+					"_GenerateJavaDesignerForComponent",
+					"_BuildLibraryImportsCache",
+					"_CompileJava",
+				};
+				foreach (var targetName in targetsToBeSkipped) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				}
 
 				b.Target = "Clean";
 				Assert.IsTrue (b.Build (proj), "clean should have succeeded.");
@@ -318,7 +326,9 @@ namespace Xamarin.Android.Tests
 				var targetsToBeSkipped = new [] {
 					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
+					"_GenerateJavaDesignerForComponent",
 					"_BuildLibraryImportsCache",
+					"_CompileJava",
 				};
 				foreach (var targetName in targetsToBeSkipped) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
