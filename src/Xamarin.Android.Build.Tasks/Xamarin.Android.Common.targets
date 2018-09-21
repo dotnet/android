@@ -89,7 +89,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.StripEmbeddedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyConfigFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -485,17 +484,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Output TaskParameter="Include" ItemName="_AdditionalAndroidResourceManifests"/>
  </CreateItem>
 </Target>
-
-<Target Name="_StripEmbeddedLibraries"
-  Inputs="@(ResolvedAssemblies)" 
-  Outputs="$(_AndroidStripFlag)"
-  DependsOnTargets="_CopyIntermediateAssemblies;_CopyPdbFiles;_CopyMdbFiles">
-    <StripEmbeddedLibraries
-      Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
-      Assemblies="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
-    <Touch Files="$(_AndroidStripFlag)" AlwaysCreate="true" />
-</Target>
-
 
 
 <!--
@@ -1148,7 +1136,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
 	<_AndroidComponentResgenFlagFile>$(IntermediateOutputPath)Component.R.cs.flag</_AndroidComponentResgenFlagFile>
-	<_AndroidStripFlag>$(IntermediateOutputPath)strip.flag</_AndroidStripFlag>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
@@ -2147,7 +2134,9 @@ because xbuild doesn't support framework reference assemblies.
 		_ResolveAssemblies
 		;_ResolveSatellitePaths
 		;_CreatePackageWorkspace
-		;_StripEmbeddedLibraries
+		;_CopyIntermediateAssemblies
+		;_CopyPdbFiles
+		;_CopyMdbFiles
 		;_LinkAssemblies
 	</_PrepareAssembliesDependsOnTargets>
 </PropertyGroup>
@@ -2680,7 +2669,9 @@ because xbuild doesn't support framework reference assemblies.
 		_SetLatestTargetFrameworkVersion;
 		_GetLibraryImports;
 		_RemoveRegisterAttribute;
-		_StripEmbeddedLibraries;
+		_CopyIntermediateAssemblies;
+		_CopyPdbFiles;
+		_CopyMdbFiles;
 		_LinkAssemblies;
 		_GetAddOnPlatformLibraries;
 		_CompileDex;
@@ -3082,7 +3073,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
 	<Delete Files="$(IntermediateOutputPath)compiled.flata" />
 	<Delete Files="$(_AndroidResFlagFile)" />
-	<Delete Files="$(_AndroidStripFlag)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />

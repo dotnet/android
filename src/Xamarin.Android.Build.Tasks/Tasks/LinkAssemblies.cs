@@ -69,24 +69,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("LinkAssemblies Task");
-			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
-			Log.LogDebugMessage ("  MainAssembly: {0}", MainAssembly);
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  OptionalDestinationDirectory: {0}", OptionalDestinationDirectory);
-			Log.LogDebugMessage ("  I18nAssemblies: {0}", I18nAssemblies);
-			Log.LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			Log.LogDebugMessage ("  LinkSkip: {0}", LinkSkip);
-			Log.LogDebugTaskItems ("  LinkDescriptions:", LinkDescriptions);
-			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugMessage ("  EnableProguard: {0}", EnableProguard);
-			Log.LogDebugMessage ("  ProguardConfiguration: {0}", ProguardConfiguration);
-			Log.LogDebugMessage ("  DumpDependencies: {0}", DumpDependencies);
-			Log.LogDebugMessage ("  LinkOnlyNewerThan: {0}", LinkOnlyNewerThan);
-			Log.LogDebugMessage ("  HttpClientHandlerType: {0}", HttpClientHandlerType);
-			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
-			Log.LogDebugMessage ("  PreserveJniMarshalMethods: {0}", PreserveJniMarshalMethods);
-
 			var rp = new ReaderParameters {
 				InMemory    = true,
 			};

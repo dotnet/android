@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -849,9 +850,6 @@ namespace UnnamedProject {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_StripEmbeddedLibraries"),
-					"the _StripEmbeddedLibraries target should not run");
 				proj.AndroidResources.Last ().Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (
@@ -885,9 +883,6 @@ namespace UnnamedProject {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_StripEmbeddedLibraries"),
-					"the _StripEmbeddedLibraries target should not run");
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
 					"the _LinkAssembliesShrink target should not run");
@@ -1581,19 +1576,48 @@ namespace App1
 		[Test]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
 				IsRelease = true,
 				OtherBuildItems = { new AndroidItem.AndroidEnvironment ("Mono.env") {
 						TextContent = () => "MONO_DEBUG=soft-breakpoints"
 					},
 				},
 			};
-			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+			var app = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AndroidLinkModeRelease = AndroidLinkMode.Full,
+				References = {
+					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
+				},
+			};
+			app.MainActivity = app.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+			app.Packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+			app.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			app.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			app.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			app.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			app.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			//LinkSkip one assembly that contains __AndroidLibraryProjects__.zip
+			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
+			app.SetProperty ("AndroidLinkSkip", linkSkip);
+			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
+			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
+				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
+				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
+				var apk = Path.Combine (Root, appb.ProjectDirectory,
+					app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					var data = ZipHelper.ReadFileFromZip (zipFile, "environment");
 					Assert.IsNotNull (data, "environment should exist in the apk.");
@@ -1604,6 +1628,18 @@ namespace App1
 						x.Contains ("soft-breakpoints") &&
 						string.IsNullOrEmpty (sequencePointsMode) ? true : x.Contains ("gen-compact-seq-points")),
 						"The values from Mono.env should have been merged into environment");
+				}
+				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
+				var rp = new ReaderParameters { ReadSymbols = false };
+				foreach (var assemblyFile in Directory.EnumerateFiles (assemblyDir, "*.dll")) {
+					using (var assembly = AssemblyDefinition.ReadAssembly (assemblyFile)) {
+						foreach (var module in assembly.Modules) {
+							var resources = module.Resources.Select (r => r.Name).ToArray ();
+							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidEnvironment__"), "AndroidEnvironment EmbeddedResource should be stripped!");
+							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidLibraryProjects__.zip"), "__AndroidLibraryProjects__.zip should be stripped!");
+							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidNativeLibraries__.zip"), "__AndroidNativeLibraries__.zip should be stripped!");
+						}
+					}
 				}
 			}
 		}
