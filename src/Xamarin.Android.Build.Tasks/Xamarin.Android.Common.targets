@@ -1176,10 +1176,11 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<WriteLinesToFile
-		File="$(_AndroidBuildPropertiesCache)"
-		Lines="@(_PropertyCacheItems)"
-		Overwrite="true"
-		WriteOnlyWhenDifferent="true" />
+			File="$(_AndroidBuildPropertiesCache)"
+			Lines="@(_PropertyCacheItems)"
+			Overwrite="true"
+			WriteOnlyWhenDifferent="true"
+	/>
 </Target>
 
 <PropertyGroup>
