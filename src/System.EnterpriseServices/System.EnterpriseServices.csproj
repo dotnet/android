@@ -18,7 +18,6 @@
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
