@@ -16,9 +16,6 @@ namespace Xamarin.Android.Tasks
 		private XNamespace androidNs = "http://schemas.android.com/apk/res/android";
 
 		[Required]
-		public string AndroidSdkDirectory { get; set; }
-
-		[Required]
 		public string AndroidSdkPlatform { get; set; }
 
 		public string AndroidManifest { get; set; }
@@ -31,11 +28,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GetJavaPlatformJar Task");
-			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
-			Log.LogDebugMessage ("  AndroidSdkPlatform: {0}", AndroidSdkPlatform);
-			Log.LogDebugMessage ("  AndroidManifest: {0}", AndroidManifest);
-			
 			var platform = AndroidSdkPlatform;
 
 			XAttribute target_sdk = null;
@@ -74,9 +66,6 @@ namespace Xamarin.Android.Tasks
 				return !Log.HasLoggedErrors;
 
 			TargetSdkVersion = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (platform).ToString ();
-
-			Log.LogDebugMessage ("  [Output] JavaPlatformJarPath: {0}", JavaPlatformJarPath);
-			Log.LogDebugMessage ("  [Output] TargetSdkVersion: {0}", TargetSdkVersion);
 
 			return !Log.HasLoggedErrors;
 		}
