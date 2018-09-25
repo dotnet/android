@@ -5,7 +5,9 @@ JavaDeveloper-2013005_dp__11m4609.pkg
 LocalJDK
 TestResult.xml
 TestResult-*.xml
-xa-gendarme.html
+lib/gendarme-*
+gendarme.html
+gendarme.xml
 packages
 .vs/
 .nuget/
@@ -13,3 +15,6 @@ packages
 *.user
 Resource.designer.cs
 *.binlog
+*.rej
+*.orig
+*~
