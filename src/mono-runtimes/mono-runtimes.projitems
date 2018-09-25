@@ -310,7 +310,7 @@
       <LdFlags>-static -static-libgcc</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <TargetAbi>armv5-none-linux-androideabi</TargetAbi>
       <ConfigureFlags>--target=armv5-linux-androideabi --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=armv5-none-linux-androideabi.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -333,7 +333,7 @@
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <TargetAbi>aarch64-v8a-linux-android</TargetAbi>
       <ConfigureFlags>--target=aarch64-v8a-linux-android --host="$(_CrossConfigureBuildHostWin64)" --with-cross-offsets=aarch64-v8a-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -356,7 +356,7 @@
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <TargetAbi>i686-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=i686-linux-android --host="$(_CrossConfigureBuildHostWin32)" --with-cross-offsets=i686-none-linux-android.h $(_CrossConfigureFlags32) --with-llvm=$(_LlvmPrefixWin32)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>
@@ -379,7 +379,7 @@
       <LdFlags>-static -static-libgcc -static-libstdc++</LdFlags>
       <RanLib>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-ranlib</RanLib>
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <TargetAbi>x86_64-none-linux-android</TargetAbi>
       <ConfigureFlags>--target=x86_64-linux-android --host="$(_CrossConfigureBuildHostWin64)" --with-cross-offsets=x86_64-none-linux-android.h $(_CrossConfigureFlags) --with-llvm=$(_LlvmPrefixWin64)</ConfigureFlags>
       <ExeSuffix>.exe</ExeSuffix>

@@ -46,7 +46,7 @@
     <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
     <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
 
-    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PACKAGE_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; ANDROID_BUILD_TOOLS_VERSION=&quot;$(_MonoSdksAndroidBuildToolsVersion)&quot; ANDROID_BUILD_TOOLS_DIR=&quot;$(_MonoSdksAndroidBuildToolsDir)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PROVISION_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -148,7 +148,7 @@
         ToolExe="$(GitToolExe)">
       <Output TaskParameter="Time" PropertyName="_LlvmCommitTime" />
     </GitCommitTime>
-    <Touch Files="$(LlvmSourceFullPath)\Makefile.config.in" Time="$(_LlvmCommitTime)" />
+    <Touch Files="$(LlvmSourceFullPath)\CMakeLists.txt" Time="$(_LlvmCommitTime)" />
   </Target>
 
   <Target Name="_PrepareLlvmItems">
@@ -164,7 +164,7 @@
   <Target Name="_BuildLlvm"
       Condition=" '@(_LlvmRuntime)' != '' "
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
-      Inputs="$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(_LlvmSourceBinary)">
     <Exec
         Command="make $(MakeConcurrency) package-llvm-%(_LlvmRuntime.Identity) $(_MonoSdksParameters) %(_LlvmRuntime.PackageOptions)"
@@ -824,12 +824,12 @@
   </Target>
   <Target Name="ForceBuild"
       DependsOnTargets="GetMonoBundleItems;$(ForceBuildDependsOn)"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(BundleItem)">
   </Target>
   <Target Name="_BuildUnlessCached"
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;GetMonoBundleItems"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\Makefile.config.in"
+      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(BundleItem)">
     <PropertyGroup>
       <_Now>$([System.DateTime]::Now.Ticks)</_Now>
