@@ -36,7 +36,6 @@
   <Import Project="$(RelativeRootPath)\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestDebug</OutputPath>
     <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Debug</OutputPath>
@@ -48,7 +47,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestRelease</OutputPath>
     <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Release</OutputPath>

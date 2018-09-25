@@ -25,7 +25,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;__MOBILE__;__ANDROID__;</DefineConstants>
