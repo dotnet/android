@@ -22,7 +22,6 @@ public class MonoPackageManager {
 
 	public static void LoadApplication (Context context, ApplicationInfo runtimePackage, String[] apks)
 	{
-		Log.v("MonoPackageManager", "LoadApplication Called");
 		synchronized (lock) {
 			if (context instanceof android.app.Application) {
 				Context = context;
@@ -47,16 +46,8 @@ public class MonoPackageManager {
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
 
-				Log.v("MonoPackageManager", "Loading monodroid " + System.getProperty("java.library.path") + " " + dataDir);
 				System.loadLibrary("monodroid");
 
-				Log.v("MonoPackageManager", "Language = " + language);
-				Log.v("MonoPackageManager", "apks = " + Arrays.toString(apks));
-				Log.v("MonoPackageManager", "nativeLibraryPath = " + getNativeLibraryPath (runtimePackage));
-				Log.v("MonoPackageManager", "dirs = " + filesDir + ":" + cacheDir + ":" + dataDir);
-				Log.v("MonoPackageManager", "external = " + externalDir + ":" + externalLegacyDir);
-				Log.v("MonoPackageManager", "assemblies = " + Arrays.toString(MonoPackageManager_Resources.Assemblies));
-				Log.v("MonoPackageManager", "packagename = " + context.getPackageName ());
 				Runtime.init (
 						language,
 						apks,
