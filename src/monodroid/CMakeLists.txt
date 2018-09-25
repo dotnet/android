@@ -36,6 +36,7 @@ if(NOT ANDROID)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.c
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.c
     )
 endif()
 

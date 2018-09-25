@@ -74,6 +74,10 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitch ("--min_sdk_version ");
 			cmd.AppendSwitch (minApiVersion.ToString ());
+			
+			if (minApiVersion < 24) {
+				cmd.AppendSwitch("--desugar_try_with_resources_omit_runtime_classes ");
+			}
 
 			//cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
@@ -85,6 +89,8 @@ namespace Xamarin.Android.Tasks
 			foreach (var jar in InputJars) {
 				var output = Path.Combine (OutputDirectory, BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileName (jar));
 				outputs.Add (output);
+				cmd.AppendSwitch ("--classpath_entry ");
+				cmd.AppendFileNameIfNotNull (jar);
 				cmd.AppendSwitch ("--input ");
 				cmd.AppendFileNameIfNotNull (jar);
 				cmd.AppendSwitch ("--output ");

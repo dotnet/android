@@ -29,8 +29,6 @@ using Android.App;
 // native library path should contain abi
 [assembly: Android.NativeLibraryReference ("arm64-v8a/libsimple.so",
 	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
-[assembly: Android.NativeLibraryReference ("armeabi/libsimple.so",
-	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
 [assembly: Android.NativeLibraryReference ("armeabi-v7a/libsimple.so",
 	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
 [assembly: Android.NativeLibraryReference ("x86/libsimple.so",
@@ -40,9 +38,6 @@ using Android.App;
 
 // native library path should contain abi
 [assembly: Android.NativeLibraryReference ("arm64-v8a/libsimple2.so",
-	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
-	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
-[assembly: Android.NativeLibraryReference ("armeabi/libsimple2.so",
 	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
 	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
 [assembly: Android.NativeLibraryReference ("armeabi-v7a/libsimple2.so",

@@ -14,16 +14,6 @@ namespace Xamarin.Android.Build.Tests
 #pragma warning disable 414
 		static object [] AotChecks = new object [] {
 			new object[] {
-				/* supportedAbis */   "armeabi",
-				/* enableLLVM */      false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "armeabi",
-				/* enableLLVM */      true,
-				/* expectedResult */  true,
-			},
-			new object[] {
 				/* supportedAbis */   "armeabi-v7a",
 				/* enableLLVM */      false,
 				/* expectedResult */  true,

@@ -13,7 +13,6 @@
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\BuildDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>

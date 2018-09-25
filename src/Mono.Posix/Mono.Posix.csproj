@@ -24,7 +24,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;MONODROID</DefineConstants>
@@ -262,9 +261,6 @@
   <ItemGroup>
     <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\arm64-v8a\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:'))">
       <Link>MonoPosixHelper\arm64-v8a\libMonoPosixHelper.so</Link>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi:'))">
-      <Link>MonoPosixHelper\armeabi\libMonoPosixHelper.so</Link>
     </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="$(XANativeLibsDir)\armeabi-v7a\libMonoPosixHelper.so" Condition="$(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:'))">
       <Link>MonoPosixHelper\armeabi-v7a\libMonoPosixHelper.so</Link>

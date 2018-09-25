@@ -319,13 +319,6 @@ namespace Xamarin.Android.Tasks
 				AndroidTargetArch arch;
 
 				switch (abi) {
-				case "armeabi":
-					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm");
-					outdir = Path.Combine (AotOutputDirectory, "armeabi");
-					mtriple = "armv5-linux-gnueabi";
-					arch = AndroidTargetArch.Arm;
-					break;
-
 				case "armeabi-v7a":
 					aotCompiler = Path.Combine (sdkBinDirectory, "cross-arm");
 					outdir = Path.Combine (AotOutputDirectory, "armeabi-v7a");

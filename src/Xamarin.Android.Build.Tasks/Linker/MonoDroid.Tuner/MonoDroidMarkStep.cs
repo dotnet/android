@@ -200,16 +200,22 @@ namespace MonoDroid.Tuner
 				return;
 
 			var typeDictionary = GetType ("mscorlib", "System.Collections.Generic.Dictionary`2");
+			var ctorDictionary = GetMethod (typeDictionary, ".ctor", new string[] { "System.Int32" });
 			var methodSetItem = GetMethod (typeDictionary, "set_Item", new string[] { "TKey", "TValue" });
 			var genericTypeDictionary = new GenericInstanceType (typeDictionary);
 			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.String"));
 			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
 
+			var genericMethodDictionaryCtor = CreateGenericMethodReference (ctorDictionary, genericTypeDictionary);
 			var genericMethodDictionarySetItem = CreateGenericMethodReference (methodSetItem, genericTypeDictionary);
 			var importedMethodSetItem = magicType.Module.ImportReference (genericMethodDictionarySetItem);
 
 			var instructions = methodPrefill.Body.Instructions;
 			instructions.Clear ();
+
+			instructions.Add (CreateLoadArraySizeOrOffsetInstruction (marshalTypes.Count));
+			instructions.Add (Instruction.Create (OpCodes.Newobj, magicType.Module.ImportReference (genericMethodDictionaryCtor)));
+			instructions.Add (Instruction.Create (OpCodes.Stsfld, fieldTypesMap));
 
 			int idx = 0;
 

@@ -100,14 +100,40 @@ namespace CodeBehindUnitTests
 		}
 	}
 
+	sealed class TestProjectInfo
+	{
+		public string RootDirectory { get; }
+		public string OutputDirectory { get; }
+		public string ObjPath { get; }
+		public string BinPath { get; }
+		public string GeneratedPath { get; }
+		public string SlnPath { get; }
+		public string ProjectName { get; }
+		public string TestName { get; }
+
+		public TestProjectInfo (string projectName, string testName, string rootDirectory, string outputRootDir)
+		{
+			TestName = testName;
+			RootDirectory = rootDirectory;
+			ProjectName = projectName;
+
+			ObjPath = Path.Combine (rootDirectory, "obj");
+			GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "generated");
+			BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
+			SlnPath = Path.Combine (rootDirectory, $"{projectName}.sln");
+
+			OutputDirectory = Path.Combine (outputRootDir, testName, XABuildPaths.Configuration);
+		}
+	}
+
+	[Parallelizable (ParallelScope.Children)]
 	public class BuildTests_CodeBehindBuildTests
 	{
 		const string ProjectName = "CodeBehindBuildTests";
+		const string CommonSampleLibraryName = "CommonSampleLibrary";
 
 		static readonly string TestProjectRootDirectory;
-		static readonly string TestProjectObjPath;
-		static readonly string TestProjectBinPath;
-		static readonly string TestProjectPath;
+		static readonly string CommonSampleLibraryRootDirectory;
 		static readonly string TestOutputDir;
 
 		static readonly List <SourceFile> generated_sources;
@@ -121,31 +147,28 @@ namespace CodeBehindUnitTests
 		static BuildTests_CodeBehindBuildTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
-			TestProjectObjPath = Path.Combine ("obj", XABuildPaths.Configuration);
-			TestProjectBinPath = Path.Combine ("bin", XABuildPaths.Configuration);
-			TestProjectPath = Path.Combine (TestProjectRootDirectory, $"{ProjectName}.sln");
+			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeBehind");
 
-			string generatedSourcesDir = Path.Combine (TestProjectObjPath, "generated");
 			generated_sources = new List <SourceFile> {
-				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.Main.g.cs")) {
+				new SourceFile ("Binding.Main.g.cs") {
 					{"public", "Button", "myButton"},
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
 					{"public", "global::Android.App.Fragment", "secondary_log_fragment"},
 					{"public", "CommonSampleLibrary.LogFragment", "tertiary_log_fragment"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.MainMerge.g.cs")) {
+				new SourceFile ("Binding.MainMerge.g.cs") {
 					{"public", "Button", "myButton"},
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
 					{"public", "CommonSampleLibrary.LogFragment", "secondary_log_fragment"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.onboarding_info.g.cs")) {
+				new SourceFile ("Binding.onboarding_info.g.cs") {
 					{"public", "LinearLayout", "onboarding_stations_info_inner"},
 					{"public", "ImageView", "icon_view"},
 					{"public", "TextView", "intro_highlighted_text"},
 					{"public", "TextView", "intro_primary_text"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.onboarding_intro.g.cs")) {
+				new SourceFile ("Binding.onboarding_intro.g.cs") {
 					{"public", "LinearLayout", "onboarding_intro_View"},
 					{"public", "TextView", "title"},
 					{"public", "TextView", "welcome"},
@@ -160,7 +183,7 @@ namespace CodeBehindUnitTests
 					{"public", "TextView", "more_intro_secondary_text"},
 
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Binding.settings.g.cs")) {
+				new SourceFile ("Binding.settings.g.cs") {
 					{"public", "ScrollView", "settings_container"},
 					{"public", "TextView", "title"},
 					{"public", "TextView", "account_type"},
@@ -169,7 +192,7 @@ namespace CodeBehindUnitTests
 					{"public", "Button", "subscribe_button"},
 					{"public", "TextView", "stream_quality_item_title"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.AnotherMainActivity.Main.g.cs")) {
+				new SourceFile ("Xamarin.Android.Tests.CodeBehindBuildTests.AnotherMainActivity.Main.g.cs") {
 					// Properties
 					{"public", "Button", "myButton"},
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
@@ -184,7 +207,7 @@ namespace CodeBehindUnitTests
 					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
 					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.MainActivity.Main.g.cs")) {
+				new SourceFile ("Xamarin.Android.Tests.CodeBehindBuildTests.MainActivity.Main.g.cs") {
 					// Properties
 					{"public", "Button", "myButton"},
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
@@ -199,7 +222,7 @@ namespace CodeBehindUnitTests
 					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
 					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.MainMergeActivity.MainMerge.g.cs")) {
+				new SourceFile ("Xamarin.Android.Tests.CodeBehindBuildTests.MainMergeActivity.MainMerge.g.cs") {
 					// Properties
 					{"public", "Button", "myButton"},
 					{"public", "CommonSampleLibrary.LogFragment", "log_fragment"},
@@ -213,7 +236,7 @@ namespace CodeBehindUnitTests
 					{"partial", "void", "OnSetContentView", "global::Android.Views.View view, global::Android.Views.ViewGroup.LayoutParams @params, ref bool callBaseAfterReturn"},
 					{"partial", "void", "OnSetContentView", "int layoutResID, ref bool callBaseAfterReturn"},
 				},
-				new SourceFile (Path.Combine (generatedSourcesDir, "Xamarin.Android.Tests.CodeBehindBuildTests.OnboardingActivityPartial.onboarding_intro.g.cs")) {
+				new SourceFile ("Xamarin.Android.Tests.CodeBehindBuildTests.OnboardingActivityPartial.onboarding_intro.g.cs") {
 					// Properties
 					{"public", "LinearLayout", "onboarding_intro_View"},
 					{"public", "TextView", "title"},
@@ -239,10 +262,10 @@ namespace CodeBehindUnitTests
 			};
 
 			produced_binaries = new List <string> {
-				Path.Combine (TestProjectBinPath, $"{ProjectName}.dll"),
-				Path.Combine (TestProjectBinPath, "CommonSampleLibrary.dll"),
-				Path.Combine (TestProjectBinPath, $"com.xamarin.{ProjectName}-Signed.apk"),
-				Path.Combine (TestProjectBinPath, $"com.xamarin.{ProjectName}.apk"),
+				$"{ProjectName}.dll",
+				"CommonSampleLibrary.dll",
+				$"com.xamarin.{ProjectName}-Signed.apk",
+				$"com.xamarin.{ProjectName}.apk",
 			};
 		}
 
@@ -270,30 +293,31 @@ namespace CodeBehindUnitTests
 			RunTest ("SuccessfulBuildMany_DTB", many: true, dtb: true, runner: SuccessfulBuild_RunTest);
 		}
 
-		void SuccessfulBuild_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb);
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.True, "Build should have succeeded");
 
-			CopyGeneratedFiles (testName);
+			CopyGeneratedFiles (testInfo);
 
 			foreach (SourceFile src in generated_sources) {
 				foreach (SourceFileMember member in src) {
+					string generatedFile = Path.Combine (testInfo.GeneratedPath, src.Path);
 					if (member.IsMethod)
-						Assert.That (SourceHasMethod (Path.Combine (TestProjectRootDirectory, src.Path), member.Visibility, member.Type, member.Name, member.Arguments), Is.True, $"Method {member.Name} must exist in {src.Path}");
+						Assert.That (SourceHasMethod (generatedFile, member.Visibility, member.Type, member.Name, member.Arguments), Is.True, $"Method {member.Name} must exist in {generatedFile}");
 					else
-						Assert.That (SourceHasProperty (Path.Combine (TestProjectRootDirectory, src.Path), member.Visibility, member.Type, member.Name, member.IsExpressionBody), Is.True, $"Property {member.Name} must exist in {src.Path}");
+						Assert.That (SourceHasProperty (generatedFile, member.Visibility, member.Type, member.Name, member.IsExpressionBody), Is.True, $"Property {member.Name} must exist in {generatedFile}");
 				}
 			}
 
 			if (dtb)
 				return; // DTB doesn't produce binaries
 
-			foreach (string binPath in produced_binaries)
-				AssertExists (testName, Path.Combine (TestProjectRootDirectory, binPath));
+			foreach (string binaryName in produced_binaries)
+				AssertExists (testInfo.TestName, Path.Combine (testInfo.BinPath, binaryName));
 		}
 
 		[Test]
@@ -308,15 +332,15 @@ namespace CodeBehindUnitTests
 			RunTest ("FailedBuildMany_ConflictingFragment", many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
 		}
 
-		void FailedBuild_ConflictingFragment_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_FRAGMENT");
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
 
-			string logPath = GetTestLogPath (testName);
+			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "MainActivity.cs", 26, "Android.App.Fragment", "CommonSampleLibrary.LogFragment");
 			AssertHaveCompilerError (haveError, "MainActivity.cs", 26);
 
@@ -336,15 +360,15 @@ namespace CodeBehindUnitTests
 			RunTest ("FailedBuildMany_ConflictingTextView", many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest);
 		}
 
-		void FailedBuild_ConflictingTextView_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_TEXTVIEW");
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
 
-			string logPath = GetTestLogPath (testName);
+			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 32, "Android.Views.View", "Android.Widget.TextView");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 32);
 
@@ -364,15 +388,15 @@ namespace CodeBehindUnitTests
 			RunTest ("FailedBuildMany_ConflictingButton", many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest);
 		}
 
-		void FailedBuild_ConflictingButton_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_BUTTON");
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
 
-			string logPath = GetTestLogPath (testName);
+			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 34, "Android.Views.View", "Android.Widget.Button");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 34);
 
@@ -392,15 +416,15 @@ namespace CodeBehindUnitTests
 			RunTest ("FailedBuildMany_ConflictingLinearLayout", many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest);
 		}
 
-		void FailedBuild_ConflictingLinearLayout_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
 
-			string logPath = GetTestLogPath (testName);
+			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 41, "Android.Views.View", "Android.Widget.LinearLayout");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 41);
 
@@ -420,15 +444,15 @@ namespace CodeBehindUnitTests
 			RunTest ("FailedBuildMany_ConflictingRelativeLayout", many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest);
 		}
 
-		void FailedBuild_ConflictingRelativeLayout_RunTest (string testName, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
-			bool success = builder.Build (TestProjectPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
-			CopyLogs (testName, true);
+			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
 
-			string logPath = GetTestLogPath (testName);
+			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 43, "Android.Views.View", "Android.Widget.RelativeLayout");
 			AssertHaveCompilerError (haveError, "OnboardingActivityPartial.cs", 43);
 
@@ -480,8 +504,8 @@ namespace CodeBehindUnitTests
 		///   <para>
 		///     <list type="bullet">
 		///        <item>
-		///          <term>string testName</term>
-		///          <description>name of the test being run - make it unique (log files etc are stored there)</description>
+		///          <term>TestProjectInfo testInfo</term>
+		///          <description>Information about the location of all the project files and directories</description>
 		///        </item>
 		///
 		///        <item>
@@ -505,37 +529,38 @@ namespace CodeBehindUnitTests
 		/// <param name="many">Generate code in parallel if <c>true</c>, serially otherwise</param>
 		/// <param name="dtb">Test design-time build if <c>true</c>, regular build otherwise</param>
 		/// <param name="runner">Action consituting the main body of the test. Passed parameters are described above in the remarks section.</param>
-		void RunTest (string testName, bool many, bool dtb, Action<string, bool, bool, LocalBuilder> runner)
+		void RunTest (string testName, bool many, bool dtb, Action<TestProjectInfo, bool, bool, LocalBuilder> runner)
 		{
-			ResetProject (testName);
+			string temporaryProjectDir = PrepareProject (testName);
 			LocalBuilder builder = GetBuilder ($"{ProjectName}.{testName}");
+			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir);
 
 			try {
-				runner (testName, many, dtb, builder);
+				runner (testInfo, many, dtb, builder);
 
 				if (many) {
-					Assert.That (WasParsedInParallel (testName), Is.True, "Should have been parsed in parallel");
-					Assert.That (WasGeneratedInParallel (testName), Is.True, "Should have been generated in parallel");
+					Assert.That (WasParsedInParallel (testInfo), Is.True, "Should have been parsed in parallel");
+					Assert.That (WasGeneratedInParallel (testInfo), Is.True, "Should have been generated in parallel");
 				} else {
-					Assert.That (WasParsedInParallel (testName), Is.False, "Should have been parsed in serial manner");
-					Assert.That (WasGeneratedInParallel (testName), Is.False, "Should have been generated in serial manner");
+					Assert.That (WasParsedInParallel (testInfo), Is.False, "Should have been parsed in serial manner");
+					Assert.That (WasGeneratedInParallel (testInfo), Is.False, "Should have been generated in serial manner");
 				}
 			} catch {
-				CopyLogs (testName, false);
+				CopyLogs (testInfo, false);
 				throw;
 			}
 		}
 
-		bool WasParsedInParallel (string testName)
+		bool WasParsedInParallel (TestProjectInfo testInfo)
 		{
 			var regex = new Regex ($"^\\s*Parsing layouts in parallel.*$", RegexOptions.Compiled);
-			return FileMatches (regex, GetTestLogPath (testName));
+			return FileMatches (regex, GetTestLogPath (testInfo));
 		}
 
-		bool WasGeneratedInParallel (string testName)
+		bool WasGeneratedInParallel (TestProjectInfo testInfo)
 		{
 			var regex = new Regex ($"^\\s*Generating binding code in parallel.*$", RegexOptions.Compiled);
-			return FileMatches (regex, GetTestLogPath (testName));
+			return FileMatches (regex, GetTestLogPath (testInfo));
 		}
 
 		bool HaveCompilerError_CS0266 (string logFile, string sourceFile, int line, string typeFrom, string typeTo)
@@ -594,35 +619,54 @@ namespace CodeBehindUnitTests
 				.Replace ("}", "\\}");
 		}
 
-		[OneTimeSetUp]
-		public void BuildTestsSetUp ()
+		string PrepareProject (string testName)
 		{
-			if (!File.Exists (TestProjectPath))
-				throw new InvalidOperationException ($"Test project '{TestProjectPath}' not found");
+			string tempRoot = Path.Combine (TestOutputDir, $"{testName}.build", XABuildPaths.Configuration);
+			string temporaryProjectPath = Path.Combine (tempRoot, "project");
+
+			var ignore = new HashSet <string> {
+				Path.Combine (TestProjectRootDirectory, "bin"),
+				Path.Combine (TestProjectRootDirectory, "obj"),
+				Path.Combine (CommonSampleLibraryRootDirectory, "bin"),
+				Path.Combine (CommonSampleLibraryRootDirectory, "obj"),
+			};
+
+			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
+			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
+			return temporaryProjectPath;
 		}
 
-		void ResetProject (string testName)
+		void CopyRecursively (string fromDir, string toDir, HashSet <string> ignoreDirs)
 		{
-			RemoveDir (TestProjectObjPath);
-			RemoveDir (TestProjectBinPath);
+			if (String.IsNullOrEmpty (fromDir))
+				throw new ArgumentException ($"{nameof (fromDir)} is must have a non-empty value");
+			if (String.IsNullOrEmpty (toDir))
+				throw new ArgumentException ($"{nameof (toDir)} is must have a non-empty value");
 
-			string outputDir = GetTestOutputDir (testName);
-			if (Directory.Exists (outputDir))
-				Directory.Delete (outputDir, true);
+			if (ignoreDirs.Contains (fromDir))
+				return;
 
-			RemoveLogs (testName);
+			var fdi = new DirectoryInfo (fromDir);
+			if (!fdi.Exists)
+				throw new InvalidOperationException ($"Source directory '{fromDir}' does not exist");
+
+			if (Directory.Exists (toDir))
+				Directory.Delete (toDir, true);
+
+			foreach (FileSystemInfo fsi in fdi.EnumerateFileSystemInfos ("*", SearchOption.TopDirectoryOnly)) {
+				if (fsi is FileInfo finfo)
+					CopyFile (fsi.FullName, Path.Combine (toDir, finfo.Name));
+				else
+					CopyRecursively (fsi.FullName, Path.Combine (toDir, fsi.Name), ignoreDirs);
+			}
 		}
 
-		void RemoveLogs (string testName)
+		void CopyFile (string from, string to)
 		{
-			RemoveFile (GetTestLogName (testName));
-			foreach (string log in log_files) {
-				RemoveFile (log);
-			}
-
-			foreach (string logFile in Directory.EnumerateFiles (TestProjectRootDirectory, $"{ProjectName}.*.log")) {
-				File.Delete (logFile);
-			}
+			string dir = Path.GetDirectoryName (to);
+			if (!Directory.Exists (dir))
+				Directory.CreateDirectory (dir);
+			File.Copy (from, to, true);
 		}
 
 		LocalBuilder GetBuilder (string baseLogFileName)
@@ -633,45 +677,43 @@ namespace CodeBehindUnitTests
 			};
 		}
 
-		void CopyLogs (string testName, bool assert)
+		void CopyLogs (TestProjectInfo testInfo, bool assert)
 		{
-			string destDir = GetTestOutputDir (testName);
-
-			AssertExistsAndCopy (testName, GetTestLogName (testName), destDir, assert);
+			AssertExistsAndCopy (testInfo, GetTestLogName (testInfo), testInfo.OutputDirectory, assert);
 			foreach (string log in log_files) {
-				AssertExistsAndCopy (testName, log, destDir, assert);
+				AssertExistsAndCopy (testInfo, log, testInfo.OutputDirectory, assert);
 			}
 		}
 
-		string GetTestLogName (string testName)
+		string GetTestLogName (TestProjectInfo testInfo)
 		{
-			return $"{ProjectName}.{testName}.log";
+			return $"{testInfo.ProjectName}.{testInfo.TestName}.log";
 		}
 
-		string GetTestLogPath (string testName)
+		string GetTestLogPath (TestProjectInfo testInfo)
 		{
-			return Path.Combine (TestProjectRootDirectory, GetTestLogName (testName));
+			return Path.Combine (testInfo.RootDirectory, GetTestLogName (testInfo));
 		}
 
-		string GetTestOutputDir (string testName)
+		string GetTemporaryProjectDir (string testName)
 		{
-			return Path.Combine (TestOutputDir, testName, XABuildPaths.Configuration);
+			return Path.Combine (TestOutputDir, $"{testName}_Project", XABuildPaths.Configuration);
 		}
 
-		void CopyGeneratedFiles (string testName)
+		void CopyGeneratedFiles (TestProjectInfo testInfo)
 		{
-			string destDir = Path.Combine (GetTestOutputDir (testName), "generated");
+			string destDir = Path.Combine (testInfo.OutputDirectory, "generated");
 
 			foreach (SourceFile src in generated_sources) {
-				AssertExistsAndCopy (testName, src.Path, destDir);
+				AssertExistsAndCopy (testInfo, Path.Combine (testInfo.GeneratedPath, src.Path), destDir);
 			}
 		}
 
-		void AssertExistsAndCopy (string testName, string relativeFilePath, string destDir, bool nunitAssert = true)
+		void AssertExistsAndCopy (TestProjectInfo testInfo, string relativeFilePath, string destDir, bool nunitAssert = true)
 		{
-			string source = Path.Combine (TestProjectRootDirectory, relativeFilePath);
+			string source = Path.Combine (testInfo.RootDirectory, relativeFilePath);
 			if (nunitAssert)
-				AssertExists (testName, source);
+				AssertExists (testInfo.TestName, source);
 			else if (!File.Exists (source))
 				return;
 
@@ -683,23 +725,7 @@ namespace CodeBehindUnitTests
 
 		void AssertExists (string testName, string filePath)
 		{
-			Assert.That (new FileInfo (filePath), Does.Exist, $"file {filePath} should exist");
-		}
-
-		void RemoveFile (string relativeFilePath)
-		{
-			string path = Path.Combine (TestProjectRootDirectory, relativeFilePath);
-			if (!File.Exists (path))
-				return;
-			File.Delete (path);
-		}
-
-		void RemoveDir (string relativeDirPath)
-		{
-			string path = Path.Combine (TestProjectRootDirectory, relativeDirPath);
-			if (!Directory.Exists (path))
-				return;
-			Directory.Delete (path, true);
+			Assert.That (new FileInfo (filePath), Does.Exist, $"file {filePath} should exist for test '{testName}'");
 		}
 	}
 }

@@ -17,5 +17,13 @@
       <Package>Xamarin.Android.JcwGen_Tests</Package>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
     </TestApkInstrumentation>
+
+    <TestApkPermission Include="READ_EXTERNAL_STORAGE">
+      <Package>Xamarin.Android.JcwGen_Tests</Package>
+    </TestApkPermission>
+
+    <TestApkPermission Include="WRITE_EXTERNAL_STORAGE">
+      <Package>Xamarin.Android.JcwGen_Tests</Package>
+    </TestApkPermission>
   </ItemGroup>
 </Project>

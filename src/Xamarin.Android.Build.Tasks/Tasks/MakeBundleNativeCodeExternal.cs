@@ -39,6 +39,9 @@ namespace Xamarin.Android.Tasks
 		public bool EmbedDebugSymbols { get; set; }
 		public bool KeepTemp { get; set; }
 
+		[Required]
+		public string BundleApiPath { get; set; }
+
 		[Output]
 		public ITaskItem [] OutputNativeLibraries { get; set; }
 
@@ -84,7 +87,6 @@ namespace Xamarin.Android.Tasks
 				case "aarch64":
 					arch = AndroidTargetArch.Arm64;
 					break;
-				case "armeabi":
 				case "armeabi-v7a":
 					arch = AndroidTargetArch.Arm;
 					break;
@@ -113,6 +115,8 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("--nomain");
 				clb.AppendSwitch ("--i18n none");
 				clb.AppendSwitch ("--bundled-header");
+				clb.AppendSwitch ("--mono-api-struct-path");
+				clb.AppendFileNameIfNotNull (BundleApiPath);
 				clb.AppendSwitch ("--style");
 				clb.AppendSwitch ("linux");
 				clb.AppendSwitch ("-c");
@@ -157,22 +161,6 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				Log.LogDebugMessage ("[mkbundle] modifying mono_mkbundle_init");
-				// make some changes in the mkbundle output so that it does not require libmonodroid.so
-				var mkbundleOutput = new StringBuilder (File.ReadAllText (Path.Combine (outpath, "temp.c")));
-
-				mkbundleOutput.Replace ("mono_jit_set_aot_mode", "mono_jit_set_aot_mode_ptr")
-					.Replace ("void mono_mkbundle_init ()", "void mono_mkbundle_init (void (register_bundled_assemblies_func)(const MonoBundledAssembly **), void (register_config_for_assembly_func)(const char *, const char *), void (mono_jit_set_aot_mode_func) (int mode))")
-					.Replace ("mono_register_config_for_assembly (\"", "register_config_for_assembly_func (\"")
-					.Replace ("install_dll_config_files (void)", "install_dll_config_files (void (register_config_for_assembly_func)(const char *, const char *))")
-					.Replace ("install_dll_config_files ()", "install_dll_config_files (register_config_for_assembly_func)")
-					.Replace ("mono_register_bundled_assemblies(", "register_bundled_assemblies_func(")
-					.Replace ("int nbundles;", "int nbundles;\n\n\tmono_jit_set_aot_mode_ptr = mono_jit_set_aot_mode_func;");
-
-				mkbundleOutput.Insert (0, "void (*mono_jit_set_aot_mode_ptr) (int mode);\n");
-
-				File.WriteAllText (Path.Combine (outpath, "temp.c"), mkbundleOutput.ToString ());
-
 				// then compile temp.c into temp.o and ...
 
 				clb = new CommandLineBuilder ();
@@ -181,6 +169,10 @@ namespace Xamarin.Android.Tasks
 				// This is necessary only when unified headers are in use but it won't hurt to have it
 				// defined even if we don't use them
 				clb.AppendSwitch ($"-D__ANDROID_API__={level}");
+
+				// This is necessary because of the injected code, which is reused between libmonodroid
+				// and the bundle
+				clb.AppendSwitch ("-DANDROID");
 
 				clb.AppendSwitch ("-o");
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.o"));

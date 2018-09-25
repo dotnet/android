@@ -437,7 +437,6 @@ namespace Xamarin.Android.Tasks
 		static readonly string[] ArmAbis = new[]{
 			"arm64-v8a",
 			"armeabi-v7a",
-			"armeabi",
 		};
 
 		public static readonly string[] ValidProfilers = new[]{

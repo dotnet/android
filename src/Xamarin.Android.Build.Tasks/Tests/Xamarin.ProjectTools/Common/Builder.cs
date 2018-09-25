@@ -153,7 +153,6 @@ namespace Xamarin.ProjectTools
 		{
 			var crossCompilerLookup = new Dictionary<string, string> {
 				{ "armeabi-v7a", "cross-arm" },
-				{ "armeabi", "cross-arm" },
 				{ "x86", "cross-x86" },
 				{ "x86_64", "cross-x86_64" },
 				{ "arm64-v8a", "cross-arm64" },
