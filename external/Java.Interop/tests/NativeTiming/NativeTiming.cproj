@@ -19,8 +19,8 @@
     <CompileTarget>SharedLibrary</CompileTarget>
     <DefineSymbols>DEBUG MONODEVELOP</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
-    <ExtraCompilerArguments>-m32 -I /System/Library/Frameworks/JavaVM.framework/Headers</ExtraCompilerArguments>
-    <ExtraLinkerArguments>-shared -m32</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-m64 -I /System/Library/Frameworks/JavaVM.framework/Headers</ExtraCompilerArguments>
+    <ExtraLinkerArguments>-shared -m64</ExtraLinkerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>

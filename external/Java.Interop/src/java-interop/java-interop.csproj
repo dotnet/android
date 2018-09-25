@@ -40,14 +40,6 @@
     <Compile Include="java-interop-mono.c" />
     <Compile Include="java-interop-gc-bridge-mono.c" />
   </ItemGroup>
-  <ItemGroup>
-    <MacLibLipo Include="obj\lib$(OutputName)-m32.dylib">
-      <Arch>-m32</Arch>
-    </MacLibLipo>
-    <MacLibLipo Include="obj\lib$(OutputName)-m64.dylib">
-      <Arch>-m64</Arch>
-    </MacLibLipo>
-  </ItemGroup>
   <PropertyGroup>
     <BuildDependsOn>
       BuildJni_c;
@@ -66,21 +58,13 @@
     <MakeDir Directories="$(OutputPath)" />
     <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; jni.g.cs jni.c" />
   </Target>
+  <PropertyGroup>
+    <_MacLib>$(OutputPath)\lib$(OutputName).dylib</_MacLib>
+  </PropertyGroup>
   <Target Name="BuildMac"
       Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
-      DependsOnTargets="BuildMacLibraries"
-      Inputs="@(MacLibLipo)"
-      Outputs="$(OutputPath)\lib$(OutputName).dylib">
-    <PropertyGroup>
-      <_Files>@(MacLibLipo -&gt; '%(Identity)', ' ')</_Files>
-    </PropertyGroup>
-    <Message Text="Inputs: MacLibLipo=@(MacLibLipo)" />
-    <Exec Command="lipo $(_Files) -create -output $(OutputPath)\lib$(OutputName).dylib" />
-  </Target>
-  <Target Name="BuildMacLibraries"
-      Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
       Inputs="@(Compile)"
-      Outputs="@(MacLibLipo)">
+      Outputs="$(_MacLib)">
     <PropertyGroup>
       <_FixedDefines>$(DefineSymbols.Split(' '))</_FixedDefines>
     </PropertyGroup>
@@ -95,9 +79,9 @@
       <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
     </PropertyGroup>
     <MakeDir Directories="obj" />
-    <Exec Command="gcc -g -shared -std=c99 -o &quot;%(MacLibLipo.Identity)&quot; %(MacLibLipo.Arch) $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+    <Exec Command="gcc -g -shared -m64 -std=c99 -o &quot;$(_MacLib)&quot; $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
-    <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;%(MacLibLipo.Identity)&quot;" />
+    <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;$(_MacLib)&quot;" />
   </Target>
   <Target Name="BuildUnixLibraries"
       Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/')"
