@@ -41,6 +41,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1908,6 +1909,14 @@ because xbuild doesn't support framework reference assemblies.
     ResourceName="Seppuku.java"
     OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
     Condition="'$(AndroidIncludeDebugSymbols)' == 'True'" />
+  <CopyResource
+    ResourceName="IncrementalClassLoader.java"
+    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java"
+    Condition="'$(AndroidEnableMultiDex)' == 'True'" />	
+  <CopyResource
+    ResourceName="MultiDexLoader.java"
+    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java"
+    Condition="'$(AndroidEnableMultiDex)' == 'True'" />
   
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
@@ -2198,6 +2207,7 @@ because xbuild doesn't support framework reference assemblies.
 	ManifestTemplate="$(_AndroidManifestAbs)"
 	MergedManifestDocuments="@(ExtractedManifestDocuments)"
 	Debug="$(AndroidIncludeDebugSymbols)"
+	MultiDex="$(AndroidEnableMultiDex)"
 	NeedsInternet="$(AndroidNeedsInternetPermission)"
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
@@ -2237,7 +2247,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
-  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;_PrepareAssemblies"
+  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);@(_ResolvedUserAssemblies);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
   Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java">
   <!-- Create java needed for Mono runtime -->
@@ -2395,6 +2405,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GeneratePackageManagerJava;
 		_FindJavaStubFiles;
 		_AddStaticResources;
+		$(_AfterAddStaticResources);
 		_GetMonoPlatformJarPath;
 		$(_OnResolveMonoAndroidSdks);
 		_GetLibraryImports;
@@ -2475,7 +2486,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CompileToDalvikWithDx"
-  DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+  DependsOnTargets="$(_BeforeCompileToDalvikWithDx);$(_CompileToDalvikDependsOnTargets)"
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(IntermediateOutputPath)_dex_stamp">
 
@@ -2593,7 +2604,6 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />
-		<_AndroidNativeLibraryForFastDev Include="@(AndroidNativeLibrary)" />
 	</ItemGroup>
 </Target>
 
@@ -2656,9 +2666,9 @@ because xbuild doesn't support framework reference assemblies.
 		_CopyMdbFiles;
 		_LinkAssemblies;
 		_GetAddOnPlatformLibraries;
+		_CompileJava;
 		_CompileDex;
 		$(_AfterCompileDex);
-		_CompileJava;
 		_CreateBaseApk;
 		_PrepareAssemblies;
 		_ResolveSatellitePaths;
@@ -3069,6 +3079,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
 	<Delete Files="$(_AndroidAapt2VersionFile)" />
 	<Delete Files="$(IntermediateOutputPath)R.txt" />
+	<Delete Files="$(_AndroidMainDexListFile)" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">

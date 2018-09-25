@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{40EAD437-216B-4DF4-8258-3F47E1672C3A}</ProjectGuid>
+    <ProjectGuid>{9ECBEA14-B79F-4F92-9266-495C03A32571}</ProjectGuid>
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
@@ -14,19 +14,23 @@
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AssemblyName>Mono.Android-Tests</AssemblyName>
+    <AssemblyName>Mono.Android-TestsMultiDex</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
-    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
+    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
   </PropertyGroup>
-  <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
-  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems')" />
+  <Import Project="..\..\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <OutputPath>..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -36,7 +40,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <OutputPath>..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -52,45 +56,8 @@
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Android.App\ApplicationTest.cs" />
-    <Compile Include="Android.Content\IntentTest.cs" />
-    <Compile Include="Android.Graphics\GraphicsTest.cs" />
-    <Compile Include="Android.Runtime\CharSequenceTest.cs" />
-    <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
-    <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
-    <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
-    <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
-    <Compile Include="Android.Widget\AdapterTests.cs" />
-    <Compile Include="Java.Interop\JavaConvertTest.cs" />
-    <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
-    <Compile Include="Java.Lang\ObjectTest.cs" />
-    <Compile Include="Java.Interop\JnienvTest.cs" />
-    <Compile Include="System\AppDomainTest.cs" />
-    <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
-    <Compile Include="System\ExceptionTest.cs" />
-    <Compile Include="System\TimeZoneTest.cs" />
-    <Compile Include="System.IO\DriveInfoTest.cs" />
-    <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
-    <Compile Include="System.Net\ProxyTest.cs" />
-    <Compile Include="System.Net\SslTest.cs" />
-    <Compile Include="System.Net\NetworkInterfaces.cs" />
-    <Compile Include="System.Threading\InterlockedTest.cs" />
-    <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
-    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
-    <Compile Include="Android.OS\BundleTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
-    <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\Icon.png" />
@@ -106,27 +73,30 @@
     </AndroidResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
-  <Import Project="Mono.Android-Tests.targets" />
+  <Import Project="Mono.Android-TestsMultiDex.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\tests\TestRunner.Core\TestRunner.Core.csproj">
+    <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.csproj">
       <Project>{3cc4e384-4985-4d93-a34c-73f69a379fa7}</Project>
       <Name>TestRunner.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\tests\TestRunner.NUnit\TestRunner.NUnit.csproj">
+    <ProjectReference Include="..\TestRunner.NUnit\TestRunner.NUnit.csproj">
       <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
       <Name>TestRunner.NUnit</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.Build.Tasks</Name>
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
+    <ProjectReference Include="..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
       <Name>Xamarin.Android.NUnitLite</Name>
       <Project>{4D603AA3-3BFD-43C8-8050-0CD6C2601126}</Project>
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>	
 </Project>

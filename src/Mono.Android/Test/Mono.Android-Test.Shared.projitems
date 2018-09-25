@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Mono.Android-Test.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)\Resources\Resource.designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Properties\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.App\ApplicationTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Content\IntentTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JavaCollectionTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\XmlReaderPullParserTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Widget\AdapterTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang\ObjectArrayMarshaling.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang\ObjectTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JnienvTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System\AppDomainTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System\AssemblyInformationalVersionAttributeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System\ExceptionTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System\TimeZoneTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.IO\DriveInfoTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.IO.Compression\GZipStreamTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\ProxyTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\SslTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\NetworkInterfaces.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\System.Threading\InterlockedTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MyIntent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.OS\BundleTest.cs" />
+  </ItemGroup>
+</Project>

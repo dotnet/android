@@ -249,6 +249,7 @@
     <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="Tasks\ConvertCustomView.cs" />
+    <Compile Include="Tasks\ComputeHash.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>
@@ -669,8 +670,17 @@
     <EmbeddedResource Include="Resources\Placeholder.java">
       <LogicalName>Placeholder.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\StubApplication.java">
-      <LogicalName>StubApplication.java</LogicalName>
+    <EmbeddedResource Include="Resources\MultiDexLoader.java">
+      <LogicalName>MultiDexLoader.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MultiDexLoader.Debug.java">
+      <LogicalName>MultiDexLoader.Debug.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonkeyPatcher.java">
+      <LogicalName>MonkeyPatcher.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\ResourcePatcher.java">
+      <LogicalName>ResourcePatcher.java</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
