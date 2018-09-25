@@ -335,8 +335,20 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
 <PropertyGroup>
-	<AssemblySearchPaths>$([System.String]::Copy('$(AssemblySearchPaths)').Replace('{GAC}',''))</AssemblySearchPaths>
-	<AssemblySearchPaths Condition="'$(MSBuildRuntimeVersion)' != ''">$(AssemblySearchPaths.Split(';'))</AssemblySearchPaths>
+	<AssemblySearchPaths>
+		{HintPathFromItem};
+		{TargetFrameworkDirectory};
+		{RawFileName};
+	</AssemblySearchPaths>
+	<AllowedReferenceAssemblyFileExtensions>
+		.dll;
+	</AllowedReferenceAssemblyFileExtensions>
+	<AllowedReferenceRelatedFileExtensions>
+		.pdb;
+		.xml;
+		.dll.config;
+		.dll.mdb;
+	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
 <Target Name="_SeparateAppExtensionReferences">
