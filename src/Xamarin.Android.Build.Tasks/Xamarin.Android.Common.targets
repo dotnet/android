@@ -672,6 +672,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			AndroidNdkPath="$(AndroidNdkDirectory)"
 			JavaSdkPath="$(JavaSdkDirectory)"
 			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
+		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
+		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
