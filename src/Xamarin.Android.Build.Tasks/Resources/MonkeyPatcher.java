@@ -322,7 +322,7 @@ public class MonkeyPatcher {
                 references = map.values ();
             }
             for (WeakReference<Resources> wr : references) {
-                Resources resources = wr.ge ();
+                Resources resources = wr.get ();
                 if (resources != null) {
                     // Set the AssetManager of the Resources instance to our brand new one
                     try {
