@@ -658,7 +658,15 @@ copy_native_libraries_to_internal_location (void)
 		while (readdir_r (dir, &b, &e) == 0 && e) {
 			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
 			if (monodroid_dirent_hasextension (e, ".so")) {
-				copy_file_to_internal_location (primary_override_dir, dir_path, e->d_name);
+#if WINDOWS
+				char *file_name = utils.utf16_to_utf8 (e->d_name);
+#else
+				char *file_name = e->d_name;
+#endif
+				copy_file_to_internal_location (primary_override_dir, dir_path, file_name);
+#if WINDOWS
+				free (file_name);
+#endif
 			}
 		}
 		monodroid_closedir (dir);
