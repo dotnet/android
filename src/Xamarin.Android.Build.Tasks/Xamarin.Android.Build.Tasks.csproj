@@ -437,9 +437,6 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
     </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
-      <Link>Linker\Linker\TypeNameParser.cs</Link>
-    </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
