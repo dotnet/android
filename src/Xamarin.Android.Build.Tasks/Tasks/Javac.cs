@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks
 {
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Tasks
 				return result;
 			// compress all the class files
 			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"), FileMode.OpenOrCreate))
-				zip.AddDirectory (ClassesOutputDirectory, "");
+				zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
 			return result;
 		}
 

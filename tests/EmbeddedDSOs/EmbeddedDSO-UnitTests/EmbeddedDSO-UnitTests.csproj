@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>EmbeddedDSOUnitTests</RootNamespace>
+    <AssemblyName>EmbeddedDSOUnitTests</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\TestDebug\EmbeddedDSO</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\TestRelease\EmbeddedDSO</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuildTests.cs" />
+    <Compile Include="$(IntermediateOutputPath)Config.cs" />
+    <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
+       <Link>XABuildPaths.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
+      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
+      <Name>Xamarin.ProjectTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\external\LibZipSharp\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="Prepare"
+      BeforeTargets="CoreCompile"
+      Inputs="$(MSBuildThisFileDirectory)Config.cs.in"
+      Outputs="$(IntermediateOutputPath)Config.cs">
+    <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <ExecutableExtension>.exe</ExecutableExtension>
+    </PropertyGroup>
+
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)Config.cs.in"
+        DestinationFile="$(IntermediateOutputPath)Config.cs"
+        Replacements="@ANDROID_SDK_DIRECTORY@=$(AndroidSdkDirectory);@BUILD_TOOLS_FOLDER@=$(XABuildToolsFolder);@EXECUTABLE_EXTENSION@=$(ExecutableExtension)"
+    />
+  </Target>
+</Project>

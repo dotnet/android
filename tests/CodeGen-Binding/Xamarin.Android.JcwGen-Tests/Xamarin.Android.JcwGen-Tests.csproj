@@ -17,14 +17,13 @@
     <AssemblyName>Xamarin.Android.JcwGen-Tests</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
-  <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -35,7 +34,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -82,7 +80,6 @@
   </PropertyGroup>
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libtiming.so" />
-    <AndroidNativeLibrary Include="libs\armeabi\libtiming.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libtiming.so" />
     <AndroidNativeLibrary Include="libs\x86\libtiming.so" />
     <AndroidNativeLibrary Include="libs\x86_64\libtiming.so" />

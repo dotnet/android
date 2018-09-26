@@ -25,7 +25,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;__MOBILE__;__ANDROID__;</DefineConstants>
@@ -74,7 +73,6 @@
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\x86\libsanangeles.so" />
     <Compile Include="MainActivity.cs" />
-    <AndroidNativeLibrary Include="libs\armeabi\libsanangeles.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libsanangeles.so" />
   </ItemGroup>
 </Project>

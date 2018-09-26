@@ -245,6 +245,10 @@ namespace Xamarin.Android.Tools {
 				if (forceUpdate || entry.ModificationTime > dt) {
 					try {
 						entry.Extract (destination, fullName, FileMode.Create);
+						MonoAndroidHelper.SetWriteable (outfile);
+						var utcNow = DateTime.UtcNow;
+						File.SetLastWriteTimeUtc (outfile, utcNow);
+						File.SetLastAccessTimeUtc (outfile, utcNow);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
 					}

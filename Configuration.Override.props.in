@@ -9,24 +9,21 @@
     <!--
       Colon-separated list of ABIs to build the mono JIT for.
       Supported ABIs include:
-      - armeabi
       - armeabi-v7a
       - arm64-v8a
       - x86
       - x86_64
       Note: Why colon? Because comma `,` and semicolon `;` can't be specified on the command-line.
       -->
-    <AndroidSupportedTargetJitAbis>armeabi:armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
+    <AndroidSupportedTargetJitAbis>armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
 
     <!--
-        Colon-separated list of ABIs to build AOT cross-compilers for. Note that there is no configuration
-        to build the armeabi-v7a cross-compiler. This is intentional as the ARMv6 cross-compiler takes care
-        of that target as well.
+        Colon-separated list of ABIs to build AOT cross-compilers for. 
         There doesn't need to be any parity between the AOT targets and the JIT ABIs above.
         Supported targets are:
 
-          - armeabi
-          - win-armeabi
+          - armeabi-v7a
+          - win-armeabi-v7a
           - arm64
           - win-arm64
           - x86
@@ -34,10 +31,10 @@
           - x86_64
           - win-x86_64
     -->
-    <AndroidSupportedTargetAotAbis>armeabi:win-armeabi:arm64:win-arm64:x86:win-x86:x86_64:win-x86_64</AndroidSupportedTargetAotAbis>
+    <AndroidSupportedTargetAotAbis>armeabi-v7a:win-armeabi-v7a:arm64:win-arm64:x86:win-x86:x86_64:win-x86_64</AndroidSupportedTargetAotAbis>
     <!--
       Colon-separated list of ABIs to build a "host" mono JIT for.
-      The host JIT is used for the Xamarin Studio Designer, among other things.
+      The host JIT is used for the designer in Visual Studio, among other things.
       Supported ABIs include:
       - Darwin
       - Linux

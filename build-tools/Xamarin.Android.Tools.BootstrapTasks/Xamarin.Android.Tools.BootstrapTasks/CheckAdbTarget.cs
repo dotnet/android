@@ -15,78 +15,78 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class CheckAdbTarget : Adb
 	{
+		const int StateCheckSdk = 0;
+		const int StateCheckPM = 1;
+		const int MaxState = StateCheckPM;
+
 		public                  string              SdkVersion              {get; set;}
 
 		[Output]
-		public                  string              AdbTarget               {get; set;}
+		public                  string              DetectedAdbTarget       {get; set;}
 
 		[Output]
 		public                  bool                IsValidTarget           {get; set;}
 
-		protected   override    bool                LogTaskMessages {
-			get { return false; }
-		}
-
-		enum CommandState {
-			CheckSdk,
-			CheckPM,
-		}
-
-		CommandState            state;
+		int currentState = -1;
 
 		public override bool Execute ()
 		{
-			state = CommandState.CheckSdk;
 			base.Execute ();
 
-			if (IsValidTarget) {
-				state = CommandState.CheckPM;
-				base.Execute ();
-			}
-
+			// We always succeed
 			return true;
 		}
 
-		protected override bool HandleTaskExecutionErrors ()
+		protected override List <CommandInfo> GenerateCommandArguments ()
 		{
-			// We ignore all generated errors
-			return true;
+			return new List <CommandInfo> {
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} shell getprop ro.build.version.sdk",
+					IgnoreExitCode = true,
+					MergeStdoutAndStderr = false,
+				},
+
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} shell pm path com.android.shell",
+					IgnoreExitCode = true,
+					MergeStdoutAndStderr = false,
+					ShouldRun = () => IsValidTarget
+				},
+			};
 		}
 
-		protected override string GenerateCommandLineCommands ()
+		protected override void BeforeCommand (int commandIndex, CommandInfo info)
 		{
-			switch (state) {
-			case CommandState.CheckSdk:
-				return $"{AdbTarget} shell getprop ro.build.version.sdk";
-			case CommandState.CheckPM:
-				return $"{AdbTarget} shell pm path com.android.shell";
-			}
-			throw new InvalidOperationException ($"Unknown state `{state}`!");
+			if (commandIndex < 0 || commandIndex > MaxState)
+				throw new ArgumentOutOfRangeException (nameof (commandIndex));
+
+			currentState = commandIndex;
 		}
 
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		protected override void ProcessStdout (string line)
 		{
-			Log.LogMessage (MessageImportance.Low, singleLine);
-			if (string.IsNullOrEmpty (singleLine))
+			if (String.IsNullOrEmpty (line))
 				return;
 
-			switch (state) {
-			case CommandState.CheckSdk:
-				CheckSdkOutput (singleLine, messageImportance);
-				break;
-			case CommandState.CheckPM:
-				CheckPMOutput (singleLine, messageImportance);
-				break;
+			switch (currentState) {
+				case StateCheckSdk:
+					CheckSdkOutput (line);
+					break;
+
+				case StateCheckPM:
+					CheckPMOutput (line);
+					break;
+
+				default:
+					throw new InvalidOperationException ($"Invalid state {currentState}");
 			}
 		}
 
-		void CheckSdkOutput (string singleLine, MessageImportance messageImportance)
+		void CheckSdkOutput (string singleLine)
 		{
 			if (singleLine.Equals ("List of devices attached", StringComparison.OrdinalIgnoreCase))
 				return;
-			// Ignore stderr
-			if (messageImportance == MessageImportance.High)
-				return;
+
 			// Informational messages, e.g.
 			//  * daemon not running. starting it now on port 5037 *
 			//  * daemon started successfully *
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 		}
 
-		void CheckPMOutput (string singleLine, MessageImportance messageImportance)
+		void CheckPMOutput (string singleLine)
 		{
 			if (singleLine.Contains ("Error: Could not access the Package Manager") ||
 				    singleLine.Contains ("Failure ")) {

@@ -43,18 +43,7 @@ Copyright (C) 2011-2016 Xamarin. All rights reserved.
 		<Delete Files="$(IntermediateOutputPath)sdks.cache" />
 	</Target>
 
-	<UsingTask Condition="'$(VsInstallRoot)' != ''" TaskName="SetVsMonoAndroidRegistryKey" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-		<ParameterGroup>
-			<InstallationID Required="true" />
-			<VisualStudioVersion Required="true" />
-		</ParameterGroup>
-		<Task>
-			<Code Type="Fragment" Language="cs">
-				Environment.SetEnvironmentVariable("XAMARIN_ANDROID_REGKEY", string.Format(@"SOFTWARE\Xamarin\VisualStudio\{0}_{1}\Android", VisualStudioVersion, InstallationID), EnvironmentVariableTarget.Process);
-				Log.LogMessage(Environment.GetEnvironmentVariable("XAMARIN_ANDROID_REGKEY"));
-			</Code>
-		</Task>
-	</UsingTask>
+	<UsingTask TaskName="Xamarin.Android.Tasks.SetVsMonoAndroidRegistryKey" AssemblyFile="Android\Xamarin.Android.Build.Tasks.dll" />
 
 	<PropertyGroup>
 		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>

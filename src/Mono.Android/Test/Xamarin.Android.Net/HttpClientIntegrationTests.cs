@@ -164,7 +164,7 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("#1");
 				} catch (AggregateException e) {
 					Console.WriteLine ("CancelRequestViaProxy exception: {0}", e);
-					Assert.IsTrue (e.InnerException is TaskCanceledException, "#2");
+					Assert.IsTrue (e.InnerException is TaskCanceledException, "#2; threw: {0}", e);
 				}
 			}
 		}
@@ -468,7 +468,7 @@ namespace Xamarin.Android.NetTests {
 					var request = l.Request;
 
 					try {
-						Assert.AreEqual ("MLK,Android,Phone,1.1.9", request.UserAgent, "#1");
+						Assert.AreEqual ("MLK Android Phone 1.1.9", request.UserAgent, "#1");
 						failed = false;
 					} catch (Exception ex) {
 						failed = true;
@@ -590,7 +590,7 @@ namespace Xamarin.Android.NetTests {
 						client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
 						Assert.Fail ("#1");
 					} catch (AggregateException e) {
-						Assert.AreEqual (typeof (ProtocolViolationException), e.InnerException.GetType (), "#2");
+						Assert.AreEqual (typeof (InvalidOperationException), e.InnerException.GetType (), "#2; threw: {0}", e);
 					}
 					Assert.IsNull (failed, "#102");
 				} finally {
@@ -707,7 +707,7 @@ namespace Xamarin.Android.NetTests {
 							client.SendAsync (request, HttpCompletionOption.ResponseContentRead).Wait (WaitTimeout);
 							Assert.Fail ("#2");
 						} catch (AggregateException e) {
-							Assert.IsTrue (e.InnerException is HttpRequestException, "#3");
+							Assert.IsTrue (e.InnerException is HttpRequestException, "#3; threw: {0}", e);
 						}
 					}
 				} finally {
@@ -944,7 +944,7 @@ namespace Xamarin.Android.NetTests {
 					} catch (AggregateException e) {
 						Console.WriteLine ("# jonp: GetByteArray_ServerError");
 						Console.WriteLine (e);
-						Assert.IsTrue (e.InnerException is HttpRequestException, "#2");
+						Assert.IsTrue (e.InnerException is HttpRequestException, "#2; threw: {0}", e);
 					}
 				} finally {
 					listener.Close ();

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{056ED976-618F-4A3E-910E-AA25230C2296}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>EmbeddedDSO</RootNamespace>
+    <AssemblyName>Xamarin.Android.EmbeddedDSO_Test</AssemblyName>
+    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
+    <AndroidApplication>True</AndroidApplication>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+
+    <!-- This should be removed once XA build tasks are updated to support embedded DSOs.
+	 The same applies to the `__XA_DSO_IN_APK=1` line in Environment.txt
+    -->
+    <AndroidStoreUncompressedFileExtensions>.so</AndroidStoreUncompressedFileExtensions>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
+    <RelativeRootPath>..\..\..\..\..\..</RelativeRootPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
+    <RelativeRootPath>..\..\..</RelativeRootPath>
+  </PropertyGroup>
+
+  <Import Project="$(RelativeRootPath)\Configuration.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestDebug</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <JavaMaximumHeapSize></JavaMaximumHeapSize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestRelease</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidManagedSymbols>true</AndroidManagedSymbols>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <JavaMaximumHeapSize></JavaMaximumHeapSize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+    <Reference Include="Xamarin.Android.NUnitLite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MainActivity.cs" />
+    <Compile Include="NUnitInstrumentation.cs" />
+    <Compile Include="Tests.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AboutResources.txt" />
+    <None Include="Properties\AndroidManifest.xml" />
+    <None Include="Assets\AboutAssets.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\Main.axml" />
+    <AndroidResource Include="Resources\values\Strings.xml" />
+    <AndroidResource Include="Resources\mipmap-hdpi\Icon.png" />
+    <AndroidResource Include="Resources\mipmap-mdpi\Icon.png" />
+    <AndroidResource Include="Resources\mipmap-xhdpi\Icon.png" />
+    <AndroidResource Include="Resources\mipmap-xxhdpi\Icon.png" />
+    <AndroidResource Include="Resources\mipmap-xxxhdpi\Icon.png" />
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RelativeRootPath)\tests\TestRunner.Core\TestRunner.Core.csproj">
+      <Project>{3CC4E384-4985-4D93-A34C-73F69A379FA7}</Project>
+      <Name>TestRunner.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(RelativeRootPath)\tests\TestRunner.NUnit\TestRunner.NUnit.csproj">
+      <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
+      <Name>TestRunner.NUnit</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\drawable\" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="EmbeddedDSO.projitems" />
+  <Import Project="$(RelativeRootPath)\build-tools\scripts\TestApks.targets" />
+
+  <Target Name="_GrantPermissions">
+    <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />
+  </Target>
+
+  <PropertyGroup>
+    <InstallDependsOnTargets>
+       $(InstallDependsOnTargets);
+       _GrantPermissions
+    </InstallDependsOnTargets>
+  </PropertyGroup>
+</Project>

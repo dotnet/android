@@ -33,25 +33,37 @@ void monodroid_dylib_mono_free (struct DylibMono *mono_imports)
 	free (mono_imports);
 }
 
+/*
+  this function is used from JavaInterop and should be treated as public API
+  https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
+*/
 int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmono_path)
+{
+	if (mono_imports == NULL)
+		return FALSE;
+
+	/*
+	 * We need to use RTLD_GLOBAL so that libmono-profiler-log.so can resolve
+	 * symbols against the Mono library we're loading.
+	 */
+
+	void* handle = libmono_path ? monodroid_load_dso (libmono_path, RTLD_LAZY | RTLD_GLOBAL, FALSE) : dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);
+
+	return monodroid_dylib_mono_init_with_handle (mono_imports, handle);
+}
+
+int monodroid_dylib_mono_init_with_handle (struct DylibMono *mono_imports, void *libmono_handle)
 {
 	int symbols_missing = FALSE;
 
 	if (mono_imports == NULL)
 		return FALSE;
 
-	memset (mono_imports, 0, sizeof (*mono_imports));
-
-	/*
-	 * We need to use RTLD_GLOBAL so that libmono-profiler-log.so can resolve
-	 * symbols against the Mono library we're loading.
-	 */
-	mono_imports->dl_handle = dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);
-
-	if (!mono_imports->dl_handle) {
+	if (libmono_handle == NULL)
 		return FALSE;
-	}
 
+	memset (mono_imports, 0, sizeof (*mono_imports));
+	mono_imports->dl_handle = libmono_handle;
 	mono_imports->version   = sizeof (*mono_imports);
 
 	log_info (LOG_DEFAULT, "Loading Mono symbols...");
@@ -139,7 +151,7 @@ int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmo
 	LOAD_SYMBOL(mono_thread_create)
 	LOAD_SYMBOL(mono_thread_current)
 	LOAD_SYMBOL(mono_use_llvm)
-
+	LOAD_SYMBOL(mono_aot_register_module)
 
 	if (symbols_missing) {
 		log_fatal (LOG_DEFAULT, "Failed to load some Mono symbols, aborting...");

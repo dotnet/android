@@ -39,7 +39,6 @@ STABLE_FRAMEWORKS = $(foreach a, $(STABLE_API_LEVELS), $(word $(a),$(ALL_FRAMEWO
 PLATFORM_IDS      = $(foreach a, $(API_LEVELS), $(word $(a),$(ALL_PLATFORM_IDS)))
 
 ALL_JIT_ABIS  = \
-	armeabi \
 	armeabi-v7a \
 	arm64-v8a \
 	x86 \
@@ -49,22 +48,19 @@ ALL_HOST_ABIS = \
 	$(shell uname)
 
 ALL_AOT_ABIS = \
-	armeabi \
+	armeabi-v7a \
 	arm64 \
 	x86 \
 	x86_64 \
+	win-armeabi-v7a \
+	win-arm64 \
+	win-x86 \
+	win-x86_64
 
 ifneq ($(OS_NAME),Linux)
 ALL_HOST_ABIS += \
 	mxe-Win32 \
 	mxe-Win64
-
-
-ALL_AOT_ABIS += \
-	win-armeabi \
-	win-arm64 \
-	win-x86 \
-	win-x86_64
 endif
 
 ifneq ($(OS_NAME),Linux)

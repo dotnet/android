@@ -9,6 +9,10 @@
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Target Name="Prepare">
+    <Error
+        Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
+        Condition="$(AndroidToolchainDirectory.Contains (' '))"
+    />
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\download-bundle\download-bundle.csproj" />

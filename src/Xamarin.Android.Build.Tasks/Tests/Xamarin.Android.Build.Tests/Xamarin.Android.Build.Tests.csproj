@@ -18,7 +18,6 @@
   <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -27,7 +26,6 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -60,6 +58,10 @@
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj">
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Name>Xamarin.Android.Build.Tasks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
+      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
+      <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</Project>
