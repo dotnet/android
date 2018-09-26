@@ -174,6 +174,38 @@ namespace Xamarin.Android.Tests
 		public void SwitchBetweenDesignTimeBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	android:orientation = ""vertical""
+	android:layout_width = ""fill_parent""
+	android:layout_height = ""fill_parent"">
+	<unamedproject.CustomTextView
+		android:id = ""@+id/myText1""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_lower"" />
+	<UnamedProject.CustomTextView
+		android:id = ""@+id/myText2""
+		android:layout_width = ""fill_parent""
+		android:layout_height = ""wrap_content""
+		android:text = ""namespace_proper"" />
+</LinearLayout>"
+			});
+			proj.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
+				TextContent = () => @"using Android.Widget;
+using Android.Content;
+using Android.Util;
+namespace UnamedProject
+{
+	public class CustomTextView : TextView
+	{
+		public CustomTextView(Context context, IAttributeSet attributes) : base(context, attributes)
+		{
+		}
+	}
+}"
+			});
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first *regular* build should have succeeded.");
