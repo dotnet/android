@@ -411,7 +411,7 @@
         DestinationFiles="@(_InstallUnstrippedCrossRuntimeBinaryOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoCrossRuntime.ExeSuffix)' == '.exe' "
+        Condition=" '@(_CrossRuntimeBinarySource)' != '' And ('$(Configuration)' != 'Debug' Or '%(_MonoCrossRuntime.ExeSuffix)' == '.exe') "
         Command="&quot;%(_MonoCrossRuntime.Strip)&quot; %(_MonoCrossRuntime.StripFlags) &quot;$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)&quot;"
     />
     <Touch Files="@(_InstallCrossRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput)" />
