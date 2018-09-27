@@ -1,7 +1,6 @@
 DEBIAN_COMMON_DEPS="autoconf
 	autotools-dev
 	automake
-	clang
 	curl
 	g++-mingw-w64
 	gcc-mingw-w64
