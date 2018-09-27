@@ -1,51 +1,51 @@
-[submodule "external/Java.Interop"]
-	path = external/Java.Interop
-	url = https://github.com/xamarin/java.interop.git
-	branch = master
-[submodule "external/mono"]
-	path = external/mono
-	url = https://github.com/mono/mono.git
-	branch = 2018-04
-[submodule "external/mxe"]
-	path = external/mxe
-	url = https://github.com/xamarin/mxe.git
-	branch = xamarin
-[submodule "external/sqlite"]
-	path = external/sqlite
-	url = https://github.com/xamarin/sqlite.git
-[submodule "external/opentk"]
-	path = external/opentk
-	url = https://github.com/mono/opentk.git
-	branch = master
-[submodule "external/libzip"]
-	path = external/libzip
-	url = https://github.com/nih-at/libzip.git
-	branch = rel-1-5-1
-[submodule "external/LibZipSharp"]
-	path = external/LibZipSharp
-	url = https://github.com/grendello/LibZipSharp.git
-	branch = master
-[submodule "external/llvm"]
-	path = external/llvm
-	url = https://github.com/mono/llvm.git
-	branch = master
-[submodule "external/proguard"]
-	path = external/proguard
-	url = https://github.com/xamarin/proguard.git
-	branch = master
-[submodule "external/xamarin-android-api-compatibility"]
-	path = external/xamarin-android-api-compatibility
-	url = https://github.com/xamarin/xamarin-android-api-compatibility.git
-	branch = master
-[submodule "external/xamarin-android-tools"]
-	path = external/xamarin-android-tools
-	url = https://github.com/xamarin/xamarin-android-tools
-	branch = master
 [submodule "external/dlfcn-win32"]
-	path = external/dlfcn-win32
-	url = https://github.com/dlfcn-win32/dlfcn-win32.git
-	branch = v1.1.1
+    path = external/dlfcn-win32
+    url = https://github.com/dlfcn-win32/dlfcn-win32.git
+    branch = v1.1.1
+[submodule "external/Java.Interop"]
+    path = external/Java.Interop
+    url = https://github.com/xamarin/java.interop.git
+    branch = master
+[submodule "external/libzip"]
+    path = external/libzip
+    url = https://github.com/nih-at/libzip.git
+    branch = rel-1-5-1
+[submodule "external/LibZipSharp"]
+    path = external/LibZipSharp
+    url = https://github.com/grendello/LibZipSharp.git
+    branch = master
+[submodule "external/llvm"]
+    path = external/llvm
+    url = https://github.com/mono/llvm.git
+    branch = master
 [submodule "external/mman-win32"]
-	path = external/mman-win32
-	url = https://github.com/witwall/mman-win32.git
-	branch = master
+    path = external/mman-win32
+    url = https://github.com/witwall/mman-win32.git
+    branch = master
+[submodule "external/mono"]
+    path = external/mono
+    url = https://github.com/mono/mono.git
+    branch = 2018-04
+[submodule "external/mxe"]
+    path = external/mxe
+    url = https://github.com/xamarin/mxe.git
+    branch = xamarin
+[submodule "external/opentk"]
+    path = external/opentk
+    url = https://github.com/mono/opentk.git
+    branch = master
+[submodule "external/proguard"]
+    path = external/proguard
+    url = https://github.com/xamarin/proguard.git
+    branch = master
+[submodule "external/sqlite"]
+    path = external/sqlite
+    url = https://github.com/xamarin/sqlite.git
+[submodule "external/xamarin-android-api-compatibility"]
+    path = external/xamarin-android-api-compatibility
+    url = https://github.com/xamarin/xamarin-android-api-compatibility.git
+    branch = master
+[submodule "external/xamarin-android-tools"]
+    path = external/xamarin-android-tools
+    url = https://github.com/xamarin/xamarin-android-tools
+    branch = master
