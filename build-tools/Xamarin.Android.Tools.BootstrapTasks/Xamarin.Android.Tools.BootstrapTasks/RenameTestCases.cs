@@ -34,15 +34,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var testNameSuffix  = string.IsNullOrWhiteSpace (Configuration)
 				? ""
 				: $" / {Configuration}";
+			var dest            = GetFixedUpPath (SourceFile, testNameSuffix);
+
 			try {
-				var dest    = FixupTestResultFile (SourceFile, testNameSuffix);
-				var item    = new TaskItem (dest);
-				item.SetMetadata ("SourceFile", SourceFile);
-				createdFiles.Add (item);
+				FixupTestResultFile (SourceFile, dest, testNameSuffix);
 			}
 			catch (Exception e) {
+				Log.LogError ($"Unable to process `{SourceFile}`.  Is it empty?  (Did a unit test runner SIGSEGV?)");
+				CreateErrorResultsFile (dest, e);
 				Log.LogErrorFromException (e);
 			}
+
+			var item    = new TaskItem (dest);
+			item.SetMetadata ("SourceFile", SourceFile);
+			createdFiles.Add (item);
 
 			CreatedFiles    = createdFiles.ToArray ();
 
@@ -54,7 +59,45 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return !Log.HasLoggedErrors;
 		}
 
-		string FixupTestResultFile (string source, string testNameSuffix)
+		string GetFixedUpPath (string source, string testNameSuffix)
+		{
+			var destFilename = Path.GetFileNameWithoutExtension (source) +
+				(string.IsNullOrWhiteSpace (Configuration) ? "" : "-" + Configuration) +
+				Path.GetExtension (source);
+			var dest = Path.Combine (DestinationFolder, destFilename);
+			return dest;
+		}
+
+		void CreateErrorResultsFile (string dest, Exception e)
+		{
+			var doc = new XDocument (
+				new XElement ("test-results",
+					new XAttribute ("date", DateTime.Now.ToString ("yyyy-MM-dd")),
+					new XAttribute ("errors", "1"),
+					new XAttribute ("failures", "0"),
+					new XAttribute ("ignored", "0"),
+					new XAttribute ("inconclusive", "0"),
+					new XAttribute ("invalid", "0"),
+					new XAttribute ("name", SourceFile),
+					new XAttribute ("not-run", "0"),
+					new XAttribute ("skipped", "0"),
+					new XAttribute ("time", DateTime.Now.ToString ("HH:mm:ss")),
+					new XAttribute ("total", "1"),
+					new XElement ("test-suite",
+						new XAttribute ("type", "Assembly"),
+						new XAttribute ("name", SourceFile),
+						new XAttribute ("executed", "True"),
+						new XAttribute ("result", "Failure"),
+						new XAttribute ("success", "False"),
+						new XAttribute ("time", "0"),
+						new XAttribute ("asserts", "0"),
+						new XElement ("failure",
+							new XElement ("message", $"Error processing `{SourceFile}`.  Check the build log for execution errors."),
+							new XElement ("stack-trace", e.ToString ())))));
+			doc.Save (dest);
+		}
+
+		void FixupTestResultFile (string source, string dest, string testNameSuffix)
 		{
 			var doc = XDocument.Load (source);
 			switch (doc.Root.Name.LocalName) {
@@ -62,16 +105,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				FixupNUnit2Results (doc, testNameSuffix);
 				break;
 			}
-			var destFilename = Path.GetFileNameWithoutExtension (source) +
-				(string.IsNullOrWhiteSpace (Configuration) ? "" : "-" + Configuration) +
-				Path.GetExtension (source);
-			var dest = Path.Combine (DestinationFolder, destFilename);
 
 			doc.Save (dest);
 			if (DeleteSourceFiles && Path.GetFullPath (source) != Path.GetFullPath (dest)) {
 				File.Delete (source);
 			}
-			return dest;
 		}
 
 		void FixupNUnit2Results (XDocument doc, string testNameSuffix)
