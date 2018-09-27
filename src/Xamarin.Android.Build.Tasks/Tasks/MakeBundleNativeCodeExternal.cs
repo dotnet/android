@@ -18,6 +18,8 @@ namespace Xamarin.Android.Tasks
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
 	public class MakeBundleNativeCodeExternal : Task
 	{
+		const string BundleSharedLibraryName = "libmonodroid_bundle_app.so";
+
 		[Required]
 		public string AndroidNdkDirectory { get; set; }
 
@@ -202,8 +204,12 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("--shared");
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.o"));
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "assemblies.o"));
+
+				// API23+ requires that the shared library has its soname set or it won't load
+				clb.AppendSwitch ("-soname");
+				clb.AppendSwitch (BundleSharedLibraryName);
 				clb.AppendSwitch ("-o");
-				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "libmonodroid_bundle_app.so"));
+				clb.AppendFileNameIfNotNull (Path.Combine (outpath, BundleSharedLibraryName));
 				clb.AppendSwitch ("-L");
 				clb.AppendFileNameIfNotNull (NdkUtil.GetNdkPlatformLibPath (AndroidNdkDirectory, arch, level));
 				clb.AppendSwitch ("-lc");
