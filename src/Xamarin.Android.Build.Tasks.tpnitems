@@ -6,7 +6,8 @@
       https://github.com/bazelbuild/bazel/tree/master/src/tools/android/java/com/google/devtools/build/android/incrementaldeployment
       * Xamarin.Android.Build.Tasks/Resources/IncrementalClassLoader.java
       * Xamarin.Android.Build.Tasks/Resources/Placeholder.java
-      * Xamarin.Android.Build.Tasks/Resources/StubApplication.java
+      * Xamarin.Android.Build.Tasks/Resources/MonkeyPatcher.java
+      * Xamarin.Android.Build.Tasks/Resources/ResourceLoader.java
       -->
     <ThirdPartyNotice Include="bazelbuild/bazel">
       <LicenseFile>$(MSBuildThisFileDirectory)\..\build-tools\license-data\Apache-2.0.txt</LicenseFile>

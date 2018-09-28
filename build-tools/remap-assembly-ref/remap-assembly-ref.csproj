@@ -9,9 +9,9 @@
     <AssemblyName>remap-assembly-ref</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\BuildDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -26,7 +26,6 @@
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Reference Include="System" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">

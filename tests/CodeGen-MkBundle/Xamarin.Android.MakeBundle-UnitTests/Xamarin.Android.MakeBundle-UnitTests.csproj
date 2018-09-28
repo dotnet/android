@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FA8EEC88-CA3C-4D69-B206-54B392570DC6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.MakeBundle.UnitTests</RootNamespace>
+    <AssemblyName>Xamarin.Android.MakeBundle-UnitTests</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\TestDebug\Xamarin.Android.MakeBundle-UnitTests</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\TestRelease\Xamarin.Android.MakeBundle-UnitTests</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuildTests.cs" />
+    <Compile Include="$(IntermediateOutputPath)Config.cs" />
+    <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
+       <Link>XABuildPaths.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
+      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
+      <Name>Xamarin.ProjectTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\external\LibZipSharp\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="Xamarin.Android.MakeBundle-UnitTests.targets" />
+</Project>

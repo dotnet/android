@@ -17,8 +17,6 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class ResolveAndroidTooling : Task
 	{
-		public string AndroidNdkPath { get; set; }
-
 		public string AndroidSdkPath { get; set; }
 
 		public string AndroidSdkBuildToolsVersion { get; set; }

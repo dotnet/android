@@ -30,6 +30,7 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
+    <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>

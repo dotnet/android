@@ -34,7 +34,11 @@ namespace Xamarin.Android.Tasks
 
 			// Copy out one of our embedded resources to a path
 			using (var from = GetManifestResourceStream (ResourceName)) {
-				
+				if (from == null) {
+					Log.LogCodedError ("XA0116", $"Unable to find `EmbeddedResource` of name `{ResourceName}`.");
+					return false;
+				}
+
 				// If the resource already exists, only overwrite if it's changed
 				if (File.Exists (OutputPath)) {
 					var hash1 = MonoAndroidHelper.HashFile (OutputPath);

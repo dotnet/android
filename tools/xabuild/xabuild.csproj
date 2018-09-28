@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -18,7 +19,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug\bin</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -27,7 +27,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>

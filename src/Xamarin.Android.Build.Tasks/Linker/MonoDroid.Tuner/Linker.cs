@@ -103,7 +103,6 @@ namespace MonoDroid.Tuner
 			pipeline.AppendStep (new PreserveCrypto ());
 			pipeline.AppendStep (new PreserveCode ());
 
-			pipeline.AppendStep (new RemoveLibraryResourceZip ());
 			pipeline.AppendStep (new RemoveResources (options.I18nAssemblies)); // remove collation tables
 			// end monodroid specific
 
@@ -114,6 +113,7 @@ namespace MonoDroid.Tuner
 			// monodroid tuner steps
 			if (!string.IsNullOrWhiteSpace (options.ProguardConfiguration))
 				pipeline.AppendStep (new GenerateProguardConfiguration (options.ProguardConfiguration));
+			pipeline.AppendStep (new StripEmbeddedLibraries ());
 			// end monodroid specific
 			pipeline.AppendStep (new RegenerateGuidStep ());
 			pipeline.AppendStep (new OutputStep ());

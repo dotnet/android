@@ -1,0 +1,11 @@
+using System;
+using System.IO;
+
+namespace Xamarin.Android.MakeBundle.UnitTests
+{
+	public static class Config
+	{
+		public static readonly string LlvmReadobj = Path.Combine (@"@ANDROID_NDK_DIRECTORY@", "toolchains", "llvm", "prebuilt", "@HOST_ARCH@", "bin", "llvm-readobj@EXECUTABLE_EXTENSION@");
+		public static readonly string GccReadelf = Path.Combine (@"@ANDROID_NDK_DIRECTORY@", "toolchains", "@OLD_TOOLCHAIN@", "prebuilt", "@HOST_ARCH@", "bin", "x86_64-linux-android-readelf@EXECUTABLE_EXTENSION@");
+	}
+}

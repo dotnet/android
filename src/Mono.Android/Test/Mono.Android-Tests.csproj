@@ -21,6 +21,7 @@
     <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
+  <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

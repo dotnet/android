@@ -193,7 +193,7 @@ namespace Xamarin.Android.NetTests {
 				}
 				catch (AggregateException e) {
 					if (supportTls1_2) {
-						Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work.");
+						Assert.Fail ("SHOULD NOT BE REACHED: BTLS is present, TLS 1.2 should work. Network error? {0}", e.ToString ());
 					}
 					if (!supportTls1_2) {
 						Assert.IsTrue (IsSecureChannelFailure (e),
@@ -216,7 +216,7 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
-					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
 					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
 				}
 			}
@@ -233,7 +233,7 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
-					Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+					Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
 					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
 				}
 			}
@@ -252,7 +252,7 @@ namespace Xamarin.Android.NetTests {
 				}
 				catch (AggregateException ex)
 				{
-					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception");
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
 				}
 			}
 		}

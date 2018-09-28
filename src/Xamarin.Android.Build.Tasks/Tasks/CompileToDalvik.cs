@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Text;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -38,6 +39,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] DexOutputs { get; set; }
 
+		string inputListFile;
+
 		protected override string ToolName {
 			get {
 				if (UseDx)
@@ -67,6 +70,7 @@ namespace Xamarin.Android.Tasks
 				Directory.CreateDirectory (ClassesOutputDirectory);
 
 			bool ret = false;
+			inputListFile = Path.GetTempFileName ();
 			try {
 				ret = base.Execute ();
 
@@ -74,7 +78,10 @@ namespace Xamarin.Android.Tasks
 
 				Log.LogDebugTaskItems ("  DexOutputs: ", DexOutputs);
 			} catch (FileNotFoundException ex) {
-				Log.LogErrorFromException (ex);
+				Log.LogCodedError ("XA1003", ex.ToString ());
+			} finally {
+				if (File.Exists (inputListFile) && !Log.HasLoggedErrors)
+					File.Delete (inputListFile);
 			}
 
 			return ret && !Log.HasLoggedErrors;
@@ -106,26 +113,38 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitch (DxExtraArguments);
 
+			cmd.AppendSwitchIfNotNull ("--input-list=", inputListFile);
+
 			if (MultiDexEnabled) {
 				cmd.AppendSwitch ("--multi-dex");
 				cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
 			}
 			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
 
-
-			// .jar files
-			if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
-				Log.LogDebugMessage ("  processing AlternativeJarFiles...");
-				cmd.AppendFileNamesIfNotNull (AlternativeJarFiles, " ");
-			} else {
-				Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
-				var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
-				if (!File.Exists (zip)) {
-					throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");
+			using (var sw = new StreamWriter (path: inputListFile, append: false,
+					encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+				// .jar files
+				if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
+					Log.LogDebugMessage ("  processing AlternativeJarFiles...");
+					foreach (var l in AlternativeJarFiles) {
+						var fullPath = Path.GetFullPath (l.ItemSpec);
+						Log.LogDebugMessage ($"    {fullPath}");
+						sw.WriteLine (fullPath);
+					}
+				} else {
+					Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
+					var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
+					if (!File.Exists (zip)) {
+						throw new FileNotFoundException ($"'{zip}' does not exist. Please rebuild the project.");
+					}
+					Log.LogDebugMessage ($"    {zip}");
+					sw.WriteLine (Path.GetFullPath (zip));
+					foreach (var jar in JavaLibrariesToCompile) {
+						var fullPath = Path.GetFullPath (jar.ItemSpec);
+						Log.LogDebugMessage ($"    {fullPath}");
+						sw.WriteLine (fullPath);
+					}
 				}
-				cmd.AppendFileNameIfNotNull (zip);
-				foreach (var jar in JavaLibrariesToCompile)
-					cmd.AppendFileNameIfNotNull (jar.ItemSpec);
 			}
 
 			return cmd.ToString ();
