@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks {
 							continue;
 						if (!File.Exists (file))
 							continue;
-						var document = XDocument.Load (file);
+						var document = XDocument.Load (file, options : LoadOptions.SetLineInfo);
 						var e = document.Root;
 						bool update = false;
 						foreach (var elem in AndroidResource.GetElements (e).Prepend (e)) {
@@ -65,7 +65,11 @@ namespace Xamarin.Android.Tasks {
 							update |= TryFixFragment (a, acw_map);
 						}
 						if (update) {
-							document.Save (file);
+							var lastModified = File.GetLastWriteTimeUtc (file);
+							if (document.SaveIfChanged (file)) {
+								Log.LogDebugMessage ($"Fixed up Custom Views in {file}");
+								MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, lastModified, Log);
+							}
 						}
 						processed.Add (file);
 					}
