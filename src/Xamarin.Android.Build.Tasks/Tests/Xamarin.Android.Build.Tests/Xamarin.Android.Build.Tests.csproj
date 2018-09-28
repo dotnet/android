@@ -82,6 +82,7 @@
     <Compile Include="ResolveSdksTaskTests.cs" />
     <Compile Include="AndroidResourceTests.cs" />
     <Compile Include="ManagedResourceParserTests.cs" />
+    <Compile Include="Tasks\CopyResourceTests.cs" />
     <Compile Include="Tasks\KeyToolTests.cs" />
     <Compile Include="Aapt2Tests.cs" />
     <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
