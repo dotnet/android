@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildThisFileDirectory)\..\..\build-tools\scripts\cmake-common.props" />
+
   <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
     <_CmakeMxeToolchainBasePath>$(MSBuildThisFileDirectory)\..\..\build-tools\scripts\mingw-linux</_CmakeMxeToolchainBasePath>
     <_MingwDependenciesRootDirectory>$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\linux-mingw-deps</_MingwDependenciesRootDirectory>
@@ -10,15 +12,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_CmakeCommonFlags>-GNinja -DMONO_PATH=$(MonoSourceFullPath) -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion) -DCMAKE_MAKE_PROGRAM=$(NinjaPath)</_CmakeCommonFlags>
+    <_CommonDefines>-DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')" -DMONO_PATH=$(MonoSourceFullPath) -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_CommonDefines>
+    <_CmakeCommonHostFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeCommonHostFlags>
 
-    <_CmakeCommonHostFlags>$(_CmakeCommonFlags) -DENABLE_NDK=OFF -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')"</_CmakeCommonHostFlags>
+    <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeMxeCommonFlags>
 
-    <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) -DENABLE_NDK=OFF -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')"</_CmakeMxeCommonFlags>
     <_CmakeMxeCommonFlags Condition=" '$(_MingwDependenciesRootDirectory)' != '' ">$(_CmakeMxeCommonFlags) -DMINGW_DEPENDENCIES_ROOT_DIR=$(_MingwDependenciesRootDirectory)</_CmakeMxeCommonFlags>
     <_CmakeMxeCommonFlags32>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-32.cmake -DMINGW_TARGET_32=1</_CmakeMxeCommonFlags32>
     <_CmakeMxeCommonFlags64>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-64.cmake -DMINGW_TARGET_64=1</_CmakeMxeCommonFlags64>
 
-    <_CmakeAndroidFlags>$(_CmakeCommonFlags) -DANDROID_TOOLCHAIN=clang -DANDROID_NATIVE_API_LEVEL=9 -DCMAKE_TOOLCHAIN_FILE=$(AndroidNdkDirectory)\build\cmake\android.toolchain.cmake -DANDROID_NDK=$(AndroidNdkDirectory)</_CmakeAndroidFlags>
+    <_CmakeAndroidFlags>$(_CmakeAndroidFlags) $(_CommonDefines)</_CmakeAndroidFlags>
   </PropertyGroup>
 </Project>
