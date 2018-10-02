@@ -41,7 +41,7 @@
 + [XA0113](xa0113.md): Google Play requires that new applications must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
 + [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
 + [XA0115](xa0115.md): This ABI ('armeabi') is deprecated and will be removed in the next release. Please update your project properties.
-+ [XA0116](xa0116.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
++ [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
 
 ### XA1xxx Project Related
 
