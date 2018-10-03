@@ -154,6 +154,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine ("temp", "UseLatestAndroidSdk_" + Guid.NewGuid ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
+			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
 			string javacExe;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe, out javacExe);
@@ -163,7 +164,7 @@ namespace Xamarin.Android.Build.Tests {
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
+				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
@@ -203,6 +204,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
+			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
 			string javacExe;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe, out javacExe);
@@ -214,7 +216,7 @@ namespace Xamarin.Android.Build.Tests {
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
+				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
@@ -260,6 +262,7 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.AreEqual (binPath, expected, $"MonoAndroidBinPath should be {expected}");
 			}
 			Assert.AreEqual (resolveSdks.AndroidSdkPath, androidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
+			Assert.AreEqual (resolveSdks.AndroidNdkPath, androidNdkPath, $"AndroidNdkPath should be {androidNdkPath}");
 			Assert.AreEqual (resolveSdks.JavaSdkPath, javaPath, $"JavaSdkPath should be {javaPath}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3");
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
@@ -377,6 +380,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var path = Path.Combine ("temp", $"{nameof (TargetFrameworkPairing)}_{description}");
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3", androidSdk);
+			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
 			string javacExe;
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out javaExe, out javacExe);
@@ -385,7 +389,7 @@ namespace Xamarin.Android.Build.Tests {
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
-				AndroidNdkPath = androidSdkPath,
+				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
