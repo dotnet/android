@@ -31,6 +31,7 @@
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
+    <AndroidNdkApiLevel Condition=" '$(AndroidNdkApiLevel)' == '' ">9</AndroidNdkApiLevel>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
