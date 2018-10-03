@@ -2,6 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_CmakeCommonFlags>-GNinja -DCMAKE_MAKE_PROGRAM=$(NinjaPath)</_CmakeCommonFlags>
-    <_CmakeAndroidFlags>$(_CmakeCommonFlags) -DANDROID_TOOLCHAIN=clang -DANDROID_NATIVE_API_LEVEL=$(AndroidNdkApiLevel) -DCMAKE_TOOLCHAIN_FILE=$(AndroidNdkDirectory)\build\cmake\android.toolchain.cmake -DANDROID_NDK=$(AndroidNdkDirectory)</_CmakeAndroidFlags>
+    <_CmakeAndroidFlags>$(_CmakeCommonFlags) -DANDROID_TOOLCHAIN=clang -DANDROID_NATIVE_API_LEVEL=$(AndroidNdkApiLevel) -DANDROID_PLATFORM=android-$(AndroidNdkApiLevel) -DCMAKE_TOOLCHAIN_FILE=$(AndroidNdkDirectory)\build\cmake\android.toolchain.cmake -DANDROID_NDK=$(AndroidNdkDirectory)</_CmakeAndroidFlags>
   </PropertyGroup>
 </Project>
