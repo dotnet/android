@@ -591,7 +591,6 @@ namespace Java.InteropTests {
 	JniRuntime {jvm};
 	IJavaPeerable {value};
 	JniObjectReference {value}_ref;
-	IntPtr {value}_handle;
 	IntPtr {value}_rtn;
 
 	try
@@ -604,13 +603,19 @@ namespace Java.InteropTests {
 		{{
 			return {value}_ref = {value}.PeerReference;
 		}}
-		{value}_handle = {value}_ref.Handle;
 		{value}_rtn = References.NewReturnToJniRef({value}_ref);
 		return {pret.Name};
 	}}
 	finally
 	{{
-		JniObjectReference.Dispose({value}_ref);
+		if (null != __value)
+		{{
+			__value.DisposeUnlessReferenced();
+		}}
+		else
+		{{
+			default(void);
+		}}
 	}}
 }}";
 		}

@@ -449,7 +449,6 @@ namespace Java.InteropTests
 	JavaObject __mret;
 	ExportTest __this_val;
 	JniObjectReference __mret_ref;
-	IntPtr __mret_handle;
 	IntPtr __mret_rtn;
 
 	__envp = new JniTransition(__jnienv);
@@ -468,7 +467,6 @@ namespace Java.InteropTests
 		{
 			return __mret_ref = __mret.PeerReference;
 		}
-		__mret_handle = __mret_ref.Handle;
 		__mret_rtn = References.NewReturnToJniRef(__mret_ref);
 		return __mret_rtn;
 	}
@@ -479,7 +477,14 @@ namespace Java.InteropTests
 	}
 	finally
 	{
-		JniObjectReference.Dispose(__mret_ref);
+		if (null != __mret)
+		{
+			__mret.DisposeUnlessReferenced();
+		}
+		else
+		{
+			default(void);
+		}
 		__envp.Dispose();
 	}
 }");

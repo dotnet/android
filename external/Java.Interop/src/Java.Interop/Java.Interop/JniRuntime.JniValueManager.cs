@@ -591,6 +591,17 @@ namespace Java.Interop
 
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
+			var r = CreateIntermediaryExpressionFromManagedExpression (context, sourceValue);
+
+			var h = Expression.Variable (typeof (IntPtr), sourceValue + "_handle");
+			context.LocalVariables.Add (h);
+			context.CreationStatements.Add (Expression.Assign (h, Expression.Property (r, "Handle")));
+
+			return h;
+		}
+
+		Expression CreateIntermediaryExpressionFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
 			var r   = Expression.Variable (typeof (JniObjectReference), sourceValue.Name + "_ref");
 			context.LocalVariables.Add (r);
 			context.CreationStatements.Add (
@@ -598,19 +609,19 @@ namespace Java.Interop
 						test:       Expression.Equal (Expression.Constant (null), sourceValue),
 						ifTrue:     Expression.Assign (r, Expression.New (typeof (JniObjectReference))),
 						ifFalse:    Expression.Assign (r, Expression.Property (sourceValue, "PeerReference"))));
-			context.CleanupStatements.Add (DisposeObjectReference (r));
 
-			var h   = Expression.Variable (typeof (IntPtr), sourceValue + "_handle");
-			context.LocalVariables.Add (h);
-			context.CreationStatements.Add (Expression.Assign (h, Expression.Property (r, "Handle")));
-			return h;
+			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (sourceValue.Type.GetTypeInfo ())) {
+				context.CleanupStatements.Add (Expression.IfThen (
+							test:       Expression.NotEqual (Expression.Constant (null), sourceValue),
+							ifTrue:     Expression.Call (sourceValue, typeof (IJavaPeerable).GetTypeInfo ().GetDeclaredMethod ("DisposeUnlessReferenced"))));
+			}
+
+			return r;
 		}
 
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
-			CreateParameterFromManagedExpression (context, sourceValue, 0);
-			var r   = context.LocalVariables [sourceValue + "_ref"];
-			return ReturnObjectReferenceToJni (context, sourceValue.Name, r);
+			return ReturnObjectReferenceToJni (context, sourceValue.Name, CreateIntermediaryExpressionFromManagedExpression (context, sourceValue));
 		}
 
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
