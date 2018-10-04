@@ -29,12 +29,11 @@
 #include <pthread.h>
 #include <string.h>
 
-#include "java-interop-logger.h"
-
 #include "monodroid.h"
 #include "monodroid-glue.h"
 #include "util.h"
-#include "dylib-mono.h"
+
+using namespace xamarin::android;
 
 static pthread_once_t java_classes_once_control = PTHREAD_ONCE_INIT;
 static jclass NetworkInterface_class;
@@ -46,11 +45,11 @@ static void
 java_classes_init (void)
 {
 	JNIEnv *env = get_jnienv ();
-	NetworkInterface_class = (*env)->FindClass (env, "java/net/NetworkInterface");
-	NetworkInterface_class = (*env)->NewGlobalRef (env, NetworkInterface_class);
-	NetworkInterface_getByName = (*env)->GetStaticMethodID (env, NetworkInterface_class, "getByName", "(Ljava/lang/String;)Ljava/net/NetworkInterface;");
-	NetworkInterface_isUp = (*env)->GetMethodID (env, NetworkInterface_class, "isUp", "()Z");
-	NetworkInterface_supportsMulticast = (*env)->GetMethodID (env, NetworkInterface_class, "supportsMulticast", "()Z");
+	NetworkInterface_class = env->FindClass ("java/net/NetworkInterface");
+	NetworkInterface_class = reinterpret_cast <jclass> (env->NewGlobalRef (NetworkInterface_class));
+	NetworkInterface_getByName = env->GetStaticMethodID (NetworkInterface_class, "getByName", "(Ljava/lang/String;)Ljava/net/NetworkInterface;");
+	NetworkInterface_isUp = env->GetMethodID (NetworkInterface_class, "isUp", "()Z");
+	NetworkInterface_supportsMulticast = env->GetMethodID (NetworkInterface_class, "supportsMulticast", "()Z");
 }
 
 static mono_bool
@@ -68,8 +67,10 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 
 	pthread_once (&java_classes_once_control, java_classes_init);
 
-	JNIEnv *env = NULL;
-	jobject networkInterface = NULL;
+	JNIEnv *env = nullptr;
+	jstring NetworkInterface_nameArg = nullptr;
+	jobject networkInterface = nullptr;
+
 	if (!NetworkInterface_class || !NetworkInterface_getByName) {
 		if (!NetworkInterface_class)
 			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface' Java class");
@@ -80,13 +81,13 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	}
 
 	env = get_jnienv ();
-	jstring NetworkInterface_nameArg = (*env)->NewStringUTF (env, ifname);
-	networkInterface = (*env)->CallStaticObjectMethod (env, NetworkInterface_class, NetworkInterface_getByName, NetworkInterface_nameArg);
-	(*env)->DeleteLocalRef (env, NetworkInterface_nameArg);
-	if ((*env)->ExceptionOccurred (env)) {
+	NetworkInterface_nameArg = env->NewStringUTF (ifname);
+	networkInterface = env->CallStaticObjectMethod (NetworkInterface_class, NetworkInterface_getByName, NetworkInterface_nameArg);
+	env->DeleteLocalRef (NetworkInterface_nameArg);
+	if (env->ExceptionOccurred ()) {
 		log_warn (LOG_NET, "Java exception occurred while looking up the interface '%s'", ifname);
-		(*env)->ExceptionDescribe (env);
-		(*env)->ExceptionClear (env);
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
 		goto leave;
 	}
 
@@ -101,7 +102,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.isUp' function. Unable to determine interface operational state");
 			ret = FALSE;
 		} else
-			*is_up = (mono_bool)(*env)->CallBooleanMethod (env, networkInterface, NetworkInterface_isUp);
+			*is_up = (mono_bool)env->CallBooleanMethod (networkInterface, NetworkInterface_isUp);
 	}
 
 	if (supports_multicast) {
@@ -109,7 +110,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.supportsMulticast' function. Unable to determine whether interface supports multicast");
 			ret = FALSE;
 		} else
-			*supports_multicast = (mono_bool)(*env)->CallBooleanMethod (env, networkInterface, NetworkInterface_supportsMulticast);
+			*supports_multicast = (mono_bool)env->CallBooleanMethod (networkInterface, NetworkInterface_supportsMulticast);
 	}
 
   leave:
@@ -117,7 +118,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 		log_warn (LOG_NET, "Unable to determine interface '%s' state using Java API", ifname);
 
 	if (networkInterface != NULL && env != NULL) {
-		(*env)->DeleteLocalRef (env, networkInterface);
+		env->DeleteLocalRef (networkInterface);
 	}
 
 	return ret;

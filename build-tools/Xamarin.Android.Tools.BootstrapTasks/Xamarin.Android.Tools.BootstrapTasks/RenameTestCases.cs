@@ -78,22 +78,25 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					new XAttribute ("ignored", "0"),
 					new XAttribute ("inconclusive", "0"),
 					new XAttribute ("invalid", "0"),
-					new XAttribute ("name", SourceFile),
+					new XAttribute ("name", dest),
 					new XAttribute ("not-run", "0"),
 					new XAttribute ("skipped", "0"),
 					new XAttribute ("time", DateTime.Now.ToString ("HH:mm:ss")),
 					new XAttribute ("total", "1"),
 					new XElement ("test-suite",
-						new XAttribute ("type", "Assembly"),
-						new XAttribute ("name", SourceFile),
+						new XAttribute ("type", "APK-File"),
+						new XAttribute ("name", dest),
 						new XAttribute ("executed", "True"),
 						new XAttribute ("result", "Failure"),
 						new XAttribute ("success", "False"),
 						new XAttribute ("time", "0"),
 						new XAttribute ("asserts", "0"),
-						new XElement ("failure",
-							new XElement ("message", $"Error processing `{SourceFile}`.  Check the build log for execution errors."),
-							new XElement ("stack-trace", e.ToString ())))));
+						new XElement ("results",
+							new XElement ("test-case",
+								new XAttribute ("name", Path.GetFileName (dest)),
+								new XElement ("failure",
+									new XElement ("message", $"Error processing `{SourceFile}`.  Check the build log for execution errors."),
+									new XElement ("stack-trace", e.ToString ())))))));
 			doc.Save (dest);
 		}
 
