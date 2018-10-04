@@ -18,12 +18,11 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
+    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
   </PropertyGroup>
+  <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
-  <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>

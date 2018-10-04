@@ -173,16 +173,16 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
         ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
-      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory"        Condition="'$(AndroidNdkDirectory)' == ''" />
-      <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory"        Condition="'$(AndroidSdkDirectory)' == ''" />
-      <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"           Condition="'$(JavaSdkDirectory)' == ''" />
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
       <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
       <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
     </ResolveSdks>
     <ValidateJavaVersion
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-        JavaSdkPath="$(JavaSdkDirectory)"
+        JavaSdkPath="$(_JavaSdkDirectory)"
         JavaToolExe="$(JavaToolExe)"
         JavacToolExe="$(JavacToolExe)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
@@ -193,8 +193,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <ResolveAndroidTooling
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         AndroidApiLevel="$(AndroidApiLevel)"
-        AndroidSdkPath="$(AndroidSdkDirectory)"
-        AndroidNdkPath="$(AndroidNdkDirectory)"
+        AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
         UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
         SequencePointsMode="$(AndroidSequencePointsMode)"
@@ -223,34 +222,25 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <!-- Find all the needed SDKs -->
   <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
 
-    <Error Text="Could not locate Android SDK." Condition="'$(AndroidSdkDirectory)'==''" />
-    <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(JavaSdkDirectory)'==''" />
+    <Error Text="Could not locate Android SDK." Condition="'$(_AndroidSdkDirectory)'==''" />
+    <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
 
-    <CreateProperty Value="$(AndroidNdkDirectory)">
-      <Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"/>
-    </CreateProperty>
     <CreateProperty Value="$(_AndroidNdkDirectory)\">
       <Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"
         Condition="!HasTrailingSlash('$(_AndroidNdkDirectory)')" />
     </CreateProperty>
 
-    <CreateProperty Value="$(AndroidSdkDirectory)">
-      <Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"/>
-    </CreateProperty>
     <CreateProperty Value="$(_AndroidSdkDirectory)\">
       <Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"
         Condition="!HasTrailingSlash('$(_AndroidSdkDirectory)')" />
     </CreateProperty>
 
-    <CreateProperty Value="$(JavaSdkDirectory)">
-      <Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"/>
-    </CreateProperty>
     <CreateProperty Value="$(_JavaSdkDirectory)\">
       <Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"
         Condition="!HasTrailingSlash('$(_JavaSdkDirectory)')" />
     </CreateProperty>
 
-	<CreateProperty Value="$(_JavaSdkDirectory)\bin">
+	<CreateProperty Value="$(_JavaSdkDirectory)bin">
 		<Output TaskParameter="Value" PropertyName="JavaToolPath"
 				Condition="'$(JavaToolPath)' == ''"
 		/>
@@ -396,7 +386,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
         SourceDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
         DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
         ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar);@(_AdditionalJavaLibraryReferences)"
-        JavaPlatformJar="$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevel)\android.jar"
+        JavaPlatformJar="$(_AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevel)\android.jar"
         />
 	
     <Touch Files="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName).stamp')" AlwaysCreate="True" />

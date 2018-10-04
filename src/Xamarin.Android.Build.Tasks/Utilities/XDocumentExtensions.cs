@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Xml.XPath;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -29,12 +30,14 @@ namespace Xamarin.Android.Tasks
 			return element.ToString (SaveOptions.DisableFormatting);
 		}
 
-		public static void SaveIfChanged (this XDocument document, string fileName)
+		public static bool SaveIfChanged (this XDocument document, string fileName)
 		{
 			var tempFile = System.IO.Path.GetTempFileName ();
 			try {
-				document.Save (tempFile);
-				MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
+				using (var stream = File.OpenWrite (tempFile))
+				using (var xw = new Monodroid.LinePreservedXmlWriter (new StreamWriter (stream)))
+					xw.WriteNode (document.CreateNavigator (), false);
+				return MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
 			} finally {
 				File.Delete (tempFile);
 			}

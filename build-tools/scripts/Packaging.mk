@@ -66,7 +66,7 @@ package-deb: $(ZIP_OUTPUT)
 _TEST_ERRORS_BASENAME   = xa-test-errors-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
 
 "$(_TEST_ERRORS_BASENAME).zip" package-test-errors:
-	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp TestResult-*.xml bin/Test*/TestOutput-*.txt
+	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp TestResult-*.xml bin/Test*/TestOutput-*.txt bin/Test*/Timing_* *.csv
 	zip -r "$(_TEST_ERRORS_BASENAME).zip" "$(_TEST_ERRORS_BASENAME)"
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \

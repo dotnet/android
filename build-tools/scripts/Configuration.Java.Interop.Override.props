@@ -3,5 +3,6 @@
   <PropertyGroup>
     <CecilSourceDirectory>$(MSBuildThisFileDirectory)..\..\external\mono\external\cecil</CecilSourceDirectory>
     <UtilityOutputFullPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\</UtilityOutputFullPath>
+    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)..\..\external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
 </Project>

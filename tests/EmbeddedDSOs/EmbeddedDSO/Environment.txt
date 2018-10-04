@@ -1,0 +1,5 @@
+debug.mono.debug=1
+MONO_LOG_LEVEL=debug
+MONO_LOG_MASK=asm
+MONO_XDEBUG=1
+__XA_DSO_IN_APK=1

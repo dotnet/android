@@ -36,6 +36,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen-MkBundle", "CodeGen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.MakeBundle-Tests", "tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj", "{A0B2692E-9FBE-4157-9526-7145F07F2C5A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.MakeBundle-UnitTests", "tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-UnitTests\Xamarin.Android.MakeBundle-UnitTests.csproj", "{FA8EEC88-CA3C-4D69-B206-54B392570DC6}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ResolveImports", "ResolveImports", "{E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib1", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib1\Xamarin.Android.BindingResolveImportLib1.csproj", "{2A0519DF-0DDA-45F7-AC3C-E2992748D364}"
@@ -75,6 +77,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performance-Tests", "Performance-Tests", "{68B8E272-5B12-47AA-8923-550B9CE535C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timing\timing.csproj", "{37CAA28C-40BE-4253-BA68-CC5D7316A617}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj", "{056ED976-618F-4A3E-910E-AA25230C2296}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO-UnitTests", "tests\EmbeddedDSOs\EmbeddedDSO-UnitTests\EmbeddedDSO-UnitTests.csproj", "{B160F0E7-799A-4EB9-92B8-D71623C7674A}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -194,6 +200,18 @@ Global
 		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37CAA28C-40BE-4253-BA68-CC5D7316A617}.Release|Any CPU.Build.0 = Release|Any CPU
+		{056ED976-618F-4A3E-910E-AA25230C2296}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{056ED976-618F-4A3E-910E-AA25230C2296}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{056ED976-618F-4A3E-910E-AA25230C2296}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{056ED976-618F-4A3E-910E-AA25230C2296}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B160F0E7-799A-4EB9-92B8-D71623C7674A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B160F0E7-799A-4EB9-92B8-D71623C7674A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B160F0E7-799A-4EB9-92B8-D71623C7674A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B160F0E7-799A-4EB9-92B8-D71623C7674A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

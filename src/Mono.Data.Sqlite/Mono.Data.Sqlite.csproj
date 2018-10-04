@@ -24,7 +24,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET_4_0;NET_4_5;MONO;DISABLE_CAS_USE;SQLITE_STANDARD;MONODROID</DefineConstants>
@@ -180,7 +179,7 @@
   </ItemGroup>
   <Import Project="$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="@(AndroidSupportedTargetJitAbi-&gt;'..\sqlite-xamarin\src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
+    <EmbeddedNativeLibrary Include="@(AndroidSupportedTargetJitAbi-&gt;'..\sqlite-xamarin\bin\$(Configuration)\%(Identity)\libsqlite3_xamarin.so')" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\sqlite-xamarin\sqlite-xamarin.csproj">

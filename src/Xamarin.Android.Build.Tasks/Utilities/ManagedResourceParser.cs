@@ -212,6 +212,9 @@ namespace Xamarin.Android.Tasks
 				case "plurals":
 					CreateIntField (plurals, itemName, value);
 					break;
+				case "raw":
+					CreateIntField (raw, itemName, value);
+					break;
 				case "string":
 					CreateIntField (strings, itemName, value);
 					break;
@@ -321,7 +324,7 @@ namespace Xamarin.Android.Tasks
 		void CreateIntField (CodeTypeDeclaration parentType, string name, int value = 0)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
-			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.OrdinalIgnoreCase) == 0))
+			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0))
 				return;
 			int id = value == 0 ? CreateResourceId (parentType): value;
 			var f = new CodeMemberField (typeof (int), mappedName) {
@@ -338,7 +341,7 @@ namespace Xamarin.Android.Tasks
 		void CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count, params int[] values)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
-			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.OrdinalIgnoreCase) == 0))
+			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0))
 				return;
 			var f = new CodeMemberField (typeof (int []), name) {
 				// pity I can't make the member readonly...

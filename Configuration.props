@@ -30,6 +30,8 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
+    <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
+    <AndroidNdkApiLevel Condition=" '$(AndroidNdkApiLevel)' == '' ">9</AndroidNdkApiLevel>
   </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
@@ -68,8 +70,8 @@
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
-    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.18.0</MonoRequiredMinimumVersion>
-    <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">5.19.0</MonoRequiredMaximumVersion>
+    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.14.0</MonoRequiredMinimumVersion>
+    <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">5.15.0</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
     <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).0</MonoRequiredDarwinMinimumVersion>
     <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\external\linker</LinkerSourceDirectory>
@@ -79,7 +81,7 @@
     <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
-    <AllSupported32BitTargetAndroidAbis>armeabi;armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
+    <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>28</XABuildToolsVersion>
@@ -116,7 +118,7 @@
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\tools</EmulatorToolPath>
+    <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>

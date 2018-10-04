@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="Prepare"
+      BeforeTargets="CoreCompile"
+      Inputs="$(MSBuildThisFileDirectory)Config.cs.in"
+      Outputs="$(IntermediateOutputPath)Config.cs">
+    <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <ExecutableExtension>.exe</ExecutableExtension>
+      <HostArch>windows-x86_64</HostArch>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <HostArch Condition=" '$(HostOS)' == 'Linux' ">linux-x86_64</HostArch>
+      <HostArch Condition=" '$(HostOS)' == 'Darwin' ">darwin-x86_64</HostArch>
+    </PropertyGroup>
+
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)Config.cs.in"
+        DestinationFile="$(IntermediateOutputPath)\Config.cs"
+        Replacements="@ANDROID_NDK_DIRECTORY@=$(AndroidNdkDirectory);@OLD_TOOLCHAIN@=x86_64-4.9;@EXECUTABLE_EXTENSION@=$(ExecutableExtension);@HOST_ARCH@=$(HostArch)"
+    />
+  </Target>
+</Project>

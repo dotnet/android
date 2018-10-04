@@ -1,38 +1,35 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="_SetReadmeTimeToLastCommitTimestamp">
-    <GitCommitTime
-        WorkingDirectory="$(SqliteSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Time" PropertyName="_SqliteCommitTime" />
-    </GitCommitTime>
-    <Touch Files="$(SqliteSourceFullPath)\README.version" Time="$(_SqliteCommitTime)" />
-  </Target>
-  <ItemGroup>
-    <!-- build outputs include (if enabled):
-      src/main/libs/x86/libsqlite3_xamarin.so
-      src/main/libs/armeabi-v7a/libsqlite3_xamarin.so
-      src/main/libs/armeabi/libsqlite3_xamarin.so
-      src/main/libs/arm64-v8a/libsqlite3_xamarin.so
-      src/main/libs/x86_64/libsqlite3_xamarin.so
-      -->
-    <_LibSqliteXamarin Include="@(AndroidSupportedTargetJitAbi->'src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
-  </ItemGroup>
+  <Import Project="sqlite-xamarin.props" />
+  <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
+  <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
+
   <PropertyGroup>
-    <_AppAbi>$(AndroidSupportedTargetJitAbis.Replace (':', ' '))</_AppAbi>
+    <_SqliteBaseLibName>sqlite3_xamarin</_SqliteBaseLibName>
+    <_SqliteLibName>lib$(_SqliteBaseLibName).so</_SqliteLibName>
   </PropertyGroup>
-  <Target Name="_NdkBuild"
-      Inputs="src\stamp"
-      Outputs="@(_LibSqliteXamarin)">
-    <Exec Command="&quot;$(NdkBuildPath)&quot; SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; APP_ABI=&quot;$(_AppAbi)&quot;"
-        WorkingDirectory="src\main\jni" />
+
+  <Target Name="_BuildSqlite" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
+
+  <Target Name="_ConfigureSqlite"
+	  Inputs="CMakeLists.txt"
+	  Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja')">
+    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)" />
+    <Exec
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)"
+    />
   </Target>
-  <Target Name="_CleanLibraries"
-      AfterTargets="Clean">
-    <RemoveDir Directories="src/main/libs;src/main/obj" />
+
+  <Target Name="_BuildAndroidSqlite"
+	  Inputs="@(_SqliteSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configure)\build.ninja')"
+	  Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\$(_SqliteLibName)')">
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)"
+    />
   </Target>
 
   <Target Name="CoreCompile"
-      DependsOnTargets="_NdkBuild">
+      DependsOnTargets="_BuildSqlite">
   </Target>
 </Project>

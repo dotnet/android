@@ -19,7 +19,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -30,7 +29,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
     <ErrorReport>prompt</ErrorReport>

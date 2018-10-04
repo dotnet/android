@@ -40,6 +40,14 @@ namespace Xamarin.ProjectTools
 
 		public string TargetFrameworkVersion { get; set; }
 
-		public string TargetFrameworkMoniker { get { return "MonoAndroid" + TargetFrameworkVersion.TrimStart ('v').Replace (".", ""); } }
+		/// <summary>
+		/// TargetFrameworkVersion=v8.1 -> 81
+		/// </summary>
+		public string TargetFrameworkAbbreviated => TargetFrameworkVersion?.TrimStart ('v').Replace (".", "");
+
+		/// <summary>
+		/// TargetFrameworkVersion=v8.1 -> MonoAndroid81
+		/// </summary>
+		public string TargetFrameworkMoniker => "MonoAndroid" + TargetFrameworkAbbreviated;
 	}
 }

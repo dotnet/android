@@ -17,7 +17,6 @@
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
@@ -107,6 +106,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\Aapt.cs" />
     <Compile Include="Tasks\Aapt2.cs" />
     <Compile Include="Tasks\Aapt2Compile.cs" />
@@ -151,6 +151,7 @@
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
+    <Compile Include="Tasks\SetVsMonoAndroidRegistryKey.cs" />
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
@@ -193,7 +194,6 @@
     <Compile Include="Tasks\CreateLibraryResourceArchive.cs" />
     <Compile Include="Tasks\ResolveLibraryProjectImports.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\RemoveLibraryResourceZip.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveLinqExpressions.cs" />
     <Compile Include="Tasks\NdkUtils.cs" />
@@ -204,7 +204,6 @@
     <Compile Include="Utilities\ResourceDesignerImportGenerator.cs" />
     <Compile Include="Tasks\CreateManagedLibraryResourceArchive.cs" />
     <Compile Include="Tasks\CheckForRemovedItems.cs" />
-    <Compile Include="Tasks\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\CheckProjectItems.cs" />
     <Compile Include="Tasks\CheckDuplicateJavaLibraries.cs" />
     <Compile Include="Mono.Android\PermissionAttribute.Partial.cs" />
@@ -249,6 +248,8 @@
     <Compile Include="Tasks\CalculateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\FindLayoutsToBind.cs" />
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
+    <Compile Include="Tasks\ConvertCustomView.cs" />
+    <Compile Include="Tasks\ComputeHash.cs" />
     <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
       <Link>pdb2mdb\BitAccess.cs</Link>
     </Compile>
@@ -341,6 +342,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyResolver.cs">
       <Link>Linker\Linker\AssemblyResolver.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
+      <Link>Linker\Linker\AssemblyUtilities.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
@@ -358,6 +362,9 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
       <Link>Linker\Linker\Pipeline.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
+      <Link>Linker\Linker\TypeNameParser.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypePreserve.cs">
       <Link>Linker\Linker\TypePreserve.cs</Link>
@@ -436,7 +443,6 @@
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
     <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
-    <Compile Include="Tasks\CheckTargetFrameworks.cs" />
     <Compile Include="Tasks\Dx.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
     <Compile Include="Utilities\AndroidResource.cs">
@@ -568,12 +574,17 @@
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
+    <Compile Include="Tasks\CancelableTask.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\monodroid\jni\mkbundle-api.h">
+      <Link>mkbundle-api.h</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Tasks\JavaDoc.cs" />
@@ -659,8 +670,17 @@
     <EmbeddedResource Include="Resources\Placeholder.java">
       <LogicalName>Placeholder.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\StubApplication.java">
-      <LogicalName>StubApplication.java</LogicalName>
+    <EmbeddedResource Include="Resources\MultiDexLoader.java">
+      <LogicalName>MultiDexLoader.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MultiDexLoader.Debug.java">
+      <LogicalName>MultiDexLoader.Debug.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonkeyPatcher.java">
+      <LogicalName>MonkeyPatcher.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\ResourcePatcher.java">
+      <LogicalName>ResourcePatcher.java</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

@@ -188,5 +188,29 @@ namespace Xamarin.Android.Tasks
 					yield return t;
 			}
 		}
+
+		public static string FixupResourceFilename (string file, string resourceDir, Dictionary<string, string> resourceNameCaseMap)
+		{
+			var targetfile = file;
+			if (resourceDir != null && targetfile.StartsWith (resourceDir, StringComparison.InvariantCultureIgnoreCase)) {
+				targetfile = file.Substring (resourceDir.Length).TrimStart (Path.DirectorySeparatorChar);
+				if (resourceNameCaseMap.TryGetValue (targetfile, out string temp))
+					targetfile = temp;
+				targetfile = Path.Combine ("Resources", targetfile);
+			}
+			return targetfile;
+		}
+
+		public static void FixupResourceFilenameAndLogCodedError (this TaskLoggingHelper log, string code, string message, string file,  string resourceDir, Dictionary<string, string> resourceNameCaseMap)
+		{
+			var targetfile = FixupResourceFilename (file, resourceDir, resourceNameCaseMap);
+			log.LogCodedError (code, file: targetfile, lineNumber: 0, message: message);
+		}
+
+		public static void FixupResourceFilenameAndLogCodedWarning (this TaskLoggingHelper log, string code, string message, string file, string resourceDir, Dictionary<string, string> resourceNameCaseMap)
+		{
+			var targetfile = FixupResourceFilename (file, resourceDir, resourceNameCaseMap);
+			log.LogCodedWarning (code, file: targetfile, lineNumber: 0, message: message);
+		}
 	}
 }

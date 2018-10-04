@@ -17,7 +17,7 @@
       DependsOnTargets="_GenerateIncludeFiles;_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
   <Target Name="_GenerateIncludeFiles"
-      Inputs="@(_EmbeddedBlobSource);jni/config.h"
+      Inputs="@(_EmbeddedBlobSource);jni\config.h"
       Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
     <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
     <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
@@ -98,7 +98,6 @@
         DestinationFiles="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.d.%(NativeLibraryExtension)')"
     />
   </Target>
-
   <Target Name="_CleanRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes"
       AfterTargets="Clean">

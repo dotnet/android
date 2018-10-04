@@ -36,6 +36,7 @@ if(NOT ANDROID)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.c
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.c
     )
 endif()
 
@@ -146,12 +147,14 @@ if(ENABLE_NDK)
   add_definitions("-DANDROID")
   add_definitions("-DLINUX -Dlinux -D__linux__")
 else()
+  # MinGW/mxe need it for {v,a}sprintf
+  add_definitions("-D_GNU_SOURCE")
   if(APPLE)
     add_definitions("-DAPPLE_OS_X")
     set(HOST_BUILD_NAME "host-Darwin")
   elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     if(NOT MINGW AND NOT WIN32)
-      add_definitions("-D_GNU_SOURCE -DLINUX -Dlinux -D__linux__")
+      add_definitions("-DLINUX -Dlinux -D__linux__")
       set(HOST_BUILD_NAME "host-Linux")
 
       if(EXISTS "/.flatpak-info")
@@ -204,9 +207,9 @@ endif()
 
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
+add_definitions("-DDYLIB_MONO")
 add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
-add_definitions("-DDYLIB_MONO")
 add_definitions("-DSGEN_BRIDGE_VERSION=${SGEN_BRIDGE_VERSION}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS} -std=c99")
@@ -231,13 +234,15 @@ set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${MONO_PATH}/support/zlib-helper.c
-  ${SOURCES_DIR}/cpu-arch-detect.c
-  ${SOURCES_DIR}/dylib-mono.c
-  ${SOURCES_DIR}/embedded-assemblies.c
+  ${SOURCES_DIR}/cpu-arch-detect.cc
+  ${SOURCES_DIR}/debug-constants.cc
+  ${SOURCES_DIR}/dylib-mono.cc
+  ${SOURCES_DIR}/embedded-assemblies.cc
+  ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
-  ${SOURCES_DIR}/monodroid-glue.c
-  ${SOURCES_DIR}/timezones.c
-  ${SOURCES_DIR}/util.c
+  ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/timezones.cc
+  ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c
   ${SOURCES_DIR}/zip/unzip.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop.c
@@ -250,9 +255,9 @@ if(UNIX)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
     ${MONO_PATH}/support/nl.c
-    ${SOURCES_DIR}/debug.c
-    ${SOURCES_DIR}/monodroid-networkinfo.c
-    ${SOURCES_DIR}/xamarin_getifaddrs.c
+    ${SOURCES_DIR}/debug.cc
+    ${SOURCES_DIR}/monodroid-networkinfo.cc
+    ${SOURCES_DIR}/xamarin_getifaddrs.cc
     )
 endif()
 

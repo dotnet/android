@@ -103,6 +103,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Wear.1.0.0-preview7\\lib\\MonoAndroid10\\Xamarin.Android.Wearable.dll" }
 				}
 		};
+		public static Package AndroidWear_2_2_0 = new Package () {
+			Id = "Xamarin.Android.Wear",
+			Version = "2.2.0",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Wearable") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Wear.2.2.0\\lib\\MonoAndroid80\\Xamarin.Android.Wear.dll" }
+				}
+		};
 		public static Package SupportV7RecyclerView = new Package {
 			Id = "Xamarin.Android.Support.v7.RecyclerView",
 			Version = "21.0.0.0-beta1",
@@ -291,6 +300,15 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Support.Media.Compat") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Media.Compat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Media.Compat.dll" }
+			}
+		};
+		public static Package SupportPercent_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Percent",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Percent") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Percent.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Percent.dll" }
 			}
 		};
 		public static Package SupportV7MediaRouter_21_0_3_0 = new Package {
@@ -565,6 +583,30 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Lifecycle.Runtime.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Lifecycle.Runtime.dll"
 				}
 			}
+		};
+		public static Package Xamarin_Android_Crashlytics_2_9_4 = new Package {
+			Id = "Xamarin.Android.Crashlytics",
+			Version = "2.9.4",
+			TargetFramework = "MonoAndroid60",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Crashlytics") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
+				}
+			}
+		};
+		public static Package Xamarin_Android_Fabric_1_4_3 = new Package {
+			Id = "Xamarin.Android.Fabric",
+			Version = "1.4.3",
+			TargetFramework = "MonoAndroid60",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Fabric") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
+				}
+			}
+		};
+		public static Package Xamarin_Build_Download_0_4_11 = new Package {
+			Id = "Xamarin.Build.Download",
+			Version = "0.4.11",
 		};
 	}
 }

@@ -20,7 +20,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -30,7 +29,6 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -80,7 +78,6 @@
     </CleanDependsOn>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="libs\armeabi\libtiming2.so" />
     <EmbeddedNativeLibrary Include="libs\armeabi-v7a\libtiming2.so" />
     <EmbeddedNativeLibrary Include="libs\x86\libtiming2.so" />
   </ItemGroup>

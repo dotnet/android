@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildThisFileDirectory)\..\..\build-tools\scripts\cmake-common.props" />
+
+  <PropertyGroup>
+    <_CommonDefines>-DSQLITE_SOURCE_DIR="$(SqliteSourceFullPath)"</_CommonDefines>
+    <_CmakeCommonHostFlags>$(_CmakeCommonFlags) $(_CommonDefines)</_CmakeCommonHostFlags>
+    <_CmakeAndroidFlags>$(_CmakeAndroidFlags) $(_CommonDefines)</_CmakeAndroidFlags>
+    <_CmakeMxeCommonFlags32>$(_CmakeMxeCommonFlags32) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-32.cmake -DMINGW_TARGET_32=1</_CmakeMxeCommonFlags32>
+    <_CmakeMxeCommonFlags64>$(_CmakeMxeCommonFlags64) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-64.cmake -DMINGW_TARGET_64=1</_CmakeMxeCommonFlags64>
+  </PropertyGroup>
+</Project>

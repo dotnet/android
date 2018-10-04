@@ -19,24 +19,36 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
   </PropertyGroup>
-  <Import Project="..\..\..\Configuration.props" />
+
+  <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
+    <RelativeRootPath>..\..\..\..\..\..</RelativeRootPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
+    <RelativeRootPath>..\..\..</RelativeRootPath>
+  </PropertyGroup>
+
+  <Import Project="$(RelativeRootPath)\Configuration.props" />
   <PropertyGroup>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestDebug</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Debug</OutputPath>
     <DefineConstants>DEBUG;__MOBILE__;__ANDROID__;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
     <ConsolePause>false</ConsolePause>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <BundleAssemblies>true</BundleAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' != 'true' ">$(RelativeRootPath)\bin\TestRelease</OutputPath>
+    <OutputPath Condition=" '$(UnitTestsMode)' == 'true' ">bin\Release</OutputPath>
     <DefineConstants>__MOBILE__;__ANDROID__;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -74,7 +86,6 @@
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\x86\libsanangeles.so" />
     <Compile Include="MainActivity.cs" />
-    <AndroidNativeLibrary Include="libs\armeabi\libsanangeles.so" />
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libsanangeles.so" />
   </ItemGroup>
 </Project>

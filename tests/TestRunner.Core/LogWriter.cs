@@ -6,6 +6,8 @@ namespace Xamarin.Android.UnitTests
 {
 	public class LogWriter
 	{
+		const string Tag = "LogWriter";
+
 		public MinimumLogLevel MinimumLogLevel { get; set; } = MinimumLogLevel.Info;
 
 		public void OnError (string tag, string message)
@@ -41,6 +43,22 @@ namespace Xamarin.Android.UnitTests
 			if (MinimumLogLevel < MinimumLogLevel.Info)
 				return;
 			Log.Info (tag, message);
+		}
+
+		public void SetMinimuLogLevelFromString (string minimumLevel)
+		{
+			// Be forgiving... :P
+			if (String.IsNullOrEmpty (minimumLevel))
+				return;
+
+			MinimumLogLevel level;
+			if (!Enum.TryParse (minimumLevel, true, out level)) {
+				Log.Warn (Tag, $"Unknown log level name: {minimumLevel}");
+				return;
+			}
+
+			Log.Info (Tag, $"Setting log level to {level}");
+			MinimumLogLevel = level;
 		}
 	}
 }
