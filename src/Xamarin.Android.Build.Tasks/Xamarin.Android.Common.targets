@@ -494,6 +494,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		TargetFrameworkVersion="$(TargetFrameworkVersion)" />
 </Target>
 
+<Target Name="_CheckSupportedAbis">
+	<PropertyGroup>
+		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
+	</PropertyGroup>
+	<Warning Code="XA0115"
+			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
+			Text="This ABI ('armeabi') is deprecated and will be removed in the next release. Please update your project properties."
+	/>
+</Target>
+
 <Target Name="_StripEmbeddedLibraries"
   Inputs="@(ResolvedAssemblies)" 
   Outputs="$(_AndroidStripFlag)"
@@ -528,6 +538,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
+	_CheckSupportedAbis;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
