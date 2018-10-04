@@ -59,7 +59,7 @@
       <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>
       <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
-      <DarwinMinimumUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2018-08/7/f123d67e048465fdcc980059e7ec70daf9e0f7cc/$(_DarwinMonoFramework)</DarwinMinimumUrl>
+      <DarwinMinimumUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2018-08/99/1644a1a01d51e13d01b1202286ee890412462d25/$(_DarwinMonoFramework)</DarwinMinimumUrl>
       <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
     </RequiredProgram>
   </ItemGroup>
