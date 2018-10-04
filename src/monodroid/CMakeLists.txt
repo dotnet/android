@@ -241,6 +241,7 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c

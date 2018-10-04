@@ -4,101 +4,18 @@
 
 #include <jni.h>
 #include "dylib-mono.h"
+#include "android-system.h"
 
 namespace xamarin { namespace android { namespace internal
 {
+	extern char *primary_override_dir;
+	extern char *external_override_dir;
+	extern char *external_legacy_override_dir;
+	extern char *runtime_libdir;
+	extern int   embedded_dso_mode;
+
 	class MonodroidRuntime
 	{
-	};
-
-	struct BundledProperty {
-		char *name;
-		char *value;
-		int   value_len;
-		struct BundledProperty *next;
-	};
-
-	class AndroidSystem
-	{
-	private:
-		static BundledProperty *bundled_properties;
-
-	public:
-#ifdef RELEASE
-		static constexpr uint32_t MAX_OVERRIDES = 1;
-#else
-		static constexpr uint32_t MAX_OVERRIDES = 3;
-#endif
-		static char* override_dirs [MAX_OVERRIDES];
-		static const char **app_lib_directories;
-		static size_t app_lib_directories_size;
-
-	public:
-		void  add_system_property (const char *name, const char *value);
-		void  setup_environment (JNIEnv *env, jobjectArray runtimeApks);
-		void  setup_process_args (JNIEnv *env, jobjectArray runtimeApks);
-		int   monodroid_get_system_property (const char *name, char **value);
-		int   monodroid_get_system_property_from_overrides (const char *name, char ** value);
-		void  create_update_dir (char *override_dir);
-		char* get_libmonosgen_path ();
-		char* get_bundled_app (JNIEnv *env, jstring dir);
-		int   count_override_assemblies ();
-		int   get_gref_gc_threshold ();
-		void  setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jobjectArray runtimeApks);
-		void* load_dso (const char *path, int dl_flags, mono_bool skip_exists_check);
-		void* load_dso_from_any_directories (const char *name, int dl_flags);
-		char* get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs_free);
-
-		const char* get_override_dir (uint32_t index) const
-		{
-			if (index >= MAX_OVERRIDES)
-				return nullptr;
-
-			return override_dirs [index];
-		}
-
-		void set_override_dir (uint32_t index, const char* dir)
-		{
-			if (index >= MAX_OVERRIDES)
-				return;
-
-			override_dirs [index] = const_cast <char*> (dir);
-		}
-
-		int get_max_gref_count () const
-		{
-			return max_gref_count;
-		}
-
-		void init_max_gref_count ()
-		{
-			max_gref_count = get_max_gref_count_from_system ();
-		}
-
-	private:
-		int  get_max_gref_count_from_system ();
-		void setup_environment_from_line (const char *line);
-		void setup_environment_from_file (const char *apk, int index, int apk_count, void *user_data);
-		BundledProperty* lookup_system_property (const char *name);
-		void setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data);
-		int  _monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len);
-		int  _monodroid_get_system_property_from_file (const char *path, char **value);
-		void  copy_native_libraries_to_internal_location ();
-		void  copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
-		void  add_apk_libdir (const char *apk, int index, int apk_count, void *user_data);
-		void  for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data);
-		char* get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_free);
-		void* load_dso_from_specified_dirs (const char **directories, int num_entries, const char *dso_name, int dl_flags);
-		void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
-		void* load_dso_from_override_dirs (const char *name, int dl_flags);
-		char* get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, mono_bool *needs_free);
-		void  dso_alloc_cleanup (char **dso_path, mono_bool *needs_free);
-
-#if !defined (ANDROID)
-		void monodroid_strreplace (char *buffer, char old_char, char new_char);
-#endif
-	private:
-		int max_gref_count = 0;
 	};
 
 	class OSBridge

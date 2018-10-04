@@ -15,13 +15,6 @@
 #include <sys/syscall.h>
 #endif
 
-#ifdef ANDROID
-#include <sys/system_properties.h>
-#else
-#define PROP_NAME_MAX   32
-#define PROP_VALUE_MAX  92
-#endif
-
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -78,7 +71,6 @@ extern "C" {
 #include "ioapi.h"
 #include "monodroid-glue.h"
 #include "mkbundle-api.h"
-#include "cpu-arch.h"
 #include "monodroid-glue-internal.h"
 #include "globals.h"
 
@@ -95,6 +87,7 @@ using namespace xamarin::android::internal;
 
 static OSBridge osBridge;
 
+// TODO: all of these must be moved to some class
 static pthread_mutex_t process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t process_cmd_cond = PTHREAD_COND_INITIALIZER;
 static int debugging_configured;
@@ -107,7 +100,7 @@ static int config_timedout;
 static struct timeval wait_tv;
 static struct timespec wait_ts;
 #endif  // def DEBUG
-static char *runtime_libdir;
+char *xamarin::android::internal::runtime_libdir;
 static int register_debug_symbols;
 static MonoMethod* registerType;
 /*
@@ -117,17 +110,6 @@ static MonoMethod* registerType;
 static int wait_for_gdb;
 static volatile int monodroid_gdb_wait = TRUE;
 static int android_api_level = 0;
-
-// Values correspond to the CPU_KIND_* macros
-static const char* android_abi_names[CPU_KIND_X86_64+1] = {
-	"unknown",
-	[CPU_KIND_ARM]      = "armeabi-v7a",
-	[CPU_KIND_ARM64]    = "arm64-v8a",
-	[CPU_KIND_MIPS]     = "mips",
-	[CPU_KIND_X86]      = "x86",
-	[CPU_KIND_X86_64]   = "x86_64",
-};
-#define ANDROID_ABI_NAMES_SIZE (sizeof(android_abi_names) / sizeof (android_abi_names[0]))
 
 #include "config.include"
 #include "machine.config.include"
@@ -141,22 +123,7 @@ monodroid_clear_gdb_wait (void)
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
-#endif
-
-#ifdef ANDROID64
-constexpr char SYSTEM_LIB_PATH[] = "/system/lib64";
-#elif ANDROID
-constexpr char SYSTEM_LIB_PATH[] = "/system/lib";
-#elif LINUX_FLATPAK
-constexpr char SYSTEM_LIB_PATH[] = "/app/lib/mono";
-#elif LINUX
-constexpr char SYSTEM_LIB_PATH[] = "/usr/lib";
-#elif APPLE_OS_X
-constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Libraries/";
-#elif WINDOWS
-static const char *SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
-#else
-constexpr char SYSTEM_LIB_PATH[] = "";
+const char *AndroidSystem::SYSTEM_LIB_PATH = get_xamarin_android_msbuild_path();
 #endif
 
 FILE  *gref_log;
@@ -193,243 +160,10 @@ monodroid_free (void *ptr)
 	free (ptr);
 }
 
-BundledProperty *AndroidSystem::bundled_properties = nullptr;
-
-BundledProperty*
-AndroidSystem::lookup_system_property (const char *name)
-{
-	BundledProperty *p = bundled_properties;
-	for ( ; p ; p = p->next)
-		if (strcmp (p->name, name) == 0)
-			return p;
-	return NULL;
-}
-
-void
-AndroidSystem::add_system_property (const char *name, const char *value)
-{
-	int name_len, value_len;
-
-	BundledProperty* p = lookup_system_property (name);
-	if (p) {
-		char *n = utils.monodroid_strdup_printf ("%s", value);
-		if (!n)
-			return;
-		free (p->value);
-		p->value      = n;
-		p->value_len  = strlen (p->value);
-		return;
-	}
-
-	name_len  = strlen (name);
-	value_len = strlen (value);
-
-	p = reinterpret_cast<BundledProperty*> (malloc (sizeof ( BundledProperty) + name_len + 1));
-	if (!p)
-		return;
-
-	p->name = ((char*) p) + sizeof (struct BundledProperty);
-	strncpy (p->name, name, name_len);
-	p->name [name_len] = '\0';
-
-	p->value      = utils.monodroid_strdup_printf ("%s", value);
-	p->value_len  = value_len;
-
-	p->next             = bundled_properties;
-	bundled_properties  = p;
-}
-
-#ifndef ANDROID
-void
-AndroidSystem::monodroid_strreplace (char *buffer, char old_char, char new_char)
-{
-	if (buffer == NULL)
-		return;
-	while (*buffer != '\0') {
-		if (*buffer == old_char)
-			*buffer = new_char;
-		buffer++;
-	}
-}
-
-int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *env_name = utils.monodroid_strdup_printf ("__XA_%s", name);
-	monodroid_strreplace (env_name, '.', '_');
-	char *env_value = getenv (env_name);
-	free (env_name);
-
-	size_t env_value_len = env_value ? strlen (env_value) : 0;
-	if (env_value_len == 0) {
-		sp_value[0] = '\0';
-		return 0;
-	}
-
-	if (env_value_len >= sp_value_len)
-		log_warn (LOG_DEFAULT, "System property buffer size too small by %u bytes", env_value_len == sp_value_len ? 1 : env_value_len - sp_value_len);
-
-	strncpy (sp_value, env_value, sp_value_len);
-	sp_value[sp_value_len] = '\0';
-
-	return strlen (sp_value);
-}
-#elif ANDROID64
-/* __system_property_get was removed in Android 5.0/64bit
-   this is hopefully temporary replacement, until we find better
-   solution
-
-   sp_value buffer should be at least PROP_VALUE_MAX+1 bytes long
-*/
-int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *cmd = utils.monodroid_strdup_printf ("getprop %s", name);
-	FILE* result = popen (cmd, "r");
-	int len = (int) fread (sp_value, 1, sp_value_len, result);
-	fclose (result);
-	sp_value [len] = 0;
-	if (len > 0 && sp_value [len - 1] == '\n') {
-		sp_value [len - 1] = 0;
-		len--;
-	} else {
-		if (len != 0)
-			len = 0;
-		sp_value [0] = 0;
-	}
-
-	log_info (LOG_DEFAULT, "_monodroid__system_property_get %s: '%s' len: %d", name, sp_value, len);
-
-	return len;
-}
-#else
-int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
-{
-	if (!name || !sp_value)
-		return -1;
-
-	char *buf = nullptr;
-	if (sp_value_len < PROP_VALUE_MAX + 1) {
-		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
-		buf = new char [PROP_VALUE_MAX + 1];
-	}
-
-	int len = __system_property_get (name, buf ? buf : sp_value);
-	if (buf) {
-		strncpy (sp_value, buf, sp_value_len);
-		sp_value [sp_value_len] = '\0';
-		delete buf;
-	}
-
-	return len;
-}
-#endif
-
 MONO_API int
 monodroid_get_system_property (const char *name, char **value)
 {
 	return androidSystem.monodroid_get_system_property (name, value);
-}
-
-int
-AndroidSystem::monodroid_get_system_property (const char *name, char **value)
-{
-	char *pvalue;
-	char  sp_value [PROP_VALUE_MAX+1] = { 0, };
-	int   len;
-	BundledProperty *p;
-
-	if (value)
-		*value = NULL;
-
-	pvalue  = sp_value;
-	len     = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
-
-	if (len <= 0 && (p = lookup_system_property (name)) != NULL) {
-		pvalue  = p->value;
-		len     = p->value_len;
-	}
-
-	if (len >= 0 && value) {
-		*value = new char [len+1];
-		if (!*value)
-			return -len;
-		memcpy (*value, pvalue, len);
-		(*value)[len] = '\0';
-	}
-	return len;
-}
-
-
-char* AndroidSystem::override_dirs [MAX_OVERRIDES];
-
-int
-AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
-{
-	int i;
-
-	if (value)
-		*value = NULL;
-
-	FILE* fp = utils.monodroid_fopen (path, "r");
-	if (fp == NULL)
-		return 0;
-
-	struct stat fileStat;
-	if (fstat (fileno (fp), &fileStat) < 0) {
-		fclose (fp);
-		return 0;
-	}
-
-	if (!value) {
-		fclose (fp);
-		return fileStat.st_size+1;
-	}
-
-	*value = new char[fileStat.st_size+1];
-	if (!(*value)) {
-		fclose (fp);
-		return fileStat.st_size+1;
-	}
-
-	ssize_t len = fread (*value, 1, fileStat.st_size, fp);
-	fclose (fp);
-	for (i = 0; i < fileStat.st_size+1; ++i) {
-		if ((*value) [i] != '\n' && (*value) [i] != '\r')
-			continue;
-		(*value) [i] = 0;
-		break;
-	}
-	return len;
-}
-
-int
-AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, char ** value)
-{
-	int result = -1;
-	int oi;
-
-	for (oi = 0; oi < MAX_OVERRIDES; ++oi) {
-		if (override_dirs [oi]) {
-			char *overide_file = utils.path_combine (override_dirs [oi], name);
-			log_info (LOG_DEFAULT, "Trying to get property from %s", overide_file);
-			result = _monodroid_get_system_property_from_file (overide_file, value);
-			free (overide_file);
-			if (result <= 0 || value == NULL || (*value) == NULL || strlen (*value) == 0) {
-				continue;
-			}
-			log_info (LOG_DEFAULT, "Property '%s' from  %s has value '%s'.", name, override_dirs [oi], *value);
-			return result;
-		}
-	}
-	return 0;
 }
 
 static char*
@@ -445,34 +179,11 @@ get_primary_override_dir (JNIEnv *env, jstring home)
 	return p;
 }
 
-static char *primary_override_dir;
-static char *external_override_dir;
-static char *external_legacy_override_dir;
-
-void
-AndroidSystem::create_update_dir (char *override_dir)
-{
-#if defined(RELEASE)
-	/*
-	 * Don't create .__override__ on Release builds, because Google requires
-	 * that pre-loaded apps not create world-writable directories.
-	 *
-	 * However, if any logging is enabled (which should _not_ happen with
-	 * pre-loaded apps!), we need the .__override__ directory...
-	 */
-	if (log_categories == 0 && utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, NULL) == 0) {
-		return;
-	}
-#endif
-
-	override_dirs [0] = override_dir;
-	utils.create_public_directory (override_dir);
-	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
-}
-
-const char **AndroidSystem::app_lib_directories;
-size_t AndroidSystem::app_lib_directories_size = 0;
-static int embedded_dso_mode = 0;
+// TODO: these must be moved to some class
+char *xamarin::android::internal::primary_override_dir;
+char *xamarin::android::internal::external_override_dir;
+char *xamarin::android::internal::external_legacy_override_dir;
+int xamarin::android::internal::embedded_dso_mode = 0;
 
 /* Set of Windows-specific utility/reimplementation of Unix functions */
 #ifdef WINDOWS
@@ -567,296 +278,11 @@ readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent **result)
 
 #endif // def WINDOWS
 
-#if ANDROID || LINUX
-#define MONO_SGEN_SO "libmonosgen-2.0.so"
-#define MONO_SGEN_ARCH_SO "libmonosgen-%s-2.0.so"
-#elif APPLE_OS_X
-#define MONO_SGEN_SO "libmonosgen-2.0.dylib"
-#define MONO_SGEN_ARCH_SO "libmonosgen-%s-2.0.dylib"
-#elif WINDOWS
-#define MONO_SGEN_SO "libmonosgen-2.0.dll"
-#define MONO_SGEN_ARCH_SO "libmonosgen-%s-2.0.dll"
-#else
-#define MONO_SGEN_SO "monosgen-2.0"
-#define MONO_SGEN_ARCH_SO "monosgen-%s-2.0"
-#endif
-
-#define TRY_LIBMONOSGEN(dir) \
-	if (dir) { \
-		libmonoso = utils.path_combine (dir, MONO_SGEN_SO); \
-		log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);	\
-		if (utils.file_exists (libmonoso)) \
-			return libmonoso; \
-		free (libmonoso); \
-	}
-
-#ifndef RELEASE
-void
-AndroidSystem::copy_native_libraries_to_internal_location ()
-{
-	int i;
-
-	for (i = 0; i < MAX_OVERRIDES; ++i) {
-		monodroid_dir_t *dir;
-		monodroid_dirent_t b, *e;
-
-		char *dir_path = utils.path_combine (override_dirs [i], "lib");
-		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
-
-		if (dir_path == NULL || !utils.directory_exists (dir_path)) {
-			log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
-			free (dir_path);
-			continue;
-		}
-
-		if ((dir = utils.monodroid_opendir (dir_path)) == NULL) {
-			log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
-			free (dir_path);
-			continue;
-		}
-
-		while (readdir_r (dir, &b, &e) == 0 && e) {
-			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
-			if (utils.monodroid_dirent_hasextension (e, ".so")) {
-#if WINDOWS
-				char *file_name = utils.utf16_to_utf8 (e->d_name);
-#else   /* def WINDOWS */
-				char *file_name = e->d_name;
-#endif  /* ndef WINDOWS */
-				copy_file_to_internal_location (primary_override_dir, dir_path, file_name);
-#if WINDOWS
-				free (file_name);
-#endif  /* def WINDOWS */
-			}
-		}
-		utils.monodroid_closedir (dir);
-		free (dir_path);
-	}
-}
-#endif
-
-char*
-AndroidSystem::get_libmonosgen_path ()
-{
-	char *libmonoso;
-	int i;
-
-#ifndef RELEASE
-	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
-	// external storage locations so we need to file copy the shared object to an internal
-	// storage location before loading it.
-	copy_native_libraries_to_internal_location ();
-
-	if (!embedded_dso_mode) {
-		for (i = 0; i < MAX_OVERRIDES; ++i)
-			TRY_LIBMONOSGEN (override_dirs [i]);
-	}
-#endif
-	if (!embedded_dso_mode) {
-		for (i = 0; i < app_lib_directories_size; i++) {
-			TRY_LIBMONOSGEN (app_lib_directories [i]);
-		}
-	}
-
-	libmonoso = runtime_libdir ? utils.monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR MONO_SGEN_ARCH_SO, runtime_libdir, sizeof(void*) == 8 ? "64bit" : "32bit") : NULL;
-	if (libmonoso && utils.file_exists (libmonoso)) {
-		char* links_dir = utils.path_combine (primary_override_dir, "links");
-		char* link = utils.path_combine (links_dir, MONO_SGEN_SO);
-		if (!utils.directory_exists (links_dir)) {
-			if (!utils.directory_exists (primary_override_dir))
-				utils.create_public_directory (primary_override_dir);
-			utils.create_public_directory (links_dir);
-		}
-		free (links_dir);
-		if (!utils.file_exists (link)) {
-			int result = symlink (libmonoso, link);
-			if (result != 0 && errno == EEXIST) {
-				log_warn (LOG_DEFAULT, "symlink exists, recreating: %s -> %s", link, libmonoso);
-				unlink (link);
-				result = symlink (libmonoso, link);
-			}
-			if (result != 0)
-				log_warn (LOG_DEFAULT, "symlink failed with errno=%i %s", errno, strerror (errno));
-		}
-		free (libmonoso);
-		libmonoso = link;
-	}
-
-	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);
-	if (libmonoso && utils.file_exists (libmonoso))
-		return libmonoso;
-	free (libmonoso);
-
-#ifdef WINDOWS
-	TRY_LIBMONOSGEN (get_libmonoandroid_directory_path ())
-#endif
-
-	TRY_LIBMONOSGEN (SYSTEM_LIB_PATH);
-	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", MONO_SGEN_SO);
-
-#ifndef RELEASE
-	if (!embedded_dso_mode) {
-		for (i = 0; i < MAX_OVERRIDES; ++i) {
-			if (override_dirs [i] == NULL)
-				continue;
-			log_fatal (LOG_DEFAULT, "  %s", override_dirs [i]);
-		}
-	}
-#endif
-	for (i = 0; i < app_lib_directories_size; i++) {
-		log_fatal (LOG_DEFAULT, "  %s", app_lib_directories [i]);
-	}
-
-	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
-	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
-	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
-
-	return libmonoso;
-}
-
 typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
 mono_mkbundle_init_ptr mono_mkbundle_init;
 
 typedef void (*mono_mkbundle_initialize_mono_api_ptr) (const BundleMonoAPI *info);
 mono_mkbundle_initialize_mono_api_ptr mono_mkbundle_initialize_mono_api;
-
-char*
-AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_free)
-{
-	assert (needs_free);
-
-	*needs_free = FALSE;
-	if (!dso_path)
-		return NULL;
-
-	if (base_dir == NULL || utils.is_path_rooted (dso_path))
-		return (char*)dso_path; // Absolute path or no base path, can't do much with it
-
-	char *full_path = utils.path_combine (base_dir, dso_path);
-	*needs_free = TRUE;
-	return full_path;
-}
-
-void*
-AndroidSystem::load_dso (const char *path, int dl_flags, mono_bool skip_exists_check)
-{
-	if (path == NULL)
-		return NULL;
-
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
-	if (!skip_exists_check && !embedded_dso_mode && !utils.file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
-		return NULL;
-	}
-
-	void *handle = dlopen (path, dl_flags);
-	if (handle == NULL)
-		log_info (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
-	return handle;
-}
-
-void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, int num_entries, const char *dso_name, int dl_flags)
-{
-	assert (directories);
-	if (dso_name == NULL)
-		return NULL;
-
-	mono_bool needs_free = FALSE;
-	char *full_path = NULL;
-	for (int i = 0; i < num_entries; i++) {
-		full_path = get_full_dso_path (directories [i], dso_name, &needs_free);
-		void *handle = load_dso (full_path, dl_flags, FALSE);
-		if (needs_free)
-			free (full_path);
-		if (handle != NULL)
-			return handle;
-	}
-
-	return NULL;
-}
-
-void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, int dl_flags)
-{
-	return load_dso_from_specified_dirs (static_cast<const char**> (app_lib_directories), app_lib_directories_size, name, dl_flags);
-}
-
-void*
-AndroidSystem::load_dso_from_override_dirs (const char *name, int dl_flags)
-{
-#ifdef RELEASE
-	return NULL;
-#else
-	return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs), AndroidSystem::MAX_OVERRIDES, name, dl_flags);
-#endif
-}
-
-void*
-AndroidSystem::load_dso_from_any_directories (const char *name, int dl_flags)
-{
-	void *handle = load_dso_from_override_dirs (name, dl_flags);
-	if (handle == NULL)
-		handle = load_dso_from_app_lib_dirs (name, dl_flags);
-	return handle;
-}
-
-char*
-AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, mono_bool *needs_free)
-{
-	assert (needs_free);
-
-	*needs_free = FALSE;
-	char *dso_path = get_full_dso_path (base_dir, dso_name, needs_free);
-	if (utils.file_exists (dso_path))
-		return dso_path;
-
-	*needs_free = FALSE;
-	free (dso_path);
-	return NULL;
-}
-
-void
-AndroidSystem::dso_alloc_cleanup (char **dso_path, mono_bool *needs_free)
-{
-	assert (needs_free);
-	if (dso_path != NULL) {
-		if (*needs_free)
-			free (*dso_path);
-		*dso_path = NULL;
-	}
-	*needs_free = FALSE;
-}
-
-char*
-AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs_free)
-{
-	assert (needs_free);
-
-	*needs_free = FALSE;
-	if (embedded_dso_mode)
-		return NULL;
-#ifndef RELEASE
-	char *dso_path = NULL;
-	for (int i = 0; i < AndroidSystem::MAX_OVERRIDES; i++) {
-		if (AndroidSystem::override_dirs [i] == NULL)
-			continue;
-		dso_path = get_existing_dso_path_on_disk (AndroidSystem::override_dirs [i], dso_name, needs_free);
-		if (dso_path != NULL)
-			return dso_path;
-		dso_alloc_cleanup (&dso_path, needs_free);
-	}
-#endif
-	for (int i = 0; i < app_lib_directories_size; i++) {
-		dso_path = get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, needs_free);
-		if (dso_path != NULL)
-			return dso_path;
-		dso_alloc_cleanup (&dso_path, needs_free);
-	}
-
-
-	return NULL;
-}
 
 // This function could be improved if we somehow marked an apk containing just the bundled app as
 // such - perhaps another __XA* environment variable? Would certainly make code faster.
@@ -2176,34 +1602,6 @@ current_time_millis (void)
 }
 
 int
-AndroidSystem::count_override_assemblies (void)
-{
-	int c = 0;
-	int i;
-
-	for (i = 0; i < MAX_OVERRIDES; ++i) {
-		monodroid_dir_t *dir;
-		monodroid_dirent_t b, *e;
-
-		const char *dir_path = override_dirs [i];
-
-		if (dir_path == NULL || !utils.directory_exists (dir_path))
-			continue;
-
-		if ((dir = utils.monodroid_opendir (dir_path)) == NULL)
-			continue;
-
-		while (readdir_r (dir, &b, &e) == 0 && e) {
-			if (utils.monodroid_dirent_hasextension (e, ".dll"))
-				++c;
-		}
-		utils.monodroid_closedir (dir);
-	}
-
-	return c;
-}
-
-int
 should_register_file (const char *filename, void *user_data)
 {
 #ifndef RELEASE
@@ -2332,48 +1730,6 @@ monodroid_debug_accept (int sock, struct sockaddr_in addr)
 	return accepted;
 }
 #endif
-
-int
-AndroidSystem::get_max_gref_count_from_system (void)
-{
-	constexpr char HARDWARE_TYPE[] = "ro.hardware";
-	constexpr char HARDWARE_EMULATOR[] = "goldfish";
-
-	int max;
-	char value [PROP_VALUE_MAX+1];
-	char *override;
-	int len;
-
-	len = _monodroid__system_property_get (HARDWARE_TYPE, value, sizeof (value));
-	if (len > 0 && strcmp (value, HARDWARE_EMULATOR) == 0) {
-		max = 2000;
-	} else {
-		max = 51200;
-	}
-
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_MAX_GREFC, &override) > 0) {
-		char *e;
-		max       = strtol (override, &e, 10);
-		switch (*e) {
-		case 'k':
-			e++;
-			max *= 1000;
-			break;
-		case 'm':
-			e++;
-			max *= 1000000;
-			break;
-		}
-		if (max < 0)
-			max = INT_MAX;
-		if (*e) {
-			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC, override);
-		}
-		log_warn (LOG_GC, "Overriding max JNI Global Reference count to %i", max);
-		free (override);
-	}
-	return max;
-}
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
@@ -2640,46 +1996,7 @@ enable_soft_breakpoints (void)
 	return 1;
 }
 #endif /* DEBUG */
-void
-AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
-{
-	char *from_file = utils.path_combine (from_dir, file);
-	char *to_file   = NULL;
-	
-	do {
-		if (!from_file || !utils.file_exists (from_file))
-			break;
-
-		log_warn (LOG_DEFAULT, "Copying file `%s` from external location `%s` to internal location `%s`",
-				file, from_dir, to_dir);
-		
-		to_file = utils.path_combine (to_dir, file);
-		if (!to_file)
-			break;
-		
-		int r = unlink (to_file);
-		if (r < 0 && errno != ENOENT) {
-			log_warn (LOG_DEFAULT, "Unable to delete file `%s`: %s", to_file, strerror (errno));
-			break;
-		}
-		
-		if (utils.file_copy (to_file, from_file) < 0) {
-			log_warn (LOG_DEFAULT, "Copy failed from `%s` to `%s`: %s", from_file, to_file, strerror (errno));
-			break;
-		}
-		
-		utils.set_user_executable (to_file);
-	} while (0);
-	
-	free (from_file);
-	free (to_file);
-}
 #else  /* !defined (ANDROID) */
-void
-AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
-{
-}
-
 #ifdef DEBUG
 #ifndef enable_soft_breakpoints
 static int
@@ -3013,16 +2330,6 @@ struct JnienvInitializeArgs {
 	int             isRunningOnDesktop;
 };
 
-int
-AndroidSystem::get_gref_gc_threshold ()
-{
-	if (max_gref_count == INT_MAX)
-		return max_gref_count;
-	long long value = max_gref_count;
-	value *= 90;
-	return (int) (value / 100);
-}
-
 #define DEFAULT_X_DPI 120.0f
 #define DEFAULT_Y_DPI 120.0f
 
@@ -3282,7 +2589,7 @@ monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 	}
 
 	if (libmonodroid_fallback) {
-		full_name = utils.path_combine (SYSTEM_LIB_PATH, "libmonodroid.so");
+		full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, "libmonodroid.so");
 		h = androidSystem.load_dso (full_name, dl_flags, FALSE);
 		goto done_and_out;
 	}
@@ -3560,108 +2867,6 @@ set_profile_options (JNIEnv *env)
 
 static FILE* counters;
 
-void
-AndroidSystem::setup_environment_from_line (const char *line)
-{
-	char **entry;
-	const char *k, *v;
-
-	if (line == NULL || !isprint (line [0]))
-		return;
-
-	entry = utils.monodroid_strsplit (line, "=", 2);
-
-	if ((k = entry [0]) && *k &&
-			(v = entry [1]) && *v) {
-		if (islower (k [0])) {
-			add_system_property (k, v);
-		} else {
-			setenv (k, v, 1);
-		}
-	}
-
-	utils.monodroid_strfreev (entry);
-}
-
-void
-AndroidSystem::setup_environment_from_file (const char *apk, int index, int apk_count, void *user_data)
-{
-	unzFile file;
-	if ((file = unzOpen (apk)) == nullptr)
-		return;
-
-	if (unzLocateFile (file, "environment", 0) == UNZ_OK) {
-		unz_file_info info;
-
-		if (unzGetCurrentFileInfo (file, &info, nullptr, 0, nullptr, 0, nullptr, 0) == UNZ_OK &&
-				unzOpenCurrentFile (file) == UNZ_OK) {
-			char *contents = new char [info.uncompressed_size+1];
-			if (contents != NULL &&
-					unzReadCurrentFile (file, contents, info.uncompressed_size) > 0) {
-
-				int i;
-				char *line = contents;
-				contents [info.uncompressed_size] = '\0';
-
-				for (i = 0; i < info.uncompressed_size; ++i) {
-					if (contents [i] != '\n')
-						continue;
-
-					contents [i] = '\0';
-					setup_environment_from_line (line);
-					line = &contents [i+1];
-				}
-
-				if (line < (contents + info.uncompressed_size))
-					setup_environment_from_line (line);
-
-				free (contents);
-			}
-
-			unzCloseCurrentFile (file);
-		}
-	}
-
-	unzClose (file);
-}
-
-void
-AndroidSystem::for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data)
-{
-	int i;
-	jsize apksLength = env->GetArrayLength (runtimeApks);
-	for (i = 0; i < apksLength; ++i) {
-		jstring e       = reinterpret_cast<jstring> (env->GetObjectArrayElement (runtimeApks, i));
-		const char *apk = env->GetStringUTFChars (e, nullptr);
-
-
-		(this->*handler) (apk, i, apksLength, user_data);
-		env->ReleaseStringUTFChars (e, apk);
-	}
-}
-
-void
-AndroidSystem::setup_environment (JNIEnv *env, jobjectArray runtimeApks)
-{
-	for_each_apk (env, runtimeApks, &AndroidSystem::setup_environment_from_file, NULL);
-}
-
-void
-AndroidSystem::setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data)
-{
-	if (!apk || index != apk_count - 1)
-		return;
-
-	char *args[1] = { (char*) apk };
-	monoFunctions.runtime_set_main_args (1, args);
-}
-
-void
-AndroidSystem::setup_process_args (JNIEnv *env, jobjectArray runtimeApks)
-{
-	for_each_apk (env, runtimeApks, &AndroidSystem::setup_process_args_apk, NULL);
-}
-
 /*
  * process_cmd:
  *
@@ -3860,21 +3065,6 @@ create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArra
 	return domain;
 }
 
-void
-AndroidSystem::add_apk_libdir (const char *apk, int index, int apk_count, void *user_data)
-{
-	assert (user_data);
-	assert (index >= 0 && index < app_lib_directories_size);
-	app_lib_directories [index] = monodroid_strdup_printf ("%s!/lib/%s", apk, (const char*)user_data);
-}
-
-void
-AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jobjectArray runtimeApks)
-{
-	// Man, the cast is ugly...
-	for_each_apk (env, runtimeApks, &AndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
-}
-
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
 {
@@ -3970,7 +3160,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	 */
 	int sgen_dlopen_flags = RTLD_LAZY | RTLD_GLOBAL;
 	if (embedded_dso_mode) {
-		libmonosgen_handle = androidSystem.load_dso_from_any_directories (MONO_SGEN_SO, sgen_dlopen_flags);
+		libmonosgen_handle = androidSystem.load_dso_from_any_directories (AndroidSystem::MONO_SGEN_SO, sgen_dlopen_flags);
 	}
 
 	if (libmonosgen_handle == NULL)
