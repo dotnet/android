@@ -363,12 +363,10 @@ namespace Android.Runtime {
 
 		public override void AddPeer (IJavaPeerable value)
 		{
-			throw new NotImplementedException ();
 		}
 
 		public override void RemovePeer (IJavaPeerable value)
 		{
-			throw new NotImplementedException ();
 		}
 
 		public override IJavaPeerable PeekPeer (JniObjectReference reference)
@@ -378,17 +376,15 @@ namespace Android.Runtime {
 
 		public override void CollectPeers ()
 		{
-			throw new NotImplementedException ();
 		}
 
 		public override void FinalizePeer (IJavaPeerable value)
 		{
-			throw new NotImplementedException ();
 		}
 
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
-			throw new NotImplementedException ();
+			return null;
 		}
 	}
 }
