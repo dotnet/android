@@ -133,7 +133,7 @@ namespace Java.Interop {
 		public  abstract    JniValueMarshalerState  CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize = 0);
 		public  abstract    void                    DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
 
-		object CreateValue (IntPtr handle, Type targetType)
+		internal object CreateValue (IntPtr handle, Type targetType)
 		{
 			var r = new JniObjectReference (handle);
 			return CreateValue (ref r, JniObjectReferenceOptions.Copy, targetType);

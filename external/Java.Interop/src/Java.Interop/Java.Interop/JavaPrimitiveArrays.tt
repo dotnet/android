@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
+using Java.Interop.Expressions;
+using System.Linq.Expressions;
+
 namespace Java.Interop {
 
 <#
@@ -180,6 +183,11 @@ namespace Java.Interop {
 				typeof (Java<#= info.TypeModifier #>Array) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<<#= info.TypeModifier #>>> {
 
 			public override IList<<#= info.TypeModifier #>> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -206,6 +214,16 @@ namespace Java.Interop {
 			{
 				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 

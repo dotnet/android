@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
+using Java.Interop.Expressions;
+using System.Linq.Expressions;
+
 namespace Java.Interop {
 
 	partial class JniRuntime {
@@ -190,6 +193,11 @@ namespace Java.Interop {
 				typeof (JavaBooleanArray) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Boolean>> {
 
 			public override IList<Boolean> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -216,6 +224,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Boolean>.DestroyArgumentState<JavaBooleanArray> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaBooleanArray.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -347,6 +365,11 @@ namespace Java.Interop {
 				typeof (JavaSByteArray) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<SByte>> {
 
 			public override IList<SByte> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -373,6 +396,16 @@ namespace Java.Interop {
 			{
 				JavaArray<SByte>.DestroyArgumentState<JavaSByteArray> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaSByteArray.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -504,6 +537,11 @@ namespace Java.Interop {
 				typeof (JavaCharArray) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Char>> {
 
 			public override IList<Char> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -530,6 +568,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Char>.DestroyArgumentState<JavaCharArray> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaCharArray.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -661,6 +709,11 @@ namespace Java.Interop {
 				typeof (JavaInt16Array) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int16>> {
 
 			public override IList<Int16> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -687,6 +740,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Int16>.DestroyArgumentState<JavaInt16Array> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaInt16Array.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -818,6 +881,11 @@ namespace Java.Interop {
 				typeof (JavaInt32Array) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int32>> {
 
 			public override IList<Int32> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -844,6 +912,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Int32>.DestroyArgumentState<JavaInt32Array> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaInt32Array.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -975,6 +1053,11 @@ namespace Java.Interop {
 				typeof (JavaInt64Array) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Int64>> {
 
 			public override IList<Int64> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -1001,6 +1084,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Int64>.DestroyArgumentState<JavaInt64Array> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaInt64Array.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -1132,6 +1225,11 @@ namespace Java.Interop {
 				typeof (JavaSingleArray) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Single>> {
 
 			public override IList<Single> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -1158,6 +1256,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Single>.DestroyArgumentState<JavaSingleArray> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaSingleArray.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
@@ -1289,6 +1397,11 @@ namespace Java.Interop {
 				typeof (JavaDoubleArray) == targetType;
 		}
 
+		public static object CreateMarshaledValue (IntPtr handle, Type targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<Double>> {
 
 			public override IList<Double> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
@@ -1315,6 +1428,16 @@ namespace Java.Interop {
 			{
 				JavaArray<Double>.DestroyArgumentState<JavaDoubleArray> (value, ref state, synchronize);
 			}
+
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+	                {
+	                        Func<IntPtr, Type, object>  m   = JavaDoubleArray.CreateMarshaledValue;
+
+	                        var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+	                        return targetType == null
+	                                ? (Expression) call
+	                                : Expression.Convert (call, targetType);
+	                }
 		}
 	}
 
