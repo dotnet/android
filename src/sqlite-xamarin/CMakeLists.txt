@@ -22,7 +22,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 
 add_definitions("-DNO_ANDROID_FUNCS=1")
-add_definitions("-DHAVE_POSIX_FALLOCATE=0")
 add_definitions("-DNDEBUG=1")
 add_definitions("-DHAVE_USLEEP=1")
 add_definitions("-DSQLITE_HAVE_ISNAN")
@@ -40,12 +39,30 @@ add_definitions("-DSQLITE_OMIT_BUILTIN_TEST")
 add_definitions("-DSQLITE_OMIT_COMPILEOPTION_DIAGS")
 add_definitions("-DSQLITE_OMIT_LOAD_EXTENSION")
 add_definitions("-DSQLITE_DEFAULT_FILE_PERMISSIONS=0600")
+add_definitions("-DSQLITE_SECURE_DELETE")
+add_definitions("-DSQLITE_ENABLE_BATCH_ATOMIC_WRITE")
+add_definitions("-DBIONIC_IOCTL_NO_SIGNEDNESS_OVERLOAD")
 add_definitions("-DHAVE_MALLOC_H=1")
+
+if (ANDROID_NATIVE_API_LEVEL GREATER 16)
+  add_definitions("-DHAVE_MALLOC_USABLE_SIZE")
+endif()
+
+# Disabled until we switch to building with API >= 12
+if (ANDROID_NATIVE_API_LEVEL GREATER 11)
+  add_definitions("-DUSE_PREAD64")
+endif()
+
+add_definitions("-Dfdatasync=fdatasync")
+
+if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 17)
+  add_definitions("-D__ANDROID_API_Q__=29")
+endif()
 
 macro(c_compiler_has_flag _flag)
   check_c_compiler_flag(-${_flag} HAS_${_flag}_C)
   if (HAS_${_flag}_C)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -${_flag}")
+    set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -${_flag}")
   endif()
 endmacro(c_compiler_has_flag)
 
@@ -68,16 +85,17 @@ set(TEST_COMPILER_ARGS
   Wformat
   Werror=format-security
   Wall
+  Wno-unused-parameter
   mindirect-branch=thunk-inline
   mfunction-return=thunk-inline
   )
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+  set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -O0")
 else()
   set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} g fomit-frame-pointer O2)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+  set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -O2")
 endif()
 
 foreach(arg ${TEST_COMPILER_ARGS})
@@ -107,6 +125,8 @@ foreach(arg ${TEST_LINKER_ARGS})
   linker_has_flag(${arg})
 endforeach(arg)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LOCAL_C_FLAGS}")
+
 set(SQLITE_XAMARIN_SOURCES
   ${SQLITE_SOURCE_DIR}/dist/sqlite3.c
   )
@@ -125,12 +145,6 @@ file(APPEND ${SOURCES_FRAGMENT_FILE} "  </ItemGroup>\n\
 
 add_library(${SQLITE_LIBRARY_NAME} SHARED ${SQLITE_XAMARIN_SOURCES})
 
-set(LINK_LIBS "-ldl")
-
-if(ENABLE_NDK)
-  set(LINK_LIBS "${LINK_LIBS} -llog")
-elseif(NOT ANDROID)
-  set(LINK_LIBS "-pthread ${LINK_LIBS}")
-endif()
+set(LINK_LIBS "-ldl -llog")
 
 target_link_libraries(${SQLITE_LIBRARY_NAME} ${LINK_LIBS})
