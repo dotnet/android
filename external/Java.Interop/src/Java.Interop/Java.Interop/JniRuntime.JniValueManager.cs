@@ -593,7 +593,7 @@ namespace Java.Interop
 		{
 			var r = CreateIntermediaryExpressionFromManagedExpression (context, sourceValue);
 
-			var h = Expression.Variable (typeof (IntPtr), sourceValue + "_handle");
+			var h = Expression.Variable (typeof (IntPtr), sourceValue.Name + "_handle");
 			context.LocalVariables.Add (h);
 			context.CreationStatements.Add (Expression.Assign (h, Expression.Property (r, "Handle")));
 
@@ -609,12 +609,9 @@ namespace Java.Interop
 						test:       Expression.Equal (Expression.Constant (null), sourceValue),
 						ifTrue:     Expression.Assign (r, Expression.New (typeof (JniObjectReference))),
 						ifFalse:    Expression.Assign (r, Expression.Property (sourceValue, "PeerReference"))));
-
-			if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (sourceValue.Type.GetTypeInfo ())) {
-				context.CleanupStatements.Add (Expression.IfThen (
-							test:       Expression.NotEqual (Expression.Constant (null), sourceValue),
-							ifTrue:     Expression.Call (sourceValue, typeof (IJavaPeerable).GetTypeInfo ().GetDeclaredMethod ("DisposeUnlessReferenced"))));
-			}
+			context.CleanupStatements.Add (Expression.IfThen (
+						test:       Expression.NotEqual (Expression.Constant (null), sourceValue),
+						ifTrue:     Expression.Call (sourceValue, typeof (IJavaPeerable).GetTypeInfo ().GetDeclaredMethod ("DisposeUnlessReferenced"))));
 
 			return r;
 		}
@@ -626,7 +623,7 @@ namespace Java.Interop
 
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
 		{
-			var r   = Expression.Variable (targetType, sourceValue + "_val");
+			var r   = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (r);
 			context.CreationStatements.Add (
 					Expression.Assign (r,

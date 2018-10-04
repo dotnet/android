@@ -162,7 +162,7 @@ namespace Java.Interop {
 		public  virtual     Expression              CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			CreateParameterFromManagedExpression (context, sourceValue, 0);
-			var s   = context.LocalVariables [sourceValue + "_state"];
+			var s   = context.LocalVariables [sourceValue.Name + "_state"];
 			return ReturnObjectReferenceToJni (context, sourceValue.Name, Expression.Property (s, "ReferenceValue"));
 		}
 
