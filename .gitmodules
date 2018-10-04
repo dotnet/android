@@ -17,7 +17,7 @@
 [submodule "external/llvm"]
     path = external/llvm
     url = https://github.com/mono/llvm.git
-    branch = master
+    branch = release_60
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
@@ -25,7 +25,7 @@
 [submodule "external/mono"]
     path = external/mono
     url = https://github.com/mono/mono.git
-    branch = 2018-04
+    branch = 2018-08
 [submodule "external/mxe"]
     path = external/mxe
     url = https://github.com/xamarin/mxe.git
