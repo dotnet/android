@@ -23,15 +23,15 @@
   </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
   <ItemGroup>
-    <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoOutputDir)\%(Identity)')" />
+    <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoProfileToolsDir)\%(Identity)')" />
   </ItemGroup>
   <ItemGroup>
     <_MonoDocInstalledItems Include="@(MonoDocCopyItem->'$(_MSBuildDir)\%(Identity)')" />
     <_MonoDocInstalledItems Include="$(_MSBuildDir)\mdoc.exe" />
   </ItemGroup>
   <PropertyGroup>
-    <_MonoProfileDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid</_MonoProfileDir>
-    <_MonoOutputDir>$(MonoSourceFullPath)\mcs\class\lib\monodroid_tools</_MonoOutputDir>
+    <_MonoProfileDir>$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid</_MonoProfileDir>
+    <_MonoProfileToolsDir>$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid_tools</_MonoProfileToolsDir>
   </PropertyGroup>
   <PropertyGroup>
     <_MonoSdksConfiguration Condition=" '$(Configuration)' == 'Release' ">release</_MonoSdksConfiguration>
@@ -109,11 +109,11 @@
     <_MonoUtility  Include="mkbundle.exe" />
   </ItemGroup>
   <ItemGroup>
-    <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity)')" />
+    <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoProfileToolsDir)\%(Identity)')" />
     <_MonoUtilityDest   Include="@(_MonoUtility->'$(_MSBuildDir)\%(Identity)')" />
     <_MonoUtilitySource
         Condition=" '$(_DebugFileExt)' == '.mdb'"
-        Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Identity).mdb')"
+        Include="@(_MonoUtility->'$(_MonoProfileToolsDir)\%(Identity).mdb')"
     />
     <_MonoUtilityDest
         Condition=" '$(_DebugFileExt)' == '.mdb'"
@@ -121,7 +121,7 @@
     />
     <_MonoUtilitySource
         Condition=" '$(_DebugFileExt)' == '.pdb'"
-        Include="@(_MonoUtility->'$(_MonoOutputDir)\%(Filename).pdb')"
+        Include="@(_MonoUtility->'$(_MonoProfileToolsDir)\%(Filename).pdb')"
     />
     <_MonoUtilityDest
         Condition=" '$(_DebugFileExt)' == '.pdb'"
@@ -161,7 +161,7 @@
       Inputs="$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(_LlvmSourceBinary)">
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_LlvmRuntime->'package-llvm-%(Identity)', ' ') $(_MonoSdksParameters) @(_LlvmRuntime->'%(PackageOptions)', ' ')"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters) @(_LlvmRuntime->'%(PackageOptions)', ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -281,24 +281,13 @@
   </Target>
 
   <Target Name="_BuildRuntimes"
-      Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' "
+      Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_MonoBcl)' != '' "
       DependsOnTargets="_GetRuntimesOutputItems"
-      Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
+      Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput);@(_BclProfileItems)">
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
-    />
-    <Exec
-        Condition=" '%(_MonoRuntime.BuildTests)' == 'True' "
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) -C android-%(_MonoRuntime.Identity)-$(_MonoSdksConfiguration) -C runtime test"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
-    />
-    <Exec
-        Condition=" '%(MonoTestAssembly.TestType)' == 'xunit' "
-        Command="make DISABLE_IOS=1 -C $(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath) xunit-test-local"
-        WorkingDirectory="$(MonoSourceFullPath)"
     />
   </Target>
 
@@ -308,16 +297,13 @@
       Outputs="@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
     <ItemGroup>
       <_BclTestAssemblyReference Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'reference'" />
-      <_BclTestAssemblyXUnit  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'xunit'" />
-      <_BclTestAssemblyNUnit  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == ''" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Filename).pdb')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyNUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyNUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Filename).pdb')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')" />
+      <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
+      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
@@ -459,19 +445,19 @@
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
   </Target>
   <ItemGroup>
-    <_MonoCilStripSource  Include="$(_MonoOutputDir)\mono-cil-strip.exe" />
+    <_MonoCilStripSource  Include="$(_MonoProfileToolsDir)\mono-cil-strip.exe" />
     <_MonoCilStripDest    Include="$(_MSBuildDir)\cil-strip.exe" />
     <_MonoCilStripSource
         Condition=" '$(_DebugFileExt)' == '.mdb' "
-        Include="$(_MonoOutputDir)\mono-cil-strip.exe.mdb"
+        Include="$(_MonoProfileToolsDir)\mono-cil-strip.exe.mdb"
     />
     <_MonoCilStripDest
         Condition=" '$(_DebugFileExt)' == '.mdb' "
-        Include="$(_MonoOutputDir)\cil-strip.exe.mdb"
+        Include="$(_MonoProfileToolsDir)\cil-strip.exe.mdb"
     />
     <_MonoCilStripSource
         Condition=" '$(_DebugFileExt)' == '.pdb' "
-        Include="$(_MonoOutputDir)\mono-cil-strip.pdb"
+        Include="$(_MonoProfileToolsDir)\mono-cil-strip.pdb"
     />
     <_MonoCilStripDest
         Condition=" '$(_DebugFileExt)' == '.pdb' "
@@ -488,7 +474,7 @@
     />
   </Target>
   <Target Name="_InstallMonoDoc"
-      Inputs="@(_MonoDocCopyItems);$(_MonoOutputDir)\mdoc.exe"
+      Inputs="@(_MonoDocCopyItems);$(_MonoProfileToolsDir)\mdoc.exe"
       Outputs="@(_MonoDocInstalledItems)">
     <MakeDir Directories="$(_MSBuildDir)" />
     <Copy
@@ -496,7 +482,7 @@
         DestinationFolder="$(_MSBuildDir)"
     />
     <Exec
-        Command="$(RemapAssemblyRefTool) &quot;$(_MonoOutputDir)\mdoc.exe&quot; &quot;$(_MSBuildDir)\mdoc.exe&quot; Mono.Cecil &quot;..\..\bin\Build$(Configuration)\Xamarin.Android.Cecil.dll&quot;"
+        Command="$(RemapAssemblyRefTool) &quot;$(_MonoProfileToolsDir)\mdoc.exe&quot; &quot;$(_MSBuildDir)\mdoc.exe&quot; Mono.Cecil &quot;..\..\bin\Build$(Configuration)\Xamarin.Android.Cecil.dll&quot;"
     />
     <Touch
         Files="@(_MonoDocInstalledItems)"
@@ -512,7 +498,7 @@
     />
     <ItemGroup>
       <_MonoUtilityExe Include="@(_MonoUtility)">
-        <Source>$(_MonoOutputDir)\%(Identity)</Source>
+        <Source>$(_MonoProfileToolsDir)\%(Identity)</Source>
         <Dest>$(_MSBuildDir)\%(Identity)</Dest>
       </_MonoUtilityExe>
     </ItemGroup>
