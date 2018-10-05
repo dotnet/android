@@ -359,9 +359,10 @@ namespace Xamarin.Android.Tasks {
 
 			var providerNames = AddMonoRuntimeProviders (app);
 
-			if (Debug && !embed)
-				app.Add (CreateMonoRuntimeProvider ("mono.android.ResourcePatcher", null, initOrder: --AppInitOrder));
-				
+			if (Debug && !embed) {
+				if (int.TryParse (SdkVersion, out int apiLevel) && apiLevel >= 19)
+					app.Add(CreateMonoRuntimeProvider ("mono.android.ResourcePatcher", null, initOrder: --AppInitOrder));
+			}
 			if (Debug) {
 				app.Add (new XComment ("suppress ExportedReceiver"));
 				app.Add (new XElement ("receiver",

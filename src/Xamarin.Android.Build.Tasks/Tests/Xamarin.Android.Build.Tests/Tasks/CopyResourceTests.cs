@@ -38,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { "IncrementalClassLoader.java" },
 			new object[] { "MultiDexLoader.java" },
 			new object[] { "Placeholder.java" },
+	    		new object[] { "ResourcePatcher.java" },
+			new object[] { "MonkeyPatcher.java" },
 		};
 
 		[Test]
