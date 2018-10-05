@@ -16,6 +16,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Output]
 		public                  string      AbbreviatedCommitHash       { get; set; }
 
+		[Output]
+		public                  string      CommitHash       { get; set; }
+
 		protected   override    bool        LogTaskMessages             {
 			get { return false; }
 		}
@@ -38,17 +41,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return "log --no-color --first-parent -n1 --pretty=format:%h";
+			return "rev-parse HEAD";
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			if (string.IsNullOrEmpty (singleLine))
 				return;
-			if (singleLine.Length < RequiredHashLength) {
-				Log.LogError ("Abbreviated commit hash `{0}` is shorter than required length of {1} characters", singleLine, RequiredHashLength);
+			if (singleLine.Length < 40) {
+				Log.LogError ("Commit hash `{0}` is shorter than required length of {1} characters", singleLine, 40);
 				return;
 			}
+			CommitHash = singleLine;
 			AbbreviatedCommitHash = singleLine.Substring (0, RequiredHashLength);
 		}
 	}

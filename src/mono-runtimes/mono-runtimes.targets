@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
@@ -48,6 +50,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
+      _DownloadArchive;
       _Autogen;
       _Build;
       _InstallRuntimes;
@@ -176,6 +179,18 @@
     />
   </Target>
 
+  <Target Name="_GetMonoGitCommitHash">
+    <GitCommitHash
+        WorkingDirectory="$(MonoSourceFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)" >
+      <Output TaskParameter="CommitHash"   PropertyName="_MonoGitCommitHash" />
+    </GitCommitHash>
+    <PropertyGroup>
+      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(_MonoGitCommitHash)-$(HostOS)</_MonoArchiveName>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_GetRuntimesOutputItems">
     <ItemGroup>
       <_RuntimeSource
@@ -267,12 +282,37 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_DownloadArchive"
+      DependsOnTargets="_GetMonoGitCommitHash"
+      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
+    <MakeDir
+        Directories="$(MonoSourceFullPath)\sdks\out"
+    />
+    <DownloadUri
+        SourceUris="https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/$(_MonoArchiveName).tar.gz"
+        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
+        ContinueOnError="True"
+    />
+    <Exec
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
+        Command="tar -xvf $(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
+        IgnoreStandardErrorWarningFormat="True"
+        WorkingDirectory="$(MonoSourceFullPath)\sdks\out"
+    />
+    <Touch
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
+        Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"
+        AlwaysCreate="True"
+    />
+  </Target>
+
   <Target Name="_Build"
       Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_MonoBcl)' != '' Or '@(_LlvmRuntime)' != '' "
-      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_GetRuntimesOutputItems;_PrepareLlvmItems"
+      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_GetRuntimesOutputItems;_PrepareLlvmItems;_GetMonoGitCommitHash;_DownloadArchive"
       Inputs="$(LlvmSourceFullPath)\CMakeLists.txt;$(MonoSourceFullPath)\autogen.sh"
       Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput);@(_BclProfileItems);@(_LlvmSourceBinary)">
     <Exec
+        Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') "
         Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
