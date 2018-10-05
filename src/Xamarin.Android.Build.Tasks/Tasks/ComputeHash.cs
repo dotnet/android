@@ -14,8 +14,15 @@ namespace Xamarin.Android.Tasks {
 		[Required]
 		public ITaskItem [] Source { get; set; }
 
+		public bool CopyMetaData { get; set; }
+
 		[Output]
 		public ITaskItem [] Output { get => output.ToArray (); }
+
+		public ComputeHash()
+		{
+			CopyMetaData = true;
+		}
 
 		public override bool Execute ()
 		{
@@ -23,9 +30,12 @@ namespace Xamarin.Android.Tasks {
 			using (var sha1 = SHA1.Create ()) {
 
 				foreach (var item in Source) {
-					output.Add (new TaskItem (item.ItemSpec, new Dictionary<string, string> () {
+					var newItem = new TaskItem(item.ItemSpec, new Dictionary<string, string>() {
 						{ "Hash", HashItemSpec (sha1, item.ItemSpec) }
-					}));
+					});
+					if (CopyMetaData)
+						item.CopyMetadataTo (newItem);
+					output.Add (newItem);
 				}
 				Log.LogDebugTaskItems ("Output : ", Output);
 				return !Log.HasLoggedErrors;

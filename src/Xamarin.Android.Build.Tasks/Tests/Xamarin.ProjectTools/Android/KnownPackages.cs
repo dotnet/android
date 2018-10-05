@@ -608,6 +608,60 @@ namespace Xamarin.ProjectTools
 			Id = "Xamarin.Build.Download",
 			Version = "0.4.11",
 		};
+		public static Package Xamarin_GooglePlayServices_Base = new Package {
+			Id = "Xamarin.GooglePlayServices.Base",
+	    		Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+	    		References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Base") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Base.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Base.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Basement = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Basement",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Basement") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Basement.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Basement.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Tasks = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Tasks",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Tasks") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Tasks.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Tasks.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Iid = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Iid",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Iid") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Iid.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Iid.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Gcm = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Gcm",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Gcm") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Gcm.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Gcm.dll"
+				}
+			},
+		};
 	}
 }
 
