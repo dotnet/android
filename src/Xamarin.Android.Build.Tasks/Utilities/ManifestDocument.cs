@@ -704,12 +704,15 @@ namespace Xamarin.Android.Tasks {
 
 			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type);
 			IEnumerable<GrantUriPermissionAttribute> grants = GrantUriPermissionAttribute.FromTypeDefinition (type);
+			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type);
 
 			XElement element = attr.ToElement (PackageName);
 			if (element.Attribute (attName) == null)
 				element.Add (new XAttribute (attName, name));
 			element.Add (metadata.Select (md => md.ToElement (PackageName)));
 			element.Add (grants.Select (intent => intent.ToElement (PackageName)));
+			element.Add (intents.Select (intent => intent.ToElement (PackageName)));
+
 			return element;
 		}
 
