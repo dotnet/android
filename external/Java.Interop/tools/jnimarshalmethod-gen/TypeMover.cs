@@ -268,7 +268,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			foreach (var p in mr.Parameters)
 				p.ParameterType = GetUpdatedType (p.ParameterType, module);
 
-			methodMap [method] = mr;
+			if (method.DeclaringType != null && !method.DeclaringType.HasGenericParameters)
+				methodMap [method] = mr;
 
 			return mr;
 		}

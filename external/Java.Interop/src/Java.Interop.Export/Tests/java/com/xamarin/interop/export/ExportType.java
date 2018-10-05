@@ -40,14 +40,19 @@ public class ExportType
 	        throw new Error ("funcInt64() should return 42!");
 
 	    Object o = funcIJavaObject ();
-		if (o != this)
-			throw new Error ("funcIJavaObject() should return `this`!");
+	    if (o != this)
+	        throw new Error ("funcIJavaObject() should return `this`!");
+
+	    staticActionInt (1);
+	    staticActionFloat (2.0f);
 	}
 
 	public native void action ();
 	public native void actionIJavaObject (Object test);
 	public native long funcInt64 ();
 	public native Object funcIJavaObject ();
+	public native void staticActionInt (int i);
+	public native void staticActionFloat (float f);
 
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 

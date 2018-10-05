@@ -73,6 +73,16 @@ namespace Java.InteropTests
 		public static void StaticActionIJavaObject (JavaObject test)
 		{
 		}
+
+		[JavaCallable ("staticActionInt", Signature="(I)V")]
+		public static void StaticActionInt (int i)
+		{
+		}
+
+		[JavaCallable ("staticActionFloat", Signature="(F)V")]
+		public static void StaticActionFloat (float f)
+		{
+		}
 	}
 
 	[JniValueMarshaler (typeof (MyColorValueMarshaler))]

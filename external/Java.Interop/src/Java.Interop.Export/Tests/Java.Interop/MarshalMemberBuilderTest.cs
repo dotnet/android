@@ -22,7 +22,7 @@ namespace Java.InteropTests
 				var methods = CreateBuilder ()
 					.GetExportedMemberRegistrations (typeof (ExportTest))
 					.ToList ();
-				Assert.AreEqual (8, methods.Count);
+				Assert.AreEqual (10, methods.Count);
 
 				Assert.AreEqual ("action",  methods [0].Name);
 				Assert.AreEqual ("()V",     methods [0].Signature);
