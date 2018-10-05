@@ -42,12 +42,14 @@
 + [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
 + [XA0115](xa0115.md): This ABI ('armeabi') is deprecated and will be removed in the next release. Please update your project properties.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
++ [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 
 ### XA1xxx Project Related
 
 + [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
 + [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
 + [XA1002](xa1002.md): We found a matching key '{Key}' for '{Item}'. But the casing was incorrect. Please correct the casing
++ [XA1005](xa1005.md): Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'
 
 ### XA2xxx Linker
 
