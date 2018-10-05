@@ -44,15 +44,14 @@
     <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
     <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
 
-    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true IGNORE_PROVISION_LLVM=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
-      _BuildLlvm;
-      _InstallLlvm;
       _Autogen;
-      _BuildRuntimes;
+      _Build;
       _InstallRuntimes;
+      _InstallLlvm;
       _InstallBcl;
       _InstallCilStrip;
       _InstallMonoDoc;
@@ -154,21 +153,9 @@
       <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)llc%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
     </ItemGroup>
   </Target>
-  
-  <Target Name="_BuildLlvm"
-      Condition=" '@(_LlvmRuntime)' != '' "
-      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_PrepareLlvmItems"
-      Inputs="$(LlvmSourceFullPath)\CMakeLists.txt"
-      Outputs="@(_LlvmSourceBinary)">
-    <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters) @(_LlvmRuntime->'%(PackageOptions)', ' ')"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
-    />
-  </Target>
 
   <Target Name="_InstallLlvm"
-          DependsOnTargets="_BuildLlvm"
+          DependsOnTargets="_Build"
           Inputs="@(_LlvmSourceBinary)"
           Outputs="@(_LlvmTargetBinary)"
           Condition=" '@(_LlvmRuntime)' != '' ">
@@ -280,12 +267,13 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_BuildRuntimes"
-      Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_MonoBcl)' != '' "
-      DependsOnTargets="_GetRuntimesOutputItems"
-      Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput);@(_BclProfileItems)">
+  <Target Name="_Build"
+      Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_MonoBcl)' != '' Or '@(_LlvmRuntime)' != '' "
+      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_GetRuntimesOutputItems;_PrepareLlvmItems"
+      Inputs="$(LlvmSourceFullPath)\CMakeLists.txt;$(MonoSourceFullPath)\autogen.sh"
+      Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput);@(_BclProfileItems);@(_LlvmSourceBinary)">
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
@@ -590,13 +578,13 @@
       AfterTargets="Clean">
     <Exec
         Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_LlvmRuntime)' != '' "
-        Command="make $(MakeConcurrency) @(_MonoRuntime->'clean-android-%(Identity)', ' ') @(_MonoCrossRuntime->'clean-android-%(Identity)', ' ') @(_LlvmRuntime->'clean-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
+        Command="make $(MakeConcurrency) @(_MonoRuntime->'clean-android-%(Identity)', ' ') @(_MonoCrossRuntime->'clean-android-%(Identity)', ' ') @(_MonoBcl->'clean-android-%(Identity)', ' ') @(_LlvmRuntime->'clean-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
 
   <Target Name="CoreCompile"
-      DependsOnTargets="_BuildRuntimes">
+      DependsOnTargets="_Build">
   </Target>
 </Project>
