@@ -43,6 +43,7 @@
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` of name `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
++ [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 
 ### XA1xxx Project Related
 
@@ -50,6 +51,7 @@
 + [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
 + [XA1002](xa1002.md): We found a matching key '{Key}' for '{Item}'. But the casing was incorrect. Please correct the casing
 + [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
++ [XA1005](xa1005.md): Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'
 
 ### XA2xxx Linker
 
