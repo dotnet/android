@@ -592,6 +592,7 @@ namespace Java.Interop
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			var r = CreateIntermediaryExpressionFromManagedExpression (context, sourceValue);
+			context.CleanupStatements.Add (DisposeObjectReference (r));
 
 			var h = Expression.Variable (typeof (IntPtr), sourceValue.Name + "_handle");
 			context.LocalVariables.Add (h);
@@ -609,9 +610,6 @@ namespace Java.Interop
 						test:       Expression.Equal (Expression.Constant (null), sourceValue),
 						ifTrue:     Expression.Assign (r, Expression.New (typeof (JniObjectReference))),
 						ifFalse:    Expression.Assign (r, Expression.Property (sourceValue, "PeerReference"))));
-			context.CleanupStatements.Add (Expression.IfThen (
-						test:       Expression.NotEqual (Expression.Constant (null), sourceValue),
-						ifTrue:     Expression.Call (sourceValue, typeof (IJavaPeerable).GetTypeInfo ().GetDeclaredMethod ("DisposeUnlessReferenced"))));
 
 			return r;
 		}

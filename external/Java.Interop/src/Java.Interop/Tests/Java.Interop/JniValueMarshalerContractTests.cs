@@ -608,14 +608,7 @@ namespace Java.InteropTests {
 	}}
 	finally
 	{{
-		if (null != __value)
-		{{
-			__value.DisposeUnlessReferenced();
-		}}
-		else
-		{{
-			default(void);
-		}}
+		default(void);
 	}}
 }}";
 		}

@@ -477,14 +477,6 @@ namespace Java.InteropTests
 	}
 	finally
 	{
-		if (null != __mret)
-		{
-			__mret.DisposeUnlessReferenced();
-		}
-		else
-		{
-			default(void);
-		}
 		__envp.Dispose();
 	}
 }");
