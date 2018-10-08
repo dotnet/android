@@ -14,15 +14,10 @@ namespace Xamarin.Android.Tasks {
 		[Required]
 		public ITaskItem [] Source { get; set; }
 
-		public bool CopyMetaData { get; set; }
+		public bool CopyMetaData { get; set; } = true;
 
 		[Output]
 		public ITaskItem [] Output { get => output.ToArray (); }
-
-		public ComputeHash()
-		{
-			CopyMetaData = true;
-		}
 
 		public override bool Execute ()
 		{

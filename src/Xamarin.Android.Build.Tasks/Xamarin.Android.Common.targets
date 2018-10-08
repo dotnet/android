@@ -2371,7 +2371,7 @@ because xbuild doesn't support framework reference assemblies.
     OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
     OutputFile="$(_PackagedResources)"
     AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
-	AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
+    AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
     YieldDuringToolExecution="$(YieldDuringToolExecution)"
     PackageName="$(_AndroidPackage)"
     ApplicationName="$(_AndroidPackage)"
