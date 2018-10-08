@@ -6,6 +6,8 @@
   <PropertyGroup>
     <_SqliteBaseLibName>sqlite3_xamarin</_SqliteBaseLibName>
     <_SqliteLibName>lib$(_SqliteBaseLibName).so</_SqliteLibName>
+    <_SqliteSourceDir Condition=" '$(HostOS)' == 'Windows' ">$(SqliteSourceFullPath.Replace ('\', '/'))</_SqliteSourceDir>
+    <_SqliteSourceDir Condition=" '$(HostOS)' != 'Windows' ">$(SqliteSourceFullPath.Replace ('\', '\\'))</_SqliteSourceDir>
   </PropertyGroup>
 
   <Target Name="_BuildSqlite" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
@@ -15,7 +17,7 @@
 	  Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja')">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(_SqliteSourceDir)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)"
     />
   </Target>
