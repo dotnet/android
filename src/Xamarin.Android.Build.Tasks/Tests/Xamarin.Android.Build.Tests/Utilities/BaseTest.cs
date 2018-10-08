@@ -170,6 +170,13 @@ namespace Xamarin.Android.Build.Tests
 				sb.AppendLine ($"echo \"GNU Make 3.81\"");
 			}
 			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-build.cmd" : "ndk-build"), sb);
+			sb.Clear();
+			if (IsWindows) {
+				sb.AppendLine("@echo off");
+			} else {
+				sb.AppendLine("#!/bin/bash");
+			}
+			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), sb);
 			return androidNdkDirectory;
 		}
 
