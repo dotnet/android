@@ -592,8 +592,6 @@ namespace Java.Interop
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			var r = CreateIntermediaryExpressionFromManagedExpression (context, sourceValue);
-			context.CleanupStatements.Add (DisposeObjectReference (r));
-
 			var h = Expression.Variable (typeof (IntPtr), sourceValue.Name + "_handle");
 			context.LocalVariables.Add (h);
 			context.CreationStatements.Add (Expression.Assign (h, Expression.Property (r, "Handle")));
