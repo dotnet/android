@@ -234,7 +234,6 @@ set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${MONO_PATH}/support/zlib-helper.c
-  ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/dylib-mono.cc
@@ -242,7 +241,6 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/monodroid-glue.cc
-  ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c
