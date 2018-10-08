@@ -1319,7 +1319,9 @@ because xbuild doesn't support framework reference assemblies.
 	</ResolveLibraryProjectImports>
 </Target>
 
-<Target Name="_CollectLibraryResourceDirectories">
+<Target Name="_CollectLibraryResourceDirectories"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
+	>
 	<CollectNonEmptyDirectories Directories="@(LibraryResourceDirectories);@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res')">
 		<Output TaskParameter="Output" ItemName="_LibraryResourceDirectories" />
 	</CollectNonEmptyDirectories>
@@ -1329,7 +1331,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
-		Condition="'$(_AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' "
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
 		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
 		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	>
@@ -1513,6 +1515,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies
 		;_CreateAdditionalResourceCache
 		;_CollectAdditionalResourceFiles
+		;_CollectLibraryResourceDirectories
 		;_CompileAndroidLibraryResources
 		;_CompileResources
 	</_GenerateJavaDesignerForComponentDependsOnTargets>
