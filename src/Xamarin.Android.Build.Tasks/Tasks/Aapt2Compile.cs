@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tasks {
 
 		public string ExtraArgs { get; set; }
 
+		public string FlatArchivesDirectory { get; set; }
+
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
@@ -68,7 +70,9 @@ namespace Xamarin.Android.Tasks {
 				return;
 			
 			var output = new List<OutputLine> ();
-			var outputArchive = Path.Combine (resourceDirectory.ItemSpec, "..", "compiled.flata");
+			var hash = resourceDirectory.GetMetadata ("Hash");
+			var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
+			var outputArchive = Path.Combine (FlatArchivesDirectory, $"{filename}.flata");
 			var success = RunAapt (GenerateCommandLineCommands (resourceDirectory, outputArchive), output);
 			if (success && File.Exists (Path.Combine (WorkingDirectory, outputArchive))) {
 				archives.Add (new TaskItem (outputArchive));

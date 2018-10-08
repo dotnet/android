@@ -8,6 +8,7 @@ using Microsoft.Build.Framework;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
+using System.Security.Cryptography;
 
 namespace Xamarin.Android.Build.Tests {
 	public class Aapt2Tests : BaseTest {
@@ -23,15 +24,36 @@ namespace Xamarin.Android.Build.Tests {
 			return Path.Combine (path, "25.0.2");
 		}
 
-		void CallAapt2Compile (IBuildEngine engine, string dir)
+		string GetHash (string hashInput)
+		{
+			using (var sha1 = SHA1.Create ())
+			{
+				var hash = sha1.ComputeHash (Encoding.UTF8.GetBytes (hashInput));
+				var hashResult = new StringBuilder (hash.Length * 2);
+
+				foreach (byte b in hash)
+				{
+					hashResult.Append (b.ToString ("x2"));
+				}
+				return hashResult.ToString ();
+			}
+		}
+
+		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, List<ITaskItem> output = null)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] { new TaskItem (dir) },
+				ResourceDirectories = new ITaskItem [] {
+					new TaskItem(dir, new Dictionary<string, string> {
+						{ "Hash", output != null ? GetHash (dir) : "compiled" }
+					}),
+				},
+				FlatArchivesDirectory = outputPath,
 			};
 			Assert.True (task.Execute (), "task should have succeeded.");
+			output?.AddRange (task.CompiledResourceFlatArchives);
 		}
 
 		[Test]
@@ -40,7 +62,9 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", "Aapt2Link");
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
+			var archivePath = Path.Combine (path, "flata");
 			Directory.CreateDirectory (resPath);
+			Directory.CreateDirectory (archivePath);
 			Directory.CreateDirectory (Path.Combine (resPath, "values"));
 			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
 			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
@@ -55,20 +79,18 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
-			CallAapt2Compile (engine, resPath);
-			CallAapt2Compile (engine, Path.Combine (libPath, "0", "res"));
-			CallAapt2Compile (engine, Path.Combine (libPath, "1", "res"));
+			var archives = new List<ITaskItem>();
+			CallAapt2Compile (engine, resPath, archivePath);
+			CallAapt2Compile (engine, Path.Combine (libPath, "0", "res"), archivePath, archives);
+			CallAapt2Compile (engine, Path.Combine (libPath, "1", "res"), archivePath, archives);
 			var outputFile = Path.Combine (path, "resources.apk");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (path, "AndroidManifest.xml")) },
-				AdditionalResourceDirectories = new ITaskItem [] {
-					new TaskItem (Path.Combine (libPath, "0", "res")),
-					new TaskItem (Path.Combine (libPath, "1", "res")),
-				},
-				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
+				AdditionalResourceArchives = archives.ToArray (),
+				CompiledResourceFlatArchive = new TaskItem (Path.Combine (archivePath, "compiled.flata")),
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
 			};
@@ -86,7 +108,9 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", "Aapt2Compile");
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
-			Directory.CreateDirectory (resPath);
+			var archivePath = Path.Combine(path, "flata");
+			Directory.CreateDirectory(resPath);
+			Directory.CreateDirectory(archivePath);
 			Directory.CreateDirectory (Path.Combine (resPath, "values"));
 			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
 			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
@@ -97,9 +121,10 @@ namespace Xamarin.Android.Build.Tests {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+				FlatArchivesDirectory = archivePath,
 			};
 			Assert.True (task.Execute (), "task should have succeeded.");
-			var flatArchive = Path.Combine (path, "compiled.flata");
+			var flatArchive = Path.Combine (archivePath, "compiled.flata");
 			Assert.True (File.Exists (flatArchive), $"{flatArchive} should have been created.");
 			using (var apk = ZipHelper.OpenZip (flatArchive)) {
 				Assert.AreEqual (2, apk.EntryCount, $"{flatArchive} should have 2 entries.");
@@ -113,7 +138,9 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", "Aapt2CompileFixesUpErrors");
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
-			Directory.CreateDirectory (resPath);
+			var archivePath = Path.Combine(path, "flata");
+			Directory.CreateDirectory(resPath);
+			Directory.CreateDirectory(archivePath);
 			Directory.CreateDirectory (Path.Combine (resPath, "values"));
 			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
 			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string</resources>");
@@ -141,6 +168,7 @@ namespace Xamarin.Android.Build.Tests {
 					BuildEngine = engine,
 					ToolPath = GetPathToAapt2 (),
 					ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+		    			FlatArchivesDirectory = archivePath,
 					ResourceNameCaseMap = $"Layout{directorySeperator}Main.xml|layout{directorySeperator}main.axml;Values{directorySeperator}Strings.xml|values{directorySeperator}strings.xml",
 				};
 				Assert.False (task.Execute (), "task should not have succeeded.");
@@ -170,7 +198,9 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
-			Directory.CreateDirectory (resPath);
+			var archivePath = Path.Combine(path, "flata");
+			Directory.CreateDirectory(resPath);
+			Directory.CreateDirectory(archivePath);
 			Directory.CreateDirectory (Path.Combine (resPath, "values"));
 			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
 			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
@@ -179,7 +209,8 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
-			CallAapt2Compile (engine, resPath);
+			var archives = new List<ITaskItem>();
+			CallAapt2Compile (engine, resPath, archivePath);
 			var outputFile = Path.Combine (path, "resources.apk");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
