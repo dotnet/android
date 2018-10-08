@@ -359,9 +359,10 @@ namespace Xamarin.Android.Tasks {
 
 			var providerNames = AddMonoRuntimeProviders (app);
 
-			if (Debug && !embed)
-				app.Add (CreateMonoRuntimeProvider ("mono.android.ResourcePatcher", null, initOrder: --AppInitOrder));
-				
+			if (Debug && !embed) {
+				if (int.TryParse (SdkVersion, out int apiLevel) && apiLevel >= 19)
+					app.Add (CreateMonoRuntimeProvider ("mono.android.ResourcePatcher", null, initOrder: --AppInitOrder));
+			}
 			if (Debug) {
 				app.Add (new XComment ("suppress ExportedReceiver"));
 				app.Add (new XElement ("receiver",
@@ -704,12 +705,15 @@ namespace Xamarin.Android.Tasks {
 
 			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type);
 			IEnumerable<GrantUriPermissionAttribute> grants = GrantUriPermissionAttribute.FromTypeDefinition (type);
+			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type);
 
 			XElement element = attr.ToElement (PackageName);
 			if (element.Attribute (attName) == null)
 				element.Add (new XAttribute (attName, name));
 			element.Add (metadata.Select (md => md.ToElement (PackageName)));
 			element.Add (grants.Select (intent => intent.ToElement (PackageName)));
+			element.Add (intents.Select (intent => intent.ToElement (PackageName)));
+
 			return element;
 		}
 

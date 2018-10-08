@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("Task ReadAdditionalResourcesFromAssemblyCache");
 			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
 			if (!File.Exists (CacheFile)) {
-				Log.LogWarning ("{0} does not exist. No Additional Resources found", CacheFile);
+				Log.LogDebugMessage ("{0} does not exist. No Additional Resources found", CacheFile);
 				return !Log.HasLoggedErrors;
 			}
 			var doc = XDocument.Load (CacheFile);

@@ -108,14 +108,14 @@ namespace Xamarin.Android.Tasks {
 			bool isDirectory, string fullPath)
 		{
 			if (!attr.HasConstructorArguments || attr.ConstructorArguments.Count != 1) {
-				LogWarning ("Attribute {0} doesn't have expected one constructor agrument", attr.AttributeType.FullName);
+				LogCodedWarning (errorCode, "Attribute {0} doesn't have expected one constructor agrument", attr.AttributeType.FullName);
 				return;
 			}
 
 			CustomAttributeArgument arg = attr.ConstructorArguments.First ();
 			string path = arg.Value as string;
 			if (string.IsNullOrEmpty (path)) {
-				LogWarning ("Attribute {0} contructor argument is empty or not set to string", attr.AttributeType.FullName);
+				LogCodedWarning (errorCode, "Attribute {0} contructor argument is empty or not set to string", attr.AttributeType.FullName);
 				return;
 			}
 			path = SubstituteEnvVariables (path).TrimEnd (Path.DirectorySeparatorChar);
@@ -298,7 +298,7 @@ namespace Xamarin.Android.Tasks {
 			string file = Path.Combine (zipDir, !uri.IsFile ? hash + ".zip" : Path.GetFileName (uri.AbsolutePath));
 			if (string.IsNullOrEmpty (extraPath) && (!File.Exists (file) || !IsValidDownload (file, sha1) || !MonoAndroidHelper.IsValidZip (file))) {
 				if (DesignTimeBuild) {
-					LogWarning ($"DesignTimeBuild={DesignTimeBuild}. Skipping download of {url}");
+					LogDebugMessage ($"DesignTimeBuild={DesignTimeBuild}. Skipping download of {url}");
 					return null;
 				}
 
