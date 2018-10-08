@@ -20,8 +20,6 @@ if [ "$OS_ARCH" = "x86_64" ]; then
 DEBIAN_COMMON_DEPS="$DEBIAN_COMMON_DEPS
 	lib32stdc++6
 	lib32z1
-	gcc-multilib
-	g++-multilib
 	"
 fi
 
