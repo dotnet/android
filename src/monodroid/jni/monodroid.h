@@ -15,11 +15,17 @@
 #endif  /* !defined(_MSC_VER) */
 
 #if defined(MONO_DLL_EXPORT)
-	#define MONO_API MONO_API_EXPORT
+	#define MONO_API_DEF MONO_API_EXPORT
 #elif defined(MONO_DLL_IMPORT)
-	#define MONO_API MONO_API_IMPORT
+	#define MONO_API_DEF MONO_API_IMPORT
 #else   /* !defined(MONO_DLL_IMPORT) && !defined(MONO_API_IMPORT) */
-	#define MONO_API
+	#define MONO_API_DEF
 #endif  /* MONO_DLL_EXPORT... */
+
+#ifdef __cplusplus
+#define MONO_API extern "C" MONO_API_DEF
+#else
+#define MONO_API MONO_API_DEF
+#endif
 
 #endif  /* defined __MONODROID_H */

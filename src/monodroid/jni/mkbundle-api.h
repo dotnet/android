@@ -1,5 +1,10 @@
 #ifndef __MKBUNDLE_API_H
 #define __MKBUNDLE_API_H
+
+#ifdef __cplusplus
+using namespace xamarin::android;
+#endif
+
 typedef struct BundleMonoAPI
 {
 	void (*mono_register_bundled_assemblies) (const MonoBundledAssembly **assemblies);
