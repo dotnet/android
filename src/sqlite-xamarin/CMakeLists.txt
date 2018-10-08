@@ -127,9 +127,7 @@ endforeach(arg)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LOCAL_C_FLAGS}")
 
-set(SQLITE_XAMARIN_SOURCES
-  ${SQLITE_SOURCE_DIR}/dist/sqlite3.c
-  )
+file(TO_CMAKE_PATH "${SQLITE_SOURCE_DIR}/dist/sqlite3.c" SQLITE_XAMARIN_SOURCES)
 
 set(SOURCES_FRAGMENT_FILE "sources.projitems")
 file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
