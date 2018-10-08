@@ -75,25 +75,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Aapt2Link Task");
-			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("  AssetsDirectory: {0}", AssetsDirectory);
-			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
-			Log.LogDebugMessage ("  JavaDesignerOutputDirectory: {0}", JavaDesignerOutputDirectory);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
-			Log.LogDebugMessage ("  ExtraPackages: {0}", ExtraPackages);
-			Log.LogDebugTaskItems ("  ResourceDirectories: ", ResourceDirectories);
-			Log.LogDebugTaskItems ("  AdditionalResourceArchives: ", AdditionalResourceArchives);
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
-			Log.LogDebugTaskItems ("  LibraryProjectJars: ", LibraryProjectJars);
-			Log.LogDebugMessage ("  ExtraArgs: {0}", ExtraArgs);
-			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
-			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
-			Log.LogDebugMessage ("  ResourceSymbolsTextFile: {0}", ResourceSymbolsTextFile);
-			Log.LogDebugMessage ("  CompiledResourceFlatArchive: {0}", CompiledResourceFlatArchive);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			

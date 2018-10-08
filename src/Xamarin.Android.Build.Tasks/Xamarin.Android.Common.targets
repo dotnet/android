@@ -1360,12 +1360,8 @@ because xbuild doesn't support framework reference assemblies.
 			AlwaysCreate="True"
 	/>
 	<ItemGroup>
-		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).flata"
-				Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).flata')"
-		/>
-		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
-				Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp')"
-		/>
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).flata" />
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp" />
 	</ItemGroup>
 </Target>
 
