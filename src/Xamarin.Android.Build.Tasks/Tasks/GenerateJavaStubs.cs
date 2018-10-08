@@ -165,6 +165,7 @@ namespace Xamarin.Android.Tasks
 					acw_map.WriteLine ();
 
 					TypeDefinition conflict;
+					bool hasConflict = false;
 					if (managed.TryGetValue (managedKey, out conflict)) {
 						Log.LogWarning (
 								"Duplicate managed type found! Mappings between managed types and Java types must be unique. " +
@@ -174,7 +175,7 @@ namespace Xamarin.Android.Tasks
 						Log.LogWarning (
 								"References to the type '{0}' will refer to '{1}'.",
 								managedKey, conflict.GetAssemblyQualifiedName ());
-						continue;
+						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
 						Log.LogError (
@@ -183,21 +184,22 @@ namespace Xamarin.Android.Tasks
 								conflict.GetAssemblyQualifiedName (),
 								type.GetAssemblyQualifiedName ());
 						success = false;
-						continue;
+						hasConflict = true;
 					}
+					if (!hasConflict) {
+						managed.Add (managedKey, type);
+						java.Add (javaKey, type);
 
-					managed.Add (managedKey, type);
-					java.Add (javaKey, type);
+						acw_map.Write (managedKey);
+						acw_map.Write (';');
+						acw_map.Write (javaKey);
+						acw_map.WriteLine ();
 
-					acw_map.Write (managedKey);
-					acw_map.Write (';');
-					acw_map.Write (javaKey);
-					acw_map.WriteLine ();
-
-					acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type).Replace ('/', '.'));
-					acw_map.Write (';');
-					acw_map.Write (javaKey);
-					acw_map.WriteLine ();
+						acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type).Replace ('/', '.'));
+						acw_map.Write (';');
+						acw_map.Write (javaKey);
+						acw_map.WriteLine ();
+					}
 				}
 
 				acw_map.Flush ();
