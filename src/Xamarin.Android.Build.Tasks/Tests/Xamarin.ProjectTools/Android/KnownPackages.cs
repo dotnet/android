@@ -584,6 +584,84 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
+		public static Package Xamarin_Android_Crashlytics_2_9_4 = new Package {
+			Id = "Xamarin.Android.Crashlytics",
+			Version = "2.9.4",
+			TargetFramework = "MonoAndroid60",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Crashlytics") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
+				}
+			}
+		};
+		public static Package Xamarin_Android_Fabric_1_4_3 = new Package {
+			Id = "Xamarin.Android.Fabric",
+			Version = "1.4.3",
+			TargetFramework = "MonoAndroid60",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Fabric") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
+				}
+			}
+		};
+		public static Package Xamarin_Build_Download_0_4_11 = new Package {
+			Id = "Xamarin.Build.Download",
+			Version = "0.4.11",
+		};
+		public static Package Xamarin_GooglePlayServices_Base = new Package {
+			Id = "Xamarin.GooglePlayServices.Base",
+	    		Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+	    		References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Base") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Base.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Base.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Basement = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Basement",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Basement") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Basement.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Basement.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Tasks = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Tasks",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Tasks") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Tasks.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Tasks.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Iid = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Iid",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Iid") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Iid.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Iid.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Gcm = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Gcm",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Gcm") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Gcm.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Gcm.dll"
+				}
+			},
+		};
 	}
 }
 
