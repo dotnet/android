@@ -4246,12 +4246,18 @@ extern "C" void monodroid_dylib_mono_free (DylibMono *mono_imports)
 	delete mono_imports;
 }
 
+/*
+  this function is used from JavaInterop and should be treated as public API
+  https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
+
+  it should also accept libmono_path = NULL parameter
+*/
 extern "C" int monodroid_dylib_mono_init (DylibMono *mono_imports, const char *libmono_path)
 {
 	if (mono_imports == nullptr)
 		return FALSE;
 
-	void *libmono_handle = androidSystem.load_dso_from_any_directories(libmono_path, RTLD_LAZY | RTLD_GLOBAL);
+	void *libmono_handle = libmono_path ? androidSystem.load_dso_from_any_directories(libmono_path, RTLD_LAZY | RTLD_GLOBAL) : dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);;
 	return mono_imports->init (libmono_handle) ? TRUE : FALSE;
 }
 
