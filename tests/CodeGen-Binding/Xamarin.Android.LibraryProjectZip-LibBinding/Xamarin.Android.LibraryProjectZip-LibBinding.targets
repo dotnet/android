@@ -39,17 +39,8 @@
         WorkingDirectory="$(OutputPath)\native-lib-2"
     />
   </Target>
-  <Target Name="_ReplaceGradleFile"
-      Inputs="java\JavaLib\library\build.gradle.in"
-      Outputs="java\JavaLib\library\build.gradle">
-    <ReplaceFileContents
-        SourceFile="java\JavaLib\library\build.gradle.in"
-        DestinationFile="java\JavaLib\library\build.gradle"
-        Replacements="@BUILD_TOOLS_VERSION@=$(XABuildToolsFolder)"
-    />
-  </Target>
   <Target Name="BuildJavaLibs"
-      DependsOnTargets="AndroidPrepareForBuild;_ReplaceGradleFile"
+      DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties;java\JavaLib\library\build.gradle"
       Outputs="$(OutputPath)JavaLib.zip">
     <PropertyGroup>
@@ -61,7 +52,7 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />
-    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library-debug.aar" DestinationFiles="$(OutputPath)JavaLib.zip" />
+    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library.aar" DestinationFiles="$(OutputPath)JavaLib.zip" />
   </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;bin;obj;libs;simple2\libs" />

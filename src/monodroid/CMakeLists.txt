@@ -91,6 +91,16 @@ if(ENABLE_NDK)
   if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
     add_definitions("-DANDROID64")
   endif()
+
+  if (ANDROID_NDK_MAJOR GREATER 17)
+    # For some reason NDK 18 (and 19b2 as of this time) doesn't set this *required* macro...
+    add_definitions("-D__ANDROID_API__=${ANDROID_NATIVE_API_LEVEL}")
+  endif()
+
+  if (ANDROID_NDK_MAJOR LESS 20)
+    # This is missing from the current NDK releases headers (that includes NDK r19b2)
+    add_definitions("-D__ANDROID_API_Q__=29")
+  endif()
 else()
   # MinGW/mxe need it for {v,a}sprintf
   add_definitions("-D_GNU_SOURCE")

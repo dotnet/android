@@ -1,0 +1,22 @@
+using System;
+using System.Collections.Generic;
+
+namespace Xamarin.Android.Tools
+{
+	static class XABuildConfig
+	{
+		public const string NDKRevision = "@NDK_REVISION@";
+		public const string NDKRelease = "@NDK_RELEASE@";
+		public const int NDKMinimumApiAvailable = @NDK_MINIMUM_API_AVAILABLE@;
+		public static readonly Version NDKVersion = new Version (@NDK_VERSION_MAJOR@, @NDK_VERSION_MINOR@, @NDK_VERSION_MICRO@);
+
+		public static readonly Dictionary <string, int> ArchAPILevels = new Dictionary <string, int> (StringComparer.Ordinal) {
+			{"armeabi-v7a", @NDK_ARMEABI_V7_API@},
+			{        "arm", @NDK_ARMEABI_V7_API@},
+			{  "arm64-v8a", @NDK_ARM64_V8A_API@},
+			{      "arm64", @NDK_ARM64_V8A_API@},
+			{        "x86", @NDK_X86_API@},
+			{     "x86_64", @NDK_X86_64_API@},
+		};
+	}
+}
