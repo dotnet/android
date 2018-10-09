@@ -275,6 +275,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
 	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
 	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
+	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -1318,17 +1319,23 @@ because xbuild doesn't support framework reference assemblies.
 	</ResolveLibraryProjectImports>
 </Target>
 
-<Target Name="_CollectLibraryResourceDirectories">
+<Target Name="_CollectLibraryResourceDirectories"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
+	>
 	<CollectNonEmptyDirectories Directories="@(LibraryResourceDirectories);@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res')">
 		<Output TaskParameter="Output" ItemName="_LibraryResourceDirectories" />
 	</CollectNonEmptyDirectories>
+	<ComputeHash Source="@(_LibraryResourceDirectories)"	>
+		<Output TaskParameter="Output" ItemName="_LibraryResourceHashDirectories" />
+	</ComputeHash>
 </Target>
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
-		Condition="'$(_AndroidUseAapt2)' == 'True' And '$(DesignTimeBuild)' != 'True' "
-		Inputs="%(_LibraryResourceDirectories.FileFound)"
-		Outputs="%(_LibraryResourceDirectories.Identity)\..\compiled.stamp"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
+		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
+		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	>
+	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<ConvertResourcesCases
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1336,36 +1343,34 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
-		AndroidConversionFlagFile="%(_LibraryResourceDirectories.Identity)\..\compiled.flata"
+		AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	/>
 	<Aapt2Compile
-		Condition=" '@(_LibraryResourceDirectories)' != '' "
+		Condition=" '@(_LibraryResourceHashDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
-		ResourceDirectories="@(_LibraryResourceDirectories)"
+		ResourceDirectories="@(_LibraryResourceHashDirectories)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+		FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
 	<Touch
-			Files="@(_LibraryResourceDirectories->'%(Identity)\..\compiled.stamp')"
+			Files="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 			AlwaysCreate="True"
 	/>
 	<ItemGroup>
-		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.flata')"
-				Condition="Exists ('@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.flata')')"
-		/>
-		<FileWrites Include="@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.stamp')"
-				Condition="Exists ('@(_LibraryResourceDirectories.Identity->'%(Identity)\..\compiled.stamp')')"
-		/>
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).flata" />
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp" />
 	</ItemGroup>
 </Target>
 
 <Target Name="_CompileResources"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
 		Inputs="@(AndroidResource)"
-		Outputs="$(IntermediateOutputPath)\compiled.flata"
+		Outputs="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
 	>
+	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<!-- Change cases so we support mixed case resource names -->
 	<ConvertResourcesCases
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1373,7 +1378,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
-		AndroidConversionFlagFile="$(IntermediateOutputPath)\compiled.flata"
+		AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
 	/>
 	<Aapt2Compile
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1381,11 +1386,12 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
 		ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+		FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
 	<ItemGroup>
-		<FileWrites Include="$(IntermediateOutputPath)\compiled.flata" />
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata" />
 	</ItemGroup>
 </Target>
 
@@ -1505,6 +1511,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetAdditionalResourcesFromAssemblies
 		;_CreateAdditionalResourceCache
 		;_CollectAdditionalResourceFiles
+		;_CollectLibraryResourceDirectories
 		;_CompileAndroidLibraryResources
 		;_CompileResources
 	</_GenerateJavaDesignerForComponentDependsOnTargets>
@@ -1545,12 +1552,12 @@ because xbuild doesn't support framework reference assemblies.
    UseShortFileNames="$(UseShortFileNames)"
    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
-   AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-   AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
+   AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
+   AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
    ApplicationName="$(_AndroidPackage)"
    JavaPlatformJarPath="$(JavaPlatformJarPath)"
    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
-   CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
+   CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -1708,7 +1715,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 
 	<Aapt2Link
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)\compiled.flata')"
+		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' And Exists ('$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata')"
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -1720,10 +1727,10 @@ because xbuild doesn't support framework reference assemblies.
 		ApplicationName="$(_AndroidPackage)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		JavaDesignerOutputDirectory="$(ResgenTemporaryDirectory)"
-		CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
+		CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
 		ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
-		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-		AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
+		AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
+		AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
@@ -2351,7 +2358,7 @@ because xbuild doesn't support framework reference assemblies.
   />
   <Aapt2Link
     Condition="'$(_AndroidUseAapt2)' == 'True'"
-    CompiledResourceFlatArchive="$(IntermediateOutputPath)\compiled.flata"
+    CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
     ResourceDirectories="$(MonoAndroidResDirIntermediate)"
     AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -2359,8 +2366,8 @@ because xbuild doesn't support framework reference assemblies.
     ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
     OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
     OutputFile="$(_PackagedResources)"
-    AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-    AdditionalAndroidResourcePaths="@(_AdditonalAndroidResourceCachePaths)"
+    AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
+    AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
     YieldDuringToolExecution="$(YieldDuringToolExecution)"
     PackageName="$(_AndroidPackage)"
     ApplicationName="$(_AndroidPackage)"
@@ -3066,6 +3073,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)proguard" Condition="Exists ('$(MonoAndroidIntermediate)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
+	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
@@ -3078,7 +3086,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
 	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
-	<Delete Files="$(IntermediateOutputPath)compiled.flata" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />

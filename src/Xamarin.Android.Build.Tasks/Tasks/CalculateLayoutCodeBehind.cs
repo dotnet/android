@@ -317,8 +317,8 @@ namespace Xamarin.Android.Tasks
 					managedType = managedType.Substring (0, idx).Trim ();
 
 				if (mayNeedTypeFixup && (idx = managedType.LastIndexOf ('.')) >= 0) {
-					LogWarning ($"Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'");
-					LogMessage ("If the above fixup fails, please add `tools:managedType` attribute to the element with fully qualified managed type name of the element");
+					LogCodedWarning ("XA1005", $"Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'");
+					LogCodedWarning ("XA1005", "If the above fixup fails, please add `xamarin:managedType` attribute to the element with fully qualified managed type name of the element");
 
 					oldType = managedType;
 					string ns = managedType.Substring (0, idx);
