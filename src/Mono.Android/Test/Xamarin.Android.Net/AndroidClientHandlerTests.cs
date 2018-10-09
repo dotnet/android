@@ -34,6 +34,8 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 
 using NUnit.Framework;
 
@@ -132,10 +134,30 @@ namespace Xamarin.Android.NetTests {
 			h.Dispose ();
 			var c = new HttpClient (h);
 			try {
-				c.GetAsync ("http://google.com").Wait ();
+				var t = ConnectIgnoreFailure (() => c.GetAsync ("http://google.com"), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
+				t.Wait ();
 				Assert.Fail ("#1");
 			} catch (AggregateException e) {
 				Assert.IsTrue (e.InnerException is ObjectDisposedException, "#2");
+			}
+		}
+
+		protected Task<HttpResponseMessage> ConnectIgnoreFailure (Func<Task<HttpResponseMessage>> connector, out bool connectionFailed)
+		{
+			connectionFailed = false;
+			try {
+				return connector ();
+			} catch (AggregateException ex) {
+				if (ex.InnerException is WebException wex && wex.Status == WebExceptionStatus.ConnectFailure) {
+					connectionFailed = true;
+					Assert.Ignore ($"Failed to connect to server. {wex}");
+					return null;
+				}
+
+				throw;
 			}
 		}
 	}
@@ -184,7 +206,10 @@ namespace Xamarin.Android.NetTests {
 			var supportTls1_2 = tlsProvider.Equals ("btls", StringComparison.OrdinalIgnoreCase);
 			using (var c = new HttpClient (new HttpClientHandler ())) {
 				try {
-					var tr = c.GetAsync (Tls_1_2_Url);
+					var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
+					if (connectionFailed)
+						return;
+
 					tr.Wait ();
 					tr.Result.EnsureSuccessStatusCode ();
 					if (!supportTls1_2) {
@@ -210,7 +235,10 @@ namespace Xamarin.Android.NetTests {
 			var cts = new CancellationTokenSource ();
 			cts.Cancel (); //Cancel immediately
 			using (var c = new HttpClient (CreateHandler())) {
-				var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+				var tr = ConnectIgnoreFailure (() => c.GetAsync ("http://10.255.255.1", cts.Token), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
 				try {
 					tr.Wait();
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
@@ -227,7 +255,10 @@ namespace Xamarin.Android.NetTests {
 		{
 			var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
 			using (var c = new HttpClient (CreateHandler())){
-				var tr = c.GetAsync ("http://10.255.255.1", cts.Token);
+				var tr = ConnectIgnoreFailure (() => c.GetAsync ("http://10.255.255.1", cts.Token), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
 				try {
 					tr.Wait ();
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
@@ -245,7 +276,10 @@ namespace Xamarin.Android.NetTests {
 			using (var c = new HttpClient (CreateHandler ()))
 			{
 				c.Timeout = TimeSpan.FromMilliseconds (2000); //Cancel after 2000ms through Timeout property
-				var tr = c.GetAsync ("http://10.255.255.1");
+				var tr = ConnectIgnoreFailure (() => c.GetAsync ("http://10.255.255.1"), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
 				try {
 					tr.Wait ();
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
@@ -263,7 +297,10 @@ namespace Xamarin.Android.NetTests {
 			var requestURI = new Uri ("http://tls-test.internalx.com/redirect.php");
 			var redirectedURI = new Uri ("http://tls-test.internalx.com/redirect-301.html");
 			using (var c = new HttpClient (CreateHandler ())) {
-				var tr = c.GetAsync (requestURI);
+				var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
 				tr.Wait ();
 				tr.Result.EnsureSuccessStatusCode ();
 				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
@@ -278,7 +315,11 @@ namespace Xamarin.Android.NetTests {
 			using (var c = new HttpClient (CreateHandler ())) {
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-				var response = c.SendAsync(request).Result;
+				var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
+				var response = t.Result;
 				response.EnsureSuccessStatusCode ();
 				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
