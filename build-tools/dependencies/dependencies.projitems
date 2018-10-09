@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_DarwinMonoFramework>MonoFramework-MDK-5.18.0.134.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
+    <_DarwinMonoFramework>MonoFramework-MDK-5.18.0.142.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
     <_AptGetInstall>apt-get -f -u install</_AptGetInstall>
   </PropertyGroup>
   <ItemGroup>
@@ -59,7 +59,7 @@
       <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>
       <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>
       <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
-      <DarwinMinimumUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2018-08/99/1644a1a01d51e13d01b1202286ee890412462d25/$(_DarwinMonoFramework)</DarwinMinimumUrl>
+      <DarwinMinimumUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2018-08/110/e257971d3c89ba4a054514d83ea84eb2bcb7ad69/$(_DarwinMonoFramework)</DarwinMinimumUrl>
       <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
     </RequiredProgram>
   </ItemGroup>
