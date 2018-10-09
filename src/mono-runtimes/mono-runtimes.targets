@@ -312,8 +312,8 @@
       <_BclTestAssemblyNUnit  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == ''" />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Identity)')" />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Filename).pdb')')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\%(SourcePath)\%(Filename).pdb')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyXUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Filename).pdb')" />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyNUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Identity)')" />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyNUnit->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\tests\%(Filename).pdb')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(MonoSourceFullPath)\mcs\class\lib\monodroid\%(Identity)')" />
