@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 	// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.3
 	public sealed class CodeAttribute : AttributeInfo {
 
-		public byte[]       Code;
+		public byte[]       ByteCode;
 		public ushort       MaxStack;
 		public ushort       MaxLocals;
 
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var code        = new byte[code_length];
 			for (int i = 0; i < code.Length; ++i)
 				code [i] = stream.ReadNetworkByte ();
-			Code = code;
+			ByteCode = code;
 
 			var exception_table_length  = stream.ReadNetworkUInt16 ();
 			for (int i = 0; i < exception_table_length; ++i) {
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			var sb = new StringBuilder ("Code(")
-				.Append (Code.Length);
+				.Append (ByteCode.Length);
 			foreach (var attr in Attributes) {
 				sb.Append (", ").Append (attr);
 			}
@@ -236,7 +236,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		public IEnumerable<ConstantPoolClassItem> Exceptions {
+		public IEnumerable<ConstantPoolClassItem> CheckedExceptions {
 			get {return exceptions.Select (c => (ConstantPoolClassItem) ConstantPool [c]);}
 		}
 
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		{
 			var sb = new StringBuilder ("Exceptions(");
 			bool first = true;
-			foreach (var e in Exceptions) {
+			foreach (var e in CheckedExceptions) {
 				if (!first)
 					sb.Append (", ");
 				first = false;
@@ -473,13 +473,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 			signatureIndex  = stream.ReadNetworkUInt16 ();
 		}
 
-		public string Signature {
+		public string Value {
 			get {return ((ConstantPoolUtf8Item) ConstantPool [signatureIndex]).Value;}
 		}
 
 		public override string ToString ()
 		{
-			return string.Format ("Signature({0})", Signature);
+			return string.Format ("Signature({0})", Value);
 		}
 	}
 

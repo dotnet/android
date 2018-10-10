@@ -53,19 +53,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerAttributeTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JniValueMarshalerContractTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CrossReferenceBridge.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived2.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorBase.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorDerived.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\SelfRegistration.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
-  </ItemGroup>
-  <Target Name="BuildInteropTestJar" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; @(JavaInteropTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
-  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)Interop-Tests.targets" />
 </Project>

@@ -96,14 +96,12 @@ namespace MonoDroid.Generation
 				case "add-node":
 					try {
 						var nodes = api_doc.XPathSelectElements (path);
-						bool matched = false;
 						if (!nodes.Any ())
 							// BG8A01
 							Report.Warning (0, Report.WarningApiFixup + 1, null, metaitem, "<add-node path=\"{0}\"/> matched no nodes.", path);
 						else {
 							foreach (var node in nodes)
 								node.Add (metaitem.Nodes ());
-							matched = true;
 						}
 					} catch (XPathException e) {
 						// BG4A02

@@ -56,10 +56,6 @@
     <Compile Include="ExpectedInnerClassInfo.cs" />
     <Compile Include="ParameterFixupTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
-    <TestJarNoParameters Include="java\java\util\Collection.java" />
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <BuildDependsOn>
@@ -67,11 +63,7 @@
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
-  <Target Name="BuildClasses" Inputs="@(TestJar)" Outputs="@(TestJar-&gt;'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
-    <MakeDir Directories="$(IntermediateOutputPath)classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -parameters -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar-&gt;'%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters-&gt;'%(Identity)', ' ')" />
-  </Target>
+  <Import Project="Xamarin.Android.Tools.Bytecode-Tests.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Bytecode.csproj">
       <Project>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</Project>

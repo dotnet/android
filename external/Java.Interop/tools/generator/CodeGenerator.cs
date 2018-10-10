@@ -14,6 +14,7 @@ using Xamarin.AndroidTools.AnnotationSupport;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
 
 namespace Xamarin.Android.Binder {
@@ -210,7 +211,7 @@ namespace Xamarin.Android.Binder {
 			if (options == null)
 				throw new ArgumentNullException ("options");
 
-			using (var resolver = new DirectoryAssemblyResolver (Console.WriteLine, loadDebugSymbols: false)) {
+			using (var resolver = new DirectoryAssemblyResolver (Diagnostic.CreateConsoleLogger (), loadDebugSymbols: false)) {
 				Run (options, resolver);
 			}
 		}

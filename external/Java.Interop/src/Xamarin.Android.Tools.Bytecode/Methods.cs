@@ -180,7 +180,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var throws  = new List<TypeInfo> ();
 			foreach (var exceptions in Attributes.Where (a => a.Name == "Exceptions")) {
 				var ex = (ExceptionsAttribute) exceptions;
-				foreach (var t in ex.Exceptions) {
+				foreach (var t in ex.CheckedExceptions) {
 					throws.Add (new TypeInfo (t.Name.Value));
 				}
 			}
@@ -202,7 +202,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		{
 			var signature = (SignatureAttribute) Attributes.SingleOrDefault (a => a.Name == "Signature");
 			return signature != null
-				? new MethodTypeSignature (signature.Signature)
+				? new MethodTypeSignature (signature.Value)
 				: null;
 		}
 

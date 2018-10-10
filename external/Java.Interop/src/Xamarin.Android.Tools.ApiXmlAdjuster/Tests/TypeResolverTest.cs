@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 	{
 		JavaApi api;
 		
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void SetupFixture ()
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();

@@ -130,7 +130,7 @@ namespace Java.InteropTests
 
 		int grefStartCount;
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void BeginCheckGlobalRefCount ()
 		{
 			// So that the JavaProxyObject.TypeRef GREF isn't counted.
@@ -139,7 +139,7 @@ namespace Java.InteropTests
 			grefStartCount  = JniEnvironment.Runtime.GlobalReferenceCount;
 		}
 
-		[TestFixtureTearDown]
+		[OneTimeTearDown]
 		public void EndCheckGlobalRefCount ()
 		{
 			int gref    = JniEnvironment.Runtime.GlobalReferenceCount;

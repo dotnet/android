@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				return this.signature;
 			var sig = Attributes.Get<SignatureAttribute> ();
 			return sig != null
-				? (this.signature = new ClassSignature (sig.Signature))
+				? (this.signature = new ClassSignature (sig.Value))
 				: null;
 		}
 

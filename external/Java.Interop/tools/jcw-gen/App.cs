@@ -16,7 +16,7 @@ namespace Java.Interop.Tools
 	{
 		public static int Main (string [] args)
 		{
-			var     resolver    = new DirectoryAssemblyResolver (logWarnings: Console.WriteLine, loadDebugSymbols: false);
+			var     resolver    = new DirectoryAssemblyResolver (logger: Diagnostic.CreateConsoleLogger (), loadDebugSymbols: false);
 
 			bool    help        = false;
 			string  outputPath  = null;

@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public string GetSignature ()
 		{
 			var signature   = Attributes.Get<SignatureAttribute> ();
-			return signature != null ? signature.Signature : null;
+			return signature != null ? signature.Value : null;
 		}
 	}
 

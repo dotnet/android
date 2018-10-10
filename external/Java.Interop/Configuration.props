@@ -24,6 +24,12 @@
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
+    <JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">1.6</JavacTargetVersion>
+    <JreRtJarPath Condition=" '$(JreRtJarPath)' == '' And '$(JavaCPath)' != '' ">$([System.IO.Path]::GetDirectoryName('$(JavaCPath)'))\..\jre\lib\rt.jar</JreRtJarPath>
+    <_JavacSourceOptions>-source $(JavacSourceVersion) -target $(JavacTargetVersion) -bootclasspath "$(JreRtJarPath)"</_JavacSourceOptions>
+  </PropertyGroup>
+  <PropertyGroup>
     <CecilFullPath>$([System.IO.Path]::GetFullPath ('$(CecilSourceDirectory)'))</CecilFullPath>
     <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>

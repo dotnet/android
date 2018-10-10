@@ -12,13 +12,13 @@ namespace Java.InteropTests
 	{
 		int lrefStartCount;
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void StartArrayTests ()
 		{
 			lrefStartCount  = JniEnvironment.LocalReferenceCount;
 		}
 
-		[TestFixtureTearDown]
+		[OneTimeTearDown]
 		public void EndArrayTests ()
 		{
 			int lref    = JniEnvironment.LocalReferenceCount;

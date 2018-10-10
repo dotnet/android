@@ -26,9 +26,6 @@ namespace Java.Interop {
 
 		internal    List<string>    Options = new List<string> ();
 
-		public  string      JvmLibraryPath              {get; set;}
-
-		public  JniVersion  JniVersion                  {get; set;}
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 
 		public  Collection<string>  ClassPath           {get; private set;}

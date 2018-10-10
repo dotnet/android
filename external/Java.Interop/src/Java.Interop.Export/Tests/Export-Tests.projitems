@@ -13,12 +13,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\ExportTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\MarshalMemberBuilderTest.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />
-  </ItemGroup>
-  <Target Name="BuildExportTestJar" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)et-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)et-classes&quot; @(JavaExportTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />
-  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)Export-Tests.targets" />
 </Project>

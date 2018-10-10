@@ -448,8 +448,6 @@ namespace Java.Interop.PerformanceTests {
 		[Test]
 		public void ObjectArrayEnumerationTiming ()
 		{
-			const int C = 100;
-
 			var total   = Stopwatch.StartNew ();
 
 			JniMethodInfo Class_getMethods;

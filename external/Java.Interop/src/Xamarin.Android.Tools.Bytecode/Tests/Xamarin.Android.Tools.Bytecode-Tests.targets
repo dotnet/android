@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
+    <TestJarNoParameters Include="java\java\util\Collection.java" />
+  </ItemGroup>
+  <Target Name="BuildClasses"
+      Inputs="@(TestJar)"
+      Outputs="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
+    <MakeDir Directories="$(IntermediateOutputPath)classes" />
+    <Exec
+        Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar->'%(Identity)', ' ')"
+    />
+    <Exec
+        Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')"
+    />
+  </Target>
+</Project>

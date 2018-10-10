@@ -13,12 +13,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)JavaTiming.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimingTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <JavaPerformanceTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\performance\JavaTiming.java" />
-  </ItemGroup>
-  <Target Name="BuildPerformanceTestJar" Inputs="@(JavaPerformanceTestJar)" Outputs="$(OutputPath)performance-test.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)pt-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)pt-classes&quot; @(JavaPerformanceTestJar -&gt; '%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)performance-test.jar&quot; -C &quot;$(IntermediateOutputPath)pt-classes&quot; ." />
-  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)PerformanceTests.targets" />
 </Project>

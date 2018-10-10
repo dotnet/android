@@ -22,7 +22,7 @@
       Inputs="@(CompileJavaInteropJar)"
       Outputs="$(OutputPath)java-interop.jar">
     <MakeDir Directories="$(OutputPath);$(IntermediateOutputPath)ji-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -source 1.5 -target 1.6 -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)ji-classes&quot; @(CompileJavaInteropJar -&gt; '%(Identity)', ' ')" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)java-interop.jar&quot; -C &quot;$(IntermediateOutputPath)ji-classes&quot; ." />
   </Target>
 </Project>

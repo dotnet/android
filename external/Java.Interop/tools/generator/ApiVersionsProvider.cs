@@ -63,7 +63,9 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			public int Deprecated;
 
 			string method;
+#if !GENERATOR
 			string [] args;
+#endif  // !GENERATOR
 
 			public string MethodName {
 				get {
@@ -76,8 +78,9 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 					EnsureParsed ();
 #if GENERATOR
 						throw new NotSupportedException ("Not supported as embedded in generator.");
-#endif
+#else   // !GENERATOR
 					return args;
+#endif  // !GENERATOR
 				}
 			}
 
