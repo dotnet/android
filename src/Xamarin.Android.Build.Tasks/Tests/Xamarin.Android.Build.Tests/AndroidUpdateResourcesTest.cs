@@ -1373,43 +1373,6 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void CustomViewAddResourceId ([Values (false, true)] bool useAapt2)
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
-			proj.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
-
-				//Add a new android:id
-				var textView1 = "textView1";
-				proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", $"<TextView android:id=\"@+id/{textView1}\" /></LinearLayout>");
-				proj.Touch (@"Resources\layout\Main.axml");
-
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded");
-
-				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "android", "support", "compat", "R.java");
-				FileAssert.Exists (r_java);
-				var r_java_contents = File.ReadAllLines (r_java);
-				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
-			}
-		}
-
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
 		public void Issue2205 ([Values(false, true)] bool useAapt2)
