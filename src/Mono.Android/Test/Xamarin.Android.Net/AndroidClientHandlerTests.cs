@@ -151,14 +151,36 @@ namespace Xamarin.Android.NetTests {
 			try {
 				return connector ();
 			} catch (AggregateException ex) {
-				if (ex.InnerException is WebException wex && wex.Status == WebExceptionStatus.ConnectFailure) {
-					connectionFailed = true;
-					Assert.Ignore ($"Failed to connect to server. {wex}");
+				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
 					return null;
-				}
-
 				throw;
 			}
+		}
+
+		protected void RunIgnoringNetworkIssues (Action runner, out bool connectionFailed)
+		{
+			connectionFailed = false;
+			try {
+				runner ();
+			} catch (AggregateException ex) {
+				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
+					return;
+				throw;
+			}
+		}
+
+		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
+		{
+			connectionFailed = false;
+			if (wex == null)
+				return false;
+
+			if (wex.Status != WebExceptionStatus.ConnectFailure)
+				return false;
+
+			connectionFailed = true;
+			Assert.Ignore ($"Failed to connect to server. {wex}");
+			return true;
 		}
 	}
 
@@ -180,8 +202,14 @@ namespace Xamarin.Android.NetTests {
 				return;
 			}
 			using (var c = new HttpClient (CreateHandler ())) {
-				var tr = c.GetAsync (Tls_1_2_Url);
-				tr.Wait ();
+				var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
+				if (connectionFailed)
+					return;
+
+				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+				if (connectionFailed)
+					return;
+
 				tr.Result.EnsureSuccessStatusCode ();
 			}
 		}
@@ -210,7 +238,10 @@ namespace Xamarin.Android.NetTests {
 					if (connectionFailed)
 						return;
 
-					tr.Wait ();
+					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+					if (connectionFailed)
+						return;
+
 					tr.Result.EnsureSuccessStatusCode ();
 					if (!supportTls1_2) {
 						Assert.Fail ("SHOULD NOT BE REACHED: Mono's HttpClientHandler doesn't support TLS 1.2.");
@@ -240,7 +271,10 @@ namespace Xamarin.Android.NetTests {
 					return;
 
 				try {
-					tr.Wait();
+					RunIgnoringNetworkIssues (() => tr.Wait(), out connectionFailed);
+					if (connectionFailed)
+						return;
+
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
@@ -260,7 +294,10 @@ namespace Xamarin.Android.NetTests {
 					return;
 
 				try {
-					tr.Wait ();
+					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+					if (connectionFailed)
+						return;
+
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
@@ -281,7 +318,10 @@ namespace Xamarin.Android.NetTests {
 					return;
 
 				try {
-					tr.Wait ();
+					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+					if (connectionFailed)
+						return;
+
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex)
@@ -301,7 +341,10 @@ namespace Xamarin.Android.NetTests {
 				if (connectionFailed)
 					return;
 
-				tr.Wait ();
+				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+				if (connectionFailed)
+					return;
+
 				tr.Result.EnsureSuccessStatusCode ();
 				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
@@ -319,7 +362,11 @@ namespace Xamarin.Android.NetTests {
 				if (connectionFailed)
 					return;
 
-				var response = t.Result;
+				HttpResponseMessage response = null;
+				RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
+				if (connectionFailed)
+					return;
+
 				response.EnsureSuccessStatusCode ();
 				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
