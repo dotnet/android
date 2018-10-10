@@ -545,8 +545,8 @@
     />
     <ItemGroup>
       <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android Base Class Libraries&quot;&gt;" />
-        <File AssemblyName="System.Buffers" Version="4.0.99.0" />
-        <File AssemblyName="System.Memory" Version="4.0.99.0" />
+      <FrameworkList Include="  &lt;File AssemblyName=&quot;System.Buffers&quot;    Version=&quot;4.0.99.0&quot; /&gt;" />
+      <FrameworkList Include="  &lt;File AssemblyName=&quot;System.Memory&quot;     Version=&quot;4.0.99.0&quot; /&gt;" />
       <FrameworkList Include="&lt;/FileList&gt;" />
     </ItemGroup>
     <WriteLinesToFile
