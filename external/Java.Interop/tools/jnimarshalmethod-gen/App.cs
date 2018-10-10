@@ -223,7 +223,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		void CreateMarshalMethodAssembly (string path)
 		{
-			var assembly        = Assembly.LoadFile (path);
+			var assembly        = Assembly.LoadFile (Path.GetFullPath (path));
 
 			var baseName        = Path.GetFileNameWithoutExtension (path);
 			var assemblyName    = new AssemblyName (baseName + "-JniMarshalMethods");
