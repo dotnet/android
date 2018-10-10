@@ -1412,30 +1412,31 @@ namespace UnnamedProject
 
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
-		public void Issue2205 ([Values(false, true)] bool useAapt2)
+		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
-			var proj = new XamarinAndroidApplicationProject();
-			proj.SetProperty("AndroidUseAapt2", useAapt2.ToString());
-			proj.Packages.Add(KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.Packages.Add(KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.Packages.Add(KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.Packages.Add(KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportCompat_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportDesign_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportFragment_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.Packages.Add(KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			proj.Packages.Add(KnownPackages.Xamarin_GooglePlayServices_Gcm);
-			proj.Packages.Add(KnownPackages.Xamarin_GooglePlayServices_Tasks);
-			proj.Packages.Add(KnownPackages.Xamarin_GooglePlayServices_Iid);
-			proj.Packages.Add(KnownPackages.Xamarin_GooglePlayServices_Basement);
-			proj.Packages.Add(KnownPackages.Xamarin_GooglePlayServices_Base);
-			proj.OtherBuildItems.Add(new BuildItem("GoogleServicesJson", () => @"{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			proj.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			proj.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Gcm);
+			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
+			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Iid);
+			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
+			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
+			proj.OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "googleservices.json") {
+				TextContent = () => @"{
     ""project_info"": {
         ""project_number"": ""12351255213413432"",
         ""project_id"": ""12341234-app"",
@@ -1474,10 +1475,10 @@ namespace UnnamedProject
         }
     ],
     ""configuration_version"": ""1""
-}"));
-			using (var b = CreateApkBuilder(Path.Combine("temp", TestName)))
-			{
-				Assert.IsTrue(b.Build(proj), "first build should have succeeded");
+}"
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 			}
 		}
 	}
