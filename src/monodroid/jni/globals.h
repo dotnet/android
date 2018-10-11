@@ -10,6 +10,7 @@
 extern xamarin::android::DylibMono monoFunctions;
 extern xamarin::android::Util utils;
 extern xamarin::android::internal::AndroidSystem androidSystem;
+extern xamarin::android::internal::OSBridge osBridge;
 
 #ifdef DEBUG
 extern xamarin::android::Debug debug;
