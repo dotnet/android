@@ -20,7 +20,7 @@ using namespace xamarin::android;
 
   it should also accept libmono_path = NULL parameter
 */
-int monodroid_dylib_mono_init (struct DylibMono *mono_imports, const char *libmono_path)
+int monodroid_dylib_mono_init (DylibMono *mono_imports, const char *libmono_path)
 {
 	if (mono_imports == NULL)
 		return FALSE;
