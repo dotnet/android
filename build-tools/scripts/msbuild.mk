@@ -31,10 +31,6 @@ else    # $(OS_NAME) != Darwin
 _PKG_CONFIG   = pkg-config
 endif   # $(OS_NAME) == Darwin
 
-ifneq ($(V),0)
-MSBUILD_FLAGS += /v:diag
-endif   # $(V) != 0
-
 ifeq ($(MSBUILD),msbuild)
 export USE_MSBUILD  = 1
 endif   # $(MSBUILD) == msbuild
@@ -54,6 +50,10 @@ MSBUILD_FLAGS += /p:_DebugFileExt=.pdb
 else    # $(_CSC_EMITS_PDB) == ''
 MSBUILD_FLAGS += /p:_DebugFileExt=.mdb
 endif   # $(_CSC_EMITS_PDB) == Pdb
+
+ifneq ($(V),0)
+MSBUILD_FLAGS += /v:diag
+endif   # $(V) != 0
 
 # $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD),conf=$(CONFIGURATION))
 define MSBUILD_BINLOG
