@@ -245,7 +245,19 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			PrepareTypeMap (ad.MainModule);
 
-			foreach (var type in assembly.DefinedTypes) {
+			IEnumerable<TypeInfo> types = null;
+			try {
+				types = assembly.DefinedTypes;
+			} catch (ReflectionTypeLoadException e) {
+				types = (IEnumerable<TypeInfo>) e.Types;
+				foreach (var le in e.LoaderExceptions)
+					Warning ($"Type Load exception{Environment.NewLine}{le}");
+			}
+
+			foreach (var type in types) {
+				if (type == null)
+					continue;
+
 				if (matchType) {
 					var matched = false;
 
