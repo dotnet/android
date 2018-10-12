@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//We don't want these things stepping on each other
@@ -285,7 +285,6 @@ namespace UnamedProject
 				IsRelease = isRelease,
 				
 			};
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//To be sure we are at a clean state
@@ -1597,7 +1596,6 @@ namespace App1
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 			};
-			app.MainActivity = app.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 			//LinkSkip one assembly that contains __AndroidLibraryProjects__.zip
 			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
 			app.SetProperty ("AndroidLinkSkip", linkSkip);

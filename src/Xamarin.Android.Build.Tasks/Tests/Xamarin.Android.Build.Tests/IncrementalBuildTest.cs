@@ -20,7 +20,7 @@ namespace Xamarin.Android.Build.Tests
 			// change one of the properties (say AotAssemblies) 
 			// do another build. it should NOT hose the resource directory.
 			var path = Path.Combine ( "temp", TestName );
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = true,
 			};
