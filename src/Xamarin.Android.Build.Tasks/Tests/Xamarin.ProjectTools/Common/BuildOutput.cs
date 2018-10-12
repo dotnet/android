@@ -50,7 +50,7 @@ namespace Xamarin.ProjectTools
 			bool found = false;
 			foreach (var line in Builder.LastBuildOutput) {
 					found = line.Contains (string.Format ("Target {0} skipped due to ", target))
-					            || line.Contains (string.Format ("Skipping target \"{0}\" because it has no outputs.", target))
+					            || line.Contains (string.Format ("Skipping target \"{0}\" because it has no ", target)) //NOTE: message can say `inputs` or `outputs`
 					            || line.Contains (string.Format ("Target \"{0}\" skipped, due to", target))
 					            || line.Contains (string.Format ("Skipping target \"{0}\" because its outputs are up-to-date", target))
 					            || line.Contains (string.Format ("target {0}, skipping", target))
