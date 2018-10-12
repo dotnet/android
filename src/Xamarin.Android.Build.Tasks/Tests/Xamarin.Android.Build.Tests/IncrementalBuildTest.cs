@@ -14,24 +14,26 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
-		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex)
+		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
 			// do a release build
 			// change one of the properties (say AotAssemblies) 
 			// do another build. it should NOT hose the resource directory.
-			var path = Path.Combine ( "temp", TestName );
+			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = true,
 			};
 			if (enableMultiDex)
-				proj.SetProperty ( "AndroidEnableMultiDex", "True" );
-			using (var b = CreateApkBuilder ( path, false, false )) {
-				Assert.IsTrue ( b.Build ( proj ), "First should have succeeded" );
-				IEnumerable<string> files = Directory.EnumerateFiles ( Path.Combine (Root, path, proj.IntermediateOutputPath ), "*.*", SearchOption.AllDirectories );
-				Assert.IsTrue ( b.Build ( proj, doNotCleanupOnUpdate: true, parameters: null, saveProject: false ), "Second should have succeeded" );
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
+			if (useAapt2)
+				proj.SetProperty ("AndroidUseAapt2", "True");
+			using (var b = CreateApkBuilder (path)) {
+				Assert.IsTrue (b.Build (proj), "First should have succeeded" );
+				IEnumerable<string> files = Directory.EnumerateFiles (Path.Combine (Root, path, proj.IntermediateOutputPath), "*.*", SearchOption.AllDirectories);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: null, saveProject: false), "Second should have succeeded");
 				foreach (var file in files) {
-					FileAssert.Exists ( file, $"{file} should not have been deleted!" );
+					FileAssert.Exists (file, $"{file} should not have been deleted!" );
 				}
 			}
 		}
