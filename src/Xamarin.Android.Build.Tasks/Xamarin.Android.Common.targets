@@ -1959,6 +1959,9 @@ because xbuild doesn't support framework reference assemblies.
       Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java')" />
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
       Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
+    <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+    <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>
 
