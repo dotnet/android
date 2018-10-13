@@ -501,7 +501,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
 	</PropertyGroup>
 	<Warning Code="XA0115"
-			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
+			Condition="$(_RequestedAbis.Contains(';armeabi;')) And '$(AndroidUseSharedRuntime)' != 'True'"
 			Text="This ABI ('armeabi') is deprecated and will be removed in the next release. Please update your project properties."
 	/>
 </Target>
