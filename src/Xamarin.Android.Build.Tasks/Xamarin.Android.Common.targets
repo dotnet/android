@@ -1950,15 +1950,15 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-      Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java')" />
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java')" />
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java"
-      Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java')" />
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java')" />
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java"
-      Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java')" />
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java')" />
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
-      Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java')" />
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java')" />
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
-      Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java')" />
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java')" />
     <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
     <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
