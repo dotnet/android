@@ -54,6 +54,7 @@
     <Compile Include="Android\XamarinAndroidProject.cs" />
     <Compile Include="Android\XamarinAndroidProjectLanguage.cs" />
     <Compile Include="Android\XamarinAndroidWearApplicationProject.cs" />
+    <Compile Include="Android\XamarinFormsAndroidApplicationProject.cs" />
     <Compile Include="Android\AndroidItem.cs" />
     <Compile Include="Common\DownloadedCache.cs" />
     <Compile Include="Common\ProjectBuilder.cs" />

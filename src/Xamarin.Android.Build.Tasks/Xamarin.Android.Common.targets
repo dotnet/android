@@ -1032,7 +1032,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
 	</PropertyGroup>
 	<Error Code="XA0115"
-			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
+			Condition="$(_RequestedAbis.Contains(';armeabi;')) And '$(AndroidUseSharedRuntime)' != 'True'"
 			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties."
 	/>
 </Target>
@@ -1947,6 +1947,22 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
   
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
+
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java"
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java"
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
+        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
+    <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+    <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CreateIntermediateAssembliesDir"
@@ -2404,6 +2420,7 @@ because xbuild doesn't support framework reference assemblies.
   <CreateItem
     Include="$(IntermediateOutputPath)android\src\\**\*.java">
     <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
+    <Output TaskParameter="Include" ItemName="FileWrites" />
   </CreateItem>
 </Target>
 
