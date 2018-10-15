@@ -854,13 +854,7 @@ AndroidSystem::get_libmonoandroid_directory_path ()
 		return libmonoandroid_directory_path;
 
 	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
-
-	// `GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS` means that `dir_path`, instead of
-	// being a filesystem path, must instead be an address within the module that
-	// we wish to obtain the HMODULE for.  Thus, while this *looks* crazy, it's
-	// correct: `&libmonoandroid_directory_path` is an address within this module.
 	const wchar_t *dir_path = static_cast<const wchar_t*>(&libmonoandroid_directory_path);
-
 	BOOL retval = GetModuleHandleExW (flags, dir_path, &module);
 	if (!retval)
 		return nullptr;
