@@ -128,6 +128,15 @@
     <EmbeddedResource Include="Resources\Base\classes.jar">
       <LogicalName>Xamarin.ProjectTools.Resources.Base.classes.jar</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Forms\MainActivity.cs" />
+    <EmbeddedResource Include="Resources\Forms\App.xaml" />
+    <EmbeddedResource Include="Resources\Forms\App.xaml.cs" />
+    <EmbeddedResource Include="Resources\Forms\MainPage.xaml" />
+    <EmbeddedResource Include="Resources\Forms\MainPage.xaml.cs" />
+    <EmbeddedResource Include="Resources\Forms\Tabbar.axml" />
+    <EmbeddedResource Include="Resources\Forms\Toolbar.axml" />
+    <EmbeddedResource Include="Resources\Forms\colors.xml" />
+    <EmbeddedResource Include="Resources\Forms\styles.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

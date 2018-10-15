@@ -2378,7 +2378,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					}
 				}
 				packages.Clear ();
-				packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+				packages.Add (KnownPackages.XamarinForms_3_1_0_697729);
 				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
 				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
 				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
