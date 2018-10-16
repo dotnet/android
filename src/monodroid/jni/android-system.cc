@@ -854,7 +854,7 @@ AndroidSystem::get_libmonoandroid_directory_path ()
 		return libmonoandroid_directory_path;
 
 	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
-	const wchar_t *dir_path = static_cast<const wchar_t*>(&libmonoandroid_directory_path);
+	const wchar_t *dir_path = reinterpret_cast<wchar_t*>(&libmonoandroid_directory_path);
 	BOOL retval = GetModuleHandleExW (flags, dir_path, &module);
 	if (!retval)
 		return nullptr;
