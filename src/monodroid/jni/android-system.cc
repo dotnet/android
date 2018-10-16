@@ -848,9 +848,9 @@ char*
 AndroidSystem::get_libmonoandroid_directory_path ()
 {
 	wchar_t module_path[MAX_PATH];
-	HMODULE module = NULL;
+	HMODULE module = nullptr;
 
-	if (libmonoandroid_directory_path != NULL)
+	if (libmonoandroid_directory_path != nullptr)
 		return libmonoandroid_directory_path;
 
 	DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
@@ -862,9 +862,8 @@ AndroidSystem::get_libmonoandroid_directory_path ()
 	const wchar_t *dir_path = static_cast<const wchar_t*>(&libmonoandroid_directory_path);
 
 	BOOL retval = GetModuleHandleExW (flags, dir_path, &module);
-	free (dir_path);
 	if (!retval)
-		return NULL;
+		return nullptr;
 
 	GetModuleFileNameW (module, module_path, sizeof (module_path) / sizeof (module_path[0]));
 	PathRemoveFileSpecW (module_path);
