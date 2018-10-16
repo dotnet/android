@@ -1,11 +1,14 @@
-﻿using System;
-using Xamarin.ProjectTools;
+﻿using Mono.Cecil;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System.Xml.Linq;
+using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests {
+namespace Xamarin.Android.Build.Tests
+{
 	[Parallelizable (ParallelScope.Children)]
 	public class BindingBuildTest : BaseTest {
 #pragma warning disable 414
@@ -444,6 +447,36 @@ AAAA==";
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				string xml = bindingBuilder.Output.GetIntermediaryAsText ("docs/Com.Xamarin.Android.Test.Msbuildtest/JavaSourceJarTest.xml");
 				Assert.IsTrue (xml.Contains ("<param name=\"name\"> - name to display.</param>"), "missing doc");
+			}
+		}
+
+		[Test]
+		[TestCaseSource ("ClassParseOptions")]
+		public void DesignTimeBuild (string classParser)
+		{
+			var proj = new XamarinAndroidBindingProject {
+				AndroidClassParser = classParser
+			};
+			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
+				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+			});
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				b.Target = "Compile";
+				Assert.IsTrue (b.Build (proj, parameters: new [] { "DesignTimeBuild=True" }), "design-time build should have succeeded.");
+
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var api_xml = Path.Combine (intermediate, "api.xml");
+				FileAssert.Exists (api_xml);
+				var xml = XDocument.Load (api_xml);
+				var element = xml.Element ("api");
+				Assert.IsNotNull (element, "api.xml should contain an `api` element!");
+				Assert.IsTrue (element.HasElements, "api.xml should contain elements!");
+
+				var assemblyFile = Path.Combine (intermediate, proj.ProjectName + ".dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyFile)) {
+					var typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
+					Assert.IsTrue (assembly.MainModule.Types.Any (t => t.FullName == typeName), $"Type `{typeName}` should exist!");
+				}
 			}
 		}
 	}
