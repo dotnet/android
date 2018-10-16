@@ -1989,9 +1989,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
 </Target>
 
-<Target Name="_CollectConfigFiles"
-		Inputs="@(ResolvedAssemblies)"
-		Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" >
+<Target Name="_CollectConfigFiles">
 	<GetFilesThatExist
 			Files="@(ResolvedAssemblies->'%(identity).config')">
 		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedConfigFiles" />
@@ -2009,8 +2007,6 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectMdbFiles"
-		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension)')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
 		DependsOnTargets="_CollectPdbFiles">
 	<GetFilesThatExist
 			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
@@ -2020,9 +2016,7 @@ because xbuild doesn't support framework reference assemblies.
 	</GetFilesThatExist>
 </Target>
 
-<Target Name="_CollectPdbFiles"
-		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+<Target Name="_CollectPdbFiles">
 	<CollectPdbFiles
 			ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
 		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
