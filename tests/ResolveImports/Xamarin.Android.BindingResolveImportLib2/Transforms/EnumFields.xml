@@ -9,7 +9,7 @@
     <field clr-name="Id" jni-name="Fragment_id" value="1" />
     <field clr-name="Name" jni-name="Fragment_name" value="0" />
     <field clr-name="Tag" jni-name="Fragment_tag" value="2" />
-  </type>
+  </mapping>
 
   Notes:
   - An optional "bitfield" attribute marks the enum type with [Flags].
