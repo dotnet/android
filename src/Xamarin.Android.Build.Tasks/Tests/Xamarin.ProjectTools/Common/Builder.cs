@@ -130,10 +130,8 @@ namespace Xamarin.ProjectTools
 			get {
 				string path;
 				if (IsUnix) {
-					path = Path.Combine ("/usr", "local", "share", "dotnet", "sdk", "2.0.0", "Sdks", "Microsoft.NET.Sdk");
-					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-						return path;
-					return string.Empty;
+					path = System.IO.Path.Combine ("/usr", "local", "share", "dotnet", "sdk");
+					return FindLatestDotNetSdk (path);
 				}
 				var visualStudioDirectory = GetVisualStudio2017Directory ();
 				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
@@ -453,6 +451,26 @@ namespace Xamarin.ProjectTools
 		string QuoteFileName (string fileName)
 		{
 			return fileName.Contains (" ") ? $"\"{fileName}\"" : fileName;
+		}
+
+		string FindLatestDotNetSdk (string dotNetPath)
+		{
+			if (Directory.Exists (dotNetPath)) {
+				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
+					let version = GetVersionFromDirectory (dir)
+					where version != null && File.Exists (Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))
+					orderby version descending
+					select Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk");
+				return directories.FirstOrDefault ();
+			}
+			return string.Empty;
+		}
+
+		static Version GetVersionFromDirectory (string dir)
+		{
+			Version v;
+			Version.TryParse (Path.GetFileName (dir), out v);
+			return v;
 		}
 	}
 }
