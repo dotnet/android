@@ -285,7 +285,7 @@
       DependsOnTargets="_GetRuntimesOutputItems"
       Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput)">
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
