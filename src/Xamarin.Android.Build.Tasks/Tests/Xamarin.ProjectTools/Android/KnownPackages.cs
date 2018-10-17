@@ -338,6 +338,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.MediaRouter.dll" }
 			}
 		};
+		public static Package VectorDrawable_27_0_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Vector.Drawable",
+			Version = "27.0.2.1",
+			TargetFramework = "MonoAndroid81",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Vector.Drawable") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Vector.Drawable.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Vector.Drawable.dll" }
+			},
+		};
 		public static Package SupportV7Palette_22_1_1_1 = new Package {
 			Id = "Xamarin.Android.Support.v7.Palette",
 			Version = "22.1.1.1",
@@ -445,25 +454,25 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
-		public static Package XamarinForms_3_0_0_561731 = new Package {
+		public static Package XamarinForms_3_1_0_697729 = new Package {
 			Id = "Xamarin.Forms",
-			Version = "3.0.0.561731",
+			Version = "3.1.0.697729",
 			TargetFramework = "MonoAndroid10",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.Android.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.Android.dll"
 				},
 				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\FormsViewGroup.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\FormsViewGroup.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Core.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Core.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Xaml.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Xaml.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.0.0.561731\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.dll"
 				},
 			}
 		};
@@ -607,6 +616,60 @@ namespace Xamarin.ProjectTools
 		public static Package Xamarin_Build_Download_0_4_11 = new Package {
 			Id = "Xamarin.Build.Download",
 			Version = "0.4.11",
+		};
+		public static Package Xamarin_GooglePlayServices_Base = new Package {
+			Id = "Xamarin.GooglePlayServices.Base",
+	    		Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+	    		References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Base") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Base.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Base.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Basement = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Basement",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Basement") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Basement.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Basement.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Tasks = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Tasks",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Tasks") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Tasks.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Tasks.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Iid = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Iid",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Iid") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Iid.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Iid.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Gcm = new Package
+		{
+			Id = "Xamarin.GooglePlayServices.Gcm",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Gcm") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Gcm.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Gcm.dll"
+				}
+			},
 		};
 	}
 }

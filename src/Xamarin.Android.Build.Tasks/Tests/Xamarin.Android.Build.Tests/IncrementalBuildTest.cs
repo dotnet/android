@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -12,6 +13,31 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
+		[Test]
+		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
+		{
+			// do a release build
+			// change one of the properties (say AotAssemblies) 
+			// do another build. it should NOT hose the resource directory.
+			var path = Path.Combine ("temp", TestName);
+			var proj = new XamarinFormsAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+			};
+			if (enableMultiDex)
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
+			if (useAapt2)
+				proj.SetProperty ("AndroidUseAapt2", "True");
+			using (var b = CreateApkBuilder (path)) {
+				Assert.IsTrue (b.Build (proj), "First should have succeeded" );
+				IEnumerable<string> files = Directory.EnumerateFiles (Path.Combine (Root, path, proj.IntermediateOutputPath), "*.*", SearchOption.AllDirectories);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: null, saveProject: false), "Second should have succeeded");
+				foreach (var file in files) {
+					FileAssert.Exists (file, $"{file} should not have been deleted!" );
+				}
+			}
+		}
+
 		[Test]
 		public void CheckResourceDirectoryDoesNotGetHosed ()
 		{
@@ -290,6 +316,30 @@ namespace Lib2
 						Directory.Delete (path, recursive: true);
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void CopyIntermediateAssemblies ()
+		{
+			var target = "_CopyIntermediateAssemblies";
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+
+				var assembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.ProjectName + ".dll");
+				FileAssert.Exists (assembly);
+				File.SetLastWriteTimeUtc (assembly, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (assembly, DateTime.UtcNow);
+
+				//NOTE: second build, target will run because inputs changed
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+
+				//NOTE: third build, it should certainly *not* run! there are no changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
 			}
 		}
 	}

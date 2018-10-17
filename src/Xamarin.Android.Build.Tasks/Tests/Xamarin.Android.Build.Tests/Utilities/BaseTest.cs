@@ -156,6 +156,30 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
+		protected string CreateFauxAndroidNdkDirectory (string path)
+		{
+			var androidNdkDirectory = Path.Combine (Root, path);
+			Directory.CreateDirectory (androidNdkDirectory);
+			Directory.CreateDirectory (Path.Combine (androidNdkDirectory, "toolchains"));
+			var sb  = new StringBuilder ();
+			if (IsWindows) {
+				sb.AppendLine ("@echo off");
+				sb.AppendLine ($"echo GNU Make 3.81");
+			} else {
+				sb.AppendLine ("#!/bin/bash");
+				sb.AppendLine ($"echo \"GNU Make 3.81\"");
+			}
+			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-build.cmd" : "ndk-build"), sb);
+			sb.Clear();
+			if (IsWindows) {
+				sb.AppendLine("@echo off");
+			} else {
+				sb.AppendLine("#!/bin/bash");
+			}
+			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), sb);
+			return androidNdkDirectory;
+		}
+
 		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, ApiInfo [] apiLevels = null)
 		{
 			var androidSdkDirectory = Path.Combine (Root, path);
@@ -248,10 +272,7 @@ namespace Xamarin.Android.Build.Tests
 				sb.AppendLine ($"echo \"Java(TM) SE Runtime Environment (build {version}-b13)\"");
 				sb.AppendLine ($"echo \"Java HotSpot(TM) 64-Bit Server VM (build 25.101-b13, mixed mode)\"");
 			}
-			File.WriteAllText (javaExeFullPath, sb.ToString ());
-			if (!IsWindows) {
-				RunProcess ("chmod", $"u+x {javaExeFullPath}");
-			}
+			CreateFauxExecutable (javaExeFullPath, sb);
 		}
 
 		void CreateFauxJavacExe (string javacExeFullPath, string version)
@@ -264,9 +285,13 @@ namespace Xamarin.Android.Build.Tests
 				sb.AppendLine ("#!/bin/bash");
 				sb.AppendLine ($"echo \"javac {version}\"");
 			}
-			File.WriteAllText (javacExeFullPath, sb.ToString ());
+			CreateFauxExecutable (javacExeFullPath, sb);
+		}
+
+		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
+			File.WriteAllText (exeFullPath, sb.ToString ());
 			if (!IsWindows) {
-				RunProcess ("chmod", $"u+x {javacExeFullPath}");
+				RunProcess ("chmod", $"u+x {exeFullPath}");
 			}
 		}
 

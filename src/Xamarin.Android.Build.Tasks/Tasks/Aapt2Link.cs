@@ -29,9 +29,9 @@ namespace Xamarin.Android.Tasks {
 
 		public string PackageName { get; set; }
 
-		public ITaskItem [] AdditionalResourceDirectories { get; set; }
+		public ITaskItem [] AdditionalResourceArchives { get; set; }
 
-		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; }
+		public ITaskItem [] AdditionalAndroidResourcePaths { get; set; }
 
 		public ITaskItem [] LibraryProjectJars { get; set; }
 
@@ -75,25 +75,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Aapt2Link Task");
-			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("  AssetsDirectory: {0}", AssetsDirectory);
-			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
-			Log.LogDebugMessage ("  JavaDesignerOutputDirectory: {0}", JavaDesignerOutputDirectory);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
-			Log.LogDebugMessage ("  ExtraPackages: {0}", ExtraPackages);
-			Log.LogDebugTaskItems ("  ResourceDirectories: ", ResourceDirectories);
-			Log.LogDebugTaskItems ("  AdditionalResourceDirectories: ", AdditionalResourceDirectories);
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
-			Log.LogDebugTaskItems ("  LibraryProjectJars: ", LibraryProjectJars);
-			Log.LogDebugMessage ("  ExtraArgs: {0}", ExtraArgs);
-			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
-			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
-			Log.LogDebugMessage ("  ResourceSymbolsTextFile: {0}", ResourceSymbolsTextFile);
-			Log.LogDebugMessage ("  CompiledResourceFlatArchive: {0}", CompiledResourceFlatArchive);
 			if (CreatePackagePerAbi)
 				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			
@@ -159,21 +140,9 @@ namespace Xamarin.Android.Tasks {
 			if (PackageName != null)
 				cmd.AppendSwitchIfNotNull ("--custom-package ", PackageName.ToLowerInvariant ());
 			
-			if (AdditionalResourceDirectories != null) {
-				foreach (var dir in AdditionalResourceDirectories) {
-					if (!Directory.Exists (dir.ItemSpec))
-						continue;
-					var flatArchive = Path.Combine (dir.ItemSpec, "..", "compiled.flata");
-					if (!File.Exists (flatArchive))
-						continue;
-					cmd.AppendSwitchIfNotNull ("-R ", flatArchive);
-				}
-			}
-			if (AdditionalAndroidResourcePaths != null) {
-				foreach (var dir in AdditionalAndroidResourcePaths) {
-					if (!Directory.Exists (dir.ItemSpec))
-						continue;
-					var flatArchive = Path.Combine (dir.ItemSpec, "compiled.flata");
+			if (AdditionalResourceArchives != null) {
+				foreach (var dir in AdditionalResourceArchives) {
+					var flatArchive = dir.ItemSpec;
 					if (!File.Exists (flatArchive))
 						continue;
 					cmd.AppendSwitchIfNotNull ("-R ", flatArchive);

@@ -64,25 +64,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Currently ignoring this test on non-Windows platforms.");
 			}
 
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+			var proj = new XamarinFormsAndroidApplicationProject ();
 
-			var packages = proj.Packages;
-			packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
-			packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//We don't want these things stepping on each other
@@ -298,34 +281,10 @@ namespace UnamedProject
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
 			var start = DateTime.UtcNow.AddSeconds (-1);
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
-				AndroidResources = {
-					new AndroidItem.AndroidResource ("Resources\\layout\\Tabbar.axml") {
-						TextContent = () => {
-							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<android.support.design.widget.TabLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" xmlns:app=\"http://schemas.android.com/apk/res-auto\" android:id=\"@+id/sliding_tabs\" android:background=\"?attr/colorPrimary\" android:theme=\"@style/ThemeOverlay.AppCompat.Dark.ActionBar\" app:tabIndicatorColor=\"@android:color/white\" app:tabGravity=\"fill\" app:tabMode=\"fixed\" />";
-						}
-					}
-				}
+				
 			};
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
-
-			var packages = proj.Packages;
-			packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
-			packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//To be sure we are at a clean state
@@ -1630,29 +1589,13 @@ namespace App1
 					},
 				},
 			};
-			var app = new XamarinAndroidApplicationProject () {
+			var app = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
 				AndroidLinkModeRelease = AndroidLinkMode.Full,
 				References = {
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 			};
-			app.MainActivity = app.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
-			app.Packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
-			app.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			app.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			app.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			app.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			app.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
 			//LinkSkip one assembly that contains __AndroidLibraryProjects__.zip
 			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
@@ -2435,7 +2378,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					}
 				}
 				packages.Clear ();
-				packages.Add (KnownPackages.XamarinForms_3_0_0_561731);
+				packages.Add (KnownPackages.XamarinForms_3_1_0_697729);
 				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
 				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
 				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);

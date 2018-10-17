@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <_MonoBcl Include="bcl" />
+  </ItemGroup>
+
+  <ItemGroup>
     <_MonoRuntime Include="armeabi-v7a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
       <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-v7a-clang\bin\arm-linux-androideabi-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
@@ -60,27 +64,16 @@
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
-    <_MonoRuntime Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
+    <_MonoRuntime Include="host-$(HostOS)" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':$(HostOS):')) And ( '$(HostOS)' == 'Darwin' Or '$(HostOS)' == 'Linux' )">
       <Strip>strip</Strip>
       <StripFlags>-S</StripFlags>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
-      <NativeLibraryExtension>dylib</NativeLibraryExtension>
+      <NativeLibraryExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</NativeLibraryExtension>
+      <NativeLibraryExtension Condition=" '$(HostOS)' == 'Linux' ">so</NativeLibraryExtension>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <BuildTests>True</BuildTests>
-    </_MonoRuntime>
-    <_MonoRuntime Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">
-      <Strip>strip</Strip>
-      <StripFlags>-S</StripFlags>
-      <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
-      <NativeLibraryExtension>so</NativeLibraryExtension>
-      <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
-      <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
-      <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
-      <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
-      <BuildTests>True</BuildTests>
     </_MonoRuntime>
   </ItemGroup>
 
@@ -91,7 +84,6 @@
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
-      <PackageOptions>llvm-llvm32_CC="$(HostCc32)" llvm-llvm32_CXX="$(HostCxx32)"</PackageOptions>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvm64" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':arm64:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':x86_64:'))) And '$(HostBits)' == '64' ">
@@ -99,7 +91,6 @@
       <InstallBinaries>true</InstallBinaries>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">Darwin/</InstallPath>
       <InstallPath Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:'))">Linux/</InstallPath>
-      <PackageOptions>llvm-llvm64_CC="$(HostCc64)" llvm-llvm64_CXX="$(HostCxx64)"</PackageOptions>
     </_LlvmRuntime>
 
     <_LlvmRuntime Include="llvmwin32" Condition=" ($(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:')) Or $(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))) ">
@@ -159,7 +150,7 @@
 
     <_MonoCrossRuntime Include="cross-arm-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-armeabi-v7a:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>armv7-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -168,7 +159,7 @@
 
     <_MonoCrossRuntime Include="cross-arm64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-arm64:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>aarch64-v8a-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -177,7 +168,7 @@
 
     <_MonoCrossRuntime Include="cross-x86-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>i686-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>
@@ -186,7 +177,7 @@
 
     <_MonoCrossRuntime Include="cross-x86_64-win" Condition="$(AndroidSupportedTargetAotAbisForConditionalChecks.Contains (':win-x86_64:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <StripFlags>-S</StripFlags>
+      <StripFlags></StripFlags>
       <ExePrefix>x86_64-linux-android-</ExePrefix>
       <ExeSuffix>.exe</ExeSuffix>
       <InstallPath></InstallPath>

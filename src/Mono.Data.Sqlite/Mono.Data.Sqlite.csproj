@@ -179,7 +179,7 @@
   </ItemGroup>
   <Import Project="$(XAInstallPrefix)xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="@(AndroidSupportedTargetJitAbi-&gt;'..\sqlite-xamarin\src\main\libs\%(Identity)\libsqlite3_xamarin.so')" />
+    <EmbeddedNativeLibrary Include="@(AndroidSupportedTargetJitAbi-&gt;'..\sqlite-xamarin\bin\$(Configuration)\%(Identity)\libsqlite3_xamarin.so')" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\sqlite-xamarin\sqlite-xamarin.csproj">

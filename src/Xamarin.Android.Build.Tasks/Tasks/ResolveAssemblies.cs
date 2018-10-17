@@ -173,12 +173,12 @@ namespace Xamarin.Android.Tasks
 
 			var framework = NuGetFramework.Parse (TargetMoniker);
 			if (framework == null) {
-				LogWarning ($"Could not parse '{TargetMoniker}'");
+				LogCodedWarning ("XA0118", $"Could not parse '{TargetMoniker}'");
 				return null;
 			}
 			var target = lockFile.GetTarget (framework, string.Empty);
 			if (target == null) {
-				LogWarning ($"Could not resolve target for '{TargetMoniker}'");
+				LogCodedWarning ("XA0118", $"Could not resolve target for '{TargetMoniker}'");
 				return null;
 			}
 			foreach (var folder in lockFile.PackageFolders) {
