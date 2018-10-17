@@ -5,7 +5,51 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
-  <Target Name="GetXAVersionInfo">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitInfo" />
+  <Target Name="_GetSubmodulesVersionInfo">
+    <ItemGroup>
+      <!-- If anything changes in this list, make sure to update:
+           src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.targets (the _GenerateXACommonProps target)
+           build-tools/create-vsix/create-vsix.targets (the _CreateDependencies target)
+      -->
+      <_SubmoduleBranchInfo Include="external/mono">
+          <OutputPropertyName>_BuildInfo_MonoCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/Java.Interop">
+          <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/LibZipSharp">
+          <OutputPropertyName>_BuildInfo_LibZipSharpCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/libzip">
+          <OutputPropertyName>_BuildInfo_LibZipCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/mxe">
+          <OutputPropertyName>_BuildInfo_MxeCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/proguard">
+          <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/sqlite">
+          <OutputPropertyName>_BuildInfo_SqliteCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+      <_SubmoduleBranchInfo Include="external/xamarin-android-tools">
+          <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
+      </_SubmoduleBranchInfo>
+    </ItemGroup>
+
+    <Message Text="Getting git branch for: %(_SubmoduleBranchInfo.Identity)" />
+    <GitCommitInfo
+        WorkingDirectory="$(XamarinAndroidSourcePath)\%(_SubmoduleBranchInfo.Identity)"
+        XASourceDirectory="$(XamarinAndroidSourcePath)"
+        SubmoduleName="%(_SubmoduleBranchInfo.Identity)"
+        GitPath="$(GitToolPath)$(GitToolExe)">
+      <Output TaskParameter="CommitInfo" PropertyName="%(_SubmoduleBranchInfo.OutputPropertyName)" />
+    </GitCommitInfo>
+  </Target>
+
+  <Target Name="GetXAVersionInfo"
+          DependsOnTargets="_GetSubmodulesVersionInfo">
     <GitBlame
         FileName="$(XamarinAndroidSourcePath)\Configuration.props"
         LineFilter="&lt;ProductVersion&gt;"

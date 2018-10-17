@@ -143,12 +143,18 @@
   <Target Name="_CreateDependencies"
       DependsOnTargets="ResolveReferences;GetXAVersionInfo"
       BeforeTargets="Build"
-      Inputs="Xamarin.Android.Sdk.pkgdef.in"
-      Outputs="Xamarin.Android.Sdk.pkgdef">
+      Inputs="Xamarin.Android.Sdk.pkgdef.in VSPackage.resx.in"
+      Outputs="Xamarin.Android.Sdk.pkgdef VSPackage.resx">
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Sdk.pkgdef.in"
         DestinationFile="Xamarin.Android.Sdk.pkgdef"
-        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch)">
+        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@LIBZIPSHARP_COMMIT@=$(_BuildInfo_LibZipSharpCommit);@LIBZIP_COMMIT@=$(_BuildInfo_LibZipCommit);@MXE_COMMIT@=$(_BuildInfo_MxeCommit);@PROGUARD_COMMIT@=$(_BuildInfo_ProguardCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+    </ReplaceFileContents>
+
+    <ReplaceFileContents
+        SourceFile="VSPackage.resx.in"
+        DestinationFile="VSPackage.resx"
+        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@LIBZIPSHARP_COMMIT@=$(_BuildInfo_LibZipSharpCommit);@LIBZIP_COMMIT@=$(_BuildInfo_LibZipCommit);@MXE_COMMIT@=$(_BuildInfo_MxeCommit);@PROGUARD_COMMIT@=$(_BuildInfo_ProguardCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
   </Target>
   <Target Name="_GetVsixPath"
