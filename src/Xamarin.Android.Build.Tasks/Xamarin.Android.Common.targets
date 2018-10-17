@@ -1032,7 +1032,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
 	</PropertyGroup>
 	<Error Code="XA0115"
-			Condition="$(_RequestedAbis.Contains(';armeabi;')) And '$(AndroidUseSharedRuntime)' != 'True'"
+			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
 			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties."
 	/>
 </Target>
@@ -1974,8 +1974,8 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyIntermediateAssemblies"
-	Inputs="@(ResolvedUserAssemblies)"
-	Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+	Inputs="@(ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+	Outputs="$(IntermediateOutputPath)_copyintermediate.stamp"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CreateIntermediateAssembliesDir;_CopyConfigFiles">
 	<!-- Make a copy of every assembly we need in assemblies -->
 	<CopyIfChanged
@@ -1987,11 +1987,13 @@ because xbuild doesn't support framework reference assemblies.
 		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
 	/>
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
+	<Touch Files="$(IntermediateOutputPath)_copyintermediate.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(IntermediateOutputPath)_copyintermediate.stamp" />
+	</ItemGroup>
 </Target>
 
-<Target Name="_CollectConfigFiles"
-		Inputs="@(ResolvedAssemblies)"
-		Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" >
+<Target Name="_CollectConfigFiles">
 	<GetFilesThatExist
 			Files="@(ResolvedAssemblies->'%(identity).config')">
 		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedConfigFiles" />
@@ -2009,8 +2011,6 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectMdbFiles"
-		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension)')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
 		DependsOnTargets="_CollectPdbFiles">
 	<GetFilesThatExist
 			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
@@ -2020,9 +2020,7 @@ because xbuild doesn't support framework reference assemblies.
 	</GetFilesThatExist>
 </Target>
 
-<Target Name="_CollectPdbFiles"
-		Inputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')"
-		Outputs="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')">
+<Target Name="_CollectPdbFiles">
 	<CollectPdbFiles
 			ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
 		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
@@ -3103,6 +3101,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
 	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
+	<Delete Files="$(IntermediateOutputPath)_copyintermediate.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />

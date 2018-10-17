@@ -318,5 +318,29 @@ namespace Lib2
 				}
 			}
 		}
+
+		[Test]
+		public void CopyIntermediateAssemblies ()
+		{
+			var target = "_CopyIntermediateAssemblies";
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+
+				var assembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.ProjectName + ".dll");
+				FileAssert.Exists (assembly);
+				File.SetLastWriteTimeUtc (assembly, DateTime.UtcNow);
+				File.SetLastAccessTimeUtc (assembly, DateTime.UtcNow);
+
+				//NOTE: second build, target will run because inputs changed
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+
+				//NOTE: third build, it should certainly *not* run! there are no changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+			}
+		}
 	}
 }

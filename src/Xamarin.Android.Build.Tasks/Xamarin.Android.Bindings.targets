@@ -139,6 +139,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
     <CompileDependsOn>
       _SetupDesignTimeBuildForCompile;
+      AddLibraryJarsToBind;
       $(CompileDependsOn);
     </CompileDependsOn>
 

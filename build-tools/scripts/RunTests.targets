@@ -138,18 +138,51 @@
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />
   </Target>
   <ItemGroup>
-    <_RunTestTarget Include="RunNUnitTests" />
-    <_RunTestTarget Include="RunJavaInteropTests" />
-    <_RunTestTarget Include="RunApkTests" />
+    <_RunParallelTestTarget Include="RunNUnitTests" />
+    <_RunParallelTestTarget Include="RunJavaInteropTests" />
+    <_RunParallelTestTarget Include="RunApkTests" />
+  </ItemGroup>
+  <ItemGroup>
     <_RunTestTarget Include="RunPerformanceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">
     <MSBuild
+        Condition=" '$(HostOS)' == 'Windows' "
         ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
         RunEachTargetSeparately="True"
-        Targets="@(_RunTestTarget)"
+        Targets="@(_RunParallelTestTarget)"
     />
-  </Target>
+    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
+      <_RunParallelTestTarget>
+        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-Target-%(Identity).binlog"</_BinLog>
+      </_RunParallelTestTarget>
+    </ItemGroup>
+    <ItemGroup>
+      <_Commands Include="@(_RunParallelTestTarget->'echo Executing in background: msbuild $(MSBuildThisFileDirectory)RunTests.targets %(_BinLog) /t:%(Identity)')" />
+      <_Commands Include="@(_RunParallelTestTarget->'msbuild $(MSBuildThisFileDirectory)RunTests.targets %(_BinLog) /t:%(Identity) &amp;')" />
+      <_Commands Include="wait" />
+      <_Commands Include="exit 0" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_ParallelTargets>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\parallel-targets.sh</_ParallelTargets>
+    </PropertyGroup>
+    <WriteLinesToFile
+        File="$(_ParallelTargets)"
+        Lines="@(_Commands)"
+        Overwrite="True"
+    />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' "
+        ContinueOnError="ErrorAndContinue"
+        WorkingDirectory="$(_TopDir)"
+        Command="bash &quot;$(_ParallelTargets)&quot;"
+    />
+    <MSBuild
+         ContinueOnError="ErrorAndContinue"
+         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
+         RunEachTargetSeparately="True"
+         Targets="@(_RunTestTarget)"
+     />
+   </Target>
 </Project>
-
