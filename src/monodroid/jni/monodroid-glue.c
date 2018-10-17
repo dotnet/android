@@ -2068,6 +2068,7 @@ gather_bundled_assemblies (JNIEnv *env, jobjectArray runtimeApks, mono_bool regi
 		prev_num_assemblies = cur_num_assemblies;
 
 		(*env)->ReleaseStringUTFChars (env, apk, apk_file);
+		(*env)->DeleteLocalRef (env, apk);
 	}
 }
 
@@ -2770,6 +2771,7 @@ load_assemblies (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
 	for (i = 1; i < assembliesLength; ++i) {
 		jstring assembly = (*env)->GetObjectArrayElement (env, assemblies, i);
 		load_assembly (domain, env, assembly);
+		(*env)->DeleteLocalRef (env, assembly);
 	}
 }
 
@@ -3051,6 +3053,7 @@ register_packages (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
 
 		free (basename);
 		(*env)->ReleaseStringUTFChars (env, assembly, filename);
+		(*env)->DeleteLocalRef (env, assembly);
 
 		image = mono.mono_assembly_get_image (a);
 
