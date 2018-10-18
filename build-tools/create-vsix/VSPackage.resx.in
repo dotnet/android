@@ -132,7 +132,16 @@
     <value>Xamarin.Android SDK</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Xamarin.Android Reference Assemblies and MSBuild support.</value>
+    <value>Xamarin.Android Reference Assemblies and MSBuild support.
+    Mono: @MONO_COMMIT@
+    Java.Interop: @JAVA_INTEROP_COMMIT@
+    LibZipSharp: @LIBZIPSHARP_COMMIT@
+    LibZip: @LIBZIP_COMMIT@
+    MXE: @MXE_COMMIT@
+    ProGuard: @PROGUARD_COMMIT@
+    SQLite: @SQLITE_COMMIT@
+    Xamarin.Android Tools: @XAMARIN_ANDROID_TOOLS_COMMIT@
+</value>
   </data>
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources/AndroidSdkPackage.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

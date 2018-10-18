@@ -398,7 +398,11 @@ namespace Xamarin.Android.Tasks
 
 		public static ZipArchive ReadZipFile (string filename)
 		{
-			return Files.ReadZipFile (filename);
+			try {
+				return Files.ReadZipFile (filename);
+			} catch (ZipIOException ex) {
+				throw new ZipIOException ($"There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again. {ex.Message}", ex);
+			}
 		}
 
 		public static bool IsValidZip (string filename)
