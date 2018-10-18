@@ -319,27 +319,45 @@ namespace Lib2
 			}
 		}
 
+		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		public void CopyIntermediateAssemblies ()
+		public void Issue2247 ()
 		{
-			var target = "_CopyIntermediateAssemblies";
+			var targets = new [] {
+				"_CopyIntermediateAssemblies",
+				"_GeneratePackageManagerJava",
+				"_ResolveLibraryProjectImports",
+			};
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
-				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
 
-				var assembly = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.ProjectName + ".dll");
-				FileAssert.Exists (assembly);
-				File.SetLastWriteTimeUtc (assembly, DateTime.UtcNow);
-				File.SetLastAccessTimeUtc (assembly, DateTime.UtcNow);
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var filesToTouch = new [] {
+					Path.Combine (intermediate, "build.props"),
+					Path.Combine (intermediate, proj.ProjectName + ".dll"),
+					Path.Combine (intermediate, "android", "assets", proj.ProjectName + ".dll"),
+				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
+				}
 
-				//NOTE: second build, target will run because inputs changed
+				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
-				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+				}
 
-				//NOTE: third build, it should certainly *not* run! there are no changes
+				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
-				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+				}
 			}
 		}
 	}
