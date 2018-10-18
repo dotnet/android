@@ -273,7 +273,7 @@
 
   <Target Name="_DownloadArchive"
       DependsOnTargets="_GetMonoGitCommitHash"
-      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
+      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
     <MakeDir
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
@@ -303,6 +303,11 @@
         Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
+    />
+    <Touch
+        Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') "
+        Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build"
+        AlwaysCreate="True"
     />
   </Target>
 
@@ -614,6 +619,12 @@
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
+
+    <ItemGroup>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-build"/>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-download"/>
+    </ItemGroup>
+    <Delete Files="@(_StampFiles)" />
   </Target>
 
   <Target Name="CoreCompile"
