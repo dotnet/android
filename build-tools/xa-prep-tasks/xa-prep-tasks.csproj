@@ -40,8 +40,8 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Git.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBranch.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
-    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitTime.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitInfo.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitTime.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\HashFileContents.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\JdkInfo.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PathToolTask.cs" />
