@@ -13,28 +13,28 @@
            build-tools/create-vsix/create-vsix.targets (the _CreateDependencies target)
       -->
       <_SubmoduleBranchInfo Include="external/mono">
-          <OutputPropertyName>_BuildInfo_MonoCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_MonoCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/Java.Interop">
-          <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/LibZipSharp">
-          <OutputPropertyName>_BuildInfo_LibZipSharpCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_LibZipSharpCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/libzip">
-          <OutputPropertyName>_BuildInfo_LibZipCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_LibZipCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/mxe">
-          <OutputPropertyName>_BuildInfo_MxeCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_MxeCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/proguard">
-          <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/sqlite">
-          <OutputPropertyName>_BuildInfo_SqliteCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_SqliteCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/xamarin-android-tools">
-          <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
+        <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
     </ItemGroup>
 
@@ -49,7 +49,7 @@
   </Target>
 
   <Target Name="GetXAVersionInfo"
-          DependsOnTargets="_GetSubmodulesVersionInfo">
+      DependsOnTargets="_GetSubmodulesVersionInfo">
     <GitBlame
         FileName="$(XamarinAndroidSourcePath)\Configuration.props"
         LineFilter="&lt;ProductVersion&gt;"
