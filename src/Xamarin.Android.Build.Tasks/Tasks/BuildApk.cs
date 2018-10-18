@@ -47,7 +47,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] Environments { get; set; }
 
-		[Required]
 		public ITaskItem[] TypeMappings { get; set; }
 
 		[Required]
@@ -135,8 +134,10 @@ namespace Xamarin.Android.Tasks
 				AddNativeLibrariesFromAssemblies (apk, supportedAbis);
 				apk.Flush();
 
-				foreach (ITaskItem typemap in TypeMappings) {
-					apk.Archive.AddFile (typemap.ItemSpec, Path.GetFileName(typemap.ItemSpec), compressionMethod: CompressionMethod.Store);
+				if (TypeMappings != null) {
+					foreach (ITaskItem typemap in TypeMappings) {
+						apk.Archive.AddFile (typemap.ItemSpec, Path.GetFileName(typemap.ItemSpec), compressionMethod: CompressionMethod.Store);
+					}
 				}
 
 				int count = 0;

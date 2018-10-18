@@ -227,6 +227,27 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 }
 
 int
+AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
+{
+	int r = 0;
+	if (value) {
+		*value = NULL;
+	}
+	FILE *fp = utils.monodroid_fopen (path, "r");
+	if (fp != NULL) {
+		struct stat fileStat;
+		if (fstat (fileno (fp), &fileStat) == 0) {
+			r = fileStat.st_size+1;
+			if (value && (*value = (char *)malloc (r))) {
+				fread (*value, 1, fileStat.st_size, fp);
+			}
+		}
+		fclose (fp);
+	}
+	return r;
+}
+
+int
 AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
 {
 	int i;
@@ -823,6 +844,11 @@ AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu
 {
 	// Man, the cast is ugly...
 	for_each_apk (env, runtimeApks, &AndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
+}
+
+int AndroidSystem::readdir (monodroid_dir_t *dir, monodroid_dirent_t *b, monodroid_dirent_t **e)
+{
+	return readdir_r (dir, b, e);
 }
 
 #if defined (WINDOWS)

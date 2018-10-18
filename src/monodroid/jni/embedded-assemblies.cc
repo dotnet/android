@@ -197,7 +197,7 @@ extract_int (const char **header, const char *source_apk, const char *source_ent
 	*header = *header + consumed + 1;
 }
 
-static void
+static bool
 add_type_mapping (struct TypeMappingInfo **info, const char *source_apk, const char *source_entry, const char *addr)
 {
 	struct TypeMappingInfo  *p        = new TypeMappingInfo (); // calloc (1, sizeof (struct TypeMappingInfo));
@@ -205,12 +205,12 @@ add_type_mapping (struct TypeMappingInfo **info, const char *source_apk, const c
 	const char              *data     = addr;
 
 	if (!p)
-		return;
+		return false;
 
 	extract_int (&data, source_apk, source_entry, "version",   &version);
 	if (version != 1) {
 		log_warn (LOG_DEFAULT, "Unsupported version '%i' within type mapping file '%s!%s'. Ignoring...", version, source_apk, source_entry);
-		return;
+		return false;
 	}
 
 	extract_int (&data, source_apk, source_entry, "entry-count",  &p->num_entries);
@@ -225,17 +225,17 @@ add_type_mapping (struct TypeMappingInfo **info, const char *source_apk, const c
 			(p->mapping == NULL)) {
 		log_warn (LOG_DEFAULT, "Could not read type mapping file '%s!%s'. Ignoring...", source_apk, source_entry);
 		free (p);
-		return;
+		return false;
 	}
 
 	p->source_apk   = utils.monodroid_strdup_printf ("%s", source_apk);
 	p->source_entry = utils.monodroid_strdup_printf ("%s", source_entry);
-
 	if (*info) {
 		(*info)->next = p;
 	} else {
 		*info = p;
 	}
+	return true;
 }
 
 struct md_mmap_info {
@@ -404,11 +404,11 @@ gather_bundled_assemblies_from_apk (
 				continue;
 			}
 
-			if (strcmp ("typemap.jm", cur_entry_name) == 0) {
+			if (utils.ends_with (cur_entry_name, ".jm")) {
 				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
 				continue;
 			}
-			if (strcmp ("typemap.mj", cur_entry_name) == 0) {
+			if (utils.ends_with (cur_entry_name, ".mj")) {
 				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
 				continue;
 			}
@@ -484,6 +484,53 @@ gather_bundled_assemblies_from_apk (
 		unzClose (file);
 	}
 
+	return 0;
+}
+
+int
+try_load_typemaps_from_directory (const char *path)
+{
+	// read the entire typemap file into a string
+	// process the string using the add_type_mapping
+	char *val = NULL;
+	monodroid_dir_t *dir;
+	monodroid_dirent_t b, *e;
+	char *dir_path = utils.path_combine (path, "typemaps");
+	if (dir_path == NULL || !utils.directory_exists (dir_path)) {
+		log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
+		free (dir_path);
+		return 0;
+	}
+
+	if ((dir = utils.monodroid_opendir (dir_path)) == NULL) {
+		log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
+		free (dir_path);
+		return 0;
+	}
+
+	while (androidSystem.readdir (dir, &b, &e) == 0 && e) {
+#if WINDOWS
+		char *file_name = utils.utf16_to_utf8 (e->d_name);
+#else   /* def WINDOWS */
+		char *file_name = e->d_name;
+#endif  /* ndef WINDOWS */
+		char *file_path = utils.path_combine (dir_path, file_name);
+		if (utils.monodroid_dirent_hasextension (e, ".mj") || utils.monodroid_dirent_hasextension (e, ".jm")) {
+			int len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
+			if (len > 0 && val != NULL) {
+				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
+					if (!add_type_mapping (&managed_to_java_maps, file_path, NULL, ((const char*)val)))
+						free (val);
+				}
+				if (utils.monodroid_dirent_hasextension (e, ".jm")) {
+					if (!add_type_mapping (&java_to_managed_maps, file_path, NULL, ((const char*)val)))
+						free (val);
+				}
+			}
+		}
+	}
+	utils.monodroid_closedir (dir);
+	free (dir_path);
 	return 0;
 }
 
