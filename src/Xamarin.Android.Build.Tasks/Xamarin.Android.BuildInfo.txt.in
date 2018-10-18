@@ -2,7 +2,7 @@
 #
 # One line per submodule, each with the following format:
 #
-#  LABEL:ORGANIZATION/REPOSITORY/BRANCH@COMMIT
+#  LABEL: ORGANIZATION/REPOSITORY/BRANCH@COMMIT
 #
 # Lines starting with # are comments
 #
