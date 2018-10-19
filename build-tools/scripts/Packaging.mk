@@ -7,18 +7,16 @@ _BUNDLE_ZIPS_EXCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip
 
 create-vsix:
-	$(foreach conf, $(CONFIGURATIONS), \
-		MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-vsix) /p:Configuration=$(conf) /p:CreateVsixContainer=True \
-			build-tools/create-vsix/create-vsix.csproj \
-			$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
-			$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
-			$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
-			$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
-			$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
-			$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
-			$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
-			$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") && ) \
-	true
+	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-vsix) /p:Configuration=$(CONFIGURATION) /p:CreateVsixContainer=True \
+		build-tools/create-vsix/create-vsix.csproj \
+		$(if $(VSIX),"/p:VsixPath=$(VSIX)") \
+		$(if $(EXPERIMENTAL),/p:IsExperimental="$(EXPERIMENTAL)") \
+		$(if $(PRODUCT_COMPONENT),/p:IsProductComponent="$(PRODUCT_COMPONENT)") \
+		$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
+		$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
+		$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
+		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
+		$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)")
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)
@@ -35,12 +33,10 @@ package-oss $(ZIP_OUTPUT):
 	fi
 	_exclude_list=".__exclude_list.txt"; \
 	ls -1d $(_BUNDLE_ZIPS_EXCLUDE) > "$$_exclude_list" 2>/dev/null ; \
-	for c in $(CONFIGURATIONS) ; do \
-		_sl="$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xamarin.android/xbuild/.__sys_links.txt"; \
-		if [ ! -f "$$_sl" ]; then continue; fi; \
-		for f in `cat $$_sl` ; do \
-			echo "$(ZIP_OUTPUT_BASENAME)/bin/$$c/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
-		done; \
+	_sl="$(ZIP_OUTPUT_BASENAME)/bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/.__sys_links.txt"; \
+	if [ ! -f "$$_sl" ]; then continue; fi; \
+	for f in `cat $$_sl` ; do \
+		echo "$(ZIP_OUTPUT_BASENAME)/bin/$CONFIGURATION/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
 	done
 	echo "Exclude List:"
 	cat ".__exclude_list.txt"
