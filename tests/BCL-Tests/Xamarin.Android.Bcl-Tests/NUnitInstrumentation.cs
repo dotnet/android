@@ -6,6 +6,8 @@ using System.Text;
 
 using Android.App;
 using Android.Runtime;
+using Android.Util;
+
 using Xamarin.Android.UnitTests;
 using Xamarin.Android.UnitTests.NUnit;
 
@@ -35,7 +37,6 @@ namespace UnitTestRunner
 
 		void CommonInit ()
 		{
-			TestAssembliesGlobPattern = "*_test.dll";
 			string cacheDir = Path.Combine (Application.Context.CacheDir.AbsolutePath, DefaultLogTag);
 			using (var files = typeof (NUnitInstrumentation).Assembly.GetManifestResourceStream ("bcl-tests.zip")) {
 				ExtractAssemblies (cacheDir, files);
@@ -73,13 +74,34 @@ namespace UnitTestRunner
 
 		protected override IList<TestAssemblyInfo> GetTestAssemblies()
 		{
-			IList<TestAssemblyInfo> ret = base.GetTestAssemblies();
+			var ret = new List<TestAssemblyInfo> ();
 
-			if (ret == null)
-				ret = new List<TestAssemblyInfo> ();
+			using (var stream = typeof (NUnitInstrumentation).Assembly.GetManifestResourceStream ("nunit-assemblies.txt"))
+			using (var reader = new StreamReader (stream)) {
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
+					string file = Path.Combine (TestsDirectory, line);
 
-			Assembly asm = typeof (BclTests.HttpClientTest).Assembly;
-			ret.Add (new TestAssemblyInfo (asm, asm.Location ?? String.Empty));
+					try {
+						Log.Info (LogTag, $"Adding test assembly: {file}");
+
+						Assembly asm = LoadTestAssembly (file);
+						if (asm == null)
+							continue;
+
+						// We store full path since Assembly.Location is not reliable on Android - it may hold a relative
+						// path or no path at all
+						ret.Add (new TestAssemblyInfo (asm, file));
+					} catch (Exception e) {
+						throw new InvalidOperationException ($"Unable to load test assembly: {file}", e);
+					}
+				}
+			}
+
+			{
+				Assembly asm = typeof (BclTests.HttpClientTest).Assembly;
+				ret.Add (new TestAssemblyInfo (asm, asm.Location ?? String.Empty));
+			}
 
 			return ret;
 		}

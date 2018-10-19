@@ -83,6 +83,12 @@
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
     <None Include="packages.config" />
+    <EmbeddedResource Include="xunit-assemblies.txt">
+      <LogicalName>xunit-assemblies.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="nunit-assemblies.txt">
+      <LogicalName>nunit-assemblies.txt</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="xunit-excluded-tests.txt">
       <LogicalName>xunit-excluded-tests.txt</LogicalName>
     </EmbeddedResource>
