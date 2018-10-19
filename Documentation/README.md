@@ -19,6 +19,7 @@
 
   * [Build Process](guides/BuildProcess.md)
   * [`.axml` CodeBehind Support](guides/LayoutCodeBehind.md)
+  * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
 
 
 # Building from Source
