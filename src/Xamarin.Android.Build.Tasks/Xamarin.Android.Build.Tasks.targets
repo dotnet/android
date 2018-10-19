@@ -83,6 +83,10 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Xamarin.Android.BuildInfo.txt">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Xamarin.Android.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -128,8 +132,13 @@
   <Target Name="_GenerateXACommonProps"
       DependsOnTargets="ResolveReferences;GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
-      Inputs="Xamarin.Android.Common.props.in"
-      Outputs="Xamarin.Android.Common.props">
+      Inputs="Xamarin.Android.Common.props.in Xamarin.Android.BuildInfo.txt.in"
+      Outputs="Xamarin.Android.Common.props Xamarin.Android.BuildInfo.txt">
+    <ReplaceFileContents
+        SourceFile="Xamarin.Android.BuildInfo.txt.in"
+        DestinationFile="Xamarin.Android.BuildInfo.txt"
+        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@LIBZIPSHARP_COMMIT@=$(_BuildInfo_LibZipSharpCommit);@LIBZIP_COMMIT@=$(_BuildInfo_LibZipCommit);@MXE_COMMIT@=$(_BuildInfo_MxeCommit);@PROGUARD_COMMIT@=$(_BuildInfo_ProguardCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+    </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Common.props.in"
         DestinationFile="Xamarin.Android.Common.props"

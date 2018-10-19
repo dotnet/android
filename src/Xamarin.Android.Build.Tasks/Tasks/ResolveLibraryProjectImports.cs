@@ -10,6 +10,7 @@ using Mono.Cecil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
+using Xamarin.Tools.Zip;
 
 using Java.Interop.Tools.Cecil;
 
@@ -85,7 +86,12 @@ namespace Xamarin.Android.Tasks
 			assemblyMap.Load (AssemblyIdentityMapFile);
 
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-				Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
+				try {
+					Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
+				} catch (ZipIOException ex) {
+					Log.LogCodedError ("XA1004", ex.Message);
+					Log.LogDebugMessage (ex.ToString ());
+				}
 			}
 
 			Jars                        = jars.ToArray ();
