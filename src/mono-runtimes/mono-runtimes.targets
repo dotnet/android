@@ -347,12 +347,6 @@
       <_BclTestContentDest  Include="@(_BclTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\Test\%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
     <ItemGroup>
-      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\test.nupkg" />
-      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\test.nupkg" />
-      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\archive.zip" />
-      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\archive.zip" />
-    </ItemGroup>
-    <ItemGroup>
       <_ZipTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression.FileSystem\foo\**\*.*" />
       <_ZipTestContentDest  Include="@(_ZipTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\foo\%(RecursiveDir)%(Filename)%(Extension)')" />
       <_BclTestContent      Include="@(_ZipTestContent)" />

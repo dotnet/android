@@ -420,6 +420,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\MarkStep.cs">
       <Link>Linker\Linker.Stepsq\MarkStep.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\PreserveDependencyLookupStep.cs">
+      <Link>Linker\Linker.Stepsq\PreserveDependencyLookupStep.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
       <Link>Linker\Linker\LoadException.cs</Link>
     </Compile>
