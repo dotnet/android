@@ -195,6 +195,12 @@
     <MonoTestAssembly Include="monodroid_corlib_test.dll">
       <SourcePath>corlib</SourcePath>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="es-ES\monodroid_corlib_test.resources.dll">
+      <TestType>resource</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="nn-NO\monodroid_corlib_test.resources.dll">
+      <TestType>resource</TestType>
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_corlib_xunit-test.dll">
       <SourcePath>corlib</SourcePath>
       <TestType>xunit</TestType>

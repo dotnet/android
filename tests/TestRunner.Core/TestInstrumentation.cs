@@ -368,7 +368,7 @@ namespace Xamarin.Android.UnitTests
 			}
 
 			Log.Info (LogTag, "Extracted assemblies:");
-			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll")) {
+			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll", SearchOption.AllDirectories)) {
 				Log.Info (LogTag, $"  {fi}");
 			}
 		}

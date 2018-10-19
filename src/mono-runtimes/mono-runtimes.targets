@@ -24,6 +24,7 @@
     <MonoDocCopyItem Include="monodoc.dll.config" />
   </ItemGroup>
   <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GetNugetPackageBasePath" />
+  <UsingTask AssemblyFile="$(_SourceTopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
   <ItemGroup>
     <_MonoDocCopyItems Include="@(MonoDocCopyItem->'$(_MonoProfileToolsDir)\%(Identity)')" />
   </ItemGroup>
@@ -66,9 +67,11 @@
     <_BclAssembly Include="@(MonoProfileAssembly)" />
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
-    <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     <_BclTestAssemblyDestination
-        Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')"
+        Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')"
+    />
+    <_BclTestAssemblyDestination
+        Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(RelativeDir)%(Filename).pdb')"
         Exclude="$(XAInstallPrefix)\..\..\bcl-tests\System.Runtime.CompilerServices.Unsafe.pdb"
     />
     <_BclTestAssemblyDestination  Include="@(MonoTestRunner->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
@@ -176,7 +179,7 @@
       <Output TaskParameter="CommitHash"   PropertyName="_MonoGitCommitHash" />
     </GitCommitHash>
     <PropertyGroup>
-      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(_MonoGitCommitHash)-$(HostOS)</_MonoArchiveName>
+      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(HostOS)-$(_MonoGitCommitHash)</_MonoArchiveName>
     </PropertyGroup>
   </Target>
 
@@ -257,13 +260,13 @@
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputMonoPosixHelperFilename).d.%(NativeLibraryExtension)')"
       />
       <_RuntimeEglibHeaderSource
-          Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\builds\android-%(Identity)-$(_MonoSdksConfiguration)\mono\eglib\eglib-config.h')"
+          Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\share\mono-2.0\mono\eglib\eglib-config.h')"
       />
       <_RuntimeEglibHeaderOutput
           Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
-          Include="$(MonoSourceFullPath)\mcs\build\common\Consts.cs"
+          Include="$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid\Consts.cs"
       />
       <_MonoConstsOutput
           Include="$(_OutputIncludeDir)Consts.cs"
@@ -273,23 +276,26 @@
 
   <Target Name="_DownloadArchive"
       DependsOnTargets="_GetMonoGitCommitHash"
-      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
+      Inputs="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
+      Outputs="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"
+      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And '$(DisableDownloadArchive)' == '' " >
     <MakeDir
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
     <DownloadUri
-        SourceUris="https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/$(_MonoArchiveName).tar.gz"
-        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
+        SourceUris="https://xamjenkinsartifact.azureedge.net/mono-sdks/$(_MonoArchiveName).zip"
+        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         ContinueOnError="True"
     />
-    <Exec
-        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
-        Command="tar -xvf $(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\out"
+    <UnzipDirectoryChildren
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
+        HostOS="$(HostOS)"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
+        DestinationFolder="$(MonoSourceFullPath)\sdks\out"
+        NoSubdirectory="True"
     />
     <Touch
-        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
         Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"
         AlwaysCreate="True"
     />
@@ -316,26 +322,60 @@
       Inputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource)"
       Outputs="@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
     <ItemGroup>
-      <_BclTestAssemblyReference Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'reference'" />
-      <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
+      <_BclTestAssemblySource
+          Condition=" '%(MonoTestAssembly.TestType)' == 'reference' "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\%(Identity)')"
+      />
+      <_BclTestAssemblySource
+          Condition=" '%(MonoTestAssembly.TestType)' == 'reference' And Exists('@(MonoTestAssembly->'$(_MonoProfileDir)\%(Filename).pdb')') "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\%(Filename).pdb')"
+      />
+      <_BclTestAssemblySource
+          Condition=" '%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')"
+      />
+      <_BclTestAssemblySource
+          Condition=" '%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' And Exists('@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')') "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')"
+      />
+      <_BclTestAssemblySource
+          Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')"
+      />
+      <_BclTestAssemblySource
+          Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')"
+      />
+      <_BclTestAssemblyResource
+          Condition=" '%(MonoTestAssembly.TestType)' == 'resource' "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')"
+      />
+      <_BclTestAssemblyResource
+          Condition=" '%(MonoTestAssembly.TestType)' == 'resource' And Exists('@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(RelativeDir)%(Filename).pdb')') "
+          Include="@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(RelativeDir)%(Filename).pdb')"
+      />
+      <_BclTestAssemblyResourceDestination
+          Condition=" '%(MonoTestAssembly.TestType)' == 'resource' "
+          Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')"
+      />
+      <_BclTestAssemblyResourceDestination
+          Condition=" '%(MonoTestAssembly.TestType)' == 'resource' And Exists('@(MonoTestAssembly->'$(_MonoProfileDir)\tests\%(RelativeDir)%(Filename).pdb')') "
+          Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(RelativeDir)%(Filename).pdb')"
+      />
     </ItemGroup>
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
         DestinationFolder="$(XAInstallPrefix)\..\..\bcl-tests"
     />
+    <Copy
+        SourceFiles="@(_BclTestAssemblyResource)"
+        DestinationFiles="@(_BclTestAssemblyResourceDestination)"
+    />
     <Touch
-        Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)')"
+        Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)');@(_BclTestAssemblyResourceDestination)"
     />
     <ItemGroup>
-      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" />
-      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.cs" />
-      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\.gitattributes" />
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" Condition=" '%(MonoTestAssembly.SourcePath)' != '' " />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.cs" Condition=" '%(MonoTestAssembly.SourcePath)' != '' " />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\.gitattributes" Condition=" '%(MonoTestAssembly.SourcePath)' != '' " />
       <_BclTestContentDest  Include="@(_BclTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\Test\%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
     <ItemGroup>
@@ -621,8 +661,8 @@
     />
 
     <ItemGroup>
-      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-build"/>
-      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-download"/>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-$(HostOS)-*-build"/>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-$(HostOS)-*-download"/>
     </ItemGroup>
     <Delete Files="@(_StampFiles)" />
   </Target>

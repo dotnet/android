@@ -18,7 +18,7 @@
       Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
+      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" Condition=" '%(MonoTestAssembly.TestType)' == '' " />
     </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
@@ -30,46 +30,17 @@
     />
     <ItemGroup>
       <_DebugSymbol
-          Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
-          Condition="Exists('..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb')"
+          Condition="Exists('@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(RelativeDir)%(Filename).pdb')')"
+          Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(RelativeDir)%(Filename).pdb')"
+      />
+      <_DebugSymbolDestination
+          Condition="Exists('@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(RelativeDir)%(Filename).pdb')')"
+          Include="@(MonoTestAssembly->'$(IntermediateOutputPath)\%(RelativeDir)%(Filename).pdb')"
       />
     </ItemGroup>
     <Copy
         SourceFiles="@(_DebugSymbol)"
-        DestinationFolder="$(IntermediateOutputPath)"
+        DestinationFiles="@(_DebugSymbolDestination)"
     />
-  </Target>
-  <ItemGroup>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.es-ES.resources">
-      <Culture>es-ES</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.nn-NO.resources">
-      <Culture>nn-NO</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-  </ItemGroup>
-  <Target Name="_CreateTestResources"
-      BeforeTargets="ResolveAssemblyReferences"
-      DependsOnTargets="_ExtractTestResources"
-      Inputs="@(_TestResource)"
-      Outputs="$(IntermediateOutputPath)%(_TestResource.Culture)\%(_TestResource.Name)">
-    <MakeDir Directories="$(IntermediateOutputPath)%(_TestResource.Culture)" />
-    <AL
-        OutputAssembly="$(IntermediateOutputPath)%(Culture)\%(Name)"
-        Version="1.0.0.0"
-        Culture="%(Culture)"
-        EmbedResources="@(_TestResource)"
-    />
-  </Target>
-  <Target Name="_ExtractTestResources"
-      Inputs="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-      Outputs="@(_TestResource)">
-    <SystemUnzip
-        SourceFiles="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-        HostOS="$(HostOS)"
-        DestinationFolder="..\..\..\bin\$(Configuration)\bcl-tests"
-    />
-    <Touch Files="@(_TestResource)" />
   </Target>
 </Project>
