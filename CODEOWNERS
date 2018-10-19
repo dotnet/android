@@ -18,10 +18,12 @@
 /build-tools/debian-metadata @directhex
 /build-tools/enumification-helpers @jonpryor
 /build-tools/manifest-attribute-codegen @jonpryor
+/build-tools/scripts/PrepareWindows.targets @jonathanpeppers
+/build-tools/timing @jonathanpeppers @radekdoulik
 
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor
-/src/Xamarin.Android.Build.Tasks @dellis1972
+/src/Xamarin.Android.Build.Tasks @dellis1972 @jonathanpeppers
 /src/Xamarin.Android.NamingCustomAttributes @jonpryor
 /src/Xamarin.Android.Tools.Aidl @jonpryor
 /tests/TestRunner.* @grendello
@@ -35,3 +37,4 @@
 /src/Mono.Android/java/mono/android/ @garuma @jonpryor
 
 /tools/xabuild @jonathanpeppers @jonpryor
+/tools/setup-windows @jonathanpeppers @jonpryor
