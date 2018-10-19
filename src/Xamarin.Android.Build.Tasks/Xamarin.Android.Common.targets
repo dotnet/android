@@ -276,6 +276,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
 	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
+	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition="'$(AndroidEnableProguard)'==''">$(EnableProguard)</AndroidEnableProguard>
@@ -1192,6 +1193,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
 	</ItemGroup>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
+	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
 			Lines="@(_PropertyCacheItems)"
@@ -1304,7 +1306,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ResolveLibraryProjectImports"
 		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(ReferencePath);@(ReferenceDependencyPaths);$(_AndroidBuildPropertiesCache)"
-		Outputs="$(_AndroidLibraryProjectImportsCache)">
+		Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
@@ -1317,6 +1319,10 @@ because xbuild doesn't support framework reference assemblies.
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
 		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
 	</ResolveLibraryProjectImports>
+	<Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CollectLibraryResourceDirectories"
@@ -2285,7 +2291,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);@(_ResolvedUserAssemblies);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java">
+  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2295,6 +2301,10 @@ because xbuild doesn't support framework reference assemblies.
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
+  <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -3089,6 +3099,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
+	<RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
 	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
