@@ -3,6 +3,11 @@
        regarded as obfuscated, so avoid that by explicitly marking not. -->
   <attr path="/api/package[@name='android']/class[@name='Manifest.permission']" name="obfuscated">false</attr>
 
+  <attr api-since="1" api-until="18" path="/api/package/class" name="deprecated"
+    >The assembly `Mono.Android.dll` for this API level will be removed in a future release.  Please update your `$(TargetFrameworkVersion)` to be v4.4 or greater.</attr>
+  <attr api-since="1" api-until="18" path="/api/package/interface" name="deprecated"
+    >The assembly `Mono.Android.dll` for this API level will be removed in a future release.  Please update your `$(TargetFrameworkVersion)` to be v4.4 or greater.</attr>
+
   <!-- FIXME: we should remove this fixup in the future release. It was
   introduced due to mismatching enum use, and we already marked the API as
   [Obsolete] -->
