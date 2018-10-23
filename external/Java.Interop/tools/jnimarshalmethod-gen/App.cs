@@ -172,6 +172,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParametersNoSymbols);
 					resolver.AddToCache (ad);
 				}
+
+				Extensions.MethodMap.Clear ();
 			}
 
 			foreach (var assembly in assemblies) {
@@ -220,6 +222,42 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			return tb;
 		}
+
+		class MethodsComparer : IComparer<MethodInfo>
+		{
+			readonly Type type;
+			readonly TypeDefinition td;
+
+			public MethodsComparer (Type type, TypeDefinition td)
+			{
+				this.type = type;
+				this.td = td;
+			}
+
+			public int Compare (MethodInfo a, MethodInfo b)
+			{
+				if (a.DeclaringType != type)
+					return 1;
+
+				var atd = td.GetMethodDefinition (a);
+				if (atd == null)
+					return 1;
+
+				if (b.DeclaringType != type)
+					return -1;
+
+				var btd = td.GetMethodDefinition (b);
+				if (btd == null)
+					return -1;
+
+				if (atd.HasOverrides ^ btd.HasOverrides)
+					return btd.HasOverrides ? -1 : 1;
+
+				return string.Compare (a.Name, b.Name);
+			}
+		}
+
+		static HashSet<string> addedMethods = new HashSet<string> ();
 
 		void CreateMarshalMethodAssembly (string path)
 		{
@@ -299,7 +337,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 				var flags = BindingFlags.Public | BindingFlags.NonPublic |
 						BindingFlags.Instance | BindingFlags.Static;
-				foreach (var method in type.GetMethods (flags)) {
+
+				var methods = type.GetMethods (flags);
+				Array.Sort (methods, new MethodsComparer (type, td));
+
+				addedMethods.Clear ();
+
+				foreach (var method in methods) {
 					// TODO: Constructors
 					var export  = method.GetCustomAttribute<JavaCallableAttribute> ();
 					string signature = null;
@@ -328,6 +372,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					if (dt == null)
 						dt = GetTypeBuilder (dm, type);
 
+					if (addedMethods.Contains (methodName))
+						continue;
+
 					if (Verbose) {
 						Console.Write ("Adding marshal method for ");
 						ColorWriteLine ($"{method}", ConsoleColor.Green );
@@ -349,6 +396,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 						signature = builder.GetJniMethodSignature (method);
 
 					registrationElements.Add (CreateRegistration (name, signature, lambda, targetType, methodName));
+
+					addedMethods.Add (methodName);
 				}
 				if (dt != null)
 					AddRegisterNativeMembers (dt, targetType, registrationElements);
@@ -463,11 +512,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		}
 	}
 
-	static class Extensions
+	internal static class Extensions
 	{
 		public static string GetCecilName (this Type type)
 		{
-			return type.FullName.Replace ('+', '/');
+			return type.FullName?.Replace ('+', '/');
 		}
 
 		static bool CompareTypes (Type reflectionType, TypeReference cecilType)
@@ -503,11 +552,19 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return true;
 		}
 
+		internal static Dictionary<MethodInfo, MethodDefinition> MethodMap = new Dictionary<MethodInfo, MethodDefinition> ();
+
 		public static MethodDefinition GetMethodDefinition (this TypeDefinition td, MethodInfo method)
 		{
+			if (MethodMap.TryGetValue (method, out var md))
+				return md;
+
 			foreach (var m in td.Methods)
-				if (MethodsAreEqual (method, m))
+				if (MethodsAreEqual (method, m)) {
+					MethodMap [method] = m;
+
 					return m;
+				}
 
 			return null;
 		}
