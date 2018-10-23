@@ -210,6 +210,11 @@ when packaing Release applications.
 
     This property is `False` by default.
 
+-   **AndroidD8JarPath** &ndash; The path to `d8.jar` for use with the
+    d8 dex-compiler. Defaults to a path in the Xamarin.Android
+    installation. For further information see our documentation on [D8
+    and R8][d8-r8].
+
 -   **AndroidDexTool** &ndash; An enum-style property with valid
     values of `dx` or `d8`. Indicates which Android [dex][dex]
     compiler is used during the Xamarin.Android build process.
@@ -405,6 +410,11 @@ when packaing Release applications.
     During the build, any other necessary values will be merged into to
     produce the actual `AndroidManifest.xml`.
     The `$(AndroidManifest)` must contain the package name in the `/manifest/@package` attribute.
+
+-   **AndroidR8JarPath** &ndash; The path to `r8.jar` for use with the
+    r8 dex-compiler and shrinker. Defaults to a path in the
+    Xamarin.Android installation. For further information see our
+    documentation on [D8 and R8][d8-r8].
 
 -   **AndroidSdkBuildToolsVersion** &ndash; The Android SDK 
     build-tools package provides the **aapt** and **zipalign** tools,

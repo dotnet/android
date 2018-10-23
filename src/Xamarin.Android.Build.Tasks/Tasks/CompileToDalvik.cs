@@ -36,9 +36,6 @@ namespace Xamarin.Android.Tasks
 		
 		public string MultiDexMainDexListFile { get; set; }
 
-		[Output]
-		public string [] DexOutputs { get; set; }
-
 		string inputListFile;
 
 		protected override string ToolName {
@@ -51,21 +48,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CompileToDalvik");
-			Log.LogDebugMessage ("  JavaOptions: {0}", JavaOptions);
-			Log.LogDebugMessage ("  JavaMaximumHeapSize: {0}", JavaMaximumHeapSize);
-			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
-			Log.LogDebugMessage ("  JavaToolPath: {0}", JavaToolPath);
-			Log.LogDebugMessage ("  DxJarPath: {0}", DxJarPath);
-			Log.LogDebugMessage ("  ToolExe: {0}",  ToolExe);
-			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("  UseDx: {0}", UseDx);
-			Log.LogDebugMessage ("  DxExtraArguments: {0}", DxExtraArguments);
-			Log.LogDebugMessage ("  MultiDexEnabled: {0}", MultiDexEnabled);
-			Log.LogDebugMessage ("  MultiDexMainDexListFile: {0}", MultiDexMainDexListFile);
-			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
-			Log.LogDebugTaskItems ("  AlternativeJarFiles:", AlternativeJarFiles);
-
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
 
@@ -73,10 +55,6 @@ namespace Xamarin.Android.Tasks
 			inputListFile = Path.GetTempFileName ();
 			try {
 				ret = base.Execute ();
-
-				DexOutputs = Directory.GetFiles (Path.GetDirectoryName (ClassesOutputDirectory), "*.dex", SearchOption.TopDirectoryOnly);
-
-				Log.LogDebugTaskItems ("  DexOutputs: ", DexOutputs);
 			} catch (FileNotFoundException ex) {
 				Log.LogCodedError ("XA1003", ex.ToString ());
 			} finally {

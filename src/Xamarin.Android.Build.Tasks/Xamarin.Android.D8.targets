@@ -15,10 +15,10 @@ Copyright (C) 2018 Xamarin. All rights reserved.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Target Name="_CompileToDalvikWithD8"
-        Condition=" '$(AndroidDexTool)' == 'd8' "
-        DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
-        Inputs="$(_CompileToDalvikInputs)"
-        Outputs="$(IntermediateOutputPath)_dex_stamp">
+      Condition=" '$(AndroidDexTool)' == 'd8' "
+      DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+      Inputs="$(_CompileToDalvikInputs)"
+      Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
     <!-- Target-level properties to simplify conditions-->
     <PropertyGroup>
@@ -31,12 +31,12 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     </PropertyGroup>
 
     <Error
-        Condition=" !Exists('$(D8JarPath)') "
-        Text="d8.jar does not exist (D8JarPath property has to point to a valid file (current value: '$(D8JarPath)')."
+        Condition=" !Exists('$(AndroidD8JarPath)') "
+        Text="d8.jar does not exist (AndroidD8JarPath property has to point to a valid file (current value: '$(AndroidD8JarPath)')."
     />
     <Error
-        Condition=" !Exists('$(R8JarPath)') "
-        Text="r8.jar does not exist (R8JarPath property has to point to a valid file (current value: '$(R8JarPath)')."
+        Condition=" !Exists('$(AndroidR8JarPath)') "
+        Text="r8.jar does not exist (AndroidR8JarPath property has to point to a valid file (current value: '$(AndroidR8JarPath)')."
     />
 
     <!-- remove existing dex files that may be previous multidex outputs. -->
@@ -77,8 +77,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     />
 
     <CreateItem 
-          Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-          Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
+        Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
+        Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
       <Output TaskParameter="Include" ItemName="_AlternativeJarForAppD8" />
     </CreateItem>
 
@@ -87,7 +87,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
-        JarPath="$(R8JarPath)"
+        JarPath="$(AndroidR8JarPath)"
         AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
         OutputDirectory="$(IntermediateOutputPath)android\bin"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -114,7 +114,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
-        JarPath="$(D8JarPath)"
+        JarPath="$(AndroidD8JarPath)"
         AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
         OutputDirectory="$(IntermediateOutputPath)android\bin"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -127,9 +127,9 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ExtraArguments="$(AndroidD8ExtraArguments)"
     />
 
-    <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
+    <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)_dex_stamp" />
+      <FileWrites Include="$(IntermediateOutputPath)android\bin\*.dex" />
     </ItemGroup>
 
   </Target>

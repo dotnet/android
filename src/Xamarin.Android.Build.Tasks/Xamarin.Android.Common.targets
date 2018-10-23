@@ -965,14 +965,14 @@ because xbuild doesn't support framework reference assemblies.
 	</CreateProperty>
 
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\r8.jar">
-		<Output TaskParameter="Value" PropertyName="R8JarPath"
-				Condition="'$(R8JarPath)' == ''"
+		<Output TaskParameter="Value" PropertyName="AndroidR8JarPath"
+				Condition="'$(AndroidR8JarPath)' == ''"
 		/>
 	</CreateProperty>
 
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\d8.jar">
-		<Output TaskParameter="Value" PropertyName="D8JarPath"
-				Condition="'$(D8JarPath)' == ''"
+		<Output TaskParameter="Value" PropertyName="AndroidD8JarPath"
+				Condition="'$(AndroidD8JarPath)' == ''"
 		/>
 	</CreateProperty>
 
@@ -2549,7 +2549,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_BeforeCompileToDalvikWithDx);$(_CompileToDalvikDependsOnTargets)"
   Condition=" '$(AndroidDexTool)' == 'dx' "
   Inputs="$(_CompileToDalvikInputs)"
-  Outputs="$(IntermediateOutputPath)_dex_stamp">
+  Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
   <!-- Desugar if exists -->
   <Error
@@ -2654,9 +2654,9 @@ because xbuild doesn't support framework reference assemblies.
     JavaLibrariesToCompile="@(_JavaLibrariesToCompileForAppDx)"
     AlternativeJarFiles="@(_AlternativeJarForAppDx)"
   />
-  <Touch Files="$(IntermediateOutputPath)_dex_stamp" AlwaysCreate="true" />
+  <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
   <ItemGroup>
-    <FileWrites Include="$(IntermediateOutputPath)_dex_stamp" />
+    <FileWrites Include="$(IntermediateOutputPath)android\bin\*.dex" />
   </ItemGroup>
 
 </Target>
@@ -3123,7 +3123,6 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
-	<Delete Files="$(IntermediateOutputPath)_dex_stamp" />
  	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
 	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
 	<Delete Files="$(MonoAndroidIntermediate)customview-map.txt" />

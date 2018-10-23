@@ -12,5 +12,12 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="r8.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
+      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
+      <Name>android-toolchain</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
 
