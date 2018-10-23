@@ -321,12 +321,14 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		public void Issue2247 ()
+		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new [] {
 				"_CopyIntermediateAssemblies",
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
+				"_BuildAdditionalResourcesCache",
+				"_CleanIntermediateIfNuGetsChange",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -340,6 +342,65 @@ namespace Lib2
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, proj.ProjectName + ".dll"),
 					Path.Combine (intermediate, "android", "assets", proj.ProjectName + ".dll"),
+					Path.Combine (Root, b.ProjectDirectory, "packages.config"),
+				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
+				}
+
+				//NOTE: second build, targets will run because inputs changed
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+				}
+
+				//NOTE: third build, targets should certainly *not* run! there are no changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+				}
+			}
+		}
+
+		[Test]
+		public void LibraryProjectTargetsDoNotBreak ()
+		{
+			var targets = new [] {
+				"_CreateNativeLibraryArchive",
+				"_CreateManagedLibraryResourceArchive",
+			};
+			var proj = new XamarinAndroidLibraryProject {
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent= () => "public class Class1 { }"
+					},
+				},
+				OtherBuildItems = {
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\armeabi-v7a\\libtest.so") {
+						BinaryContent = () => new byte [10],
+						MetadataValues = "Link=libs\\armeabi-v7a\\libtest.so",
+					},
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\x86\\libtest.so") {
+						BinaryContent = () => new byte [10],
+						MetadataValues = "Link=libs\\x86\\libtest.so",
+					},
+					new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
+						TextContent =  () => "bar",
+					},
+				},
+			};
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var filesToTouch = new [] {
+					Path.Combine (Root, b.ProjectDirectory, "foo", "armeabi-v7a", "libtest.so"),
+					Path.Combine (Root, b.ProjectDirectory, "Assets", "foo.txt"),
 				};
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);

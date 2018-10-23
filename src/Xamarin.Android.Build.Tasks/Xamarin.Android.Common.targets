@@ -273,7 +273,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
 	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
-	<_AndroidNuGetStampFile>$(IntermediateOutputPath)$(MSBuildProjectName).nuget.stamp</_AndroidNuGetStampFile>
 	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
@@ -443,7 +442,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
 		<_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
 	</PropertyGroup>
-	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" '$(DesignTimeBuild)' == 'true' " />
+	<MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
+	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') " />
 </Target>
 
 <PropertyGroup>
@@ -453,21 +453,24 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <Target Name="_BuildAdditionalResourcesCache"
-	Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
-	Outputs="$(_AndroidResourcePathsCache)"
-	DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
-	>
- <GetAdditionalResourcesFromAssemblies
-   AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-   AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-   Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
-   CacheFile="$(_AndroidResourcePathsCache)"
-   YieldDuringToolExecution="$(YieldDuringToolExecution)"
-   DesignTimeBuild="$(DesignTimeBuild)"
-   ContinueOnError="$(DesignTimeBuild)"
-   Condition=" '$(DesignTimeBuild)' == '' Or '$(DesignTimeBuild)' == 'false' "
+    Inputs="@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildProjectFullPath);$(NugetPackagesConfig);$(_AndroidBuildPropertiesCache)"
+    Outputs="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp"
+    DependsOnTargets="$(_BeforeBuildAdditionalResourcesCache)"
+    Condition=" '$(DesignTimeBuild)' != 'True' ">
+  <GetAdditionalResourcesFromAssemblies
+      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
+      CacheFile="$(_AndroidResourcePathsCache)"
+      YieldDuringToolExecution="$(YieldDuringToolExecution)"
+      DesignTimeBuild="$(DesignTimeBuild)"
+      ContinueOnError="$(DesignTimeBuild)"
   />
-  <Message Text="Skipping GetAdditionalResourcesFromAssemblies in DesignTime build" Condition=" '$(DesignTimeBuild)' == 'true' " />
+  <Touch Files="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidResourcePathsCache)" Condition=" Exists ('$(_AndroidResourcePathsCache)') " />
+    <FileWrites Include="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ValidateResourceCache">
@@ -539,7 +542,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CleanIntermediateIfNuGetsChange;
      _CreatePropertiesCache;
     _AddAndroidDefines;
-    _AddNativeLibraryArchiveToCompile;
+    _CreateNativeLibraryArchive;
     _AddAndroidEnvironmentToCompile;
     _CheckForContent;
     _CheckTargetFramework;
@@ -654,12 +657,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
     Inputs="$(_NuGetAssetsFile)"
-    Outputs="$(_AndroidNuGetStampFile)">
-  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition="Exists('$(_AndroidNuGetStampFile)')" />
-  <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
-  <Touch Files="$(_AndroidNuGetStampFile)" AlwaysCreate="true" />
+    Outputs="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp">
+  <!--NOTE: only want to clean if the stamp exists, *after* an initial build-->
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" Exists ('$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp') " />
+  <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
+  <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" AlwaysCreate="true" />
   <ItemGroup>
-    <FileWrites Include="$(_AndroidNuGetStampFile)" />
+    <FileWrites Include="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" />
   </ItemGroup>
 </Target>
 
@@ -1192,7 +1196,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AdbTarget=$(AdbTarget)" />
 		<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
 	</ItemGroup>
-	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1248,7 +1251,7 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Resource Build -->
 
 <Target Name="_UpdateAndroidResources" Condition=" '$(ManagedDesignTimeBuild)' == 'False' "
-	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_AddLibraryProjectsEmbeddedResourceToProject;_GenerateJavaDesignerForComponent"> 
+	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_CreateManagedLibraryResourceArchive;_GenerateJavaDesignerForComponent"> 
 </Target>
 
 <Target Name="UpdateAndroidResources" DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
@@ -1481,21 +1484,20 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
   
 <Target Name="_CreateNativeLibraryArchive"
-        Condition="@(EmbeddedNativeLibrary) != ''" 
+        Condition=" '$(AndroidApplication)' != 'True' And '@(EmbeddedNativeLibrary)' != '' " 
         DependsOnTargets="ResolveReferences"
         Inputs="@(EmbeddedNativeLibrary)"
         Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
-    <CreateNativeLibraryArchive
+  <CreateNativeLibraryArchive
       OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
       EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)" />
-</Target>
-
-<Target Name="_AddNativeLibraryArchiveToCompile" DependsOnTargets="_CreateNativeLibraryArchive">
-    <CreateItem Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip"
-        Condition="Exists ('$(IntermediateOutputPath)__AndroidNativeLibraries__.zip')"
-        AdditionalMetadata="LogicalName=__AndroidNativeLibraries__.zip">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+  <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+  <ItemGroup>
+    <FileWrites Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
+      <LogicalName>__AndroidNativeLibraries__.zip</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Target>
 
 <Target Name="_AddAndroidEnvironmentToCompile">
@@ -1819,22 +1821,16 @@ because xbuild doesn't support framework reference assemblies.
 		MonoAndroidAssetsPrefix="$(MonoAndroidAssetsPrefix)"
 		AndroidJavaSources="@(AndroidJavaSource)"
 		AndroidJavaLibraries="@(AndroidJavaLibrary)"
-		IsApplication="$(AndroidApplication)"
 		AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
 		RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
 	/>
-</Target>
-
-<Target Name="_AddLibraryProjectsEmbeddedResourceToProject"
-		DependsOnTargets="_CreateManagedLibraryResourceArchive"
-		Condition=" '$(AndroidApplication)' != 'True' "
-	>
-	<CreateItem
-		Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
-        Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')"
-        AdditionalMetadata="LogicalName=__AndroidLibraryProjects__.zip">
-		<Output TaskParameter="Include" ItemName="EmbeddedResource" />
-	</CreateItem>
+	<Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+	<ItemGroup>
+		<FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+		<EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+			<LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
 </Target>
 
 <!-- AIDL Build -->
@@ -1981,7 +1977,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CopyIntermediateAssemblies"
 	Inputs="@(ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-	Outputs="$(IntermediateOutputPath)_copyintermediate.stamp"
+	Outputs="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CreateIntermediateAssembliesDir;_CopyConfigFiles">
 	<!-- Make a copy of every assembly we need in assemblies -->
 	<CopyIfChanged
@@ -1993,9 +1989,9 @@ because xbuild doesn't support framework reference assemblies.
 		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
 	/>
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
-	<Touch Files="$(IntermediateOutputPath)_copyintermediate.stamp" AlwaysCreate="True" />
+	<Touch Files="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" AlwaysCreate="True" />
 	<ItemGroup>
-		<FileWrites Include="$(IntermediateOutputPath)_copyintermediate.stamp" />
+		<FileWrites Include="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" />
 	</ItemGroup>
 </Target>
 
@@ -3112,7 +3108,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
 	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
-	<Delete Files="$(IntermediateOutputPath)_copyintermediate.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />
