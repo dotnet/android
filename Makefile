@@ -102,8 +102,8 @@ prepare-external:
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION)) && \
-	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8) && \
+	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
+	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 
 prepare-deps: prepare-external
