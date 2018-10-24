@@ -59,7 +59,6 @@ package-deb: $(ZIP_OUTPUT)
 	cp -a build-tools/debian-metadata $(ZIP_OUTPUT_BASENAME)/debian
 	sed "s/%CONFIG%/$(CONFIGURATION)/" $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install.in > $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install && rm -f $(ZIP_OUTPUT_BASENAME)/debian/xamarin.android-oss.install.in
 	cp LICENSE $(ZIP_OUTPUT_BASENAME)/debian/copyright
-	ln -sf $(ZIP_OUTPUT) xamarin.android-oss_$(PRODUCT_VERSION).$(-num-commits-since-version-change).orig.tar.bz2
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
 
