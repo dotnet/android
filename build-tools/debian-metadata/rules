@@ -16,6 +16,9 @@ override_dh_shlibdeps:
 
 override_dh_install:
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/cross-*.exe*
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/llc.exe
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/opt.exe
+
 	dh_install
 
 override_dh_clideps:
