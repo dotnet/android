@@ -469,7 +469,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Touch Files="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="$(_AndroidResourcePathsCache)" Condition=" Exists ('$(_AndroidResourcePathsCache)') " />
-    <FileWrites Include="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp" />
   </ItemGroup>
 </Target>
 
@@ -662,9 +661,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" Exists ('$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp') " />
   <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
   <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" AlwaysCreate="true" />
-  <ItemGroup>
-    <FileWrites Include="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
@@ -1323,9 +1319,6 @@ because xbuild doesn't support framework reference assemblies.
 		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
 	</ResolveLibraryProjectImports>
 	<Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="True" />
-	<ItemGroup>
-		<FileWrites Include="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" />
-	</ItemGroup>
 </Target>
 
 <Target Name="_CollectLibraryResourceDirectories"
@@ -1990,9 +1983,6 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
 	<Touch Files="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" AlwaysCreate="True" />
-	<ItemGroup>
-		<FileWrites Include="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" />
-	</ItemGroup>
 </Target>
 
 <Target Name="_CollectConfigFiles">
@@ -2298,9 +2288,6 @@ because xbuild doesn't support framework reference assemblies.
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
-  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -3057,6 +3044,13 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="Sign" 	DependsOnTargets="Build;_ResolveAndroidSigningKey;_Sign" />
 
 <!-- Cleaning -->
+
+<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
+  <ItemGroup>
+    <!-- When following the naming convention for stamp files, this target handles FileWrites -->
+    <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
+  </ItemGroup>
+</Target>
 
 <Target Name="_CleanMsymArchive">
 	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">

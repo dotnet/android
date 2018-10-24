@@ -220,8 +220,16 @@ We should also name the stamp file the same as the target, such as:
     Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
   <!-- ... -->
   <Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="True" />
+</Target>
+```
+
+Do we need `FileWrites` here? Nope. The `_AddFilesToFileWrites`
+target takes care of it, so we can't as easily mess it up:
+
+```xml
+<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
   <ItemGroup>
-    <FileWrites Include="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" />
+    <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
   </ItemGroup>
 </Target>
 ```
