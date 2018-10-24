@@ -2,6 +2,12 @@
 
 DISTRO_DEPS="$DEBIAN_COMMON_DEPS"
 
+if [ "$OS_ARCH" = "x86_64" ]; then
+	DISTRO_DEPS="$DISTRO_DEPS lib32ncurses-dev "
+else
+	DISTRO_DEPS="$DISTRO_DEPS lib64ncurses-dev"
+fi
+
 MAJOR=$(echo $1 | cut -d '.' -f 1)
 MINOR=$(echo $1 | cut -d '.' -f 2)
 
