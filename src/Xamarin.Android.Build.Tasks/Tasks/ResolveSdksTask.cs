@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 				JdkJvmPath = info.JdkJvmPath;
 
-				if (string.IsNullOrEmpty(JdkJvmPath)) {
+				if (string.IsNullOrEmpty (JdkJvmPath)) {
 					Log.LogCodedError ("XA5300", $"{nameof (JdkJvmPath)} is blank");
 					return false;
 				}
