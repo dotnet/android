@@ -36,7 +36,7 @@ package-oss $(ZIP_OUTPUT):
 	_sl="$(ZIP_OUTPUT_BASENAME)/bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/.__sys_links.txt"; \
 	if [ ! -f "$$_sl" ]; then continue; fi; \
 	for f in `cat $$_sl` ; do \
-		echo "$(ZIP_OUTPUT_BASENAME)/bin/$CONFIGURATION/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
+		echo "$(ZIP_OUTPUT_BASENAME)/bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/$$f" >> "$$_exclude_list"; \
 	done
 	echo "Exclude List:"
 	cat ".__exclude_list.txt"
