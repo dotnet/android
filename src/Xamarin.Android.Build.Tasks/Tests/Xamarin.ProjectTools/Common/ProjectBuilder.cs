@@ -1,6 +1,7 @@
 ﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 
@@ -61,7 +62,7 @@ namespace Xamarin.ProjectTools
 			Save (project, doNotCleanupOnUpdate, saveProject);
 
 			Output = project.CreateBuildOutput (this);
-
+			
 			project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables);
@@ -71,6 +72,17 @@ namespace Xamarin.ProjectTools
 				Cleanup ();
 			last_build_result = result;
 			return result;
+		}
+
+		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		{
+			var oldTarget = Target;
+			Target = "Restore";
+			try {
+				return Build (project, doNotCleanupOnUpdate);
+			} finally {
+				Target = oldTarget;
+			}
 		}
 
 		public bool Clean (XamarinProject project, bool doNotCleanupOnUpdate = false)

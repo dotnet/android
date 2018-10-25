@@ -83,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 				UseLatestPlatformSdk = true,
 				IsRelease = true,
 			};
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.AndroidClassParser = classParser;
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
 				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
 			});
@@ -384,7 +384,7 @@ namespace Foo {
 	<attr path=""/api/package[@name='com.actionbarsherlock.view']"" name=""managedName"">Xamarin.ActionbarSherlockBinding.Views</attr>
 </metadata>",
 			};
-			binding.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 			}

@@ -533,7 +533,7 @@ namespace Bug12935
 				References = {
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
-				Packages = {
+				PackageReferences = {
 					KnownPackages.SupportMediaCompat_25_4_0_1,
 					KnownPackages.SupportFragment_25_4_0_1,
 					KnownPackages.SupportCoreUtils_25_4_0_1,
