@@ -77,7 +77,7 @@ namespace xamarin { namespace android { namespace internal
 		void  setup_process_args (JNIEnv *env, jobjectArray runtimeApks);
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property_from_overrides (const char *name, char ** value);
-		int  monodroid_read_file_into_memory (const char *path, char **value);
+		int   monodroid_read_file_into_memory (const char *path, char **value);
 		void  create_update_dir (char *override_dir);
 		char* get_libmonosgen_path ();
 		char* get_bundled_app (JNIEnv *env, jstring dir);
