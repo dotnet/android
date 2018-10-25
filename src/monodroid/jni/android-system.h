@@ -77,6 +77,7 @@ namespace xamarin { namespace android { namespace internal
 		void  setup_process_args (JNIEnv *env, jobjectArray runtimeApks);
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property_from_overrides (const char *name, char ** value);
+		int   monodroid_read_file_into_memory (const char *path, char **value);
 		void  create_update_dir (char *override_dir);
 		char* get_libmonosgen_path ();
 		char* get_bundled_app (JNIEnv *env, jstring dir);
@@ -86,6 +87,7 @@ namespace xamarin { namespace android { namespace internal
 		void* load_dso (const char *path, int dl_flags, mono_bool skip_exists_check);
 		void* load_dso_from_any_directories (const char *name, int dl_flags);
 		char* get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs_free);
+		int   readdir (monodroid_dir_t *dir, monodroid_dirent_t *b, monodroid_dirent_t **e);
 
 		const char* get_override_dir (uint32_t index) const
 		{

@@ -27,4 +27,6 @@ MONO_API int monodroid_embedded_assemblies_register_from (
 /* mono_bool; returns TRUE if the install succeeded. */
 MONO_API int monodroid_embedded_assemblies_install_preload_hook (xamarin::android::DylibMono *imports);
 
+int try_load_typemaps_from_directory (const char *path);
+
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */
