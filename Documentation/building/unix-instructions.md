@@ -190,12 +190,6 @@ There are a few ways to do it:
   * Build all the platforms with:
   
         make framework-assemblies
-  
-    Note that `make framework-assemblies` builds `Mono.Android.dll`
-    for *both* Debug and Release configurations. To build only a
-    single configuration, set the `$(CONFIGURATIONS)` make variable:
-
-        make framework-assemblies CONFIGURATIONS=Debug
 
   * Build several platforms other than the default
   

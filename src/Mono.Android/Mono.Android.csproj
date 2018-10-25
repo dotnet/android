@@ -346,6 +346,11 @@
       <Name>api-merge</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
+      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
+      <Name>api-xml-adjuster</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
       <Project>{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2}</Project>
       <Name>jnienv-gen</Name>

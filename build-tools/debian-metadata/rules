@@ -14,6 +14,13 @@ override_dh_makeclilibs:
 override_dh_shlibdeps:
 	dh_shlibdeps -X/usr/lib/xamarin.android/xbuild-frameworks/ -X/usr/lib/xamarin.android/xbuild/Xamarin/Android/lib/
 
+override_dh_install:
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/cross-*.exe*
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/llc.exe
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/opt.exe
+
+	dh_install
+
 override_dh_clideps:
 	dh_clideps -X/usr/lib/xamarin.android/xbuild-frameworks/ \
 		--exclude-moduleref=clr.dll \
