@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<_ILRepacker_stamp>$(IntermediateOutputPath)ILRepacker.stamp</_ILRepacker_stamp>
 	</PropertyGroup>
-	<Target Name="ILRepacker"
+	<Target Name="ILRepacker" Condition=" '$(HostOS)' != 'Linux' "
 			AfterTargets="AfterBuild"
 			Inputs="$(OutputPath)\$(AssemblyName).dll"
 			Outputs="$(_ILRepacker_stamp)">

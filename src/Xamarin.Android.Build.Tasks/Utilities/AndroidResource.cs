@@ -37,7 +37,7 @@ namespace Monodroid {
 
 		static readonly XNamespace android = "http://schemas.android.com/apk/res/android";
 		static readonly XNamespace res_auto = "http://schemas.android.com/apk/res-auto";
-		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$");
+		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$", RegexOptions.Compiled);
 		static readonly string[] fixResourcesAliasPaths = {
 			"/resources/item",
 			"/resources/integer-array/item",
@@ -104,13 +104,13 @@ namespace Monodroid {
 			// Might be a bit of an overkill, but the data comes (indirectly) from the user since it's the
 			// path to the msbuild's intermediate output directory and that location can be changed by the
 			// user. It's better to be safe than sorry.
-			resourceBasePath = (resourceBasePath ?? String.Empty).Trim ();
-			if (String.IsNullOrEmpty (resourceBasePath))
+			resourceBasePath = resourceBasePath?.Trim ();
+			if (string.IsNullOrEmpty (resourceBasePath))
 				return true;
 
 			// Avoid resource names that are all whitespace
-			value = (value ?? String.Empty).Trim ();
-			if (String.IsNullOrEmpty (value))
+			value = value?.Trim ();
+			if (string.IsNullOrEmpty (value))
 				return false; // let's save some time
 			if (value.Length < 4 || value [0] != '@') // 4 is the minimum length since we need a string
 								  // that is at least of the following
@@ -118,24 +118,31 @@ namespace Monodroid {
 								  // below.
 				return true;
 
-			string filePath = null;
 			int slash = value.IndexOf ('/');
 			int colon = value.IndexOf (':');
 			if (colon == -1)
 				colon = 0;
 
 			// Determine the the potential definition file's path based on the resource type.
-			string dirPrefix = value.Substring (colon + 1, slash - colon - 1).ToLowerInvariant ();
+			string dirPattern = value.Substring (colon + 1, slash - colon - 1).ToLowerInvariant () + "*";
 			string fileNamePattern = value.Substring (slash + 1).ToLowerInvariant () + ".*";
 			
-			if (Directory.EnumerateDirectories (resourceBasePath, dirPrefix + "*").Any (dir => Directory.EnumerateFiles (dir, fileNamePattern).Any ()))
-				return true;
+			foreach (var dir in Directory.EnumerateDirectories (resourceBasePath, dirPattern)) {
+				foreach (var file in Directory.EnumerateFiles (dir, fileNamePattern)) {
+					return true;
+				}
+			}
 
 			// check additional directories if we have them incase the resource is in a library project
-			if (additionalDirectories != null)
-				foreach (var additionalDirectory in additionalDirectories)
-					if (Directory.EnumerateDirectories (additionalDirectory, dirPrefix + "*").Any (dir => Directory.EnumerateFiles (dir, fileNamePattern).Any ()))
-						return true;
+			if (additionalDirectories != null) {
+				foreach (var additionalDirectory in additionalDirectories) {
+					foreach (var dir in Directory.EnumerateDirectories (additionalDirectory, dirPattern)) {
+						foreach (var file in Directory.EnumerateFiles (dir, fileNamePattern)) {
+							return true;
+						}
+					}
+				}
+			}
 
 			// No need to change the reference case.
 			return false;

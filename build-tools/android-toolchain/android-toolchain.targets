@@ -5,20 +5,11 @@
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
-      _CopyBootstrapTasksAssembly;
       _DownloadItems;
       _UnzipFiles;
       _CreateMxeToolchains;
-      _AcceptAndroidSdkLicenses;
     </BuildDependsOn>
   </PropertyGroup>
-  <Target Name="_CopyBootstrapTasksAssembly"
-      Outputs="$(OutputPath)\Xamarin.Android.Tools.BootstrapTasks.dll">
-    <MSBuild
-        Projects="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
-        Properties="OutputPath=$(AndroidToolchainDirectory)\"
-    />
-  </Target>
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
   <Target Name="_DetermineItems">
     <CreateItem
@@ -96,13 +87,11 @@
         SourceFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')"
         DestinationFolder="$(AntDirectory)"
     />
+    <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"
     />
-  </Target>
-  <Target Name="_AcceptAndroidSdkLicenses">
-    <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
   </Target>
   <Target Name="_CreateMxeToolchains"
       Condition=" '$(HostOS)' != 'Windows' And '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"

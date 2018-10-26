@@ -1,19 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
-using Xamarin.Tools.Zip;
 
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
+	/// <summary>
+	/// Creates __AndroidNativeLibraries__.zip, $(AndroidApplication) should be False!
+	/// </summary>
 	public class CreateNativeLibraryArchive : Task
 	{
 		[Required]
@@ -28,10 +25,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("EmbeddedNativeLibraries Task");
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugTaskItems ("  EmbeddedNativeLibraries:", EmbeddedNativeLibraries);
-
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			
 			// Copy files into _NativeLibraryImportsDirectoryName (native_library_imports) dir.
@@ -72,7 +65,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ("Saving contents to " + outpath);
 			}
 			
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

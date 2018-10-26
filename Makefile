@@ -102,16 +102,13 @@ prepare-external:
 	git submodule update --init --recursive
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
-	$(foreach conf, $(CONFIGURATIONS), \
-		(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(conf)) && \
-		(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(conf) JI_MAX_JDK=8) && \
-		(cd $(call GetPath,JavaInterop) && make bin/Build$(conf)/JdkInfo.props CONFIGURATION=$(conf) JI_MAX_JDK=8) && ) \
-	true
+	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
+	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
+	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	$(foreach conf, $(CONFIGURATIONS), \
-		mkdir -p bin/Build$(conf) ; )
+	mkdir -p bin/Build$(CONFIGURATION)
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
 	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
 
@@ -142,7 +139,7 @@ include tests/api-compatibility/api-compatibility.mk
 topdir  := $(shell pwd)
 
 
-XA_BUILD_PATHS_OUT = $(CONFIGURATIONS:%=bin/Test%/XABuildPaths.cs)
+XA_BUILD_PATHS_OUT = bin/Test$(CONFIGURATION)/XABuildPaths.cs
 
 prepare-paths: $(XA_BUILD_PATHS_OUT)
 

@@ -40,9 +40,17 @@
   </Target>
   <Target Name="RunNUnitTests">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
+    <ItemGroup>
+      <NUnitTarget Include="@(_TestAssembly)">
+         <TestFilename>%(_TestAssembly.Filename)</TestFilename>
+         <NUnitOutput Condition=" '$(HostOS)' != 'Windows' " >| tee &quot;bin\Test$(Configuration)\TestOutput-%(_TestAssembly.Filename).txt&quot;</NUnitOutput>
+         <NUnitOutput Condition=" '$(HostOS)' == 'Windows'  ">--output=&quot;bin\Test$(Configuration)\TestOutput-%(_TestAssembly.Filename).txt&quot;</NUnitOutput>
+      </NUnitTarget>
+    </ItemGroup>
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Test) --labels=All --result=&quot;TestResult-%(Filename).xml;format=nunit2&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml;format=nunit2&quot; %(NUnitTarget.NUnitOutput)"
         WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="true"
         ContinueOnError="ErrorAndContinue"
     />
     <ItemGroup>
@@ -175,6 +183,7 @@
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
         ContinueOnError="ErrorAndContinue"
+        IgnoreStandardErrorWarningFormat="true"
         WorkingDirectory="$(_TopDir)"
         Command="bash &quot;$(_ParallelTargets)&quot;"
     />

@@ -488,7 +488,15 @@ gather_bundled_assemblies (JNIEnv *env, jobjectArray runtimeApks, mono_bool regi
 
 	monodroid_embedded_assemblies_set_register_debug_symbols (register_debug_symbols);
 	monodroid_embedded_assemblies_set_should_register (should_register_file, NULL);
-
+#ifndef RELEASE
+	for (i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
+		const char *p = androidSystem.get_override_dir (i);
+		if (!utils.directory_exists (p))
+			continue;
+		log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
+		try_load_typemaps_from_directory (p);
+	}
+#endif
 	for (i = apksLength - 1; i >= 0; --i) {
 		int          cur_num_assemblies;
 		const char  *apk_file;

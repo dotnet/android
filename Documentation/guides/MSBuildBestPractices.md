@@ -114,7 +114,7 @@ assembly file is *newer* than the stamp file.
 
 Other times it is good to use "stamp" files:
 - You have files that are not *always* updated, such as mentioned in
-  [Github #2247][github_issue]. Since you can't on a file being
+  [Github #2247][github_issue]. Since you can't rely on a file being
   updated, it might be desirable to run the `<Touch />` command within
   the target or use a stamp file.
 - The outputs are *many* files. Since MSBuild has to hit the disk to
@@ -158,6 +158,46 @@ properly be written as:
   </ItemGroup>
 </Target>
 ```
+
+Also note that the `<ItemGroup>` will still be evaluated here, even
+though the `_GenerateJavaSources` target might be skipped due to
+`Inputs` and `Outputs`.
+
+However, for example, the following would be *wrong*!
+
+```xml
+<Target Name="_GenerateJavaSources"
+    Inputs="@(_AssemblyFiles)"
+    Outputs="$(_GenerateJavaStamp)">
+  <GenerateJava 
+      InputFiles="@(_AssemblyFiles)"
+      OutputDirectory="$(_JavaIntermediateDirectory)"
+  />
+  <Touch Files="$(_GenerateJavaStamp)" AlwaysCreate="True">
+    <!-- WRONG, nope! don't do this! -->
+    <Output TaskParameter="TouchedFiles" ItemName="FileWrites" />
+  </Touch>
+</Target>
+```
+
+Using `<Output/>` allows the `TouchedFiles` output parameter to get
+directly added to `FileWrites`.
+
+This seems like it would be simpler and *better*, but
+`$(_GenerateJavaStamp)` won't get added to `FileWrites` if this target
+is skipped! `IncrementalClean` could delete the file and cause this
+target to re-run on the next build!
+
+## When to *not* use Inputs and Outputs?
+
+In other words, when should a target *not* build incrementally?
+
+- If the target merely reads from files, or locates files.
+- If the target merely sets properties or adds to item groups.
+
+In general, if a target *writes* files, it should be incremental. If
+it needs to run every time in order to support other targets, do not
+use `Inputs` or `Outputs`.
 
 # Best Practices for Xamarin.Android MSBuild targets
 

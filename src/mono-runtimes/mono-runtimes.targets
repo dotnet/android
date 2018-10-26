@@ -51,7 +51,6 @@
   <PropertyGroup>
     <ForceBuildDependsOn>
       _DownloadArchive;
-      _Autogen;
       _Build;
       _InstallRuntimes;
       _InstallLlvm;
@@ -147,7 +146,7 @@
     <Touch Files="$(LlvmSourceFullPath)\CMakeLists.txt" Time="$(_LlvmCommitTime)" />
   </Target>
 
-  <Target Name="_PrepareLlvmItems">
+  <Target Name="_GetLlvmOutputItems">
     <ItemGroup>
       <_LlvmSourceBinary Include="@(_LlvmRuntime->'$(MonoSourceFullPath)\sdks\out\llvm-%(Identity)\bin\opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
       <_LlvmTargetBinary Include="@(_LlvmRuntime->'$(_MSBuildDir)\%(InstallPath)opt%(ExeSuffix)')" Condition=" '%(_LlvmRuntime.InstallBinaries)' == 'true' " />
@@ -167,16 +166,6 @@
         DestinationFiles="@(_LlvmTargetBinary)" />
     <Touch
         Files="@(_LlvmTargetBinary)" />
-  </Target>
-
-  <Target Name="_Autogen"
-      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp"
-      Inputs="$(MonoSourceFullPath)\autogen.sh"
-      Outputs="$(MonoSourceFullPath)\configure">
-    <Exec
-        Command="make DISABLE_IOS=1 configure-mono"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
-    />
   </Target>
 
   <Target Name="_GetMonoGitCommitHash">
@@ -284,7 +273,7 @@
 
   <Target Name="_DownloadArchive"
       DependsOnTargets="_GetMonoGitCommitHash"
-      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
+      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
     <MakeDir
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
@@ -308,14 +297,17 @@
 
   <Target Name="_Build"
       Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_MonoBcl)' != '' Or '@(_LlvmRuntime)' != '' "
-      DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;_GetRuntimesOutputItems;_PrepareLlvmItems;_GetMonoGitCommitHash;_DownloadArchive"
-      Inputs="$(LlvmSourceFullPath)\CMakeLists.txt;$(MonoSourceFullPath)\autogen.sh"
-      Outputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource);@(_BclTestOutput);@(_BclProfileItems);@(_LlvmSourceBinary)">
+      DependsOnTargets="_GetMonoGitCommitHash;_DownloadArchive">
     <Exec
         Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') "
         Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
+    />
+    <Touch
+        Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') "
+        Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build"
+        AlwaysCreate="True"
     />
   </Target>
 
@@ -565,7 +557,7 @@
   </Target>
 
   <Target Name="GetMonoBundleItems"
-      DependsOnTargets="_GetRuntimesOutputItems;_PrepareLlvmItems">
+      DependsOnTargets="_GetRuntimesOutputItems;_GetLlvmOutputItems">
     <ItemGroup>
       <BundleItem Include="@(_BclInstalledItem)" />
       <BundleItem Include="@(_MonoDocInstalledItems)" />
@@ -592,11 +584,13 @@
       <BundleItem Include="@(_BclTestOutput)" />
     </ItemGroup>
   </Target>
+
   <Target Name="ForceBuild"
       DependsOnTargets="GetMonoBundleItems;$(ForceBuildDependsOn)"
       Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
       Outputs="@(BundleItem)">
   </Target>
+
   <Target Name="_BuildUnlessCached"
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;GetMonoBundleItems"
       Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
@@ -610,6 +604,7 @@
         Targets="ForceBuild"
     />
   </Target>
+
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
     <Exec
@@ -618,6 +613,12 @@
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
+
+    <ItemGroup>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-build"/>
+      <_StampFiles Include="$(MonoSourceFullPath)\sdks\out\.stamp-android-$(_MonoSdksConfiguration)-*-$(HostOS)-download"/>
+    </ItemGroup>
+    <Delete Files="@(_StampFiles)" />
   </Target>
 
   <Target Name="CoreCompile"

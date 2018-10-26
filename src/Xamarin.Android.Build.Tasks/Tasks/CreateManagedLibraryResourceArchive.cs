@@ -1,23 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
-using Xamarin.Tools.Zip;
 
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
+	/// <summary>
+	/// Creates __AndroidLibraryProjects__.zip, $(AndroidApplication) should be False!
+	/// </summary>
 	public class CreateManagedLibraryResourceArchive : Task
 	{
-		public bool IsApplication { get; set; }
-		
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -42,18 +37,6 @@ namespace Xamarin.Android.Tasks
 		
 		public override bool Execute ()
 		{
-			if (IsApplication)
-				return true;
-
-			Log.LogDebugMessage ("CreateManagedLibraryResourceArchive Task");
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
-			Log.LogDebugTaskItems ("  AndroidAssets:", AndroidAssets);
-			Log.LogDebugTaskItems ("  AndroidJavaSources:", AndroidJavaSources);
-			Log.LogDebugTaskItems ("  AndroidJavaLibraries:", AndroidJavaLibraries);
-			Log.LogDebugTaskItems ("  AndroidResourcesInThisExactProject:", AndroidResourcesInThisExactProject);
-			Log.LogDebugTaskItems ("  RemovedAndroidResourceFiles:", RemovedAndroidResourceFiles);
-
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			
 			// Copy files into _LibraryProjectImportsDirectoryName (library_project_imports) dir.
@@ -84,7 +67,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			// resources folders are converted to the structure that aapt accepts.
-			bool hasInvalidName = false;
 			foreach (var srcsub in Directory.GetDirectories (ResourceDirectory)) {
 				var dstsub = Path.Combine (outDirInfo.FullName, "res", Path.GetFileName (srcsub));
 				if (!Directory.Exists (dstsub))
@@ -104,8 +86,6 @@ namespace Xamarin.Android.Tasks
 
 				}
 			}
-			if (hasInvalidName)
-				return false;
 			if (AndroidJavaSources != null)
 				foreach (var item in AndroidJavaSources)
 					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (outDirInfo.FullName, item.ItemSpec));
@@ -139,7 +119,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ("Saving contents to " + outpath);
 			}
 
-			return true;
+			return !Log.HasLoggedErrors ;
 		}
 	}
 }
