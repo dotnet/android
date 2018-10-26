@@ -369,6 +369,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 -->
 <!-- As we split up/refactor this file, put new imports here -->
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
 
 <Target Name="_SeparateAppExtensionReferences">
 	<CreateItem Include="@(ProjectReference)" PreserveExistingMetadata="true" Condition="'%(Identity)' != '' AND '%(ProjectReference.IsAppExtension)' == 'true'">
@@ -1346,7 +1347,8 @@ because xbuild doesn't support framework reference assemblies.
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
+		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+		AssembliesToSkipCases="@(_AndroidAssemblySkipCases)">
 	</ResolveLibraryProjectImports>
 	<Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="True" />
 </Target>

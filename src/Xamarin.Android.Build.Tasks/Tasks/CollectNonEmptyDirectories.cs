@@ -21,9 +21,11 @@ namespace Xamarin.Android.Tasks {
 			foreach (var directory in Directories) {
 				var firstFile = Directory.EnumerateFiles(directory.ItemSpec, "*.*", SearchOption.AllDirectories).FirstOrDefault ();
 				if (firstFile != null) {
-					output.Add (new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
+					var taskItem = new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
 						{"FileFound", firstFile}
-					}));
+					});
+					directory.CopyMetadataTo (taskItem);
+					output.Add (taskItem);
 				}
 			}
 			return !Log.HasLoggedErrors;
