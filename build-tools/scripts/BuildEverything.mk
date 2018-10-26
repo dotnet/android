@@ -16,7 +16,7 @@ else
 ZIP_EXTENSION         = zip
 endif
 
-ZIP_OUTPUT_BASENAME   = xamarin.android-oss_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+ZIP_OUTPUT_BASENAME   = xamarin.android-oss_v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 ZIP_OUTPUT            = $(ZIP_OUTPUT_BASENAME).$(ZIP_EXTENSION)
 
 
