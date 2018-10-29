@@ -1035,19 +1035,19 @@ namespace App1
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbAndPortablePdb")) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
-					WebContent = "https://www.dropbox.com/s/s4br29kvuy8ygz1/PdbTestLibrary.dll?dl=1"
+					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
 				};
 				proj.References.Add (reference);
 				var pdb = new BuildItem.NoActionResource ("PdbTestLibrary.pdb") {
-					WebContent = "https://www.dropbox.com/s/033jif54ma0e01m/PdbTestLibrary.pdb?dl=1"
+					WebContentFileNameFromAzure = "PdbTestLibrary.pdb"
 				};
 				proj.References.Add (pdb);
 				var netStandardRef = new BuildItem.Reference ("NetStandard16.dll") {
-					WebContent = "https://www.dropbox.com/s/g7v0d4irzvaw5pl/NetStandard16.dll?dl=1"
+					WebContentFileNameFromAzure = "NetStandard16.dll"
 				};
 				proj.References.Add (netStandardRef);
 				var netStandardpdb = new BuildItem.NoActionResource ("NetStandard16.pdb") {
-					WebContent = "https://www.dropbox.com/s/m898ix2m2il631y/NetStandard16.pdb?dl=1"
+					WebContentFileNameFromAzure = "NetStandard16.pdb"
 				};
 				proj.References.Add (netStandardpdb);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -2436,19 +2436,19 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
-					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/PdbTestLibrary.dll"
+					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
 				};
 				proj.References.Add (reference);
 				var pdb = new BuildItem.NoActionResource ("PdbTestLibrary.pdb") {
-					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/PdbTestLibrary.pdb"
+					WebContentFileNameFromAzure = "PdbTestLibrary.pdb"
 				};
 				proj.References.Add (pdb);
 				var netStandardRef = new BuildItem.Reference ("NetStandard16.dll") {
-					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/NetStandard16.dll"
+					WebContentFileNameFromAzure = "NetStandard16.dll"
 				};
 				proj.References.Add (netStandardRef);
 				var netStandardpdb = new BuildItem.NoActionResource ("NetStandard16.pdb") {
-					WebContent = "https://dl.dropboxusercontent.com/u/18881050/Xamarin/NetStandard16.pdb"
+					WebContentFileNameFromAzure = "NetStandard16.pdb"
 				};
 				proj.References.Add (netStandardpdb);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

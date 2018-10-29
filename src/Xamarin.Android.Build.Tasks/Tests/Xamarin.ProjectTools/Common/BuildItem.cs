@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -123,18 +122,22 @@ namespace Xamarin.ProjectTools
 		public bool Deleted { get; set; }
 		public FileAttributes Attributes { get; set;}
 
-		static readonly ConcurrentDictionary<string, object> locks = new ConcurrentDictionary<string, object> ();
-
 		public string WebContent {
 			get { throw new NotSupportedException (); }
 			set {
 				BinaryContent = () => {
-					lock (locks.GetOrAdd (value, _ => new object ())) {
-						var file = new DownloadedCache ().GetAsFile (value);
-						return File.ReadAllBytes (file);
-					}
+					var file = new DownloadedCache ().GetAsFile (value);
+					return File.ReadAllBytes (file);
 				};
 			}
+		}
+
+		/// <summary>
+		/// NOTE: downloads a file from our https://xamjenkinsartifact.azureedge.net/ Azure Storage Account
+		/// </summary>
+		public string WebContentFileNameFromAzure {
+			get { throw new NotSupportedException (); }
+			set { WebContent = $"https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/{value}"; }
 		}
 
 		public string MetadataValues {
