@@ -183,6 +183,8 @@ $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,F
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
+	# For debugging a mono "hang"; see e.g. https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/1239/console
+	MONO_LOG_LEVEL=debug MONO_LOG_MASK=io-layer-process \
 	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
 	$(MAKE) run-api-compatibility-tests
 
