@@ -329,20 +329,32 @@ namespace Lib2
 				"_ResolveLibraryProjectImports",
 				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
+				"_CopyConfigFiles",
 			};
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			var proj = new XamarinFormsAndroidApplicationProject {
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
+						TextContent = () => "<?xml version='1.0' ?><configuration/>",
+						Metadata = {
+							{ "CopyToOutputDirectory", "PreserveNewest"},
+						}
+					}
+				}
+			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 
+				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var filesToTouch = new [] {
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
-					Path.Combine (intermediate, proj.ProjectName + ".dll"),
-					Path.Combine (intermediate, "android", "assets", proj.ProjectName + ".dll"),
+					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
+					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
+					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);

@@ -92,7 +92,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CopyConfigFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyMdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAndroidResourceStamp" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1894,10 +1893,13 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CreatePackageWorkspace">
   <!-- Create our intermediate directory -->
-  <MakeDir Directories="$(MonoAndroidResDirIntermediate)" />
+  <MakeDir Directories="$(MonoAndroidResDirIntermediate)"      Condition=" !Exists ('$(MonoAndroidResDirIntermediate)') " />
 
   <!-- Create directory to package from -->
-  <MakeDir Directories="$(MonoAndroidIntermediateAssetsDir)" />
+  <MakeDir Directories="$(MonoAndroidIntermediateAssetsDir)"   Condition=" !Exists ('$(MonoAndroidIntermediateAssetsDir)') " />
+
+  <!-- Create our intermediate directory for assemblies -->
+  <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
   
 <Target Name="_GetMonoPlatformJarPath">
@@ -1960,18 +1962,10 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_CreateIntermediateAssembliesDir"
-    Inputs="@(ResolvedUserAssemblies->'%(Identity)')"
-    Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" >
-
-  <!-- Create our intermediate directory -->
-  <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition="!Exists ('$(MonoAndroidIntermediateAssemblyDir)')" />
-</Target>
-
 <Target Name="_CopyIntermediateAssemblies"
 	Inputs="@(ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
 	Outputs="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp"
-	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CreateIntermediateAssembliesDir;_CopyConfigFiles">
+	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CopyConfigFiles">
 	<!-- Make a copy of every assembly we need in assemblies -->
 	<CopyIfChanged
 		SourceFiles="@(ResolvedAssemblies)"
@@ -1994,12 +1988,13 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CopyConfigFiles"
 		Inputs="@(_ResolvedConfigFiles)"
-		Outputs="@(_ResolvedConfigFiles->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-		DependsOnTargets="_CollectConfigFiles" >
-	<CopyConfigFiles
+		Outputs="$(_AndroidStampDirectory)_CopyConfigFiles.stamp"
+		DependsOnTargets="_CollectConfigFiles">
+	<CopyIfChanged
 			SourceFiles="@(_ResolvedConfigFiles)"
 			DestinationFiles="@(_ResolvedConfigFiles->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
 	/>
+	<Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_CollectMdbFiles"
@@ -2649,7 +2644,7 @@ because xbuild doesn't support framework reference assemblies.
     DestinationFiles="@(_ShrunkFrameworkAssemblies)"
     SkipUnchangedFiles="true" />
 
-  <CopyConfigFiles
+  <CopyIfChanged
     SourceFiles="@(_ResolvedFrameworkAssemblies->'%(Identity).config')"
     DestinationFiles="@(_ShrunkFrameworkAssemblies->'%(Identity).config')" />
   

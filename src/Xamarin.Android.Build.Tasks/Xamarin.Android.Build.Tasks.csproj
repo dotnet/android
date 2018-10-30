@@ -214,7 +214,6 @@
     <Compile Include="Mono.Android\SupportsGLTextureAttribute.Partial.cs" />
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
     <Compile Include="Tasks\GetImportedLibraries.cs" />
-    <Compile Include="Tasks\CopyConfigFiles.cs" />
     <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
     <Compile Include="Tasks\CreateAndroidResourceStamp.cs" />
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
