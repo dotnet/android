@@ -111,7 +111,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidClassParser = classParser;
 			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
-				WebContent = "https://www.dropbox.com/s/hl98jrvlw4d9vjy/aFileChooserBinaries.zip?dl=1"
+				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -167,7 +167,7 @@ namespace Com.Ipaulpro.Afilechooser {
 				AndroidClassParser = "class-parse",
 			};
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContent = "https://www.dropbox.com/s/5ovudccigydohys/javaBindingIssue.jar?dl=1"
+				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
 			using (var b = CreateDllBuilder ("temp/BindByteArrayInMethodParameter")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -182,7 +182,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\adal-1.0.7.aar") {
-				WebContent = "https://www.dropbox.com/s/bubopadhd9d1l4b/adal-1.0.7.aar?dl=1"
+				WebContentFileNameFromAzure = "adal-1.0.7.aar"
 			});
 			binding.MetadataXml = @"
 <metadata>
@@ -213,7 +213,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContent = "https://www.dropbox.com/s/53679881kg9rdiq/mylibrary-debug.aar?dl=1"
+				WebContentFileNameFromAzure = "mylibrary-debug.aar"
 			});
 			var bindingBuilder = CreateDllBuilder ("temp/AnnotationSupport");
 			Assert.IsTrue (bindingBuilder.Build (binding), "binding build failed");
@@ -251,7 +251,7 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContent = "https://www.dropbox.com/s/apphdrh9cjqvtye/card.io-5.3.0.aar?dl=1"
+				WebContentFileNameFromAzure = "card.io-5.3.0.aar"
 			});
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "BindngFilterUnsupportedNativeAbiLibraries", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
@@ -272,10 +272,10 @@ namespace Com.Ipaulpro.Afilechooser {
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContent = "https://www.dropbox.com/s/astiqp8jo97x91h/mylibrary.aar?dl=1"
+				WebContentFileNameFromAzure = "mylibrary.aar"
 			});
 			binding.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContent = "https://www.dropbox.com/s/5ovudccigydohys/javaBindingIssue.jar?dl=1"
+				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
@@ -321,7 +321,7 @@ namespace Com.Ipaulpro.Afilechooser {
 				IsRelease = true,
 				Jars = {
 					new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-						WebContent = "https://www.dropbox.com/s/5ovudccigydohys/javaBindingIssue.jar?dl=1"
+						WebContentFileNameFromAzure = "javaBindingIssue.jar"
 					}
 				},
 				AssemblyInfo = @"
