@@ -150,15 +150,15 @@ $(XA_BUILD_PATHS_OUT): bin/Test%/XABuildPaths.cs: build-tools/scripts/XABuildPat
 	cat $@
 
 
-# Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+# Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,path,licenseType,includeExternalDeps,includeBuildDeps)
 define CREATE_THIRD_PARTY_NOTICES
-	$(call MSBUILD_BINLOG,create-tpn,$(MSBUILD),$(1)) $(_MSBUILD_ARGS) \
+	$(call MSBUILD_BINLOG,create-tpn,$(MSBUILD)) $(_MSBUILD_ARGS) \
 		$(topdir)/build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
-		/p:Configuration=$(1) \
-		/p:ThirdPartyNoticeFile=$(topdir)/$(2) \
-		/p:ThirdPartyNoticeLicenseType=$(3) \
-		/p:TpnIncludeExternalDependencies=$(4) \
-		/p:TpnIncludeBuildDependencies=$(5)
+		/p:Configuration=$(CONFIGURATION) \
+		/p:ThirdPartyNoticeFile=$(topdir)/$(1) \
+		/p:ThirdPartyNoticeLicenseType=$(2) \
+		/p:TpnIncludeExternalDependencies=$(3) \
+		/p:TpnIncludeBuildDependencies=$(4)
 endef # CREATE_THIRD_PARTY_NOTICES
 
 prepare:: prepare-tpn
@@ -167,20 +167,20 @@ TPN_LICENSE_FILES = $(shell grep -h '<LicenseFile>' external/*.tpnitems src/*.tp
 	| sed -E 's,<LicenseFile>(.*)</LicenseFile>,\1,g;s,.\(MSBuildThisFileDirectory\),$(topdir)/external/,g' \
 	| tr \\ / )
 
-# Usage: $(call CREATE_THIRD_PARTY_NOTICES,configuration,path,licenseType,includeExternalDeps,includeBuildDeps)
+# Usage: $(call CREATE_THIRD_PARTY_NOTICES_RULE,path,licenseType,includeExternalDeps,includeBuildDeps)
 define CREATE_THIRD_PARTY_NOTICES_RULE
-prepare-tpn:: $(2)
+prepare-tpn:: $(1)
 
-$(2) $(topdir)/$(2): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
+$(1) $(topdir)/$(1): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
 		$(wildcard external/*.tpnitems src/*.tpnitems) \
 		$(TPN_LICENSE_FILES)
-	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4),$(5))
+	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4))
 endef # CREATE_THIRD_PARTY_NOTICES_RULE
 
 THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
 
-$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),ThirdPartyNotices.txt,foundation,False,False))
-$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,$(CONFIGURATION),bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,False,False))
+$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
 	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
