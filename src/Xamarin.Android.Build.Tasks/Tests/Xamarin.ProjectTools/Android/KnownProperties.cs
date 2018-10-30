@@ -17,6 +17,8 @@ namespace Xamarin.ProjectTools
 		public const string BundleAssemblies = "BundleAssemblies";
 		public const string EnableProguard = "EnableProguard";
 		public const string AndroidEnableDesugar = "AndroidEnableDesugar";
+		public const string AndroidDexTool = "AndroidDexTool";
+		public const string AndroidLinkTool = "AndroidLinkTool";
 		public const string UseJackAndJill = "UseJackAndJill";
 		public const string AotAssemblies = "AotAssemblies";
 

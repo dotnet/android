@@ -1,0 +1,23 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
+    <ProjectGuid>1bafa0cc-0377-46ce-ab7b-7bb2e7b62f63</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
+  <Import Project="r8.props" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="r8.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
+      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
+      <Name>android-toolchain</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
+

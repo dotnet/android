@@ -20,6 +20,7 @@
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
+    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
   </PropertyGroup>
   <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
@@ -41,6 +42,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
