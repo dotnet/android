@@ -32,6 +32,79 @@ properties, targets, etc., as we would likely need to support them
 into oblivion. However, we might choose to "safely" deprecate them
 in a way that makes sense.
 
+## Item Group Transforms
+
+MSBuild has a widely used feature where you can create a one-to-one
+mapping from an `<ItemGroup/>` to a new `<ItemGroup/>`. The syntax for
+this looks like:
+
+```xml
+<ItemGroup>
+  <_DestinationFiles Include="@(_SourceFiles->'$(SomeDirectory)%(Filename)%(Extension)')" />
+</ItemGroup>
+```
+
+This takes a list of files, and creates a desired destination path for
+each file in `$(SomeDirectory)`. The `%(Filename)` and `%(Extension)`
+item metadata is used to get the filename of the source file. See the
+MSBuild documentation on [transforms][msbuild-transforms] and
+[well-known item metadata][msbuild-metadata] for more info.
+
+One thing to note here, is we shouldn't have multiple transforms
+within the same target:
+
+```xml
+<Target Name="_CopyPdbFiles"
+    Inputs="@(_ResolvedPortablePdbFiles)"
+    Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
+    DependsOnTargets="_ConvertPdbFiles">
+  <CopyIfChanged
+      SourceFiles="@(_ResolvedPortablePdbFiles)"
+      DestinationFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+  />
+  <Touch Files="$(_AndroidStampDirectory)_CopyPdbFiles.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+  </ItemGroup>
+</Target>
+```
+
+Running this transformation twice:
+```
+@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')
+```
+
+Would be like generating the same `string[]` twice in C#, in the same method.
+
+The target could be better written as:
+
+```xml
+<Target Name="_CopyPdbFiles"
+    Inputs="@(_ResolvedPortablePdbFiles)"
+    Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
+    DependsOnTargets="_ConvertPdbFiles">
+  <ItemGroup>
+    <_CopyPdbFilesDestinationFiles Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+  </ItemGroup>
+  <CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesDestinationFiles)" />
+  <Touch Files="$(_AndroidStampDirectory)_CopyPdbFiles.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="@(_CopyPdbFilesDestinationFiles)" />
+  </ItemGroup>
+</Target>
+```
+
+Additionally, if the new `@(_CopyPdbFilesDestinationFiles)` is not
+meant to be used from outside the target, it should be prefixed with
+an underscore and have a name specific to the target. The
+`@(_CopyPdbFilesDestinationFiles)` name is a reasonable length, but an
+abbreviation could be used if the name is quite long, such as:
+`@(_CPFDestinationFiles)`. `_CPF` denotes a private value within the
+`_CopyPdbFiles` target.
+
+[msbuild-transforms]: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-transforms
+[msbuild-metadata]: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-well-known-item-metadata
+
 ## Incremental Builds
 
 The MSBuild Github repo has some [documentation][msbuild] on this
@@ -241,6 +314,63 @@ Do we need `FileWrites` here? Nope. The `_AddFilesToFileWrites`
 target takes care of it, so we can't as easily mess it up:
 
 ```xml
+<Target Name="_AddFilesToFileWrites">
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
+  </ItemGroup>
+</Target>
+```
+
+## Legacy Code and XBuild
+
+From time to time, we might find oddities in our MSBuild targets, that
+might be around for one reason or another:
+
+- We might be doing something weird in order to support XBuild. We
+  support XBuild no longer, yay!
+- The code just might have been around a while, and there wasn't a
+  reason to change it.
+- There is a nuance to MSBuild we hadn't figured out yet (lol?).
+
+Take, for instance, the following example:
+
+```xml
+<WriteLinesToFile
+    File="$(IntermediateOutputPath)$(CleanFile)"
+    Lines="@(_ConvertedDebuggingFiles)"
+    Overwrite="false"
+/>
+```
+
+The intent here is to replicate what happens with the `@(FileWrites)`
+item group, by directly writing to this file. This
+`<WriteLinesToFile/>` call likely "works" in some fashion, but is not
+quite correct.
+
+A couple problems with this approach with MSBuild:
+
+- This task won't run if the target is skipped!
+- How do we know MSBuild isn't going to overwrite this file?
+- On a subsequent build, this could append to the file *again*.
+
+Really, who knows what weirdness could be caused by this?
+
+For MSBuild, we should instead do:
+
+```xml
+<ItemGroup>
+  <FileWrites Include="@(_ConvertedDebuggingFiles)" />
+</ItemGroup>
+```
+
+Then we just let MSBuild and `IncrementalClean` do their thing.
+
+## IncrementalClean and _CleanGetCurrentAndPriorFileWrites
+
+If you have a target that needs to run before `IncrementalClean`, such
+as:
+
+```xml
 <Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
   <ItemGroup>
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
@@ -248,6 +378,24 @@ target takes care of it, so we can't as easily mess it up:
 </Target>
 ```
 
+Unfortunately, due to the ordering of MSBuild's core targets. These
+files won't get added to the `FileWrites` list appropriately!
+`IncrementalClean` depends on a `_CleanGetCurrentAndPriorFileWrites`
+target which does the actual work of persisting the contents of
+`FileWrites`. The above target runs after
+`_CleanGetCurrentAndPriorFileWrites`.
+
+The only working fix I've found so far is to add:
+```
+BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+```
+
+In the meantime, see the following links about this problem:
+* [MSBuild Github Issue #3916][msbuild_issue]
+* [MSBuild Repro][msbuild_repro]
+
 [msbuild]: https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/Rebuilding-when-nothing-changed.md
 [github_issue]: https://github.com/xamarin/xamarin-android/issues/2247
 [clean]: https://github.com/Microsoft/msbuild/issues/2408#issuecomment-321082997
+[msbuild_issue]: https://github.com/Microsoft/msbuild/issues/3916
+[msbuild_repro]: https://github.com/jonathanpeppers/MSBuildIncrementalClean

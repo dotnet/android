@@ -320,14 +320,20 @@ namespace Lib2
 		[Test]
 		public void AppProjectTargetsDoNotBreak ()
 		{
-			var targets = new [] {
+			var targets = new List<string> {
 				"_CopyIntermediateAssemblies",
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
 				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
+				"_CopyPdbFiles",
+				"_CopyMdbFiles",
 			};
+			if (IsWindows) {
+				//NOTE: pdb2mdb only happens on Windows
+				targets.Add ("_ConvertPdbFiles");
+			}
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
@@ -350,6 +356,7 @@ namespace Lib2
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
+					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
 					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};

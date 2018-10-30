@@ -389,7 +389,7 @@ namespace UnamedProject
 		[Test]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {

@@ -95,7 +95,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CopyMdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAndroidResourceStamp" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ParseAndroidWearProjectAndManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2022,20 +2021,22 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyIntermediateAssemblies"
-	Inputs="@(ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+	Inputs="@(ResolvedAssemblies);@(_AndroidResolvedSatellitePaths)"
 	Outputs="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CopyConfigFiles">
+	<ItemGroup>
+		<_CIAResolvedAssembliesDestinationFiles     Include="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+		<_CIAResolvedSatellitePathsDestinationFiles Include="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')" />
+	</ItemGroup>
 	<!-- Make a copy of every assembly we need in assemblies -->
-	<CopyIfChanged
-		SourceFiles="@(ResolvedAssemblies)"
-		DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-	/>
-	<CopyIfChanged
-		SourceFiles="@(_AndroidResolvedSatellitePaths)"
-		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
-	/>
+	<CopyIfChanged SourceFiles="@(ResolvedAssemblies)"             DestinationFiles="@(_CIAResolvedAssembliesDestinationFiles)" />
+	<CopyIfChanged SourceFiles="@(_AndroidResolvedSatellitePaths)" DestinationFiles="@(_CIAResolvedSatellitePathsDestinationFiles)" />
+	<!-- Delete mdb files leftover from a previous build -->
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
 	<Touch Files="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CIAResolvedAssembliesDestinationFiles);@(_CIAResolvedSatellitePathsDestinationFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CollectConfigFiles">
@@ -2072,65 +2073,52 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
 		<Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
 	</CollectPdbFiles>
+	<ItemGroup>
+		<_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_ConvertPdbFiles"
 		Inputs="@(_ResolvedPdbFiles)"
-		Outputs="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
+		Outputs="@(_ConvertedMdbFiles)"
 		DependsOnTargets="_CollectPdbFiles">
-	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)">
-		<Output TaskParameter="ConvertedFiles" ItemName="_ConvertedDebuggingFiles" />
-	</ConvertDebuggingFiles>
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_ConvertedDebuggingFiles)"
-		Overwrite="false" />
+	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+	<Touch Files="@(_ConvertedMdbFiles)" />
+	<ItemGroup>
+		<FileWrites Include="@(_ConvertedMdbFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CopyPdbFiles"
 		Inputs="@(_ResolvedPortablePdbFiles)"
-		Outputs="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
 		DependsOnTargets="_ConvertPdbFiles">
-	<CopyMdbFiles
-			SourceFiles="@(_ResolvedPortablePdbFiles)"
-			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
-		<Output TaskParameter="CopiedFiles" ItemName="_PdbFilesCopied" />
-		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-	</CopyMdbFiles>
-	<Copy
-			SourceFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-			SkipUnchangedFiles="true">
-		<Output TaskParameter="CopiedFiles" ItemName="_PdbDebugFilesCopiedToLinkerSrc" />
-		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-	</Copy>
-	<Touch Files="@(_PdbFilesCopied);@(_PdbDebugFilesCopiedToLinkerSrc)" />
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_PdbFilesCopied->'%(FullPath)');@(_PdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
-		Overwrite="false" />
+	<ItemGroup>
+		<_CopyPdbFilesOutputFiles Include="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
+		<_CopyPdbFilesLinkerFiles Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+	</ItemGroup>
+	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesOutputFiles)" />
+	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesLinkerFiles)" />
+	<Touch Files="$(_AndroidStampDirectory)_CopyPdbFiles.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CopyPdbFilesOutputFiles);@(_CopyPdbFilesLinkerFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CopyMdbFiles"
 		Inputs="@(_ResolvedMdbFiles)"
-		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-		DependsOnTargets="_CollectMdbFiles" >
-	<CopyMdbFiles
-			SourceFiles="@(_ResolvedMdbFiles)"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
-		<Output TaskParameter="CopiedFiles" ItemName="_MdbFilesCopied" />
-	</CopyMdbFiles>
-	<Copy
-			SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-			SkipUnchangedFiles="true">
-		<Output TaskParameter="CopiedFiles" ItemName="_MdbDebugFilesCopiedToLinkerSrc" />
-	</Copy>
-	<Touch Files="@(_MdbFilesCopied);@(_MdbDebugFilesCopiedToLinkerSrc)" />
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_MdbFilesCopied->'%(FullPath)');@(_MdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
-		Overwrite="false" />
+		Outputs="$(_AndroidStampDirectory)_CopyMdbFiles.stamp"
+		DependsOnTargets="_CollectMdbFiles">
+	<ItemGroup>
+		<_CopyMdbFilesOutputFiles Include="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
+		<_CopyMdbFilesLinkerFiles Include="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+	</ItemGroup>
+	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesOutputFiles)" />
+	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesLinkerFiles)" />
+	<Touch Files="$(_AndroidStampDirectory)_CopyMdbFiles.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CopyMdbFilesOutputFiles);@(_CopyMdbFilesLinkerFiles)" />
+	</ItemGroup>
 </Target>
 	
 <Target Name="_LinkAssemblies"
@@ -2176,12 +2164,16 @@ because xbuild doesn't support framework reference assemblies.
 
     <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
     <ItemGroup>
-      <_LinkAssembliesNoShrinkFiles Include="$(MonoAndroidIntermediateAssemblyTempDir)*" />
+      <_LinkAssembliesNoShrinkFiles Include="$(MonoAndroidIntermediateAssemblyDir)*" />
     </ItemGroup>
     <Touch Files="@(_LinkAssembliesNoShrinkFiles)" />
 
     <!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidLinkFlag)" />
+      <FileWrites Include="@(_LinkAssembliesNoShrinkFiles)" />
+    </ItemGroup>
 </Target>
 	
 <Target Name="_LinkAssembliesShrink"
@@ -2221,6 +2213,10 @@ because xbuild doesn't support framework reference assemblies.
 
     <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidLinkFlag)" />
+      <FileWrites Include="@(_LinkAssembliesShrinkFiles)" />
+    </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2233,9 +2229,15 @@ because xbuild doesn't support framework reference assemblies.
 		;_CopyMdbFiles
 		;_LinkAssemblies
 	</_PrepareAssembliesDependsOnTargets>
+	<_PrepareAssembliesBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
+		IncrementalClean;
+		_CleanGetCurrentAndPriorFileWrites;
+	</_PrepareAssembliesBeforeTargets>
 </PropertyGroup>
   
-<Target Name="_PrepareAssemblies" DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
+<Target Name="_PrepareAssemblies"
+    DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)"
+    BeforeTargets="$(_PrepareAssembliesBeforeTargets)">
   <!-- Update our assembly lists to the copies for linking.  We also need to verify
        they still exist cause linking will delete them if they aren't used -->
   <GetFilesThatExist
@@ -3124,7 +3126,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Cleaning -->
 
-<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
+<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean;_CleanGetCurrentAndPriorFileWrites">
   <ItemGroup>
     <!-- When following the naming convention for stamp files, this target handles FileWrites -->
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
