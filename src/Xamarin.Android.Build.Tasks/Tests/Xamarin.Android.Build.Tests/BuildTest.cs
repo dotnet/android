@@ -1159,7 +1159,7 @@ namespace App1
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationAaptErrorWithDuplicateEntry")) {
 				// Add a library project so that aapt gets multiple resource directory to include
-				proj.Packages.Add (KnownPackages.SupportV7CardView);
+				proj.PackageReferences.Add (KnownPackages.SupportV7CardView);
 				proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\ExtraStrings.xml") {
 					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?><resources><string name=""Common.None"">None</string><string name=""Common.None"">None</string></resources>",
 				});
@@ -1244,10 +1244,10 @@ namespace App1
 					+ "\n}",
 				Encoding = Encoding.ASCII
 			});
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-			proj.Packages.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
-			proj.Packages.Add (KnownPackages.GooglePlayServices_22_0_0_2);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
+			proj.PackageReferences.Add (KnownPackages.GooglePlayServices_22_0_0_2);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "64m");
@@ -1372,8 +1372,8 @@ namespace App1
 		public void BuildLibraryWhichUsesResources ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidLibraryProject () { IsRelease = isRelease };
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Styles.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <resources>
@@ -1703,7 +1703,7 @@ namespace App1
 						BinaryContent = () => new byte[10],
 					},
 				},
-				Packages = {
+				PackageReferences = {
 					KnownPackages.Xamarin_Android_Support_v8_RenderScript_23_1_1_0,
 				}
 			};
@@ -1913,7 +1913,7 @@ namespace App1
 		public void ResourceExtraction ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				Packages = {
+				PackageReferences = {
 					KnownPackages.AndroidSupportV4_23_1_1_0,
 					KnownPackages.SupportV7AppCompat_23_1_1_0,
 				},
@@ -2178,14 +2178,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				Packages = {
+				PackageReferences = {
 					KnownPackages.AndroidSupportV4_21_0_3_0,
 				},
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				DirectoryAssert.Exists (Path.Combine (Root, "temp","packages", "Xamarin.Android.Support.v4.21.0.3.0"),
-										"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
+				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
+				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,
+					"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
 			}
 		}
 
@@ -2217,23 +2218,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				if (usePackageReference) {
-					//NOTE: <PackageReference /> not working under xbuild
-					if (!libBuilder.RunningMSBuild)
-						Assert.Ignore ("This test requires MSBuild.");
-
-					libBuilder.Target = "Restore";
-					Assert.IsTrue (libBuilder.Build (lib), "Restore should have succeeded.");
-					libBuilder.Target = "Build";
-				}
+				libBuilder.Target = "Restore";
+				Assert.IsTrue (libBuilder.Build (lib), "Restore should have succeeded.");
+				libBuilder.Target = "Build";
 				Assert.IsTrue (libBuilder.Build (lib), "Build should have succeeded.");
 
 				appBuilder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (appBuilder.Build (app), "Build should have failed.");
 
 				const string error = "error XA2002: Can not resolve reference:";
-
-				//NOTE: we get a different message when using <PackageReference /> due to automatically getting the Microsoft.Azure.Amqp (and many other) transient dependencies
 				if (usePackageReference) {
 					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.EventHubs`, referenced by `MyLibrary`. Please add a NuGet package or assembly reference for `Microsoft.Azure.EventHubs`, or remove the reference to `MyLibrary`."),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.EventHubs`!");
@@ -2241,7 +2234,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `MyLibrary` > `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `MyLibrary`."),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.Amqp`!");
 				}
-
 				//Now add the PackageReference to the app to see a different error message
 				if (usePackageReference) {
 					app.PackageReferences.Add (KnownPackages.Microsoft_Azure_EventHubs);
@@ -2312,7 +2304,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
-				proj.Packages.Add (KnownPackages.SupportV7CardView_24_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_24_2_1);
 				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
 					reference.Timestamp = DateTimeOffset.Now;
 					proj.References.Add (reference);
@@ -2613,7 +2605,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			//NOTE: doesn't need to be a full Android Wear app
 			var proj = new XamarinAndroidApplicationProject {
-				Packages = {
+				PackageReferences = {
 					KnownPackages.AndroidWear_2_2_0,
 					KnownPackages.Android_Arch_Core_Common_26_1_0,
 					KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
@@ -2844,35 +2836,35 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				//    Output Property: TargetFrameworkVersion=v8.0
 				// ValidateJavaVersion and ResolveAndroidTooling take input, ResolveAndroidTooling has final output
 
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.0", 2), "TargetFrameworkVersion should initially be v8.0");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.0", 1), "TargetFrameworkVersion should be v8.0");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.0", 4), "TargetFrameworkVersion should initially be v8.0");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.0", 2), "TargetFrameworkVersion should be v8.0");
 
 				proj.TargetFrameworkVersion = "v8.0";
 				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Second Build should have succeeded"));
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.0", 2), "TargetFrameworkVersion should initially be v8.0");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.0", 1), "TargetFrameworkVersion should be v8.0");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.0", 4), "TargetFrameworkVersion should initially be v8.0");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.0", 2), "TargetFrameworkVersion should be v8.0");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v8.1";
 				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Third Build should have succeeded"));
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.1", 2), "TargetFrameworkVersion should initially be v8.1");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.1", 1), "TargetFrameworkVersion should be v8.1");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.1", 4), "TargetFrameworkVersion should initially be v8.1");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.1", 2), "TargetFrameworkVersion should be v8.1");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v8.99";
 				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Third Build should have succeeded"));
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.99", 2), "TargetFrameworkVersion should initially be v8.99");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.99", 1), "TargetFrameworkVersion should be v8.99");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v8.99", 4), "TargetFrameworkVersion should initially be v8.99");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.99", 2), "TargetFrameworkVersion should be v8.99");
 
 				proj.UseLatestPlatformSdk = true;
 				proj.TargetFrameworkVersion = "v6.0";
 				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
 					string.Format ("Forth Build should have succeeded"));
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v6.0", 2), "TargetFrameworkVersion should initially be v6.0");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.1", 1), "TargetFrameworkVersion should be v8.1");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Task Parameter:TargetFrameworkVersion=v6.0", 4), "TargetFrameworkVersion should initially be v6.0");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsOccurances ("Output Property: TargetFrameworkVersion=v8.1", 2), "TargetFrameworkVersion should be v8.1");
 			}
 			Directory.Delete (referencesPath, recursive: true);
 		}
@@ -2892,7 +2884,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				ProjectName = "App1",
 				AotAssemblies = true,
 				IsRelease = true,
-				Packages = {
+				PackageReferences = {
 					KnownPackages.AndroidSupportV4_21_0_3_0,
 					KnownPackages.GooglePlayServices_22_0_0_2,
 				},

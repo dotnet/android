@@ -29,8 +29,8 @@ namespace Xamarin.ProjectTools
 		{
 			TargetFrameworkVersion = Versions.KitkatWatch;
 			UseLatestPlatformSdk = false;
-			Packages.Add (KnownPackages.AndroidSupportV13Kitkat);
-			Packages.Add (KnownPackages.AndroidWear);
+			PackageReferences.Add (KnownPackages.AndroidSupportV13Kitkat);
+			PackageReferences.Add (KnownPackages.AndroidWear);
 
 			MainActivity = default_main_activity;
 			StringsXml = default_strings_xml;

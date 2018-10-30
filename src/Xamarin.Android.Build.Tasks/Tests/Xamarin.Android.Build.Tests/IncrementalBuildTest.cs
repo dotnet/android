@@ -339,10 +339,10 @@ namespace Lib2
 
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var filesToTouch = new [] {
+					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, proj.ProjectName + ".dll"),
 					Path.Combine (intermediate, "android", "assets", proj.ProjectName + ".dll"),
-					Path.Combine (Root, b.ProjectDirectory, "packages.config"),
 				};
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
