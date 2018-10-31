@@ -314,6 +314,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+		NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"

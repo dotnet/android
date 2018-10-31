@@ -487,6 +487,10 @@ namespace Xamarin.Android.Tasks
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll", // AndroidResources
 		};
+		internal static readonly string [] FrameworkEmbeddedNativeLibraryAssemblies = {
+			"Mono.Data.Sqlite.dll",
+			"Mono.Posix.dll",
+		};
 		// MUST BE SORTED CASE-INSENSITIVE
 		internal static readonly string[] FrameworkAssembliesToTreatAsUserAssemblies = {
 			"Mono.Android.GoogleMaps.dll",
