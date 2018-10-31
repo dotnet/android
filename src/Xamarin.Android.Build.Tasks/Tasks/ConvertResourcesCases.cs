@@ -47,11 +47,18 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-
 		void FixupResources (Dictionary<string, string> acwMap)
 		{
-			foreach (var dir in ResourceDirectories)
+			foreach (var dir in ResourceDirectories) {
+				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.SkipAndroidResourceProcessing);
+				if (skipResourceProcessing != null && skipResourceProcessing.Equals ("true", StringComparison.OrdinalIgnoreCase)) {
+					var originalFile = dir.GetMetadata (ResolveLibraryProjectImports.OriginalFile);
+					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.SkipAndroidResourceProcessing}`, original file: `{originalFile}`...");
+					continue;
+				}
+
 				FixupResources (dir, acwMap);
+			}
 		}
 
 		void FixupResources (ITaskItem item, Dictionary<string, string> acwMap)

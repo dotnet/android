@@ -42,6 +42,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CacheFile { get; set; }
 
+		public string [] AssembliesToSkipCases { get; set; }
+
 		[Required]
 		public bool DesignTimeBuild { get; set; }
 
@@ -60,7 +62,15 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ResolvedResourceDirectoryStamps { get; set; }
 
+		internal const string OriginalFile = "OriginalFile";
+		internal const string SkipAndroidResourceProcessing = "SkipAndroidResourceProcessing";
+		static readonly string [] knownMetadata = new [] {
+			OriginalFile,
+			SkipAndroidResourceProcessing
+		};
+
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap();
+		HashSet<string> assembliesToSkip;
 
 		public ResolveLibraryProjectImports ()
 		{
@@ -70,20 +80,13 @@ namespace Xamarin.Android.Tasks
 		// Extracts library project contents under e.g. obj/Debug/[lp/*.jar | res/*/*]
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ResolveLibraryProjectImports Task");
-			Log.LogDebugMessage ("  ImportsDirectory: {0}", ImportsDirectory);
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  OutputImportDirectory: {0}", OutputImportDirectory);
-			Log.LogDebugMessage ("  UseShortFileNames: {0}", UseShortFileNames);
-			Log.LogDebugTaskItems ("  Assemblies: ", Assemblies);
-			Log.LogDebugTaskItems ("  AarLibraries: ", AarLibraries);
-
 			var jars                          = new List<string> ();
-			var resolvedResourceDirectories   = new List<string> ();
+			var resolvedResourceDirectories   = new List<ITaskItem> ();
 			var resolvedAssetDirectories      = new List<string> ();
 			var resolvedEnvironmentFiles      = new List<string> ();
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
+			assembliesToSkip = new HashSet<string> (AssembliesToSkipCases ?? new string [0], StringComparer.OrdinalIgnoreCase);
 
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				try {
@@ -95,9 +98,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Jars                        = jars.ToArray ();
-			ResolvedResourceDirectories = resolvedResourceDirectories
-				.Select (s => new TaskItem (Path.GetFullPath (s)))
-				.ToArray ();
+			ResolvedResourceDirectories = resolvedResourceDirectories.ToArray ();
 			ResolvedAssetDirectories    = resolvedAssetDirectories.ToArray ();
 			ResolvedEnvironmentFiles    = resolvedEnvironmentFiles.ToArray ();
 
@@ -120,7 +121,15 @@ namespace Xamarin.Android.Tasks
 						new XElement ("Jars",
 							Jars.Select(e => new XElement ("Jar", e))),
 						new XElement ("ResolvedResourceDirectories",
-							ResolvedResourceDirectories.Select(e => new XElement ("ResolvedResourceDirectory", e))),
+							ResolvedResourceDirectories.Select(dir => {
+								var e = new XElement ("ResolvedResourceDirectory", dir.ItemSpec);
+								foreach (var name in knownMetadata) {
+									var value = dir.GetMetadata (name);
+									if (!string.IsNullOrEmpty (value))
+										e.SetAttributeValue (name, value);
+								}
+								return e;
+							})),
 						new XElement ("ResolvedAssetDirectories", 
 							ResolvedAssetDirectories.Select(e => new XElement ("ResolvedAssetDirectory", e))),
 						new XElement ("ResolvedEnvironmentFiles", 
@@ -133,10 +142,10 @@ namespace Xamarin.Android.Tasks
 
 			assemblyMap.Save (AssemblyIdentityMapFile);
 
-			Log.LogDebugTaskItems ("  Jars: ", Jars.Select (s => new TaskItem (s)).ToArray ());
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectories: ", ResolvedResourceDirectories.Select (s => new TaskItem (s)).ToArray ());
-			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories.Select (s => new TaskItem (s)).ToArray ());
-			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles.Select (s => new TaskItem (s)).ToArray ());
+			Log.LogDebugTaskItems ("  Jars: ", Jars);
+			Log.LogDebugTaskItems ("  ResolvedResourceDirectories: ", ResolvedResourceDirectories);
+			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories);
+			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
 			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
 
 			return !Log.HasLoggedErrors;
@@ -160,7 +169,7 @@ namespace Xamarin.Android.Tasks
 		void Extract (
 				DirectoryAssemblyResolver res,
 				ICollection<string> jars,
-				ICollection<string> resolvedResourceDirectories,
+				ICollection<ITaskItem> resolvedResourceDirectories,
 				ICollection<string> resolvedAssetDirectories,
 				ICollection<string> resolvedEnvironments)
 		{
@@ -183,9 +192,10 @@ namespace Xamarin.Android.Tasks
 					.Select (a => GetTargetAssembly (a))
 					.Where (a => a != null)
 					.Distinct ()) {
-				string assemblyIdentName = Path.GetFileNameWithoutExtension (assemblyPath);
+				string assemblyFileName = Path.GetFileNameWithoutExtension (assemblyPath);
+				string assemblyIdentName = assemblyFileName;
 				if (UseShortFileNames) {
-					assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyIdentName);
+					assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
 				}
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
@@ -210,8 +220,14 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (binAssemblyDir))
 						resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
-					if (Directory.Exists (resDir))
-						resolvedResourceDirectories.Add (resDir);
+					if (Directory.Exists (resDir)) {
+						var taskItem = new TaskItem (resDir, new Dictionary<string, string> {
+							{ OriginalFile, assemblyPath },
+						});
+						if (assembliesToSkip.Contains (assemblyFileName))
+							taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
+						resolvedResourceDirectories.Add (taskItem);
+					}
 					if (Directory.Exists (assemblyDir))
 						resolvedAssetDirectories.Add (assemblyDir);
 					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
@@ -308,8 +324,14 @@ namespace Xamarin.Android.Tasks
 						if (Directory.Exists (binAssemblyDir))
 							resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
-						if (Directory.Exists (resDir))
-							resolvedResourceDirectories.Add (resDir);
+						if (Directory.Exists (resDir)) {
+							var taskItem = new TaskItem (resDir, new Dictionary<string, string> {
+								{ OriginalFile, assemblyPath }
+							});
+							if (assembliesToSkip.Contains (assemblyFileName))
+								taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
+							resolvedResourceDirectories.Add (taskItem);
+						}
 						if (Directory.Exists (assemblyDir))
 							resolvedAssetDirectories.Add (assemblyDir);
 
@@ -362,7 +384,10 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (Directory.Exists (resDir))
-					resolvedResourceDirectories.Add (resDir);
+					resolvedResourceDirectories.Add (new TaskItem (resDir, new Dictionary<string, string> {
+						{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
+						{ SkipAndroidResourceProcessing, "True" },
+					}));
 				if (Directory.Exists (assetsDir))
 					resolvedAssetDirectories.Add (assetsDir);
 			}

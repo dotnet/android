@@ -57,6 +57,64 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void SkipConvertResourcesCases ()
+		{
+			var target = "ConvertResourcesCases";
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
+				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
+
+				List<string> skipped = new List<string> (), processed = new List<string> ();
+				bool convertResourcesCases = false;
+				foreach (var line in b.LastBuildOutput) {
+					if (!convertResourcesCases) {
+						convertResourcesCases = line.StartsWith ($"Task \"{target}\"", StringComparison.OrdinalIgnoreCase);
+					} else if (line.StartsWith ($"Done executing task \"{target}\"", StringComparison.OrdinalIgnoreCase)) {
+						break; //end of target
+					} else if (line.IndexOf ("Processing:", StringComparison.OrdinalIgnoreCase) >= 0) {
+						//Processing: obj\Debug\res\layout\main.xml   10/29/2018 8:19:36 PM > 1/1/0001 12:00:00 AM
+						processed.Add (line);
+					} else if (line.IndexOf ("Skipping:", StringComparison.OrdinalIgnoreCase) >= 0) {
+						//Skipping: `obj\Debug\lp\5\jl\res` via `SkipAndroidResourceProcessing`, original file: `bin\TestDebug\temp\packages\Xamarin.Android.Support.Compat.27.0.2.1\lib\MonoAndroid81\Xamarin.Android.Support.Compat.dll`...
+						skipped.Add (line);
+					}
+				}
+
+				var resources = new [] {
+					Path.Combine ("layout", "main.xml"),
+					Path.Combine ("layout", "tabbar.xml"),
+					Path.Combine ("layout", "toolbar.xml"),
+					Path.Combine ("values", "colors.xml"),
+					Path.Combine ("values", "strings.xml"),
+					Path.Combine ("values", "styles.xml"),
+				};
+				foreach (var resource in resources) {
+					Assert.IsTrue (StringAssertEx.ContainsText (processed, resource), $"`{target}` should process `{resource}`.");
+				}
+
+				var files = new [] {
+					"Xamarin.Android.Support.Compat.dll",
+					"Xamarin.Android.Support.Design.dll",
+					"Xamarin.Android.Support.Media.Compat.dll",
+					"Xamarin.Android.Support.Transition.dll",
+					"Xamarin.Android.Support.v4.dll",
+					"Xamarin.Android.Support.v7.AppCompat.dll",
+					"Xamarin.Android.Support.v7.CardView.dll",
+					"Xamarin.Android.Support.v7.MediaRouter.dll",
+					"Xamarin.Android.Support.v7.RecyclerView.dll",
+					"material-menu-1.1.0.aar",
+				};
+				foreach (var file in skipped) {
+					Assert.IsTrue (StringAssertEx.ContainsText (skipped, file), $"`{target}` should skip `{file}`.");
+				}
+			}
+		}
+
+		[Test]
 		public void BuildInParallel ()
 		{
 			if (!IsWindows) {
