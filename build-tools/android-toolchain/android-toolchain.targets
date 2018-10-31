@@ -2,7 +2,6 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.AcceptAndroidSdkLicenses" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
@@ -69,9 +68,6 @@
       DependsOnTargets="_DetermineItems"
       Inputs="@(_DownloadedItem)"
       Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
-    <PropertyGroup>
-      <_OriginalPath>$(PATH)</_OriginalPath>
-    </PropertyGroup>
     <CreateItem
         Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(_PlatformAndroidSdkItem.Identity).zip'">
       <Output TaskParameter="Include" ItemName="_AndroidSdkItems"/>
@@ -110,15 +106,7 @@
         DestinationFolder="$(ChromeToolsDirectory)"
     />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
-    />
-    <Exec Command="gclient --version" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$(_OriginalPath)"
-    />
+    <Exec Command=".\gclient --version" WorkingDirectory="$(ChromeToolsDirectory)" />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"
