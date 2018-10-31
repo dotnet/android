@@ -106,9 +106,12 @@
         DestinationFolder="$(ChromeToolsDirectory)"
     />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
+    <PropertyGroup>
+      <_GClientEnv Condition=" '$(JavaSdkDirectory)' != '' ">JAVA_HOME=$(JavaSdkDirectory)</_GClientEnv>
+    </PropertyGroup>
     <Exec
       Command=".\gclient --version"
-      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      EnvironmentVariables="$(_GClientEnv)"
       WorkingDirectory="$(ChromeToolsDirectory)"
     />
     <Touch

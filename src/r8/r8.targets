@@ -5,6 +5,7 @@
   <PropertyGroup>
     <!--NOTE: we don't want a gradle daemon locking directories on Windows-->
     <_GradleArgs>--stacktrace --no-daemon</_GradleArgs>
+    <_GradleEnv Condition=" '$(JavaSdkDirectory)' != '' ">JAVA_HOME=$(JavaSdkDirectory)</_GradleEnv>
     <BuildDependsOn>
       ResolveReferences;
       _BuildR8;
@@ -24,8 +25,8 @@
   <Target Name="_BuildR8">
     <Exec
       Command="python tools\gradle.py d8 r8 $(_GradleArgs)"
-      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);PATH=$(ChromeToolsDirectory)"
       WorkingDirectory="..\..\external\r8"
+      EnvironmentVariables="$(_GradleEnv)"
     />
   </Target>
 
@@ -43,8 +44,8 @@
     />
     <Exec
       Command="python tools\gradle.py clean $(_GradleArgs)"
-      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);PATH=$(ChromeToolsDirectory)"
       WorkingDirectory="..\..\external\r8"
+      EnvironmentVariables="$(_GradleEnv)"
     />
   </Target>
 
