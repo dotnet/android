@@ -1,11 +1,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
 
   <PropertyGroup>
     <!--NOTE: we don't want a gradle daemon locking directories on Windows-->
-    <_GradleArgs>--no-daemon</_GradleArgs>
+    <_GradleArgs>--stacktrace --no-daemon</_GradleArgs>
     <BuildDependsOn>
       ResolveReferences;
       _BuildR8;
@@ -20,25 +19,13 @@
 
   <!--
     NOTE: depot_tools has an odd requirement of being in PATH
-    I am also getting some odd failures on Windows, if not specifying namespace for <SetEnvironmentVariable />
   -->
 
   <Target Name="_BuildR8">
-    <PropertyGroup>
-      <_OriginalPath>$(PATH)</_OriginalPath>
-    </PropertyGroup>
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
-    />
     <Exec
       Command="python tools\gradle.py d8 r8 $(_GradleArgs)"
-      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);PATH=$(ChromeToolsDirectory)"
       WorkingDirectory="..\..\external\r8"
-    />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$(_OriginalPath)"
     />
   </Target>
 
@@ -51,24 +38,13 @@
   </Target>
 
   <Target Name="_CleanR8">
-    <PropertyGroup>
-      <_OriginalPath>$(PATH)</_OriginalPath>
-    </PropertyGroup>
     <Delete
         Files="$(XAInstallPrefix)xbuild\Xamarin\Android\d8.jar;$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar;"
     />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
-    />
     <Exec
       Command="python tools\gradle.py clean $(_GradleArgs)"
-      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);PATH=$(ChromeToolsDirectory)"
       WorkingDirectory="..\..\external\r8"
-    />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$(_OriginalPath)"
     />
   </Target>
 
