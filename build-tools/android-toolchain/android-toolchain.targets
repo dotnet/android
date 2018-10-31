@@ -106,7 +106,11 @@
         DestinationFolder="$(ChromeToolsDirectory)"
     />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
-    <Exec Command=".\gclient --version" WorkingDirectory="$(ChromeToolsDirectory)" />
+    <Exec
+      Command=".\gclient --version"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+      WorkingDirectory="$(ChromeToolsDirectory)"
+    />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"
