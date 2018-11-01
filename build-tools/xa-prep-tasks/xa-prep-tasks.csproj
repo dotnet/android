@@ -31,12 +31,14 @@
     <Reference Include="System" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Json" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\CreateThirdPartyNotices.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\DownloadUri.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitHubStatus.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Git.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBranch.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitHash.cs" />
