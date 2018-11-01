@@ -5,7 +5,7 @@
 
   <PropertyGroup>
     <!--NOTE: we don't want a gradle daemon locking directories on Windows-->
-    <_GradleArgs>--no-daemon</_GradleArgs>
+    <_GradleArgs>--stacktrace --no-daemon</_GradleArgs>
     <BuildDependsOn>
       ResolveReferences;
       _BuildR8;
