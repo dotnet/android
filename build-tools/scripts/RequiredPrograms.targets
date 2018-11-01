@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitHubStatus" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.PrepareInstall" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
+  <Import Project="..\android-toolchain\android-toolchain.projitems" />
   <Target Name="CheckForRequiredPrograms"
       Condition=" '@(RequiredProgram)' != '' "
+      DependsOnTargets="_GetManagedRuntimeRequiredProgram"
       Inputs="@(RequiredProgram)"
       Outputs="%(RequiredProgram.Identity)-BATCH">
     <Which
@@ -50,5 +55,79 @@
         Condition=" '$(AutoProvision)' == 'True' And '$(_InstallCommand)' != '' "
         Command="$(_InstallCommand)"
     />
+  </Target>
+  <Target Name="PrepareImageDependencies"
+      DependsOnTargets="_GetManagedRuntimeRequiredProgram">
+    <ItemGroup>
+      <_Dir Include="sdk" />
+      <_Dir Include="ndk" />
+      <_Dir Include="ant" />
+    </ItemGroup>
+    <ItemGroup>
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip sdk/%(DestDir)')"
+      />
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip ndk/%(DestDir)')"
+      />
+      <_Package
+          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
+          Include="@(AntItem->'$(AntUri)/%(RelUrl)%(Identity).zip ant/%(DestDir)')"
+      />
+    </ItemGroup>
+    <ItemGroup>
+      <_Brew
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Homebrew)' != '' "
+        Include="@(RequiredProgram->'%(Homebrew)')"
+      />
+    </ItemGroup>
+    <ItemGroup>
+      <_DarwinPkg
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Identity)' == 'mono' "
+        Include="%(RequiredProgram.DarwinMinimumUrl)"
+      />
+    </ItemGroup>
+    <PropertyGroup>
+      <_Packages>@(_Package->'%(Identity)', '
+')</_Packages>
+      <_Dirs>@(_Dir->'%(Identity)', '
+')</_Dirs>
+      <_Brews>@(_Brew->'%(Identity)', '
+')</_Brews>
+      <_DarwinPkgs>@(_DarwinPkg->'%(Identity)', '
+')</_DarwinPkgs>
+    </PropertyGroup>
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)prepare-image-dependencies.sh.in"
+        DestinationFile="$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\prepare-image-dependencies.sh"
+        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews);@PKG_URLS@=$(_DarwinPkgs)">
+    </ReplaceFileContents>
+  </Target>
+  <Target Name="_GetManagedRuntimeRequiredProgram">
+    <GitCommitHash
+        WorkingDirectory="$(MonoSourceFullPath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)" >
+      <Output TaskParameter="CommitHash"  PropertyName="_DarwinMonoFrameworkHash" />
+    </GitCommitHash>
+    <GitHubStatus
+        Repository="mono/mono"
+        Context="PKG-mono"
+        CommitHash="$(_DarwinMonoFrameworkHash)">
+      <Output TaskParameter="TargetUrl"   PropertyName="_DarwinMonoFrameworkUrl" />
+      <Output TaskParameter="Description" PropertyName="_DarwinMonoFrameworkPackage" />
+    </GitHubStatus>
+    <ItemGroup>
+      <RequiredProgram Include="$(ManagedRuntime)" Condition=" '$(ManagedRuntime)' != '' ">
+        <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
+        <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>
+        <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>
+        <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
+        <DarwinMinimumUrl>$(_DarwinMonoFrameworkUrl)</DarwinMinimumUrl>
+        <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFrameworkPackage)" -target /</DarwinInstall>
+      </RequiredProgram>
+    </ItemGroup>
   </Target>
 </Project>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_DarwinMonoFramework>MonoFramework-MDK-5.16.0.106.macos10.xamarin.universal.pkg</_DarwinMonoFramework>
     <_AptGetInstall>apt-get -f -u install</_AptGetInstall>
   </PropertyGroup>
   <ItemGroup>
@@ -53,14 +52,6 @@
     </RequiredProgram>
     <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
       <Homebrew>xz</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
-      <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
-      <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>
-      <DarwinMinimumVersion>$(MonoRequiredDarwinMinimumVersion)</DarwinMinimumVersion>
-      <CurrentVersionCommand>$(MSBuildThisFileDirectory)..\scripts\mono-version</CurrentVersionCommand>
-      <DarwinMinimumUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2018-06/78/341142d7656f43239a041b2c44f00acfb8fa7c59/$(_DarwinMonoFramework)</DarwinMinimumUrl>
-      <DarwinInstall>installer -pkg "$(AndroidToolchainCacheDirectory)\$(_DarwinMonoFramework)" -target /</DarwinInstall>
     </RequiredProgram>
   </ItemGroup>
 </Project>

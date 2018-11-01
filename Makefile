@@ -126,7 +126,7 @@ ifeq ($(USE_MSBUILD),1)
 endif	# msbuild
 
 prepare-image-dependencies:
-	$(call MSBUILD_BINLOG,prepare-image-deps) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
+	$(call MSBUILD_BINLOG,prepare-image-deps) build-tools/scripts/RequiredPrograms.targets /t:PrepareImageDependencies \
 		/p:AndroidSupportedHostJitAbis=mxe-Win32:mxe-Win64
 	cat bin/Build$(CONFIGURATION)/prepare-image-dependencies.sh | tr -d '\r' > prepare-image-dependencies.sh
 
