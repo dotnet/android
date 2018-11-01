@@ -31,7 +31,7 @@ namespace Xamarin.Android.UnitTests
 		Bundle arguments;
 
 		protected abstract string LogTag { get; set; }
-		protected string TestAssembliesGlobPattern { get; set; }
+		protected string TestsDirectory { get; set; }
 		protected IList<string> TestAssemblyDirectories { get; set; }
 		protected bool GCAfterEachFixture { get; set; }
 		protected LogWriter Logger { get; } = new LogWriter ();
@@ -249,6 +249,10 @@ namespace Xamarin.Android.UnitTests
 				return false;
 			}
 
+			Log.Info (LogTag, "Test assemblies:");
+			foreach (var asm in assemblies)
+				Log.Info (LogTag, $"\t{asm.FullPath}");
+
 			TRunner runner = CreateRunner (Logger, arguments);
 			runner.LogTag = LogTag;
 			ConfigureFilters (runner);
@@ -292,13 +296,13 @@ namespace Xamarin.Android.UnitTests
 
 			if (TestAssemblyDirectories != null && TestAssemblyDirectories.Count > 0) {
 				foreach (string adir in TestAssemblyDirectories)
-					GetTestAssembliesFromDirectory (adir, TestAssembliesGlobPattern, ret);
+					GetTestAssembliesFromDirectory (adir, ret);
 			}
 
 			return ret;
 		}
 
-		protected virtual void GetTestAssembliesFromDirectory (string directoryPath, string globPattern, IList<TestAssemblyInfo> assemblies)
+		protected virtual void GetTestAssembliesFromDirectory (string directoryPath, IList<TestAssemblyInfo> assemblies)
 		{
 			if (String.IsNullOrEmpty (directoryPath))
 				throw new ArgumentException ("must not be null or empty", nameof (directoryPath));
@@ -306,8 +310,7 @@ namespace Xamarin.Android.UnitTests
 			if (assemblies == null)
 				throw new ArgumentNullException (nameof (assemblies));
 
-			string pattern = String.IsNullOrEmpty (globPattern) ? "*.dll" : globPattern;
-			foreach (string file in Directory.EnumerateFiles (directoryPath, pattern, SearchOption.AllDirectories)) {
+			foreach (string file in Directory.EnumerateFiles (directoryPath, "*.dll", SearchOption.AllDirectories)) {
 				Log.Info (LogTag, $"Adding test assembly: {file}");
 				Assembly asm;
 				Exception ex = null;
@@ -368,7 +371,7 @@ namespace Xamarin.Android.UnitTests
 			}
 
 			Log.Info (LogTag, "Extracted assemblies:");
-			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll")) {
+			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll", SearchOption.AllDirectories)) {
 				Log.Info (LogTag, $"  {fi}");
 			}
 		}
