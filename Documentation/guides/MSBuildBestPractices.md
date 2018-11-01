@@ -201,6 +201,20 @@ use `Inputs` or `Outputs`.
 
 # Best Practices for Xamarin.Android MSBuild targets
 
+## Naming in Xamarin.Android targets
+
+As mentioned [above](/MSBuildBestPractices.md#naming), a good amount
+of consideration should be done before adding new public-facing
+MSBuild properties. This is pretty clear when adding a new feature,
+since an obvious feature flag will be needed to enable it.
+
+The main thing to keep in mind here is that almost all of our
+public-facing MSBuild properties should be prefixed with `Android`.
+This is a good convention so it is easy to know which properties are
+specific to Xamarin.Android, and this will prevent them from
+conflicting with MSBuild properties from other products. All MSBuild
+properties are effectively "global variables"...
+
 ## Stamp Files
 
 From now on, we should try to put new stamp files in
@@ -220,8 +234,16 @@ We should also name the stamp file the same as the target, such as:
     Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
   <!-- ... -->
   <Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="True" />
+</Target>
+```
+
+Do we need `FileWrites` here? Nope. The `_AddFilesToFileWrites`
+target takes care of it, so we can't as easily mess it up:
+
+```xml
+<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
   <ItemGroup>
-    <FileWrites Include="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" />
+    <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
   </ItemGroup>
 </Target>
 ```

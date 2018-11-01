@@ -100,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				Packages = {
+				PackageReferences = {
 					new Package () {
 						Id = "System.Runtime.InteropServices.WindowsRuntime",
 						Version = "4.0.1",
@@ -174,7 +174,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.Packages.Add(KnownPackages.SQLitePCLRaw_Core);
+			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
 			proj.SetProperty(proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : ".so");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {

@@ -147,10 +147,10 @@
   </Target>
   <ItemGroup>
     <_RunParallelTestTarget Include="RunNUnitTests" />
-    <_RunParallelTestTarget Include="RunJavaInteropTests" />
     <_RunParallelTestTarget Include="RunApkTests" />
   </ItemGroup>
   <ItemGroup>
+    <_RunTestTarget Include="RunJavaInteropTests" />
     <_RunTestTarget Include="RunPerformanceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">

@@ -135,7 +135,7 @@ using System.Runtime.CompilerServices;
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				Packages = {
+				PackageReferences = {
 					KnownPackages.SupportMediaCompat_25_4_0_1,
 					KnownPackages.SupportFragment_25_4_0_1,
 					KnownPackages.SupportCoreUtils_25_4_0_1,
@@ -284,10 +284,10 @@ using System.Runtime.CompilerServices;
 					proj.AndroidResources.Add (image1); 
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
-				proj.Packages.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-				proj.Packages.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-				proj.Packages.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
-				proj.Packages.Add (KnownPackages.GooglePlayServices_22_0_0_2);
+				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
+				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
+				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
+				proj.PackageReferences.Add (KnownPackages.GooglePlayServices_22_0_0_2);
 				proj.AndroidExplicitCrunch = explicitCrunch;
 				proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
@@ -425,9 +425,9 @@ namespace UnnamedProject
 	}
 }"
 			});
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
-			proj.Packages.Add (KnownPackages.SupportV7Palette_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7Palette_22_1_1_1);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
 			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
@@ -617,8 +617,8 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
@@ -983,7 +983,7 @@ namespace UnnamedProject
 </resources>",
 					}
 				},
-				Packages = {
+				PackageReferences = {
 					new Package (KnownPackages.AndroidSupportV13_21_0_3_0, audoAddReferences:true),
 					new Package (KnownPackages.AndroidSupportV4_21_0_3_0, audoAddReferences:true),
 					new Package (KnownPackages.SupportV7AppCompat_21_0_3_0, audoAddReferences:true),
@@ -1147,7 +1147,7 @@ namespace Lib1 {
 				References = {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
-				Packages = {
+				PackageReferences = {
 					KnownPackages.SupportMediaCompat_25_4_0_1,
 					KnownPackages.SupportFragment_25_4_0_1,
 					KnownPackages.SupportCoreUtils_25_4_0_1,
@@ -1378,20 +1378,20 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
-			proj.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
@@ -1415,30 +1415,31 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Gcm);
-			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
-			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Iid);
-			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
-			proj.Packages.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Gcm);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Iid);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
 			proj.OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "googleservices.json") {
+				Encoding = Encoding.ASCII,
 				TextContent = () => @"{
     ""project_info"": {
         ""project_number"": ""12351255213413432"",
-        ""project_id"": ""12341234-app"",
+        ""project_id"": ""12341234-app""
     },
     ""client"": [
         {

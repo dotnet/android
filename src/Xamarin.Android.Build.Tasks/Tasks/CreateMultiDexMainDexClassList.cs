@@ -37,16 +37,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CreateMultiDexMainDexClassList");
-			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugMessage ("  MultiDexMainDexListFile: {0}", MultiDexMainDexListFile);
-			Log.LogDebugTaskItems ("  CustomMainDexListFiles:", CustomMainDexListFiles);
-			Log.LogDebugMessage ("  ToolExe: {0}", ToolExe);
-			Log.LogDebugMessage ("  ToolPath: {0}", ToolPath);
-			Log.LogDebugMessage ("  ProguardJarPath: {0}", ProguardJarPath);
-			Log.LogDebugMessage ("  ProguardInputJarFilter: {0}", ProguardInputJarFilter);
-
 			tempJar = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName () + ".jar");
 			commandlineAction = GenerateProguardCommands;
 			// run proguard first
@@ -62,13 +52,19 @@ namespace Xamarin.Android.Tasks
 
 			var result = base.Execute () && !Log.HasLoggedErrors;
 
-			if (result && CustomMainDexListFiles != null && CustomMainDexListFiles.Any (x => File.Exists (x.ItemSpec))) {
-				foreach (var content in CustomMainDexListFiles.Select (i => File.ReadAllLines (i.ItemSpec)))
-					File.AppendAllLines (MultiDexMainDexListFile, content);
+			if (result && CustomMainDexListFiles?.Length > 0) {
+				var content = new List<string> ();
+				foreach (var file in CustomMainDexListFiles) {
+					if (File.Exists (file.ItemSpec)) {
+						content.Add (File.ReadAllText (file.ItemSpec));
+					} else {
+						Log.LogCodedWarning ("XA4305", file.ItemSpec, 0, $"'MultiDexMainDexList' file '{file.ItemSpec}' does not exist.");
+					}
+				}
+				File.AppendAllText (MultiDexMainDexListFile, string.Concat (content));
 			}
 
 			return result;
-
 		}
 
 		protected override string GenerateCommandLineCommands ()

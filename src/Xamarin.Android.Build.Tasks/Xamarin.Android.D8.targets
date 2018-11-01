@@ -1,0 +1,137 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.D8.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file contains targets specific to d8 and r8 integration.
+
+Copyright (C) 2018 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="_CompileToDalvikWithD8"
+      Condition=" '$(AndroidDexTool)' == 'd8' "
+      DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+      Inputs="$(_CompileToDalvikInputs)"
+      Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
+
+    <!-- Target-level properties to simplify conditions-->
+    <PropertyGroup>
+      <!--Flag indicating if using d8 or r8-->
+      <_UseR8>False</_UseR8>
+      <_UseR8 Condition=" ('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True' ">True</_UseR8>
+      <!--Flag indicating if r8 should have EnableShrinking-->
+      <_R8EnableShrinking>False</_R8EnableShrinking>
+      <_R8EnableShrinking Condition=" '$(AndroidLinkTool)' == 'r8' ">True</_R8EnableShrinking>
+    </PropertyGroup>
+
+    <Error
+        Condition=" !Exists('$(AndroidD8JarPath)') "
+        Text="d8.jar does not exist (AndroidD8JarPath property has to point to a valid file (current value: '$(AndroidD8JarPath)')."
+    />
+    <Error
+        Condition=" !Exists('$(AndroidR8JarPath)') "
+        Text="r8.jar does not exist (AndroidR8JarPath property has to point to a valid file (current value: '$(AndroidR8JarPath)')."
+    />
+
+    <!-- remove existing dex files that may be previous multidex outputs. -->
+    <ItemGroup>
+      <_DexesToDelete Include="$(IntermediateOutputPath)android\bin\*.dex" />
+    </ItemGroup>
+    <Delete Files="@(_DexesToDelete)" />
+
+    <MakeDir
+        Directories="$(IntermediateOutputPath)proguard"
+        Condition=" '$(AndroidLinkTool)' != '' "
+    />
+
+    <Proguard
+        Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' "
+        ProguardJarPath="$(ProguardJarPath)"
+        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+        JavaToolPath="$(JavaToolPath)"
+        ProguardToolPath="$(ProguardToolPath)"
+        ToolExe="$(ProguardToolExe)"
+        UseProguard="$(UseProguard)"
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+        AcwMapFile="$(_AcwMapFile)"
+        ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
+        ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
+        ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
+        ProguardConfigurationFiles="$(ProguardConfigFiles)"
+        JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
+        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+        ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
+        EnableLogging="$(ProguardEnableLogging)"
+        DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"
+        PrintSeedsOutput="$(IntermediateOutputPath)proguard\seeds.txt"
+        PrintUsageOutput="$(IntermediateOutputPath)proguard\usage.txt"
+        PrintMappingOutput="$(IntermediateOutputPath)proguard\mapping.txt"
+        ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
+    />
+
+    <CreateItem 
+        Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
+        Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
+      <Output TaskParameter="Include" ItemName="_AlternativeJarForAppD8" />
+    </CreateItem>
+
+    <R8
+        Condition=" '$(_UseR8)' == 'True' "
+        ToolPath="$(JavaToolPath)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JarPath="$(AndroidR8JarPath)"
+        AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+        OutputDirectory="$(IntermediateOutputPath)android\bin"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
+        JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
+        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+        EnableDesugar="$(AndroidEnableDesugar)"
+        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+        AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
+        AcwMapFile="$(_AcwMapFile)"
+        ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
+        ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
+        ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
+        ProguardConfigurationFiles="$(ProguardConfigFiles)"
+        EnableShrinking="$(_R8EnableShrinking)"
+        EnableMultiDex="$(AndroidEnableMultiDex)"
+        MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
+        CustomMainDexListFiles="@(MultiDexMainDexList)"
+        ExtraArguments="$(AndroidR8ExtraArguments)"
+    />
+    <D8
+        Condition=" '$(_UseR8)' != 'True' "
+        ToolPath="$(JavaToolPath)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JarPath="$(AndroidD8JarPath)"
+        AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+        OutputDirectory="$(IntermediateOutputPath)android\bin"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
+        JavaLibrariesToEmbed="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference)"
+        AlternativeJarLibrariesToEmbed="@(_AlternativeJarForAppD8)"
+        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+        EnableDesugar="$(AndroidEnableDesugar)"
+        ExtraArguments="$(AndroidD8ExtraArguments)"
+    />
+
+    <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)android\bin\*.dex" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>

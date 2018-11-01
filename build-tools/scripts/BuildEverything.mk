@@ -88,8 +88,8 @@ jenkins: prepare leeroy $(ZIP_OUTPUT)
 leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
-	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD),$(CONFIGURATION)) $(SOLUTION) /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) && \
-	$(call CREATE_THIRD_PARTY_NOTICES,$(CONFIGURATION),bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False)
+	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) $(SOLUTION) /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) && \
+	$(call CREATE_THIRD_PARTY_NOTICES,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False)
 
 framework-assemblies:
 	PREV_VERSION="v1.0"; \
@@ -100,24 +100,24 @@ framework-assemblies:
 		if [ $$? -ne 0 ] ; then \
 			rm -f bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$${CUR_VERSION}/RedistList/FrameworkList.xml; \
 		fi; \
-		$(call MSBUILD_BINLOG,Mono.Android,$(_SLN_BUILD),$(CONFIGURATION)) src/Mono.Android/Mono.Android.csproj \
+		$(call MSBUILD_BINLOG,Mono.Android,$(_SLN_BUILD)) src/Mono.Android/Mono.Android.csproj \
 			/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$${CUR_VERSION} \
 			/p:AndroidPreviousFrameworkVersion=$${PREV_VERSION} || exit 1; \
 		PREV_VERSION=$${CUR_VERSION}; )
 	rm -f bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Xamarin.Android.NUnitLite.dll; \
-	$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD),$(CONFIGURATION)) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
+	$(call MSBUILD_BINLOG,NUnitLite,$(_SLN_BUILD)) $(MSBUILD_FLAGS) src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj \
 		/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
 		/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 		/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1;
 	_latest_stable_framework=$$($(MSBUILD) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:GetAndroidLatestStableFrameworkVersion build-tools/scripts/Info.targets | tr -d '[[:space:]]') ; \
 	rm -f "bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/Mono.Android.Export.* ; \
-	$(call MSBUILD_BINLOG,Mono.Android.Export,$(_SLN_BUILD),$(CONFIGURATION)) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj \
+	$(call MSBUILD_BINLOG,Mono.Android.Export,$(_SLN_BUILD)) $(MSBUILD_FLAGS) src/Mono.Android.Export/Mono.Android.Export.csproj \
 		/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
 		/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 		/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1; \
 	rm -f "bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/$$_latest_stable_framework"/OpenTK-1.0.* ; \
-	$(call MSBUILD_BINLOG,OpenTK,$(_SLN_BUILD),$(CONFIGURATION)) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj \
+	$(call MSBUILD_BINLOG,OpenTK,$(_SLN_BUILD)) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj \
 		/p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
 		/p:AndroidApiLevel=$(firstword $(API_LEVELS)) /p:AndroidPlatformId=$(word $(firstword $(API_LEVELS)), $(ALL_PLATFORM_IDS)) \
 		/p:AndroidFrameworkVersion=$(firstword $(FRAMEWORKS)) || exit 1;
@@ -125,6 +125,6 @@ framework-assemblies:
 opentk-jcw:
 	$(foreach a, $(API_LEVELS), \
 		touch bin/$(CONFIGURATION)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/*/OpenTK-1.0.dll; \
-		$(call MSBUILD_BINLOG,OpenTK-JCW,$(_SLN_BUILD),$(CONFIGURATION)) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj \
+		$(call MSBUILD_BINLOG,OpenTK-JCW,$(_SLN_BUILD)) $(MSBUILD_FLAGS) src/OpenTK-1.0/OpenTK.csproj \
 			/t:GenerateJavaCallableWrappers /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS) \
 			/p:AndroidApiLevel=$(a) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS)) /p:AndroidFrameworkVersion=$(word $(a), $(ALL_FRAMEWORKS)) || exit 1; )
