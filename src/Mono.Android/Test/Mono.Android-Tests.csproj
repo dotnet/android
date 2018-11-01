@@ -43,6 +43,7 @@
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
+    <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
