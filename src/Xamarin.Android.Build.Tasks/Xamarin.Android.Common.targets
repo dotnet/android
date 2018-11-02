@@ -1365,12 +1365,10 @@ because xbuild doesn't support framework reference assemblies.
 	</ComputeHash>
 </Target>
 
-<Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_CollectLibraryResourceDirectories"
+<Target Name="_ConvertLibraryResourcesCases" DependsOnTargets="_CollectLibraryResourceDirectories"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
-		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
-	>
-	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
+		Inputs="@(_LibraryResourceHashDirectories->'%(FileFound)')"
+		Outputs="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp">
 	<ConvertResourcesCases
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
@@ -1378,8 +1376,17 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
-		AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
+		AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp"
 	/>
+	<Touch Files="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp" AlwaysCreate="True" />
+</Target>
+
+<Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
+		Condition="'$(_AndroidUseAapt2)' == 'True'"
+		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
+		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
+	>
+	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<Aapt2Compile
 		Condition=" '@(_LibraryResourceHashDirectories)' != '' "
 		ContinueOnError="$(DesignTimeBuild)"
