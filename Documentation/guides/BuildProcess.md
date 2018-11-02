@@ -720,8 +720,24 @@ when packaing Release applications.
 
         /p:AndroidGenerateJniMarshalMethods=True
 
-    **Experimental**. Added in Xamarin.Android 8.4.  
+    **Experimental**. Added in Xamarin.Android 9.2.
     The default value is False.
+
+- **AndroidGenerateJniMarshalMethodsAdditionalArguments** &ndash; A
+   string property which can be used to add additional parameters to
+   the `jnimarshalmethod-gen.exe` invocation.  This is useful for
+   debugging, so that options such as `-v`, `-d`, or `--keeptemp` can
+   be used.
+
+   Default value is empty string. It can be set in the csproj file or
+   on the command line. For example:
+
+        <AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
+
+   or:
+
+        /p:AndroidGenerateJniMarshalMethodsAdditionalArguments="-v -d --keeptemp"
+    Added in Xamarin.Android 9.2.
 
 - **AndroidMultiDexClassListExtraArgs** &ndash; A string property
     which allows developers to pass additional arguments to the 
