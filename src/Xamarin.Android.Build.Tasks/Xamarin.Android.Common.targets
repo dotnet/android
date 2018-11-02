@@ -1345,6 +1345,7 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+		NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"

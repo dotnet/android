@@ -1800,6 +1800,9 @@ namespace App1
 			var dll2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library2",
 				IsRelease = isRelease,
+				References = {
+					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
+				},
 				OtherBuildItems = {
 					new AndroidItem.EmbeddedNativeLibrary ("foo\\armeabi-v7a\\libtest1.so") {
 						BinaryContent = () => new byte[10],
@@ -1816,6 +1819,8 @@ namespace App1
 				References = {
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 					new BuildItem ("ProjectReference","..\\Library2\\Library2.csproj"),
+					new BuildItem.Reference ("Mono.Data.Sqlite"),
+					new BuildItem.Reference ("Mono.Posix"),
 				},
 				OtherBuildItems = {
 					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
@@ -1853,6 +1858,14 @@ namespace App1
 							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
 							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libsqlite3_xamarin.so");
+							Assert.IsNotNull (data, "libsqlite3_xamarin.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libsqlite3_xamarin.so");
+							Assert.IsNotNull (data, "libsqlite3_xamarin.so for armeabi-v7a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libMonoPosixHelper.so");
+							Assert.IsNotNull (data, "libMonoPosixHelper.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libMonoPosixHelper.so");
+							Assert.IsNotNull (data, "libMonoPosixHelper.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}

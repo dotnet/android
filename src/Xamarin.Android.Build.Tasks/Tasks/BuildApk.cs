@@ -131,8 +131,6 @@ namespace Xamarin.Android.Tasks
 				apk.Flush();
 				AddAdditionalNativeLibraries (files, supportedAbis);
 				apk.Flush();
-				AddNativeLibrariesFromAssemblies (apk, supportedAbis);
-				apk.Flush();
 
 				if (TypeMappings != null) {
 					foreach (ITaskItem typemap in TypeMappings) {
@@ -515,48 +513,6 @@ namespace Xamarin.Android.Tasks
 				}
 				AddBtlsLibs (apk, abi);
 				AddProfilers (apk, abi);
-			}
-		}
-
-		void AddNativeLibrariesFromAssemblies (ZipArchiveEx apk, string supportedAbis)
-		{
-			int count = 0;
-			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-			foreach (var assembly in EmbeddedNativeLibraryAssemblies)
-				res.Load (assembly.ItemSpec);
-				foreach (var assemblyPath in EmbeddedNativeLibraryAssemblies) {
-					var assembly = res.GetAssembly (assemblyPath.ItemSpec);
-					foreach (var mod in assembly.Modules) {
-						var ressozip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
-						if (ressozip == null)
-							continue;
-						var data = ressozip.GetResourceData ();
-						using (var ms = new MemoryStream (data)) {
-							using (var zip = ZipArchive.Open (ms)) {
-								foreach (var e in zip.Where (x => abis.Any (a => x.FullName.Contains ($"/{a}/")))) {
-									if (e.IsDirectory)
-										continue;
-									var key = e.FullName.Replace ("native_library_imports", "lib");
-									if (apk.Archive.Any (k => k.FullName == key)) {
-										Log.LogCodedWarning ("XA4301", "Apk already contains the item {0}; ignoring.", key);
-										continue;
-									}
-									using (var s = new MemoryStream ()) {
-										e.Extract (s);
-										s.Position = 0;
-										apk.Archive.AddEntry (s.ToArray (), key, compressionMethod: GetCompressionMethod (key));
-									}
-								}
-							}
-						}
-					}
-					count++;
-					if (count == ZipArchiveEx.ZipFlushLimit) {
-						apk.Flush();
-						count = 0;
-					}
-				}
 			}
 		}
 
