@@ -93,7 +93,7 @@ namespace Xamarin.ProjectTools
 		public void Touch (params string [] itemPaths)
 		{
 			foreach (var item in itemPaths)
-				GetItem (item).Timestamp = DateTimeOffset.Now;
+				GetItem (item).Timestamp = DateTimeOffset.UtcNow;
 		}
 
 		public virtual ProjectRootElement Construct ()
