@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <Target Name="_CreateJavaInteropDllConfigs"
+      Inputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll;$(JavaInteropSourceDirectory)\src\Java.Runtime.Environment\Java.Runtime.Environment.dll.config"
+      Outputs="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config;$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Runtime.Environment.dll.config">
+    <ReadLinesFromFile
+        File="$(MSBuildThisFileDirectory)java-interop.dllmap">
+      <Output TaskParameter="Lines" ItemName="_JavaInteropDllMapContent" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        File="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config"
+        Lines="&lt;configuration&gt;;@(_JavaInteropDllMapContent);&lt;/configuration&gt;"
+        Overwrite="True"
+    />
+    <PropertyGroup>
+      <_DllMaps>@(_JavaInteropDllMapContent->'%(Identity)', '%0a  ')</_DllMaps>
+    </PropertyGroup>
+    <ReplaceFileContents
+        Condition="Exists('$(JavaInteropSourceDirectory)\src\Java.Runtime.Environment\Java.Runtime.Environment.dll.config')"
+        SourceFile="$(JavaInteropSourceDirectory)\src\Java.Runtime.Environment\Java.Runtime.Environment.dll.config"
+        DestinationFile="$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Runtime.Environment.dll.config"
+        Replacements="&lt;configuration&gt;=&lt;configuration&gt;%0a  $(_DllMaps)"
+    />
+  </Target>
+</Project>

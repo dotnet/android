@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Target Name="BuildNativeLibs"
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="jni\simple-lib.c;jni\Android.mk"
@@ -38,15 +39,24 @@
         WorkingDirectory="$(OutputPath)\native-lib-2"
     />
   </Target>
+  <Target Name="_ReplaceGradleFile"
+      Inputs="java\JavaLib\library\build.gradle.in"
+      Outputs="java\JavaLib\library\build.gradle">
+    <ReplaceFileContents
+        SourceFile="java\JavaLib\library\build.gradle.in"
+        DestinationFile="java\JavaLib\library\build.gradle"
+        Replacements="@BUILD_TOOLS_VERSION@=$(XABuildToolsFolder)"
+    />
+  </Target>
   <Target Name="BuildJavaLibs"
-      DependsOnTargets="AndroidPrepareForBuild"
-      Inputs="java\JavaLib\project.properties"
+      DependsOnTargets="AndroidPrepareForBuild;_ReplaceGradleFile"
+      Inputs="java\JavaLib\project.properties;java\JavaLib\library\build.gradle"
       Outputs="$(OutputPath)JavaLib.zip">
     <PropertyGroup>
       <_Jdk9Modules Condition="$(_JdkVersion.StartsWith ('9'))">JAVA_OPTS="--add-modules java.xml.bind"</_Jdk9Modules>
     </PropertyGroup>
     <Exec
-        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
+        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);ANDROID_NDK_HOME=$(AndroidNdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
         Command="$(_Jdk9Modules) .\gradlew assembleDebug --stacktrace --no-daemon"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />

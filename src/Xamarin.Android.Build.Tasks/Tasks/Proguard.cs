@@ -41,23 +41,17 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProguardJarOutput { get; set; }
 
-		[Required]
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
-
-		[Required]
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
-
-		[Required]
 		public string ProguardCommonXamarinConfiguration { get; set; }
 
+		[Required]
 		public string ProguardConfigurationFiles { get; set; }
 
 		public ITaskItem[] JavaLibrariesToEmbed { get; set; }
 		
-		public ITaskItem[] ExternalJavaLibraries { get; set; }
+		public ITaskItem[] JavaLibrariesToReference { get; set; }
 		
-		public ITaskItem[] DoNotPackageJavaLibraries { get; set; }
-
 		public bool UseProguard { get; set; }
 
 		public string JavaOptions { get; set; }
@@ -119,15 +113,9 @@ namespace Xamarin.Android.Tasks
 						// skip invalid lines
 					}
 
-			var injars = new List<string> ();
-			var libjars = new List<string> ();
-			injars.Add (classesZip);
-			if (JavaLibrariesToEmbed != null)
-				foreach (var jarfile in JavaLibrariesToEmbed)
-					injars.Add (jarfile.ItemSpec);
-
-			using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
-				GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
+			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
+				using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
+					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
 			
 			var configs = ProguardConfigurationFiles
 				.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
@@ -148,9 +136,15 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedWarning ("XA4304", file, 0, "Proguard configuration file '{0}' was not found.", file);
 			}
 
+			var injars = new List<string> ();
+			var libjars = new List<string> ();
+			injars.Add (classesZip);
+			if (JavaLibrariesToEmbed != null)
+				foreach (var jarfile in JavaLibrariesToEmbed)
+					injars.Add (jarfile.ItemSpec);
 			libjars.Add (JavaPlatformJarPath);
-			if (ExternalJavaLibraries != null)
-				foreach (var jarfile in ExternalJavaLibraries.Select (p => p.ItemSpec))
+			if (JavaLibrariesToReference != null)
+				foreach (var jarfile in JavaLibrariesToReference.Select (p => p.ItemSpec))
 					libjars.Add (jarfile);
 
 			cmd.AppendSwitchUnquotedIfNotNull ("-injars ", "\"'" + string.Join ($"'{ProguardInputJarFilter}{Path.PathSeparator}'", injars.Distinct ()) + $"'{ProguardInputJarFilter}\"");

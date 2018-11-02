@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
+    <ThirdPartyNotice Include="google/r8">
+      <LicenseFile>$(MSBuildThisFileDirectory)\r8\LICENSE</LicenseFile>
+      <SourceUrl>https://r8.googlesource.com/r8/</SourceUrl>
+    </ThirdPartyNotice>
+  </ItemGroup>
+</Project>

@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 using Android.Runtime;
 
+using Java.Interop;
+using Java.Interop.Expressions;
+
 namespace Android.Graphics
 {
+	[JniValueMarshaler (typeof (ColorValueMarshaler))]
 	public struct Color
 	{
 		private int color;
@@ -385,5 +391,51 @@ namespace Android.Graphics
 		public static Color Yellow { get { return new Color (0xFFFFFF00); } }
 		public static Color YellowGreen { get { return new Color (0xFF9ACD32); } }
 		#endregion
+	}
+
+	public class ColorValueMarshaler : JniValueMarshaler<Color>
+	{
+		public override Type MarshalType {
+			get { return typeof (int); }
+		}
+
+		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Color value, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override void DestroyGenericArgumentState (Color value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		{
+			var c = typeof (Color).GetConstructor (new[]{typeof (int)});
+			var v = Expression.Variable (typeof (Color), sourceValue.Name + "_val");
+			context.LocalVariables.Add (v);
+			context.CreationStatements.Add (Expression.Assign (v, Expression.New (c, sourceValue)));
+
+			return v;
+		}
+
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			var r = Expression.Variable (MarshalType, sourceValue.Name + "_p");
+			context.LocalVariables.Add (r);
+			context.CreationStatements.Add (Expression.Assign (r, Expression.Field (sourceValue, "color")));
+
+			return r;
+		}
+
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			return CreateParameterFromManagedExpression (context, sourceValue, 0);
+		}
 	}
 }

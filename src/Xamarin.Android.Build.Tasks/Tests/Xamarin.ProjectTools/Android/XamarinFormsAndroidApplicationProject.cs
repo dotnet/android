@@ -41,22 +41,22 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			var forms = KnownPackages.XamarinForms_3_1_0_697729;
-			Packages.Add (forms);
-			Packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			Packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			Packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			Packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			Packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-			Packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			Packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			Packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-			Packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-			Packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			Packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			Packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			Packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			Packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			Packages.Add (KnownPackages.VectorDrawable_27_0_2_1);
+			PackageReferences.Add (forms);
+			PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+			PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+			PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+			PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			PackageReferences.Add (KnownPackages.VectorDrawable_27_0_2_1);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,
@@ -82,7 +82,6 @@ namespace Xamarin.ProjectTools
 			Sources.Add (new BuildItem.Source ("App.xaml.cs") {
 				TextContent = () => ProcessSourceTemplate (App_xaml_cs),
 			});
-			Imports.Add (new Import ($@"..\packages\{forms.Id}.{forms.Version}\build\netstandard2.0\Xamarin.Forms.targets"));
 
 			MainActivity = default_main_activity_cs;
 		}

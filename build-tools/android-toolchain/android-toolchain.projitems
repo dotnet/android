@@ -3,6 +3,7 @@
   <PropertyGroup>
     <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl.google.com/android/repository</AndroidUri>
     <AntUri Condition=" '$(AntUri)' == '' ">https://archive.apache.org/dist/ant/binaries</AntUri>
+    <ChromeUri Condition=" '$(ChromeUri)' == '' ">https://storage.googleapis.com/chrome-infra</ChromeUri>
   </PropertyGroup>
   <ItemGroup>
     <AndroidNdkItem Include="android-ndk-r14b-linux-x86_64">
@@ -161,5 +162,16 @@
     <AntItem Include="apache-ant-1.9.9-bin">
       <HostOS></HostOS>
     </AntItem>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 
+      depot_tools, a set of git extensions from Chromium
+      http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html
+    -->
+    <ChromeItem Include="depot_tools">
+      <HostOS></HostOS>
+      <NoSubdirectory>True</NoSubdirectory>
+      <HashHeader>x-goog-hash</HashHeader>
+    </ChromeItem>
   </ItemGroup>
 </Project>

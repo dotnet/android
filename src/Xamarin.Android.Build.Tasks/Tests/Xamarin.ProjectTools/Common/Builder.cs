@@ -287,7 +287,7 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} {2}",
+			args.AppendFormat ("{0} /t:{1} /restore {2}",
 				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (RunningMSBuild)
 				args.Append (" /p:BuildingOutOfProcess=true");

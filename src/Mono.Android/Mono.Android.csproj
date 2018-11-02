@@ -83,6 +83,7 @@
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
+    <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
   </ItemGroup>
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
