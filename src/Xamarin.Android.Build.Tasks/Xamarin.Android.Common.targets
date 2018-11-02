@@ -1086,7 +1086,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
 	<Lint
-		TargetDirectory="$(IntermediateOutputPath)"
+		TargetDirectory="$(IntermediateOutputPath)android"
 		EnabledIssues="$(AndroidLintEnabledIssues)"
 		DisabledIssues="$(AndroidLintDisabledIssues)"
 		CheckIssues="$(AndroidLintCheckIssues)"

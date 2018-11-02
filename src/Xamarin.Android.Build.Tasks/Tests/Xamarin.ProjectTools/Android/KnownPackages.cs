@@ -338,6 +338,16 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.MediaRouter.dll" }
 			}
 		};
+		public static Package SupportConstraintLayout_1_0_2_2 = new Package {
+			Id = "Xamarin.Android.Support.Constraint.Layout",
+			Version = "1.0.2.2",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Constraint.Layout") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Constraint.Layout.1.0.2.2\\lib\\MonoAndroid70\\Xamarin.Android.Support.Constraint.Layout.dll"
+				}
+			}
+		};
 		public static Package VectorDrawable_27_0_2_1 = new Package {
 			Id = "Xamarin.Android.Support.Vector.Drawable",
 			Version = "27.0.2.1",
