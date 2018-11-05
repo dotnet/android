@@ -17,6 +17,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 		protected IEnumerable<string> IncludedCategories { get; set; }
 		protected IEnumerable<string> ExcludedCategories { get; set; }
 		protected IEnumerable<string> ExcludedTestNames { get; set; }
+		protected string TestsDirectory { get; set; }
 
 		protected NUnitTestInstrumentation ()
 		{
