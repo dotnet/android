@@ -30,5 +30,5 @@ MONO_API_INFO_REFS  = \
   bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/Xamarin/Android/Xamarin.Android.Cecil.dll
 
 $(MONO_API_INFO): $(wildcard $(MONO_API_INFO_DIR)/*.cs) $(MONO_OPTIONS_SRC)
-	$(CSC) -out:$@ $^ /main:CorCompare.Driver \
+	$(CSC) -out:$@ $^ \
 		$(MONO_API_INFO_REFS:%=-r:%)

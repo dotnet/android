@@ -24,6 +24,9 @@ namespace Xamarin.Android.Tasks
 		public string ImportsDirectory { get; set; }
 
 		[Required]
+		public string NativeImportsDirectory { get; set; }
+
+		[Required]
 		public string OutputDirectory { get; set; }
 
 		[Required]
@@ -159,8 +162,12 @@ namespace Xamarin.Android.Tasks
 			if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath))
 				hintPath = null;
 			string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
-			if (MonoAndroidHelper.IsFrameworkAssembly (fileName) && !MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (Path.GetFileName (fileName)))
+			string fileNameOnly = Path.GetFileName (fileName);
+			if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
+					!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileNameOnly) &&
+					!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileNameOnly)) {
 				return null;
+			}
 			return Path.GetFullPath (assemblyPath);
 		}
 
@@ -199,6 +206,7 @@ namespace Xamarin.Android.Tasks
 				}
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
+				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
 #if SEPARATE_CRUNCH
 				// FIXME: review these binResDir thing and enable this. Eclipse does this.
 				// Enabling these blindly causes build failure on ActionBarSherlock.
@@ -280,6 +288,38 @@ namespace Xamarin.Android.Tasks
 								outfs.Write (data, 0, data.Length);
 							updated = true;
 						}
+					}
+
+					var libzip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
+					if (libzip != null) {
+						if (!Directory.Exists (outDirForDll))
+							Directory.CreateDirectory (outDirForDll);
+						var finfo = new FileInfo (Path.Combine (outDirForDll, libzip.Name));
+						using (var fs = finfo.Create ()) {
+							var data = libzip.GetResourceData ();
+							fs.Write (data, 0, data.Length);
+						}
+						List<string> files = new List<string> ();
+						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
+							try {
+								updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
+									files.Add (Path.GetFullPath (Path.Combine (nativeimportsDir, entryFullName)));
+									return entryFullName
+										.Replace ("native_library_imports\\", "")
+										.Replace ("native_library_imports/", "");
+								}, deleteCallback: (fileToDelete) => {
+									return !files.Contains (fileToDelete);
+								}, forceUpdate: false);
+							} catch (PathTooLongException ex) {
+								Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+								return;
+							} catch (NotSupportedException ex) {
+								Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+								return;
+							}
+						}
+
+						finfo.Delete ();
 					}
 
 					// embedded AndroidResourceLibrary archive

@@ -1396,10 +1396,15 @@ namespace App1
 		{
 			FixLintOnWindows ();
 
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.UseLatestPlatformSdk = true;
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageReferences = {
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportConstraintLayout_1_0_2_2,
+				},
+			};
+			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
-			proj.SetProperty ("AndroidLintDisabledIssues", "StaticFieldLeak,ObsoleteSdkInt");
+			proj.SetProperty ("AndroidLintDisabledIssues", "StaticFieldLeak,ObsoleteSdkInt,AllowBackup");
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
 			proj.SetProperty ("AndroidLintCheckIssues", "");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", @"
@@ -1410,9 +1415,34 @@ namespace App1
 		)]
 		public class MainActivity : Activity
 			");
-			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings")) {
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+				TextContent = () => {
+					return @"<?xml version=""1.0"" encoding=""utf-8""?>
+<ConstraintLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	xmlns:app=""http://schemas.android.com/apk/res-auto""
+	android:orientation=""vertical""
+	android:layout_width=""fill_parent""
+	android:layout_height=""fill_parent"">
+	<TextView android:id=""@+id/foo""
+		android:layout_width=""150dp""
+		android:layout_height=""wrap_content""
+		app:layout_constraintTop_toTopOf=""parent""
+	/>
+</ConstraintLayout>";
+				}
+			});
+			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
+				string apiLevel;
+				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnamedProject.UnamedProject"">
+	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{APILEVEL}"" />
+	<application android:label=""${PROJECT_NAME}"">
+	</application >
+</manifest> ".Replace ("{APILEVEL}", apiLevel);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");
+				StringAssertEx.DoesNotContain ("XA0103", b.LastBuildOutput, "Output should not contain any XA0103 errors");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1770,6 +1800,9 @@ namespace App1
 			var dll2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library2",
 				IsRelease = isRelease,
+				References = {
+					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
+				},
 				OtherBuildItems = {
 					new AndroidItem.EmbeddedNativeLibrary ("foo\\armeabi-v7a\\libtest1.so") {
 						BinaryContent = () => new byte[10],
@@ -1786,6 +1819,8 @@ namespace App1
 				References = {
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 					new BuildItem ("ProjectReference","..\\Library2\\Library2.csproj"),
+					new BuildItem.Reference ("Mono.Data.Sqlite"),
+					new BuildItem.Reference ("Mono.Posix"),
 				},
 				OtherBuildItems = {
 					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
@@ -1823,6 +1858,14 @@ namespace App1
 							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
 							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libsqlite3_xamarin.so");
+							Assert.IsNotNull (data, "libsqlite3_xamarin.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libsqlite3_xamarin.so");
+							Assert.IsNotNull (data, "libsqlite3_xamarin.so for armeabi-v7a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libMonoPosixHelper.so");
+							Assert.IsNotNull (data, "libMonoPosixHelper.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libMonoPosixHelper.so");
+							Assert.IsNotNull (data, "libMonoPosixHelper.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}
