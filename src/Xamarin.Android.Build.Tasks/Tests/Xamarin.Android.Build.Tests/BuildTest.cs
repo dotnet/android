@@ -57,10 +57,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SkipConvertResourcesCases ()
+		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
 			var target = "ConvertResourcesCases";
 			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
@@ -74,13 +75,16 @@ namespace Xamarin.Android.Build.Tests
 					if (!convertResourcesCases) {
 						convertResourcesCases = line.StartsWith ($"Task \"{target}\"", StringComparison.OrdinalIgnoreCase);
 					} else if (line.StartsWith ($"Done executing task \"{target}\"", StringComparison.OrdinalIgnoreCase)) {
-						break; //end of target
-					} else if (line.IndexOf ("Processing:", StringComparison.OrdinalIgnoreCase) >= 0) {
-						//Processing: obj\Debug\res\layout\main.xml   10/29/2018 8:19:36 PM > 1/1/0001 12:00:00 AM
-						processed.Add (line);
-					} else if (line.IndexOf ("Skipping:", StringComparison.OrdinalIgnoreCase) >= 0) {
-						//Skipping: `obj\Debug\lp\5\jl\res` via `SkipAndroidResourceProcessing`, original file: `bin\TestDebug\temp\packages\Xamarin.Android.Support.Compat.27.0.2.1\lib\MonoAndroid81\Xamarin.Android.Support.Compat.dll`...
-						skipped.Add (line);
+						convertResourcesCases = false; //end of target
+					}
+					if (convertResourcesCases) {
+						if (line.IndexOf ("Processing:", StringComparison.OrdinalIgnoreCase) >= 0) {
+							//Processing: obj\Debug\res\layout\main.xml   10/29/2018 8:19:36 PM > 1/1/0001 12:00:00 AM
+							processed.Add (line);
+						} else if (line.IndexOf ("Skipping:", StringComparison.OrdinalIgnoreCase) >= 0) {
+							//Skipping: `obj\Debug\lp\5\jl\res` via `SkipAndroidResourceProcessing`, original file: `bin\TestDebug\temp\packages\Xamarin.Android.Support.Compat.27.0.2.1\lib\MonoAndroid81\Xamarin.Android.Support.Compat.dll`...
+							skipped.Add (line);
+						}
 					}
 				}
 
@@ -92,8 +96,9 @@ namespace Xamarin.Android.Build.Tests
 					Path.Combine ("values", "strings.xml"),
 					Path.Combine ("values", "styles.xml"),
 				};
+
 				foreach (var resource in resources) {
-					Assert.IsTrue (StringAssertEx.ContainsText (processed, resource), $"`{target}` should process `{resource}`.");
+					Assert.IsTrue (processed.ContainsText (resource), $"`{target}` should process `{resource}`.");
 				}
 
 				var files = new [] {
