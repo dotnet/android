@@ -980,7 +980,7 @@ namespace UnnamedProject {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
 					"the _LinkAssembliesShrink target should not run");
-				foo.Timestamp = DateTime.UtcNow;
+				foo.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"),
 					"the Core Compile target should run");
@@ -1165,7 +1165,7 @@ namespace App1
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTime.UtcNow;
+				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
@@ -2092,7 +2092,7 @@ namespace App1
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should not have run.");
-				aar.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (2));
+				aar.Timestamp = DateTimeOffset.UtcNow.Add (TimeSpan.FromMinutes (2));
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should have run.");
@@ -2442,7 +2442,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_24_2_1);
 				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
-					reference.Timestamp = DateTimeOffset.Now;
+					reference.Timestamp = DateTimeOffset.UtcNow;
 					proj.References.Add (reference);
 				}
 				b.Save (proj, doNotCleanupOnUpdate: true);
@@ -2619,7 +2619,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					"the _CopyMdbFiles target should be skipped");
 				b.BuildLogFile = "build2.log";
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTime.UtcNow;
+				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
