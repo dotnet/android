@@ -53,6 +53,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool EmbedAssemblies { get; set; }
 		public bool NeedsInternet   { get; set; }
+		public bool InstantRunEnabled { get; set; }
 
 		public bool UseSharedRuntime { get; set; }
 
@@ -69,27 +70,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GenerateJavaStubs Task");
-			Log.LogDebugMessage ("  ManifestTemplate: {0}", ManifestTemplate);
-			Log.LogDebugMessage ("  Debug: {0}", Debug);
-			Log.LogDebugMessage ("  MultiDex: {0}", MultiDex);
-			Log.LogDebugMessage ("  ApplicationName: {0}", ApplicationName);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-			Log.LogDebugMessage ("  AndroidSdkDir: {0}", AndroidSdkDir);
-			Log.LogDebugMessage ("  AndroidSdkPlatform: {0}", AndroidSdkPlatform);
-			Log.LogDebugMessage ($"  {nameof (ErrorOnCustomJavaObject)}: {ErrorOnCustomJavaObject}");
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  MergedAndroidManifestOutput: {0}", MergedAndroidManifestOutput);
-			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
-			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
-			Log.LogDebugTaskItems ("  FrameworkDirectories: ", FrameworkDirectories);
-			Log.LogDebugMessage ("  BundledWearApplicationName: {0}", BundledWearApplicationName);
-			Log.LogDebugTaskItems ("  MergedManifestDocuments:", MergedManifestDocuments);
-			Log.LogDebugMessage ("  PackageNamingPolicy: {0}", PackageNamingPolicy);
-			Log.LogDebugMessage ("  ApplicationJavaClass: {0}", ApplicationJavaClass);
-			Log.LogDebugTaskItems ("  ManifestPlaceholders: ", ManifestPlaceholders);
-
 			try {
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
@@ -235,6 +215,7 @@ namespace Xamarin.Android.Tasks
 			manifest.Debug = Debug;
 			manifest.MultiDex = MultiDex;
 			manifest.NeedsInternet = NeedsInternet;
+			manifest.InstantRunEnabled = InstantRunEnabled;
 
 			var additionalProviders = manifest.Merge (all_java_types, selectedWhitelistAssemblies, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
