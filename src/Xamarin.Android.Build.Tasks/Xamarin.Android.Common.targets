@@ -2295,6 +2295,7 @@ because xbuild doesn't support framework reference assemblies.
 	Debug="$(AndroidIncludeDebugSymbols)"
 	MultiDex="$(AndroidEnableMultiDex)"
 	NeedsInternet="$(AndroidNeedsInternetPermission)"
+	InstantRunEnabled="$(_InstantRunEnabled)"
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
 	PackageName="$(_AndroidPackage)"
