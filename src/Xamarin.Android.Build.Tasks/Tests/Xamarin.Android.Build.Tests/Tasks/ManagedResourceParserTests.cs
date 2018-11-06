@@ -721,5 +721,35 @@ int styleable ElevenAttributes_attr10 10";
 				 $"{task.NetResgenOutputFile} and {expected} do not match.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+		
+		public void DebugGenerator ()
+		{
+			string path = "/Users/dean/Documents/Sandbox/Xamarin/xaspeed/tests/Xamarin.Forms-Performance-Integration/Droid";
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var task = new GenerateResourceDesigner {
+				BuildEngine = engine
+			};
+			task.UseManagedResourceGenerator = true;
+			task.DesignTimeBuild = true;
+			task.Namespace = "Xamarin.Forms.Performance.Integration.Droid";
+			task.NetResgenOutputFile = Path.Combine (path, "Resource.designer.cs");
+			task.ProjectDir = Path.Combine (path);
+			task.ResourceDirectory = Path.Combine (path, "obj", "Debug", "res") + Path.DirectorySeparatorChar;
+			var files = Directory.EnumerateFiles (task.ResourceDirectory, "*.*", SearchOption.AllDirectories);
+			List<TaskItem> items = new List<TaskItem> ();
+			foreach (var f in files) {
+				items.Add (new TaskItem (f, new Dictionary<string, string> {
+					{ "LogicalName", f.Replace (task.ResourceDirectory, string.Empty) }
+				}));
+			}
+			task.Resources = items.ToArray ();
+			task.AdditionalResourceDirectories = new TaskItem [] {
+				new TaskItem (Path.Combine (path, "obj", "Debug", "lp", "res")),
+			};
+			task.IsApplication = true;
+			task.StableIdsFile = Path.Combine (path, "stableid-test.txt");
+			task.ApplicationName = "Xamarin.Forms_Performance_Integration";
+			task.Execute ();
+		}
 	}
 }

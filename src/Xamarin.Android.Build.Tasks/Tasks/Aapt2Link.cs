@@ -73,6 +73,10 @@ namespace Xamarin.Android.Tasks {
 		public bool NonConstantId { get; set; }
 
 		public bool ProtobufFormat { get; set; }
+		
+		public string EmitIdsFile { get; set; }
+
+		public string StableIdsFile { get; set; }
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
@@ -201,6 +205,10 @@ namespace Xamarin.Android.Tasks {
 				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir))
 					cmd.AppendSwitchIfNotNull ("-A ", assetDir);
 			}
+			if (!string.IsNullOrEmpty (StableIdsFile) && File.Exists (StableIdsFile)) {
+				cmd.AppendSwitchIfNotNull ("--stable-ids ", StableIdsFile);
+			}
+			cmd.AppendSwitchIfNotNull ("--emit-ids ", EmitIdsFile);
 			cmd.AppendSwitchIfNotNull ("-o ", currentResourceOutputFile);
 			return cmd.ToString ();
 		}

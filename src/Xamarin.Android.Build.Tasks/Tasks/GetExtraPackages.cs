@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GEP";
 
 		[Required]
-		public string IntermediateOutputPath { get; set; }
+		public string LibraryProjectIntermediatePath { get; set; }
 
 		[Output]
 		public string ExtraPackages { get; set; }
@@ -24,9 +24,8 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var extraPackages = new List<string> ();
-			var libProjects = Path.Combine (IntermediateOutputPath, "__library_projects__");
-			if (Directory.Exists (libProjects)) {
-				foreach (var assemblyDir in Directory.GetDirectories (libProjects)) {
+			if (Directory.Exists (LibraryProjectIntermediatePath)) {
+				foreach (var assemblyDir in Directory.GetDirectories (LibraryProjectIntermediatePath)) {
 					foreach (var importBaseDir in new string [] { LibraryProjectImportsDirectoryName, "library_project_imports", }) {
 						string importsDir = Path.Combine (assemblyDir, importBaseDir);
 						string libpkg = GetPackageNameForLibrary (importsDir, Path.GetDirectoryName (assemblyDir));

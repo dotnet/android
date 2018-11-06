@@ -27,6 +27,18 @@ namespace Xamarin.Android.Tasks
 		XDocument publicXml;
 
 		public string JavaPlatformDirectory { get; set; }
+		
+		public string StableIdsFile { get; set; }
+
+		public string ApplicationName { get; set; }
+
+		void WriteStableIdEntry (string path, string id)
+		{
+			// com.infinitespace_studios.BlankForms2:styleable/ViewBackgroundHelper = 0x7f0e003b
+			//Console.WriteLine ($"STABLEID {path}= {id}");
+			if (!string.IsNullOrEmpty (StableIdsFile))
+				File.AppendAllText (StableIdsFile, $"{path} = {id}\r\n");
+		}
 
 		public string ResourceFlagFile { get; set; }
 
@@ -193,6 +205,13 @@ namespace Xamarin.Android.Tasks
 						field.InitExpression = new CodePrimitiveExpression (id);
 						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
 						itemid++;
+						var pt = CodeTypeToResourceType (codeDeclaration);
+						if (!string.IsNullOrEmpty (pt)) {
+							string name = field.Name;
+							var n = pt != "style" ? name : name.Replace ("_", ".");
+							var entryName = string.Format ("{0}:{1}/{2}", ApplicationName, pt,  n);
+							WriteStableIdEntry ($"{entryName}", $"0x{id.ToString ("X")}");
+						}
 					}
 				}
 			}
@@ -289,6 +308,68 @@ namespace Xamarin.Android.Tasks
 			return resources;
 		}
 
+		string CodeTypeToResourceType (CodeTypeDeclaration declaration)
+		{
+			switch (declaration.Name) {
+			case "Animation": return "anim";
+			case "Animator": return "animator";
+			case "Attribute": return "attr";
+			case "Array": return "array";
+			case "Boolean": return "bool";
+			case "Color": return "color";
+			case "Dimension": return "dimen";
+			case "Drawable": return "drawable";
+			case "Font": return "font";
+			case "Id": return "id";
+			case "Integer": return "integer";
+			case "Interpolator": return "interpolator";
+			case "Layout": return "layout";
+			case "Menu": return "menu";
+			case "MipMap": return "mipmap";
+			case "Plurals": return "plurals";
+			case "Raw": return "raw";
+			case "String": return "string";
+			case "Style": return "style";
+			case "Styleable": return "styleable";
+			case "Transition": return "transition";
+			case "Xml": return "xml";
+			}
+			return string.Empty;
+		}
+
+		CodeTypeDeclaration MapToCodeType (string type)
+		{
+			switch (type) {
+			case "anim": return animation;
+			case "animator": return animator;
+			case "attr": return attrib;
+			case "integer-array":
+			case "string-array":
+			case "array": return arrays;
+			case "bool": return boolean;
+			case "color": return colors;
+			case "dimen": return dimension;
+			case "drawable": return drawable;
+			case "font": return font;
+			case "enum":
+			case "flag":
+			case "id": return ids;
+			case "integer": return ints;
+			case "interpolator": return interpolators;
+			case "layout": return layout;
+			case "menu": return menu;
+			case "mipmap": return mipmaps;
+			case "plurals": return plurals;
+			case "raw": return raw;
+			case "string": return strings;
+			case "style": return style;
+			case "styleable": return styleable;
+			case "transition": return transition;
+			case "xml": return xml;
+			}
+			return null;
+		}
+
 		void ProcessRtxtFile (string file)
 		{
 			var lines = System.IO.File.ReadLines (file);
@@ -296,64 +377,8 @@ namespace Xamarin.Android.Tasks
 				var items = line.Split (new char [] { ' ' }, 4);
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3], 16) : -1;
 				string itemName = items [2];
-				switch (items [1]) {
-				case "anim":
-					CreateIntField (animation, itemName, value);
-					break;
-				case "animator":
-					CreateIntField (animator, itemName, value);
-					break;
-				case "attr":
-					CreateIntField (attrib, itemName, value);
-					break;
-				case "array":
-					CreateIntField (arrays, itemName, value);
-					break;
-				case "bool":
-					CreateIntField (boolean, itemName, value);
-					break;
-				case "color":
-					CreateIntField (colors, itemName, value);
-					break;
-				case "dimen":
-					CreateIntField (dimension, itemName, value);
-					break;
-				case "drawable":
-					CreateIntField (drawable, itemName, value);
-					break;
-				case "font":
-					CreateIntField (font, itemName, value);
-					break;
-				case "id":
-					CreateIntField (ids, itemName, value);
-					break;
-				case "integer":
-					CreateIntField (ints, itemName, value);
-					break;
-				case "interpolator":
-					CreateIntField (interpolators, itemName, value);
-					break;
-				case "layout":
-					CreateIntField (layout, itemName, value);
-					break;
-				case "menu":
-					CreateIntField (menu, itemName, value);
-					break;
-				case "mipmap":
-					CreateIntField (mipmaps, itemName, value);
-					break;
-				case "plurals":
-					CreateIntField (plurals, itemName, value);
-					break;
-				case "raw":
-					CreateIntField (raw, itemName, value);
-					break;
-				case "string":
-					CreateIntField (strings, itemName, value);
-					break;
-				case "style":
-					CreateIntField (style, itemName, value);
-					break;
+				string itemType = items [1];
+				switch (itemType) {
 				case "styleable":
 					switch (items [0]) {
 					case "int":
@@ -363,16 +388,16 @@ namespace Xamarin.Android.Tasks
 						var arrayValues = items [3].Trim (new char [] { '{', '}' })
 							.Replace (" ", "")
 							.Split (new char [] { ',' });
+						Console.WriteLine ($"Write Styleable int[] {itemName} {value} {string.Join (";", arrayValues)}");
 						CreateIntArrayField (styleable, itemName, arrayValues.Length,
 							arrayValues.Select (x => string.IsNullOrEmpty (x) ? -1 : Convert.ToInt32 (x, 16)).ToArray ());
 						break;
 					}
 					break;
-				case "transition":
-					CreateIntField (transition, itemName, value);
-					break;
-				case "xml":
-					CreateIntField (xml, itemName, value);
+				default:
+					var codeType = MapToCodeType (itemType);
+					if (codeType != null)
+						CreateIntField (codeType, itemName, value);
 					break;
 				// for custom views
 				default:
@@ -514,67 +539,6 @@ namespace Xamarin.Android.Tasks
 			var item = i < 0 ? root : root.Substring (0, i);
 			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
 			switch (item.ToLower ()) {
-			case "animator":
-				CreateIntField (animator, fieldName);
-				break;
-			case "bool":
-				CreateIntField (boolean, fieldName);
-				break;
-			case "color":
-				CreateIntField (colors, fieldName);
-				break;
-			case "drawable":
-				CreateIntField (drawable, fieldName);
-				break;
-			case "dimen":
-				CreateIntField (dimension, fieldName);
-				break;
-			case "font":
-				CreateIntField (font, fieldName);
-				break;
-			case "fraction":
-				CreateIntField (dimension, fieldName);
-				break;
-			case "integer":
-				CreateIntField (ints, fieldName);
-				break;
-			case "interpolator":
-				CreateIntField (interpolators, fieldName);
-				break;
-			case "anim":
-				CreateIntField (animation, fieldName);
-				break;
-			case "attr":
-				CreateIntField (attrib, fieldName);
-				break;
-			case "layout":
-				CreateIntField (layout, fieldName);
-				break;
-			case "menu":
-				CreateIntField (menu, fieldName);
-				break;
-			case "mipmap":
-				CreateIntField (mipmaps, fieldName);
-				break;
-			case "raw":
-				CreateIntField (raw, fieldName);
-				break;
-			case "plurals":
-				CreateIntField (plurals, fieldName);
-				break;
-			case "string":
-				CreateIntField (strings, fieldName);
-				break;
-			case "enum":
-			case "flag":
-			case "id":
-				CreateIntField (ids, fieldName);
-				break;
-			case "array":
-			case "integer-array":
-			case "string-array":
-				CreateIntField (arrays, fieldName);
-				break;
 			case "configVarying":
 			case "add-resource":
 			case "declare-styleable":
@@ -583,13 +547,10 @@ namespace Xamarin.Android.Tasks
 			case "style":
 				CreateIntField (style, fieldName);
 				break;
-			case "transition":
-				CreateIntField (transition, fieldName);
-				break;
-			case "xml":
-				CreateIntField (xml, fieldName);
-				break;
 			default:
+				var codeType = MapToCodeType (item.ToLower ());
+				if (codeType != null)
+					CreateIntField (codeType, fieldName);
 				break;
 			}
 		}
@@ -612,8 +573,10 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				if (!reader.IsStartElement () || reader.LocalName == "declare-styleable")
+				if (!reader.IsStartElement () || reader.LocalName == "declare-styleable") {
+					CreateIntField (styleable, topName);
 					continue;
+				}
 				if (reader.HasAttributes) {
 					while (reader.MoveToNextAttribute ()) {
 						if (reader.Name.Replace ("android:", "") == "name")

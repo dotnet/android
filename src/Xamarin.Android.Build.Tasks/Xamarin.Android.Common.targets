@@ -1331,6 +1331,8 @@ because xbuild doesn't support framework reference assemblies.
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 		ResourceFlagFile="$(_AndroidResFlagFile)"
+		StableIdsFile="$(IntermediateOutputPath)stableids.txt"
+		ApplicationName="$(_AndroidPackage)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
 	<ItemGroup>
@@ -1338,6 +1340,7 @@ because xbuild doesn't support framework reference assemblies.
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == 'Resources\Resource.designer.cs'"/>
 		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
 		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
+		<FileWrites Include="$(IntermediateOutputPath)stableids.txt" />
 	</ItemGroup>
 </Target>
 	
@@ -1692,8 +1695,21 @@ because xbuild doesn't support framework reference assemblies.
 		IsApplication="$(AndroidApplication)"
 		References="@(_ReferencePath)"
 		UseManagedResourceGenerator="$(_UseManagedResourceGenerator)"
+		StableIdsFile="$(IntermediateOutputPath)stableids.txt"
+		ApplicationName="$(_AndroidPackage)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
+	/>
+		
+	<ItemGroup>
+		<FileWrites Include="$(IntermediateOutputPath)stableids.txt" />	
+	</ItemGroup>
+
+	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
+	<CopyIfChanged
+		SourceFiles="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
+		DestinationFiles="$(_AndroidResourceDesignerFile)"
+		Condition="'$(_AndroidResourceDesignerFile)' != '' And Exists ('$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)')"
 	/>
 
 	<!-- Delete our temporary directory -->
@@ -2381,6 +2397,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <FileWrites Include="$(_PackagedResources)" />
     <FileWrites Include="$(_GeneratedPrimaryJavaResgenFile)" />
+    <FileWrites Include="$(IntermediateOutputPath)emit.txt" />
   </ItemGroup>
 </Target>
 
@@ -3291,6 +3308,8 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidMainDexListFile)" />
 	<Delete Files="$(_AndroidBuildIdFile)" />
 	<Delete Files="$(_ResolvedUserAssembliesHashFile)" />
+	<Delete Files="$(IntermediateOutputPath)stableids.txt" />
+	<Delete Files="$(IntermediateOutputPath)emit.txt" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
