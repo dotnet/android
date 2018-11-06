@@ -39,7 +39,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 				throw new ArgumentNullException (nameof (testAssemblies));
 			
 			var builder = new NUnitLiteTestAssemblyBuilder ();
-			var runner = new NUnitLiteTestAssemblyRunner (builder);
+			var runner = new NUnitLiteTestAssemblyRunner (builder, new FinallyDelegate ());
 			var testSuite = new TestSuite (global::Android.App.Application.Context.PackageName);
 			results = new TestSuiteResult (testSuite);
 

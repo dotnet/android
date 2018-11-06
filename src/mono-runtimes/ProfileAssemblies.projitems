@@ -190,6 +190,7 @@
     <MonoProfileAssembly Include="System.Xml.dll" />
     <MonoProfileAssembly Include="System.Xml.Linq.dll" />
     <MonoProfileAssembly Include="System.Xml.Serialization.dll" />
+    <MonoProfileAssembly Include="nunitlite.dll" />
   </ItemGroup>
   <ItemGroup>
     <MonoTestAssembly Include="monodroid_corlib_test.dll">

@@ -48,6 +48,8 @@ namespace Xamarin.Android.NUnitLite
 
 		public List<Assembly> Assemblies = new List<Assembly> ();
 
+		private FinallyDelegate finallyDelegate = new FinallyDelegate ();
+
 		public AndroidRunner ()
 		{
 		}
@@ -258,9 +260,9 @@ namespace Xamarin.Android.NUnitLite
 		{
 			TestExecutionContext current = TestExecutionContext.CurrentContext;
 			current.WorkDirectory = System.Environment.CurrentDirectory;
-			current.Listener = this;
+			/* current.Listener = this; */ current.GetType ().GetProperty ("Listener", BindingFlags.Instance | BindingFlags.NonPublic).SetValue (current, this);
 			current.TestObject = test is TestSuite ? null : Reflect.Construct ((test as TestMethod).Method.ReflectedType, null);
-			WorkItem wi = test.CreateWorkItem (Filter ?? TestFilter.Empty);
+			WorkItem wi = test.CreateWorkItem (Filter ?? TestFilter.Empty, finallyDelegate);
 			if (test is TestMethod)
 				(test.Parent as TestSuite).GetOneTimeSetUpCommand ().Execute (current);
 			wi.Execute (current);

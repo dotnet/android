@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\packages\ILRepack.Lib.MSBuild.Task.2.0.15.4\build\ILRepack.Lib.MSBuild.Task.dll" TaskName="ILRepack" />
+  <Target Name="ILRepacker"
+      AfterTargets="AfterBuild">
+    <ILRepack
+        Parallel="true"
+        Verbose="true"
+        DebugInfo="true"
+        InputAssemblies="$(OutputPath)\$(AssemblyName).dll;$(OutputPath)\nunitlite.dll"
+        LibraryPath="$(OutputPath);$(OutputPath)\..\v9.0"
+        TargetKind="Dll"
+        OutputFile="$(OutputPath)\$(AssemblyName).dll"
+    />
+  </Target>
+</Project>
