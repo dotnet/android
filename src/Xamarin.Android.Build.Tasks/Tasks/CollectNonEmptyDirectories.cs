@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks {
 				var firstFile = Directory.EnumerateFiles(directory.ItemSpec, "*.*", SearchOption.AllDirectories).FirstOrDefault ();
 				if (firstFile != null) {
 					var taskItem = new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
-						{"FileFound", firstFile}
+						{"FileFound", Path.GetFullPath (Path.Combine (directory.ItemSpec, "..", "..")) + ".stamp" }
 					});
 					directory.CopyMetadataTo (taskItem);
 					output.Add (taskItem);
