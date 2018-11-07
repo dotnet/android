@@ -453,6 +453,9 @@ namespace Xamarin.Android.Net
 					ParseCookies (ret, connectionUri);
 				}
 
+				// We don't want to pass the authorization header onto the next location
+				request.Headers.Authorization = null;
+
 				return ret;
 			}
 
