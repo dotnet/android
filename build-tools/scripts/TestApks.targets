@@ -184,7 +184,7 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
-      <_LogcatFilenameBase>logcat-$(Configuration)$(TestsAotName)</_LogcatFilenameBase>
+      <_LogcatFilenameBase>logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
@@ -222,7 +222,7 @@
         ResultsFilename="%(TestApk.TimingResultsFilename)"
         DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
         AddResults="true"
-        LabelSuffix="-$(Configuration)$(TestsAotName)"
+        LabelSuffix="-$(Configuration)$(TestsFlavor)"
         Activity="%(TestApk.Activity)" />
   </Target>
   <Target Name="RenameTestCases">
@@ -258,7 +258,7 @@
       Condition=" '@(TestApk)' != '' ">
     <RenameTestCases
         Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
-        Configuration="$(Configuration)$(TestsAotName)"
+        Configuration="$(Configuration)$(TestsFlavor)"
         DeleteSourceFiles="True"
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApkInstrumentation.ResultsPath)"
@@ -287,7 +287,7 @@
         ResultsFilename="%(TestApk.ApkSizesResultsFilename)"
         DefinitionsFilename="%(TestApk.ApkSizesDefinitionFilename)"
         AddResults="True"
-        LabelSuffix="-$(Configuration)$(TestsAotName)"
+        LabelSuffix="-$(Configuration)$(TestsFlavor)"
         ContinueOnError="ErrorAndContinue"
     />
   </Target>
