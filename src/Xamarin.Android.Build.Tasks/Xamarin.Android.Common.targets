@@ -181,6 +181,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AvailableItemName Include="MultiDexMainDexList" />
   <AvailableItemName Include="ProguardConfiguration" />
   <AvailableItemName Include="ProjectReference" />
+  <AvailableItemName Include="AndroidManifestTransform" />	
 </ItemGroup>
 
 <!-- Version/fx properties -->
@@ -2286,6 +2287,10 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
   Outputs="$(IntermediateOutputPath)_javastubs.stamp">
+  <PropertyGroup>
+	<_ManifestOutput Condition=" '@(AndroidManifestTransform)' != '' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+	<_ManifestOutput Condition=" '@(AndroidManifestTransform)' == '' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+  </PropertyGroup>
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
@@ -2301,7 +2306,7 @@ because xbuild doesn't support framework reference assemblies.
 	PackageName="$(_AndroidPackage)"
 	ManifestPlaceholders="$(AndroidManifestPlaceholders)"
 	OutputDirectory="$(IntermediateOutputPath)android"
-	MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
+	MergedAndroidManifestOutput="$(_ManifestOutput)"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
 	EmbedAssemblies="$(EmbedAssembliesIntoApk)"
 	ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -2317,6 +2322,12 @@ because xbuild doesn't support framework reference assemblies.
 	AcwMapFile="$(_AcwMapFile)"
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+  />
+  <XslTransformation
+	Condition=" '@(AndroidManifestTransform)' != '' "
+    XmlInputPaths="$(_ManifestOutput)"
+	XslInputPath="@(AndroidManifestTransform)"
+	OutputPaths="$(IntermediateOutputPath)android\AndroidManifest.xml"
   />
   <Touch Files="$(IntermediateOutputPath)_javastubs.stamp" AlwaysCreate="True" />
   <ItemGroup>

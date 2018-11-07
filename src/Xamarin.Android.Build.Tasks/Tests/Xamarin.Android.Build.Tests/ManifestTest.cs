@@ -501,6 +501,7 @@ namespace Bug12935
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
     <uses-sdk android:minSdkVersion='14'/>
     <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
+	<permission android:name='${applicationId}.permission.REMOVEME' />
     <application>
         <activity android:name='.signin.internal.SignInHubActivity' />
         <provider
@@ -543,6 +544,19 @@ namespace Bug12935
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 			};
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidManifestTransform", "ManifestTransform.xslt") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<xsl:stylesheet xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"" xmlns:android=""http://schemas.android.com/apk/res/android"" version=""1.0"">
+    <xsl:output method=""xml"" omit-xml-declaration=""no"" />
+	<xsl:template match=""@*|node()"">
+	<xsl:copy>
+	    <xsl:apply-templates select=""@*|node()"" />
+	</xsl:copy>
+    </xsl:template>
+	<xsl:template match=""/manifest/permission[@android:name='com.xamarin.manifest.permission.REMOVEME']"">
+	</xsl:template>
+</xsl:stylesheet>"
+			});
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
@@ -583,13 +597,15 @@ public class TestActivity2 : FragmentActivity {
 }
 				",
 			});
-			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
+			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"), cleanupOnDispose: false)) {
 				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
-				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
+				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"), cleanupOnDispose: false)) {
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 					var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.permission.C2D_MESSAGE"),
 						"${applicationId}.permission.C2D_MESSAGE was not replaced with com.xamarin.manifest.permission.C2D_MESSAGE");
+					Assert.IsFalse (manifest.Contains ("com.xamarin.manifest.permission.REMOVEME"),
+						"com.xamarin.manifest.permission.REMOVEME was not removed");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
 						".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),
