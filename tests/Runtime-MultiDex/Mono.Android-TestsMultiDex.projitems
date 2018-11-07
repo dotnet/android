@@ -7,7 +7,7 @@
       <ResultsPath>$(MSBuildThisFileDirectory)..\..\TestResult-Mono.Android_TestsMultiDex.xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-Mono.Android_TestsMultiDex-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsAotName).txt</ApkSizesInputFilename>
+      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
       <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)apk-sizes-definitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-Mono.Android_TestsMultDex-values.csv</ApkSizesResultsFilename>
     </TestApk>
