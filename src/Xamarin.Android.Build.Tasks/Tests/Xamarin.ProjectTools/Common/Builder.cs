@@ -7,6 +7,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
+using System.Xml.XPath;
+using System.Xml.Linq;
 
 using XABuildPaths = Xamarin.Android.Build.Paths;
 
@@ -170,7 +173,12 @@ namespace Xamarin.ProjectTools
 		}
 
 		public string LatestTargetFrameworkVersion () {
+			return LatestTargetFrameworkVersion (out string apiLevel);
+		}
+
+		public string LatestTargetFrameworkVersion (out string apiLevel) {
 			Version latest = new Version (1, 0);
+			apiLevel = "1";
 			var outdir = FrameworkLibDirectory;
 			var path = Path.Combine (outdir, "xbuild-frameworks", "MonoAndroid");
 			if (!Directory.Exists(path)) {
@@ -181,8 +189,14 @@ namespace Xamarin.ProjectTools
 				string v = Path.GetFileName (dir).Replace ("v", "");
 				if (!Version.TryParse (v, out version))
 					continue;
-				if (latest.Major < version.Major && latest.Minor <= version.Minor)
+				if (latest < version) {
+					var apiInfo = Path.Combine (dir, "AndroidApiInfo.xml");
+					if (File.Exists (apiInfo)) {
+						var doc = XDocument.Load (apiInfo);
+						apiLevel = doc.XPathSelectElement ("/AndroidApiInfo/Level")?.Value ?? apiLevel;
+					}
 					latest = version;
+				}
 			}
 			return "v" + latest.ToString (2);
 		}

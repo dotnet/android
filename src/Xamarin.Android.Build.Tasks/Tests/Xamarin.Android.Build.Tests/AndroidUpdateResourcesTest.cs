@@ -241,9 +241,9 @@ using System.Runtime.CompilerServices;
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
 					"The Target _LinkAssembliesNoShrink should have been skipped");
-				image1.Timestamp = DateTime.UtcNow;
+				image1.Timestamp = DateTimeOffset.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
-				layout.Timestamp = DateTime.UtcNow;
+				layout.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
@@ -528,7 +528,7 @@ namespace UnnamedProject
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
 					"{0} should be read only", designerPath);
 				var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
-				main.Timestamp = DateTime.UtcNow;
+				main.Timestamp = DateTimeOffset.UtcNow;
 				main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	android:orientation=""vertical""
@@ -867,7 +867,7 @@ namespace UnnamedProject
 <resources>
 	<string name=""greeting"">Foo</string>
 </resources>";
-					strings_de.Timestamp = DateTime.Now;
+					strings_de.Timestamp = DateTimeOffset.UtcNow;
 
 					Assert.IsTrue (dllBuilder.Build (library), "Third Library1 build should have succeeded");
 					Assert.IsTrue (b.Build (project), "Third Applications1 build should have succeeded");
@@ -946,7 +946,7 @@ namespace UnnamedProject
 	<color name=""dark_red"">#FFFFFF</color>
 	<color name=""xamarin_green"">#00AA00</color>
 </resources>";
-					values.Timestamp = DateTime.Now;
+					values.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (b.Build (proj), "Third Build should have succeeded");
 
 					Assert.IsTrue (File.Exists (colorsXml), "{0} should exist", colorsXml);
@@ -996,7 +996,7 @@ namespace UnnamedProject
 
 				var theme = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Theme.xml");
 				theme.Deleted = true;
-				theme.Timestamp = DateTime.Now;
+				theme.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
 				Assert.IsFalse (File.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "theme.xml")),
@@ -1048,7 +1048,7 @@ namespace Lib1 {
 					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
-					foo.Timestamp = DateTime.UtcNow;
+					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
@@ -1058,7 +1058,7 @@ namespace Lib1 {
 	<color name=""theme_devicedefault_background"">#00000000</color>
 	<color name=""theme_devicedefault_background2"">#ffffffff</color>
 </resources>";
-					theme.Timestamp = DateTime.UtcNow;
+					theme.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
@@ -1066,7 +1066,7 @@ namespace Lib1 {
 					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
 					theme.Deleted = true;
-					theme.Timestamp = DateTime.UtcNow;
+					theme.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
 					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");

@@ -260,7 +260,7 @@ namespace Xamarin.Android.Net
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection;
 				if (UseProxy)
-					java_connection = java_url.OpenConnection ();
+					java_connection = java_url.OpenConnection (await GetJavaProxy (redirectState.NewUrl, cancellationToken));
 				else
 					java_connection = java_url.OpenConnection (Java.Net.Proxy.NoProxy);
 
@@ -287,7 +287,30 @@ namespace Xamarin.Android.Net
 				request.Method = redirectState.Method;
 			}
 		}
-		
+
+		protected virtual async Task <Java.Net.Proxy> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
+		{
+			Java.Net.Proxy proxy = Java.Net.Proxy.NoProxy;
+
+			if (destination == null || Proxy == null) {
+				goto done;
+			}
+
+			Uri puri = Proxy.GetProxy (destination);
+			if (puri == null) {
+				goto done;
+			}
+
+			proxy = await Task <Java.Net.Proxy>.Run (() => {
+				// Let the Java code resolve the address, if necessary
+				var addr = new Java.Net.InetSocketAddress (puri.Host, puri.Port);
+				return new Java.Net.Proxy (Java.Net.Proxy.Type.Http, addr);
+			}, cancellationToken);
+
+		  done:
+			return proxy;
+		}
+
 		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
@@ -453,6 +476,9 @@ namespace Xamarin.Android.Net
 					CopyHeaders (httpConnection, ret);
 					ParseCookies (ret, connectionUri);
 				}
+
+				// We don't want to pass the authorization header onto the next location
+				request.Headers.Authorization = null;
 
 				return ret;
 			}

@@ -1086,7 +1086,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
 	<Lint
-		TargetDirectory="$(IntermediateOutputPath)"
+		TargetDirectory="$(IntermediateOutputPath)android"
 		EnabledIssues="$(AndroidLintEnabledIssues)"
 		DisabledIssues="$(AndroidLintDisabledIssues)"
 		CheckIssues="$(AndroidLintCheckIssues)"
@@ -1345,6 +1345,7 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
 		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+		NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
 		UseShortFileNames="$(UseShortFileNames)"
 		OutputDirectory="$(IntermediateOutputPath)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
@@ -2294,6 +2295,7 @@ because xbuild doesn't support framework reference assemblies.
 	Debug="$(AndroidIncludeDebugSymbols)"
 	MultiDex="$(AndroidEnableMultiDex)"
 	NeedsInternet="$(AndroidNeedsInternetPermission)"
+	InstantRunEnabled="$(_InstantRunEnabled)"
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
 	PackageName="$(_AndroidPackage)"
