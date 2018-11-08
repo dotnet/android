@@ -66,7 +66,7 @@ _TEST_ERRORS_BASENAME   = xa-test-errors-v$(PRODUCT_VERSION).$(-num-commits-sinc
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \
 	Configuration.OperatingSystem.props \
-	$(wildcard bin/Build*/msbuild*.binlog) \
+	$(wildcard bin/Build$(CONFIGURATION)/msbuild*.binlog) \
 	$(shell find . -name 'config.log') \
 	$(shell find . -name 'config.status') \
 	$(shell find . -name 'config.h') \
@@ -75,7 +75,7 @@ _BUILD_STATUS_BUNDLE_INCLUDE = \
 	$(shell find . -name '.ninja_log') \
 	$(shell find . -name 'android-*.config.cache')
 
-_BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+_BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 _BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)
 
 ifneq ($(wildcard Configuration.Override.props),)
