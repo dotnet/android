@@ -61,14 +61,19 @@ namespace Java.Interop.Tools.Cecil {
 					t.Interfaces.Any (i => i.InterfaceType.FullName == interfaceName));
 		}
 
-		public static string GetPartialAssemblyQualifiedName (this TypeReference type)
+		public static string GetPartialAssemblyName (this TypeReference type)
 		{
 			TypeDefinition def = type.Resolve ();
+			return (def ?? type).Module.Assembly.Name.Name;
+		}
+
+		public static string GetPartialAssemblyQualifiedName (this TypeReference type)
+		{
 			return string.Format ("{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
 					type.FullName.Replace ('/', '+'),
-					(def ?? type).Module.Assembly.Name.Name);
+					type.GetPartialAssemblyName ());
 		}
 
 		public static string GetAssemblyQualifiedName (this TypeReference type)

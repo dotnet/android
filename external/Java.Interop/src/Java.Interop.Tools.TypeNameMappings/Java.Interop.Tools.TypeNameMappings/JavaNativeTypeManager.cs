@@ -508,15 +508,15 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static string GetPackageName (TypeDefinition type)
 		{
-			if (IsPackageNamePreservedForAssembly (type.Module.Assembly.Name.Name))
+			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName ()))
 				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (type.Module.Assembly.Name.Name.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+				return "assembly_" + (type.GetPartialAssemblyName ().Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			default:
-				return "md5" + ToMd5 (type.Namespace + ":" + type.Module.Assembly.Name.Name);
+				return "md5" + ToMd5 (type.Namespace + ":" + type.GetPartialAssemblyName ());
 			}
 		}
 #endif
