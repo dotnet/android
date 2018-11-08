@@ -76,6 +76,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -v threadtime -d",
+					MergeStdoutAndStderr = false,
+					StdoutFilePath = LogcatFilename,
+					StdoutAppend = true,
 				},
 
 				new CommandInfo {

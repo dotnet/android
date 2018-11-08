@@ -134,7 +134,7 @@ namespace Lib
 				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
 						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
 						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
-				class1Source.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (1));
+				class1Source.Timestamp = DateTimeOffset.UtcNow.Add (TimeSpan.FromMinutes (1));
 				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
 				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
 						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
@@ -181,7 +181,6 @@ public class TestMe {
 	}
 }",
 						Encoding = Encoding.ASCII,
-						Timestamp = DateTimeOffset.Now,
 					}
 				},
 			};
@@ -219,7 +218,6 @@ public class TestMe {
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
-						Timestamp = DateTimeOffset.Now,
 					}
 				},
 				Sources = {
@@ -249,7 +247,6 @@ namespace Lib
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
-						Timestamp = DateTimeOffset.Now,
 					},
 					new BuildItem.ProjectReference (@"..\Lib\Lib.csproj", "Lib", lib.ProjectGuid) {
 					}
@@ -297,7 +294,7 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						so.TextContent = () => "newValue";
-						so.Timestamp = DateTimeOffset.Now;
+						so.Timestamp = DateTimeOffset.UtcNow;
 						Assert.IsTrue (libbuilder.Build (lib), "lib 2nd. build failed");
 						Assert.IsTrue (libbuilder2.Build (lib2), "lib 2nd. build failed");
 						Assert.IsTrue (builder.Build (app), "app 2nd. build failed");

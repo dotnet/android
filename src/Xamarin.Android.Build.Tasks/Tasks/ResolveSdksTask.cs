@@ -97,27 +97,19 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				Log.LogDebugMessage ($"JavaSdkPath: {JavaSdkPath}");
-				Xamarin.Android.Tools.JdkInfo info = null;
-				try {
-					info = new Xamarin.Android.Tools.JdkInfo (JavaSdkPath);
-				} catch {
-					info = Xamarin.Android.Tools.JdkInfo.GetKnownSystemJdkInfos (this.CreateTaskLogger ()).FirstOrDefault ();
-				}
-
-				JdkJvmPath = info.JdkJvmPath;
-
-				if (string.IsNullOrEmpty (JdkJvmPath)) {
-					Log.LogCodedError ("XA5300", $"{nameof (JdkJvmPath)} is blank");
-					return false;
-				}
-
-				if (!File.Exists (JdkJvmPath)) {
-					Log.LogCodedError ("XA5300", $"JdkJvmPath not found at {JdkJvmPath}");
-					return false;
-				}
+				JdkJvmPath = GetJvmPath ();
 			} catch (Exception e) {
 				Log.LogCodedError ("XA5300", $"Unable to find {nameof (JdkJvmPath)}{Environment.NewLine}{e}");
+				return false;
+			}
+
+			if (string.IsNullOrEmpty (JdkJvmPath)) {
+				Log.LogCodedError ("XA5300", $"{nameof (JdkJvmPath)} is blank");
+				return false;
+			}
+
+			if (!File.Exists (JdkJvmPath)) {
+				Log.LogCodedError ("XA5300", $"JdkJvmPath not found at {JdkJvmPath}");
 				return false;
 			}
 
@@ -133,6 +125,35 @@ namespace Xamarin.Android.Tasks
 
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
+		}
+
+		string GetJvmPath ()
+		{
+			var key = new Tuple<string, string> (nameof (ResolveSdks), JavaSdkPath);
+			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
+			if (cached != null) {
+				Log.LogDebugMessage ($"Using cached value for {nameof (JdkJvmPath)}: {cached}");
+
+				return cached;
+			}
+
+			Xamarin.Android.Tools.JdkInfo info = null;
+			try {
+				info = new Xamarin.Android.Tools.JdkInfo (JavaSdkPath);
+			} catch {
+				info = Xamarin.Android.Tools.JdkInfo.GetKnownSystemJdkInfos (this.CreateTaskLogger ()).FirstOrDefault ();
+			}
+
+			if (info == null)
+				return null;
+
+			var path = info.JdkJvmPath;
+			if (string.IsNullOrEmpty (path))
+				return null;
+
+			BuildEngine4.RegisterTaskObject (key, path, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
+
+			return path;
 		}
 	}
 }

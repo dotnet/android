@@ -980,7 +980,7 @@ namespace UnnamedProject {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
 					"the _LinkAssembliesShrink target should not run");
-				foo.Timestamp = DateTime.UtcNow;
+				foo.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"),
 					"the Core Compile target should run");
@@ -1165,7 +1165,7 @@ namespace App1
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
 					"the _CopyMdbFiles target should be skipped");
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTime.UtcNow;
+				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
@@ -2092,7 +2092,7 @@ namespace App1
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should not have run.");
-				aar.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (2));
+				aar.Timestamp = DateTimeOffset.UtcNow.Add (TimeSpan.FromMinutes (2));
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should have run.");
@@ -2442,7 +2442,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_24_2_1);
 				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
-					reference.Timestamp = DateTimeOffset.Now;
+					reference.Timestamp = DateTimeOffset.UtcNow;
 					proj.References.Add (reference);
 				}
 				b.Save (proj, doNotCleanupOnUpdate: true);
@@ -2619,7 +2619,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					"the _CopyMdbFiles target should be skipped");
 				b.BuildLogFile = "build2.log";
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTime.UtcNow;
+				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
@@ -3263,6 +3263,27 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			}
 		}
 
+		[Test]
+		public void FastDeploymentDoesNotAddContentProvider ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "True");
+			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", "False");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				//NOTE: build will fail, due to $(_XASupportsFastDev)
+				b.ThrowOnBuildFailure = false;
+				b.Build (proj);
+
+				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				FileAssert.Exists (manifest);
+				var content = File.ReadAllLines (manifest);
+				var type = "mono.android.ResourcePatcher";
+
+				//NOTE: only $(AndroidFastDeploymentType) containing "dexes" should add this to the manifest
+				Assert.IsFalse (StringAssertEx.ContainsText (content, type), $"`{type}` should not exist in `AndroidManifest.xml`!");
+			}
+		}
 	}
 }
 

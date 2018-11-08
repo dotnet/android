@@ -91,7 +91,9 @@
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
-    <TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</TestsAotName>
+    <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
+    <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
+    <TestsFlavor>$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
     <_MingwPrefixTail Condition=" '$(HostOS)' == 'Darwin' ">.static</_MingwPrefixTail>
