@@ -189,7 +189,7 @@ namespace Xamarin.ProjectTools
 				string v = Path.GetFileName (dir).Replace ("v", "");
 				if (!Version.TryParse (v, out version))
 					continue;
-				if (latest.Major < version.Major && latest.Minor <= version.Minor) {
+				if (latest < version) {
 					var apiInfo = Path.Combine (dir, "AndroidApiInfo.xml");
 					if (File.Exists (apiInfo)) {
 						var doc = XDocument.Load (apiInfo);
