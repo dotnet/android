@@ -310,7 +310,7 @@
   <Target Name="_InstallRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
       Inputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource)"
-      Outputs="@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput);do-not-cache">
+      Outputs="@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
     <ItemGroup>
       <_BclTest Include="$(_MonoProfileDir)\tests\**\*" />
       <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
