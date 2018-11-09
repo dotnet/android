@@ -27,6 +27,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -710,10 +711,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
-		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath"          Condition="'$(JdkJvmPath)' == ''" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
 	</ResolveSdks>
+	<ResolveJdkJvmPath
+			JavaSdkPath="$(_JavaSdkDirectory)"
+			Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
+		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
+	</ResolveJdkJvmPath>
 	<ValidateJavaVersion
 			Condition=" '$(DesignTimeBuild)' != 'True' "
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
