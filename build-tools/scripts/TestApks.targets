@@ -251,7 +251,12 @@
         Configuration="$(Configuration)"
         DeleteSourceFiles="$(_DeleteSource)"
         SourceFile="%(_RenameSource.Identity)"
-        DestinationFolder="%(_RenameSource.DestinationFolder)"
+        DestinationFolder="%(_RenameSource.DestinationFolder)">
+      <Output TaskParameter="CreatedFiles" ItemName="_RenameFailed"/>
+    </RenameTestCases>
+    <Error
+        Condition=" '%(_RenameFailed.Invalid)' != '' "
+        Text="One or more of the unit tests failed to produce an NUnit XML file.  Did a unit test runner crash?"
     />
   </Target>
   <Target Name="RenameApkTestCases"
