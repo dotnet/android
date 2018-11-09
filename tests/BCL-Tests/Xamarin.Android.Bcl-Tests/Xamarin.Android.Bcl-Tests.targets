@@ -5,71 +5,89 @@
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
   <Import Project="..\..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
+  <Target Name="_GetTestAssemblies">
+    <ItemGroup>
+      <_TestAssembly Include="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_*_test.dll">
+        <!-- This is needed for the remaping from nunitlite to Xamarin.Android.NUnitLite -->
+        <TestType>nunit</TestType>
+      </_TestAssembly>
+      <_TestAssembly Include="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_*_xunit-test.dll" />
+      <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
+      <_TestAssembly Include="..\..\..\bin\$(Configuration)\bcl-tests\System.Runtime.CompilerServices.Unsafe.dll" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- These NUnit tests are disabled for now. We need to check if they are working -->
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_I18N.Other_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_I18N.Rare_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_Mono.Posix_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.ComponentModel.DataAnnotations_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Security_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.ServiceModel_test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Web.Services_test.dll" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- These XUnit tests are disabled for now. We need to check if they are working -->
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_Microsoft.CSharp_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.ComponentModel.Composition_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Core_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Data_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Json_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Runtime.CompilerServices.Unsafe_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Runtime.Serialization_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Security_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Xml_xunit-test.dll" />
+      <_TestAssembly Remove="..\..\..\bin\$(Configuration)\bcl-tests\monodroid_System.Xml.Linq_xunit-test.dll" />
+    </ItemGroup>
+  </Target>
   <Target Name="_AddTestAssemblies"
-      DependsOnTargets="_RemapAssemblies"
+      DependsOnTargets="_GetTestAssemblies;_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')" />
-      <Reference Remove="$(IntermediateOutputPath)nunitlite.dll" />
+      <Reference Include="@(_TestAssembly->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>
   <Target Name="_RemapAssemblies"
-      Inputs="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
-      Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
+      DependsOnTargets="_GetTestAssemblies"
+      Inputs="@(_TestAssembly)"
+      Outputs="@(_TestAssembly->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename)%(Extension)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
-    </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
         SearchPaths="$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0;$(FrameworkPathOverride)">
       <Output TaskParameter="ResolvedFiles"   PropertyName="_NUnit" />
     </ResolveAssemblyReference>
     <Exec
-        Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
+        Condition=" '%(_TestAssembly.TestType)' == 'nunit' "
+        Command="$(RemapAssemblyRefTool) &quot;%(_TestAssembly.Identity)&quot; &quot;$(IntermediateOutputPath)%(_TestAssembly.RecursiveDir)%(_TestAssembly.Filename)%(_TestAssembly.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
-    <ItemGroup>
-      <_DebugSymbol
-          Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
-          Condition="Exists('..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb')"
-      />
-    </ItemGroup>
     <Copy
-        SourceFiles="@(_DebugSymbol)"
-        DestinationFolder="$(IntermediateOutputPath)"
+        Condition=" '%(_TestAssembly.TestType)' == '' "
+        SourceFiles="@(_TestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(RecursiveDir)%(Filename)%(Extension)')"
+        DestinationFiles="@(_TestAssembly->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename)%(Extension)')"
+    />
+    <Copy
+        Condition="Exists('..\..\..\bin\$(Configuration)\bcl-tests\%(_TestAssembly.RecursiveDir)%(_TestAssembly.Filename).pdb')"
+        SourceFiles="@(_TestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(RecursiveDir)%(Filename).pdb')"
+        DestinationFiles="@(_TestAssembly->'$(IntermediateOutputPath)%(RecursiveDir)%(Filename).pdb')"
     />
   </Target>
-  <ItemGroup>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.es-ES.resources">
-      <Culture>es-ES</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.nn-NO.resources">
-      <Culture>nn-NO</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-  </ItemGroup>
-  <Target Name="_CreateTestResources"
-      BeforeTargets="ResolveAssemblyReferences"
-      DependsOnTargets="_ExtractTestResources"
-      Inputs="@(_TestResource)"
-      Outputs="$(IntermediateOutputPath)%(_TestResource.Culture)\%(_TestResource.Name)">
-    <MakeDir Directories="$(IntermediateOutputPath)%(_TestResource.Culture)" />
-    <AL
-        OutputAssembly="$(IntermediateOutputPath)%(Culture)\%(Name)"
-        Version="1.0.0.0"
-        Culture="%(Culture)"
-        EmbedResources="@(_TestResource)"
+  <Target Name="_WriteAssembliesList"
+      Outputs="nunit-assemblies.txt;xunit-assemblies.txt"
+      BeforeTargets="CoreCompile">
+    <WriteLinestoFile
+        File="nunit-assemblies.txt"
+        Lines="@(_TestAssembly->'%(Filename)%(Extension)')"
+        Condition=" '%(_TestAssembly.TestType)' == 'nunit' "
+        WriteOnlyWhenDifferent="True"
+        Overwrite="True"
     />
-  </Target>
-  <Target Name="_ExtractTestResources"
-      Inputs="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-      Outputs="@(_TestResource)">
-    <SystemUnzip
-        SourceFiles="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-        HostOS="$(HostOS)"
-        DestinationFolder="..\..\..\bin\$(Configuration)\bcl-tests"
+    <WriteLinestoFile
+        File="xunit-assemblies.txt"
+        Lines="@(_TestAssembly->'%(Filename)%(Extension)')"
+        Condition=" '%(_TestAssembly.TestType)' == '' "
+        WriteOnlyWhenDifferent="True"
+        Overwrite="True"
     />
-    <Touch Files="@(_TestResource)" />
   </Target>
 </Project>
