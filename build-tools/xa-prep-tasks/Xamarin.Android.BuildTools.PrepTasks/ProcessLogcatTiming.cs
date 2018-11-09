@@ -17,6 +17,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
+
+			if (!CheckInputFile ())
+				return false;
+
 			using (var reader = new StreamReader (InputFilename)) {
 				string line;
 				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
