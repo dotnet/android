@@ -6,6 +6,7 @@
   <PropertyGroup>
     <_SqliteBaseLibName>sqlite3_xamarin</_SqliteBaseLibName>
     <_SqliteLibName>lib$(_SqliteBaseLibName).so</_SqliteLibName>
+    <_BclFrameworkDir>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</_BclFrameworkDir>
   </PropertyGroup>
 
   <Target Name="_BuildSqlite" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
@@ -27,6 +28,7 @@
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)"
     />
+    <Copy SourceFiles="Mono.Data.Sqlite.dll.config" DestinationFolder="$(_BclFrameworkDir)" SkipUnchangedFiles="True" />
   </Target>
 
   <Target Name="CoreCompile"
