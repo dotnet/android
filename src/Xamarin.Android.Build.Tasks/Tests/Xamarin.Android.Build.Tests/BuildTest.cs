@@ -1904,7 +1904,9 @@ namespace App1
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
+				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
 				Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
+				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
 				var assemblyIdentityMap = new List<string> ();
 				foreach (var s in File.ReadLines (assemblyMap)) {
 					assemblyIdentityMap.Add (s);
@@ -1915,10 +1917,18 @@ namespace App1
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should not have run.");
+
+				var doc = XDocument.Load (cache);
+				var expectedCount = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
+
 				aar.Timestamp = DateTime.UtcNow.Add (TimeSpan.FromMinutes (2));
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should have run.");
+
+				doc = XDocument.Load (cache);
+				var count = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
+				Assert.AreEqual (expectedCount, count, "The same number of resource directories should have been resolved.");
 
 			}
 		}
