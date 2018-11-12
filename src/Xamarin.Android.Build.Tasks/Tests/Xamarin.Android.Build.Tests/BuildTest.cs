@@ -2103,7 +2103,7 @@ namespace App1
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
 					"_ResolveLibraryProjectImports should have run.");
 
-				var doc = XDocument.Load (cache);
+				doc = XDocument.Load (cache);
 				var count = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
 				Assert.AreEqual (expectedCount, count, "The same number of resource directories should have been resolved.");
 
