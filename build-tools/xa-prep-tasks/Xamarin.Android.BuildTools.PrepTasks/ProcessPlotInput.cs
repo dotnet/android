@@ -54,9 +54,23 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 		}
 
+		protected bool CheckInputFile ()
+		{
+			if (File.Exists (InputFilename))
+				return true;
+
+			Log.LogError ($"Input file '{InputFilename}' doesn't exist.");
+
+			return false;
+		}
+
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
+
+			if (!CheckInputFile ())
+				return false;
+
 			using (var reader = new StreamReader (InputFilename)) {
 				string line;
 

@@ -27,6 +27,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -315,6 +316,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
+	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
 	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
@@ -710,11 +712,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
-		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath"          Condition="'$(JdkJvmPath)' == ''" />
 		<Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
 		<Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
 	</ResolveSdks>
+	<ResolveJdkJvmPath
+			JavaSdkPath="$(_JavaSdkDirectory)"
+			Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
+		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
+	</ResolveJdkJvmPath>
 	<ValidateJavaVersion
+			Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			JavaSdkPath="$(_JavaSdkDirectory)"
@@ -1221,8 +1228,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
-		<_PropertyCacheItems Include="AdbTarget=$(AdbTarget)" />
-		<_PropertyCacheItems Include="AdbOptions=$(AdbOptions)" />
 	</ItemGroup>
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
@@ -1231,6 +1236,17 @@ because xbuild doesn't support framework reference assemblies.
 			Overwrite="true"
 			WriteOnlyWhenDifferent="true"
 	/>
+	<WriteLinesToFile
+			Condition=" '$(DesignTimeBuild)' != 'True' "
+			File="$(_AdbPropertiesCache)"
+			Lines="AdbTarget=$(AdbTarget);AdbOptions=$(AdbOptions)"
+			Overwrite="true"
+			WriteOnlyWhenDifferent="true"
+	/>
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidBuildPropertiesCache)" />
+		<FileWrites Include="$(_AdbPropertiesCache)" />
+	</ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -3171,6 +3187,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLintConfigFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AndroidBuildPropertiesCache)" />
+	<Delete Files="$(_AdbPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache).stamp" />
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />

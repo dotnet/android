@@ -215,7 +215,7 @@
         Timeout="300000">
     </RunUITests>
     <ProcessLogcatTiming
-        Condition=" '%(TestApk.TimingDefinitionsFilename)' != '' And Exists ('$(_LogcatFilenameBase)-%(TestApk.Package).txt')"
+        Condition=" '%(TestApk.TimingDefinitionsFilename)' != ''"
         ContinueOnError="ErrorAndContinue"
         InputFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
         ApplicationPackageName="%(TestApk.Package)"

@@ -204,7 +204,7 @@ There are a few ways to do it:
     where *LEVEL* is one of the [API levels from the `$(API_LEVELS)` variable][api-levels].
 
 [override-props]: ../README.md#build-configuration
-[api-levels]: ../build-tools/scripts/BuildEverything.mk#L31]
+[api-levels]: ../../build-tools/scripts/BuildEverything.mk#L31
 
 # How do I rebuild the Mono Runtime and Native Binaries?
 
@@ -284,7 +284,7 @@ where the "relevant directory" is the target of interest within
 `src/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
 invoke the `_InstallRuntimes` target so that the updated native libraries
 are copied into `bin/$(Configuration)/lib`, which will allow subsequent
-top-level `make` and [`xabuild`](../tools/xabuild) invocations to use them.
+top-level `make` and [`xabuild`](../../tools/xabuild) invocations to use them.
 
 For example, to rebuild Mono for armeabi-v7a:
 
