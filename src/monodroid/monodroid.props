@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_CommonDefines>-DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')" -DMONO_PATH=$(MonoSourceFullPath) -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_CommonDefines>
+    <_CommonDefines>-DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')" -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_CommonDefines>
     <_CmakeCommonHostFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeCommonHostFlags>
 
     <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeMxeCommonFlags>
