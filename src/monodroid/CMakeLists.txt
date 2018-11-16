@@ -89,6 +89,9 @@ set(TEST_COMPILER_ARGS
   finline-limit=300
   fvisibility=hidden
   fstack-protector
+  fno-rtti
+  fno-exceptions
+  flto
   Wa,--noexecstack
   Wformat
   Werror=format-security
@@ -238,6 +241,7 @@ set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${MONO_PATH}/support/zlib-helper.c
+  ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc

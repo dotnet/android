@@ -1773,19 +1773,21 @@ namespace App1
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
-				var apk = Path.Combine (Root, appb.ProjectDirectory,
-					app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					var data = ZipHelper.ReadFileFromZip (zipFile, "environment");
-					Assert.IsNotNull (data, "environment should exist in the apk.");
-					var env = Encoding.ASCII.GetString (data);
-					var lines = env.Split (new char [] { '\n' });
+				string javaEnv = Path.Combine (Root, appb.ProjectDirectory,
+							       app.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
+				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-					Assert.IsTrue (lines.Any (x => x.Contains ("MONO_DEBUG") &&
+				string[] lines = File.ReadAllLines (javaEnv);
+				Assert.IsTrue (lines.Any (x => x.Contains ("MONO_DEBUG") &&
 						x.Contains ("soft-breakpoints") &&
 						string.IsNullOrEmpty (sequencePointsMode) ? true : x.Contains ("gen-compact-seq-points")),
 						"The values from Mono.env should have been merged into environment");
-				}
+
+				string dexFile = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes.dex");
+				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
+				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, appb.AndroidSdkDirectory),
+					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
+
 				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
 				var rp = new ReaderParameters { ReadSymbols = false };
 				foreach (var assemblyFile in Directory.EnumerateFiles (assemblyDir, "*.dll")) {
@@ -1811,21 +1813,22 @@ namespace App1
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					var data = ZipHelper.ReadFileFromZip (zipFile, "environment");
-					Assert.IsNotNull (data, "environment should exist in the apk.");
-					var env = Encoding.ASCII.GetString (data);
-					var lines = env.Split (new char [] { '\n' });
+				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
+							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
+				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-					Assert.IsTrue (lines.Any (x =>
-						string.IsNullOrEmpty (sequencePointsMode)
-							? !x.Contains ("MONO_DEBUG")
-							: x.Contains ("MONO_DEBUG") && x.Contains ("gen-compact-seq-points")),
-						"environment {0} contain MONO_DEBUG=gen-compact-seq-points",
-						string.IsNullOrEmpty (sequencePointsMode) ? "should not" : "should");
-				}
+				string[] lines = File.ReadAllLines (javaEnv);
+				Assert.IsTrue (lines.Any (x =>
+							  string.IsNullOrEmpty (sequencePointsMode)
+							  ? !x.Contains ("MONO_DEBUG")
+							  : x.Contains ("MONO_DEBUG") && x.Contains ("gen-compact-seq-points")),
+					       "environment {0} contain MONO_DEBUG=gen-compact-seq-points",
+					       string.IsNullOrEmpty (sequencePointsMode) ? "should not" : "should");
+
+				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
+				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
+				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
+					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
 			}
 		}
 

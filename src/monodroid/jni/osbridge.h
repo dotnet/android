@@ -107,7 +107,7 @@ namespace xamarin { namespace android { namespace internal
 		int get_gref_gc_threshold ();
 		JNIEnv* ensure_jnienv ();
 		void initialize_on_onload (JavaVM *vm, JNIEnv *env);
-		void initialize_on_runtime_init (JNIEnv *env);
+		void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass);
 		void add_monodroid_domain (MonoDomain *domain);
 		void remove_monodroid_domain (MonoDomain *domain);
 		void on_destroy_contexts ();

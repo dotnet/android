@@ -26,6 +26,7 @@ extern "C" {
 #include "logger.h"
 }
 
+#include "globals.h"
 #include "xamarin_getifaddrs.h"
 
 /* Some of these aren't defined in android's rtnetlink.h (as of ndk 16). We define values for all of
@@ -269,6 +270,8 @@ typedef void (*freeifaddrs_impl_fptr)(struct _monodroid_ifaddrs *ifa);
 
 static getifaddrs_impl_fptr getifaddrs_impl = NULL;
 static freeifaddrs_impl_fptr freeifaddrs_impl = NULL;
+static bool initialized;
+static std::mutex init_lock;
 
 void
 _monodroid_getifaddrs_init ()
@@ -279,6 +282,14 @@ _monodroid_getifaddrs_init ()
 int
 _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap)
 {
+	if (!initialized) {
+		std::lock_guard<std::mutex> lock (init_lock);
+		if (!initialized) {
+			_monodroid_getifaddrs_init ();
+			initialized = true;
+		}
+	}
+
 	int ret = -1;
 
 	if (getifaddrs_impl)
@@ -361,10 +372,11 @@ get_ifaddrs_impl (int (**getifaddrs_impl) (struct _monodroid_ifaddrs **ifap), vo
 			*freeifaddrs_impl = reinterpret_cast<void (*) (struct _monodroid_ifaddrs*)> (dlsym (libc, "freeifaddrs"));
 	}
 
-	if (!*getifaddrs_impl)
+	if (!*getifaddrs_impl) {
 		log_info (LOG_NET, "This libc does not have getifaddrs/freeifaddrs, using Xamarin's\n");
-	else
+	} else {
 		log_info (LOG_NET, "This libc has getifaddrs/freeifaddrs\n");
+	}
 }
 
 static void
@@ -540,20 +552,22 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 		}
 
 #if DEBUG
-		log_debug (LOG_NETLINK, "response flags:");
-		if (netlink_reply.msg_flags == 0)
-			log_debug (LOG_NETLINK, "   [NONE]");
-		else {
-			if (netlink_reply.msg_flags & MSG_EOR)
-				log_debug (LOG_NETLINK, "   MSG_EOR");
-			if (netlink_reply.msg_flags & MSG_TRUNC)
-				log_debug (LOG_NETLINK, "   MSG_TRUNC");
-			if (netlink_reply.msg_flags & MSG_CTRUNC)
-				log_debug (LOG_NETLINK, "   MSG_CTRUNC");
-			if (netlink_reply.msg_flags & MSG_OOB)
-				log_debug (LOG_NETLINK, "   MSG_OOB");
-			if (netlink_reply.msg_flags & MSG_ERRQUEUE)
-				log_debug (LOG_NETLINK, "   MSG_ERRQUEUE");
+		if (utils.should_log (LOG_NETLINK)) {
+			log_debug_nocheck (LOG_NETLINK, "response flags:");
+			if (netlink_reply.msg_flags == 0)
+				log_debug_nocheck (LOG_NETLINK, "   [NONE]");
+			else {
+				if (netlink_reply.msg_flags & MSG_EOR)
+					log_debug_nocheck (LOG_NETLINK, "   MSG_EOR");
+				if (netlink_reply.msg_flags & MSG_TRUNC)
+					log_debug_nocheck (LOG_NETLINK, "   MSG_TRUNC");
+				if (netlink_reply.msg_flags & MSG_CTRUNC)
+					log_debug_nocheck (LOG_NETLINK, "   MSG_CTRUNC");
+				if (netlink_reply.msg_flags & MSG_OOB)
+					log_debug_nocheck (LOG_NETLINK, "   MSG_OOB");
+				if (netlink_reply.msg_flags & MSG_ERRQUEUE)
+					log_debug_nocheck (LOG_NETLINK, "   MSG_ERRQUEUE");
+			}
 		}
 #endif
 
@@ -784,11 +798,13 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 			if (prefix_bytes + 2 < data_length)
 				/* Set the rest of the mask bits in the byte following the last 0xFF value */
 				netmask_data [prefix_bytes + 1] = 0xff << (8 - (prefix_length % 8));
-			log_debug (LOG_NETLINK, "   netmask is: ");
-			for (i = 0; i < data_length; i++) {
-				log_debug (LOG_NETLINK, "%s%u", i == 0 ? " " : ".", (unsigned char)ifa->ifa_netmask->sa_data [i]);
+			if (utils.should_log (LOG_NETLINK)) {
+				log_debug_nocheck (LOG_NETLINK, "   netmask is: ");
+				for (i = 0; i < data_length; i++) {
+					log_debug_nocheck (LOG_NETLINK, "%s%u", i == 0 ? " " : ".", (unsigned char)ifa->ifa_netmask->sa_data [i]);
+				}
+				log_debug_nocheck (LOG_NETLINK, "\n");
 			}
-			log_debug (LOG_NETLINK, "\n");
 		}
 	}
 
@@ -975,8 +991,10 @@ get_link_info (const struct nlmsghdr *message)
 				if (!ifa->ifa_name) {
 					goto error;
 				}
-				log_debug (LOG_NETLINK, "   interface name (payload length: %d; string length: %d)\n", RTA_PAYLOAD (attribute), strlen (ifa->ifa_name));
-				log_debug (LOG_NETLINK, "     %s\n", ifa->ifa_name);
+				if (utils.should_log (LOG_NETLINK)) {
+					log_debug_nocheck (LOG_NETLINK, "   interface name (payload length: %d; string length: %d)\n", RTA_PAYLOAD (attribute), strlen (ifa->ifa_name));
+					log_debug_nocheck (LOG_NETLINK, "     %s\n", ifa->ifa_name);
+				}
 				break;
 
 			case IFLA_BROADCAST:
@@ -1094,10 +1112,13 @@ struct enumvalue iflas[] = {
 static void
 print_ifla_name (int id)
 {
+	if (!utils.should_log (LOG_NETLINK))
+		return;
+
 	int i = 0;
 	while (1) {
 		if (iflas [i].value == -1 && iflas [i].name == 0) {
-			log_info (LOG_NETLINK, "Unknown ifla->name: unknown id %d\n", id);
+			log_info_nocheck (LOG_NETLINK, "Unknown ifla->name: unknown id %d\n", id);
 			break;
 		}
 		
@@ -1105,7 +1126,7 @@ print_ifla_name (int id)
 			i++;
 			continue;
 		}
-		log_info (LOG_NETLINK, "ifla->name: %s (%d)\n", iflas [i].name, iflas [i].value);
+		log_info_nocheck (LOG_NETLINK, "ifla->name: %s (%d)\n", iflas [i].name, iflas [i].value);
 		break;
 	}
 }
@@ -1113,11 +1134,14 @@ print_ifla_name (int id)
 static void
 print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 {
+	if (!utils.should_log (LOG_NETLINK))
+		return;
+
 	struct _monodroid_ifaddrs *cur;
 	char *msg, *tmp;
 	
 	if (!list) {
-		log_info (LOG_NETLINK, "monodroid-net", "No list to print in %s", __FUNCTION__);
+		log_info_nocheck (LOG_NETLINK, "monodroid-net", "No list to print in %s", __FUNCTION__);
 		return;
 	}
 
@@ -1132,7 +1156,7 @@ print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 		cur = cur->ifa_next;
 	}
 
-	log_info (LOG_NETLINK, "%s: %s", title, msg ? msg : "[no addresses]");
+	log_info_nocheck (LOG_NETLINK, "%s: %s", title, msg ? msg : "[no addresses]");
 	free (msg);
 }
 #endif

@@ -63,7 +63,9 @@ public class MonoPackageManager {
 							externalLegacyDir
 						},
 						MonoPackageManager_Resources.Assemblies,
-						context.getPackageName ());
+						context.getPackageName (),
+						android.os.Build.VERSION.SDK_INT,
+						mono.android.app.XamarinAndroidEnvironmentVariables.Variables);
 				
 				mono.android.app.ApplicationRegistration.registerApplications ();
 				

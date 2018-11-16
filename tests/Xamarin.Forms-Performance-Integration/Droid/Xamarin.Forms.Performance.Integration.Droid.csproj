@@ -18,6 +18,7 @@
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AndroidUseAapt2 Condition="'$(AndroidUseAapt2)' == ''">True</AndroidUseAapt2>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
+    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
@@ -40,9 +41,8 @@
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
-    <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
+    <AndroidGenerateJniMarshalMethods Condition=" '$(HostOS)' != 'Linux' ">True</AndroidGenerateJniMarshalMethods>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

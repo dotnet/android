@@ -25,7 +25,13 @@
 #ifdef __cplusplus
 #define MONO_API extern "C" MONO_API_DEF
 #else
-#define MONO_API MONO_API_DEF
+
+/* Use our own definition, to stay consistent */
+#if defined (MONO_API)
+#undef MONO_API
 #endif
+#define MONO_API MONO_API_DEF
+
+#endif /* __cplusplus */
 
 #endif  /* defined __MONODROID_H */

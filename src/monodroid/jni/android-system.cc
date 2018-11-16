@@ -1,8 +1,8 @@
-#include <climits>
-#include <cstring>
-#include <cerrno>
-#include <cassert>
-#include <cctype>
+#include <limits.h>
+#include <string.h>
+#include <errno.h>
+#include <assert.h>
+#include <ctype.h>
 #include <dlfcn.h>
 
 #ifdef ANDROID
@@ -23,6 +23,7 @@
 #include "android-system.h"
 #include "monodroid.h"
 #include "monodroid-glue-internal.h"
+#include "jni-wrappers.h"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -40,7 +41,7 @@ constexpr char AndroidSystem::MONO_SGEN_SO[];
 constexpr char AndroidSystem::MONO_SGEN_ARCH_SO[];
 
 #if defined (WINDOWS)
-pthread_mutex_t AndroidSystem::readdir_mutex = PTHREAD_MUTEX_INITIALIZER;
+std::mutex AndroidSystem::readdir_mutex;
 char *AndroidSystem::libmonoandroid_directory_path = nullptr;
 #endif
 
@@ -396,12 +397,12 @@ AndroidSystem::get_libmonosgen_path ()
 	// storage location before loading it.
 	copy_native_libraries_to_internal_location ();
 
-	if (!embedded_dso_mode) {
+	if (!is_embedded_dso_mode_enabled ()) {
 		for (i = 0; i < MAX_OVERRIDES; ++i)
 			TRY_LIBMONOSGEN (override_dirs [i]);
 	}
 #endif
-	if (!embedded_dso_mode) {
+	if (!is_embedded_dso_mode_enabled ()) {
 		for (i = 0; i < app_lib_directories_size; i++) {
 			TRY_LIBMONOSGEN (app_lib_directories [i]);
 		}
@@ -450,7 +451,7 @@ AndroidSystem::get_libmonosgen_path ()
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", MONO_SGEN_SO);
 
 #ifndef RELEASE
-	if (!embedded_dso_mode) {
+	if (!is_embedded_dso_mode_enabled ()) {
 		for (i = 0; i < MAX_OVERRIDES; ++i) {
 			if (override_dirs [i] == NULL)
 				continue;
@@ -493,14 +494,14 @@ AndroidSystem::load_dso (const char *path, int dl_flags, mono_bool skip_exists_c
 		return NULL;
 
 	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
-	if (!skip_exists_check && !embedded_dso_mode && !utils.file_exists (path)) {
+	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !utils.file_exists (path)) {
 		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
 		return NULL;
 	}
 
 	void *handle = dlopen (path, dl_flags);
-	if (handle == NULL)
-		log_info (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
+	if (handle == NULL && utils.should_log (LOG_ASSEMBLY))
+		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
 	return handle;
 }
 
@@ -583,7 +584,7 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs
 	assert (needs_free);
 
 	*needs_free = FALSE;
-	if (embedded_dso_mode)
+	if (is_embedded_dso_mode_enabled ())
 		return NULL;
 
 	char *dso_path = nullptr;
@@ -731,89 +732,95 @@ AndroidSystem::get_gref_gc_threshold ()
 }
 
 void
-AndroidSystem::setup_environment_from_line (const char *line)
+AndroidSystem::setup_environment (jstring_wrapper& name, jstring_wrapper& value)
 {
-	char **entry;
-	const char *k, *v;
+	const char *k = name.get_cstr ();
 
-	if (line == NULL || !isprint (line [0]))
+	if (k == nullptr || *k == '\0')
 		return;
 
-	entry = utils.monodroid_strsplit (line, "=", 2);
+	const char *v = value.get_cstr ();
+	if (v == nullptr || *v == '\0')
+		v = "";
 
-	if ((k = entry [0]) && *k &&
-			(v = entry [1]) && *v) {
-		if (islower (k [0])) {
-			add_system_property (k, v);
-		} else {
-			setenv (k, v, 1);
+	if (isupper (k [0]) || k [0] == '_') {
+		if (k [0] == '_') {
+			if (strcmp (k, "__XA_DSO_IN_APK") == 0) {
+				knownEnvVars.DSOInApk = true;
+				return;
+			}
 		}
+
+		setenv (k, v, 1);
+		return;
 	}
 
-	utils.monodroid_strfreev (entry);
-}
-
-void
-AndroidSystem::setup_environment_from_file (const char *apk, int index, int apk_count, void *user_data)
-{
-	unzFile file;
-	if ((file = unzOpen (apk)) == nullptr)
-		return;
-
-	if (unzLocateFile (file, "environment", 0) == UNZ_OK) {
-		unz_file_info info;
-
-		if (unzGetCurrentFileInfo (file, &info, nullptr, 0, nullptr, 0, nullptr, 0) == UNZ_OK &&
-				unzOpenCurrentFile (file) == UNZ_OK) {
-			char *contents = new char [info.uncompressed_size+1];
-			if (contents != NULL &&
-					unzReadCurrentFile (file, contents, info.uncompressed_size) > 0) {
-
-				int i;
-				char *line = contents;
-				contents [info.uncompressed_size] = '\0';
-
-				for (i = 0; i < info.uncompressed_size; ++i) {
-					if (contents [i] != '\n')
-						continue;
-
-					contents [i] = '\0';
-					setup_environment_from_line (line);
-					line = &contents [i+1];
-				}
-
-				if (line < (contents + info.uncompressed_size))
-					setup_environment_from_line (line);
-
-				free (contents);
+	if (k [0] == 'm') {
+		if (strcmp (k, "mono.aot") == 0) {
+			if (*v == '\0') {
+				knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_NONE;
+				return;
 			}
 
-			unzCloseCurrentFile (file);
+			switch (v [0]) {
+				case 'n':
+					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_NORMAL;
+					break;
+
+				case 'h':
+					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_HYBRID;
+					break;
+
+				case 'f':
+					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_FULL;
+					break;
+
+				default:
+					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_UNKNOWN;
+					break;
+			}
+
+			if (knownEnvVars.MonoAOT != MonoAotMode::MONO_AOT_MODE_UNKNOWN)
+				log_info (LOG_DEFAULT, "Mono AOT mode: %s", v);
+			else
+				log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", v);
+
+			return;
+		}
+
+		if (strcmp (k, "mono.llvm") == 0) {
+			knownEnvVars.MonoLLVM = true;
+			return;
 		}
 	}
 
-	unzClose (file);
+	add_system_property (k, v);
 }
 
 void
-AndroidSystem::for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data)
+AndroidSystem::setup_environment (JNIEnv *env, jobjectArray environmentVariables)
 {
-	int i;
-	jsize apksLength = env->GetArrayLength (runtimeApks);
-	for (i = 0; i < apksLength; ++i) {
-		jstring e       = reinterpret_cast<jstring> (env->GetObjectArrayElement (runtimeApks, i));
-		const char *apk = env->GetStringUTFChars (e, nullptr);
+	jsize envvarsLength = env->GetArrayLength (environmentVariables);
+	if (envvarsLength == 0)
+		return;
 
-
-		(this->*handler) (apk, i, apksLength, user_data);
-		env->ReleaseStringUTFChars (e, apk);
+	jstring_wrapper name (env), value (env);
+	for (jsize i = 0; (i + 1) < envvarsLength; i += 2) {
+		name = reinterpret_cast<jstring> (env->GetObjectArrayElement (environmentVariables, i));
+		value = reinterpret_cast<jstring> (env->GetObjectArrayElement (environmentVariables, i + 1));
+		setup_environment (name, value);
 	}
 }
 
 void
-AndroidSystem::setup_environment (JNIEnv *env, jobjectArray runtimeApks)
+AndroidSystem::for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data)
 {
-	for_each_apk (env, runtimeApks, &AndroidSystem::setup_environment_from_file, NULL);
+	size_t apksLength = runtimeApks.get_length ();
+	for (size_t i = 0; i < apksLength; ++i) {
+		jstring_wrapper &e = runtimeApks [i];
+
+		(this->*handler) (e.get_cstr (), i, apksLength, user_data);
+	}
 }
 
 void
@@ -827,7 +834,7 @@ AndroidSystem::setup_process_args_apk (const char *apk, int index, int apk_count
 }
 
 void
-AndroidSystem::setup_process_args (JNIEnv *env, jobjectArray runtimeApks)
+AndroidSystem::setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks)
 {
 	for_each_apk (env, runtimeApks, &AndroidSystem::setup_process_args_apk, NULL);
 }
@@ -841,7 +848,7 @@ AndroidSystem::add_apk_libdir (const char *apk, int index, int apk_count, void *
 }
 
 void
-AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jobjectArray runtimeApks)
+AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks)
 {
 	// Man, the cast is ugly...
 	for_each_apk (env, runtimeApks, &AndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
@@ -858,7 +865,7 @@ AndroidSystem::readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent *
 {
 	int error_code = 0;
 
-	pthread_mutex_lock (&readdir_mutex);
+	std::lock_guard<std::mutex> lock (readdir_mutex);
 	errno = 0;
 	entry = _wreaddir (dirp);
 	*result = entry;
@@ -866,7 +873,6 @@ AndroidSystem::readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent *
 	if (entry == NULL && errno != 0)
 		error_code = -1;
 
-	pthread_mutex_unlock (&readdir_mutex);
 	return error_code;
 }
 
