@@ -52,7 +52,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingReso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImports-Tests", "tests\ResolveImports\Xamarin.Android.BindingResolveImports-Tests\Xamarin.Android.BindingResolveImports-Tests.csproj", "{B297008B-C313-455E-B230-E119589D2D79}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.shproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration.Droid", "tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj", "{576312CC-83FF-48B1-A473-488CDC7121AD}"
 EndProject
@@ -82,12 +82,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj", "{056ED976-618F-4A3E-910E-AA25230C2296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO-UnitTests", "tests\EmbeddedDSOs\EmbeddedDSO-UnitTests\EmbeddedDSO-UnitTests.csproj", "{B160F0E7-799A-4EB9-92B8-D71623C7674A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO-UnitTests", "tests\EmbeddedDSOs\EmbeddedDSO-UnitTests\EmbeddedDSO-UnitTests.csproj", "{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.projitems*{195be9c2-1f91-40dc-bd6d-de860bf083fb}*SharedItemsImports = 13
-		tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.projitems*{576312cc-83ff-48b1-a473-488cdc7121ad}*SharedItemsImports = 4
+		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{40ead437-216b-4df4-8258-3f47e1672c3a}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -138,6 +137,10 @@ Global
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -158,6 +161,10 @@ Global
 		{B297008B-C313-455E-B230-E119589D2D79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B297008B-C313-455E-B230-E119589D2D79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{576312CC-83FF-48B1-A473-488CDC7121AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{576312CC-83FF-48B1-A473-488CDC7121AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{576312CC-83FF-48B1-A473-488CDC7121AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -218,6 +225,10 @@ Global
 		{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

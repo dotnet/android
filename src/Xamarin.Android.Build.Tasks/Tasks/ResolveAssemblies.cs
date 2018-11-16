@@ -77,7 +77,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				resolver.SearchDirectories.Add (dir);
 
-			var assemblies = new Dictionary<string, string> ();
+			var assemblies = new Dictionary<string, ITaskItem> ();
 
 			var topAssemblyReferences = new List<AssemblyDefinition> ();
 			var logger = new NuGetLogger((s) => {
@@ -111,7 +111,13 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 					topAssemblyReferences.Add (assemblyDef);
-					assemblies [assemblyDef.Name.Name] = Path.GetFullPath (assemblyDef.MainModule.FileName);
+					var taskItem = new TaskItem (assembly) {
+						ItemSpec = Path.GetFullPath (assemblyDef.MainModule.FileName),
+					};
+					if (string.IsNullOrEmpty (taskItem.GetMetadata ("ReferenceAssembly"))) {
+						taskItem.SetMetadata ("ReferenceAssembly", taskItem.ItemSpec);
+					}
+					assemblies [assemblyDef.Name.Name] = taskItem;
 				}
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
@@ -142,17 +148,16 @@ namespace Xamarin.Android.Tasks
 			var resolvedUserAssemblies      = new List<ITaskItem> (assemblies.Count);
 			foreach (var assembly in assemblies.Values) {
 				var mdb = assembly + ".mdb";
-				var pdb = Path.ChangeExtension (assembly, "pdb");
+				var pdb = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 				if (File.Exists (mdb))
 					resolvedSymbols.Add (new TaskItem (mdb));
 				if (File.Exists (pdb) && Files.IsPortablePdb (pdb))
 					resolvedSymbols.Add (new TaskItem (pdb));
-				var assemblyItem = new TaskItem (assembly);
-				resolvedAssemblies.Add (assemblyItem);
-				if (MonoAndroidHelper.IsFrameworkAssembly (assembly, checkSdkPath: true)) {
-					resolvedFrameworkAssemblies.Add (assemblyItem);
+				resolvedAssemblies.Add (assembly);
+				if (MonoAndroidHelper.IsFrameworkAssembly (assembly.ItemSpec, checkSdkPath: true)) {
+					resolvedFrameworkAssemblies.Add (assembly);
 				} else {
-					resolvedUserAssemblies.Add (assemblyItem);
+					resolvedUserAssemblies.Add (assembly);
 				}
 			}
 			ResolvedAssemblies = resolvedAssemblies.ToArray ();
@@ -201,7 +206,7 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, Dictionary<string, string> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
+		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, Dictionary<string, ITaskItem> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
 		{
 			var assemblyName = assembly.Name.Name;
 			var fullPath = Path.GetFullPath (assembly.MainModule.FileName);
@@ -221,8 +226,9 @@ namespace Xamarin.Android.Tasks
 			indent += 2;
 
 			// Add this assembly
-			if (!topLevel)
-				assemblies [assemblyName] = fullPath;
+			if (!topLevel) {
+				assemblies [assemblyName] = CreateAssemblyTaskItem (fullPath);
+			}
 
 			// Recurse into each referenced assembly
 			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
@@ -299,7 +305,7 @@ namespace Xamarin.Android.Tasks
 			return mode;
 		}
 
-		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, Dictionary<string, string> assemblies)
+		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, Dictionary<string, ITaskItem> assemblies)
 		{
 			var i18n = Linker.ParseI18nAssemblies (I18nAssemblies);
 			var link = ParseLinkMode (LinkMode);
@@ -326,10 +332,18 @@ namespace Xamarin.Android.Tasks
 				ResolveI18nAssembly (resolver, "I18N.West", assemblies);
 		}
 
-		void ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name, Dictionary<string, string> assemblies)
+		void ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name, Dictionary<string, ITaskItem> assemblies)
 		{
 			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
-			assemblies [name] = Path.GetFullPath (assembly.MainModule.FileName);
+			var assemblyFullPath = Path.GetFullPath (assembly.MainModule.FileName);
+			assemblies [name] = CreateAssemblyTaskItem (assemblyFullPath);
+		}
+
+		static ITaskItem CreateAssemblyTaskItem (string assemblyFullPath)
+		{
+			return new TaskItem (assemblyFullPath, new Dictionary<string, string> {
+				{ "ReferenceAssembly", assemblyFullPath }
+			});
 		}
 	}
 }
