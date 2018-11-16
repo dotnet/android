@@ -26,6 +26,7 @@
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
+        MaxJdkVersion="$(MaxJdkVersion)"
         Output="$(_TopDir)\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props">
       <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
     </JdkInfo>
