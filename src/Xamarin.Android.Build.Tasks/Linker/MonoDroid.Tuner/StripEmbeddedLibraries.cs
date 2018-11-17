@@ -14,7 +14,7 @@ namespace MonoDroid.Tuner
 			if (!Annotations.HasAction (assembly))
 				return;
 			var action = Annotations.GetAction (assembly);
-			if (action == AssemblyAction.Skip || action == AssemblyAction.Delete)
+			if (action == AssemblyAction.Delete)
 				return;
 
 			var fileName = assembly.Name.Name + ".dll";
@@ -33,7 +33,7 @@ namespace MonoDroid.Tuner
 					}
 				}
 			}
-			if (assembly_modified && action == AssemblyAction.Copy) {
+			if (assembly_modified && (action == AssemblyAction.Copy || action == AssemblyAction.Skip)) {
 				Annotations.SetAction (assembly, AssemblyAction.Save);
 			}
 		}

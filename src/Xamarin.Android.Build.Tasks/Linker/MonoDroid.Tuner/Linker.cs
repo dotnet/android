@@ -61,6 +61,7 @@ namespace MonoDroid.Tuner
 
 			if (options.LinkNone) {
 				pipeline.AppendStep (new FixAbstractMethodsStep ());
+				pipeline.AppendStep (new StripEmbeddedLibraries ());
 				pipeline.AppendStep (new OutputStep ());
 				return pipeline;
 			}
@@ -113,6 +114,7 @@ namespace MonoDroid.Tuner
 			// monodroid tuner steps
 			if (!string.IsNullOrWhiteSpace (options.ProguardConfiguration))
 				pipeline.AppendStep (new GenerateProguardConfiguration (options.ProguardConfiguration));
+			//NOTE: StripEmbeddedLibraries should run last since Skip assemblies might change to Save
 			pipeline.AppendStep (new StripEmbeddedLibraries ());
 			// end monodroid specific
 			pipeline.AppendStep (new RegenerateGuidStep ());
