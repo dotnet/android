@@ -37,6 +37,46 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildBasicApplicationWithNuGetPackageConflicts ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageReferences = {
+					new Package () {
+						Id = "System.Buffers",
+						Version = "4.4.0",
+						TargetFramework = "monoandroid90",
+					},
+					new Package () {
+						Id = "System.Memory",
+						Version = "4.5.1",
+						TargetFramework = "monoandroid90",
+					},
+				}
+			};
+
+			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.fs") {
+				TextContent = () => @"
+using System;
+
+class MemTest {
+	static void Test ()
+	{
+		var x = new Memory<int> ().Length;
+		Console.WriteLine (x);
+
+		var array = new byte [100];
+		var arraySpan = new Span<byte> (array);
+		Console.WriteLine (arraySpan.IsEmpty);
+	}
+}"
+			});
+
+			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationWithNuGetPackageConflicts")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[Category ("Minor")]
 		public void BuildBasicApplicationFSharp ()
 		{
