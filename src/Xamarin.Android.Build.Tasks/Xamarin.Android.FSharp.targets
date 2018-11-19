@@ -32,6 +32,8 @@ Copyright (C) 2012 Xamarin. All rights reserved.
              Disable generation to avoid "bizarre" build errors. -->
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
         <_AndroidResourceDesigner>Resource.designer.fs</_AndroidResourceDesigner>
+        <!-- Enable nuget package conflict resolution -->
+        <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     </PropertyGroup>
     <!-- Force Xbuild to behave like msbuild -->
     <PropertyGroup>
