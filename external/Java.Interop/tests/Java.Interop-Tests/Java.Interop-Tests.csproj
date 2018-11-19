@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Java.InteropTests</RootNamespace>
     <AssemblyName>Java.Interop-Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

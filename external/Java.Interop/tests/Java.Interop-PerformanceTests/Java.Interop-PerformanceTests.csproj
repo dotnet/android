@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Java.Interop.PerformanceTests</RootNamespace>
     <AssemblyName>Java.Interop-PerformanceTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

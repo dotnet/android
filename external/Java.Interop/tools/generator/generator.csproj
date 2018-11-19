@@ -15,7 +15,7 @@
         <Variable name="FACADES_PATH" value="$(XABuildOutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades" />
       </EnvironmentVariables>
     </EnvironmentVariables>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

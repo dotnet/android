@@ -51,14 +51,17 @@ run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
 include build-tools/scripts/msbuild.mk
 
+prepare:: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+
 prepare:: prepare-bootstrap
+	$(MSBUILD) $(MSBUILD_FLAGS) /t:Restore Java.Interop.sln
 
 prepare-bootstrap: prepare-external bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll
 
 bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks.csproj \
 		external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj \
 		$(wildcard build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
-	$(MSBUILD) $(MSBUILD_FLAGS) "$<"
+	$(MSBUILD) $(MSBUILD_FLAGS) /restore "$<"
 
 prepare-external $(PREPARE_EXTERNAL_FILES): $(PACKAGES) $(NUNIT_CONSOLE)
 	git submodule update --init --recursive
@@ -82,15 +85,13 @@ else
 	JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD = '/@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@/ {' -e 'r $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)' -e 'd' -e '}'
 endif
 
-prepare:: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
-
 src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config.in \
 		bin/Build$(CONFIGURATION)/JdkInfo.props
 	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' -e $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD) < $< > $@
 
-fxcop: lib/gendarme-2.10/gendarme.exe bin/GendarmeDebug/Java.Interop.dll
-	cp src/Java.Interop/obj/Gendarme/Java.Interop.dll.mdb bin/GendarmeDebug/
-	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/GendarmeDebug/Java.Interop.dll
+fxcop: lib/gendarme-2.10/gendarme.exe bin/GendarmeDebug/netstandard2.0/Java.Interop.dll
+	cp src/Java.Interop/obj/Gendarme/netstandard2.0/Java.Interop.dll.mdb bin/GendarmeDebug/netstandard2.0
+	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/GendarmeDebug/netstandard2.0/Java.Interop.dll
 
 lib/gendarme-2.10/gendarme.exe:
 	-mkdir -p `dirname "$@"`
@@ -127,7 +128,7 @@ bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Inter
 bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
 
-bin/GendarmeDebug/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
+bin/GendarmeDebug/netstandard2.0/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` src/Java.Interop/Java.Interop.csproj
 
 CSHARP_REFS = \

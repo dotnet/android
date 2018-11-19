@@ -3,6 +3,17 @@
   <PropertyGroup>
     <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
   </PropertyGroup>
+  <ItemGroup>
+    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyObject.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyThrowable.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\GCUserPeerable.java" />
+    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(OutputPath)java-interop.jar">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Target Name="BuildJnienvGen"
       Inputs="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
       Outputs="$(JNIEnvGenPath)\jnienv-gen.exe">
@@ -11,14 +22,23 @@
     />
   </Target>
   <Target Name="BuildJniEnvironment_g_cs"
+      BeforeTargets="BeforeCompile"
+      DependsOnTargets="BuildJnienvGen"
       Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
       Outputs="Java.Interop\JniEnvironment.g.cs;$(IntermediateOutputPath)\jni.c">
     <MakeDir Directories="$(IntermediateOutputPath)" />
+    <PropertyGroup>
+      <_AddCompile Condition=" !Exists('Java.Interop\JniEnvironment.g.cs') ">True</_AddCompile>
+    </PropertyGroup>
     <Exec
         Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c"
     />
+    <ItemGroup>
+      <Compile Include="Java.Interop\JniEnvironment.g.cs" Condition=" '$(_AddCompile)' == 'True' " />
+    </ItemGroup>
   </Target>
   <Target Name="BuildInteropJar"
+      AfterTargets="AfterCompile"
       Inputs="@(CompileJavaInteropJar)"
       Outputs="$(OutputPath)java-interop.jar">
     <MakeDir Directories="$(OutputPath);$(IntermediateOutputPath)ji-classes" />

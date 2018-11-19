@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools.LogcatParse.Tests</RootNamespace>
     <AssemblyName>LogcatParse-Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

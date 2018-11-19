@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Java.Interop</RootNamespace>
     <AssemblyName>Java.Runtime.Environment</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

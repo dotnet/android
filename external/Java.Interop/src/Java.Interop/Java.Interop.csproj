@@ -1,134 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <ProjectGuid>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</ProjectGuid>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Java.Interop</RootNamespace>
-    <AssemblyName>Java.Interop</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.5</TargetFrameworkVersion>
     <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyTitle>Java.Interop</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>Microsoft Corporation</Copyright>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Gendarme|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\..\bin\GendarmeDebug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Java.Interop\JniArgumentValue.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.g.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Errors.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Object.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Monitors.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.References.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Strings.cs" />
-    <Compile Include="Java.Interop\JniEnvironment.Types.cs" />
-    <Compile Include="Java.Interop\JniFieldInfo.cs" />
-    <Compile Include="Java.Interop\JniManagedPeerStates.cs" />
-    <Compile Include="Java.Interop\JniMethodInfo.cs" />
-    <Compile Include="Java.Interop\JniObjectReference.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.cs" />
-    <Compile Include="Java.Interop\JniReleaseArrayElementsMode.cs" />
-    <Compile Include="Java.Interop\JniRuntime.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniObjectReferenceManager.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniTypeManager.cs" />
-    <Compile Include="Java.Interop\JniTransition.cs" />
-    <Compile Include="Java.Interop\JniType.cs" />
-    <Compile Include="Java.Interop\JniTypeSignature.cs" />
-    <Compile Include="Java.Interop\JniTypeSignatureAttribute.cs" />
-    <Compile Include="Java.Interop\JniNativeMethodRegistration.cs" />
-    <Compile Include="Java.Interop\IJavaPeerable.cs" />
-    <Compile Include="Java.Interop\JniObjectReferenceOptions.cs" />
-    <Compile Include="Java.Interop\JniObjectReferenceType.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.cs">
-      <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Java.Interop\JniPeerMembers.JniStaticMethods.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceMethods.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.JniInstanceFields.cs" />
-    <Compile Include="Java.Interop\JniPeerMembers.JniFields.cs">
-      <DependentUpon>JniPeerMembers.JniFields.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Java.Interop\JniPeerMembers.JniStaticFields.cs" />
-    <Compile Include="Java.Interop\JniAddNativeMethodRegistrationAttribute.cs" />
-    <Compile Include="Java.Interop\JniNativeMethodRegistrationArguments.cs" />
-    <Compile Include="Java.Interop\JavaArray.cs" />
-    <Compile Include="Java.Interop\JavaException.cs" />
-    <Compile Include="Java.Interop\JavaObject.cs" />
-    <Compile Include="Java.Interop\JavaObjectArray.cs" />
-    <Compile Include="Java.Interop\JavaPeerableExtensions.cs" />
-    <Compile Include="Java.Interop\JavaPrimitiveArrays.cs">
-      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Java.Interop\JavaProxyObject.cs" />
-    <Compile Include="Java.Interop\JavaProxyThrowable.cs" />
-    <Compile Include="Java.Interop\JniAllocObjectRef.cs" />
-    <Compile Include="Java.Interop\JniBuiltinMarshalers.cs">
-      <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Java.Interop\JniGlobalReference.cs" />
-    <Compile Include="Java.Interop\JniLocalReference.cs" />
-    <Compile Include="Java.Interop\JniMarshal.cs" />
-    <Compile Include="Java.Interop\JniReferenceSafeHandle.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniMarshalMemberBuilder.cs" />
-    <Compile Include="Java.Interop\JniRuntime.JniValueManager.cs" />
-    <Compile Include="Java.Interop\JniStringValueMarshaler.cs" />
-    <Compile Include="Java.Interop\JniSystem.cs" />
-    <Compile Include="Java.Interop\JniValueMarshaler.cs" />
-    <Compile Include="Java.Interop\JniValueMarshalerAttribute.cs" />
-    <Compile Include="Java.Interop\JniWeakGlobalReference.cs" />
-    <Compile Include="Java.Interop\ManagedPeer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyObject.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyThrowable.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\GCUserPeerable.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
+    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
   <Import Project="..\..\Configuration.props" />
-  <Import Project="Java.Interop.PCL.props"   Condition=" '$(JavaInteropProfile)' != 'net45' " />
-  <Import Project="Java.Interop.Net45.props" Condition=" '$(JavaInteropProfile)' == 'net45' " />
   <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
@@ -138,11 +44,6 @@
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>
-  <ItemGroup>
-    <Content Include="$(OutputPath)java-interop.jar">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <ItemGroup>
     <None Include="Java.Interop\JavaPrimitiveArrays.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

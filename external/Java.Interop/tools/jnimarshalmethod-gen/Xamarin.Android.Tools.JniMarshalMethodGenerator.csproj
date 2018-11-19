@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools.JniMarshalMethodGenerator</RootNamespace>
     <AssemblyName>jnimarshalmethod-gen</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

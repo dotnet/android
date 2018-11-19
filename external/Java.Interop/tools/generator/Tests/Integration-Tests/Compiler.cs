@@ -60,7 +60,7 @@ namespace generatortests
 			var binDir  = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
 			var facDir  = GetFacadesPath ();
 			parameters.ReferencedAssemblies.Add (Path.Combine (binDir, "Java.Interop.dll"));
-			parameters.ReferencedAssemblies.Add (Path.Combine (facDir, "System.Runtime.dll"));
+			parameters.ReferencedAssemblies.Add (Path.Combine (facDir, "netstandard.dll"));
 #if DEBUG
 			parameters.IncludeDebugInformation = true;
 #else

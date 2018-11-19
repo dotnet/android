@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools.LogcatParse</RootNamespace>
     <AssemblyName>logcat-parse</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <StartupObject>Xamarin.Android.Tools.LogcatParse.Program</StartupObject>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
