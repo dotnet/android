@@ -49,6 +49,7 @@
       <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <OutputBinaryWFilename>monow.exe</OutputBinaryWFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
@@ -59,6 +60,7 @@
       <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
+      <OutputBinaryWFilename>monow.exe</OutputBinaryWFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>
