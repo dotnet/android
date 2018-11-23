@@ -36,7 +36,9 @@ extern unsigned int log_categories;
 extern int gc_spew_enabled;
 #endif
 
-void init_categories (const char *override_dir);
+void init_logging_categories ();
+
+void init_reference_logging (const char *override_dir);
 
 void log_error (LogCategories category, const char *format, ...);
 
