@@ -2,15 +2,16 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <MonoFacadeAssembly Include="Microsoft.Win32.Primitives.dll" />
-    <MonoFacadeAssembly Include="Microsoft.Win32.Registry.AccessControl.dll" />
     <MonoFacadeAssembly Include="Microsoft.Win32.Registry.dll" />
+    <MonoFacadeAssembly Include="Microsoft.Win32.Registry.AccessControl.dll" />
     <MonoFacadeAssembly Include="System.AppContext.dll" />
-    <MonoFacadeAssembly Include="System.Collections.Concurrent.dll" />
+    <MonoFacadeAssembly Include="System.Buffers.dll" />
     <MonoFacadeAssembly Include="System.Collections.dll" />
+    <MonoFacadeAssembly Include="System.Collections.Concurrent.dll" />
     <MonoFacadeAssembly Include="System.Collections.NonGeneric.dll" />
     <MonoFacadeAssembly Include="System.Collections.Specialized.dll" />
-    <MonoFacadeAssembly Include="System.ComponentModel.Annotations.dll" />
     <MonoFacadeAssembly Include="System.ComponentModel.dll" />
+    <MonoFacadeAssembly Include="System.ComponentModel.Annotations.dll" />
     <MonoFacadeAssembly Include="System.ComponentModel.EventBasedAsync.dll" />
     <MonoFacadeAssembly Include="System.ComponentModel.Primitives.dll" />
     <MonoFacadeAssembly Include="System.ComponentModel.TypeConverter.dll" />
@@ -29,13 +30,13 @@
     <MonoFacadeAssembly Include="System.Diagnostics.Tracing.dll" />
     <MonoFacadeAssembly Include="System.Drawing.Common.dll" />
     <MonoFacadeAssembly Include="System.Dynamic.Runtime.dll" />
-    <MonoFacadeAssembly Include="System.Globalization.Calendars.dll" />
     <MonoFacadeAssembly Include="System.Globalization.dll" />
+    <MonoFacadeAssembly Include="System.Globalization.Calendars.dll" />
     <MonoFacadeAssembly Include="System.Globalization.Extensions.dll" />
-    <MonoFacadeAssembly Include="System.IO.Compression.ZipFile.dll" />
     <MonoFacadeAssembly Include="System.IO.dll" />
-    <MonoFacadeAssembly Include="System.IO.FileSystem.AccessControl.dll" />
+    <MonoFacadeAssembly Include="System.IO.Compression.ZipFile.dll" />
     <MonoFacadeAssembly Include="System.IO.FileSystem.dll" />
+    <MonoFacadeAssembly Include="System.IO.FileSystem.AccessControl.dll" />
     <MonoFacadeAssembly Include="System.IO.FileSystem.DriveInfo.dll" />
     <MonoFacadeAssembly Include="System.IO.FileSystem.Primitives.dll" />
     <MonoFacadeAssembly Include="System.IO.FileSystem.Watcher.dll" />
@@ -47,6 +48,7 @@
     <MonoFacadeAssembly Include="System.Linq.Expressions.dll" />
     <MonoFacadeAssembly Include="System.Linq.Parallel.dll" />
     <MonoFacadeAssembly Include="System.Linq.Queryable.dll" />
+    <MonoFacadeAssembly Include="System.Memory.dll" />
     <MonoFacadeAssembly Include="System.Net.AuthenticationManager.dll" />
     <MonoFacadeAssembly Include="System.Net.Cache.dll" />
     <MonoFacadeAssembly Include="System.Net.HttpListener.dll" />
@@ -61,8 +63,8 @@
     <MonoFacadeAssembly Include="System.Net.Sockets.dll" />
     <MonoFacadeAssembly Include="System.Net.Utilities.dll" />
     <MonoFacadeAssembly Include="System.Net.WebHeaderCollection.dll" />
-    <MonoFacadeAssembly Include="System.Net.WebSockets.Client.dll" />
     <MonoFacadeAssembly Include="System.Net.WebSockets.dll" />
+    <MonoFacadeAssembly Include="System.Net.WebSockets.Client.dll" />
     <MonoFacadeAssembly Include="System.ObjectModel.dll" />
     <MonoFacadeAssembly Include="System.Reflection.dll" />
     <MonoFacadeAssembly Include="System.Reflection.DispatchProxy.dll" />
@@ -76,8 +78,8 @@
     <MonoFacadeAssembly Include="System.Resources.ReaderWriter.dll" />
     <MonoFacadeAssembly Include="System.Resources.ResourceManager.dll" />
     <MonoFacadeAssembly Include="System.Resources.Writer.dll" />
-    <MonoFacadeAssembly Include="System.Runtime.CompilerServices.VisualC.dll" />
     <MonoFacadeAssembly Include="System.Runtime.dll" />
+    <MonoFacadeAssembly Include="System.Runtime.CompilerServices.VisualC.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Extensions.dll" />
     <MonoFacadeAssembly Include="System.Runtime.Handles.dll" />
     <MonoFacadeAssembly Include="System.Runtime.InteropServices.dll" />
@@ -96,12 +98,12 @@
     <MonoFacadeAssembly Include="System.Security.Cryptography.Csp.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.DeriveBytes.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Encoding.dll" />
-    <MonoFacadeAssembly Include="System.Security.Cryptography.Encryption.Aes.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Encryption.dll" />
+    <MonoFacadeAssembly Include="System.Security.Cryptography.Encryption.Aes.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Encryption.ECDiffieHellman.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Encryption.ECDsa.dll" />
-    <MonoFacadeAssembly Include="System.Security.Cryptography.Hashing.Algorithms.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Hashing.dll" />
+    <MonoFacadeAssembly Include="System.Security.Cryptography.Hashing.Algorithms.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.OpenSsl.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Pkcs.dll" />
     <MonoFacadeAssembly Include="System.Security.Cryptography.Primitives.dll" />
@@ -118,14 +120,15 @@
     <MonoFacadeAssembly Include="System.ServiceModel.Primitives.dll" />
     <MonoFacadeAssembly Include="System.ServiceModel.Security.dll" />
     <MonoFacadeAssembly Include="System.ServiceProcess.ServiceController.dll" />
-    <MonoFacadeAssembly Include="System.Text.Encoding.CodePages.dll" />
     <MonoFacadeAssembly Include="System.Text.Encoding.dll" />
+    <MonoFacadeAssembly Include="System.Text.Encoding.CodePages.dll" />
     <MonoFacadeAssembly Include="System.Text.Encoding.Extensions.dll" />
     <MonoFacadeAssembly Include="System.Text.RegularExpressions.dll" />
-    <MonoFacadeAssembly Include="System.Threading.AccessControl.dll" />
     <MonoFacadeAssembly Include="System.Threading.dll" />
+    <MonoFacadeAssembly Include="System.Threading.AccessControl.dll" />
     <MonoFacadeAssembly Include="System.Threading.Overlapped.dll" />
     <MonoFacadeAssembly Include="System.Threading.Tasks.dll" />
+    <MonoFacadeAssembly Include="System.Threading.Tasks.Extensions.dll" />
     <MonoFacadeAssembly Include="System.Threading.Tasks.Parallel.dll" />
     <MonoFacadeAssembly Include="System.Threading.Thread.dll" />
     <MonoFacadeAssembly Include="System.Threading.ThreadPool.dll" />
@@ -139,6 +142,7 @@
     <MonoFacadeAssembly Include="System.Xml.XPath.XDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.XPath.XmlDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.Xsl.Primitives.dll" />
+
     <!--
       System.Drawing.Primitives and netstandard need a reference to Mono.Android.dll so their
       build is driven from the XA repo by invoking make in the Mono submodule and passing the path
