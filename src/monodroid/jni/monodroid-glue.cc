@@ -1924,6 +1924,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	char *aotMode;
 	int i;
 
+	init_logging_categories ();
 	android_api_level = GetAndroidSdkVersion (env, loader);
 
 	pkgName = env->GetStringUTFChars (packageName, NULL);
@@ -1971,7 +1972,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	external_legacy_override_dir = utils.monodroid_strdup_printf ("%s", esd);
 	env->ReleaseStringUTFChars (reinterpret_cast<jstring> (env->GetObjectArrayElement (externalStorageDirs, 1)), esd);
 
-	init_categories (primary_override_dir);
+	init_reference_logging(primary_override_dir);
 	androidSystem.create_update_dir (primary_override_dir);
 
 #if DEBUG
