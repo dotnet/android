@@ -4,7 +4,7 @@
   <UsingTask AssemblyFile="$(OutputPath)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
   <Import Project="..\create-bundle\bundle-path.targets" />
   <PropertyGroup>
-    <_AzureBaseUri>https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android/bin/</_AzureBaseUri>
+    <_AzureBaseUri>https://xamjenkinsartifact.azureedge.net/mono-jenkins/</_AzureBaseUri>
     <_NuGetUri>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</_NuGetUri>
     <_NuGetPath>$(MSBuildThisFileDirectory)\..\..\.nuget</_NuGetPath>
   </PropertyGroup>
@@ -19,7 +19,9 @@
       Inputs="download-bundle.csproj"
       Outputs="$(_BundlePath)">
     <PropertyGroup>
-      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(Configuration)</XABundleDownloadPrefix>
+      <_AzureJobUri Condition=" '$(Configuration)' == 'Debug' ">xamarin-android-debug/bin/</_AzureJobUri>
+      <_AzureJobUri Condition=" '$(Configuration)' != 'Debug' ">xamarin-android/bin/</_AzureJobUri>
+      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(_AzureJobUri)$(Configuration)</XABundleDownloadPrefix>
     </PropertyGroup>
     <DownloadUri
         ContinueOnError="True"
