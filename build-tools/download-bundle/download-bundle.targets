@@ -19,9 +19,9 @@
       Inputs="download-bundle.csproj"
       Outputs="$(_BundlePath)">
     <PropertyGroup>
-      <_AzureJobUri Condition=" '$(Configuration)' == 'Debug' ">xamarin-android-debug/bin/</_AzureJobUri>
-      <_AzureJobUri Condition=" '$(Configuration)' != 'Debug' ">xamarin-android/bin/</_AzureJobUri>
-      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(_AzureJobUri)$(Configuration)</XABundleDownloadPrefix>
+      <_AzureJobUri Condition=" '$(Configuration)' == 'Debug' ">xamarin-android-debug</_AzureJobUri>
+      <_AzureJobUri Condition=" '$(Configuration)' != 'Debug' ">xamarin-android</_AzureJobUri>
+      <XABundleDownloadPrefix Condition=" '$(XABundleDownloadPrefix)' == '' ">$(_AzureBaseUri)$(_AzureJobUri)/xamarin-android/bin/$(Configuration)</XABundleDownloadPrefix>
     </PropertyGroup>
     <DownloadUri
         ContinueOnError="True"
