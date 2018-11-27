@@ -978,12 +978,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\d8.jar">
-		<Output TaskParameter="Value" PropertyName="AndroidD8JarPath"
-				Condition="'$(AndroidD8JarPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="--dex --no-strict">
 		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
 			Condition="'$(DxExtraArguments)' == ''"
