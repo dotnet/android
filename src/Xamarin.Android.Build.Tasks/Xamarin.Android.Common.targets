@@ -2137,7 +2137,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
 
 <Target Name="_GenerateJniMarshalMethods"
-    Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None' And '$(OS)' != 'Windows_NT'"
+    Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None'"
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
     Inputs="@(ResolvedUserAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
     Outputs="$(_AndroidJniMarshalMethodsFlag)">
@@ -2151,8 +2151,17 @@ because xbuild doesn't support framework reference assemblies.
     <_AssembliesToProcess Include="@(ResolvedUserAssemblies)" />
     <_AssembliesToProcess Include="@(ResolvedAssemblies)" Condition=" '%(Filename)' != '' And '@(_JniFrameworkAssembly)' != '' " />
   </ItemGroup>
+  <PropertyGroup>
+    <_Is64BitOperatingSystem>$([System.Environment]::Is64BitOperatingSystem)</_Is64BitOperatingSystem>
+    <_WindowsFlavor Condition=" '$(_Is64BitOperatingSystem)' == 'true' ">Win64</_WindowsFlavor>
+    <_WindowsFlavor Condition=" '$(_Is64BitOperatingSystem)' == 'false' ">Win32</_WindowsFlavor>
+    <_MonoBinary Condition=" '$(OS)' == 'Windows_NT' ">$(MonoAndroidToolsDirectory)\lib\host-mxe-$(_WindowsFlavor)\monow.exe</_MonoBinary>
+    <_MonoBinary Condition=" '$(OS)' != 'Windows_NT' ">$(MonoAndroidBinDirectory)\mono</_MonoBinary>
+    <_MonoPath Condition=" '$(OS)' == 'Windows_NT' ">( set MONO_PATH=$(_XATargetFrameworkDirectories);$(MonoAndroidLinkerInputDir) ) &amp;<_MonoPath>
+    <_MonoPath Condition=" '$(OS)' != 'Windows_NT' ">MONO_PATH=&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot;<_MonoPath>
+  </PropertyGroup>
   <Exec
-       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
+       Command="$(_MonoPath) &quot;$(_MonoBinary)&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
   />
   <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
 </Target>
