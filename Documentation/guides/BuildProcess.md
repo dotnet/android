@@ -210,11 +210,6 @@ when packaing Release applications.
 
     This property is `False` by default.
 
--   **AndroidD8JarPath** &ndash; The path to `d8.jar` for use with the
-    d8 dex-compiler. Defaults to a path in the Xamarin.Android
-    installation. For further information see our documentation on [D8
-    and R8][d8-r8].
-
 -   **AndroidDexTool** &ndash; An enum-style property with valid
     values of `dx` or `d8`. Indicates which Android [dex][dex]
     compiler is used during the Xamarin.Android build process.

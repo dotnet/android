@@ -32,7 +32,7 @@
         Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
     />
     <Exec
-      Command="python tools\gradle.py d8 r8 $(_GradleArgs)"
+      Command="python tools\gradle.py r8 $(_GradleArgs)"
       EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
       WorkingDirectory="..\..\external\r8"
     />
@@ -44,7 +44,7 @@
 
   <Target Name="_CopyR8">
     <Copy
-        SourceFiles="..\..\external\r8\build\libs\d8.jar;..\..\external\r8\build\libs\r8.jar"
+        SourceFiles="..\..\external\r8\build\libs\r8.jar"
         DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android\"
         SkipUnchangedFiles="true"
     />
@@ -54,9 +54,7 @@
     <PropertyGroup>
       <_OriginalPath>$(PATH)</_OriginalPath>
     </PropertyGroup>
-    <Delete
-        Files="$(XAInstallPrefix)xbuild\Xamarin\Android\d8.jar;$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar;"
-    />
+    <Delete Files="$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar" />
     <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
         Name="PATH"
         Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
