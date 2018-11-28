@@ -585,8 +585,9 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs
 	*needs_free = FALSE;
 	if (embedded_dso_mode)
 		return NULL;
+
+	char *dso_path = nullptr;
 #ifndef RELEASE
-	char *dso_path = NULL;
 	for (int i = 0; i < AndroidSystem::MAX_OVERRIDES; i++) {
 		if (AndroidSystem::override_dirs [i] == NULL)
 			continue;

@@ -627,7 +627,4 @@
     <Delete Files="@(_StampFiles)" />
   </Target>
 
-  <Target Name="CoreCompile"
-      DependsOnTargets="_Build">
-  </Target>
 </Project>

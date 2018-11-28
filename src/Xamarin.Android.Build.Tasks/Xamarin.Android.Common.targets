@@ -1872,6 +1872,7 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidJavaSources="@(AndroidJavaSource)"
 		AndroidJavaLibraries="@(AndroidJavaLibrary)"
 		AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
+		FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
 		RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
 	/>
 	<Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
