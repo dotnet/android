@@ -559,29 +559,80 @@ namespace Xamarin.Android.Net
 
 			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
 			IList <string> locationHeader;
-			if (!headers.TryGetValue ("Location", out locationHeader) || locationHeader == null || locationHeader.Count == 0) {
+			string location = null;
+
+			if (headers.TryGetValue ("Location", out locationHeader) && locationHeader != null && locationHeader.Count > 0) {
+				if (locationHeader.Count == 1) {
+					location = locationHeader [0]?.Trim ();
+				} else {
+					if (Logger.LogNet)
+						Logger.Log (LogLevel.Info, LOG_APP, $"More than one location header for HTTP {redirectCode} redirect. Will use the first non-empty one.");
+
+					foreach (string l in locationHeader) {
+						location = l?.Trim ();
+						if (!String.IsNullOrEmpty (location))
+							break;
+					}
+				}
+			}
+
+			if (String.IsNullOrEmpty (location)) {
 				// As per https://tools.ietf.org/html/rfc7231#section-6.4.1 the reponse isn't required to contain the Location header and the
 				// client should act accordingly. Since it is not documented what the action in this case should be, we're following what
 				// Xamarin.iOS does and simply return the content of the request as if it wasn't a redirect.
+				// It is not clear what to do if there is a Location header but its value is empty, so
+				// we assume the same action here.
 				disposeRet = false;
 				return true;
 			}
-
-			if (locationHeader.Count > 1 && Logger.LogNet)
-				Logger.Log (LogLevel.Info, LOG_APP, $"More than one location header for HTTP {redirectCode} redirect. Will use the first one.");
 
 			redirectState.RedirectCounter++;
 			if (redirectState.RedirectCounter >= MaxAutomaticRedirections)
 				throw new WebException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)");
 
-			string redirectUrl = locationHeader [0];
-			string protocol = httpConnection.URL?.Protocol;
-			if (redirectUrl.StartsWith ("//", StringComparison.Ordinal)) {
-				// When redirecting to an URL without protocol, we use the protocol of previous request
-				// See https://tools.ietf.org/html/rfc3986#section-5 (example in section 5.4)
-				redirectUrl = protocol + ":" + redirectUrl;
+			Uri redirectUrl;
+			try {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Debug, LOG_APP, $"Raw redirect location: {location}");
+
+				var baseUrl = new Uri (httpConnection.URL.ToString ());
+				if (location [0] == '/') {
+					// Shortcut for the '/' and '//' cases, simplifies logic since URI won't treat
+					// such URLs as relative and we'd have to work around it in the `else` block
+					// below.
+					redirectUrl = new Uri (baseUrl, location);
+				} else {
+					// Special case (from https://tools.ietf.org/html/rfc3986#section-5.4.1) not
+					// handled by the Uri class: scheme:host
+					//
+					// This is a valid URI (should be treated as `scheme://host`) but URI throws an
+					// exception about DOS path being malformed IF the part before colon is just one
+					// character long... We could replace the scheme with the original request's one, but
+					// that would NOT be the right thing to do since it is not what the redirecting server
+					// meant. The fix doesn't belong here, but rather in the Uri class. So we'll throw...
+
+					redirectUrl = new Uri (location, UriKind.RelativeOrAbsolute);
+					if (!redirectUrl.IsAbsoluteUri)
+						redirectUrl = new Uri (baseUrl, location);
+				}
+
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Debug, LOG_APP, $"Cooked redirect location: {redirectUrl}");
+			} catch (Exception ex) {
+				throw new WebException ($"Invalid redirect URI received: {location}", ex);
 			}
-			redirectState.NewUrl = new Uri (redirectUrl, UriKind.Absolute);
+
+			UriBuilder builder = null;
+			if (!String.IsNullOrEmpty (httpConnection.URL.Ref) && String.IsNullOrEmpty (redirectUrl.Fragment)) {
+				if (Logger.LogNet)
+					Logger.Log (LogLevel.Debug, LOG_APP, $"Appending fragment '{httpConnection.URL.Ref}' to redirect URL '{redirectUrl}'");
+
+				builder = new UriBuilder (redirectUrl) {
+					Fragment = httpConnection.URL.Ref
+				};
+			}
+
+			redirectState.NewUrl = builder == null ? redirectUrl : builder.Uri;
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Debug, LOG_APP, $"Request redirected to {redirectState.NewUrl}");
 
