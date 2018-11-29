@@ -198,7 +198,7 @@ log_fatal (LogCategories category, const char *format, ...)
 }
 
 void
-log_info (LogCategories category, const char *format, ...)
+log_info_nocheck (LogCategories category, const char *format, ...)
 {
 	va_list args;
 
@@ -217,7 +217,7 @@ log_warn (LogCategories category, const char *format, ...)
 }
 
 void
-log_debug (LogCategories category, const char *format, ...)
+log_debug_nocheck (LogCategories category, const char *format, ...)
 {
 	va_list args;
 
