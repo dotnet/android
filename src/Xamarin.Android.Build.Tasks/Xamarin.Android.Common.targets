@@ -1373,7 +1373,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ConvertLibraryResourcesCases" DependsOnTargets="_CollectLibraryResourceDirectories"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="@(_LibraryResourceHashDirectories->'%(FileFound)')"
+		Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
 		Outputs="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp">
 	<ConvertResourcesCases
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
@@ -1389,7 +1389,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
+		Inputs="%(_LibraryResourceHashDirectories.StampFile)"
 		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	>
 	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
