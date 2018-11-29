@@ -443,16 +443,6 @@ open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *use
 }
 #endif
 
-static long long
-current_time_millis (void)
-{
-	struct timeval tv;
-
-	gettimeofday(&tv, (struct timezone *) NULL);
-	long long when = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
-	return when;
-}
-
 int
 should_register_file (const char *filename, void *user_data)
 {
@@ -774,6 +764,10 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 static void
 load_assembly (MonoDomain *domain, JNIEnv *env, jstring assembly)
 {
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
 	const char *assm_name;
 	MonoAssemblyName *aname;
 
@@ -791,6 +785,13 @@ load_assembly (MonoDomain *domain, JNIEnv *env, jstring assembly)
 	}
 
 	monoFunctions.assembly_name_free (aname);
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info (LOG_TIMING, "Assembly load: %s loaded; elapsed: %lis.%03llu::%llu", assm_name, diff.sec, diff.ms, diff.ns);
+	}
 }
 
 static void
@@ -948,7 +949,7 @@ mono_runtime_init (char *runtime_args)
 #endif
 
 	profile_events = MonoProfileFlags::MONO_PROFILE_THREADS;
-	if ((log_categories & LOG_TIMING) != 0) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		char *jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
 		jit_log = utils.monodroid_fopen (jit_log_path, "a");
 		utils.set_world_accessable (jit_log_path);
@@ -959,7 +960,7 @@ mono_runtime_init (char *runtime_args)
 	monoFunctions.profiler_install ((MonoProfiler*)&monodroid_profiler, NULL);
 	monoFunctions.profiler_set_events (profile_events);
 	monoFunctions.profiler_install_thread (reinterpret_cast<void*> (thread_start), reinterpret_cast<void*> (thread_end));
-	if ((log_categories & LOG_TIMING) != 0)
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		monoFunctions.profiler_install_jit_end (jit_end);
 
 	parse_gdb_options ();
@@ -1235,7 +1236,6 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	MonoClass *environment;
 	MonoImage *image;
 	MonoMethod *method;
-	long long start_time, end_time;
 	jclass lrefLoaderClass;
 	jobject lrefIGCUserPeer;
 	int i;
@@ -1308,14 +1308,20 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 
 	osBridge.initialize_on_runtime_init (env);
 
-	start_time = current_time_millis ();
-	log_info (LOG_TIMING, "Runtime.init: start native-to-managed transition time: %lli ms\n", start_time);
 	log_warn (LOG_DEFAULT, "Calling into managed runtime init");
+
+	timing_period partial_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		partial_time.mark_start ();
 
 	utils.monodroid_runtime_invoke (domain, method, NULL, args, NULL);
 
-	end_time = current_time_millis ();
-	log_info (LOG_TIMING, "Runtime.init: end native-to-managed transition time: %lli [elapsed %lli ms]\n", end_time, end_time - start_time);
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		partial_time.mark_end ();
+
+		timing_diff diff (partial_time);
+		log_info (LOG_TIMING, "Runtime.init: end native-to-managed transition; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
+	}
 }
 
 static MonoClass*
@@ -1925,6 +1931,13 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	int i;
 
 	init_logging_categories ();
+
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_start ();
+		log_info (LOG_TIMING, "Runtime.init: start");
+	}
+
 	android_api_level = GetAndroidSdkVersion (env, loader);
 
 	pkgName = env->GetStringUTFChars (packageName, NULL);
@@ -1932,8 +1945,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	env->ReleaseStringUTFChars (packageName, pkgName);
 
 	disable_external_signal_handlers ();
-
-	log_info (LOG_TIMING, "Runtime.init: start: %lli ms\n", current_time_millis ());
 
 	jstring homeDir = reinterpret_cast<jstring> (env->GetObjectArrayElement (appDirs, 0));
 	set_environment_variable (env, "LANG", lang);
@@ -2108,7 +2119,11 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
 	}
 
-	if ((log_categories & LOG_TIMING) != 0) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info (LOG_TIMING, "Runtime.init: end, total time; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
 		_monodroid_counters_dump ("## Runtime.init: end");
 	}
 }
@@ -2122,9 +2137,10 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring m
 	char *type;
 	const char *mt_ptr;
 	MonoDomain *domain = monoFunctions.domain_get ();
+	timing_period total_time;
 
-	long long start_time = current_time_millis (), end_time;
-	log_info (LOG_TIMING, "Runtime.register: start time: %lli ms\n", start_time);
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
 
 	managedType_len = env->GetStringLength (managedType);
 	managedType_ptr = env->GetStringChars (managedType, NULL);
@@ -2150,11 +2166,14 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring m
 	env->ReleaseStringChars (managedType, managedType_ptr);
 	env->ReleaseStringChars (methods, methods_ptr);
 
-	end_time = current_time_millis ();
-	log_info (LOG_TIMING, "Runtime.register: end time: %lli [elapsed %lli ms]\n", end_time, end_time - start_time);
-	if ((log_categories & LOG_TIMING) != 0) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info (LOG_TIMING, "Runtime.register: end time; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
 		_monodroid_counters_dump ("## Runtime.register: type=%s\n", type);
 	}
+
 	free (type);
 }
 

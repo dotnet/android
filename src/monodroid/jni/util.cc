@@ -28,6 +28,57 @@ extern "C" {
 
 using namespace xamarin::android;
 
+#if defined (ANDROID) || defined (LINUX)
+using timestruct = timespec;
+#else
+using timestruct = timeval;
+#endif
+
+void timing_point::mark ()
+{
+	int ret;
+	uint64_t tail;
+	timestruct tv_ctm;
+
+#if defined (ANDROID) || defined (LINUX)
+	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
+	tail = tv_ctm.tv_nsec;
+#else
+	ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
+	tail = tv_ctm.tv_usec * 1000LL;
+#endif
+	if (ret != 0) {
+		sec = 0ULL;
+		ns = 0ULL;
+		return;
+	}
+
+	sec = tv_ctm.tv_sec;
+	ns = tail;
+}
+
+timing_diff::timing_diff (const timing_period &period)
+{
+	uint64_t nsec;
+	if (period.end.ns < period.start.ns) {
+		sec = period.end.sec - period.start.sec - 1;
+		if (sec < 0)
+			sec = 0;
+		nsec = 1000000000ULL + period.end.ns - period.start.ns;
+	} else {
+		sec = period.end.sec - period.start.sec;
+		nsec = period.end.ns - period.start.ns;
+	}
+
+	ms = nsec / ms_in_nsec;
+	if (ms >= 1000) {
+		sec += ms / 1000;
+		ms = ms % 1000;
+	}
+
+	ns = nsec % ms_in_nsec;
+}
+
 int
 Util::ends_with (const char *str, const char *end)
 {
