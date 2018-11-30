@@ -52,7 +52,7 @@ void log_debug_nocheck (LogCategories category, const char *format, ...);
 
 #define DO_LOG(_level, _category_, ...)                                           \
 	do {                                                                      \
-		if ((log_categories && ((_category_))) != 0) {                    \
+		if ((log_categories & ((_category_))) != 0) {                     \
 			::log_ ## _level ## _nocheck ((_category_), __VA_ARGS__); \
 		}                                                                 \
 	} while (0)
