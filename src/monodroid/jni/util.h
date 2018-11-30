@@ -41,6 +41,8 @@ typedef struct dirent monodroid_dirent_t;
 #include <sys/stat.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "monodroid.h"
 #include "dylib-mono.h"
@@ -56,6 +58,7 @@ extern "C" {
 #endif // __cplusplus
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
+#define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,6 +80,41 @@ extern "C" {
 
 namespace xamarin { namespace android
 {
+	struct timing_point
+	{
+		time_t sec = 0;
+		uint64_t ns = 0;
+
+		void mark ();
+	};
+
+	struct timing_period
+	{
+		timing_point start;
+		timing_point end;
+
+		void mark_start ()
+		{
+			start.mark ();
+		}
+
+		void mark_end ()
+		{
+			end.mark ();
+		}
+	};
+
+	struct timing_diff
+	{
+		static constexpr uint32_t ms_in_nsec = 1000000ULL;
+
+		time_t sec;
+		uint32_t ms;
+		uint32_t ns;
+
+		timing_diff (const timing_period &period);
+	};
+
 	class Util
 	{
 	public:
@@ -141,6 +179,11 @@ namespace xamarin { namespace android
 		void *xcalloc (size_t nmemb, size_t size)
 		{
 			return ::xcalloc (nmemb, size);
+		}
+
+		bool should_log (LogCategories category) const
+		{
+			return (log_categories & category) != 0;
 		}
 
 	private:
