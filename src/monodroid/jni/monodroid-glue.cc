@@ -1935,7 +1935,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_start ();
-		log_info (LOG_TIMING, "Runtime.init: start");
 	}
 
 	android_api_level = GetAndroidSdkVersion (env, loader);
