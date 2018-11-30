@@ -250,11 +250,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	     Disable generation to avoid "bizarre" build errors. -->
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
 
-	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">27.0.3</AndroidSdkBuildToolsVersion>
-	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">27.0.1</AndroidSdkPlatformToolsVersion>
-	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
-	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
-
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
 
@@ -978,12 +973,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\d8.jar">
-		<Output TaskParameter="Value" PropertyName="AndroidD8JarPath"
-				Condition="'$(AndroidD8JarPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="--dex --no-strict">
 		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
 			Condition="'$(DxExtraArguments)' == ''"
@@ -1384,7 +1373,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ConvertLibraryResourcesCases" DependsOnTargets="_CollectLibraryResourceDirectories"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="@(_LibraryResourceHashDirectories->'%(FileFound)')"
+		Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
 		Outputs="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp">
 	<ConvertResourcesCases
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
@@ -1400,7 +1389,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
+		Inputs="%(_LibraryResourceHashDirectories.StampFile)"
 		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	>
 	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />

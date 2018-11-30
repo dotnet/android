@@ -108,50 +108,28 @@ namespace Xamarin.Android.Tasks
 			SortMembers (xml);
 
 
-			if (animation.Members.Count > 1)
-				resources.Members.Add (animation);
-			if (animator.Members.Count > 1)
-				resources.Members.Add (animator);
-			if (arrays.Members.Count > 1)
-				resources.Members.Add (arrays);
-			if (attrib.Members.Count > 1)
-				resources.Members.Add (attrib);
-			if (boolean.Members.Count > 1)
-				resources.Members.Add (boolean);
-			if (colors.Members.Count > 1)
-				resources.Members.Add (colors);
-			if (dimension.Members.Count > 1)
-				resources.Members.Add (dimension);
-			if (drawable.Members.Count > 1)
-				resources.Members.Add (drawable);
-			if (font.Members.Count > 1)
-				resources.Members.Add (font);
-			if (ids.Members.Count > 1)
-				resources.Members.Add (ids);
-			if (ints.Members.Count > 1)
-				resources.Members.Add (ints);
-			if (interpolators.Members.Count > 1)
-				resources.Members.Add (interpolators);
-			if (layout.Members.Count > 1)
-				resources.Members.Add (layout);
-			if (menu.Members.Count > 1)
-				resources.Members.Add (menu);
-			if (mipmaps.Members.Count > 1)
-				resources.Members.Add (mipmaps);
-			if (raw.Members.Count > 1)
-				resources.Members.Add (raw);
-			if (plurals.Members.Count > 1)
-				resources.Members.Add (plurals);
-			if (strings.Members.Count > 1)
-				resources.Members.Add (strings);
-			if (style.Members.Count > 1)
-				resources.Members.Add (style);
-			if (styleable.Members.Count > 1)
-				resources.Members.Add (styleable);
-			if (transition.Members.Count > 1)
-				resources.Members.Add (transition);
-			if (xml.Members.Count > 1)
-				resources.Members.Add (xml);
+			resources.Members.Add (animation);
+			resources.Members.Add (animator);
+			resources.Members.Add (arrays);
+			resources.Members.Add (attrib);
+			resources.Members.Add (boolean);
+			resources.Members.Add (colors);
+			resources.Members.Add (dimension);
+			resources.Members.Add (drawable);
+			resources.Members.Add (font);
+			resources.Members.Add (ids);
+			resources.Members.Add (ints);
+			resources.Members.Add (interpolators);
+			resources.Members.Add (layout);
+			resources.Members.Add (menu);
+			resources.Members.Add (mipmaps);
+			resources.Members.Add (raw);
+			resources.Members.Add (plurals);
+			resources.Members.Add (strings);
+			resources.Members.Add (style);
+			resources.Members.Add (styleable);
+			resources.Members.Add (transition);
+			resources.Members.Add (xml);
 
 			return resources;
 		}

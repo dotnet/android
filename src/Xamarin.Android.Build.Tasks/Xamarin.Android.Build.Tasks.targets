@@ -138,8 +138,8 @@
   <Target Name="_GenerateXACommonProps"
       DependsOnTargets="ResolveReferences;GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
-      Inputs="Xamarin.Android.Common.props.in Xamarin.Android.BuildInfo.txt.in"
-      Outputs="Xamarin.Android.Common.props Xamarin.Android.BuildInfo.txt">
+      Inputs="Xamarin.Android.Common.props.in;Xamarin.Android.BuildInfo.txt.in"
+      Outputs="Xamarin.Android.Common.props;Xamarin.Android.BuildInfo.txt">
     <ReplaceFileContents
         SourceFile="Xamarin.Android.BuildInfo.txt.in"
         DestinationFile="Xamarin.Android.BuildInfo.txt"
