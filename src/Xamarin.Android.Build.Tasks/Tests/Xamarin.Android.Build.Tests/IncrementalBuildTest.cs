@@ -330,10 +330,6 @@ namespace Lib2
 				"_CopyPdbFiles",
 				"_CopyMdbFiles",
 			};
-			if (IsWindows) {
-				//NOTE: pdb2mdb only happens on Windows
-				targets.Add ("_ConvertPdbFiles");
-			}
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
@@ -344,6 +340,11 @@ namespace Lib2
 					}
 				}
 			};
+			if (IsWindows) {
+				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
+				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
+				targets.Add ("_ConvertPdbFiles");
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
