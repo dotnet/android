@@ -2122,15 +2122,15 @@ namespace App1
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
-			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v2.3")))
+				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
+				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v2.3"), "TargetFrameworkVerson should be v2.3");
-				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v4.4"), "TargetFrameworkVerson should be v4.4");
-
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVerson should be {firstFrameworkVersion}");
+				Assert.IsTrue (builder.Build (proj, parameters: new [] { $"TargetFrameworkVersion={lastFrameworkVersion}" }), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={lastFrameworkVersion}"), $"TargetFrameworkVersion should be {lastFrameworkVersion}");
 			}
 		}
 
@@ -2558,14 +2558,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
-			proj.SetProperty ("TargetFrameworkVersion", "v2.3");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v2.3")))
+				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
+				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v2.3"), "TargetFrameworkVerson should be v2.3");
-				Assert.IsTrue (builder.Build (proj, parameters: new [] { "TargetFrameworkVersion=v4.4" }), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion=v4.4"), "TargetFrameworkVerson should be v4.4");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVersion should be {firstFrameworkVersion}");
+				Assert.IsTrue (builder.Build (proj, parameters: new [] { $"TargetFrameworkVersion={lastFrameworkVersion}" }), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={lastFrameworkVersion}"), $"TargetFrameworkVersion should be {lastFrameworkVersion}");
 			}
 		}
 

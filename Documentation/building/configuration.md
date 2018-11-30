@@ -29,7 +29,7 @@ Overridable MSBuild properties include:
 
   * `$(AndroidFirstFrameworkVersion)`: The first `$(TargetFrameworkVersion)`
     which will be built by `make jenkins` and included in the installer.
-    Currently `v2.3`, but will be changed when we drop support for API-10.
+    Currently `v4.4`.
     This controls what is included in `build-tools/create-vsix` packages.
 
   * `$(AndroidFrameworkVersion)`: The Xamarin.Android `$(TargetFrameworkVersion)`

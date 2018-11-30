@@ -172,33 +172,71 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
+		public string FirstTargetFrameworkVersion ()
+		{
+			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _);
+			return firstFrameworkVersion;
+		}
+
+		public string FirstTargetFrameworkVersion (out string apiLevel)
+		{
+			GetTargetFrameworkVersionRange (out apiLevel, out string firstFrameworkVersion, out string _, out string _);
+			return firstFrameworkVersion;
+		}
+
 		public string LatestTargetFrameworkVersion () {
-			return LatestTargetFrameworkVersion (out string apiLevel);
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion);
+			return lastFrameworkVersion;
 		}
 
 		public string LatestTargetFrameworkVersion (out string apiLevel) {
-			Version latest = new Version (1, 0);
-			apiLevel = "1";
+			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion);
+			return lastFrameworkVersion;
+		}
+
+		public void GetTargetFrameworkVersionRange (out string firstApiLevel, out string firstFrameworkVersion, out string lastApiLevel, out string lastFrameworkVersion)
+		{
+			firstApiLevel = firstFrameworkVersion = lastApiLevel = lastFrameworkVersion = null;
+
+			Version firstVersion    = null;
+			Version lastVersion     = null;
+
 			var outdir = FrameworkLibDirectory;
 			var path = Path.Combine (outdir, "xbuild-frameworks", "MonoAndroid");
 			if (!Directory.Exists(path)) {
 				path = outdir;
 			}
 			foreach (var dir in Directory.EnumerateDirectories (path, "v*", SearchOption.TopDirectoryOnly)) {
+				// No binding assemblies in `v1.0`; don't process.
+				if (Path.GetFileName (dir) == "v1.0")
+					continue;
 				Version version;
 				string v = Path.GetFileName (dir).Replace ("v", "");
 				if (!Version.TryParse (v, out version))
 					continue;
-				if (latest < version) {
-					var apiInfo = Path.Combine (dir, "AndroidApiInfo.xml");
-					if (File.Exists (apiInfo)) {
-						var doc = XDocument.Load (apiInfo);
-						apiLevel = doc.XPathSelectElement ("/AndroidApiInfo/Level")?.Value ?? apiLevel;
-					}
-					latest = version;
+
+				string frameworkVersion = "v" + version.ToString (2);
+				string apiLevel         = GetApiLevelFromInfoPath (Path.Combine (dir, "AndroidApiInfo.xml"));
+				if (firstVersion == null || version < firstVersion) {
+					firstVersion            = version;
+					firstFrameworkVersion   = frameworkVersion;
+					firstApiLevel           = apiLevel;
+				}
+				if (lastVersion == null || version > lastVersion) {
+					lastVersion             = version;
+					lastFrameworkVersion    = frameworkVersion;
+					lastApiLevel            = apiLevel;
 				}
 			}
-			return "v" + latest.ToString (2);
+		}
+
+		static string GetApiLevelFromInfoPath (string androidApiInfo)
+		{
+			if (!File.Exists (androidApiInfo))
+				return null;
+
+			var doc = XDocument.Load (androidApiInfo);
+			return doc.XPathSelectElement ("/AndroidApiInfo/Level")?.Value;
 		}
 
 		public bool TargetFrameworkExists (string targetFramework)
