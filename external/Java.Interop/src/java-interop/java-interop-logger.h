@@ -1,21 +1,7 @@
 #ifndef __JAVA_INTEROP_LOGGER_H__
 #define __JAVA_INTEROP_LOGGER_H__
 
-#ifndef ANDROID
-typedef enum android_LogPriority {
-    ANDROID_LOG_UNKNOWN = 0,
-    ANDROID_LOG_DEFAULT,    /* only for SetMinPriority() */
-    ANDROID_LOG_VERBOSE,
-    ANDROID_LOG_DEBUG,
-    ANDROID_LOG_INFO,
-    ANDROID_LOG_WARN,
-    ANDROID_LOG_ERROR,
-    ANDROID_LOG_FATAL,
-    ANDROID_LOG_SILENT,     /* only for SetMinPriority(); must be last */
-} android_LogPriority;
-#endif
-
-// Keep in sync with Mono.Android/src/Runtime/Logger.cs!LogCategories enum
+// Keep in sync with java-interop-logger.c's LogCategories enum
 typedef enum _LogCategories {
 	LOG_NONE      = 0,
 	LOG_DEFAULT   = 1 << 0,
@@ -31,14 +17,6 @@ typedef enum _LogCategories {
 } LogCategories;
 
 extern unsigned int log_categories;
-
-#if DEBUG
-extern int gc_spew_enabled;
-#endif
-
-void init_logging_categories ();
-
-void init_reference_logging (const char *override_dir);
 
 void log_error (LogCategories category, const char *format, ...);
 
