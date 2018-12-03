@@ -20,8 +20,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (commandIndex != StateRunTests)
 				return;
 
-			Log.LogMessage (MessageImportance.Low, $"  going to wait for 15 seconds");
-			System.Threading.Thread.Sleep (15000);
+			Log.LogMessage (MessageImportance.Low, $"  going to wait for 30 seconds");
+			System.Threading.Thread.Sleep (30000);
 		}
 
 		protected override List <CommandInfo> GenerateCommandArguments ()
