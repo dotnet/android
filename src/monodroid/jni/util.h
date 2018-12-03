@@ -52,6 +52,7 @@ extern "C" {
 #endif // __cplusplus
 
 #include "java-interop-util.h"
+#include "logger.h"
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,7 @@
 #endif
 
 extern "C" {
-#include "java-interop-logger.h"
+#include "logger.h"
 }
 
 #include "xamarin_getifaddrs.h"
