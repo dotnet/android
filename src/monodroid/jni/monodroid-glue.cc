@@ -56,6 +56,7 @@
 
 extern "C" {
 #include "java-interop-util.h"
+#include "logger.h"
 }
 
 #include "monodroid.h"

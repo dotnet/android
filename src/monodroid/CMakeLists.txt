@@ -241,6 +241,7 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
+  ${SOURCES_DIR}/logger.c
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/timezones.cc
@@ -248,7 +249,6 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/zip/ioapi.c
   ${SOURCES_DIR}/zip/unzip.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-logger.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.c
   )
