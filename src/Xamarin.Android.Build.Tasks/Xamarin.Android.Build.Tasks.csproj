@@ -118,7 +118,6 @@
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
     <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
-    <Compile Include="Tasks\CopyMdbFiles.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />

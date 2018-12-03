@@ -320,13 +320,15 @@ namespace Lib2
 		[Test]
 		public void AppProjectTargetsDoNotBreak ()
 		{
-			var targets = new [] {
+			var targets = new List<string> {
 				"_CopyIntermediateAssemblies",
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
 				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
+				"_CopyPdbFiles",
+				"_CopyMdbFiles",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
@@ -338,6 +340,11 @@ namespace Lib2
 					}
 				}
 			};
+			if (IsWindows) {
+				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
+				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
+				targets.Add ("_ConvertPdbFiles");
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
@@ -350,6 +357,7 @@ namespace Lib2
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
+					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
 					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
