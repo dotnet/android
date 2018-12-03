@@ -16,7 +16,7 @@ namespace MonoDroid.Generation {
 		string name;
 		string type, managed_type, rawtype;
 		ISymbol sym;
-		bool is_enumified;
+		bool is_enumified, validated, is_valid;
 
 		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null)
 		{
@@ -254,16 +254,20 @@ namespace MonoDroid.Generation {
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
+			if (validated)
+				return is_valid;
+			validated = true;
+
 			sym = opt.SymbolTable.Lookup (type, type_params);
 			if (sym == null) {
 				Report.Warning (0, Report.WarningParameter + 0, "Unknown parameter type {0} {1}.", type, opt.ContextString);
-				return false;
+				return (is_valid = false);
 			}
 			if (!sym.Validate (opt, type_params)) {
 				Report.Warning (0, Report.WarningParameter + 1, "Invalid parameter type {0} {1}.", type, opt.ContextString);
-				return false;
+				return (is_valid = false);
 			}
-			return true;
+			return (is_valid = true);
 		}
 
 		public static Parameter FromElement (XElement elem)
