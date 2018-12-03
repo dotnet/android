@@ -70,6 +70,7 @@ within the same target:
 ```
 
 Running this transformation twice:
+
 ```
 @(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')
 ```
@@ -326,11 +327,11 @@ target takes care of it, so we can't as easily mess it up:
 From time to time, we might find oddities in our MSBuild targets, that
 might be around for one reason or another:
 
-- We might be doing something weird in order to support XBuild. We
-  support XBuild no longer, yay!
-- The code just might have been around a while, and there wasn't a
-  reason to change it.
-- There is a nuance to MSBuild we hadn't figured out yet (lol?).
+  - We might be doing something weird in order to support XBuild. We
+    support XBuild no longer, yay!
+  - The code just might have been around a while, and there wasn't a
+    reason to change it.
+  - There is a nuance to MSBuild we hadn't figured out yet (lol?).
 
 Take, for instance, the following example:
 
@@ -349,9 +350,9 @@ quite correct.
 
 A couple problems with this approach with MSBuild:
 
-- This task won't run if the target is skipped!
-- How do we know MSBuild isn't going to overwrite this file?
-- On a subsequent build, this could append to the file *again*.
+  - This task won't run if the target is skipped!
+  - How do we know MSBuild isn't going to overwrite this file?
+  - On a subsequent build, this could append to the file *again*.
 
 Really, who knows what weirdness could be caused by this?
 
@@ -365,7 +366,7 @@ For MSBuild, we should instead do:
 
 Then we just let MSBuild and `IncrementalClean` do their thing.
 
-## IncrementalClean and _CleanGetCurrentAndPriorFileWrites
+## IncrementalClean and `_CleanGetCurrentAndPriorFileWrites`
 
 If you have a target that needs to run before `IncrementalClean`, such
 as:
@@ -386,13 +387,15 @@ target which does the actual work of persisting the contents of
 `_CleanGetCurrentAndPriorFileWrites`.
 
 The only working fix I've found so far is to add:
+
 ```
 BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
 ```
 
 In the meantime, see the following links about this problem:
-* [MSBuild Github Issue #3916][msbuild_issue]
-* [MSBuild Repro][msbuild_repro]
+
+  * [MSBuild Github Issue #3916][msbuild_issue]
+  * [MSBuild Repro][msbuild_repro]
 
 [msbuild]: https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/Rebuilding-when-nothing-changed.md
 [github_issue]: https://github.com/xamarin/xamarin-android/issues/2247
