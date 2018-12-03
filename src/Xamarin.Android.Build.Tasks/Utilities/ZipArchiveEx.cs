@@ -110,6 +110,25 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		/// <summary>
+		/// HACK: aapt2 is creating zip entries on Windows such as `assets\subfolder/asset2.txt`
+		/// </summary>
+		public void FixupWindowsPathSeparators (Action<string, string> onRename)
+		{
+			bool modified = false;
+			foreach (var entry in zip) {
+				if (entry.FullName.Contains ('\\')) {
+					var name = entry.FullName.Replace ('\\', '/');
+					onRename?.Invoke (entry.FullName, name);
+					entry.Rename (name);
+					modified = true;
+				}
+			}
+			if (modified) {
+				Flush ();
+			}
+		}
+
 		public void Close ()
 		{
 			if (zip != null) {
