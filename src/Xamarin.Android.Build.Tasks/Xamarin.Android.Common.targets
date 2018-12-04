@@ -1422,6 +1422,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ConvertResourcesCases
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+		AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"

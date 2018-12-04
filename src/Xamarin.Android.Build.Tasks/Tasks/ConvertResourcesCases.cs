@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResourceDirectories { get; set; }
 
+		public ITaskItem[] AdditionalResourceDirectories { get; set; }
+
 		[Required]
 		public string AcwMapFile { get; set; }
 
@@ -83,7 +85,10 @@ namespace Xamarin.Android.Tasks
 			}
 			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);
 			
-			var resourcedirectories = ResourceDirectories.Where (s => s != item).Select(s => s.ItemSpec).ToArray();
+			var resourcedirectories = ResourceDirectories.Where (s => s != item)
+				.Concat (AdditionalResourceDirectories ?? new ITaskItem [0])
+				.Select(s => s.ItemSpec)
+				.ToArray();
 			// Fix up each file
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
