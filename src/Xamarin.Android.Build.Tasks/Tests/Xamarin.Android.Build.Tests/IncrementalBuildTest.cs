@@ -438,5 +438,58 @@ namespace Lib2
 				}
 			}
 		}
+
+		[Test]
+		public void ProduceReferenceAssembly ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			int count = 0;
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"
+					},
+				}
+			};
+			lib.SetProperty ("ProduceReferenceAssembly", "True");
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				lib.Touch ("Bar.cs");
+
+				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
+
+				var targetsShouldSkip = new [] {
+					//TODO: perhaps more targets will skip here eventually?
+					"CoreCompile",
+				};
+				foreach (var target in targetsShouldSkip) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+
+				var targetsShouldRun = new [] {
+					"_BuildApkEmbed",
+					"_CopyPackage",
+					"_Sign",
+				};
+				foreach (var target in targetsShouldRun) {
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+			}
+		}
 	}
 }

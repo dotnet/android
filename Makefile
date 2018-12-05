@@ -105,6 +105,7 @@ prepare-external:
 	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
 	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
+	$(call MSBUILD_BINLOG,prepare-external,msbuild) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
