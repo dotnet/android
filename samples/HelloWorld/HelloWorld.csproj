@@ -17,6 +17,7 @@
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v7.1</TargetFrameworkVersion>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <Import
       Condition="Exists('..\..\Configuration.props')"
