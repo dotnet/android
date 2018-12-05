@@ -91,7 +91,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				resourcedirectories.Add (dir.ItemSpec);
 			}
-			foreach (var dir in AdditionalResourceDirectories) {
+			foreach (var dir in AdditionalResourceDirectories ?? new ITaskItem[0]) {
 				if (dir == item)
 					continue;
 				resourcedirectories.Add (dir.ItemSpec);
