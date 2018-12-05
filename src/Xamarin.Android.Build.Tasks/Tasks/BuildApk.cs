@@ -115,6 +115,7 @@ namespace Xamarin.Android.Tasks
 			if (apkInputPath != null)
 				File.Copy (apkInputPath, apkOutputPath + "new", overwrite: true);
 			using (var apk = new ZipArchiveEx (apkOutputPath + "new", apkInputPath != null ? FileMode.Open : FileMode.Create )) {
+				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				apk.Archive.AddEntry ("NOTICE",
 						Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"));
 

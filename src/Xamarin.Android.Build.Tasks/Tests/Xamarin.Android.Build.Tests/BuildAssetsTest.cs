@@ -58,9 +58,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckAssetsAreIncludedInAPK ()
+		public void CheckAssetsAreIncludedInAPK ([Values (true, false)] bool useAapt2)
 		{
-			var projectPath = string.Format ("temp/CheckAssetsAreIncludedInAPK");
+			var projectPath = Path.Combine ("temp", TestName);
 			var libproj = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				IsRelease = true,
@@ -95,12 +95,13 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, libproj.ProjectName))) {
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
 					Assert.IsTrue (b.Build (proj), "{0} should have built successfully.", proj.ProjectName);
-					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "packaged_resources"))) {
+					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk"))) {
 						foreach (var a in libproj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
 							if (item.EndsWith ("/"))
