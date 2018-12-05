@@ -154,14 +154,14 @@ namespace Xamarin.Android.Tasks
 						continue;
 
 					MonoAndroidHelper.CopyIfChanged (copysrc, assemblyDestination);
-					try {
+					var mdb = assembly.ItemSpec + ".mdb";
+					if (File.Exists (mdb)) {
 						var mdbDestination = assemblyDestination + ".mdb";
-						MonoAndroidHelper.CopyIfChanged (assembly.ItemSpec + ".mdb", mdbDestination);
-					} catch (Exception) { // skip it, mdb sometimes fails to read and it's optional
+						MonoAndroidHelper.CopyIfChanged (mdb, mdbDestination);
 					}
 					var pdb = Path.ChangeExtension (copysrc, "pdb");
 					if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
-						var pdbDestination = Path.ChangeExtension (Path.Combine (copydst, filename), "pdb");
+						var pdbDestination = Path.ChangeExtension (assemblyDestination, "pdb");
 						MonoAndroidHelper.CopyIfChanged (pdb, pdbDestination);
 					}
 				}
