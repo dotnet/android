@@ -45,8 +45,13 @@
       Outputs="@(_DownloadedItem)">
     <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
     <DownloadUri
-        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
-        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
+        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
+        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
+      <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
+    </DownloadUri>
+    <DownloadUri
+        SourceUris="@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
+        DestinationFiles="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
       <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
     </DownloadUri>
     <DownloadUri
