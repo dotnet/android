@@ -386,6 +386,21 @@ namespace Xamarin.Android.Tasks
 			return Files.CopyIfChanged (source, destination);
 		}
 
+		public static bool CopyIfStringChanged (string contents, string destination)
+		{
+			return Files.CopyIfStringChanged (contents, destination);
+		}
+
+		public static bool CopyIfBytesChanged (byte [] bytes, string destination)
+		{
+			return Files.CopyIfBytesChanged (bytes, destination);
+		}
+
+		public static bool CopyIfStreamChanged (Stream source, string destination)
+		{
+			return Files.CopyIfStreamChanged (source, destination);
+		}
+
 		public static bool CopyIfZipChanged (Stream source, string destination)
 		{
 			return Files.CopyIfZipChanged (source, destination);
