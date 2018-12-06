@@ -2137,8 +2137,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
-  Inputs="@(ResolvedUserAssemblies)"
-  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
+  Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
+  Outputs="$(_AndroidLinkFlag)">
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
@@ -2152,17 +2152,11 @@ because xbuild doesn't support framework reference assemblies.
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
-    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
-    <ItemGroup>
-      <_LinkAssembliesNoShrinkFiles Include="$(MonoAndroidIntermediateAssemblyDir)*" />
-    </ItemGroup>
-    <Touch Files="@(_LinkAssembliesNoShrinkFiles)" />
-
-    <!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
+    <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidLinkFlag)" />
-      <FileWrites Include="@(_LinkAssembliesNoShrinkFiles)" />
+      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
     </ItemGroup>
 </Target>
 	
@@ -2195,17 +2189,11 @@ because xbuild doesn't support framework reference assemblies.
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)" />
 
-    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
-    <ItemGroup>
-      <_LinkAssembliesShrinkFiles Include="$(MonoAndroidIntermediateAssetsDir)*" />
-    </ItemGroup>
-    <Touch Files="@(_LinkAssembliesShrinkFiles)" />
-
     <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidLinkFlag)" />
-      <FileWrites Include="@(_LinkAssembliesShrinkFiles)" />
+      <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)*" />
     </ItemGroup>
 </Target>
 
