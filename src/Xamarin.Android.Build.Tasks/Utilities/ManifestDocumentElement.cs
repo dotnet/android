@@ -180,17 +180,18 @@ namespace Xamarin.Android.Manifest {
 		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> ValueConverters = new Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, string>> () {
 			{ typeof (bool),                (value, p, r, v) => ToString ((bool) value) },
 			{ typeof (int),                 (value, p, r, v) => value.ToString () },
+			{ typeof (float),               (value, p, r, v) => value.ToString () },
 			{ typeof (string),              (value, p, r, v) => value.ToString () },
 			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
 			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
 			{ typeof (DocumentLaunchMode),  (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
 			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
-			{ typeof (LockTaskMode),        (value, p, r, v) => ToString ((LockTaskMode) value) },
 			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
 			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
 			{ typeof (SoftInput),           (value, p, r, v) => ToString ((SoftInput) value) },
 			{ typeof (UiOptions),           (value, p, r, v) => ToString ((UiOptions) value) },
 			{ typeof (Type),                (value, p, r, v) => ToString (value.ToString (), p, r) },
+			{ typeof (WindowRotationAnimation),     (value, p, r, v) => ToString ((WindowRotationAnimation) value) },
 		};
 
 		static string ToString (bool value)
@@ -270,17 +271,6 @@ namespace Xamarin.Android.Manifest {
 			}
 		}
 
-		static string ToString (LockTaskMode value)
-		{
-			switch (value) {
-				case LockTaskMode.Locked: return "locked";
-				case LockTaskMode.None: return "none";
-				case LockTaskMode.Pinned: return "pinned";
-				default:
-					throw new ArgumentException ($"Unsupported LockTaskMode value '{value}'.", "LockTaskMode");
-			}
-		}
-
 		static string ToString (Protection value)
 		{
 			value = value & Protection.MaskBase;
@@ -354,6 +344,18 @@ namespace Xamarin.Android.Manifest {
 				case UiOptions.SplitActionBarWhenNarrow:  return "splitActionBarWhenNarrow";
 				default:
 					throw new ArgumentException ("Unsupported UiOptions value '" + value + "'.", "LaunchMode");
+			}
+		}
+
+		static string ToString (WindowRotationAnimation value)
+		{
+			switch (value) {
+				case WindowRotationAnimation.Crossfade: return "crossfade";
+				case WindowRotationAnimation.Jumpcut:   return "jumpcut";
+				case WindowRotationAnimation.Rotate:    return "rotate";
+				case WindowRotationAnimation.Seamless:  return "seamless";
+				default:
+					throw new ArgumentException ($"Unsupported WindowRotationAnimation value '{value}'", "WindowRotationAnimation");
 			}
 		}
 
