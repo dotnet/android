@@ -682,7 +682,7 @@ class TestActivity : Activity { }"
 			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
-				string manifest = builder.Output.GetIntermediaryAsText ("android\\AndroidManifest.xml");
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
 				var doc = XDocument.Parse (manifest);
 				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
 				IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
