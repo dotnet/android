@@ -8,6 +8,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	{
 		const                   int                 StateRunTests               = 0;
 		const                   int                 StateGetLogcat              = 1;
+		const                   int                 StateClearLogcat            = 2;
 
 		[Required]
 		public                  string              Activity                    { get; set; }
@@ -37,6 +38,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					StdoutFilePath = LogcatFilename,
 					StdoutAppend = true,
 				},
+
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -c",
+				},
+
 			};
 		}
 	}

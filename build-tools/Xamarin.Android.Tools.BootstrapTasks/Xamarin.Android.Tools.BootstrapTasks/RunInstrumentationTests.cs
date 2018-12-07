@@ -14,7 +14,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		const                   string              TestResultsPathResult       = "INSTRUMENTATION_RESULT: nunit2-results-path=";
 		const                   int                 StateRunInstrumentation     = 0;
 		const                   int                 StateGetLogcat              = 1;
-		const                   int                 StatePullFiles              = 2;
+		const                   int                 StateClearLogcat            = 2;
+		const                   int                 StatePullFiles              = 3;
 		const                   int                 MaxState                    = StatePullFiles;
 
 		public                  string              TestFixture                 { get; set; }
@@ -79,6 +80,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					MergeStdoutAndStderr = false,
 					StdoutFilePath = LogcatFilename,
 					StdoutAppend = true,
+				},
+
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -c",
 				},
 
 				new CommandInfo {
