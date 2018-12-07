@@ -105,13 +105,13 @@ prepare-external:
 	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
 	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
-	$(call MSBUILD_BINLOG,prepare-external,msbuild) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
 
 prepare-deps: prepare-external
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	mkdir -p bin/Build$(CONFIGURATION)
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
 	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
+	$(call MSBUILD_BINLOG,prepare-restore) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
 
 prepare-props: prepare-deps
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
