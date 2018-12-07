@@ -451,6 +451,10 @@ namespace Lib2
 					},
 				}
 			};
+			//NOTE: so _BuildApkEmbed runs in commercial tests
+			app.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
+			app.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
+
 			int count = 0;
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "MyLibrary",
