@@ -69,6 +69,7 @@ namespace Android.Runtime {
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
 			TypeManager             = new AndroidTypeManager ();
 			ValueManager            = new AndroidValueManager ();
+			UseMarshalMemberBuilder = false;
 		}
 	}
 
