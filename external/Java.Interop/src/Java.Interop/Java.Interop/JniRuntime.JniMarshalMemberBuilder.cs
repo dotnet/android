@@ -10,6 +10,7 @@ namespace Java.Interop {
 	partial class JniRuntime {
 
 		partial class CreationOptions {
+			public  bool                       UseMarshalMemberBuilder     {get; set;}      = true;
 			public  JniMarshalMemberBuilder    MarshalMemberBuilder        {get; set;}
 		}
 
@@ -24,6 +25,10 @@ namespace Java.Interop {
 
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
+			if (!options.UseMarshalMemberBuilder) {
+				return;
+			}
+
 			if (options.MarshalMemberBuilder != null) {
 				marshalMemberBuilder    = SetRuntime (options.MarshalMemberBuilder);
 				return;
