@@ -3267,11 +3267,13 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		public void XA0115 ()
+		[TestCase ("armeabi;armeabi-v7a", TestName = "XA0115")]
+		[TestCase ("armeabi,armeabi-v7a", TestName = "XA0115Commas")]
+		public void XA0115 (string abis)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi;armeabi-v7a");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, abis);
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA0115.");
 				StringAssertEx.Contains ($"error XA0115", builder.LastBuildOutput, "Error should be XA0115");
