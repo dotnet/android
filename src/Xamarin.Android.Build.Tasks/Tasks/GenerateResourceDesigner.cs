@@ -239,8 +239,12 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-
-			MonoAndroidHelper.CopyIfStringChanged (code, file);
+			
+			var temp_o  = Path.Combine (Path.GetDirectoryName (file), "__" + Path.GetFileName (file) + ".new");
+			using (TextWriter o = File.CreateText (temp_o))
+				o.Write (code);
+			MonoAndroidHelper.CopyIfChanged (temp_o, file);
+			try { File.Delete (temp_o); } catch (Exception) { }
 		}
 
 		private void AddRename (string android, string user)

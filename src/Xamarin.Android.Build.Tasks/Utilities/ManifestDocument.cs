@@ -928,13 +928,7 @@ namespace Xamarin.Android.Tasks {
 		
 		public void Save (string filename)
 		{
-			using (var file = new StreamWriter (filename, append: false, encoding: new UTF8Encoding (false)))
-				Save (file);
-		}
-
-		public void Save (Stream stream)
-		{
-			using (var file = new StreamWriter (stream, new UTF8Encoding (false), bufferSize: 1024, leaveOpen: true))
+			using (var file = new StreamWriter (filename, false, new UTF8Encoding (false)))
 				Save (file);
 		}
 
