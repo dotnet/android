@@ -263,26 +263,22 @@ namespace Xamarin.Android.Tasks
 
 		bool RunParallelAotCompiler (List<string> nativeLibs)
 		{
-			CancellationTokenSource cts = null;
-
 			try {
-				cts = new CancellationTokenSource ();
-
 				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = cts.Token,
+					CancellationToken = Token,
 					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 				};
 
 				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
 					config => {
 						if (!config.Valid) {
-							cts.Cancel ();
+							Cancel ();
 							return;
 						}
 
-						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, cts.Token)) {
+						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath)) {
 							LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
-							cts.Cancel ();
+							Cancel ();
 							return;
 						}
 
@@ -292,9 +288,6 @@ namespace Xamarin.Android.Tasks
 				);
 			} catch (OperationCanceledException) {
 				return false;
-			} finally {
-				if (cts != null)
-					cts.Dispose ();
 			}
 
 			return true;
@@ -443,7 +436,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 			
-		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, CancellationToken token)
+		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
@@ -484,7 +477,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
+				Token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
 				proc.WaitForExit ();
 				if (psi.RedirectStandardError)
 					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
