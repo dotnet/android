@@ -200,6 +200,23 @@ namespace Xamarin.Android.Tools
 			return GetJavaProperties (ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
 		}
 
+		static bool AnySystemJavasInstalled ()
+		{
+			if (OS.IsMac) {
+				string path = Path.Combine (Path.DirectorySeparatorChar + "System", "Library", "Java", "JavaVirtualMachines");
+				if (!Directory.Exists (path)) {
+					return false;
+				}
+
+				string[] dirs = Directory.GetDirectories (path);
+				if (dirs == null || dirs.Length == 0) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		static Dictionary<string, List<string>> GetJavaProperties (string java)
 		{
 			var javaProps   = new ProcessStartInfo {
@@ -209,6 +226,10 @@ namespace Xamarin.Android.Tools
 
 			var     props   = new Dictionary<string, List<string>> ();
 			string  curKey  = null;
+
+			if (!AnySystemJavasInstalled () && (java == "/usr/bin/java" || java == "java"))
+				return props;
+
 			ProcessUtils.Exec (javaProps, (o, e) => {
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
