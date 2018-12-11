@@ -2068,6 +2068,7 @@ namespace App1
 					Directory.Delete (embedded, recursive: true);
 				}
 				Assert.IsTrue (builder.Build (proj), "Second Build should have succeeded");
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "`_BuildAdditionalResourcesCache` should not be skipped!");
 			}
 		}
 
