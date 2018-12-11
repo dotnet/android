@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    compile group: 'com.android.tools', name: 'r8', version: '1.2.52'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.android.tools.r8.SwissArmyKnife'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    archiveName 'r8.jar'
+}
