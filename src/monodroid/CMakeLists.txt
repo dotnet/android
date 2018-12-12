@@ -205,6 +205,10 @@ if (ENABLE_TIMING)
   add_definitions("-DMONODROID_TIMING=1")
 endif()
 
+if (WIN32)
+  include_directories(BEFORE "jni/win32")
+endif()
+
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
 add_definitions("-DDYLIB_MONO")
