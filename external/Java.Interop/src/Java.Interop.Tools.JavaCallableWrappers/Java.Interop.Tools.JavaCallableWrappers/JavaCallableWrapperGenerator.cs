@@ -856,15 +856,18 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		StreamWriter OpenStream (string outputPath)
 		{
-			string path = outputPath;
-			foreach (string dir in package.Split ('.'))
-				path = Path.Combine (path, dir);
+			string destination = GetDestinationPath (outputPath);
+			Directory.CreateDirectory (Path.GetDirectoryName (destination));
+			return new StreamWriter (new FileStream (destination, FileMode.Create, FileAccess.Write));
+		}
 
-			if (!Directory.Exists (path))
-				Directory.CreateDirectory (path);
-
-			path = Path.Combine (path, name + ".java");
-			return new StreamWriter (new FileStream (path, FileMode.Create, FileAccess.Write));
+		/// <summary>
+		/// Returns a destination file path based on the package name of this Java type
+		/// </summary>
+		public string GetDestinationPath (string outputPath)
+		{
+			var dir = package.Replace ('.', Path.DirectorySeparatorChar);
+			return Path.Combine (outputPath, dir, name + ".java");
 		}
 	}
 }
