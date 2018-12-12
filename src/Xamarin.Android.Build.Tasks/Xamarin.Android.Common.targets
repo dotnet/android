@@ -1055,7 +1055,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CheckSupportedAbis">
 	<PropertyGroup>
-		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
+		<_RequestedAbis>;$(AndroidSupportedAbis.Replace(',', ';'));</_RequestedAbis>
 	</PropertyGroup>
 	<Error Code="XA0115"
 			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
