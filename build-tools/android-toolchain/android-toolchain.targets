@@ -72,8 +72,8 @@
       <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
     </CreateItem>
 
-    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory);$(ChromeToolsDirectory)" />
-    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory);$(ChromeToolsDirectory)" />
+    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
+    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
 
     <UnzipDirectoryChildren
         HostOS="$(HostOS)"
@@ -94,15 +94,6 @@
         DestinationFolder="$(AntDirectory)"
     />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
-    />
-    <Exec Command="gclient --version" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$(_OriginalPath)"
-    />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"
