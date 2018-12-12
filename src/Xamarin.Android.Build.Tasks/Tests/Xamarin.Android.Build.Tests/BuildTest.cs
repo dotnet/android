@@ -1838,6 +1838,9 @@ namespace App1
 			};
 			proj.SetProperty ("TargetFrameworkVersion", "v7.1");
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("int count = 1;", @"int count = 1;
+Mono.Data.Sqlite.SqliteConnection connection = null;
+Mono.Unix.UnixFileInfo fileInfo = null;");
 			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				b1.Verbosity = LoggerVerbosity.Diagnostic;
