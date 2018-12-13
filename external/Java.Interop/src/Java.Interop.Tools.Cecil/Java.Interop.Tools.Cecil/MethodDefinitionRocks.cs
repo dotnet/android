@@ -13,17 +13,18 @@ namespace Java.Interop.Tools.Cecil {
 		{
 			if (method.IsStatic || method.IsNewSlot || !method.IsVirtual)
 				return method;
-			var baseMethod = method.DeclaringType.GetBaseTypes ()
-				.SelectMany (t => t.Methods)
-				.Where (m => !m.IsConstructor &&
-						m.Name == method.Name &&
-						(m.IsVirtual || m.IsAbstract) &&
-						m.HasParameters == method.HasParameters &&
-						(!m.HasParameters
-							? true
-							: AreParametersCompatibleWith (m.Parameters, method.Parameters)))
-				.FirstOrDefault ();
-			return baseMethod ?? method;
+
+			foreach (var baseType in method.DeclaringType.GetBaseTypes ()) {
+				foreach (var m in baseType.Methods) {
+					if (!m.IsConstructor &&
+							m.Name == method.Name &&
+							(m.IsVirtual || m.IsAbstract) &&
+							AreParametersCompatibleWith (m.Parameters, method.Parameters)) {
+						return m;
+					}
+				}
+			}
+			return method;
 		}
 
 		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit)

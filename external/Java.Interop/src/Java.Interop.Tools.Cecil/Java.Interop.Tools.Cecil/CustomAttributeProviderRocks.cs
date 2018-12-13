@@ -15,9 +15,6 @@ namespace Java.Interop.Tools.Cecil {
 
 		public static IEnumerable<CustomAttribute> GetCustomAttributes (this ICustomAttributeProvider item, string attribute_fullname)
 		{
-			if (!item.HasCustomAttributes)
-				yield break;
-
 			foreach (CustomAttribute custom_attribute in item.CustomAttributes) {
 				if (custom_attribute.Constructor.DeclaringType.FullName != attribute_fullname)
 					continue;

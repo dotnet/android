@@ -115,10 +115,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Diagnostic.Error (4203, LookupSource (type), "The Name property must be a fully qualified 'package.TypeName' value, and no package was found for '{0}'.", jniName);
 
 			foreach (MethodDefinition minfo in type.Methods.Where (m => !m.IsConstructor)) {
-				var baseMethods = GetBaseMethods (minfo);
-				var baseRegiteredMethod = baseMethods.FirstOrDefault (m => GetRegisterAttributes (m).Any ());
-				if (baseRegiteredMethod != null)
-					AddMethod (baseRegiteredMethod, minfo);
+				var baseRegisteredMethod = GetBaseRegisteredMethod (minfo);
+				if (baseRegisteredMethod != null)
+					AddMethod (baseRegisteredMethod, minfo);
 				else if (GetExportFieldAttributes (minfo).Any ()) {
 					AddMethod (null, minfo);
 					HasExport = true;
@@ -283,13 +282,18 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 		}
 
-		static IEnumerable<MethodDefinition> GetBaseMethods (MethodDefinition method)
+		static MethodDefinition GetBaseRegisteredMethod (MethodDefinition method)
 		{
 			MethodDefinition bmethod;
 			while ((bmethod = method.GetBaseDefinition ()) != method) {
 				method = bmethod;
-				yield return method;
+
+				var attributes = method.GetCustomAttributes (typeof (RegisterAttribute));
+				if (attributes.Any ()) {
+					return method;
+				}
 			}
+			return null;
 		}
 
 		internal static RegisterAttribute ToRegisterAttribute (CustomAttribute attr)
