@@ -79,7 +79,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
 			try {
-				using (var r = await client.GetAsync (uri, source.Token)) {
+				using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
 					r.EnsureSuccessStatusCode ();
 					using (var s = await r.Content.ReadAsStreamAsync ())
 					using (var o = File.OpenWrite (tempPath)) {
