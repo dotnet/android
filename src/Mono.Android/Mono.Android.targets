@@ -20,7 +20,7 @@
       </_GlobalProperties>
     </PropertyGroup>
     <MSBuild
-        Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
+        Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop-MonoAndroid.csproj"
         Properties="$(_GlobalProperties)"
     />
     <ItemGroup>
