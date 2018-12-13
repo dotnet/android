@@ -19,6 +19,7 @@
 
 + [XA0000](xa0000.md): Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion).
 + [XA0001](xa0001.md): Invalid or unsupported `$(TargetFrameworkVersion)` value.
++ [XA0118](xa0002.md): Could not find mono.android.jar
 
 + [XA0030](xa0030.md): Building with JDK Version `{versionNumber}` is not supported.
 + [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.

@@ -365,5 +365,10 @@
       <Name>mono-runtimes</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj">
+      <Project>{1D4FC8F1-0DA4-4F38-BE68-11AEBA9A0EA4}</Project>
+      <Name>java-runtime</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>

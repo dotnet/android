@@ -650,17 +650,11 @@
     <EmbeddedResource Include="Resources\machine.config">
       <LogicalName>machine.config</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoPackageManager.java">
-      <LogicalName>MonoPackageManager.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
       <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
       <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Seppuku.java">
-      <LogicalName>Seppuku.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>
@@ -680,29 +674,8 @@
     <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
       <LogicalName>proguard_xamarin.cfg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\NotifyTimeZoneChanges.java">
-      <LogicalName>NotifyTimeZoneChanges.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\IncrementalClassLoader.java">
-      <LogicalName>IncrementalClassLoader.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Placeholder.java">
-      <LogicalName>Placeholder.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MultiDexLoader.java">
-      <LogicalName>MultiDexLoader.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MultiDexLoader.Debug.java">
-      <LogicalName>MultiDexLoader.Debug.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonkeyPatcher.java">
-      <LogicalName>MonkeyPatcher.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\ResourcePatcher.java">
-      <LogicalName>ResourcePatcher.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\XamarinAndroidEnvironmentVariables.java">
       <LogicalName>XamarinAndroidEnvironmentVariables.java</LogicalName>

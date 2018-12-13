@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tasks
 	public class DetermineJavaLibrariesToCompile : Task
 	{
 		[Required]
-		public string MonoPlatformJarPath { get; set; }
+		public ITaskItem[] MonoPlatformJarPaths { get; set; }
 
 		public bool EnableInstantRun { get; set; }
 
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("DetermineJavaLibrariesToCompile");
 			Log.LogDebugMessage ("  EnableInstantRun: {0}", EnableInstantRun);
-			Log.LogDebugMessage ("  MonoPlatformJarPath: {0}", MonoPlatformJarPath);
+			Log.LogDebugMessage ("  MonoPlatformJarPaths: {0}", MonoPlatformJarPaths);
 			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
 			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
 			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tasks
 
 			var jars = new List<ITaskItem> ();
 			if (!EnableInstantRun)
-				jars.Add (new TaskItem (MonoPlatformJarPath));
+				jars.AddRange (MonoPlatformJarPaths);
 			if (JavaSourceFiles != null)
 				foreach (var jar in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".jar"))
 					jars.Add (jar);

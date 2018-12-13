@@ -1891,6 +1891,13 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Create our intermediate directory for assemblies -->
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
+
+<Target Name="_CollectRuntimeJarFilenames">
+  <PropertyGroup>
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
+    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
+  </PropertyGroup>
+</Target>
   
 <Target Name="_GetMonoPlatformJarPath">
   <GetMonoPlatformJar TargetFrameworkDirectory="$(TargetFrameworkDirectory)">
@@ -1902,30 +1909,12 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResources"
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
-		DependsOnTargets="$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
+		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
   <CopyResource
     ResourceName="MonoRuntimeProvider.Bundled.java"
     OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
     Condition="'$(AndroidUseSharedRuntime)' != 'true'" />
-
-  <CopyResource
-    ResourceName="NotifyTimeZoneChanges.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
-    Condition="'$(AndroidIncludeDebugSymbols)' == 'True'" />
-
-  <CopyResource
-    ResourceName="Seppuku.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
-    Condition="'$(AndroidIncludeDebugSymbols)' == 'True'" />
-  <CopyResource
-    ResourceName="IncrementalClassLoader.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java"
-    Condition="'$(AndroidEnableMultiDex)' == 'True'" />	
-  <CopyResource
-    ResourceName="MultiDexLoader.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java"
-    Condition="'$(AndroidEnableMultiDex)' == 'True'" />
   
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
@@ -1938,14 +1927,6 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
         Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java')" />
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java"
-        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java')" />
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java"
-        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java')" />
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java"
-        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java')" />
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java"
-        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java')" />
     <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
     <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
@@ -2569,7 +2550,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DetermineJavaLibrariesToCompile">
 
   <DetermineJavaLibrariesToCompile
-    MonoPlatformJarPath="$(MonoPlatformJarPath)"
+    MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
     JavaSourceFiles="@(AndroidJavaSource)" 
     JavaLibraries="@(AndroidJavaLibrary)"
     ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
