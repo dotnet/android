@@ -840,8 +840,10 @@ DylibMono::get_root_domain ()
 void
 DylibMono::aot_register_module (void *aot_info)
 {
-	if (mono_aot_register_module == nullptr)
+	if (mono_aot_register_module == nullptr) {
+		log_info (LOG_DEFAULT, "Could not register AOT module, mono_aot_register_module is null");
 		return;
+	}
 
 	mono_aot_register_module (aot_info);
 }
