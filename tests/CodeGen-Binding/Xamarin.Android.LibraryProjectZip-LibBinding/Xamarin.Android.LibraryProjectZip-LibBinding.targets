@@ -56,8 +56,8 @@
       <_Jdk9Modules Condition="$(_JdkVersion.StartsWith ('9'))">JAVA_OPTS="--add-modules java.xml.bind"</_Jdk9Modules>
     </PropertyGroup>
     <Exec
-        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);ANDROID_NDK_HOME=$(AndroidNdkDirectory);JAVA_HOME=$(JavaSdkDirectory)"
-        Command="$(_Jdk9Modules) .\gradlew assembleDebug --stacktrace --no-daemon"
+        EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);ANDROID_NDK_HOME=$(AndroidNdkDirectory);JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        Command="$(_Jdk9Modules) &quot;$(GradleWPath)&quot; assembleDebug $(GradleArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />
