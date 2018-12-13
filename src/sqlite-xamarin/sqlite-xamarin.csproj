@@ -7,10 +7,10 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
@@ -19,6 +19,11 @@
     </BuildDependsOn>
   </PropertyGroup>
   <Import Project="sqlite-xamarin.targets" />
+  <ItemGroup>
+    <Content Include="Mono.Data.Sqlite.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
       <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>

@@ -164,6 +164,7 @@
     <MonoProfileAssembly Include="Mono.Btls.Interface.dll" />
     <MonoProfileAssembly Include="Mono.CompilerServices.SymbolWriter.dll" />
     <MonoProfileAssembly Include="Mono.CSharp.dll" />
+    <MonoProfileAssembly Include="Mono.Data.Sqlite.dll" />
     <MonoProfileAssembly Include="Mono.Data.Tds.dll" />
     <MonoProfileAssembly Include="Mono.Security.dll" />
     <MonoProfileAssembly Include="mscorlib.dll" />
