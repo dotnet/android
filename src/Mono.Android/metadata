@@ -267,7 +267,7 @@
   <attr path="/api/package[@name='android.view']/interface[@name='View.OnLongClickListener']/method[@name='onLongClick']/parameter[@name='v']" name="sender">true</attr>
   <attr path="/api/package[@name='android.view']/interface[@name='View.OnTouchListener']/method[@name='onTouch']/parameter[@name='v']" name="sender">true</attr>
   <attr path="/api/package[@name='android.view']/interface[@name='ViewStub.OnInflateListener']/method[@name='onInflate']/parameter[@name='stub']" name="sender">true</attr>
-  <attr api-since="11" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="type">Android.Views.StatusBarVisibility</attr>
+  <attr api-since="11" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="type">Android.Views.SystemUiFlags</attr>
   <attr path="/api/package[@name='android.view.accessibility']" name="managedName">Android.Views.Accessibility</attr>
   <attr path="/api/package[@name='android.view.animation']" name="managedName">Android.Views.Animations</attr>
   <attr path="/api/package[@name='android.view.animation']/class[@name='Animation.Description']/field[@name='type']" name="type">Android.Views.Animations.Dimension</attr>
