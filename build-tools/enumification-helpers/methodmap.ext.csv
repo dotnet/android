@@ -1810,7 +1810,7 @@
 28, android.graphics, ImageDecoder, getMemorySizePolicy, return, Android.Graphics.ImageDecoderMemoryPolicy
 28, android.graphics, ImageDecoder, setMemorySizePolicy, policy, Android.Graphics.ImageDecoderMemoryPolicy
 28, android.graphics, ImageDecoder.DecodeException, getError, return, Android.Graphics.ImageDecoderErrorType
-28, android.hardware.biometrics, BiometricPrompt.AuthenticationCallback, onAuthenticationError, errorCode, Android.Hardware.Biometrics.BiometricsErrorCode
+28, android.hardware.biometrics, BiometricPrompt.AuthenticationCallback, onAuthenticationError, errorCode, Android.Hardware.Biometrics.BiometricErrorCode
 28, android.hardware.biometrics, BiometricPrompt.AuthenticationCallback, onAuthenticationHelp, helpCode, Android.Hardware.Biometrics.BiometricAcquiredStatus
 28, android.hardware.camera2.params, SessionConfiguration, getSessionType, return, Android.Hardware.Camera2.Params.SessionType
 28, android.icu.util, LocaleData, getDelimiter, type, Android.Icu.Util.DelimiterType
