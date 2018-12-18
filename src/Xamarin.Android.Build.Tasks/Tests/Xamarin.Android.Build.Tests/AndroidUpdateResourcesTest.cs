@@ -316,6 +316,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[NonParallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
