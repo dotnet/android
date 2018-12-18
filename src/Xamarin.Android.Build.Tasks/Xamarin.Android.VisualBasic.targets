@@ -29,6 +29,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
     <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <NoStdLib>true</NoStdLib>
+    <!-- Enable nuget package conflict resolution -->
+    <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <Import Project="Xamarin.Android.Common.targets" />
