@@ -17,12 +17,13 @@
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\download-bundle\download-bundle.csproj" />
     <Exec Command="$(_NuGet) restore Xamarin.Android.sln" WorkingDirectory="$(_TopDir)" />
-    <Exec Command="$(_NuGet) restore Xamarin.Android-Tests.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\LibZipSharp\libZipSharp.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\xamarin-android-tools\Xamarin.Android.Tools.sln" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj" Targets="Restore" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
+    <!--NOTE: need to restore test sln *after* android-toolchain has the Android SDK in place-->
+    <Exec Command="$(_NuGet) restore Xamarin.Android-Tests.sln" WorkingDirectory="$(_TopDir)" />
     <JdkInfo
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
