@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			catch (Exception e) {
 				Log.LogWarning ($"Unable to process `{SourceFile}`.  Is it empty?  (Did a unit test runner SIGSEGV?)");
 				Log.LogWarningFromException (e);
-				CreateErrorResultsFile (SourceFile, dest, e);
+				CreateErrorResultsFile (SourceFile, dest, Configuration, e);
 			}
 
 			if (DeleteSourceFiles && Path.GetFullPath (SourceFile) != Path.GetFullPath (dest)) {
@@ -101,11 +101,41 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 	partial class RenameTestCases {
 
-		static void CreateErrorResultsFile (string source, string dest, Exception e)
+		static void CreateErrorResultsFile (string sourceFile, string destFile, string config, Exception e)
 		{
-			var contents  = File.Exists (source)
-				? File.ReadAllText (source)
-				: "";
+			GetTestCaseInfo (sourceFile, Path.GetDirectoryName (destFile), config, out var testSuiteName, out var testCaseName, out var logcatPath);
+			var contents  = new StringBuilder ();
+			if (File.Exists (sourceFile)) {
+				contents.Append (File.ReadAllText (sourceFile));
+			}
+			if (logcatPath != null) {
+				if (contents.Length > 0) {
+					contents.AppendLine ();
+					contents.AppendLine ();
+				}
+				contents.AppendLine ("---`adb logcat`---");
+				var logcat      = File.ReadAllText (logcatPath);
+				var inBinRun    = false;
+				foreach (var c in logcat) {
+					if (!char.IsControl (c) || char.IsWhiteSpace (c)) {
+						if (inBinRun) {
+							contents.Append ("]");
+						}
+						inBinRun        = false;
+						contents.Append (c);
+						continue;
+					}
+					if (!inBinRun) {
+						inBinRun        = true;
+						contents.Append ("[!binary-block");
+					}
+					// Invalid XML char such as 0x0f; escape it
+					contents.AppendFormat (" {0:x2}", (int) c);
+				}
+				if (inBinRun) {
+					contents.Append ("]");
+				}
+			}
 
 			var doc       = new XDocument (
 				new XElement ("test-results",
@@ -115,7 +145,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					new XAttribute ("ignored", "0"),
 					new XAttribute ("inconclusive", "0"),
 					new XAttribute ("invalid", "0"),
-					new XAttribute ("name", dest),
+					new XAttribute ("name", destFile),
 					new XAttribute ("not-run", "0"),
 					new XAttribute ("skipped", "0"),
 					new XAttribute ("time", DateTime.Now.ToString ("HH:mm:ss")),
@@ -134,7 +164,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						new XAttribute ("current-uiculture", "en-US")),
 					new XElement ("test-suite",
 						new XAttribute ("type", "APK-File"),
-						new XAttribute ("name", dest),
+						new XAttribute ("name", testSuiteName),
 						new XAttribute ("executed", "True"),
 						new XAttribute ("result", "Failure"),
 						new XAttribute ("success", "False"),
@@ -142,7 +172,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						new XAttribute ("asserts", "0"),
 						new XElement ("results",
 							new XElement ("test-case",
-								new XAttribute ("name", Path.GetFileName (dest)),
+								new XAttribute ("name", testCaseName),
 								new XAttribute ("executed", "True"),
 								new XAttribute ("result", "Error"),
 								new XAttribute ("success", "False"),
@@ -150,12 +180,33 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 								new XAttribute ("asserts", "1"),
 								new XElement ("failure",
 									new XElement ("message",
-										$"Error processing `{source}`.  " +
+										$"Error processing `{sourceFile}`.  " +
 										$"Check the build log for execution errors.{Environment.NewLine}" +
 										$"File contents:{Environment.NewLine}",
-										new XCData (contents)),
+										new XCData (contents.ToString ())),
 									new XElement ("stack-trace", e.ToString ())))))));
-			doc.Save (dest);
+			doc.Save (destFile);
+		}
+
+		// Example `SourceFile`:
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/TestResult-Mono.Android_Tests.xml
+		// Example `DestinationFolder`:
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/
+		// Example `adb logcat`:
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/tests/logcat-Release-Mono.Android_Tests.txt
+		//
+		// We need to extract the "base" test name from `SourceFile`, and use that to construct `logcatPath`
+		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, out string testSuiteName, out string testCaseName, out string logcatPath)
+		{
+			var name        = Path.GetFileNameWithoutExtension (sourceFile);
+			if (name.StartsWith ("TestResult-"))
+				name    = name.Substring ("TestResult-".Length);
+			testSuiteName   = name;
+			testCaseName    = $"Possible Crash / {config}";
+			logcatPath      = Path.Combine (destinationFolder, "tests", $"logcat-{config}-{name}.txt");
+			if (!File.Exists (logcatPath)) {
+				logcatPath      = null;
+			}
 		}
 	}
 
@@ -171,9 +222,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public static void Main (string[] args)
 		{
-			foreach (var file in args) {
-				CreateErrorResultsFile ("source.xml", file, new Exception ("Wee!!!"));
+			if (args.Length == 0) {
+				Console.WriteLine ("RenameTestCases <DESTINATION-FILE> [SOURCE-FILE] [CONFIG]");
+				return;
 			}
+			string destFile       = args [0];
+			string sourceFile     = args.Length > 1 ? args [1] : "source.xml";
+			string config         = args.Length > 2 ? args [2] : "Debug";
+			CreateErrorResultsFile (sourceFile, destFile, config, new Exception ("Wee!!!"));
 		}
 	}
 #endif  // APP
