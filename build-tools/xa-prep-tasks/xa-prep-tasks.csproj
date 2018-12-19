@@ -51,6 +51,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitBlame.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\GitCommitsInRange.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ReplaceFileContents.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\RunParallelTargets.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\PrepareInstall.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\AcceptAndroidSdkLicenses.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\Sleep.cs" />
