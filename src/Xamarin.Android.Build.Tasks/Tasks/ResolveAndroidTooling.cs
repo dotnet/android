@@ -326,18 +326,20 @@ namespace Xamarin.Android.Tasks
 
 		int GetMaxInstalledApiLevel ()
 		{
-			string platformsDir = Path.Combine (AndroidSdkPath, "platforms");
-			var apiIds = Directory.EnumerateDirectories (platformsDir)
-				.Select (platformDir => Path.GetFileName (platformDir))
-				.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
-				.Select (dir => dir.Substring ("android-".Length))
-				.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
 			int maxApiLevel = int.MinValue;
-			foreach (var id in apiIds) {
-				int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
-				if (!v.HasValue)
-					continue;
-				maxApiLevel = Math.Max (maxApiLevel, v.Value);
+			string platformsDir = Path.Combine (AndroidSdkPath, "platforms");
+			if (Directory.Exists (platformsDir)) {
+				var apiIds = Directory.EnumerateDirectories (platformsDir)
+					.Select (platformDir => Path.GetFileName (platformDir))
+					.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
+					.Select (dir => dir.Substring ("android-".Length))
+					.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
+				foreach (var id in apiIds) {
+					int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
+					if (!v.HasValue)
+						continue;
+					maxApiLevel = Math.Max (maxApiLevel, v.Value);
+				}
 			}
 			if (maxApiLevel < 0)
 				Log.LogCodedError ("XA5300",
