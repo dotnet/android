@@ -264,6 +264,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void Check9PatchFilesAreProcessed ([Values(false, true)] bool explicitCrunch)
 		{
 			var projectPath = string.Format ("temp/Check9PatchFilesAreProcessed_{0}", explicitCrunch.ToString ());
@@ -315,6 +316,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[NonParallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
@@ -1416,6 +1418,7 @@ namespace UnnamedProject
 
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
+		[NonParallelizable]
 		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();

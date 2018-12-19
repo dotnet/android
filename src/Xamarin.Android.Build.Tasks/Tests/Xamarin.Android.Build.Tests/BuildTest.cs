@@ -97,6 +97,7 @@ class MemTest {
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
 			var target = "ConvertResourcesCases";
@@ -381,6 +382,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
 			var start = DateTime.UtcNow.AddSeconds (-1);
@@ -1826,6 +1828,7 @@ namespace App1
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
 			var dll = new XamarinAndroidLibraryProject () {
