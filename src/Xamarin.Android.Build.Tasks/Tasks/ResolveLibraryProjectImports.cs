@@ -331,10 +331,7 @@ namespace Xamarin.Android.Tasks
 				var stamp = new FileInfo (Path.Combine (outdir.FullName, Path.GetFileNameWithoutExtension (aarFile.ItemSpec) + ".stamp"));
 				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (aarFile.ItemSpec).LastWriteTimeUtc) {
 					if (Directory.Exists (resDir))
-						resolvedResourceDirectories.Add (new TaskItem (resDir, new Dictionary<string, string> {
-							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
-							{ SkipAndroidResourceProcessing, "True" },
-						}));
+						resolvedResourceDirectories.Add (resDir);
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (assetsDir);
 					continue;
