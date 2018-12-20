@@ -109,6 +109,17 @@ or via
 
 ## Running Individual `.apk` Projects
 
+You can run selected apk test by passing PACKAGES variable to
+`make run-apk-tests`. For example:
+
+    make run-apk-tests PACKAGES="Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"
+
+or with msbuild:
+
+    msbuild /t:RunApkTests tests/RunApkTests.targets /p:ApkTests='"Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"'
+
+Another possibility is to run them manually as described below.
+
 See also the [`tests/RunApkTests.targets`](../../tests/RunApkTests.targets) and
 [`build-tools/scripts/TestApks.targets`](../../build-tools/scripts/TestApks.targets)
 files.
