@@ -329,8 +329,13 @@ namespace Xamarin.Android.Tasks
 				string assetsDir = Path.Combine (importsDir, "assets");
 
 				var stamp = new FileInfo (Path.Combine (outdir.FullName, Path.GetFileNameWithoutExtension (aarFile.ItemSpec) + ".stamp"));
-				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (aarFile.ItemSpec).LastWriteTimeUtc)
+				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (aarFile.ItemSpec).LastWriteTimeUtc) {
+					if (Directory.Exists (resDir))
+						resolvedResourceDirectories.Add (resDir);
+					if (Directory.Exists (assetsDir))
+						resolvedAssetDirectories.Add (assetsDir);
 					continue;
+				}
 				// temporarily extracted directory will look like:
 				// _lp_/[aarFile]
 				using (var zip = MonoAndroidHelper.ReadZipFile (aarFile.ItemSpec)) {
