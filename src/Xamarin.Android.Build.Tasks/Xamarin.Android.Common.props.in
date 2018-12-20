@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<XamarinAndroidVersion>@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
+		<Debugger Condition=" '$(Debugger)' == '' ">Xamarin</Debugger>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>

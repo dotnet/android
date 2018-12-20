@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Build.Framework;
 using NUnit.Framework;
-using Xamarin.ProjectTools;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Framework;
 using System.Text;
-using System.Xml.Linq;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -16,9 +15,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
-			// do a release build
-			// change one of the properties (say AotAssemblies) 
-			// do another build. it should NOT hose the resource directory.
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -29,12 +25,41 @@ namespace Xamarin.Android.Build.Tests
 			if (useAapt2)
 				proj.SetProperty ("AndroidUseAapt2", "True");
 			using (var b = CreateApkBuilder (path)) {
+				//To be sure we are at a clean state
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+
 				Assert.IsTrue (b.Build (proj), "First should have succeeded" );
-				IEnumerable<string> files = Directory.EnumerateFiles (Path.Combine (Root, path, proj.IntermediateOutputPath), "*.*", SearchOption.AllDirectories);
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: null, saveProject: false), "Second should have succeeded");
+				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
+				var output = Path.Combine (projectDir, proj.OutputPath);
+				var fileWrites = Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt");
+				FileAssert.Exists (fileWrites);
+				var expected = File.ReadAllText (fileWrites);
+				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
+				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
+
+				//Touch a few files, do an incremental build
+				var filesToTouch = new [] {
+ 					Path.Combine (intermediate, "build.props"),
+ 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
+ 				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
+				}
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
+
+				//No changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("IncrementalClean"), "`IncrementalClean` should have run!");
 				foreach (var file in files) {
 					FileAssert.Exists (file, $"{file} should not have been deleted!" );
 				}
+				FileAssert.Exists (fileWrites);
+				var actual = File.ReadAllText (fileWrites);
+				Assert.AreEqual (expected, actual, $"`{fileWrites}` has changes!");
 			}
 		}
 
