@@ -24,19 +24,6 @@ namespace Foo.Foo
 			global::Android.Runtime.ResourceIdManager.UpdateIdValues();
 		}
 		
-		public partial class Animation
-		{
-			
-			static Animation()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Animation()
-			{
-			}
-		}
-		
 		public partial class Animator
 		{
 			
@@ -78,32 +65,6 @@ namespace Foo.Foo
 			}
 			
 			private Attribute()
-			{
-			}
-		}
-		
-		public partial class Boolean
-		{
-			
-			static Boolean()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Boolean()
-			{
-			}
-		}
-		
-		public partial class Color
-		{
-			
-			static Color()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Color()
 			{
 			}
 		}
@@ -174,32 +135,6 @@ namespace Foo.Foo
 			}
 			
 			private Id()
-			{
-			}
-		}
-		
-		public partial class Integer
-		{
-			
-			static Integer()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Integer()
-			{
-			}
-		}
-		
-		public partial class Interpolator
-		{
-			
-			static Interpolator()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Interpolator()
 			{
 			}
 		}
@@ -309,32 +244,6 @@ namespace Foo.Foo
 			}
 		}
 		
-		public partial class Style
-		{
-			
-			static Style()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Style()
-			{
-			}
-		}
-		
-		public partial class Styleable
-		{
-			
-			static Styleable()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Styleable()
-			{
-			}
-		}
-		
 		public partial class Transition
 		{
 			
@@ -347,19 +256,6 @@ namespace Foo.Foo
 			}
 			
 			private Transition()
-			{
-			}
-		}
-		
-		public partial class Xml
-		{
-			
-			static Xml()
-			{
-				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
-			}
-			
-			private Xml()
 			{
 			}
 		}
