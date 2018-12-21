@@ -1,9 +1,9 @@
 #ifndef INC_JAVA_INTEROP_JVM_H
 #define INC_JAVA_INTEROP_JVM_H
 
-#include "java-interop.h"
+#include <jni.h>
 
-typedef void JavaVM;
+#include "java-interop.h"
 
 JAVA_INTEROP_BEGIN_DECLS
 

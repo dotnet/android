@@ -79,7 +79,7 @@ namespace Java.Interop
 	partial class NativeMethods {
 		const string JavaInteropLibrary = "java-interop";
 
-		[DllImport (JavaInteropLibrary)]
+		[DllImport (JavaInteropLibrary, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_list ([Out] IntPtr[] handles, int bufLen, out int nVMs);
 	}
 

@@ -6,8 +6,8 @@
 #include "java-interop-util.h"
 
 
-typedef int (*java_interop_JNI_CreateJavaVM_fptr) (JavaVM **p_vm, void **p_env, void *vm_args);
-typedef int (*java_interop_JNI_GetCreatedJavaVMs_fptr) (JavaVM **vmBuf, int bufLen, int *nVMs);
+typedef int (JNICALL *java_interop_JNI_CreateJavaVM_fptr) (JavaVM **p_vm, void **p_env, void *vm_args);
+typedef int (JNICALL *java_interop_JNI_GetCreatedJavaVMs_fptr) (JavaVM **vmBuf, int bufLen, int *nVMs);
 
 struct DylibJVM {
 	void                                       *dl_handle;

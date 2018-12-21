@@ -17,19 +17,19 @@ namespace Java.Interop.PerformanceTests {
 
 		const string LibName = "NativeTiming";
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern void foo_void_timing ();
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern int foo_int_timing ();
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern IntPtr foo_ptr_timing ();
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern void foo_init (IntPtr env);
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern void foo_get_native_jni_timings (IntPtr env, int count, IntPtr klass, IntPtr self, long[] jniTimes);
 
 		struct FooMethods {
@@ -46,7 +46,7 @@ namespace Java.Interop.PerformanceTests {
 			public IntPtr void_3_iargs;
 		}
 
-		[DllImport (LibName)]
+		[DllImport (LibName, CallingConvention=CallingConvention.Cdecl)]
 		static extern void foo_get_methods (out FooMethods methods);
 
 

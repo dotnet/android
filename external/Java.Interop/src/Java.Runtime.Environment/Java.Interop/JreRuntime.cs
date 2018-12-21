@@ -153,10 +153,10 @@ namespace Java.Interop {
 	}
 
 	partial class NativeMethods {
-		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi)]
+		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_load (string path);
 
-		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi)]
+		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
 	}
 }
