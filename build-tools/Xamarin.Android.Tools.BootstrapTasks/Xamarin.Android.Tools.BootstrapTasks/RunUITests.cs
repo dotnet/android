@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public                  string              LogcatFilename              { get; set; }
 
-		protected virtual void AfterCommand (int commandIndex, CommandInfo info)
+		protected override void AfterCommand (int commandIndex, CommandInfo info)
 		{
 			if (commandIndex != StateRunTests)
 				return;
