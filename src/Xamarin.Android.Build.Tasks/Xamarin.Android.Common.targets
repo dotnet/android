@@ -691,7 +691,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
-<Target Name="_SetLatestTargetFrameworkVersionForPackageReference" BeforeTargets="_GetRestoreTargetFrameworksOutput" DependsOnTargets="_SetLatestTargetFrameworkVersion">
+<Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
+    Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
+    BeforeTargets="_GetRestoreTargetFrameworksOutput"
+    DependsOnTargets="_SetLatestTargetFrameworkVersion">
 </Target>
 
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
