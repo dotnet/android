@@ -243,6 +243,35 @@ struct md_mmap_info {
 	size_t  size;
 };
 
+struct md_apk_mmap_info {
+	md_mmap_info mmap_info;
+	md_mmap_info file_info;
+};
+
+MONO_API int monodroid_getpagesize (void);
+
+static md_apk_mmap_info
+md_mmap_apk_file(int fd, uLong offset, uLong size, const char* filename, const char* apk)
+{
+	md_apk_mmap_info info;
+	
+	int pageSize = monodroid_getpagesize();
+	uLong offsetFromPage = offset % pageSize;
+	uLong offsetPage = offset - offsetFromPage;
+	uLong offsetSize = size + offsetFromPage;
+	
+	info.mmap_info.area = mmap(NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+	info.mmap_info.size = offsetSize;
+	info.file_info.area = (void*)((const char*)info.mmap_info.area + offsetFromPage);
+	info.file_info.size = size;
+	
+	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s", 
+		  info.mmap_info.area, reinterpret_cast<int*> (info.mmap_info.area) + info.mmap_info.size, (unsigned int) info.mmap_info.size,
+		  info.file_info.area, reinterpret_cast<int*> (info.file_info.area) + info.file_info.size, (unsigned int) info.file_info.size, apk, filename);
+	
+	return info;
+}
+
 static void*
 md_mmap_open_file (void *opaque, const char *filename, int mode)
 {
@@ -254,37 +283,31 @@ md_mmap_open_file (void *opaque, const char *filename, int mode)
 static uLong
 md_mmap_read_file (void *opaque, void *stream, void *buf, uLong size)
 {
-	int *offset = reinterpret_cast<int*> (stream);
-	struct md_mmap_info *info = reinterpret_cast <md_mmap_info*> (opaque);
-
-	memcpy (buf, ((const char*) info->area) + *offset, size);
-	*offset += size;
-
-	return size;
+	int fd = *reinterpret_cast<int*>(opaque);
+	return read(fd, buf, size);
 }
 
 static long
 md_mmap_tell_file (void *opaque, void *stream)
 {
-	int *offset = reinterpret_cast <int*> (stream);
-	return *offset;
+	int fd = *reinterpret_cast<int*>(opaque);
+	return lseek(fd, 0, SEEK_CUR);
 }
 
 static long
 md_mmap_seek_file (void *opaque, void *stream, uLong offset, int origin)
 {
-	int *pos = reinterpret_cast <int*> (stream);
-	struct md_mmap_info *info = reinterpret_cast <md_mmap_info*> (opaque);
+	int fd = *reinterpret_cast<int*>(opaque);
 
 	switch (origin) {
 	case ZLIB_FILEFUNC_SEEK_END:
-		*pos = info->size;
-		/* goto case ZLIB_FILEFUNC_SEEK_CUR */
+		lseek(fd, offset, SEEK_END);
+		break;
 	case ZLIB_FILEFUNC_SEEK_CUR:
-		*pos += (int) offset;
+		lseek(fd, offset, SEEK_CUR);
 		break;
 	case ZLIB_FILEFUNC_SEEK_SET:
-		*pos = (int) offset;
+		lseek(fd, offset, SEEK_SET);
 		break;
 	default:
 		return -1;
@@ -351,8 +374,6 @@ gather_bundled_assemblies_from_apk (
 		int                   *bundle_count)
 {
 	int fd;
-	struct stat buf;
-	struct md_mmap_info mmap_info;
 	unzFile file;
 
 	zlib_filefunc_def funcs = {
@@ -371,21 +392,8 @@ gather_bundled_assemblies_from_apk (
 		// TODO: throw
 		return -1;
 	}
-	if (fstat (fd, &buf) < 0) {
-		close (fd);
-		// TODO: throw
-		return -1;
-	}
 
-	mmap_info.area = mmap (NULL, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	mmap_info.size = buf.st_size;
-
-	log_info (LOG_ASSEMBLY, "                       start: %08p  end: %08p  len: % 12u        apk: %s", 
-		  mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size, apk);
-
-	close (fd);
-
-	funcs.opaque = &mmap_info;
+	funcs.opaque = &fd;
 
 	if ((file = unzOpen2 (NULL, &funcs)) != NULL) {
 		do {
@@ -405,11 +413,13 @@ gather_bundled_assemblies_from_apk (
 			}
 
 			if (utils.ends_with (cur_entry_name, ".jm")) {
-				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
+				md_apk_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, (const char*)map_info.file_info.area);
 				continue;
 			}
 			if (utils.ends_with (cur_entry_name, ".mj")) {
-				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
+				md_apk_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, (const char*)map_info.file_info.area);
 				continue;
 			}
 
@@ -420,7 +430,7 @@ gather_bundled_assemblies_from_apk (
 			// assemblies must be 4-byte aligned, or Bad Things happen
 			if ((offset & 0x3) != 0) {
 				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at a bad address %p\n", cur_entry_name,
-						((const unsigned char*) mmap_info.area) + offset);
+						offset);
 				log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (apk, '/') + 1);
 				exit (FATAL_EXIT_MISSING_ZIPALIGN);
 			}
@@ -431,19 +441,22 @@ gather_bundled_assemblies_from_apk (
 			if ((utils.ends_with (cur_entry_name, ".mdb") || utils.ends_with (cur_entry_name, ".pdb")) &&
 					register_debug_symbols &&
 					!entry_is_overridden &&
-					*bundle != NULL &&
-					register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
-						((const mono_byte*) mmap_info.area) + offset,
-						info.uncompressed_size))
-				continue;
+					*bundle != NULL) {
+				md_apk_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				if(register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
+					(const mono_byte*)map_info.file_info.area,
+					info.uncompressed_size))
+					continue;
+			}
 
 			if (utils.ends_with (cur_entry_name, ".config") &&
 					*bundle != NULL) {
 				char *assembly_name = utils.monodroid_strdup_printf ("%s", basename (cur_entry_name));
 				// Remove '.config' suffix
 				*strrchr (assembly_name, '.') = '\0';
-
-				mono->register_config_for_assembly (assembly_name, ((const char*) mmap_info.area) + offset);
+				
+				md_apk_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				mono->register_config_for_assembly (assembly_name, (const char*)map_info.file_info.area);
 
 				continue;
 			}
@@ -458,8 +471,9 @@ gather_bundled_assemblies_from_apk (
 			cur = (*bundle) [*bundle_count] = reinterpret_cast<MonoBundledAssembly*> (utils.xcalloc (1, sizeof (MonoBundledAssembly)));
 			++*bundle_count;
 
+			md_apk_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
 			cur->name = utils.monodroid_strdup_printf ("%s", strstr (cur_entry_name, prefix) + strlen (prefix));
-			cur->data = ((const unsigned char*) mmap_info.area) + offset;
+			cur->data = (const unsigned char*)map_info.file_info.area;
 
 			// MonoBundledAssembly::size is const?!
 			psize = (unsigned int*) &cur->size;
@@ -483,6 +497,8 @@ gather_bundled_assemblies_from_apk (
 		} while (unzGoToNextFile (file) == UNZ_OK);
 		unzClose (file);
 	}
+	
+	close(fd);
 
 	return 0;
 }
