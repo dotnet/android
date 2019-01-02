@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <errno.h>
 
 extern "C" {
 #include "java-interop-util.h"
@@ -19,6 +20,7 @@ extern "C" {
 #include "ioapi.h"
 #include "embedded-assemblies.h"
 #include "globals.h"
+#include "monodroid-glue.h"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -248,8 +250,6 @@ struct md_apk_mmap_info {
 	md_mmap_info file_info;
 };
 
-MONO_API int monodroid_getpagesize (void);
-
 static md_apk_mmap_info
 md_mmap_apk_file(int fd, uLong offset, uLong size, const char* filename, const char* apk)
 {
@@ -260,7 +260,12 @@ md_mmap_apk_file(int fd, uLong offset, uLong size, const char* filename, const c
 	uLong offsetPage = offset - offsetFromPage;
 	uLong offsetSize = size + offsetFromPage;
 	
-	info.mmap_info.area = mmap(NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+	info.mmap_info.area = mmap (NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+	if (info.mmap_info.area == MAP_FAILED) {
+		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
+		exit (FATAL_EXIT_CANNOT_FIND_APK);
+	}
+	
 	info.mmap_info.size = offsetSize;
 	info.file_info.area = (void*)((const char*)info.mmap_info.area + offsetFromPage);
 	info.file_info.size = size;
