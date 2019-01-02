@@ -2880,16 +2880,17 @@ because xbuild doesn't support framework reference assemblies.
   </BuildApk>
 </Target>
 
-<PropertyGroup>
-	<_CopyPackageInputs>
-		$(MSBuildAllProjects)
-		;@(ReferencePath)
-		;@(ReferenceDependencyPaths)
-		;$(ApkFileIntermediate)
-		;$(_AndroidBuildPropertiesCache)
-		;@(ApkFiles)
-	</_CopyPackageInputs>
-</PropertyGroup>
+<Target Name="_ResolveCopyPackageInputs">
+	<PropertyGroup>
+		<_CopyPackageInputs>
+			;@(ReferencePath)
+			;@(ReferenceDependencyPaths)
+			;$(ApkFileIntermediate)
+			;$(_AndroidBuildPropertiesCache)
+			;@(ApkFiles)
+		</_CopyPackageInputs>
+	</PropertyGroup>
+</Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
 	<CreateProperty Value="$(AndroidSupportedAbis)" Condition="'$(_BuildTargetAbis)' == ''">
@@ -2902,6 +2903,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_CopyPackageDependsOn>
 		_DefineBuildTargetAbis
 		;_BuildApkEmbed
+		;_ResolveCopyPackageInputs
 	</_CopyPackageDependsOn>
 </PropertyGroup>
 
