@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static List<Regex> typeNameRegexes = new List<Regex> ();
 		static string jvmDllPath;
 		List<string> FilesToDelete = new List<string> ();
+		static string outDirectory;
 
 		public static int Main (string [] args)
 		{
@@ -93,6 +94,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "h|help|?",
 				  "Show this message and exit",
 				  v => help = v != null },
+				{ "o=",
+				  "{DIRECTORY} to write updated assemblies",
+				  v => outDirectory = v },
 				{ "types=",
 				  "Generate marshaling methods only for types whose names match regex patterns listed {FILE}.\n" +
 				  "One regex pattern per line.\n" +
@@ -412,6 +416,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 
 			var dstAssembly = resolver.GetAssembly (destPath);
+
+			if (!string.IsNullOrEmpty (outDirectory))
+				path = Path.Combine (outDirectory, Path.GetFileName (path));
+
 			var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver);
 			mover.Move ();
 
