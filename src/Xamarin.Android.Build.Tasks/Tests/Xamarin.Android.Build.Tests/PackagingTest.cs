@@ -196,6 +196,53 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void EmbeddedDSOs ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
+	<uses-sdk />
+	<application android:label=""{proj.ProjectName}"" android:extractNativeLibs=""false"">
+	</application>
+</manifest>";
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				AssertEmbeddedDSOs (apk);
+
+				//Delete the apk & build again
+				File.Delete (apk);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+				AssertEmbeddedDSOs (apk);
+			}
+		}
+
+		void AssertEmbeddedDSOs (string apk)
+		{
+			FileAssert.Exists (apk);
+
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				foreach (var entry in zip) {
+					if (entry.FullName.EndsWith (".so")) {
+						Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+					} else if (entry.FullName == "environment") {
+						using (var stream = new MemoryStream ()) {
+							entry.Extract (stream);
+							stream.Position = 0;
+							using (var reader = new StreamReader (stream)) {
+								string environment = reader.ReadToEnd ();
+								StringAssert.Contains ("__XA_DSO_IN_APK=1", environment, "`__XA_DSO_IN_APK=1` should be set via @(AndroidEnvironment)");
+							}
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void ExplicitPackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();

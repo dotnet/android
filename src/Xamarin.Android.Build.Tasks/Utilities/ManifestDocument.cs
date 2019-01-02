@@ -644,6 +644,20 @@ namespace Xamarin.Android.Tasks {
 					intentFilter.Elements (entry.Key).Any (e => ((string) e.Attribute (attName) == entry.Value)));
 		}
 
+		/// <summary>
+		/// Returns the value of //application/@android:extractNativeLibs.
+		/// </summary>
+		public bool ExtractNativeLibraries ()
+		{
+			string text = app?.Attribute (androidNs + "extractNativeLibs")?.Value;
+			if (bool.TryParse (text, out bool value)) {
+				return value;
+			}
+
+			// If android:extractNativeLibs is omitted, returns true.
+			return true;
+		}
+
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
 		{
 			if (name.StartsWith ("_"))

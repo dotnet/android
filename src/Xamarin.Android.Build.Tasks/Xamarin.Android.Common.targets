@@ -91,6 +91,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2285,7 +2286,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
-  Outputs="$(IntermediateOutputPath)_javastubs.stamp">
+  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
@@ -2309,7 +2310,8 @@ because xbuild doesn't support framework reference assemblies.
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-	AcwMapFile="$(_AcwMapFile)">
+	AcwMapFile="$(_AcwMapFile)"
+	CacheFile="$(IntermediateOutputPath)javastubs.cache">
   </GenerateJavaStubs>
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"
@@ -2318,13 +2320,46 @@ because xbuild doesn't support framework reference assemblies.
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
-  <Touch Files="$(IntermediateOutputPath)_javastubs.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   <ItemGroup>
-	<FileWrites Include="$(IntermediateOutputPath)_javastubs.stamp" />
+    <FileWrites Include="$(IntermediateOutputPath)javastubs.cache" Condition="Exists('$(IntermediateOutputPath)javastubs.cache')" />
   </ItemGroup>
 </Target>
 
-<Target Name="_GetAddOnPlatformLibraries" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_ReadJavaStubsCache">
+  <ReadJavaStubsCache CacheFile="$(IntermediateOutputPath)javastubs.cache">
+    <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
+  </ReadJavaStubsCache>
+</Target>
+
+<Target Name="_SetupEmbeddedDSOs"
+    Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' "
+    Inputs="$(IntermediateOutputPath)javastubs.cache"
+    Outputs="$(IntermediateOutputPath)dsoenvironment.txt">
+  <WriteLinesToFile
+      File="$(IntermediateOutputPath)dsoenvironment.txt"
+      Lines="__XA_DSO_IN_APK=1"
+      Overwrite="True"
+      WriteOnlyWhenDifferent="True"
+  />
+  <PropertyGroup>
+    <AndroidStoreUncompressedFileExtensions>.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidEnvironment Include="$(IntermediateOutputPath)dsoenvironment.txt" />
+    <FileWrites         Include="$(IntermediateOutputPath)dsoenvironment.txt" />
+  </ItemGroup>
+</Target>
+
+<PropertyGroup>
+  <_GetAddOnPlatformLibrariesDependsOn>
+    _GenerateJavaStubs;
+    _ReadJavaStubsCache;
+    _SetupEmbeddedDSOs;
+  </_GetAddOnPlatformLibrariesDependsOn>
+</PropertyGroup>
+
+<Target Name="_GetAddOnPlatformLibraries" DependsOnTargets="$(_GetAddOnPlatformLibrariesDependsOn)">
   <GetAddOnPlatformLibraries
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
@@ -3173,7 +3208,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)__AndroidNativeLibraries__.zip" />
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
-	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />

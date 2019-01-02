@@ -18,11 +18,6 @@
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-
-    <!-- This should be removed once XA build tasks are updated to support embedded DSOs.
-	 The same applies to the `__XA_DSO_IN_APK=1` line in Environment.txt
-    -->
-    <AndroidStoreUncompressedFileExtensions>.so</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
