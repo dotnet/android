@@ -430,7 +430,7 @@ gather_bundled_assemblies_from_apk (
 
 			// assemblies must be 4-byte aligned, or Bad Things happen
 			if ((offset & 0x3) != 0) {
-				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at a bad address %p\n", cur_entry_name,
+				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at a bad offset %p in the apk\n", cur_entry_name,
 						offset);
 				log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (apk, '/') + 1);
 				exit (FATAL_EXIT_MISSING_ZIPALIGN);
