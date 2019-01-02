@@ -207,8 +207,12 @@ endif # $(SKIP_NUNIT_TESTS) == ''
 run-ji-tests:
 	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
 
+ifneq ($(PACKAGES),)
+APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
+endif
+
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests
+	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 
 run-performance-tests:
 	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests
