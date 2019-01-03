@@ -444,7 +444,7 @@ gather_bundled_assemblies_from_apk (
 					!entry_is_overridden &&
 					*bundle != NULL) {
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				if(register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
+				if (register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
 						(const mono_byte*)map_info.area,
 						info.uncompressed_size))
 					continue;
