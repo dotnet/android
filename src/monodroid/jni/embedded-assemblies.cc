@@ -267,8 +267,8 @@ md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const 
 	file_info.size  = size;
 	
 	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s", 
-		  mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
-		  file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
+			mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
+			file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
 	
 	return file_info;
 }
@@ -414,12 +414,12 @@ gather_bundled_assemblies_from_apk (
 			}
 
 			if (utils.ends_with (cur_entry_name, ".jm")) {
-				md_mmap_info map_info = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, (const char*)map_info.area);
 				continue;
 			}
 			if (utils.ends_with (cur_entry_name, ".mj")) {
-				md_mmap_info map_info = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, (const char*)map_info.area);
 				continue;
 			}
@@ -445,8 +445,8 @@ gather_bundled_assemblies_from_apk (
 					*bundle != NULL) {
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				if(register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
-					(const mono_byte*)map_info.area,
-					info.uncompressed_size))
+						(const mono_byte*)map_info.area,
+						info.uncompressed_size))
 					continue;
 			}
 
