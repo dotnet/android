@@ -1794,7 +1794,6 @@ because xbuild doesn't support framework reference assemblies.
 	
 	<CopyGeneratedJavaResourceClasses
 		SourceTopDirectory="$(ResgenTemporaryDirectory)"
-		DestinationTopDirectory="$(IntermediateOutputPath)android"
 		PrimaryPackageName="$(_AndroidPackage)"
 		ExtraPackages="$(AaptExtraPackages)">
 		<Output TaskParameter="PrimaryJavaResgenFile" PropertyName="_GeneratedPrimaryJavaResgenFile" />
@@ -2464,6 +2463,11 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Delete our temporary directory -->
   <RemoveDirFixed Directories="$(AaptTemporaryDirectory)" />
+
+  <ItemGroup>
+    <FileWrites Include="$(_PackagedResources)" />
+    <FileWrites Include="$(_GeneratedPrimaryJavaResgenFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GetAddOnPlatformLibraries">
@@ -2690,9 +2694,20 @@ because xbuild doesn't support framework reference assemblies.
 
 </Target>
 
-<Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithD8">
+<PropertyGroup>
+	<_CompileDexDependsOn>
+		_CompileToDalvikWithDx;
+		_CompileToDalvikWithD8;
+	</_CompileDexDependsOn>
+	<_CompileDexBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
+		IncrementalClean;
+		_CleanGetCurrentAndPriorFileWrites;
+	</_CompileDexBeforeTargets>
+</PropertyGroup>
 
+<Target Name="_CompileDex"
+		DependsOnTargets="$(_CompileDexDependsOn)"
+		BeforeTargets="$(_CompileDexBeforeTargets)">
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />

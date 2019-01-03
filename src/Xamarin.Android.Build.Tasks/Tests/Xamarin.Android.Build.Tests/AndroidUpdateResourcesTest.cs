@@ -92,16 +92,6 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
 					Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "Target `_BuildAdditionalResourcesCache` should be skipped!");
-					var items = new List<string> ();
-					string first = null;
-					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
-							var matches = regEx.Matches (File.ReadAllText (file));
-							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
-						}
-						first = items.First ();
-						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
-					}
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
@@ -117,13 +107,13 @@ using System.Runtime.CompilerServices;
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
-					items.Clear ();
+					var items = new List<string> ();
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android", "src"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
-						first = items.First ();
+						var first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
 				}
