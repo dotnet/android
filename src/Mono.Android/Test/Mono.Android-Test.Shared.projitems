@@ -12,7 +12,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)\Resources\Resource.designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Properties\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.App\ApplicationTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.Content\IntentTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Android.Graphics\GraphicsTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JnienvArrayMarshaling.cs" />
@@ -39,6 +41,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.OS\BundleTest.cs" />
   </ItemGroup>
