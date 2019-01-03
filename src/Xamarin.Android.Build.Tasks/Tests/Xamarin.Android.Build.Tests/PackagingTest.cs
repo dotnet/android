@@ -240,7 +240,9 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 
-				proj.AndroidResources.First ().Timestamp = null;
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
 						"Second build should not contain warnings!  Contains\n" +
