@@ -246,25 +246,25 @@ struct md_mmap_info {
 };
 
 static md_mmap_info
-md_mmap_apk_file(int fd, uLong offset, uLong size, const char* filename, const char* apk)
+md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const char* apk)
 {
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 	
-	int pageSize = monodroid_getpagesize();
-	uLong offsetFromPage = offset % pageSize;
-	uLong offsetPage = offset - offsetFromPage;
-	uLong offsetSize = size + offsetFromPage;
+	int pageSize          = monodroid_getpagesize();
+	uLong offsetFromPage  = offset % pageSize;
+	uLong offsetPage      = offset - offsetFromPage;
+	uLong offsetSize      = size + offsetFromPage;
 	
-	mmap_info.area = mmap (NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+	mmap_info.area        = mmap (NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
 	if (mmap_info.area == MAP_FAILED) {
 		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
 	}
 	
-	mmap_info.size = offsetSize;
-	file_info.area = (void*)((const char*)mmap_info.area + offsetFromPage);
-	file_info.size = size;
+	mmap_info.size  = offsetSize;
+	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
+	file_info.size  = size;
 	
 	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s", 
 		  mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
@@ -285,14 +285,14 @@ static uLong
 md_mmap_read_file (void *opaque, void *stream, void *buf, uLong size)
 {
 	int fd = *reinterpret_cast<int*>(opaque);
-	return read(fd, buf, size);
+	return read (fd, buf, size);
 }
 
 static long
 md_mmap_tell_file (void *opaque, void *stream)
 {
 	int fd = *reinterpret_cast<int*>(opaque);
-	return lseek(fd, 0, SEEK_CUR);
+	return lseek (fd, 0, SEEK_CUR);
 }
 
 static long
@@ -302,13 +302,13 @@ md_mmap_seek_file (void *opaque, void *stream, uLong offset, int origin)
 
 	switch (origin) {
 	case ZLIB_FILEFUNC_SEEK_END:
-		lseek(fd, offset, SEEK_END);
+		lseek (fd, offset, SEEK_END);
 		break;
 	case ZLIB_FILEFUNC_SEEK_CUR:
-		lseek(fd, offset, SEEK_CUR);
+		lseek (fd, offset, SEEK_CUR);
 		break;
 	case ZLIB_FILEFUNC_SEEK_SET:
-		lseek(fd, offset, SEEK_SET);
+		lseek (fd, offset, SEEK_SET);
 		break;
 	default:
 		return -1;
@@ -414,12 +414,12 @@ gather_bundled_assemblies_from_apk (
 			}
 
 			if (utils.ends_with (cur_entry_name, ".jm")) {
-				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				md_mmap_info map_info = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, (const char*)map_info.area);
 				continue;
 			}
 			if (utils.ends_with (cur_entry_name, ".mj")) {
-				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
+				md_mmap_info map_info = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, (const char*)map_info.area);
 				continue;
 			}
@@ -430,7 +430,7 @@ gather_bundled_assemblies_from_apk (
 
 			// assemblies must be 4-byte aligned, or Bad Things happen
 			if ((offset & 0x3) != 0) {
-				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at a bad offset %p in the apk\n", cur_entry_name,
+				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", cur_entry_name,
 						offset);
 				log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (apk, '/') + 1);
 				exit (FATAL_EXIT_MISSING_ZIPALIGN);
