@@ -23,13 +23,15 @@ namespace Xamarin.Android.Build.Tests
 			if (Directory.Exists ("temp/RepetitiveBuild"))
 				Directory.Delete ("temp/RepetitiveBuild", true);
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetitiveBuild")) {
+			using (var b = CreateApkBuilder ("temp/RepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				proj.AndroidResources.Last ().Timestamp = null; // means "always build"
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
