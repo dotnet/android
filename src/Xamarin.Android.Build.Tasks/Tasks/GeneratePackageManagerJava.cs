@@ -61,15 +61,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GeneratePackageManagerJava Task");
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  TargetFrameworkVersion: {0}", TargetFrameworkVersion);
-			Log.LogDebugMessage ("  Manifest: {0}", Manifest);
-			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
-			Log.LogDebugMessage ("  MainAssembly: {0}", MainAssembly);
-			Log.LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
-
 			BuildId = buildId.ToString ();
 			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);
 
@@ -84,10 +75,8 @@ namespace Xamarin.Android.Tasks
 			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
 			assemblies = assemblies.Where (a => fileNameEq (a, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a, mainFileName))).ToList ();
 
-			// Write first to a temporary file
-			var temp = Path.GetTempFileName ();
-
-			using (var pkgmgr = File.CreateText (temp)) {
+			using (var stream = new MemoryStream ())
+			using (var pkgmgr = new StreamWriter (stream)) {
 				// Write the boilerplate from the MonoPackageManager.java resource
 				var packageManagerResource = minApiVersion < 9 ? "MonoPackageManager.api4.java" : "MonoPackageManager.java";
 				using (var template = new StreamReader (Assembly.GetExecutingAssembly ().GetManifestResourceStream (packageManagerResource))) {
@@ -123,14 +112,13 @@ namespace Xamarin.Android.Tasks
 							MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion))
 						: "null");
 				pkgmgr.WriteLine ("}");
+				pkgmgr.Flush ();
+
+				// Only copy to the real location if the contents actually changed
+				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager.java"));
+
+				MonoAndroidHelper.CopyIfStreamChanged (stream, dest);
 			}
-
-			// Only copy to the real location if the contents actually changed
-			var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager.java"));
-
-			MonoAndroidHelper.CopyIfChanged (temp, dest);
-
-			try { File.Delete (temp); } catch (Exception) { }
 
 			AddEnvironment ();
 
