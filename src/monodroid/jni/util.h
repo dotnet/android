@@ -43,9 +43,11 @@ typedef struct dirent monodroid_dirent_t;
 #include <stdarg.h>
 #include <time.h>
 #include <sys/time.h>
+#include <jni.h>
 
 #include "monodroid.h"
 #include "dylib-mono.h"
+#include "jni-wrappers.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,8 +85,8 @@ namespace xamarin { namespace android
 {
 	struct timing_point
 	{
-		time_t sec = 0;
-		uint64_t ns = 0;
+		time_t sec;
+		uint64_t ns;
 
 		void mark ();
 	};
@@ -118,10 +120,12 @@ namespace xamarin { namespace android
 
 	class Util
 	{
-	public:
-		explicit Util ()
-			: package_property_suffix {0}
-		{}
+#if defined (ANDROID) || defined (LINUX)
+		using timestruct = timespec;
+#else
+		using timestruct = timeval;
+#endif
+		static constexpr uint32_t ms_in_nsec = 1000000ULL;
 
 	public:
 		FILE            *monodroid_fopen (const char* filename, const char* mode);
@@ -151,6 +155,8 @@ namespace xamarin { namespace android
 		bool             file_exists (const char *file);
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
+		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
+
 #ifdef WINDOWS
 		/* Those two conversion functions are only properly implemented on Windows
 		 * because that's the only place where they should be useful.
@@ -191,6 +197,16 @@ namespace xamarin { namespace android
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
 		void  add_to_vector (char ***vector, int size, char *token);
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
+
+#if WINDOWS
+		void package_hash_to_hex (uint32_t hash);
+#else
+		template<typename IdxType>
+		void package_hash_to_hex (IdxType idx);
+
+		template<typename IdxType = size_t, typename ...Indices>
+		void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
+#endif
 
 		int make_directory (const char *path, int mode)
 		{

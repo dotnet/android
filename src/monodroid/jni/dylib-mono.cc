@@ -60,6 +60,11 @@ bool DylibMono::init (void *libmono_handle)
 #define LOAD_SYMBOL(symbol) LOAD_SYMBOL_CAST(symbol, monodroid_ ##symbol ##_fptr)
 #define LOAD_SYMBOL_NO_PREFIX(symbol) LOAD_SYMBOL_CAST(symbol, symbol ##_fptr)
 
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_start ();
+	}
+
 	LOAD_SYMBOL(mono_add_internal_call)
 	LOAD_SYMBOL(mono_assembly_get_image)
 	LOAD_SYMBOL(mono_assembly_load_from_full)
@@ -137,6 +142,13 @@ bool DylibMono::init (void *libmono_handle)
 	LOAD_SYMBOL(mono_thread_current)
 	LOAD_SYMBOL_CAST(mono_use_llvm, int*)
 	LOAD_SYMBOL_NO_PREFIX(mono_aot_register_module)
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info_nocheck (LOG_TIMING, "DylibMono.init: end, total time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+	}
 
 	if (symbols_missing) {
 		log_fatal (LOG_DEFAULT, "Failed to load some Mono symbols, aborting...");

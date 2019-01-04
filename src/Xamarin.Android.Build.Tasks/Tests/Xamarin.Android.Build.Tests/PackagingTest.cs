@@ -67,19 +67,26 @@ namespace Xamarin.Android.Build.Tests
 				//NOTE: Windows is still generating mdb files here
 				extension = IsWindows ? "dll.mdb" : "pdb";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-" + abi + "-Signed.apk"))) {
-						var data = ZipHelper.ReadFileFromZip (apk, "environment");
-						var env = Encoding.ASCII.GetString (data);
-						var lines = env.Split (new char [] { '\n' });
-						Assert.IsTrue (lines.Any (x => x.Contains ("XAMARIN_BUILD_ID")),
-							"The environment should contain a XAMARIN_BUIL_ID");
-						var buildID = lines.First (x => x.StartsWith ("XAMARIN_BUILD_ID", StringComparison.InvariantCultureIgnoreCase));
-						buildIds.Add (abi, buildID);
-					}
-				}
-				Assert.IsFalse (buildIds.Values.Any (x => buildIds.Values.Any (v => v != x)),
-					"All the XAMARIN_BUILD_ID values should be the same");
+				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
+							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
+				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
+
+				string[] lines = File.ReadAllLines (javaEnv);
+
+				Assert.IsTrue (lines.Any (x => x.Contains ("\"XAMARIN_BUILD_ID\",")),
+					       "The environment should contain a XAMARIN_BUILD_ID");
+
+				string buildID = lines.First (x => x.Contains ("\"XAMARIN_BUILD_ID\","))
+					.Trim ()
+					.Replace ("\", \"", "=")
+					.Replace ("\",", String.Empty)
+					.Replace ("\"", String.Empty);
+				buildIds.Add ("all", buildID);
+
+				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
+				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
+				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
+					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
 
 				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);

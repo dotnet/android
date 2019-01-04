@@ -26,7 +26,7 @@
 
   <Target Name="_ConfigureHostRuntimes"
       DependsOnTargets="_CreateMacMxeCmakeToolchainFiles"
-      Inputs="CMakeLists.txt"
+      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props"
       Outputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug" />
     <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mxe/mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
@@ -44,7 +44,7 @@
   </Target>
 
   <Target Name="_ConfigureAndroidRuntimes"
-      Inputs="CMakeLists.txt"
+      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
     <Exec
@@ -61,7 +61,7 @@
 
   <Target Name="_BuildAndroidRuntimes"
       DependsOnTargets="_ConfigureAndroidRuntimes"
-      Inputs="@(_MonodroidSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')"
+      Inputs="@(_MonodroidSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
     <Exec
         Command="$(NinjaPath) -v"
@@ -76,7 +76,7 @@
 
   <Target Name="_BuildHostRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes;_CreateJavaInteropDllConfigs;_ConfigureHostRuntimes"
-      Inputs="@(_MonodroidSource);@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')"
+      Inputs="@(_MonodroidSource);@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c"
       Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)')">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />

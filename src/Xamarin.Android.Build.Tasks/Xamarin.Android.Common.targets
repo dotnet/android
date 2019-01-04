@@ -2341,10 +2341,21 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
-    OutputDirectory="$(IntermediateOutputPath)android\src\mono" 
+    OutputDirectory="$(IntermediateOutputPath)android\src\mono"
+    EnvironmentOutputDirectory="$(IntermediateOutputPath)android\src\mono\android\app"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
-    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
+    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+    AndroidAotMode="$(AndroidAotMode)"
+    EnableLLVM="$(EnableLLVM)"
+    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+    TlsProvider="$(AndroidTlsProvider)"
+    Debug="$(AndroidIncludeDebugSymbols)"
+    AndroidSequencePointsMode="$(_SequencePointsMode)"
+    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
+    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+  </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
 </Target>
 
@@ -2866,7 +2877,6 @@ because xbuild doesn't support framework reference assemblies.
     BundleAssemblies="$(BundleAssemblies)"
     BundleNativeLibraries="$(_BundleResultNativeLibraries)"
     EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
     ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
     NativeLibraries="@(AndroidNativeLibrary)"
@@ -2879,18 +2889,13 @@ because xbuild doesn't support framework reference assemblies.
     Debug="$(AndroidIncludeDebugSymbols)"
     PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
     TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
-    AndroidAotMode="$(AndroidAotMode)"
-    EnableLLVM="$(EnableLLVM)"
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     LibraryProjectJars="@(ExtractedJarImports)"
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
-    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
-    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
 </Target>

@@ -47,6 +47,7 @@ namespace EmbeddedDSOUnitTests
 		};
 
 		string testProjectPath;
+		string androidSdkDir;
 
 		static BuildTests_EmbeddedDSOBuildTests ()
 		{
@@ -69,6 +70,8 @@ namespace EmbeddedDSOUnitTests
 			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true" });
 
 			Assert.That (success, Is.True, "Should have been built");
+
+			androidSdkDir = builder.AndroidSdkDirectory;
 		}
 
 		[Test]
@@ -94,41 +97,28 @@ namespace EmbeddedDSOUnitTests
 		[Test]
 		public void EnvironmentFileContents ()
 		{
-			string apk = Path.Combine (testProjectPath, "bin", XABuildPaths.Configuration, $"{ProjectAssemblyName}-Signed.apk");
-			Assert.That (new FileInfo (apk), Does.Exist, $"File {apk} should exist");
+			string javaEnv = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
+			Assert.That (new FileInfo (javaEnv), Does.Exist, $"File {javaEnv} should exist");
 
-			using (ZipArchive zip = ZipArchive.Open (apk, FileMode.Open)) {
-				Assert.That (zip, Is.Not.Null, $"{apk} couldn't be opened as a zip archive");
-				Assert.That (zip.ContainsEntry ("environment"), Is.True, $"`environment` file not found in {apk}");
+			string[] envLines = File.ReadAllLines (javaEnv);
+			Assert.That (envLines.Any (l => !String.IsNullOrEmpty (l)), Is.True, $"Environment file {javaEnv} must contain at least one non-empty line");
 
-				ZipEntry entry = zip.FirstOrDefault (e => String.Compare (e.FullName, "environment", StringComparison.Ordinal) == 0);
-				Assert.That (entry, Is.Not.Null, $"Unable to open the `environment` entry from {apk}");
+			bool found = false;
+			foreach (string line in envLines) {
+				if (String.IsNullOrEmpty (line))
+					continue;
 
-				string environment = null;
-				using (var ms = new MemoryStream ()) {
-					entry.Extract (ms);
-					environment = Encoding.UTF8.GetString (ms.ToArray ());
+				if (line.IndexOf ("\"__XA_DSO_IN_APK\",") >= 0) {
+					found = true;
+					break;
 				}
-
-				Assert.That (String.IsNullOrEmpty (environment), Is.False, $"Environment file from {apk} must not be empty");
-
-				string[] envLines = environment.Split (new [] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-				Assert.That (envLines.Length > 0, Is.True, $"Environment file from {apk} must contain at least one non-empty line");
-
-				bool found = false;
-				foreach (string line in envLines) {
-					string[] ev = line.Split ('=');
-					if (ev.Length != 2)
-						continue;
-
-					if (String.Compare ("__XA_DSO_IN_APK", ev [0].Trim (), StringComparison.Ordinal) == 0) {
-						found = true;
-						break;
-					}
-				}
-
-				Assert.That (found, Is.True, $"The `__XA_DSO_IN_APK` variable wasn't found in the environment file from {apk}");
 			}
+
+			Assert.That (found, Is.True, $"The `__XA_DSO_IN_APK` variable wasn't found in the environment file {javaEnv}");
+
+			string dexFile = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "bin", "classes.dex");
+			Assert.That (new FileInfo (dexFile), Does.Exist, $"File {dexFile} should exist");
+			Assert.That (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, androidSdkDir), Is.True, $"Dex file {dexFile} should contain the XamarinAndroidEnvironmentVariables class");
 		}
 
 		[Test]
