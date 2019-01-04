@@ -92,12 +92,13 @@
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
       <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
+      <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
     </PropertyGroup>
     <Exec
         Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)mcw\**\*.cs" />
+      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
     </ItemGroup>
     <XmlPeek
         Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
