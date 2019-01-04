@@ -2525,6 +2525,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		//This test validates the _CleanIntermediateIfNuGetsChange target
 		[Test]
+		[NonParallelizable]
 		public void BuildAfterUpgradingNuget ([Values (false, true)] bool usePackageReference)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
