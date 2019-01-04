@@ -2340,7 +2340,6 @@ because xbuild doesn't support framework reference assemblies.
       File="$(IntermediateOutputPath)dsoenvironment.txt"
       Lines="__XA_DSO_IN_APK=1"
       Overwrite="True"
-      WriteOnlyWhenDifferent="True"
   />
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions>.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
