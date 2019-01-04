@@ -6,6 +6,7 @@
 #include "util.h"
 #include "debug.h"
 #include "monodroid-glue-internal.h"
+#include "cppcompat.h"
 
 extern xamarin::android::DylibMono monoFunctions;
 extern xamarin::android::Util utils;

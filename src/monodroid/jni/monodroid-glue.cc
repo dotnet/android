@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <jni.h>
@@ -159,23 +158,15 @@ monodroid_get_system_property (const char *name, char **value)
 }
 
 static char*
-get_primary_override_dir (JNIEnv *env, jstring home)
+get_primary_override_dir (JNIEnv *env, jstring_wrapper &home)
 {
-	const char *v;
-	char *p;
-
-	v = env->GetStringUTFChars (home, NULL);
-	p = utils.path_combine (v, ".__override__");
-	env->ReleaseStringUTFChars (home, v);
-
-	return p;
+	return utils.path_combine (home.get_cstr (), ".__override__");
 }
 
 // TODO: these must be moved to some class
 char *xamarin::android::internal::primary_override_dir;
 char *xamarin::android::internal::external_override_dir;
 char *xamarin::android::internal::external_legacy_override_dir;
-int xamarin::android::internal::embedded_dso_mode = 0;
 
 /* Set of Windows-specific utility/reimplementation of Unix functions */
 #ifdef WINDOWS
@@ -230,7 +221,7 @@ setup_bundled_app (const char *dso_name)
 	static int dlopen_flags = RTLD_LAZY;
 	void *libapp = NULL;
 
-	if (embedded_dso_mode) {
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
 		libapp = androidSystem.load_dso_from_any_directories (dso_name, dlopen_flags);
 	} else {
@@ -247,7 +238,7 @@ setup_bundled_app (const char *dso_name)
 
 	if (libapp == NULL) {
 		log_info (LOG_DEFAULT, "No libapp!");
-		if (!embedded_dso_mode) {
+		if (!androidSystem.is_embedded_dso_mode_enabled ()) {
 			log_fatal (LOG_BUNDLE, "bundled app initialization error");
 			exit (FATAL_EXIT_CANNOT_LOAD_BUNDLE);
 		} else {
@@ -273,10 +264,13 @@ typedef struct {
 static MonoDroidProfiler monodroid_profiler;
 
 static jclass     TimeZone_class;
-static jmethodID  TimeZone_getDefault;
-static jmethodID  TimeZone_getID;
 
-static int is_running_on_desktop = 0;
+static constexpr bool is_running_on_desktop =
+#if ANDROID
+	false;
+#else
+	true;
+#endif
 
 MONO_API int
 _monodroid_max_gref_get (void)
@@ -437,8 +431,8 @@ open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *use
 		}
 	}
 	free (pname);
-	if (result) {
-		log_info (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
+	if (result && utils.should_log (LOG_ASSEMBLY)) {
+		log_info_nocheck (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
 	}
 	return result;
 }
@@ -471,16 +465,12 @@ should_register_file (const char *filename, void *user_data)
 }
 
 static void
-gather_bundled_assemblies (JNIEnv *env, jobjectArray runtimeApks, mono_bool register_debug_symbols, int *out_user_assemblies_count)
+gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, mono_bool register_debug_symbols, int *out_user_assemblies_count)
 {
-	jsize i;
-	int   prev_num_assemblies = 0;
-	jsize apksLength          = env->GetArrayLength (runtimeApks);
-
 	monodroid_embedded_assemblies_set_register_debug_symbols (register_debug_symbols);
 	monodroid_embedded_assemblies_set_should_register (should_register_file, NULL);
 #ifndef RELEASE
-	for (i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
+	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *p = androidSystem.get_override_dir (i);
 		if (!utils.directory_exists (p))
 			continue;
@@ -488,22 +478,18 @@ gather_bundled_assemblies (JNIEnv *env, jobjectArray runtimeApks, mono_bool regi
 		try_load_typemaps_from_directory (p);
 	}
 #endif
-	for (i = apksLength - 1; i >= 0; --i) {
-		int          cur_num_assemblies;
-		const char  *apk_file;
-		jstring      apk = reinterpret_cast <jstring> (env->GetObjectArrayElement (runtimeApks, i));
 
-		apk_file = env->GetStringUTFChars (apk, NULL);
+	int prev_num_assemblies = 0;
+	for (int32_t i = runtimeApks.get_length () - 1; i >= 0; --i) {
+		int              cur_num_assemblies;
+		jstring_wrapper &apk_file = runtimeApks [i];
 
-		cur_num_assemblies  = monodroid_embedded_assemblies_register_from (&monoFunctions, apk_file);
+		cur_num_assemblies  = monodroid_embedded_assemblies_register_from (&monoFunctions, apk_file.get_cstr ());
 
-		if (strstr (apk_file, "/Mono.Android.DebugRuntime") == NULL &&
-				strstr (apk_file, "/Mono.Android.Platform.ApiLevel_") == NULL)
+		if (strstr (apk_file.get_cstr (), "/Mono.Android.DebugRuntime") == nullptr &&
+		    strstr (apk_file.get_cstr (), "/Mono.Android.Platform.ApiLevel_") == nullptr)
 			*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
-
-		env->ReleaseStringUTFChars (apk, apk_file);
-		env->DeleteLocalRef (apk);
 	}
 }
 
@@ -592,38 +578,6 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	osBridge.initialize_on_onload (vm, env);
-	TimeZone_class      = reinterpret_cast<jclass> (osBridge.lref_to_gref (env, env->FindClass ("java/util/TimeZone")));
-	if (!TimeZone_class) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone class!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
-
-	TimeZone_getDefault = env->GetStaticMethodID (TimeZone_class, "getDefault", "()Ljava/util/TimeZone;");
-	if (!TimeZone_getDefault) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone.getDefault() method!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
-
-	TimeZone_getID      = env->GetMethodID (TimeZone_class, "getID",      "()Ljava/lang/String;");
-	if (!TimeZone_getID) {
-		log_fatal (LOG_DEFAULT, "Fatal error: Could not find java.util.TimeZone.getDefault() method!");
-		exit (FATAL_EXIT_MISSING_TIMEZONE_MEMBERS);
-	}
-
-	/* When running on Android, as per http://developer.android.com/reference/java/lang/System.html#getProperty(java.lang.String)
-	 * the value of java.version is deemed "(Not useful on Android)" and is hardcoded to return zero. We can thus use this fact
-	 * to distinguish between running on a normal JVM and an Android VM.
-	 */
-	jclass System_class = env->FindClass ("java/lang/System");
-	jmethodID System_getProperty = env->GetStaticMethodID (System_class, "getProperty", "(Ljava/lang/String;)Ljava/lang/String;");
-	jstring System_javaVersionArg = env->NewStringUTF ("java.version");
-	jstring System_javaVersion = reinterpret_cast <jstring> (env->CallStaticObjectMethod (System_class, System_getProperty, System_javaVersionArg));
-	const char* javaVersion = env->GetStringUTFChars (System_javaVersion, NULL);
-	is_running_on_desktop = atoi (javaVersion) != 0;
-	env->ReleaseStringUTFChars (System_javaVersion, javaVersion);
-	env->DeleteLocalRef (System_javaVersionArg);
-	env->DeleteLocalRef (System_javaVersion);
-	env->DeleteLocalRef (System_class);
 
 	return JNI_VERSION_1_6;
 }
@@ -763,39 +717,6 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 #endif  // def DEBUG
 
 static void
-load_assembly (MonoDomain *domain, JNIEnv *env, jstring assembly)
-{
-	timing_period total_time;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
-		total_time.mark_start ();
-
-	const char *assm_name;
-	MonoAssemblyName *aname;
-
-	assm_name = env->GetStringUTFChars (assembly, NULL);
-	aname = monoFunctions.assembly_name_new (assm_name);
-	env->ReleaseStringUTFChars (assembly, assm_name);
-
-	if (domain != monoFunctions.domain_get ()) {
-		MonoDomain *current = monoFunctions.domain_get ();
-		monoFunctions.domain_set (domain, FALSE);
-		monoFunctions.assembly_load_full (aname, NULL, NULL, 0);
-		monoFunctions.domain_set (current, FALSE);
-	} else {
-		monoFunctions.assembly_load_full (aname, NULL, NULL, 0);
-	}
-
-	monoFunctions.assembly_name_free (aname);
-
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
-		total_time.mark_end ();
-
-		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "Assembly load: %s loaded; elapsed: %lis.%03llu::%llu", assm_name, diff.sec, diff.ms, diff.ns);
-	}
-}
-
-static void
 set_debug_options (void)
 {
 	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, NULL) == 0)
@@ -806,11 +727,11 @@ set_debug_options (void)
 }
 
 #ifdef ANDROID
+#ifdef DEBUG
 static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", NULL
 };
 
-#ifdef DEBUG
 static int
 enable_soft_breakpoints (void)
 {
@@ -1023,34 +944,8 @@ mono_runtime_init (char *runtime_args)
 #endif
 }
 
-static int
-GetAndroidSdkVersion (JNIEnv *env, jobject loader)
-{
-	jclass    lrefVersion = env->FindClass ("android/os/Build$VERSION");
-	if (lrefVersion == NULL) {
-		// Try to load the class from the loader instead.
-		// Needed by Android designer that uses dynamic loaders
-		env->ExceptionClear ();
-		jclass classLoader = env->FindClass ("java/lang/ClassLoader");
-		jmethodID classLoader_loadClass = env->GetMethodID (classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-		//env->ExceptionDescribe ();
-		jstring versionClassName = env->NewStringUTF ("android.os.Build$VERSION");
-
-		lrefVersion = (jclass)env->CallObjectMethod (loader, classLoader_loadClass, versionClassName);
-
-		env->DeleteLocalRef (classLoader);
-		env->DeleteLocalRef (versionClassName);
-	}
-	jfieldID  SDK_INT     = env->GetStaticFieldID (lrefVersion, "SDK_INT", "I");
-	int       version     = env->GetStaticIntField (lrefVersion, SDK_INT);
-
-	env->DeleteLocalRef (lrefVersion);
-
-	return version;
-}
-
 static MonoDomain*
-create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject loader, mono_bool is_root_domain)
+create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jstring assembly, jobject loader, bool is_root_domain)
 {
 	MonoDomain *domain;
 	int user_assemblies_count   = 0;;
@@ -1068,7 +963,7 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 		domain = monoFunctions.jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
 	} else {
 		MonoDomain* root_domain = monoFunctions.get_root_domain ();
-		char *domain_name = utils.monodroid_strdup_printf ("MonoAndroidDomain%d", GetAndroidSdkVersion (env, loader));
+		char *domain_name = utils.monodroid_strdup_printf ("MonoAndroidDomain%d", android_api_level);
 		domain = utils.monodroid_create_appdomain (root_domain, domain_name, /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
 		free (domain_name);
 	}
@@ -1078,7 +973,7 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 		// tell the IDE that the project likely need to be recompiled.
 		char* corlib_error_message = monoFunctions.check_corlib_version ();
 		if (corlib_error_message == NULL) {
-			if (!monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
+			if (!androidSystem.monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
 				free (corlib_error_message);
 				corlib_error_message = NULL;
 			}
@@ -1095,40 +990,22 @@ create_domain (JNIEnv *env, jobjectArray runtimeApks, jstring assembly, jobject 
 		MonoAssemblyName *aname = monoFunctions.assembly_name_new ("System");
 		monoFunctions.assembly_load_full (aname, NULL, NULL, 0);
 		monoFunctions.assembly_name_free (aname);
-	} else {
-		// Inflate environment from user app assembly
-		load_assembly (domain, env, assembly);
 	}
 
 	return domain;
-}
-
-static void
-load_assemblies (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
-{
-	jsize i;
-	jsize assembliesLength = env->GetArrayLength (assemblies);
-	/* skip element 0, as that's loaded in create_domain() */
-	for (i = 1; i < assembliesLength; ++i) {
-		jstring assembly = reinterpret_cast<jstring> (env->GetObjectArrayElement (assemblies, i));
-		load_assembly (domain, env, assembly);
-		env->DeleteLocalRef (assembly);
-	}
 }
 
 static jclass System;
 static jmethodID System_identityHashCode;
 
 static int
-LocalRefsAreIndirect (JNIEnv *env, int version)
+LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version)
 {
 	if (version < 14)
 		return 0;
 
-	System = reinterpret_cast<jclass> (env->NewGlobalRef (env->FindClass ("java/lang/System")));
-
-	System_identityHashCode = env->GetStaticMethodID (System,
-			"identityHashCode", "(Ljava/lang/Object;)I");
+	System = utils.get_class_from_runtime_field(env, runtimeClass, "java_lang_System", true);
+	System_identityHashCode = env->GetStaticMethodID (System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	return 1;
 }
@@ -1143,12 +1020,13 @@ _monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 MONO_API void*
 _monodroid_timezone_get_default_id (void)
 {
-	JNIEnv *env         = osBridge.ensure_jnienv ();
-	jobject d           = env->CallStaticObjectMethod (TimeZone_class, TimeZone_getDefault);
-	jstring id          = reinterpret_cast<jstring> (env->CallObjectMethod (d, TimeZone_getID));
-	const char *mutf8   = env->GetStringUTFChars (id, NULL);
-
-	char *def_id        = utils.monodroid_strdup_printf ("%s", mutf8);
+	JNIEnv *env          = osBridge.ensure_jnienv ();
+	jmethodID getDefault = env->GetStaticMethodID (TimeZone_class, "getDefault", "()Ljava/util/TimeZone;");
+	jmethodID getID      = env->GetMethodID (TimeZone_class, "getID",      "()Ljava/lang/String;");
+	jobject d            = env->CallStaticObjectMethod (TimeZone_class, getDefault);
+	jstring id           = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
+	const char *mutf8    = env->GetStringUTFChars (id, NULL);
+	char *def_id         = utils.monodroid_strdup_printf ("%s", mutf8);
 
 	env->ReleaseStringUTFChars (id, mutf8);
 	env->DeleteLocalRef (id);
@@ -1202,6 +1080,23 @@ _monodroid_get_display_dpi (float *x_dpi, float *y_dpi)
 		return -1;
 	}
 
+	MonoDomain *domain = nullptr;
+	if (!runtime_GetDisplayDPI) {
+		domain = monoFunctions.get_root_domain ();
+		MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");;
+
+		MonoImage *image = nullptr;
+		if (assm != nullptr)
+			image = monoFunctions.assembly_get_image  (assm);
+
+		MonoClass *environment = nullptr;
+		if (image != nullptr)
+			environment = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "AndroidEnvironment");
+
+		if (environment != nullptr)
+			runtime_GetDisplayDPI = monoFunctions.class_get_method_from_name (environment, "GetDisplayDPI", 2);
+	}
+
 	if (!runtime_GetDisplayDPI) {
 		*x_dpi = DEFAULT_X_DPI;
 		*y_dpi = DEFAULT_Y_DPI;
@@ -1210,7 +1105,7 @@ _monodroid_get_display_dpi (float *x_dpi, float *y_dpi)
 
 	args [0] = x_dpi;
 	args [1] = y_dpi;
-	utils.monodroid_runtime_invoke (monoFunctions.get_root_domain (), runtime_GetDisplayDPI, NULL, args, &exc);
+	utils.monodroid_runtime_invoke (domain != nullptr ? domain : monoFunctions.get_root_domain (), runtime_GetDisplayDPI, NULL, args, &exc);
 	if (exc) {
 		*x_dpi = DEFAULT_X_DPI;
 		*y_dpi = DEFAULT_Y_DPI;
@@ -1230,15 +1125,13 @@ lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJa
 }
 
 static void
-init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
+init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
 {
 	MonoAssembly *assm;
 	MonoClass *runtime;
-	MonoClass *environment;
 	MonoImage *image;
 	MonoMethod *method;
 	jclass lrefLoaderClass;
-	jobject lrefIGCUserPeer;
 	int i;
 
 	struct JnienvInitializeArgs init    = {};
@@ -1250,7 +1143,7 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
 	init.androidSdkVersion      = android_api_level;
-	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, init.androidSdkVersion);
+	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, runtimeClass, init.androidSdkVersion);
 	init.isRunningOnDesktop     = is_running_on_desktop;
 
 	// GC threshold is 90% of the max GREF count
@@ -1258,11 +1151,9 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 
 	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
-	jclass lrefClass = env->FindClass ("java/lang/Class");
-	init.grefClass = reinterpret_cast <jclass> (env->NewGlobalRef (lrefClass));
-	init.Class_getName  = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
-	init.Class_forName = env->GetStaticMethodID (lrefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
-	env->DeleteLocalRef (lrefClass);
+	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	init.Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
+	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
 	assm  = utils.monodroid_load_assembly (domain, "Mono.Android");
 	image = monoFunctions.assembly_get_image  (assm);
@@ -1273,7 +1164,6 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 
 	runtime                             = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
 	method                              = monoFunctions.class_get_method_from_name (runtime, "Initialize", 1);
-	environment                         = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "AndroidEnvironment");
 
 	if (method == 0) {
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.Initialize!");
@@ -1291,7 +1181,6 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 	}
 	MonoClass *android_runtime_jnienv = runtime;
 	MonoClassField *bridge_processing_field = monoFunctions.class_get_field_from_name (runtime, const_cast<char*> ("BridgeProcessing"));
-	runtime_GetDisplayDPI                           = monoFunctions.class_get_method_from_name (environment, "GetDisplayDPI", 2);
 	if (!android_runtime_jnienv || !bridge_processing_field) {
 		log_fatal (LOG_DEFAULT, "INTERNAL_ERROR: Unable to find Android.Runtime.JNIEnv.BridgeProcessing");
 		exit (FATAL_EXIT_CANNOT_FIND_JNIENV);
@@ -1303,13 +1192,11 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 
 	init.grefLoader = env->NewGlobalRef (loader);
 
-	lrefIGCUserPeer       = env->FindClass ("mono/android/IGCUserPeer");
-	init.grefIGCUserPeer  = env->NewGlobalRef (lrefIGCUserPeer);
-	env->DeleteLocalRef (lrefIGCUserPeer);
+	init.grefIGCUserPeer  = utils.get_class_from_runtime_field(env, runtimeClass, "mono_android_IGCUserPeer", true);
 
-	osBridge.initialize_on_runtime_init (env);
+	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
-	log_warn (LOG_DEFAULT, "Calling into managed runtime init");
+	log_info (LOG_DEFAULT, "Calling into managed runtime init");
 
 	timing_period partial_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1321,7 +1208,7 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jobject loader)
 		partial_time.mark_end ();
 
 		timing_diff diff (partial_time);
-		log_info (LOG_TIMING, "Runtime.init: end native-to-managed transition; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
+		log_info_nocheck (LOG_TIMING, "Runtime.init: end native-to-managed transition; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
 	}
 }
 
@@ -1355,48 +1242,6 @@ propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env, jobject javaThrea
 	args[1] = &javaThread;
 	args[2] = &javaException;
 	utils.monodroid_runtime_invoke (domain, method, NULL, args, NULL);
-}
-
-static void
-register_packages (MonoDomain *domain, JNIEnv *env, jobjectArray assemblies)
-{
-	jsize i;
-	jsize assembliesLength = env->GetArrayLength (assemblies);
-	for (i = 0; i < assembliesLength; ++i) {
-		const char    *filename;
-		char          *basename;
-		MonoAssembly  *a;
-		MonoImage     *image;
-		MonoClass     *c;
-		MonoMethod    *m;
-		jstring assembly = reinterpret_cast<jstring> (env->GetObjectArrayElement (assemblies, i));
-
-		filename = env->GetStringUTFChars (assembly, NULL);
-		basename = utils.monodroid_strdup_printf ("%s", filename);
-		(*strrchr (basename, '.')) = '\0';
-		a = monoFunctions.domain_assembly_open (domain, basename);
-		if (a == NULL) {
-			log_fatal (LOG_ASSEMBLY, "Could not load assembly '%s' during startup registration.", basename);
-			log_fatal (LOG_ASSEMBLY, "This might be due to an invalid debug installation.");
-			log_fatal (LOG_ASSEMBLY, "A common cause is to 'adb install' the app directly instead of doing from the IDE.");
-			exit (FATAL_EXIT_MISSING_ASSEMBLY);
-		}
-
-
-		free (basename);
-		env->ReleaseStringUTFChars (assembly, filename);
-		env->DeleteLocalRef (assembly);
-
-		image = monoFunctions.assembly_get_image (a);
-
-		c = utils.monodroid_get_class_from_image (domain, image, "Java.Interop", "__TypeRegistrations");
-		if (c == NULL)
-			continue;
-		m = monoFunctions.class_get_method_from_name (c, "RegisterPackages", 0);
-		if (m == NULL)
-			continue;
-		utils.monodroid_runtime_invoke (domain, m, NULL, NULL, NULL);
-	}
 }
 
 #if DEBUG
@@ -1461,8 +1306,8 @@ monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 	basename = monodroid_strdup_printf ("libaot-%s", basename);
 	h = androidSystem.load_dso_from_any_directories (basename, dl_flags);
 
-	if (h != NULL)
-		log_info (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename);
+	if (h != NULL && XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY)))
+		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename);
 
   done_and_out:
 	if (!h && err) {
@@ -1490,36 +1335,32 @@ monodroid_dlsym (void *handle, const char *name, char **err, void *user_data)
 }
 
 static void
-set_environment_variable_for_directory_full (JNIEnv *env, const char *name, jstring value, int createDirectory, int mode )
+set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value, bool createDirectory, int mode )
 {
-	const char *v;
-
-	v = env->GetStringUTFChars (value, NULL);
 	if (createDirectory) {
-		int rv = utils.create_directory (v, mode);
+		int rv = utils.create_directory (value.get_cstr (), mode);
 		if (rv < 0 && errno != EEXIST)
 			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable %s. %s", name, strerror (errno));
 	}
-	setenv (name, v, 1);
-	env->ReleaseStringUTFChars (value, v);
+	setenv (name, value.get_cstr (), 1);
 }
 
 static void
-set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring value)
+set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value)
 {
-	set_environment_variable_for_directory_full (env, name, value, 1, DEFAULT_DIRECTORY_MODE);
+	set_environment_variable_for_directory (env, name, value, true, DEFAULT_DIRECTORY_MODE);
 }
 
 static void
-set_environment_variable (JNIEnv *env, const char *name, jstring value)
+set_environment_variable (JNIEnv *env, const char *name, jstring_wrapper &value)
 {
-	set_environment_variable_for_directory_full (env, name, value, 0, 0);
+	set_environment_variable_for_directory (env, name, value, false, 0);
 }
 
 static void
-create_xdg_directory (const char *home, const char *relativePath, const char *environmentVariableName)
+create_xdg_directory (jstring_wrapper& home, const char *relativePath, const char *environmentVariableName)
 {
-	char *dir = utils.monodroid_strdup_printf ("%s/%s", home, relativePath);
+	char *dir = utils.monodroid_strdup_printf ("%s/%s", home.get_cstr (), relativePath);
 	log_info (LOG_DEFAULT, "Creating XDG directory: %s", dir);
 	int rv = utils.create_directory (dir, DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
@@ -1530,12 +1371,10 @@ create_xdg_directory (const char *home, const char *relativePath, const char *en
 }
 
 static void
-create_xdg_directories_and_environment (JNIEnv *env, jstring homeDir)
+create_xdg_directories_and_environment (JNIEnv *env, jstring_wrapper &homeDir)
 {
-	const char *home = env->GetStringUTFChars (homeDir, NULL);
-	create_xdg_directory (home, ".local/share", "XDG_DATA_HOME");
-	create_xdg_directory (home, ".config", "XDG_CONFIG_HOME");
-	env->ReleaseStringUTFChars (homeDir, home);
+	create_xdg_directory (homeDir, ".local/share", "XDG_DATA_HOME");
+	create_xdg_directory (homeDir, ".config", "XDG_CONFIG_HOME");
 }
 
 #if DEBUG
@@ -1657,16 +1496,12 @@ static void
 set_profile_options (JNIEnv *env)
 {
 	char *value;
-	char *output;
-	char **args, **ptr;
-
 	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, &value) == 0)
 		return;
 
-	output = NULL;
-
-	args = utils.monodroid_strsplit (value, ",", -1);
-	for (ptr = args; ptr && *ptr; ptr++) {
+	char *output = nullptr;
+	char **args = utils.monodroid_strsplit (value, ",", -1);
+	for (char **ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
 		if (!strncmp (arg, "output=", sizeof ("output=")-1)) {
 			const char *p = arg + (sizeof ("output=")-1);
@@ -1865,6 +1700,9 @@ This is a hack to set llvm::DisablePrettyStackTrace to true and avoid this sourc
 static void
 disable_external_signal_handlers (void)
 {
+	if (!androidSystem.is_mono_llvm_enabled ())
+		return;
+
 	void *llvm  = androidSystem.load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
 	if (llvm) {
 		bool *disable_signals = reinterpret_cast<bool*> (dlsym (llvm, "_ZN4llvm23DisablePrettyStackTraceE"));
@@ -1879,11 +1717,10 @@ disable_external_signal_handlers (void)
 MONO_API void
 _monodroid_counters_dump (const char *format, ...)
 {
-	va_list args;
-
 	if (counters == NULL)
 		return;
 
+	va_list args;
 	fprintf (counters, "\n");
 
 	va_start (args, format);
@@ -1902,17 +1739,15 @@ monodroid_Mono_UnhandledException_internal (MonoException *ex)
 }
 
 static MonoDomain*
-create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArray assemblies, jobject loader, mono_bool is_root_domain)
+create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobjectArray assemblies, jobject loader, bool is_root_domain)
 {
-	MonoDomain* domain = create_domain (env, runtimeApks, reinterpret_cast <jstring> (env->GetObjectArrayElement (assemblies, 0)), loader, is_root_domain);
+	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, reinterpret_cast <jstring> (env->GetObjectArrayElement (assemblies, 0)), loader, is_root_domain);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if (is_running_on_desktop && is_root_domain)
 		return domain;
 
-	load_assemblies (domain, env, assemblies);
-	init_android_runtime (domain, env, loader);
-	register_packages (domain, env, assemblies);
+	init_android_runtime (domain, env, runtimeClass, loader);
 
 	osBridge.add_monodroid_domain (domain);
 
@@ -1920,17 +1755,11 @@ create_and_initialize_domain (JNIEnv* env, jobjectArray runtimeApks, jobjectArra
 }
 
 JNIEXPORT void JNICALL
-Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
+Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+                                jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
+                                jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName,
+                                jint apiLevel, jobjectArray environmentVariables)
 {
-	char *runtime_args = NULL;
-	char *connect_args;
-	jstring libdir_s;
-	const char *libdir, *esd;
-	char *counters_path;
-	const char *pkgName;
-	char *aotMode;
-	int i;
-
 	init_logging_categories ();
 
 	timing_period total_time;
@@ -1938,34 +1767,38 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		total_time.mark_start ();
 	}
 
-	android_api_level = GetAndroidSdkVersion (env, loader);
+	android_api_level = apiLevel;
 
-	pkgName = env->GetStringUTFChars (packageName, NULL);
-	utils.monodroid_store_package_name (pkgName); /* Will make a copy of the string */
-	env->ReleaseStringUTFChars (packageName, pkgName);
+	TimeZone_class = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
+
+	jstring_wrapper jstr (env, packageName);
+	utils.monodroid_store_package_name (jstr.get_cstr ());
+
+	jstr = lang;
+	set_environment_variable (env, "LANG", jstr);
+
+	androidSystem.setup_environment (env, environmentVariables);
+
+	jstr = reinterpret_cast <jstring> (env->GetObjectArrayElement (appDirs, 1));
+	set_environment_variable_for_directory (env, "TMPDIR", jstr);
+
+	jstr = reinterpret_cast<jstring> (env->GetObjectArrayElement (appDirs, 0));
+	set_environment_variable_for_directory (env, "HOME", jstr);
+	create_xdg_directories_and_environment (env, jstr);
+	primary_override_dir = get_primary_override_dir (env, jstr);
 
 	disable_external_signal_handlers ();
 
-	jstring homeDir = reinterpret_cast<jstring> (env->GetObjectArrayElement (appDirs, 0));
-	set_environment_variable (env, "LANG", lang);
-	set_environment_variable_for_directory (env, "HOME", homeDir);
-	set_environment_variable_for_directory (env, "TMPDIR", reinterpret_cast <jstring> (env->GetObjectArrayElement (appDirs, 1)));
-	create_xdg_directories_and_environment (env, homeDir);
-
-	androidSystem.setup_environment (env, runtimeApks);
-
-	if (android_api_level < 23 || getenv ("__XA_DSO_IN_APK") == NULL) {
+	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
+	if (android_api_level < 23 || !androidSystem.is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
-		libdir_s = reinterpret_cast<jstring> (env->GetObjectArrayElement (appDirs, 2));
-		libdir = env->GetStringUTFChars (libdir_s, NULL);
+		jstr = env->GetObjectArrayElement (appDirs, 2);
 		AndroidSystem::app_lib_directories_size = 1;
 		AndroidSystem::app_lib_directories = (const char**) xcalloc (AndroidSystem::app_lib_directories_size, sizeof(char*));
-		AndroidSystem::app_lib_directories [0] = utils.monodroid_strdup_printf ("%s", libdir);
-		env->ReleaseStringUTFChars (libdir_s, libdir);
+		AndroidSystem::app_lib_directories [0] = strdup (jstr.get_cstr ());
 	} else {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
-		embedded_dso_mode = 1;
-		AndroidSystem::app_lib_directories_size = env->GetArrayLength (runtimeApks);
+		AndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
 		AndroidSystem::app_lib_directories = (const char**) xcalloc (AndroidSystem::app_lib_directories_size, sizeof(char*));
 
 		unsigned short built_for_cpu = 0, running_on_cpu = 0;
@@ -1974,16 +1807,13 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		androidSystem.setup_apk_directories (env, running_on_cpu, runtimeApks);
 	}
 
-	primary_override_dir = get_primary_override_dir (env, reinterpret_cast <jstring> (env->GetObjectArrayElement (appDirs, 0)));
-	esd = env->GetStringUTFChars (reinterpret_cast<jstring> (env->GetObjectArrayElement (externalStorageDirs, 0)), NULL);
-	external_override_dir = utils.monodroid_strdup_printf ("%s", esd);
-	env->ReleaseStringUTFChars (reinterpret_cast<jstring> (env->GetObjectArrayElement (externalStorageDirs, 0)), esd);
+	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
+	external_override_dir = strdup (jstr.get_cstr ());
 
-	esd = env->GetStringUTFChars (reinterpret_cast<jstring> (env->GetObjectArrayElement (externalStorageDirs, 1)), nullptr);
-	external_legacy_override_dir = utils.monodroid_strdup_printf ("%s", esd);
-	env->ReleaseStringUTFChars (reinterpret_cast<jstring> (env->GetObjectArrayElement (externalStorageDirs, 1)), esd);
+	jstr = env->GetObjectArrayElement (externalStorageDirs, 1);
+	external_legacy_override_dir = strdup (jstr.get_cstr ());
 
-	init_reference_logging(primary_override_dir);
+	init_reference_logging (primary_override_dir);
 	androidSystem.create_update_dir (primary_override_dir);
 
 #if DEBUG
@@ -1994,7 +1824,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 #ifndef RELEASE
 	androidSystem.set_override_dir (1, external_override_dir);
 	androidSystem.set_override_dir (2, external_legacy_override_dir);
-	for (i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
+	for (uint32_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *p = androidSystem.get_override_dir (i);
 		if (!utils.directory_exists (p))
 			continue;
@@ -2004,10 +1834,8 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	setup_bundled_app ("libmonodroid_bundle_app.so");
 
 	if (runtimeNativeLibDir != NULL) {
-		const char *rd;
-		rd = env->GetStringUTFChars (runtimeNativeLibDir, NULL);
-		runtime_libdir = utils.monodroid_strdup_printf ("%s", rd);
-		env->ReleaseStringUTFChars (runtimeNativeLibDir, rd);
+		jstr = runtimeNativeLibDir;
+		runtime_libdir = strdup (jstr.get_cstr ());
 		log_warn (LOG_DEFAULT, "Using runtime path: %s", runtime_libdir);
 	}
 
@@ -2018,7 +1846,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	 * symbols against the Mono library we're loading.
 	 */
 	int sgen_dlopen_flags = RTLD_LAZY | RTLD_GLOBAL;
-	if (embedded_dso_mode) {
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
 		libmonosgen_handle = androidSystem.load_dso_from_any_directories (AndroidSystem::MONO_SGEN_SO, sgen_dlopen_flags);
 	}
 
@@ -2030,13 +1858,11 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		exit (FATAL_EXIT_CANNOT_FIND_MONO);
 	}
 	androidSystem.setup_process_args (env, runtimeApks);
-#ifndef WINDOWS
-	_monodroid_getifaddrs_init ();
-#endif
 
-	if ((log_categories & LOG_TIMING) != 0) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		monoFunctions.counters_enable (XA_LOG_COUNTERS);
-		counters_path = utils.path_combine (androidSystem.get_override_dir (0), "counters.txt");
+		char *counters_path = utils.path_combine (androidSystem.get_override_dir (0), "counters.txt");
+		log_info_nocheck (LOG_TIMING, "counters path: %s", counters_path);
 		counters = utils.monodroid_fopen (counters_path, "a");
 		utils.set_world_accessable (counters_path);
 		free (counters_path);
@@ -2048,9 +1874,10 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 	set_trace_options ();
 
+#if defined (DEBUG) && !defined (WINDOWS)
+	char *connect_args;
 	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
-#if defined (DEBUG) && !defined (WINDOWS)
 	if (connect_args) {
 		int res = debug.start_connection (connect_args);
 		if (res != 2) {
@@ -2072,44 +1899,48 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	monoFunctions.config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
 	monoFunctions.register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
 
-	log_info (LOG_DEFAULT, "Probing for mono.aot AOT mode\n");
+	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
 
-	if (monodroid_get_system_property ("mono.aot", &aotMode) > 0) {
-		MonoAotMode mode = static_cast <MonoAotMode> (0);
-		if (strcmp (aotMode, "normal") == 0)
-			mode = MonoAotMode::MONO_AOT_MODE_NORMAL;
-		else if (strcmp (aotMode, "hybrid") == 0)
-			mode = MonoAotMode::MONO_AOT_MODE_HYBRID;
-		else if (strcmp (aotMode, "full") == 0)
-			mode = MonoAotMode::MONO_AOT_MODE_FULL;
-		else
-			log_warn (LOG_DEFAULT, "Unknown mono.aot property value: %s\n", aotMode);
+	MonoAotMode mode = androidSystem.get_mono_aot_mode ();
+	if (mode == MonoAotMode::MONO_AOT_MODE_UNKNOWN)
+		mode = MonoAotMode::MONO_AOT_MODE_NONE;
 
-		if (mode != MonoAotMode::MONO_AOT_MODE_NORMAL) {
-			log_info (LOG_DEFAULT, "Enabling %s AOT mode in Mono\n", aotMode);
-			monoFunctions.jit_set_aot_mode (mode);
-		}
+	if (mode != MonoAotMode::MONO_AOT_MODE_NORMAL && mode != MonoAotMode::MONO_AOT_MODE_NONE) {
+		log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+		monoFunctions.jit_set_aot_mode (mode);
 	}
 
 	log_info (LOG_DEFAULT, "Probing if we should use LLVM\n");
 
-	if (monodroid_get_system_property ("mono.llvm", NULL) > 0) {
+	if (androidSystem.is_mono_llvm_enabled ()) {
 		char *args [1];
 		args[0] = const_cast<char*> ("--llvm");
-		log_info (LOG_DEFAULT, "Found mono.llvm property, enabling LLVM mode in Mono\n");
+		log_info (LOG_DEFAULT, "Enabling LLVM mode in Mono\n");
 		monoFunctions.jit_parse_options (1,  args);
 		monoFunctions.set_use_llvm (true);
 	}
 
+	char *runtime_args = nullptr;
 	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_EXTRA_PROPERTY, &runtime_args);
 #if TRACE
 	__android_log_print (ANDROID_LOG_INFO, "*jonp*", "debug.mono.extra=%s", runtime_args);
 #endif
 
+	timing_period partial_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		partial_time.mark_start ();
+
 	mono_runtime_init (runtime_args);
 
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		partial_time.mark_end ();
+
+		timing_diff diff (partial_time);
+		log_info_nocheck (LOG_TIMING, "Runtime.init: Mono runtime init; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+	}
+
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, runtimeApks, assemblies, loader, /*is_root_domain:*/ 1);
+	create_and_initialize_domain (env, klass, runtimeApks, assemblies, loader, /*is_root_domain:*/ true);
 
 	free (runtime_args);
 
@@ -2123,7 +1954,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		total_time.mark_end ();
 
 		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "Runtime.init: end, total time; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
+		log_info_nocheck (LOG_TIMING, "Runtime.init: end, total time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
 		_monodroid_counters_dump ("## Runtime.init: end");
 	}
 }
@@ -2170,7 +2001,7 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring m
 		total_time.mark_end ();
 
 		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "Runtime.register: end time; elapsed: %lis.%03llu::%llu", diff.sec, diff.ms, diff.ns);
+		log_info_nocheck (LOG_TIMING, "Runtime.register: end time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
 		_monodroid_counters_dump ("## Runtime.register: type=%s\n", type);
 	}
 
@@ -2192,13 +2023,15 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 }
 
 JNIEXPORT jint
-JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApks, jobjectArray assemblies, jobject loader)
+JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assemblies, jobject loader)
 {
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
 	MonoDomain *root_domain = monoFunctions.get_root_domain ();
 	monoFunctions.jit_thread_attach (root_domain);
-	MonoDomain *domain = create_and_initialize_domain (env, runtimeApks, assemblies, loader, /*is_root_domain:*/ 0);
+
+	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
+	MonoDomain *domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, loader, /*is_root_domain:*/ false);
 	monoFunctions.domain_set (domain, FALSE);
 	int domain_id = monoFunctions.domain_get_id (domain);
 	current_context_id = domain_id;

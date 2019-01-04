@@ -1,5 +1,5 @@
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
 
 #include <sys/types.h>
 #if defined (LINUX) || defined (__linux__) || defined (__linux)
@@ -927,8 +927,10 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 			}
 		}
 
-		for (i = 0; i < num_xrefs; ++i)
-			log_info (LOG_GC, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
+		if (utils.should_log (LOG_GC)) {
+			for (i = 0; i < num_xrefs; ++i)
+				log_info_nocheck (LOG_GC, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
+		}
 	}
 #endif
 
@@ -1062,10 +1064,10 @@ OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env)
 }
 
 void
-OSBridge::initialize_on_runtime_init (JNIEnv *env)
+OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 {
 	assert (env != nullptr);
-	GCUserPeer_class      = reinterpret_cast<jclass> (lref_to_gref (env, env->FindClass ("mono/android/GCUserPeer")));
+	GCUserPeer_class      = utils.get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor       = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 	assert ( (GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load mono.android.GCUserPeer!" );
 }

@@ -152,15 +152,16 @@ namespace Android.Runtime {
 		{
 			Logger.Categories = (LogCategories) args->logCategories;
 
-			var __start = new DateTime ();
+			Stopwatch stopper = null;
+			long elapsed, totalElapsed = 0;
 			if (Logger.LogTiming) {
-				__start = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize start: " + (__start - new DateTime (1970, 1, 1)).TotalMilliseconds);
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: Logger JIT/etc. time: " + (DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (DateTime.UtcNow - __start).TotalMilliseconds + " ms]");
+				stopper = new Stopwatch ();
+				stopper.Start ();
+				Logger.Log (LogLevel.Info, "monodroid-timing", "JNIEnv.Initialize start");
+				elapsed = stopper.ElapsedMilliseconds;
+				totalElapsed += elapsed;
+				Logger.Log (LogLevel.Info, "monodroid-timing", $"JNIEnv.Initialize: Logger JIT/etc. time: elapsed {elapsed} ms]");
+				stopper.Restart ();
 			}
 
 			gref_gc_threshold = args->grefGcThreshold;
@@ -195,16 +196,14 @@ namespace Android.Runtime {
 #endif // JAVA_INTEROP
 
 			if (Logger.LogTiming) {
-				var __end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: time: " + (__end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (__end - __start).TotalMilliseconds + " ms]");
-				__start = DateTime.UtcNow;
+				elapsed = stopper.ElapsedMilliseconds;
+				totalElapsed += elapsed;
+				Logger.Log (LogLevel.Info, "monodroid-timing", $"JNIEnv.Initialize: managed runtime init time: elapsed {elapsed} ms]");
+				stopper.Restart ();
 				var _ = Java.Interop.TypeManager.jniToManaged;
-				__end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: TypeManager init time: " + (__end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (__end - __start).TotalMilliseconds + " ms]");
+				elapsed = stopper.ElapsedMilliseconds;
+				totalElapsed += elapsed;
+				Logger.Log (LogLevel.Info, "monodroid-timing", $"JNIEnv.Initialize: TypeManager init time: elapsed {elapsed} ms]");
 			}
 
 			AllocObjectSupported = androidSdkVersion > 10;
@@ -238,10 +237,10 @@ namespace Android.Runtime {
 					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
 			}
 
-			if (Logger.LogTiming)
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize end: " + (DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalMilliseconds);
+			if (Logger.LogTiming) {
+				totalElapsed += stopper.ElapsedMilliseconds;
+				Logger.Log (LogLevel.Info, "monodroid-timing", $"JNIEnv.Initialize end: elapsed {totalElapsed} ms");
+			}
 		}
 
 		internal static void Exit ()

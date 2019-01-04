@@ -195,8 +195,8 @@ Debug::handle_server_connection (void)
 
 	flags = 1;
 	rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
-	if (rv == -1) {
-		log_info (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket (%s)", strerror (errno));
+	if (rv == -1 && utils.should_log (LOG_DEFAULT)) {
+		log_info_nocheck (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket (%s)", strerror (errno));
 		// not a fatal failure
 	}
 

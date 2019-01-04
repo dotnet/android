@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -72,7 +72,7 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 	MonoAssembly *a = NULL;
 
 	int name_len = culture == NULL ? 0 : strlen (culture) + 1;
-	name_len += std::strlen (reinterpret_cast<const char*> (mono->assembly_name_get_name (aname)));
+	name_len += strlen (reinterpret_cast<const char*> (mono->assembly_name_get_name (aname)));
 	name = static_cast<char*> (utils.xmalloc (name_len + sizeof (".exe") + 1));
 	if (culture != NULL && strlen (culture) > 0)
 		sprintf (name, "%s/%s", culture, (const char*) mono->assembly_name_get_name (aname));
@@ -108,8 +108,8 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 		}
 	}
 	free (name);
-	if (a) {
-		log_info (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
+	if (a && utils.should_log (LOG_ASSEMBLY)) {
+		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
 	}
 	return a;
 }
@@ -139,7 +139,7 @@ monodroid_embedded_assemblies_install_preload_hook (DylibMono *imports)
 static int
 TypeMappingInfo_compare_key (const void *a, const void *b)
 {
-	return std::strcmp (reinterpret_cast <const char*> (a), reinterpret_cast <const char*> (b));
+	return strcmp (reinterpret_cast <const char*> (a), reinterpret_cast <const char*> (b));
 }
 
 MONO_API const char *
@@ -148,7 +148,7 @@ monodroid_typemap_java_to_managed (const char *java)
 	struct TypeMappingInfo *info;
 	for (info = java_to_managed_maps; info != NULL; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, java); */
-		const char *e = reinterpret_cast<const char*> (std::bsearch (java, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
+		const char *e = reinterpret_cast<const char*> (bsearch (java, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
 		if (e == NULL)
 			continue;
 		return e + info->value_offset;
@@ -162,7 +162,7 @@ monodroid_typemap_managed_to_java (const char *managed)
 	struct TypeMappingInfo *info;
 	for (info = managed_to_java_maps; info != NULL; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, managed); */
-		const char *e = reinterpret_cast <const char*> (std::bsearch (managed, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
+		const char *e = reinterpret_cast <const char*> (bsearch (managed, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
 		if (e == NULL)
 			continue;
 		return e + info->value_offset;
@@ -480,7 +480,7 @@ gather_bundled_assemblies_from_apk (
 			psize = (unsigned int*) &cur->size;
 			*psize = info.uncompressed_size;
 
-			if ((log_categories & LOG_ASSEMBLY) != 0) {
+			if (utils.should_log (LOG_ASSEMBLY)) {
 				const char *p = (const char*) cur->data;
 
 				char header[9];
@@ -489,7 +489,7 @@ gather_bundled_assemblies_from_apk (
 					header[i] = isprint (p [i]) ? p [i] : '.';
 				header [sizeof(header)-1] = '\0';
 
-				log_info (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
+				log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
 						(int) offset, cur->data, cur->data + *psize, (int) info.uncompressed_size, cur_entry_name, cur->name, header);
 			}
 

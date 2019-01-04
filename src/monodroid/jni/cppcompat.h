@@ -2,6 +2,8 @@
 #ifndef __CPP_COMPAT_H
 #define __CPP_COMPAT_H
 
+#include <pthread.h>
+
 // Since Android doesn't currently have any standard C++ library
 // and we don't want to use any implementation of it shipped in
 // source form with the NDK (for space reasons), this header will
@@ -20,5 +22,50 @@ namespace std
 	{
 		return static_cast<typename remove_reference<decltype(arg)>::type&&>(arg);
 	}
+
+	template<typename TMutex>
+	class lock_guard
+	{
+	public:
+		using mutex_type = TMutex;
+
+	public:
+		lock_guard (const lock_guard&) = delete;
+
+		explicit lock_guard (mutex_type& _mutex)
+			: _mutex (_mutex)
+		{
+			_mutex.lock ();
+		}
+
+		~lock_guard ()
+		{
+			_mutex.unlock ();
+		}
+
+		lock_guard& operator= (const lock_guard&) = delete;
+
+	private:
+		mutex_type &_mutex;
+	};
+
+	class mutex
+	{
+	public:
+		mutex () noexcept = default;
+		~mutex () noexcept = default;
+
+		void lock () noexcept
+		{
+			pthread_mutex_lock (&_pmutex);
+		}
+
+		void unlock () noexcept
+		{
+			pthread_mutex_unlock (&_pmutex);
+		}
+	private:
+		pthread_mutex_t _pmutex = PTHREAD_MUTEX_INITIALIZER;
+	};
 }
 #endif

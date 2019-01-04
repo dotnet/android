@@ -34,6 +34,8 @@ using timestruct = timespec;
 using timestruct = timeval;
 #endif
 
+static const char hex_chars [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
 void timing_point::mark ()
 {
 	int ret;
@@ -246,14 +248,52 @@ Util::recv_uninterrupted (int fd, void *buf, int len)
 	return total;
 }
 
+#if WINDOWS
+//
+// This version should be removed once MXE we have on mac can build the glorious version in the
+// #else below.
+//
+// Currently mxe fails with:
+//
+//  Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+// collect2 : error : ld returned 1 exit status
+//   [/Users/builder/jenkins/workspace/xamarin-android-pr-builder-debug/xamarin-android/src/monodroid/monodroid.csproj]
+//
+void Util::package_hash_to_hex (uint32_t hash)
+{
+	for (uint32_t idx = 0; idx < 8; idx++) {
+		package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
+	}
+	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
+}
+#else
+template<typename IdxType>
+inline void
+Util::package_hash_to_hex (IdxType /* idx */)
+{
+	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
+}
+
+template<typename IdxType, typename ...Indices>
+inline void
+Util::package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices)
+{
+	package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
+	package_hash_to_hex <IdxType> (hash, indices...);
+}
+#endif
+
 void
 Util::monodroid_store_package_name (const char *name)
 {
-	const char *ch;
-	int hash;
-
-	memset (package_property_suffix, 0, sizeof (package_property_suffix));
-	if (!name || strlen (name) == 0)
+	if (!name || *name == '\0')
 		return;
 
 	/* Android properties can be at most 32 bytes long (!) and so we mustn't append the package name
@@ -262,11 +302,21 @@ Util::monodroid_store_package_name (const char *name)
 	 * as a stream of bytes assumming it's an ASCII string using a simplified version of the hash
 	 * algorithm used by BCL's String.GetHashCode ()
 	 */
-	ch = name;
-	hash = 0;
+	const char *ch = name;
+	uint32_t hash = 0;
 	while (*ch)
 		hash = (hash << 5) - (hash + *ch++);
-	snprintf (package_property_suffix, sizeof (package_property_suffix), "%08x", hash);
+
+#if WINDOWS
+	package_hash_to_hex (hash);
+#else
+	// In C++14 or newer we could use std::index_sequence, but in C++11 it's a bit too much ado
+	// for this simple case, so a manual sequence it is.
+	//
+	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
+	// that would be boring, wouldn't it? :)
+	package_hash_to_hex (hash, 0, 1, 2, 3, 4, 5, 6, 7);
+#endif
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
@@ -283,13 +333,13 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
 		char *propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
 		if (propname) {
-			result = monodroid_get_system_property (propname, &local_value);
+			result = androidSystem.monodroid_get_system_property (propname, &local_value);
 			free (propname);
 		}
 	}
 
 	if (result <= 0 || !local_value)
-		result = monodroid_get_system_property (name, &local_value);
+		result = androidSystem.monodroid_get_system_property (name, &local_value);
 
 	if (result > 0) {
 		if (strlen (local_value) == 0) {
@@ -640,6 +690,22 @@ Util::is_path_rooted (const char *path)
 #else
 	return path [0] == MONODROID_PATH_SEPARATOR_CHAR;
 #endif
+}
+
+jclass
+Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref)
+{
+	static constexpr char java_lang_class_sig[] = "Ljava/lang/Class;";
+
+	jfieldID fieldID = env->GetStaticFieldID (runtime, name, java_lang_class_sig);
+	if (fieldID == nullptr)
+		return nullptr;
+
+	jobject field = env->GetStaticObjectField (runtime, fieldID);
+	if (field == nullptr)
+		return nullptr;
+
+	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
 }
 
 extern "C" void
