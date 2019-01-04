@@ -122,6 +122,7 @@
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
     <Compile Include="Tasks\GetFilesThatExist.cs" />
+    <Compile Include="Tasks\ReadJavaStubsCache.cs" />
     <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
     <Compile Include="Tasks\GetMonoPlatformJar.cs" />
     <Compile Include="Tasks\GeneratePackageManagerJava.cs" />

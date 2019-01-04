@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using MonoDroid.Utils;
@@ -67,6 +67,11 @@ namespace Xamarin.Android.Tasks
 		public string PackageNamingPolicy { get; set; }
 		
 		public string ApplicationJavaClass { get; set; }
+
+		/// <summary>
+		/// If specified, we need to cache the value of EmbeddedDSOsEnabled=True for incremental builds
+		/// </summary>
+		public string CacheFile { get; set; }
 
 		public override bool Execute ()
 		{
@@ -221,6 +226,22 @@ namespace Xamarin.Android.Tasks
 
 				// Only write the new manifest if it actually changed
 				MonoAndroidHelper.CopyIfStreamChanged (stream, MergedAndroidManifestOutput);
+			}
+
+			// Create the CacheFile if needed
+			if (!string.IsNullOrEmpty (CacheFile)) {
+				bool extractNativeLibraries = manifest.ExtractNativeLibraries ();
+				if (!extractNativeLibraries) {
+					//We need to write the value to a file, if _GenerateJavaStubs is skipped on incremental builds
+					var document = new XDocument (
+						new XDeclaration ("1.0", "UTF-8", null),
+						new XElement ("Properties", new XElement (nameof (ReadJavaStubsCache.EmbeddedDSOsEnabled), "True"))
+					);
+					document.SaveIfChanged (CacheFile);
+				} else {
+					//Delete the file otherwise, since we only need to specify when EmbeddedDSOsEnabled=True
+					File.Delete (CacheFile);
+				}
 			}
 
 			// Create additional runtime provider java sources.
