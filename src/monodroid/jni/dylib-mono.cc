@@ -18,11 +18,11 @@ using namespace xamarin::android;
   this function is used from JavaInterop and should be treated as public API
   https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
 
-  it should also accept libmono_path = NULL parameter
+  it should also accept libmono_path = nullptr parameter
 */
 int monodroid_dylib_mono_init (DylibMono *mono_imports, const char *libmono_path)
 {
-	if (mono_imports == NULL)
+	if (mono_imports == nullptr)
 		return FALSE;
 
 	/*

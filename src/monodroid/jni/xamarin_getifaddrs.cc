@@ -688,7 +688,7 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 	if (rta_payload_length > sizeof ((*sa)->sll_addr)) {
 		log_info (LOG_NETLINK, "Address is too long to place in sockaddr_ll (%d > %d)", rta_payload_length, sizeof ((*sa)->sll_addr));
 		delete *sa;
-		*sa = nullptr;
+		*sa = NULL;
 		return -1;
 	}
 	
@@ -705,7 +705,7 @@ find_interface_by_index (int index, struct _monodroid_ifaddrs **ifaddrs_head)
 {
 	struct _monodroid_ifaddrs *cur;
 	if (!ifaddrs_head || !*ifaddrs_head)
-		return nullptr;
+		return NULL;
 
 	/* Normally expensive, but with the small amount of links in the chain we'll deal with it's not
 	 * worth the extra houskeeping and memory overhead
@@ -719,7 +719,7 @@ find_interface_by_index (int index, struct _monodroid_ifaddrs **ifaddrs_head)
 		cur = cur->ifa_next;
 	}
 
-	return nullptr;
+	return NULL;
 }
 
 static char *
@@ -818,7 +818,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	ssize_t length = 0;
 	struct rtattr *attribute;
 	struct ifaddrmsg *net_address;
-	struct _monodroid_ifaddrs *ifa = nullptr;
+	struct _monodroid_ifaddrs *ifa = NULL;
 	struct sockaddr **sa;
 	int payload_size;
 
@@ -842,7 +842,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	while (RTA_OK (attribute, length)) {
 		payload_size = RTA_PAYLOAD (attribute);
 		log_debug (LOG_NETLINK, "     attribute payload_size == %u\n", payload_size);
-		sa = nullptr;
+		sa = NULL;
 		
 		switch (attribute->rta_type) {
 			case IFA_LABEL: {
@@ -967,8 +967,8 @@ get_link_info (const struct nlmsghdr *message)
 	ssize_t length;
 	struct rtattr *attribute;
 	struct ifinfomsg *net_interface;
-	struct _monodroid_ifaddrs *ifa = nullptr;
-	struct sockaddr_ll_extended *sa = nullptr;
+	struct _monodroid_ifaddrs *ifa = NULL;
+	struct sockaddr_ll_extended *sa = NULL;
 
 	assert (message);
 	net_interface = reinterpret_cast <ifinfomsg*> (NLMSG_DATA (message));
@@ -1031,7 +1031,7 @@ get_link_info (const struct nlmsghdr *message)
 		delete sa;
 	free_single_xamarin_ifaddrs (&ifa);
 	
-	return nullptr;
+	return NULL;
 }
 #else
 void

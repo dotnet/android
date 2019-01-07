@@ -69,12 +69,12 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 	char *ename;
 	size_t si;
 
-	MonoAssembly *a = NULL;
+	MonoAssembly *a = nullptr;
 
-	int name_len = culture == NULL ? 0 : strlen (culture) + 1;
+	int name_len = culture == nullptr ? 0 : strlen (culture) + 1;
 	name_len += strlen (reinterpret_cast<const char*> (mono->assembly_name_get_name (aname)));
 	name = static_cast<char*> (utils.xmalloc (name_len + sizeof (".exe") + 1));
-	if (culture != NULL && strlen (culture) > 0)
+	if (culture != nullptr && strlen (culture) > 0)
 		sprintf (name, "%s/%s", culture, (const char*) mono->assembly_name_get_name (aname));
 	else
 		sprintf (name, "%s", (const char*) mono->assembly_name_get_name (aname));
@@ -86,7 +86,7 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 		".exe",
 	};
 
-	for (si = 0; si < sizeof (suffixes)/sizeof (suffixes [0]) && a == NULL; ++si) {
+	for (si = 0; si < sizeof (suffixes)/sizeof (suffixes [0]) && a == nullptr; ++si) {
 		MonoBundledAssembly **p;
 
 		*ename = '\0';
@@ -94,14 +94,14 @@ open_from_bundles (MonoAssemblyName *aname, char **assemblies_path, void *user_d
 
 		log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
 
-		for (p = bundled_assemblies; p != NULL && *p; ++p) {
-			MonoImage *image = NULL;
+		for (p = bundled_assemblies; p != nullptr && *p; ++p) {
+			MonoImage *image = nullptr;
 			MonoImageOpenStatus status;
 			const MonoBundledAssembly *e = *p;
 
 			if (strcmp (e->name, name) == 0 &&
-					(image  = mono->image_open_from_data_with_name ((char*) e->data, e->size, 0, NULL, ref_only, name)) != NULL &&
-					(a      = mono->assembly_load_from_full (image, name, &status, ref_only)) != NULL) {
+					(image  = mono->image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
+					(a      = mono->assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
 				mono->config_for_assembly (image);
 				break;
 			}
@@ -146,28 +146,28 @@ MONO_API const char *
 monodroid_typemap_java_to_managed (const char *java)
 {
 	struct TypeMappingInfo *info;
-	for (info = java_to_managed_maps; info != NULL; info = info->next) {
+	for (info = java_to_managed_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, java); */
 		const char *e = reinterpret_cast<const char*> (bsearch (java, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
-		if (e == NULL)
+		if (e == nullptr)
 			continue;
 		return e + info->value_offset;
 	}
-	return NULL;
+	return nullptr;
 }
 
 MONO_API const char *
 monodroid_typemap_managed_to_java (const char *managed)
 {
 	struct TypeMappingInfo *info;
-	for (info = managed_to_java_maps; info != NULL; info = info->next) {
+	for (info = managed_to_java_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, managed); */
 		const char *e = reinterpret_cast <const char*> (bsearch (managed, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
-		if (e == NULL)
+		if (e == nullptr)
 			continue;
 		return e + info->value_offset;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -178,12 +178,12 @@ extract_int (const char **header, const char *source_apk, const char *source_ent
 	int   key_name_len      = 0;
 	char  scanf_format [20] = { 0, };
 
-	if (header == NULL || *header == NULL)
+	if (header == nullptr || *header == nullptr)
 		return;
 
 	key_name_len    = strlen (key_name);
 	if (key_name_len >= (sizeof (scanf_format) - sizeof ("=%d%n"))) {
-		*header = NULL;
+		*header = nullptr;
 		return;
 	}
 
@@ -193,7 +193,7 @@ extract_int (const char **header, const char *source_apk, const char *source_ent
 	if (read != 1) {
 		log_warn (LOG_DEFAULT, "Could not read header '%s' value from '%s!%s': read %i elements, expected 1 element. Contents: '%s'",
 				key_name, source_apk, source_entry, read, *header);
-		*header = NULL;
+		*header = nullptr;
 		return;
 	}
 	*header = *header + consumed + 1;
@@ -224,7 +224,7 @@ add_type_mapping (struct TypeMappingInfo **info, const char *source_apk, const c
 			(p->num_entries <= 0) ||
 			(p->entry_length <= 0) ||
 			(p->value_offset >= p->entry_length) ||
-			(p->mapping == NULL)) {
+			(p->mapping == nullptr)) {
 		log_warn (LOG_DEFAULT, "Could not read type mapping file '%s!%s'. Ignoring...", source_apk, source_entry);
 		free (p);
 		return false;
@@ -256,7 +256,7 @@ md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const 
 	uLong offsetPage      = offset - offsetFromPage;
 	uLong offsetSize      = size + offsetFromPage;
 	
-	mmap_info.area        = mmap (NULL, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
 	if (mmap_info.area == MAP_FAILED) {
 		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
@@ -278,7 +278,7 @@ md_mmap_open_file (void *opaque, const char *filename, int mode)
 {
 	if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER) == ZLIB_FILEFUNC_MODE_READ)
 		return utils.xcalloc (1, sizeof (int));
-	return NULL;
+	return nullptr;
 }
 
 static uLong
@@ -337,7 +337,7 @@ register_debug_symbols_for_assembly (DylibMono *mono, const char *entry_name, Mo
 	if (strncmp (assembly->name, entry_basename, strlen (assembly->name)) != 0) {
 		// That failed; try for System.dll, System.pdb case
 		const char *eb_ext  = strrchr (entry_basename, '.');
-		if (eb_ext == NULL)
+		if (eb_ext == nullptr)
 			return 0;
 		int basename_len    = eb_ext - entry_basename;
 		assert (basename_len > 0 && "basename must have a length!");
@@ -380,12 +380,12 @@ gather_bundled_assemblies_from_apk (
 	zlib_filefunc_def funcs = {
 		md_mmap_open_file,  // zopen_file,
 		md_mmap_read_file,  // zread_file,
-		NULL,               // zwrite_file,
+		nullptr,               // zwrite_file,
 		md_mmap_tell_file,  // ztell_file,
 		md_mmap_seek_file,  // zseek_file,
 		md_mmap_close_file, // zclose_file
 		md_mmap_error_file, // zerror_file
-		NULL                // opaque
+		nullptr                // opaque
 	};
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
@@ -396,7 +396,7 @@ gather_bundled_assemblies_from_apk (
 
 	funcs.opaque = &fd;
 
-	if ((file = unzOpen2 (NULL, &funcs)) != NULL) {
+	if ((file = unzOpen2 (nullptr, &funcs)) != nullptr) {
 		do {
 			unz_file_info info;
 			uLong offset;
@@ -406,9 +406,9 @@ gather_bundled_assemblies_from_apk (
 			int entry_is_overridden = FALSE;
 
 			cur_entry_name [0] = 0;
-			if (unzGetCurrentFileInfo (file, &info, cur_entry_name, sizeof (cur_entry_name)-1, NULL, 0, NULL, 0) != UNZ_OK ||
+			if (unzGetCurrentFileInfo (file, &info, cur_entry_name, sizeof (cur_entry_name)-1, nullptr, 0, nullptr, 0) != UNZ_OK ||
 					info.compression_method != 0 ||
-					unzOpenCurrentFile3 (file, NULL, NULL, 1, NULL) != UNZ_OK ||
+					unzOpenCurrentFile3 (file, nullptr, nullptr, 1, nullptr) != UNZ_OK ||
 					unzGetRawFileOffset (file, &offset) != UNZ_OK) {
 				continue;
 			}
@@ -442,7 +442,7 @@ gather_bundled_assemblies_from_apk (
 			if ((utils.ends_with (cur_entry_name, ".mdb") || utils.ends_with (cur_entry_name, ".pdb")) &&
 					register_debug_symbols &&
 					!entry_is_overridden &&
-					*bundle != NULL) {
+					*bundle != nullptr) {
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				if (register_debug_symbols_for_assembly (mono, cur_entry_name, (*bundle) [*bundle_count-1],
 						(const mono_byte*)map_info.area,
@@ -451,7 +451,7 @@ gather_bundled_assemblies_from_apk (
 			}
 
 			if (utils.ends_with (cur_entry_name, ".config") &&
-					*bundle != NULL) {
+					*bundle != nullptr) {
 				char *assembly_name = utils.monodroid_strdup_printf ("%s", basename (cur_entry_name));
 				// Remove '.config' suffix
 				*strrchr (assembly_name, '.') = '\0';
@@ -509,17 +509,17 @@ try_load_typemaps_from_directory (const char *path)
 {
 	// read the entire typemap file into a string
 	// process the string using the add_type_mapping
-	char *val = NULL;
+	char *val = nullptr;
 	monodroid_dir_t *dir;
 	monodroid_dirent_t b, *e;
 	char *dir_path = utils.path_combine (path, "typemaps");
-	if (dir_path == NULL || !utils.directory_exists (dir_path)) {
+	if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
 		log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
 		free (dir_path);
 		return 0;
 	}
 
-	if ((dir = utils.monodroid_opendir (dir_path)) == NULL) {
+	if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
 		log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
 		free (dir_path);
 		return 0;
@@ -534,13 +534,13 @@ try_load_typemaps_from_directory (const char *path)
 		char *file_path = utils.path_combine (dir_path, file_name);
 		if (utils.monodroid_dirent_hasextension (e, ".mj") || utils.monodroid_dirent_hasextension (e, ".jm")) {
 			int len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
-			if (len > 0 && val != NULL) {
+			if (len > 0 && val != nullptr) {
 				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
-					if (!add_type_mapping (&managed_to_java_maps, file_path, NULL, ((const char*)val)))
+					if (!add_type_mapping (&managed_to_java_maps, file_path, nullptr, ((const char*)val)))
 						free (val);
 				}
 				if (utils.monodroid_dirent_hasextension (e, ".jm")) {
-					if (!add_type_mapping (&java_to_managed_maps, file_path, NULL, ((const char*)val)))
+					if (!add_type_mapping (&java_to_managed_maps, file_path, nullptr, ((const char*)val)))
 						free (val);
 				}
 			}
@@ -568,7 +568,7 @@ monodroid_embedded_assemblies_register_from (
 
 	if (bundled_assemblies) {
 		bundled_assemblies  = reinterpret_cast <MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, sizeof(void*)*(bundled_assemblies_count + 1)));
-		bundled_assemblies [bundled_assemblies_count] = NULL;
+		bundled_assemblies [bundled_assemblies_count] = nullptr;
 	}
 
 	return bundled_assemblies_count;
