@@ -380,12 +380,12 @@ gather_bundled_assemblies_from_apk (
 	zlib_filefunc_def funcs = {
 		md_mmap_open_file,  // zopen_file,
 		md_mmap_read_file,  // zread_file,
-		nullptr,               // zwrite_file,
+		nullptr,            // zwrite_file,
 		md_mmap_tell_file,  // ztell_file,
 		md_mmap_seek_file,  // zseek_file,
 		md_mmap_close_file, // zclose_file
 		md_mmap_error_file, // zerror_file
-		nullptr                // opaque
+		nullptr             // opaque
 	};
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
