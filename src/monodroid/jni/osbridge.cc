@@ -74,7 +74,7 @@ static pid_t gettid ()
 	return syscall (SYS_gettid);
 #else
 	uint64_t tid;
-	pthread_threadid_np (NULL, &tid);
+	pthread_threadid_np (nullptr, &tid);
 	return (pid_t)tid;
 #endif
 }
@@ -86,11 +86,11 @@ OSBridge::clear_mono_java_gc_bridge_info ()
 {
 	for (uint32_t c = 0; c < NUM_GC_BRIDGE_TYPES; c++) {
 		MonoJavaGCBridgeInfo *info = &mono_java_gc_bridge_info [c];
-		info->klass = NULL;
-		info->handle = NULL;
-		info->handle_type = NULL;
-		info->refs_added = NULL;
-		info->weak_handle = NULL;
+		info->klass = nullptr;
+		info->handle = nullptr;
+		info->handle_type = nullptr;
+		info->refs_added = nullptr;
+		info->weak_handle = nullptr;
 	}
 }
 
@@ -101,7 +101,7 @@ OSBridge::get_gc_bridge_index (MonoClass *klass)
 
 	for (uint32_t i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
 		MonoClass *k = mono_java_gc_bridge_info [i].klass;
-		if (k == NULL) {
+		if (k == nullptr) {
 			f++;
 			continue;
 		}
@@ -118,20 +118,20 @@ OSBridge::get_gc_bridge_info_for_class (MonoClass *klass)
 {
 	int   i;
 
-	if (klass == NULL)
-		return NULL;
+	if (klass == nullptr)
+		return nullptr;
 
 	i   = get_gc_bridge_index (klass);
 	if (i < 0)
-		return NULL;
+		return nullptr;
 	return &mono_java_gc_bridge_info [i];
 }
 
 OSBridge::MonoJavaGCBridgeInfo *
 OSBridge::get_gc_bridge_info_for_object (MonoObject *object)
 {
-	if (object == NULL)
-		return NULL;
+	if (object == nullptr)
+		return nullptr;
 	return get_gc_bridge_info_for_class (monoFunctions.object_get_class (object));
 }
 
@@ -150,7 +150,7 @@ char
 OSBridge::get_object_ref_type (JNIEnv *env, void *handle)
 {
 	jobjectRefType value;
-	if (handle == NULL)
+	if (handle == nullptr)
 		return 'I';
 	value = env->GetObjectRefType (reinterpret_cast<jobject> (handle));
 	switch (value) {
@@ -407,7 +407,7 @@ OSBridge::take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj)
 	int type = JNIGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == NULL)
+	if (bridge_info == nullptr)
 		return 0;
 
 	monoFunctions.field_get_value (obj, bridge_info->weak_handle, &weak);
@@ -425,12 +425,12 @@ OSBridge::take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj)
 	}
 	_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak), "finalizer", gettid(), __PRETTY_FUNCTION__, 0);
 	env->DeleteGlobalRef (weak);
-	weak = NULL;
+	weak = nullptr;
 	monoFunctions.field_set_value (obj, bridge_info->weak_handle, &weak);
 
 	monoFunctions.field_set_value (obj, bridge_info->handle, &handle);
 	monoFunctions.field_set_value (obj, bridge_info->handle_type, &type);
-	return handle != NULL;
+	return handle != nullptr;
 }
 
 mono_bool
@@ -440,7 +440,7 @@ OSBridge::take_weak_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj)
 	jobject handle, weakglobal;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == NULL)
+	if (bridge_info == nullptr)
 		return 0;
 
 	monoFunctions.field_get_value (obj, bridge_info->handle, &handle);
@@ -468,7 +468,7 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	int type = JNIGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == NULL)
+	if (bridge_info == nullptr)
 		return 0;
 
 	monoFunctions.field_get_value (obj, bridge_info->handle, &weak);
@@ -487,13 +487,13 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 			"finalizer", gettid (), "take_global_ref_jni", 0);
 	env->DeleteWeakGlobalRef (weak);
 	if (!handle) {
-		void *old_handle = NULL;
+		void *old_handle = nullptr;
 
 		monoFunctions.field_get_value (obj, bridge_info->handle, &old_handle);
 	}
 	monoFunctions.field_set_value (obj, bridge_info->handle, &handle);
 	monoFunctions.field_set_value (obj, bridge_info->handle_type, &type);
-	return handle != NULL;
+	return handle != nullptr;
 }
 
 mono_bool
@@ -503,7 +503,7 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	int type = JNIWeakGlobalRefType;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == NULL)
+	if (bridge_info == nullptr)
 		return 0;
 
 	monoFunctions.field_get_value (obj, bridge_info->handle, &handle);
@@ -553,11 +553,11 @@ OSBridge::gc_is_bridge_object (MonoObject *object)
 	void *handle;
 
 	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (object);
-	if (bridge_info == NULL)
+	if (bridge_info == nullptr)
 		return 0;
 
 	monoFunctions.field_get_value (object, bridge_info->handle, &handle);
-	if (handle == NULL) {
+	if (handle == nullptr) {
 #if DEBUG
 		MonoClass *mclass = monoFunctions.object_get_class (object);
 		log_info (LOG_GC, "object of class %s.%s with null handle",
@@ -626,7 +626,7 @@ OSBridge::describe_target (OSBridge::AddReferenceTarget target)
 mono_bool
 OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBridge::AddReferenceTarget reffed_target)
 {
-	MonoJavaGCBridgeInfo *bridge_info = NULL, *reffed_bridge_info = NULL;
+	MonoJavaGCBridgeInfo *bridge_info = nullptr, *reffed_bridge_info = nullptr;
 	jobject handle, reffed_handle;
 
 	if (!load_reference_target (target, &bridge_info, &handle))
@@ -731,7 +731,7 @@ void
 OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs)
 {
 	/* Some SCCs might have no IGCUserPeers associated with them, so we must create one */
-	jobject temporary_peers = NULL;     // This is an ArrayList
+	jobject temporary_peers = nullptr;     // This is an ArrayList
 	int temporary_peer_count = 0;       // Number of items in temporary_peers
 
 	/* Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
@@ -849,7 +849,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 			obj = sccs [i]->objs [j];
 
 			bridge_info = get_gc_bridge_info_for_object (obj);
-			if (bridge_info == NULL)
+			if (bridge_info == nullptr)
 				continue;
 			monoFunctions.field_get_value (obj, bridge_info->handle, &jref);
 			if (jref) {
@@ -895,7 +895,7 @@ OSBridge::java_gc (JNIEnv *env)
 void
 OSBridge::set_bridge_processing_field (MonodroidBridgeProcessingInfo *list, mono_bool value)
 {
-	for ( ; list != NULL; list = list->next) {
+	for ( ; list != nullptr; list = list->next) {
 		MonoClassField *bridge_processing_field = list->bridge_processing_field;
 		MonoVTable *jnienv_vtable = list->jnienv_vtable;
 		monoFunctions.field_static_set_value (jnienv_vtable, bridge_processing_field, &value);
@@ -1094,16 +1094,16 @@ void
 OSBridge::remove_monodroid_domain (MonoDomain *domain)
 {
 	MonodroidBridgeProcessingInfo *node = domains_list;
-	MonodroidBridgeProcessingInfo *prev = NULL;
+	MonodroidBridgeProcessingInfo *prev = nullptr;
 
-	while (node != NULL) {
+	while (node != nullptr) {
 		if (node->domain != domain) {
 			prev = node;
 			node = node->next;
 			continue;
 		}
 
-		if (prev != NULL)
+		if (prev != nullptr)
 			prev->next = node->next;
 		else
 			domains_list = node->next;

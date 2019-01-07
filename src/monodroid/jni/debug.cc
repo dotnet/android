@@ -110,7 +110,7 @@ Debug::start_connection (char *options)
 
 	parse_options (options, &opts);
 
-	cur_time = time (NULL);
+	cur_time = time (nullptr);
 
 	if (opts.timeout_time && cur_time > opts.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not connecting to IDE as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, opts.timeout_time);
@@ -120,7 +120,7 @@ Debug::start_connection (char *options)
 	if (!conn_port)
 		return 0;
 
-	res = pthread_create (&conn_thread_id, NULL, xamarin::android::conn_thread, this);
+	res = pthread_create (&conn_thread_id, nullptr, xamarin::android::conn_thread, this);
 	if (res) {
 		log_error (LOG_DEFAULT, "Failed to create connection thread: %s", strerror (errno));
 		return 1;
@@ -139,7 +139,7 @@ inline int
 Debug::process_connection (int fd)
 {
 	// make sure the fd/socket blocks on reads/writes
-	fcntl (fd, F_SETFL, fcntl (fd, F_GETFL, NULL) & ~O_NONBLOCK);
+	fcntl (fd, F_SETFL, fcntl (fd, F_GETFL, nullptr) & ~O_NONBLOCK);
 
 	while (TRUE) {
 		char command [257];
@@ -213,7 +213,7 @@ Debug::handle_server_connection (void)
 	}
 
 	// Make the socket non-blocking
-	flags = fcntl (listen_socket, F_GETFL, NULL);
+	flags = fcntl (listen_socket, F_GETFL, nullptr);
 	flags |= O_NONBLOCK;
 	fcntl (listen_socket, F_SETFL, flags);
 
@@ -234,7 +234,7 @@ Debug::handle_server_connection (void)
 
 		do {
 			// Calculate how long we can wait if we can only work for 2s since we started
-			gettimeofday (&now, NULL);
+			gettimeofday (&now, nullptr);
 			if (start.tv_sec == 0) {
 				start.tv_sec = now.tv_sec;
 				start.tv_usec = now.tv_usec;
@@ -254,7 +254,7 @@ Debug::handle_server_connection (void)
 
 			// LOG ("MonoTouch: Waiting for connections from XS, sec: %i usec: %i\n", (int) tv.tv_sec, (int) tv.tv_usec);
 
-			if ((rv = select (listen_socket + 1, &rset, NULL, NULL, &tv)) == 0) {
+			if ((rv = select (listen_socket + 1, &rset, nullptr, nullptr, &tv)) == 0) {
 				// timeout hit, no connections available.
 				log_info (LOG_DEFAULT, "Listened2 for connections from XS for 2 seconds, nobody connected.\n");
 				rv = 3;
@@ -313,6 +313,6 @@ xamarin::android::conn_thread (void *arg)
 		exit (FATAL_EXIT_DEBUGGER_CONNECT);
 	}
 
-	return NULL;
+	return nullptr;
 }
 #endif /* DEBUG */

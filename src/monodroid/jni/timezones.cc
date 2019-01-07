@@ -35,7 +35,7 @@ init (DylibMono *mono)
 	AndroidEnvironment                        = mono->class_from_name (Mono_Android_image,  "Android.Runtime",  "AndroidEnvironment");
 	AndroidEnvironment_NotifyTimeZoneChanged  = mono->class_get_method_from_name (AndroidEnvironment, "NotifyTimeZoneChanged", 0);
 
-	if (AndroidEnvironment_NotifyTimeZoneChanged == NULL) {
+	if (AndroidEnvironment_NotifyTimeZoneChanged == nullptr) {
 		log_fatal (LOG_DEFAULT, "Unable to find Android.Runtime.AndroidEnvironment.NotifyTimeZoneChanged()!");
 		exit (FATAL_EXIT_MISSING_ASSEMBLY);
 	}
@@ -48,9 +48,9 @@ clear_time_zone_caches_within_domain (void *user_data)
 
 	mono->runtime_invoke (
 			AndroidEnvironment_NotifyTimeZoneChanged, /* method */
-			NULL,                                     /* obj    */
-			NULL,                                     /* args   */
-			NULL                                      /* exc    */
+			nullptr,                                  /* obj    */
+			nullptr,                                  /* args   */
+			nullptr                                   /* exc    */
 	);
 }
 
