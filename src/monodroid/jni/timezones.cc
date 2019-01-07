@@ -48,9 +48,9 @@ clear_time_zone_caches_within_domain (void *user_data)
 
 	mono->runtime_invoke (
 			AndroidEnvironment_NotifyTimeZoneChanged, /* method */
-			nullptr,                                     /* obj    */
-			nullptr,                                     /* args   */
-			nullptr                                      /* exc    */
+			nullptr,                                  /* obj    */
+			nullptr,                                  /* args   */
+			nullptr                                   /* exc    */
 	);
 }
 
