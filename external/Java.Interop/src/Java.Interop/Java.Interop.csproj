@@ -8,10 +8,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyTitle>Java.Interop</AssemblyTitle>
-    <Company>Microsoft Corporation</Company>
-    <Copyright>Microsoft Corporation</Copyright>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\bin\Debug</OutputPath>

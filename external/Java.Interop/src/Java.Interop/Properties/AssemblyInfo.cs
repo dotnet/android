@@ -1,6 +1,16 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+[assembly: AssemblyTitle ("Java.Interop")]
+[assembly: AssemblyDescription ("")]
+[assembly: AssemblyCulture ("")]
+[assembly: AssemblyConfiguration ("")]
+[assembly: AssemblyCompany ("Microsoft Corporation")]
+[assembly: AssemblyCopyright ("Microsoft Corporation")]
+[assembly: AssemblyProduct ("")]
+[assembly: AssemblyTrademark ("Microsoft Corporation")]
+[assembly: AssemblyVersion ("0.1.0.0")]
+
 [assembly: InternalsVisibleTo (
 	"Java.Interop.GenericMarshaler, PublicKey=" +
 	"0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf1" +
