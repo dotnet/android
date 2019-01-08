@@ -1,0 +1,235 @@
+// UNDONE: Latest Azure artifacts storage summary section with pipeline build?
+// UNDONE: Display machine name (bot) in build summary section in Jenkins?
+
+// This file is based on the Jenkins declarative pipeline syntax (as opposed to the scripted pipeline syntax)
+// https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
+// https://jenkins.io/doc/book/pipeline/syntax/
+
+repoUrl = "https://github.com/xamarin/xamarin-android.git"
+XADir = "xamarin-android"
+WorkDir = "~/jenkins/workspace/$XADir"
+
+MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
+
+pipeline {
+    
+    agent {
+        label 'xamarin-android-master-pipeline-eval'
+    }
+
+    options { timestamps () } 
+
+    environment {        
+        PUBLISH_PATH = "${env.JOB_NAME}"
+    }
+    
+    stages {
+        stage('clean') {
+            steps {
+                dir('package') {
+                    deleteDir()
+                }
+
+                dir('xamarin-android@tmp') {
+                    deleteDir()
+                }
+            }   
+        }
+    
+        stage('checkout') {
+            options { timeout(time: 1, unit: 'HOURS') }     // Typically takes a few minutes for a bot already having XA cloned, but longer for new clones.  Allow an hour to be safe.
+            steps {
+                // UNDONE: TEST: Avoid taking any new changes since current changes have proven to build
+                // echo "Checkout skipped"
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "$XADir"], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: "$repoUrl"]]])
+            }
+        }
+
+        stage('prepare deps') {
+            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 2 minutes
+            steps {
+                dir("$XADir") {
+                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                }
+            }
+        }
+        
+        stage('build') {
+            options { timeout(time: 3, unit: 'HOURS') }     // Typically takes less than 2 hours
+            steps {
+                dir("$XADir") {
+                    sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                }
+            }
+        }
+        
+        stage('create vsix') {
+            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
+            steps {
+                dir("$XADir") {
+                    // UNDONE: What was the reason within the freestyle build for returning true on failure
+                    // sh "make create-vsix CONFIGURATION=${BuildFlavor} V=1 || true"
+                    sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
+                }
+            }
+        }
+        
+        stage('build tests') {
+            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes 10 minutes
+
+            steps {
+                dir("$XADir") {
+                    sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
+                }
+            }
+        }
+        
+        stage('package build') {
+            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 1 minute
+            steps {
+                dir("$XADir") {
+                    sh('mkdir -p ../package')
+                    sh("make package-build-status CONFIGURATION=${env.BuildFlavor}")
+                    
+                    sh('cp xamarin.android-oss*.zip ../package')
+                    sh('cp bin/Release/bundle-*.zip ../package')
+                    sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
+                    sh('cp xa-build-status*.zip ../package')
+
+                    // UNDONE: XA build also includes the following for upload
+                    //   xamarin-android/prepare-image-dependencies.sh
+                    //   xamarin-android/build-status*
+                    //   xamarin-android/xa-test-errors*
+                    //   xamarin-android/xa-build-status*
+                }
+            }
+        }
+        
+        stage('publish packages to Azure') {
+            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            steps {
+                dir('package') {
+                    // Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview
+                    step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                        doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                        filesPath: '*.pkg, *.vsix, *.zip', storageAccName: '${env.StorageAccountName}', storageCredentialId: "${env.StorageCredentialId}",
+                        uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+                    ])
+                }
+            }
+        }
+        
+        stage('run all tests') {
+            options { timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
+            steps {
+                dir("$XADir") {
+                    sh("make run-all-tests CONFIGURATION=${BuildFlavor} V=1")
+                }
+            }   
+        }
+        
+        stage('package tests') {
+            options { timeout(time: 30, unit: 'SECONDS') }
+            steps {
+                dir("$XADir") {
+                    sh('mkdir -p ../package.tests')
+                    
+                    // UNDONE: Use script block instead?
+                    sh '''
+                    if [ -d "xamarin-android/xa-test-errors" ]; then
+                        cp xamarin-android/xa-test-errors/* ../package.tests
+                    fi
+                    '''
+                    
+                    // UNDONE: Add another publish step after the test run - see UNDONE in publish step above
+                    //   xamarin-android/prepare-image-dependencies.sh
+                    //   xamarin-android/xa-test-errors*
+                }
+            }
+        }
+        
+        stage ('Plot build times') {
+            options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
+            steps {
+                dir("$XADir") {                    
+                    plot(
+                        title: 'Jcw',                        
+                        csvFileName: 'plot-jcw-test-times.csv',       
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    plot(
+                        title: 'Locale',
+                        csvFileName: 'plot-locale-times.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    plot(
+                        title: 'Runtime test sizes',
+                        csvFileName: 'plot-runtime-test-sizes.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    plot(
+                        title: 'Runtime merged',
+                        csvFileName: 'plot-runtime-merged-test-times.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    plot(
+                        title: 'Xamarin.Forms app startup',
+                        csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    plot(
+                        title: 'Xamarin.Forms app',
+                        csvFileName: 'plot-xamarin-forms-tests-size.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+
+                    // UNDONE: Safe to remove?
+                    //plot(
+                    //    title: '[History] (before the graphs were split up)',
+                    //    csvFileName: 'plot-build-times.csv',
+                    //    csvSeries: [[
+                    //        displayTableFlag: true, file: 'TestResult-MSBuild-times.csv', inclusionFlag: 'OFF'
+                    //    ]],
+                    //    group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    //)        			
+
+                    plot(
+                        title: 'Hello World',
+                        csvFileName: 'plot-hello-world-build-times.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                    
+                    plot(
+                        title: 'Xamarin.Forms',
+                        csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
+                        csvSeries: [[
+                            displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
+                        ]],
+                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                    )
+                }
+            }
+        }
+    }
+}
