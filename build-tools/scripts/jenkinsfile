@@ -14,7 +14,10 @@ pipeline {
         label 'xamarin-android-master-pipeline-eval'
     }
 
-    options { timestamps () } 
+    options {
+        timestamps()
+        skipStagesAfterUnstable()
+    }
 
     environment {        
         PUBLISH_PATH = "${env.JOB_NAME}"
@@ -131,7 +134,6 @@ pipeline {
                 dir("$XADir") {
                     sh('mkdir -p ../package.tests')
                     
-                    // UNDONE: Use script block instead?
                     sh '''
                     if [ -d "xamarin-android/xa-test-errors" ]; then
                         cp xamarin-android/xa-test-errors/* ../package.tests
