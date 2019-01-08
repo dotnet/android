@@ -36,15 +36,6 @@ pipeline {
             }   
         }
     
-        stage('checkout') {
-            options { timeout(time: 1, unit: 'HOURS') }     // Typically takes a few minutes for a bot already having XA cloned, but longer for new clones.  Allow an hour to be safe.
-            steps {
-                // UNDONE: TEST: Avoid taking any new changes since current changes have proven to build
-                // echo "Checkout skipped"
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "$XADir"], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: "$repoUrl"]]])
-            }
-        }
-
         stage('prepare deps') {
             options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 2 minutes
             steps {
