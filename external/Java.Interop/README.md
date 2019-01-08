@@ -171,21 +171,6 @@ Java-side collection, perform a GC, and the instance will survive the GC.
 Types with a `Jni` prefix are "low-level" types and do *not* participate in
 object-reference semantics.
 
-## Android Tests
-
-[src/Android.Interop](src/Android.Interop) is vestigial; it was for
-testing before a subset of Java.Interop was integrated with
-Xamarin.Android 6.1 ("cycle 7"). It should arguably be deleted.
-
-The top-level `make run-android` target will run the Java.Interop unit tests
-on Android via the Android.Interop-Tests project.
-
-The Android.Interop-Tests project currently contains *all* tests, including
-the time intensive "PerformanceTests".
-
-To run a specific test fixture, set the FIXTURE variable:
-
-    make run-android FIXTURE=Java.Interop.PerformanceTests.TimingTests
 
 ## Notes
 

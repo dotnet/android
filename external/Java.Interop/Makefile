@@ -157,9 +157,6 @@ run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	cp $< $@
 
-run-android: $(ATESTS)
-	(cd src/Android.Interop/Tests; $(MSBUILD) $(MSBUILD_FLAGS) '/t:Install;RunTests' $(if $(FIXTURE),/p:TestFixture=$(FIXTURE)))
-
 JRE_DLL_CONFIG=bin/$(CONFIGURATION)/Java.Runtime.Environment.dll.config
 
 $(JRE_DLL_CONFIG): src/Java.Runtime.Environment/Java.Runtime.Environment.csproj
