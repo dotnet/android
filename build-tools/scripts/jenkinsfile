@@ -1,6 +1,3 @@
-// UNDONE: Latest Azure artifacts storage summary section with pipeline build?
-// UNDONE: Display machine name (bot) in build summary section in Jenkins?
-
 // This file is based on the Jenkins declarative pipeline syntax (as opposed to the scripted pipeline syntax)
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 // https://jenkins.io/doc/book/pipeline/syntax/
