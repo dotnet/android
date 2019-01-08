@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static II1 GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

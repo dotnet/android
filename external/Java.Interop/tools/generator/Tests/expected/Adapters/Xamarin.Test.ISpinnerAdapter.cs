@@ -23,7 +23,7 @@ namespace Xamarin.Test {
 			get { return typeof (ISpinnerAdapterInvoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static ISpinnerAdapter GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

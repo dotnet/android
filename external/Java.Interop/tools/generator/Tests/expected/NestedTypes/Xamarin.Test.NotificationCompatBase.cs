@@ -35,7 +35,7 @@ namespace Xamarin.Test {
 					get { return typeof (IFactoryInvoker); }
 				}
 
-				IntPtr class_ref;
+				new IntPtr class_ref;
 
 				public static IFactory GetObject (IntPtr handle, JniHandleOwnership transfer)
 				{

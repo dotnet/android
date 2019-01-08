@@ -626,6 +626,13 @@ namespace MonoDroid.Generation {
 		public IList<GenBase> Gens {get;set;}
 		public int ProductVersion { get; set; }
 
+		bool? buildingCoreAssembly;
+		public bool BuildingCoreAssembly {
+			get {
+				return buildingCoreAssembly ?? (buildingCoreAssembly = (SymbolTable.Lookup ("java.lang.Object") is XmlClassGen)).Value;
+			}
+		}
+
 		public string GetOutputName (string s)
 		{
 			if (s == "System.Void")

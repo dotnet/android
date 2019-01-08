@@ -37,7 +37,7 @@ namespace Android.Text {
 			get { return _members.ManagedPeerType; }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static ISpanned GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

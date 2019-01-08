@@ -27,7 +27,7 @@ namespace Xamarin.Test {
 			get { return typeof (II1Invoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static II1 GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

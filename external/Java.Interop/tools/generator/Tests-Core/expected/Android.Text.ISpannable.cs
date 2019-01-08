@@ -23,7 +23,7 @@ namespace Android.Text {
 			get { return typeof (ISpannableInvoker); }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static ISpannable GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{

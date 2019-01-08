@@ -31,7 +31,7 @@ namespace Android.Views {
 				get { return typeof (IOnClickListenerInvoker); }
 			}
 
-			IntPtr class_ref;
+			new IntPtr class_ref;
 
 			public static IOnClickListener GetObject (IntPtr handle, JniHandleOwnership transfer)
 			{

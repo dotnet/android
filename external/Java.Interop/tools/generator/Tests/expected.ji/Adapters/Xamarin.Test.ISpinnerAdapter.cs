@@ -32,7 +32,7 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		IntPtr class_ref;
+		new IntPtr class_ref;
 
 		public static ISpinnerAdapter GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
