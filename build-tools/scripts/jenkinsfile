@@ -30,6 +30,10 @@ pipeline {
                     deleteDir()
                 }
 
+                dir('package.tests') {
+                    deleteDir()
+                }
+
                 dir('xamarin-android@tmp') {
                     deleteDir()
                 }
@@ -58,7 +62,7 @@ pipeline {
             options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
             steps {
                 dir("$XADir") {
-                    // UNDONE: What was the reason within the freestyle build for returning true on failure
+                    // UNDONE: What was the reason within the freestyle build for returning true on failure - is okay to ignore VSIX creation failures?
                     // sh "make create-vsix CONFIGURATION=${BuildFlavor} V=1 || true"
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
                 }
@@ -85,13 +89,9 @@ pipeline {
                     sh('cp xamarin.android-oss*.zip ../package')
                     sh('cp bin/Release/bundle-*.zip ../package')
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
-                    sh('cp xa-build-status*.zip ../package')
-
-                    // UNDONE: XA build also includes the following for upload
-                    //   xamarin-android/prepare-image-dependencies.sh
-                    //   xamarin-android/build-status*
-                    //   xamarin-android/xa-test-errors*
-                    //   xamarin-android/xa-build-status*
+                    sh('cp xa-build-status* ../package')
+                    sh('cp build-status* ../package 2>/dev/null')                       // Files may not exist and so pipe to null
+                    sh('cp prepare-image-dependencies.sh ../package 2>/dev/null')       // Files may not exist and so pipe to null
                 }
             }
         }
@@ -103,7 +103,7 @@ pipeline {
                     // Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview
                     step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
                         doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
-                        filesPath: '*.pkg, *.vsix, *.zip', storageAccName: '${env.StorageAccountName}', storageCredentialId: "${env.StorageCredentialId}",
+                        filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
                         uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
                     ])
                 }
@@ -122,21 +122,38 @@ pipeline {
         stage('package tests') {
             options { timeout(time: 30, unit: 'SECONDS') }
             steps {
-                dir("$XADir") {
-                    sh('mkdir -p ../package.tests')
-                    
+                dir("$XADir") {                    
                     sh '''
                     if [ -d "xamarin-android/xa-test-errors" ]; then
-                        cp xamarin-android/xa-test-errors/* ../package.tests
+                        mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
+                        cp xamarin-android/xa-test-errors/* ../package.tests 2>/dev/null
                     fi
                     '''
-                    
-                    // UNDONE: Add another publish step after the test run - see UNDONE in publish step above
-                    //   xamarin-android/prepare-image-dependencies.sh
-                    //   xamarin-android/xa-test-errors*
                 }
             }
         }
+
+        stage('publish test error logs to Azure') {
+            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            steps {
+                dir('package.tests') {
+                    // Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview
+                    
+                    // UNDONE: TEST: Verify that anything under the 'dir' command only executes if the directory actually exists
+                    echo "package.tests exists ... publish"
+
+                    // UNDONE: Enable the following publishing step
+                    /*
+                    step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,                    
+                        doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                        filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+                        uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+                    ])
+                    */
+                }
+            }
+        }
+
         
         stage ('Plot build times') {
             options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
