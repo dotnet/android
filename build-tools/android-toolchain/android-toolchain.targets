@@ -58,7 +58,7 @@
   <Target Name="_UnzipFiles"
       DependsOnTargets="_DetermineItems"
       Inputs="@(_DownloadedItem)"
-      Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk">
+      Outputs="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk-$(AndroidNdkVersion)">
     <PropertyGroup>
       <_OriginalPath>$(PATH)</_OriginalPath>
     </PropertyGroup>
@@ -95,7 +95,7 @@
     />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
     <Touch
-        Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
+        Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk-$(AndroidNdkVersion)"
         AlwaysCreate="True"
     />
   </Target>

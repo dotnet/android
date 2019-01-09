@@ -3,10 +3,17 @@
   <PropertyGroup>
     <AndroidUri Condition=" '$(AndroidUri)' == '' ">https://dl.google.com/android/repository</AndroidUri>
     <AntUri Condition=" '$(AntUri)' == '' ">https://archive.apache.org/dist/ant/binaries</AntUri>
+    <AndroidNdkVersion>r14b</AndroidNdkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <AndroidNdkItem Include="android-ndk-r14b-linux-x86_64">
+    <AndroidNdkItem Include="android-ndk-$(AndroidNdkVersion)-darwin-x86_64">
+      <HostOS>Darwin</HostOS>
+    </AndroidNdkItem>
+    <AndroidNdkItem Include="android-ndk-$(AndroidNdkVersion)-linux-x86_64">
       <HostOS>Linux</HostOS>
+    </AndroidNdkItem>
+    <AndroidNdkItem Include="android-ndk-$(AndroidNdkVersion)-windows-x86_64">
+      <HostOS>Windows</HostOS>
     </AndroidNdkItem>
     <!--
       $(XABuildToolsVersion) is defined in Configuration.props
@@ -27,9 +34,6 @@
       <HostOS>Linux</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidNdkItem Include="android-ndk-r14b-darwin-x86_64">
-      <HostOS>Darwin</HostOS>
-    </AndroidNdkItem>
     <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-macosx">
       <HostOS>Darwin</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
@@ -46,9 +50,6 @@
       <HostOS>Darwin</HostOS>
       <DestDir>emulator</DestDir>
     </AndroidSdkItem>
-    <AndroidNdkItem Include="android-ndk-r14b-windows-x86_64">
-      <HostOS>Windows</HostOS>
-    </AndroidNdkItem>
     <AndroidSdkItem Include="build-tools_r$(XABuildToolsVersion)-windows">
       <HostOS>Windows</HostOS>
       <DestDir>build-tools\$(XABuildToolsFolder)</DestDir>
