@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tasks {
 
 		public ITaskItem [] ResourceDirectories { get; set; }
 
+		[Output]
+		public ITaskItem [] Processed { get; set; }
+
 		public override bool Execute ()
 		{
 			var resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
@@ -75,7 +78,20 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-
+			var output = new List<ITaskItem> ();
+			foreach (var file in processed) {
+				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
+				var hash = resdir?.GetMetadata ("Hash") ?? null;
+				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
+				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
+				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
+				Log.LogDebugMessage ($"{filename} {stampFile}");
+				output.Add (new TaskItem (file, new Dictionary<string, string> {
+					{ "StampFile" , $"{stampFile}" },
+					{ "Hash" , $"{filename}" },
+				}));
+			}
+			Processed = output.ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 

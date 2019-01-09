@@ -310,16 +310,11 @@ using System.Runtime.CompilerServices;
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool isRelease)
+		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool useAapt2)
 		{
-			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", isRelease);
+			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", useAapt2);
 
-			var lib = new XamarinAndroidLibraryProject () {
-				IsRelease = isRelease,
-				ProjectName = "Classlibrary1",
-			};
-			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	android:orientation = ""vertical""
 	android:layout_width = ""fill_parent""
@@ -334,7 +329,12 @@ using System.Runtime.CompilerServices;
 		android:layout_width = ""fill_parent""
 		android:layout_height = ""wrap_content""
 		android:text = ""namespace_proper"" />
-</LinearLayout>"
+</LinearLayout>";
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Classlibrary1",
+			};
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_lib.xml") {
+				TextContent = () => layout,
 			});
 			lib.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
 				TextContent = () => @"using Android.Widget;
@@ -352,12 +352,17 @@ namespace ClassLibrary1
 			});
 
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
 					},
 				}
 			};
+
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_app.xml") {
+				TextContent = () => layout,
+			});
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\UPPER_image.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
@@ -421,25 +426,21 @@ namespace UnnamedProject
 			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
 			proj.PackageReferences.Add (KnownPackages.SupportV7Palette_22_1_1_1);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
-			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
-			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName)))
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), cleanupOnDispose: false))
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), cleanupOnDispose: false)) {
 				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var customViewPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", "0", "jl", "res", "layout", "custom_text.xml");
-				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
-				var doc = XDocument.Load (customViewPath);
-				Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
-				Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
-					"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
-				Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
-					"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
+				FileAssert.Exists (packaged_resources);
+				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
+					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
+				}
 				
 				var preferencesPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
-				doc = XDocument.Load (preferencesPath);
+				var doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
 					"UnamedProject.CustomPreference should have been replaced with an $(MD5Hash).CustomPreference");
@@ -458,9 +459,41 @@ namespace UnnamedProject
 					.FirstOrDefault (x => x.Attribute("name").Value == "colorAccent");
 				Assert.IsNotNull (item, "The Style should contain an Item");
 				Assert.AreEqual ("@color/deep_purple_A200", item.Value, "item value should be @color/deep_purple_A200");
-				StringAssertEx.DoesNotContain ("AndroidResgen: Warning while updating Resource XML", b.LastBuildOutput,
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "AndroidResgen: Warning while updating Resource XML"),
 					"Warning while processing resources should not have been raised.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		void CheckCustomView (Xamarin.Tools.Zip.ZipArchive zip, params string [] paths)
+		{
+			var customViewPath = Path.Combine (paths);
+			FileAssert.Exists (customViewPath, $"custom_text.xml should exist at {customViewPath}");
+			var doc = XDocument.Load (customViewPath);
+			Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
+			Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
+				"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+			Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
+				"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+
+			//Now check the zip
+			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
+			var entry = zip.ReadEntry (customViewInZip);
+			Assert.IsNotNull (entry, $"`{customViewInZip}` should exist in packaged_resources!");
+
+			using (var stream = new MemoryStream ()) {
+				entry.Extract (stream);
+				stream.Position = 0;
+
+				using (var reader = new StreamReader (stream)) {
+					//NOTE: This is a binary format, but we can still look for text within.
+					//      Don't use `StringAssert` because `contents` make the failure message unreadable.
+					var contents = reader.ReadToEnd ();
+					Assert.IsFalse (contents.Contains ("Classlibrary1.CustomTextView"),
+							"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+					Assert.IsFalse (contents.Contains ("classlibrary1.CustomTextView"),
+							"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				}
 			}
 		}
 
