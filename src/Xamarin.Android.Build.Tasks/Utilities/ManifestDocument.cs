@@ -644,6 +644,20 @@ namespace Xamarin.Android.Tasks {
 					intentFilter.Elements (entry.Key).Any (e => ((string) e.Attribute (attName) == entry.Value)));
 		}
 
+		/// <summary>
+		/// Returns the value of //application/@android:extractNativeLibs.
+		/// </summary>
+		public bool ExtractNativeLibraries ()
+		{
+			string text = app?.Attribute (androidNs + "extractNativeLibs")?.Value;
+			if (bool.TryParse (text, out bool value)) {
+				return value;
+			}
+
+			// If android:extractNativeLibs is omitted, returns true.
+			return true;
+		}
+
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
 		{
 			if (name.StartsWith ("_"))
@@ -928,7 +942,13 @@ namespace Xamarin.Android.Tasks {
 		
 		public void Save (string filename)
 		{
-			using (var file = new StreamWriter (filename, false, new UTF8Encoding (false)))
+			using (var file = new StreamWriter (filename, append: false, encoding: new UTF8Encoding (false)))
+				Save (file);
+		}
+
+		public void Save (Stream stream)
+		{
+			using (var file = new StreamWriter (stream, new UTF8Encoding (false), bufferSize: 1024, leaveOpen: true))
 				Save (file);
 		}
 

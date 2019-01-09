@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
 
@@ -21,37 +22,39 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public string JavaSdkPath { get; set; }
 
+		public string MaxJdkVersion { get; set; }
+
 		[Output]
 		public string JavaSdkDirectory { get; set; }
 
 		public override bool Execute ()
 		{
-			Log.LogMessage (MessageImportance.Low, $"Task {nameof (JdkInfo)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (Output)}: {Output}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
-
-			var androidSdk    = new AndroidSdkInfo (CreateTaskLogger (this), AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+			var logger        = CreateTaskLogger (this);
+			var androidSdk    = new AndroidSdkInfo (logger, AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
 			try {
-				var javaSdkPath = androidSdk.JavaSdkPath;
-				if (string.IsNullOrEmpty(javaSdkPath)) {
-					Log.LogError ("JavaSdkPath is blank");
+				Log.LogMessage (MessageImportance.Low, $"  {nameof (androidSdk.JavaSdkPath)}: {androidSdk.JavaSdkPath}");
+
+				Version maxVersion;
+				if (string.IsNullOrEmpty (MaxJdkVersion)) {
+					maxVersion = new Version ("8.0");
+				} else {
+					maxVersion = new Version (MaxJdkVersion);
+				}
+				
+				var defaultJdk = new [] { new Tools.JdkInfo (androidSdk.JavaSdkPath) };
+				var jdk = defaultJdk.Concat (Tools.JdkInfo.GetKnownSystemJdkInfos (logger))
+					.Where (j => maxVersion != null ? j.Version <= maxVersion : true)
+					.Where (j => j.IncludePath.Any ())
+					.FirstOrDefault ();
+
+				if (jdk == null) {
+					Log.LogError ($"Could not determine a valid JavaSdkPath, `{androidSdk.JavaSdkPath}` was not compatible with the Xamarin.Android build.");
 					return false;
+				} else {
+					Log.LogMessage (MessageImportance.Low, $"  {nameof (jdk.HomePath)}: {jdk.HomePath}");
 				}
 
-				Log.LogMessage (MessageImportance.Low, $"  {nameof (androidSdk.JavaSdkPath)}: {javaSdkPath}");
-
-				var jvmPath = Path.Combine (javaSdkPath, "jre", "bin", "server", "jvm.dll");
-				if (!File.Exists (jvmPath)) {
-					Log.LogError ($"JdkJvmPath not found at {jvmPath}");
-					return false;
-				}
-
-				var javaIncludePath = Path.Combine (javaSdkPath, "include");
-				var includes = new List<string> { javaIncludePath };
-				includes.AddRange (Directory.GetDirectories (javaIncludePath)); //Include dirs such as "win32"
-
+				var includes = new List<string> (jdk.IncludePath);
 				var includeXmlTags = new StringBuilder ();
 				foreach (var include in includes) {
 					includeXmlTags.AppendLine ($"<JdkIncludePath Include=\"{include}\" />");
@@ -62,7 +65,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
   <Choose>
     <When Condition="" '$(JdkJvmPath)' == '' "">
       <PropertyGroup>
-        <JdkJvmPath>{jvmPath}</JdkJvmPath>
+        <JdkJvmPath>{jdk.JdkJvmPath}</JdkJvmPath>
       </PropertyGroup>
       <ItemGroup>
         {includeXmlTags}
@@ -70,12 +73,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks
     </When>
   </Choose>
   <PropertyGroup>
-    <JavaCPath Condition="" '$(JavaCPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "javac.exe")}</JavaCPath>
-    <JarPath Condition="" '$(JarPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "jar.exe")}</JarPath>
+    <JavaCPath Condition="" '$(JavaCPath)' == '' "">{jdk.JavacPath}</JavaCPath>
+    <JarPath Condition="" '$(JarPath)' == '' "">{jdk.JarPath}</JarPath>
   </PropertyGroup>
 </Project>");
 
-				JavaSdkDirectory = javaSdkPath;
+				JavaSdkDirectory = jdk.HomePath;
 				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (JavaSdkDirectory)}: {JavaSdkDirectory}");
 
 				return !Log.HasLoggedErrors;

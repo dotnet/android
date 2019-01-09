@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 	MONO_API  int monodroid_get_system_property (const char *name, char **value);
+	MONO_API  int monodroid_getpagesize (void);
 #ifdef __cplusplus
 }
 #endif

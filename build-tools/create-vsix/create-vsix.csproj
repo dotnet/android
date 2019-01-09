@@ -25,6 +25,8 @@
     <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
     <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " />
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' " />
   <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Compile Include="AndroidSdkPackage.cs" />

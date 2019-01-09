@@ -2,14 +2,20 @@
 #ifndef __ANDROID_SYSTEM_H
 #define __ANDROID_SYSTEM_H
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 #include <pthread.h>
 #include <jni.h>
 
 #include "dylib-mono.h"
 #include "util.h"
 #include "cpu-arch.h"
+#include "cppcompat.h"
+
+namespace xamarin { namespace android {
+	class jstring_wrapper;
+	class jstring_array_wrapper;
+}}
 
 namespace xamarin { namespace android { namespace internal
 {
@@ -20,13 +26,20 @@ namespace xamarin { namespace android { namespace internal
 		struct BundledProperty *next;
 	};
 
+	struct KnownEnvironmentVariables
+	{
+		bool        DSOInApk = false;
+		MonoAotMode MonoAOT = MonoAotMode::MONO_AOT_MODE_NONE;
+		bool        MonoLLVM = false;
+	};
+
 	class AndroidSystem
 	{
 	private:
 		static BundledProperty *bundled_properties;
 		static const char* android_abi_names[CPU_KIND_X86_64+1];
 #if defined (WINDOWS)
-		static pthread_mutex_t readdir_mutex;
+		static std::mutex readdir_mutex;
 		static char *libmonoandroid_directory_path;
 #endif
 
@@ -73,8 +86,8 @@ namespace xamarin { namespace android { namespace internal
 
 	public:
 		void  add_system_property (const char *name, const char *value);
-		void  setup_environment (JNIEnv *env, jobjectArray runtimeApks);
-		void  setup_process_args (JNIEnv *env, jobjectArray runtimeApks);
+		void  setup_environment (JNIEnv *env, jobjectArray environmentVariables);
+		void  setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks);
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property_from_overrides (const char *name, char ** value);
 		int   monodroid_read_file_into_memory (const char *path, char **value);
@@ -83,7 +96,7 @@ namespace xamarin { namespace android { namespace internal
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
 		int   get_gref_gc_threshold ();
-		void  setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jobjectArray runtimeApks);
+		void  setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks);
 		void* load_dso (const char *path, int dl_flags, mono_bool skip_exists_check);
 		void* load_dso_from_any_directories (const char *name, int dl_flags);
 		char* get_full_dso_path_on_disk (const char *dso_name, mono_bool *needs_free);
@@ -119,10 +132,24 @@ namespace xamarin { namespace android { namespace internal
 		int setenv (const char *name, const char *value, int overwrite);
 #endif
 
+		bool is_mono_llvm_enabled () const
+		{
+			return knownEnvVars.MonoLLVM;
+		}
+
+		bool is_embedded_dso_mode_enabled () const
+		{
+			return knownEnvVars.DSOInApk;
+		}
+
+		MonoAotMode get_mono_aot_mode () const
+		{
+			return knownEnvVars.MonoAOT;
+		}
+
 	private:
 		int  get_max_gref_count_from_system ();
-		void setup_environment_from_line (const char *line);
-		void setup_environment_from_file (const char *apk, int index, int apk_count, void *user_data);
+		void setup_environment (jstring_wrapper& name, jstring_wrapper& value);
 		BundledProperty* lookup_system_property (const char *name);
 		void setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data);
 		int  _monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len);
@@ -130,7 +157,7 @@ namespace xamarin { namespace android { namespace internal
 		void  copy_native_libraries_to_internal_location ();
 		void  copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 		void  add_apk_libdir (const char *apk, int index, int apk_count, void *user_data);
-		void  for_each_apk (JNIEnv *env, jobjectArray runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data);
+		void  for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data);
 		char* get_full_dso_path (const char *base_dir, const char *dso_path, mono_bool *needs_free);
 		void* load_dso_from_specified_dirs (const char **directories, int num_entries, const char *dso_name, int dl_flags);
 		void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
@@ -148,6 +175,7 @@ namespace xamarin { namespace android { namespace internal
 #endif // !ANDROID
 	private:
 		int max_gref_count = 0;
+		KnownEnvironmentVariables knownEnvVars;
 	};
 }}}
 #endif // !__ANDROID_SYSTEM_H

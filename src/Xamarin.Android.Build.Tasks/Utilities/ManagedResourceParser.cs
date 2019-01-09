@@ -114,8 +114,8 @@ namespace Xamarin.Android.Tasks
 				resources.Members.Add (animator);
 			if (arrays.Members.Count > 1)
 				resources.Members.Add (arrays);
-			if (attrib.Members.Count > 1)
-				resources.Members.Add (attrib);
+			//NOTE: aapt always emits Resource.Attribute, so we are replicating that
+			resources.Members.Add (attrib);
 			if (boolean.Members.Count > 1)
 				resources.Members.Add (boolean);
 			if (colors.Members.Count > 1)

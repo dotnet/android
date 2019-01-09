@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using MonoDroid.Utils;
@@ -68,6 +68,11 @@ namespace Xamarin.Android.Tasks
 		
 		public string ApplicationJavaClass { get; set; }
 
+		/// <summary>
+		/// If specified, we need to cache the value of EmbeddedDSOsEnabled=True for incremental builds
+		/// </summary>
+		public string CacheFile { get; set; }
+
 		public override bool Execute ()
 		{
 			try {
@@ -76,8 +81,7 @@ namespace Xamarin.Android.Tasks
 				using (var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true)) {
 					Run (res);
 				}
-			}
-			catch (XamarinAndroidException e) {
+			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
 				if (MonoAndroidHelper.LogInternalExceptions)
 					Log.LogMessage (e.ToString ());
@@ -99,8 +103,6 @@ namespace Xamarin.Android.Tasks
 		{
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
-			var temp = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
-			Directory.CreateDirectory (temp);
 
 			foreach (var dir in FrameworkDirectories) {
 				if (Directory.Exists (dir.ItemSpec))
@@ -111,9 +113,10 @@ namespace Xamarin.Android.Tasks
 			
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
-				res.Load (Path.GetFullPath (assembly.ItemSpec));
+				var assemblyFullPath = Path.GetFullPath (assembly.ItemSpec);
+				res.Load (assemblyFullPath);
 				if (MonoAndroidHelper.FrameworkAttributeLookupTargets.Any (a => Path.GetFileName (assembly.ItemSpec) == a))
-					selectedWhitelistAssemblies.Add (Path.GetFullPath (assembly.ItemSpec));
+					selectedWhitelistAssemblies.Add (assemblyFullPath);
 			}
 
 			// However we only want to look for JLO types in user code
@@ -130,76 +133,75 @@ namespace Xamarin.Android.Tasks
 
 			WriteTypeMappings (all_java_types);
 
-			var java_types = all_java_types.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t));
+			var java_types = all_java_types
+				.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t))
+				.ToArray ();
 
 			// Step 2 - Generate Java stub code
-			var keep_going = Generator.CreateJavaSources (
+			var success = Generator.CreateJavaSources (
 				Log,
 				java_types,
-				temp,
+				Path.Combine (OutputDirectory, "src"),
 				ApplicationJavaClass,
 				UseSharedRuntime,
 				int.Parse (AndroidSdkPlatform) <= 10,
 				ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll"));
-
-			var temp_map_file = Path.Combine (temp, "acw-map.temp");
+			if (!success)
+				return;
 
 			// We need to save a map of .NET type -> ACW type for resource file fixups
-			var managed = new Dictionary<string, TypeDefinition> ();
-			var java    = new Dictionary<string, TypeDefinition> ();
-			var acw_map = new StreamWriter (temp_map_file);
+			var managed = new Dictionary<string, TypeDefinition> (java_types.Length, StringComparer.Ordinal);
+			var java    = new Dictionary<string, TypeDefinition> (java_types.Length, StringComparer.Ordinal);
+			// Allocate a MemoryStream with a reasonable guess at its capacity
+			using (var stream = new MemoryStream (java_types.Length * 32))
+			using (var acw_map = new StreamWriter (stream)) {
+				foreach (var type in java_types) {
+					string managedKey = type.FullName.Replace ('/', '.');
+					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 
-			foreach (var type in java_types) {
-				string managedKey = type.FullName.Replace ('/', '.');
-				string javaKey    = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
+					acw_map.Write (type.GetPartialAssemblyQualifiedName ());
+					acw_map.Write (';');
+					acw_map.Write (javaKey);
+					acw_map.WriteLine ();
 
-				acw_map.WriteLine ("{0};{1}", type.GetPartialAssemblyQualifiedName (), javaKey);
+					TypeDefinition conflict;
+					if (managed.TryGetValue (managedKey, out conflict)) {
+						Log.LogWarning (
+								"Duplicate managed type found! Mappings between managed types and Java types must be unique. " +
+								"First Type: '{0}'; Second Type: '{1}'.",
+								conflict.GetAssemblyQualifiedName (),
+								type.GetAssemblyQualifiedName ());
+						Log.LogWarning (
+								"References to the type '{0}' will refer to '{1}'.",
+								managedKey, conflict.GetAssemblyQualifiedName ());
+						continue;
+					}
+					if (java.TryGetValue (javaKey, out conflict)) {
+						Log.LogError (
+								"Duplicate Java type found! Mappings between managed types and Java types must be unique. " +
+								"First Type: '{0}'; Second Type: '{1}'",
+								conflict.GetAssemblyQualifiedName (),
+								type.GetAssemblyQualifiedName ());
+						success = false;
+						continue;
+					}
 
-				TypeDefinition conflict;
-				if (managed.TryGetValue (managedKey, out conflict)) {
-					Log.LogWarning (
-							"Duplicate managed type found! Mappings between managed types and Java types must be unique. " +
-							"First Type: '{0}'; Second Type: '{1}'.",
-							conflict.GetAssemblyQualifiedName (),
-							type.GetAssemblyQualifiedName ());
-					Log.LogWarning (
-							"References to the type '{0}' will refer to '{1}'.",
-							managedKey, conflict.GetAssemblyQualifiedName ());
-					continue;
+					managed.Add (managedKey, type);
+					java.Add (javaKey, type);
+
+					acw_map.Write (managedKey);
+					acw_map.Write (';');
+					acw_map.Write (javaKey);
+					acw_map.WriteLine ();
+
+					acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type).Replace ('/', '.'));
+					acw_map.Write (';');
+					acw_map.Write (javaKey);
+					acw_map.WriteLine ();
 				}
-				if (java.TryGetValue (javaKey, out conflict)) {
-					Log.LogError (
-							"Duplicate Java type found! Mappings between managed types and Java types must be unique. " +
-							"First Type: '{0}'; Second Type: '{1}'",
-							conflict.GetAssemblyQualifiedName (),
-							type.GetAssemblyQualifiedName ());
-					keep_going = false;
-					continue;
-				}
-				managed.Add (managedKey, type);
-				java.Add (javaKey, type);
-				acw_map.WriteLine ("{0};{1}", managedKey, javaKey);
-				acw_map.WriteLine ("{0};{1}", JavaNativeTypeManager.ToCompatJniName (type).Replace ('/', '.'), javaKey);
-			}
 
-			acw_map.Close ();
-
-			//The previous steps found an error, so we must abort and not generate any further output
-			//We must do so subsequent unchanged builds fail too.
-			if (!keep_going) {
-				File.Delete (temp_map_file);
-				return;
-			}
-
-			MonoAndroidHelper.CopyIfChanged (temp_map_file, AcwMapFile);
-
-			try { File.Delete (temp_map_file); } catch (Exception) { }
-
-			// Only overwrite files if the contents actually changed
-			foreach (var file in Directory.GetFiles (temp, "*", SearchOption.AllDirectories)) {
-				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "src", file.Substring (temp.Length + 1)));
-
-				MonoAndroidHelper.CopyIfChanged (file, dest);
+				acw_map.Flush ();
+				MonoAndroidHelper.CopyIfStreamChanged (stream, AcwMapFile);
 			}
 
 			// Step 3 - Merge [Activity] and friends into AndroidManifest.xml
@@ -219,38 +221,40 @@ namespace Xamarin.Android.Tasks
 
 			var additionalProviders = manifest.Merge (all_java_types, selectedWhitelistAssemblies, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
-			var temp_manifest = Path.Combine (temp, "AndroidManifest.xml");
-			var real_manifest = Path.GetFullPath (MergedAndroidManifestOutput);
+			using (var stream = new MemoryStream ()) {
+				manifest.Save (stream);
 
-			manifest.Save (temp_manifest);
+				// Only write the new manifest if it actually changed
+				MonoAndroidHelper.CopyIfStreamChanged (stream, MergedAndroidManifestOutput);
+			}
 
-			// Only write the new manifest if it actually changed
-			MonoAndroidHelper.CopyIfChanged (temp_manifest, real_manifest);
+			// Create the CacheFile if needed
+			if (!string.IsNullOrEmpty (CacheFile)) {
+				bool extractNativeLibraries = manifest.ExtractNativeLibraries ();
+				if (!extractNativeLibraries) {
+					//We need to write the value to a file, if _GenerateJavaStubs is skipped on incremental builds
+					var document = new XDocument (
+						new XDeclaration ("1.0", "UTF-8", null),
+						new XElement ("Properties", new XElement (nameof (ReadJavaStubsCache.EmbeddedDSOsEnabled), "True"))
+					);
+					document.SaveIfChanged (CacheFile);
+				} else {
+					//Delete the file otherwise, since we only need to specify when EmbeddedDSOsEnabled=True
+					File.Delete (CacheFile);
+				}
+			}
 
 			// Create additional runtime provider java sources.
 			string providerTemplateFile = UseSharedRuntime ? "MonoRuntimeProvider.Shared.java" : "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = new StreamReader (typeof (JavaCallableWrapperGenerator).Assembly.GetManifestResourceStream (providerTemplateFile)).ReadToEnd ();
+			string providerTemplate = GetResource<JavaCallableWrapperGenerator> (providerTemplateFile);
 			
 			foreach (var provider in additionalProviders) {
-				var temp_provider = Path.Combine (temp, provider + ".java");
-				File.WriteAllText (temp_provider, providerTemplate.Replace ("MonoRuntimeProvider", provider));
-				var real_provider_dir = Path.GetFullPath (Path.Combine (OutputDirectory, "src", "mono"));
-				Directory.CreateDirectory (real_provider_dir);
-				var real_provider = Path.Combine (real_provider_dir, provider + ".java");
-				MonoAndroidHelper.CopyIfChanged (temp_provider, real_provider);
+				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
+				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
+				MonoAndroidHelper.CopyIfStringChanged (contents, real_provider);
 			}
 
 			// Create additional application java sources.
-			
-			Action<string,string,string,Func<string,string>> save = (resource, filename, destDir, applyTemplate) => {
-				string temp_file = Path.Combine (temp, filename);
-				string template = applyTemplate (new StreamReader (typeof (GenerateJavaStubs).Assembly.GetManifestResourceStream (resource)).ReadToEnd ());
-				File.WriteAllText (temp_file, template);
-				Directory.CreateDirectory (destDir);
-				var real_file = Path.Combine (destDir, filename);
-				MonoAndroidHelper.CopyIfChanged (temp_file, real_file);
-			};
-			
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in java_types) {
@@ -262,17 +266,28 @@ namespace Xamarin.Android.Tasks
 			}
 			regCallsWriter.Close ();
 
-			var real_app_dir = Path.GetFullPath (Path.Combine (OutputDirectory, "src", "mono", "android", "app"));
+			var real_app_dir = Path.Combine (OutputDirectory, "src", "mono", "android", "app");
 			string applicationTemplateFile = "ApplicationRegistration.java";
-			save (applicationTemplateFile, applicationTemplateFile, real_app_dir,
+			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 			
 			// Create NotifyTimeZoneChanges java sources.
 			string notifyTimeZoneChangesFile = "NotifyTimeZoneChanges.java";
-			save (notifyTimeZoneChangesFile, notifyTimeZoneChangesFile, real_app_dir, template => template);
-			
-			// Delete our temp directory
-			try { Directory.Delete (temp, true); } catch (Exception) { }
+			SaveResource (notifyTimeZoneChangesFile, notifyTimeZoneChangesFile, real_app_dir, template => template);
+		}
+
+		string GetResource <T> (string resource)
+		{
+			using (var stream = typeof (T).Assembly.GetManifestResourceStream (resource))
+			using (var reader = new StreamReader (stream))
+				return reader.ReadToEnd ();
+		}
+
+		void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)
+		{
+			string template = GetResource<GenerateJavaStubs> (resource);
+			template = applyTemplate (template);
+			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
 		void WriteTypeMappings (List<TypeDefinition> types)
@@ -287,11 +302,10 @@ namespace Xamarin.Android.Tasks
 
 		void UpdateWhenChanged (string path, Action<Stream> generator)
 		{
-			var np  = path + ".new";
-			using (var o = File.OpenWrite (np))
-				generator (o);
-			MonoAndroidHelper.CopyIfChanged (np, path);
-			File.Delete (np);
+			using (var stream = new MemoryStream ()) {
+				generator (stream);
+				MonoAndroidHelper.CopyIfStreamChanged (stream, path);
+			}
 		}
 	}
 }

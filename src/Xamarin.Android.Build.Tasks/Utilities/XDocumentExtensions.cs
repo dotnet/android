@@ -44,14 +44,11 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveIfChanged (this XDocument document, string fileName)
 		{
-			var tempFile = System.IO.Path.GetTempFileName ();
-			try {
-				using (var stream = File.OpenWrite (tempFile))
-				using (var xw = new Monodroid.LinePreservedXmlWriter (new StreamWriter (stream)))
-					xw.WriteNode (document.CreateNavigator (), false);
-				return MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
-			} finally {
-				File.Delete (tempFile);
+			using (var stream = new MemoryStream ())
+			using (var xw = new Monodroid.LinePreservedXmlWriter (new StreamWriter (stream))) {
+				xw.WriteNode (document.CreateNavigator (), false);
+				xw.Flush ();
+				return MonoAndroidHelper.CopyIfStreamChanged (stream, fileName);
 			}
 		}
 	}

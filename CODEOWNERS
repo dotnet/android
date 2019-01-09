@@ -24,8 +24,10 @@
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor
 /src/Xamarin.Android.Build.Tasks @dellis1972 @jonathanpeppers
+/src/Xamarin.Android.Build.Tasks/Linker @radekdoulik
 /src/Xamarin.Android.NamingCustomAttributes @jonpryor
 /src/Xamarin.Android.Tools.Aidl @jonpryor
+/src/monodroid/ @jonpryor @grendello
 /tests/TestRunner.* @grendello
 /tests/BCL-Tests @grendello
 /tests/CodeBehind @grendello

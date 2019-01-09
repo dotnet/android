@@ -5,6 +5,7 @@ DEBIAN_COMMON_DEPS="autoconf
 	g++-mingw-w64
 	gcc-mingw-w64
 	git
+	libncurses5
 	libtool
 	libz-mingw-w64-dev
 	libzip4
@@ -14,6 +15,7 @@ DEBIAN_COMMON_DEPS="autoconf
 	unzip
 	vim-common
 	sqlite3
+	zlib1g-dev
 	"
 
 if [ "$OS_ARCH" = "x86_64" ]; then

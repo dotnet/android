@@ -60,12 +60,12 @@ namespace Xamarin.Android.Build
 		/// <summary>
 		/// Path to the system directory containing .NETPortable and .NETFramework
 		/// </summary>
-		public string SystemProfiles { get; private set; }
+		public string SystemFrameworks { get; private set; }
 
 		/// <summary>
-		/// Our default $(MSBuildExtensionPath) which should be the "xbuild" directory in the Xamarin.Android build output
+		/// Path to the system directories for MSBuild targets, such as 15.0 and Microsoft, under $(MSBuildExtensionsPath) to be merged with in-tree MSBuildExtensionsPath
 		/// </summary>
-		public string MSBuildExtensionsPath { get; private set; }
+		public string [] SystemTargetsDirectories { get; private set; }
 
 		/// <summary>
 		/// Used as the MSBuildSDKsPath environment variable, required for .NET standard projects to build
@@ -73,9 +73,9 @@ namespace Xamarin.Android.Build
 		public string MSBuildSdksPath { get; private set; }
 
 		/// <summary>
-		/// Array of search paths for MSBuildExtensionsPath
+		/// Our default $(MSBuildExtensionPath) which should be the "xbuild" directory in the Xamarin.Android build output
 		/// </summary>
-		public string [] ProjectImportSearchPaths { get; private set; }
+		public string MSBuildExtensionsPath { get; private set; }
 
 		/// <summary>
 		/// The xbuild-frameworks directory inside the Xamarin.Android build output
@@ -130,8 +130,8 @@ namespace Xamarin.Android.Build
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
-				ProjectImportSearchPaths = new [] { MSBuildPath, "$(MSBuildProgramFiles32)\\MSBuild" };
-				SystemProfiles           = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
+				SystemFrameworks         = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
+				SystemTargetsDirectories = new [] { Path.Combine (MSBuildPath, vsVersion), Path.Combine (MSBuildPath, "Microsoft") };
 				SearchPathsOS            = "windows";
 				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", vsVersion);
 				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
@@ -145,8 +145,8 @@ namespace Xamarin.Android.Build
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
 				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
-				ProjectImportSearchPaths = new [] { MSBuildPath, Path.Combine (mono, "xbuild"), Path.Combine (monoExternal, "xbuild") };
-				SystemProfiles           = Path.Combine (mono, "xbuild-frameworks");
+				SystemFrameworks         = Path.Combine (mono, "xbuild-frameworks");
+				SystemTargetsDirectories = new [] { Path.Combine (mono, "xbuild", vsVersion), Path.Combine (mono, "xbuild", "Microsoft") };
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
 
 				string nuget = Path.Combine (mono, "xbuild", "Microsoft", "NuGet");
@@ -156,7 +156,7 @@ namespace Xamarin.Android.Build
 				}
 				NuGetRestoreTargets = Path.Combine (MSBuildBin, "NuGet.targets");
 				if (!File.Exists (NuGetRestoreTargets) && !string.IsNullOrEmpty (DotNetSdkPath)) {
-					NuGetRestoreTargets  = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
+					NuGetRestoreTargets = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
 				}
 			}
 

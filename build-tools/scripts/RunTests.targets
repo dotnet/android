@@ -5,6 +5,7 @@
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime)</_Runtime>
@@ -154,38 +155,13 @@
     <_RunTestTarget Include="RunPerformanceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">
-    <MSBuild
-        Condition=" '$(HostOS)' == 'Windows' "
+    <RunParallelTargets
         ContinueOnError="ErrorAndContinue"
-        Projects="$(MSBuildThisFileDirectory)RunTests.targets"
-        RunEachTargetSeparately="True"
+        Configuration="$(Configuration)"
+        MSBuildBinaryLogParameterPrefix="$(_XABinLogPrefix)"
+        MSBuildBinPath="$(MSBuildBinPath)"
+        ProjectFile="$(MSBuildThisFileDirectory)RunTests.targets"
         Targets="@(_RunParallelTestTarget)"
-    />
-    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
-      <_RunParallelTestTarget>
-        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-Target-%(Identity).binlog"</_BinLog>
-      </_RunParallelTestTarget>
-    </ItemGroup>
-    <ItemGroup>
-      <_Commands Include="@(_RunParallelTestTarget->'echo Executing in background: msbuild $(MSBuildThisFileDirectory)RunTests.targets %(_BinLog) /t:%(Identity)')" />
-      <_Commands Include="@(_RunParallelTestTarget->'msbuild $(MSBuildThisFileDirectory)RunTests.targets %(_BinLog) /t:%(Identity) &amp;')" />
-      <_Commands Include="wait" />
-      <_Commands Include="exit 0" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_ParallelTargets>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\parallel-targets.sh</_ParallelTargets>
-    </PropertyGroup>
-    <WriteLinesToFile
-        File="$(_ParallelTargets)"
-        Lines="@(_Commands)"
-        Overwrite="True"
-    />
-    <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
-        ContinueOnError="ErrorAndContinue"
-        IgnoreStandardErrorWarningFormat="true"
-        WorkingDirectory="$(_TopDir)"
-        Command="bash &quot;$(_ParallelTargets)&quot;"
     />
     <MSBuild
          ContinueOnError="ErrorAndContinue"

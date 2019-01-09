@@ -1,5 +1,6 @@
 ﻿using Microsoft.Build.CommandLine;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,20 +23,22 @@ namespace Xamarin.Android.Build
 				//Create a custom xabuild.exe.config
 				var xml = CreateConfig (paths);
 
-				//Symbolic links to .NETFramework and .NETPortable directory
-				var systemDirectories = Directory.EnumerateDirectories (paths.SystemProfiles)
-					.Where (d => Path.GetFileName (d) != "MonoAndroid") //NOTE: this happened on one of our VSTS build agents
-					.ToArray ();
-				var symbolicLinks = systemDirectories
-					.Select (d => Path.Combine (paths.FrameworksDirectory, Path.GetFileName (d)))
-					.ToArray ();
-
-				if (symbolicLinks.Any (d => !Directory.Exists (d))) {
+				//Symbolic links to be created: key=system, value=in-tree
+				var symbolicLinks = new Dictionary<string, string> ();
+				foreach (var dir in Directory.EnumerateDirectories (paths.SystemFrameworks)) {
+					if (Path.GetFileName (dir) != "MonoAndroid") {
+						symbolicLinks [dir] = Path.Combine (paths.FrameworksDirectory, Path.GetFileName (dir));
+					}
+				}
+				foreach (var dir in paths.SystemTargetsDirectories) {
+					symbolicLinks [dir] = Path.Combine (paths.MSBuildExtensionsPath, Path.GetFileName (dir));
+				}
+				if (symbolicLinks.Values.Any (d => !Directory.Exists (d))) {
 					//Hold open the file while creating the symbolic links
 					using (var writer = OpenSysLinksFile (paths)) {
-						for (int i = 0; i < systemDirectories.Length; i++) {
-							var symbolicLink = symbolicLinks [i];
-							var systemDirectory = systemDirectories [i];
+						foreach (var pair in symbolicLinks) {
+							var systemDirectory = pair.Key;
+							var symbolicLink = pair.Value;
 							Console.WriteLine ($"[xabuild] creating symbolic link '{symbolicLink}' -> '{systemDirectory}'");
 							if (!SymbolicLink.Create (symbolicLink, systemDirectory)) {
 								return 1;
@@ -97,32 +100,10 @@ namespace Xamarin.Android.Build
 
 			var projectImportSearchPaths = toolsets.SelectSingleNode ("projectImportSearchPaths");
 			var searchPaths = projectImportSearchPaths.SelectSingleNode ($"searchPaths[@os='{paths.SearchPathsOS}']") as XmlElement;
-
-			//NOTE: on Linux, the searchPaths XML element does not exist, so we have to create it
-			if (searchPaths == null) {
-				searchPaths = xml.CreateElement ("searchPaths");
-				searchPaths.SetAttribute ("os", paths.SearchPathsOS);
-
-				var property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
-
-				property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath32");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
-
-				property = xml.CreateElement ("property");
-				property.SetAttribute ("name", "MSBuildExtensionsPath64");
-				property.SetAttribute ("value", "");
-				searchPaths.AppendChild (property);
-
-				projectImportSearchPaths.AppendChild (searchPaths);
-			}
-
-			foreach (XmlNode property in searchPaths.SelectNodes ("property[starts-with(@name, 'MSBuildExtensionsPath')]/@value")) {
-				property.Value = string.Join (";", paths.ProjectImportSearchPaths);
+			if (searchPaths != null) {
+				foreach (XmlNode property in searchPaths.SelectNodes ("property[starts-with(@name, 'MSBuildExtensionsPath')]/@value")) {
+					property.Value = "";
+				}
 			}
 
 			xml.Save (paths.XABuildConfig);

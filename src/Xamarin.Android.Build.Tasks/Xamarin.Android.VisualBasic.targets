@@ -25,10 +25,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
             Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
   <PropertyGroup>
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.4</TargetFrameworkVersion>
     <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
     <UseHostCompilerIfAvailable>false</UseHostCompilerIfAvailable>
     <NoStdLib>true</NoStdLib>
+    <!-- Enable nuget package conflict resolution -->
+    <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <Import Project="Xamarin.Android.Common.targets" />

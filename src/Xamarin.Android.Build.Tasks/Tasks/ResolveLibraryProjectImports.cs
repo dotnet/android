@@ -266,9 +266,9 @@ namespace Xamarin.Android.Tasks
 							Directory.CreateDirectory (outDirForDll);
 						var finfo = new FileInfo (Path.Combine (outDirForDll, envtxt.Name));
 						if (!finfo.Exists || finfo.LastWriteTimeUtc > assemblyLastWrite) {
+							using (var stream = envtxt.GetResourceStream ())
 							using (var fs = finfo.Create ()) {
-								var data = envtxt.GetResourceData ();
-								fs.Write (data, 0, data.Length);
+								stream.CopyTo (fs);
 							}
 							updated = true;
 						}
@@ -283,24 +283,18 @@ namespace Xamarin.Android.Tasks
 						var outjarFile = Path.Combine (importsDir, resjar.Name);
 						var fi = new FileInfo (outjarFile);
 						if (!fi.Exists || fi.LastWriteTimeUtc > assemblyLastWrite) {
-							var data = resjar.GetResourceData ();
+							using (var stream = resjar.GetResourceStream ())
 							using (var outfs = File.Create (outjarFile))
-								outfs.Write (data, 0, data.Length);
+								stream.CopyTo (outfs);
 							updated = true;
 						}
 					}
 
 					var libzip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidNativeLibraries__.zip") as EmbeddedResource;
 					if (libzip != null) {
-						if (!Directory.Exists (outDirForDll))
-							Directory.CreateDirectory (outDirForDll);
-						var finfo = new FileInfo (Path.Combine (outDirForDll, libzip.Name));
-						using (var fs = finfo.Create ()) {
-							var data = libzip.GetResourceData ();
-							fs.Write (data, 0, data.Length);
-						}
 						List<string> files = new List<string> ();
-						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
+						using (var stream = libzip.GetResourceStream ())
+						using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
 							try {
 								updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
 									files.Add (Path.GetFullPath (Path.Combine (nativeimportsDir, entryFullName)));
@@ -318,24 +312,15 @@ namespace Xamarin.Android.Tasks
 								return;
 							}
 						}
-
-						finfo.Delete ();
 					}
 
 					// embedded AndroidResourceLibrary archive
 					var reszip = mod.Resources.FirstOrDefault (r => r.Name == "__AndroidLibraryProjects__.zip") as EmbeddedResource;
 					if (reszip != null) {
-						if (!Directory.Exists (outDirForDll))
-							Directory.CreateDirectory (outDirForDll);
-						var finfo = new FileInfo (Path.Combine (outDirForDll, reszip.Name));
-						using (var fs = finfo.Create ()) {
-							var data = reszip.GetResourceData ();
-							fs.Write (data, 0, data.Length);
-						}
-
 						// temporarily extracted directory will look like:
 						//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-						using (var zip = MonoAndroidHelper.ReadZipFile (finfo.FullName)) {
+						using (var stream = reszip.GetResourceStream ())
+						using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
 							try {
 								updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
 									return entryFullName
@@ -374,8 +359,6 @@ namespace Xamarin.Android.Tasks
 						}
 						if (Directory.Exists (assemblyDir))
 							resolvedAssetDirectories.Add (assemblyDir);
-
-						finfo.Delete ();
 					}
 				}
 

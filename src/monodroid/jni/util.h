@@ -41,21 +41,27 @@ typedef struct dirent monodroid_dirent_t;
 #include <sys/stat.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include <time.h>
+#include <sys/time.h>
+#include <jni.h>
 
 #include "monodroid.h"
 #include "dylib-mono.h"
+#include "jni-wrappers.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 #include "java-interop-util.h"
+#include "logger.h"
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
+#define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,12 +83,49 @@ extern "C" {
 
 namespace xamarin { namespace android
 {
+	struct timing_point
+	{
+		time_t sec;
+		uint64_t ns;
+
+		void mark ();
+	};
+
+	struct timing_period
+	{
+		timing_point start;
+		timing_point end;
+
+		void mark_start ()
+		{
+			start.mark ();
+		}
+
+		void mark_end ()
+		{
+			end.mark ();
+		}
+	};
+
+	struct timing_diff
+	{
+		static constexpr uint32_t ms_in_nsec = 1000000ULL;
+
+		time_t sec;
+		uint32_t ms;
+		uint32_t ns;
+
+		timing_diff (const timing_period &period);
+	};
+
 	class Util
 	{
-	public:
-		explicit Util ()
-			: package_property_suffix {0}
-		{}
+#if defined (ANDROID) || defined (LINUX)
+		using timestruct = timespec;
+#else
+		using timestruct = timeval;
+#endif
+		static constexpr uint32_t ms_in_nsec = 1000000ULL;
 
 	public:
 		FILE            *monodroid_fopen (const char* filename, const char* mode);
@@ -112,6 +155,8 @@ namespace xamarin { namespace android
 		bool             file_exists (const char *file);
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
+		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
+
 #ifdef WINDOWS
 		/* Those two conversion functions are only properly implemented on Windows
 		 * because that's the only place where they should be useful.
@@ -143,10 +188,25 @@ namespace xamarin { namespace android
 			return ::xcalloc (nmemb, size);
 		}
 
+		bool should_log (LogCategories category) const
+		{
+			return (log_categories & category) != 0;
+		}
+
 	private:
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
 		void  add_to_vector (char ***vector, int size, char *token);
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
+
+#if WINDOWS
+		void package_hash_to_hex (uint32_t hash);
+#else
+		template<typename IdxType>
+		void package_hash_to_hex (IdxType idx);
+
+		template<typename IdxType = size_t, typename ...Indices>
+		void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
+#endif
 
 		int make_directory (const char *path, int mode)
 		{

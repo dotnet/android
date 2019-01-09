@@ -45,8 +45,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] BundleNativeLibraries { get; set; }
 
-		public ITaskItem[] Environments { get; set; }
-
 		public ITaskItem[] TypeMappings { get; set; }
 
 		[Required]
@@ -74,27 +72,16 @@ namespace Xamarin.Android.Tasks
 
 		public bool PreferNativeLibrariesWithDebugSymbols { get; set; }
 
-		public string AndroidAotMode { get; set; }		
-
 		public string AndroidSequencePointsMode { get; set; }
 
-		public bool EnableLLVM { get; set; }
-
-		public bool EnableSGenConcurrent { get; set; }
-
 		public string AndroidEmbedProfilers { get; set; }
-		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
 		public string UncompressedFileExtensions { get; set; }
-
 
 		static  readonly    string          MSBuildXamarinAndroidDirectory      = Path.GetDirectoryName (typeof (BuildApk).Assembly.Location);
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
-
-		[Output]
-		public string BuildId { get; set; }
 
 		bool _Debug {
 			get {
@@ -103,8 +90,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 		SequencePointsMode sequencePointsMode = SequencePointsMode.None;
-
-		Guid buildId = Guid.NewGuid ();
 		
 		public ITaskItem[] LibraryProjectJars { get; set; }
 		string [] uncompressedFileExtensions;
@@ -115,6 +100,7 @@ namespace Xamarin.Android.Tasks
 			if (apkInputPath != null)
 				File.Copy (apkInputPath, apkOutputPath + "new", overwrite: true);
 			using (var apk = new ZipArchiveEx (apkOutputPath + "new", apkInputPath != null ? FileMode.Open : FileMode.Create )) {
+				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				apk.Archive.AddEntry ("NOTICE",
 						Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"));
 
@@ -124,7 +110,6 @@ namespace Xamarin.Android.Tasks
 				if (EmbedAssemblies && !BundleAssemblies)
 					AddAssemblies (apk);
 
-				AddEnvironment (apk);
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
@@ -205,11 +190,9 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  Debug: {0}", Debug ?? "no");
 			Log.LogDebugMessage ("  PreferNativeLibrariesWithDebugSymbols: {0}", PreferNativeLibrariesWithDebugSymbols);
 			Log.LogDebugMessage ("  EmbedAssemblies: {0}", EmbedAssemblies);
-			Log.LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
 			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
 			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
 			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
-			Log.LogDebugTaskItems ("  Environments:", Environments);
 			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
 			Log.LogDebugTaskItems ("  ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
 			Log.LogDebugTaskItems ("  NativeLibraries:", NativeLibraries);
@@ -219,8 +202,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
 			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
 			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
-			Log.LogDebugTaskItems ("  HttpClientHandlerType:", HttpClientHandlerType);
-			Log.LogDebugMessage ("  TlsProvider: {0}", TlsProvider);
 
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
@@ -244,10 +225,6 @@ namespace Xamarin.Android.Tasks
 						outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 					}
 			}
-
-			BuildId = buildId.ToString ();
-
-			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);
 
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
 
@@ -346,83 +323,6 @@ namespace Xamarin.Android.Tasks
 				return "assemblies/" + culture;
 			}
 			return "assemblies";
-		}
-
-		void AddEnvironment (ZipArchiveEx apk)
-		{
-			var environment = new StringWriter () {
-				NewLine = "\n",
-			};
-
-			if (EnableLLVM) {
-				environment.WriteLine ("mono.llvm=true");
-			}
-
-			AotMode aotMode;
-			if (AndroidAotMode != null && Aot.GetAndroidAotMode(AndroidAotMode, out aotMode)) {
-				environment.WriteLine ("mono.aot={0}", aotMode.ToString().ToLowerInvariant());
-			}
-
-			const string defaultLogLevel = "MONO_LOG_LEVEL=info";
-			const string defaultMonoDebug = "MONO_DEBUG=gen-compact-seq-points";
-			const string defaultHttpMessageHandler = "XA_HTTP_CLIENT_HANDLER_TYPE=System.Net.Http.HttpClientHandler, System.Net.Http";
-			const string defaultTlsProvider = "XA_TLS_PROVIDER=btls";
-			string xamarinBuildId = string.Format ("XAMARIN_BUILD_ID={0}", buildId);
-
-			bool haveLogLevel = false;
-			bool haveMonoDebug = false;
-			bool havebuildId = false;
-			bool haveHttpMessageHandler = false;
-			bool haveTlsProvider = false;
-			bool haveMonoGCParams = false;
-
-			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
-				environment.WriteLine ("## Source File: {0}", env.ItemSpec);
-				foreach (string line in File.ReadLines (env.ItemSpec)) {
-					var lineToWrite = line;
-					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
-						haveLogLevel = true;
-					if (lineToWrite.StartsWith ("MONO_GC_PARAMS=", StringComparison.Ordinal))
-						haveMonoGCParams = true;
-					if (lineToWrite.StartsWith ("XAMARIN_BUILD_ID=", StringComparison.Ordinal))
-						havebuildId = true;
-					if (lineToWrite.StartsWith ("MONO_DEBUG=", StringComparison.Ordinal)) {
-						haveMonoDebug = true;
-						if (sequencePointsMode != SequencePointsMode.None && !lineToWrite.Contains ("gen-compact-seq-points"))
-							lineToWrite = line  + ",gen-compact-seq-points";
-					}
-					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
-						haveHttpMessageHandler = true;
-					if (lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
-						haveTlsProvider = true;
-					environment.WriteLine (lineToWrite);
-				}
-			}
-
-			if (_Debug && !haveLogLevel) {
-				environment.WriteLine (defaultLogLevel);
-			}
-
-			if (sequencePointsMode != SequencePointsMode.None && !haveMonoDebug) {
-				environment.WriteLine (defaultMonoDebug);
-			}
-
-			if (!havebuildId)
-				environment.WriteLine (xamarinBuildId);
-
-			if (!haveHttpMessageHandler)
-				environment.WriteLine (HttpClientHandlerType == null ? defaultHttpMessageHandler : $"XA_HTTP_CLIENT_HANDLER_TYPE={HttpClientHandlerType.Trim ()}");
-			if (!haveTlsProvider)
-				environment.WriteLine (TlsProvider == null ? defaultTlsProvider : $"XA_TLS_PROVIDER={TlsProvider.Trim ()}");
-			if (!haveMonoGCParams) {
-				if (EnableSGenConcurrent)
-					environment.WriteLine ("MONO_GC_PARAMS=major=marksweep-conc");
-				else
-					environment.WriteLine ("MONO_GC_PARAMS=major=marksweep");
-			}
-
-			apk.Archive.AddEntry ("environment", environment.ToString (),
-					new UTF8Encoding (encoderShouldEmitUTF8Identifier:false));
 		}
 
 		class LibInfo

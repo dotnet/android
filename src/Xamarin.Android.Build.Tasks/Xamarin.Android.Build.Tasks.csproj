@@ -118,11 +118,11 @@
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
     <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
-    <Compile Include="Tasks\CopyMdbFiles.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
     <Compile Include="Tasks\GetFilesThatExist.cs" />
+    <Compile Include="Tasks\ReadJavaStubsCache.cs" />
     <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
     <Compile Include="Tasks\GetMonoPlatformJar.cs" />
     <Compile Include="Tasks\GeneratePackageManagerJava.cs" />
@@ -603,6 +603,9 @@
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.LayoutDirection.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ActivityPersistableMode.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.DocumentLaunchMode.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.WindowRotationAnimation.cs" />
     <Compile Include="@(_MonoAndroidEnum)">
       <Link>Mono.Android\%(Filename)%(Extension)</Link>
     </Compile>
@@ -686,6 +689,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\ResourcePatcher.java">
       <LogicalName>ResourcePatcher.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\XamarinAndroidEnvironmentVariables.java">
+      <LogicalName>XamarinAndroidEnvironmentVariables.java</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

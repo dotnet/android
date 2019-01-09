@@ -25,13 +25,15 @@ Copyright (C) 2012 Xamarin. All rights reserved.
             Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
     <PropertyGroup>
         <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-        <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
+        <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.4</TargetFrameworkVersion>
         <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
         <!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
              our mscorlib.dll isn't properly signed, as far as its concerned.
              Disable generation to avoid "bizarre" build errors. -->
         <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
         <_AndroidResourceDesigner>Resource.designer.fs</_AndroidResourceDesigner>
+        <!-- Enable nuget package conflict resolution -->
+        <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     </PropertyGroup>
     <!-- Force Xbuild to behave like msbuild -->
     <PropertyGroup>

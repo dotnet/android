@@ -18,11 +18,11 @@ using namespace xamarin::android;
   this function is used from JavaInterop and should be treated as public API
   https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
 
-  it should also accept libmono_path = NULL parameter
+  it should also accept libmono_path = nullptr parameter
 */
 int monodroid_dylib_mono_init (DylibMono *mono_imports, const char *libmono_path)
 {
-	if (mono_imports == NULL)
+	if (mono_imports == nullptr)
 		return FALSE;
 
 	/*
@@ -59,6 +59,11 @@ bool DylibMono::init (void *libmono_handle)
 
 #define LOAD_SYMBOL(symbol) LOAD_SYMBOL_CAST(symbol, monodroid_ ##symbol ##_fptr)
 #define LOAD_SYMBOL_NO_PREFIX(symbol) LOAD_SYMBOL_CAST(symbol, symbol ##_fptr)
+
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_start ();
+	}
 
 	LOAD_SYMBOL(mono_add_internal_call)
 	LOAD_SYMBOL(mono_assembly_get_image)
@@ -137,6 +142,13 @@ bool DylibMono::init (void *libmono_handle)
 	LOAD_SYMBOL(mono_thread_current)
 	LOAD_SYMBOL_CAST(mono_use_llvm, int*)
 	LOAD_SYMBOL_NO_PREFIX(mono_aot_register_module)
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info_nocheck (LOG_TIMING, "DylibMono.init: end, total time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+	}
 
 	if (symbols_missing) {
 		log_fatal (LOG_DEFAULT, "Failed to load some Mono symbols, aborting...");

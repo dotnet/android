@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Build.Framework;
 using NUnit.Framework;
-using Xamarin.ProjectTools;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Framework;
 using System.Text;
-using System.Xml.Linq;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -16,9 +15,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
-			// do a release build
-			// change one of the properties (say AotAssemblies) 
-			// do another build. it should NOT hose the resource directory.
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -29,12 +25,41 @@ namespace Xamarin.Android.Build.Tests
 			if (useAapt2)
 				proj.SetProperty ("AndroidUseAapt2", "True");
 			using (var b = CreateApkBuilder (path)) {
+				//To be sure we are at a clean state
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+
 				Assert.IsTrue (b.Build (proj), "First should have succeeded" );
-				IEnumerable<string> files = Directory.EnumerateFiles (Path.Combine (Root, path, proj.IntermediateOutputPath), "*.*", SearchOption.AllDirectories);
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: null, saveProject: false), "Second should have succeeded");
+				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
+				var output = Path.Combine (projectDir, proj.OutputPath);
+				var fileWrites = Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt");
+				FileAssert.Exists (fileWrites);
+				var expected = File.ReadAllText (fileWrites);
+				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
+				files.AddRange (Directory.EnumerateFiles (output, "*", SearchOption.AllDirectories));
+
+				//Touch a few files, do an incremental build
+				var filesToTouch = new [] {
+ 					Path.Combine (intermediate, "build.props"),
+ 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
+ 				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
+				}
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
+
+				//No changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("IncrementalClean"), "`IncrementalClean` should have run!");
 				foreach (var file in files) {
 					FileAssert.Exists (file, $"{file} should not have been deleted!" );
 				}
+				FileAssert.Exists (fileWrites);
+				var actual = File.ReadAllText (fileWrites);
+				Assert.AreEqual (expected, actual, $"`{fileWrites}` has changes!");
 			}
 		}
 
@@ -320,13 +345,15 @@ namespace Lib2
 		[Test]
 		public void AppProjectTargetsDoNotBreak ()
 		{
-			var targets = new [] {
+			var targets = new List<string> {
 				"_CopyIntermediateAssemblies",
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
 				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
+				"_CopyPdbFiles",
+				"_CopyMdbFiles",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
@@ -338,6 +365,11 @@ namespace Lib2
 					}
 				}
 			};
+			if (IsWindows) {
+				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
+				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
+				targets.Add ("_ConvertPdbFiles");
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
@@ -350,6 +382,7 @@ namespace Lib2
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
+					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
 					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
@@ -427,6 +460,63 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+				}
+			}
+		}
+
+		[Test]
+		public void ProduceReferenceAssembly ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			//NOTE: so _BuildApkEmbed runs in commercial tests
+			app.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
+			app.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
+
+			int count = 0;
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"
+					},
+				}
+			};
+			lib.SetProperty ("ProduceReferenceAssembly", "True");
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				lib.Touch ("Bar.cs");
+
+				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
+
+				var targetsShouldSkip = new [] {
+					//TODO: perhaps more targets will skip here eventually?
+					"CoreCompile",
+				};
+				foreach (var target in targetsShouldSkip) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+
+				var targetsShouldRun = new [] {
+					"_BuildApkEmbed",
+					"_CopyPackage",
+					"_Sign",
+				};
+				foreach (var target in targetsShouldRun) {
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 			}
 		}

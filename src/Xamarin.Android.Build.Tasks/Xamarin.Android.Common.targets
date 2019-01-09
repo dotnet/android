@@ -91,11 +91,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CopyMdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAndroidResourceStamp" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ParseAndroidWearProjectAndManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -249,11 +249,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	     our mscorlib.dll isn't properly signed, as far as its concerned.
 	     Disable generation to avoid "bizarre" build errors. -->
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-
-	<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">27.0.3</AndroidSdkBuildToolsVersion>
-	<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">27.0.1</AndroidSdkPlatformToolsVersion>
-	<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
-	<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
@@ -498,7 +493,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>
 		<Output TaskParameter="IsResourceCacheValid" PropertyName="_IsResourceCacheValid" />
 	</ReadAdditionalResourcesFromAssemblyCache>
-	<Delete Files="$(_AndroidResourcePathsCache)" Condition=" '$(_IsResourceCacheValid)' == 'False' " />
+	<Delete Files="$(_AndroidResourcePathsCache);$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp" Condition=" '$(_IsResourceCacheValid)' == 'False' " />
 	<PropertyGroup>
 		<NugetPackagesConfig Condition="Exists('$(MSBuildProjectDirectory)\packages.config')">$(MSBuildProjectDirectory)\packages.config</NugetPackagesConfig>
 	</PropertyGroup>
@@ -697,7 +692,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
-<Target Name="_SetLatestTargetFrameworkVersionForPackageReference" BeforeTargets="_GetRestoreTargetFrameworksOutput" DependsOnTargets="_SetLatestTargetFrameworkVersion">
+<Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
+    Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
+    BeforeTargets="_GetRestoreTargetFrameworksOutput"
+    DependsOnTargets="_SetLatestTargetFrameworkVersion">
 </Target>
 
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
@@ -978,12 +976,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\d8.jar">
-		<Output TaskParameter="Value" PropertyName="AndroidD8JarPath"
-				Condition="'$(AndroidD8JarPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="--dex --no-strict">
 		<Output TaskParameter="Value" PropertyName="DxExtraArguments"
 			Condition="'$(DxExtraArguments)' == ''"
@@ -1067,7 +1059,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CheckSupportedAbis">
 	<PropertyGroup>
-		<_RequestedAbis>;$(AndroidSupportedAbis);</_RequestedAbis>
+		<_RequestedAbis>;$(AndroidSupportedAbis.Replace(',', ';'));</_RequestedAbis>
 	</PropertyGroup>
 	<Error Code="XA0115"
 			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
@@ -1384,7 +1376,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ConvertLibraryResourcesCases" DependsOnTargets="_CollectLibraryResourceDirectories"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="@(_LibraryResourceHashDirectories->'%(FileFound)')"
+		Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
 		Outputs="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp">
 	<ConvertResourcesCases
 		Condition=" '@(_LibraryResourceDirectories)' != '' "
@@ -1400,7 +1392,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="%(_LibraryResourceHashDirectories.FileFound)"
+		Inputs="%(_LibraryResourceHashDirectories.StampFile)"
 		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
 	>
 	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
@@ -1434,6 +1426,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ConvertResourcesCases
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+		AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AcwMapFile="$(_AcwMapFile)"
 		CustomViewMapFile="$(_CustomViewMapFile)"
@@ -1802,7 +1795,6 @@ because xbuild doesn't support framework reference assemblies.
 	
 	<CopyGeneratedJavaResourceClasses
 		SourceTopDirectory="$(ResgenTemporaryDirectory)"
-		DestinationTopDirectory="$(IntermediateOutputPath)android"
 		PrimaryPackageName="$(_AndroidPackage)"
 		ExtraPackages="$(AaptExtraPackages)">
 		<Output TaskParameter="PrimaryJavaResgenFile" PropertyName="_GeneratedPrimaryJavaResgenFile" />
@@ -1872,6 +1864,7 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidJavaSources="@(AndroidJavaSource)"
 		AndroidJavaLibraries="@(AndroidJavaLibrary)"
 		AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
+		FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
 		RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
 	/>
 	<Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
@@ -1926,9 +1919,9 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
-		<FilteredAssemblies Include="%(ReferenceCopyLocalPaths.Identity)"
+		<FilteredAssemblies Include="@(ReferenceCopyLocalPaths)"
 				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' "/>
-		<FilteredAssemblies Include="%(ReferencePath.Identity)"
+		<FilteredAssemblies Include="@(ReferencePath)"
 				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
@@ -2021,20 +2014,22 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyIntermediateAssemblies"
-	Inputs="@(ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+	Inputs="@(ResolvedAssemblies);@(_AndroidResolvedSatellitePaths)"
 	Outputs="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CopyConfigFiles">
+	<ItemGroup>
+		<_CIAResolvedAssembliesDestinationFiles     Include="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+		<_CIAResolvedSatellitePathsDestinationFiles Include="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')" />
+	</ItemGroup>
 	<!-- Make a copy of every assembly we need in assemblies -->
-	<CopyIfChanged
-		SourceFiles="@(ResolvedAssemblies)"
-		DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-	/>
-	<CopyIfChanged
-		SourceFiles="@(_AndroidResolvedSatellitePaths)"
-		DestinationFiles="@(_AndroidResolvedSatellitePaths->'$(MonoAndroidLinkerInputDir)%(DestinationSubDirectory)%(Filename)%(Extension)')"
-	/>
+	<CopyIfChanged SourceFiles="@(ResolvedAssemblies)"             DestinationFiles="@(_CIAResolvedAssembliesDestinationFiles)" />
+	<CopyIfChanged SourceFiles="@(_AndroidResolvedSatellitePaths)" DestinationFiles="@(_CIAResolvedSatellitePathsDestinationFiles)" />
+	<!-- Delete mdb files leftover from a previous build -->
 	<Delete Files="@(ResolvedAssemblies->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension).mdb')" />
 	<Touch Files="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CIAResolvedAssembliesDestinationFiles);@(_CIAResolvedSatellitePathsDestinationFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CollectConfigFiles">
@@ -2071,65 +2066,52 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
 		<Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
 	</CollectPdbFiles>
+	<ItemGroup>
+		<_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_ConvertPdbFiles"
 		Inputs="@(_ResolvedPdbFiles)"
-		Outputs="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
+		Outputs="@(_ConvertedMdbFiles)"
 		DependsOnTargets="_CollectPdbFiles">
-	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)">
-		<Output TaskParameter="ConvertedFiles" ItemName="_ConvertedDebuggingFiles" />
-	</ConvertDebuggingFiles>
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_ConvertedDebuggingFiles)"
-		Overwrite="false" />
+	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+	<Touch Files="@(_ConvertedMdbFiles)" />
+	<ItemGroup>
+		<FileWrites Include="@(_ConvertedMdbFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CopyPdbFiles"
 		Inputs="@(_ResolvedPortablePdbFiles)"
-		Outputs="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
+		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
 		DependsOnTargets="_ConvertPdbFiles">
-	<CopyMdbFiles
-			SourceFiles="@(_ResolvedPortablePdbFiles)"
-			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
-		<Output TaskParameter="CopiedFiles" ItemName="_PdbFilesCopied" />
-		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-	</CopyMdbFiles>
-	<Copy
-			SourceFiles="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-			DestinationFiles="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-			SkipUnchangedFiles="true">
-		<Output TaskParameter="CopiedFiles" ItemName="_PdbDebugFilesCopiedToLinkerSrc" />
-		<Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-	</Copy>
-	<Touch Files="@(_PdbFilesCopied);@(_PdbDebugFilesCopiedToLinkerSrc)" />
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_PdbFilesCopied->'%(FullPath)');@(_PdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
-		Overwrite="false" />
+	<ItemGroup>
+		<_CopyPdbFilesOutputFiles Include="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
+		<_CopyPdbFilesLinkerFiles Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+	</ItemGroup>
+	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesOutputFiles)" />
+	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesLinkerFiles)" />
+	<Touch Files="$(_AndroidStampDirectory)_CopyPdbFiles.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CopyPdbFilesOutputFiles);@(_CopyPdbFilesLinkerFiles)" />
+	</ItemGroup>
 </Target>
 
 <Target Name="_CopyMdbFiles"
 		Inputs="@(_ResolvedMdbFiles)"
-		Outputs="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-		DependsOnTargets="_CollectMdbFiles" >
-	<CopyMdbFiles
-			SourceFiles="@(_ResolvedMdbFiles)"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')">
-		<Output TaskParameter="CopiedFiles" ItemName="_MdbFilesCopied" />
-	</CopyMdbFiles>
-	<Copy
-			SourceFiles="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')"
-			DestinationFiles="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')"
-			SkipUnchangedFiles="true">
-		<Output TaskParameter="CopiedFiles" ItemName="_MdbDebugFilesCopiedToLinkerSrc" />
-	</Copy>
-	<Touch Files="@(_MdbFilesCopied);@(_MdbDebugFilesCopiedToLinkerSrc)" />
-	<WriteLinesToFile
-		File="$(IntermediateOutputPath)$(CleanFile)"
-		Lines="@(_MdbFilesCopied->'%(FullPath)');@(_MdbDebugFilesCopiedToLinkerSrc->'%(FullPath)')"
-		Overwrite="false" />
+		Outputs="$(_AndroidStampDirectory)_CopyMdbFiles.stamp"
+		DependsOnTargets="_CollectMdbFiles">
+	<ItemGroup>
+		<_CopyMdbFilesOutputFiles Include="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
+		<_CopyMdbFilesLinkerFiles Include="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
+	</ItemGroup>
+	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesOutputFiles)" />
+	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesLinkerFiles)" />
+	<Touch Files="$(_AndroidStampDirectory)_CopyMdbFiles.stamp" AlwaysCreate="True" />
+	<ItemGroup>
+		<FileWrites Include="@(_CopyMdbFilesOutputFiles);@(_CopyMdbFilesLinkerFiles)" />
+	</ItemGroup>
 </Target>
 	
 <Target Name="_LinkAssemblies"
@@ -2158,8 +2140,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
-  Inputs="@(ResolvedUserAssemblies)"
-  Outputs="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
+  Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
+  Outputs="$(_AndroidLinkFlag)">
 
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
@@ -2173,14 +2155,12 @@ because xbuild doesn't support framework reference assemblies.
       LinkOnlyNewerThan="$(_AndroidLinkFlag)"
       ResolvedAssemblies="@(ResolvedAssemblies)" />
 
-    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
-    <ItemGroup>
-      <_LinkAssembliesNoShrinkFiles Include="$(MonoAndroidIntermediateAssemblyTempDir)*" />
-    </ItemGroup>
-    <Touch Files="@(_LinkAssembliesNoShrinkFiles)" />
-
-    <!-- We don't have to depend on flag file for NoShrink, but it is used to check timestamp -->
+    <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidLinkFlag)" />
+      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
+    </ItemGroup>
 </Target>
 	
 <Target Name="_LinkAssembliesShrink"
@@ -2212,14 +2192,12 @@ because xbuild doesn't support framework reference assemblies.
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)" />
 
-    <!--NOTE: the linker's use of File.Copy requires us to update the timestamps of output files -->
-    <ItemGroup>
-      <_LinkAssembliesShrinkFiles Include="$(MonoAndroidIntermediateAssetsDir)*" />
-    </ItemGroup>
-    <Touch Files="@(_LinkAssembliesShrinkFiles)" />
-
     <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidLinkFlag)" />
+      <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)*" />
+    </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2232,9 +2210,15 @@ because xbuild doesn't support framework reference assemblies.
 		;_CopyMdbFiles
 		;_LinkAssemblies
 	</_PrepareAssembliesDependsOnTargets>
+	<_PrepareAssembliesBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
+		IncrementalClean;
+		_CleanGetCurrentAndPriorFileWrites;
+	</_PrepareAssembliesBeforeTargets>
 </PropertyGroup>
   
-<Target Name="_PrepareAssemblies" DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
+<Target Name="_PrepareAssemblies"
+    DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)"
+    BeforeTargets="$(_PrepareAssembliesBeforeTargets)">
   <!-- Update our assembly lists to the copies for linking.  We also need to verify
        they still exist cause linking will delete them if they aren't used -->
   <GetFilesThatExist
@@ -2301,7 +2285,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
-  Outputs="$(IntermediateOutputPath)_javastubs.stamp">
+  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
@@ -2325,7 +2309,8 @@ because xbuild doesn't support framework reference assemblies.
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-	AcwMapFile="$(_AcwMapFile)">
+	AcwMapFile="$(_AcwMapFile)"
+	CacheFile="$(IntermediateOutputPath)javastubs.cache">
   </GenerateJavaStubs>
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"
@@ -2334,13 +2319,45 @@ because xbuild doesn't support framework reference assemblies.
 	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
-  <Touch Files="$(IntermediateOutputPath)_javastubs.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   <ItemGroup>
-	<FileWrites Include="$(IntermediateOutputPath)_javastubs.stamp" />
+    <FileWrites Include="$(IntermediateOutputPath)javastubs.cache" Condition="Exists('$(IntermediateOutputPath)javastubs.cache')" />
   </ItemGroup>
 </Target>
 
-<Target Name="_GetAddOnPlatformLibraries" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_ReadJavaStubsCache">
+  <ReadJavaStubsCache CacheFile="$(IntermediateOutputPath)javastubs.cache">
+    <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
+  </ReadJavaStubsCache>
+</Target>
+
+<Target Name="_SetupEmbeddedDSOs"
+    Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' "
+    Inputs="$(IntermediateOutputPath)javastubs.cache"
+    Outputs="$(IntermediateOutputPath)dsoenvironment.txt">
+  <WriteLinesToFile
+      File="$(IntermediateOutputPath)dsoenvironment.txt"
+      Lines="__XA_DSO_IN_APK=1"
+      Overwrite="True"
+  />
+  <PropertyGroup>
+    <AndroidStoreUncompressedFileExtensions>.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidEnvironment Include="$(IntermediateOutputPath)dsoenvironment.txt" />
+    <FileWrites         Include="$(IntermediateOutputPath)dsoenvironment.txt" />
+  </ItemGroup>
+</Target>
+
+<PropertyGroup>
+  <_GetAddOnPlatformLibrariesDependsOn>
+    _GenerateJavaStubs;
+    _ReadJavaStubsCache;
+    _SetupEmbeddedDSOs;
+  </_GetAddOnPlatformLibrariesDependsOn>
+</PropertyGroup>
+
+<Target Name="_GetAddOnPlatformLibraries" DependsOnTargets="$(_GetAddOnPlatformLibrariesDependsOn)">
   <GetAddOnPlatformLibraries
 	AndroidSdkPlatform="$(_AndroidApiLevel)"
 	AndroidSdkDir="$(_AndroidSdkDirectory)"
@@ -2358,10 +2375,21 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
-    OutputDirectory="$(IntermediateOutputPath)android\src\mono" 
+    OutputDirectory="$(IntermediateOutputPath)android\src\mono"
+    EnvironmentOutputDirectory="$(IntermediateOutputPath)android\src\mono\android\app"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
-    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml" />
+    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+    AndroidAotMode="$(AndroidAotMode)"
+    EnableLLVM="$(EnableLLVM)"
+    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+    TlsProvider="$(AndroidTlsProvider)"
+    Debug="$(AndroidIncludeDebugSymbols)"
+    AndroidSequencePointsMode="$(_SequencePointsMode)"
+    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
+    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+  </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
 </Target>
 
@@ -2480,6 +2508,11 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Delete our temporary directory -->
   <RemoveDirFixed Directories="$(AaptTemporaryDirectory)" />
+
+  <ItemGroup>
+    <FileWrites Include="$(_PackagedResources)" />
+    <FileWrites Include="$(_GeneratedPrimaryJavaResgenFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GetAddOnPlatformLibraries">
@@ -2706,9 +2739,20 @@ because xbuild doesn't support framework reference assemblies.
 
 </Target>
 
-<Target Name="_CompileDex"
-		DependsOnTargets="_CompileToDalvikWithDx;_CompileToDalvikWithD8">
+<PropertyGroup>
+	<_CompileDexDependsOn>
+		_CompileToDalvikWithDx;
+		_CompileToDalvikWithD8;
+	</_CompileDexDependsOn>
+	<_CompileDexBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
+		IncrementalClean;
+		_CleanGetCurrentAndPriorFileWrites;
+	</_CompileDexBeforeTargets>
+</PropertyGroup>
 
+<Target Name="_CompileDex"
+		DependsOnTargets="$(_CompileDexDependsOn)"
+		BeforeTargets="$(_CompileDexBeforeTargets)">
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />
@@ -2763,6 +2807,16 @@ because xbuild doesn't support framework reference assemblies.
    <Delete Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' != 'true'" />
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
+	
+<Target Name="_IncludeNativeSystemLibraries">
+	<PropertyGroup>
+		<_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
+	</PropertyGroup>
+	<ItemGroup>
+		<AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)\lib\*\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
+		<AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)\lib\*\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
+	</ItemGroup>
+</Target>
 
 <PropertyGroup>
 	<_PrepareBuildApkDependsOnTargets>
@@ -2782,6 +2836,7 @@ because xbuild doesn't support framework reference assemblies.
 		_ResolveSatellitePaths;
 		_CheckApkPerAbiFlag
 		;_LintChecks
+		;_IncludeNativeSystemLibraries
 	</_PrepareBuildApkDependsOnTargets>
 </PropertyGroup>
 
@@ -2856,7 +2911,6 @@ because xbuild doesn't support framework reference assemblies.
     BundleAssemblies="$(BundleAssemblies)"
     BundleNativeLibraries="$(_BundleResultNativeLibraries)"
     EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
     ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
     NativeLibraries="@(AndroidNativeLibrary)"
@@ -2869,32 +2923,28 @@ because xbuild doesn't support framework reference assemblies.
     Debug="$(AndroidIncludeDebugSymbols)"
     PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
     TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
-    AndroidAotMode="$(AndroidAotMode)"
-    EnableLLVM="$(EnableLLVM)"
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     LibraryProjectJars="@(ExtractedJarImports)"
     AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
-    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
     TlsProvider="$(AndroidTlsProvider)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
-    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
 </Target>
 
-<PropertyGroup>
-	<_CopyPackageInputs>
-		$(MSBuildAllProjects)
-		;@(ReferencePath)
-		;@(ReferenceDependencyPaths)
-		;$(ApkFileIntermediate)
-		;$(_AndroidBuildPropertiesCache)
-		;@(ApkFiles)
-	</_CopyPackageInputs>
-</PropertyGroup>
+<Target Name="_ResolveCopyPackageInputs">
+	<PropertyGroup>
+		<_CopyPackageInputs>
+			;@(ReferencePath)
+			;@(ReferenceDependencyPaths)
+			;$(ApkFileIntermediate)
+			;$(_AndroidBuildPropertiesCache)
+			;@(ApkFiles)
+		</_CopyPackageInputs>
+	</PropertyGroup>
+</Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
 	<CreateProperty Value="$(AndroidSupportedAbis)" Condition="'$(_BuildTargetAbis)' == ''">
@@ -2907,6 +2957,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_CopyPackageDependsOn>
 		_DefineBuildTargetAbis
 		;_BuildApkEmbed
+		;_ResolveCopyPackageInputs
 	</_CopyPackageDependsOn>
 </PropertyGroup>
 
@@ -3123,7 +3174,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Cleaning -->
 
-<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
+<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean;_CleanGetCurrentAndPriorFileWrites">
   <ItemGroup>
     <!-- When following the naming convention for stamp files, this target handles FileWrites -->
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
@@ -3178,7 +3229,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(MonoAndroidIntermediate)__AndroidNativeLibraries__.zip" />
 	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
-	<Delete Files="$(IntermediateOutputPath)_javastubs.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidComponentResgenFlagFile)" />

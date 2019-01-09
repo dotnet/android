@@ -56,6 +56,19 @@ namespace Foo.Foo
 			}
 		}
 		
+		public partial class Attribute
+		{
+			
+			static Attribute()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Attribute()
+			{
+			}
+		}
+		
 		public partial class Dimension
 		{
 			

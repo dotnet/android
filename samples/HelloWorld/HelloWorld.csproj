@@ -17,6 +17,7 @@
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v7.1</TargetFrameworkVersion>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <Import
       Condition="Exists('..\..\Configuration.props')"
@@ -48,6 +49,12 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="HelloLibrary\HelloLibrary.csproj">
+      <Project>{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2}</Project>
+      <Name>HelloLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />

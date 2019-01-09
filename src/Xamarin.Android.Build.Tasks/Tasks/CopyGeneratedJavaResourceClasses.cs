@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -12,7 +11,6 @@ namespace Xamarin.Android.Tasks
 	{
 		[Required]
 		public string SourceTopDirectory { get; set; }
-		[Required]
 		public string DestinationTopDirectory { get; set; }
 		[Required]
 		public string PrimaryPackageName { get; set; }
@@ -23,23 +21,22 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("SourceTopDirectory: {0}", SourceTopDirectory);
-			Log.LogDebugMessage ("DestinationTopDirectory: {0}", DestinationTopDirectory);
-			Log.LogDebugMessage ("PrimaryPackageName: {0}", PrimaryPackageName);
-			Log.LogDebugMessage ("ExtraPackages: {0}", ExtraPackages);
-
 			var list = new List<string> ();
 			foreach (var pkg in GetPackages ()) {
 				string subpath = Path.Combine (pkg.Split ('.'));
 				string src = Path.Combine (SourceTopDirectory, subpath, "R.java");
-				string dst = Path.Combine (DestinationTopDirectory, subpath, "R.java");
 
 				if (!File.Exists (src))
 					continue;
 
-				var date = File.GetLastWriteTimeUtc (src);
-				MonoAndroidHelper.CopyIfChanged (src, dst);
-				list.Add (dst);
+				//NOTE: DestinationTopDirectory is optional, and we can just use the file in SourceTopDirectory
+				if (!string.IsNullOrEmpty (DestinationTopDirectory)) {
+					string dst = Path.Combine (DestinationTopDirectory, subpath, "R.java");
+					MonoAndroidHelper.CopyIfChanged (src, dst);
+					list.Add (dst);
+				} else {
+					list.Add (src);
+				}
 			}
 			// so far we only need the package's R.java for GenerateResourceDesigner input.
 			PrimaryJavaResgenFile = list.FirstOrDefault ();

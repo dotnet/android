@@ -28,13 +28,8 @@
         Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
       <Output TaskParameter="Include" ItemName="_PlatformAntItem"/>
     </CreateItem>
-    <CreateItem
-        Include="@(ChromeItem)"
-        Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' ">
-      <Output TaskParameter="Include" ItemName="_PlatformChromeItem"/>
-    </CreateItem>
     <ItemGroup>
-        <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
+      <_SdkStampFiles Include="@(_PlatformAndroidSdkItem->'$(AndroidToolchainDirectory)\sdk\.stamp-%(Identity)')" />
     </ItemGroup>
     <ItemGroup>
       <_SdkStampFiles Include="@(_PlatformAntItem->'$(AntDirectory)\.stamp-%(Identity)')" />
@@ -45,8 +40,13 @@
       Outputs="@(_DownloadedItem)">
     <MakeDir Directories="$(AndroidToolchainCacheDirectory)" />
     <DownloadUri
-        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip');@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
-        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip');@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
+        SourceUris="@(_PlatformAndroidSdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
+        DestinationFiles="@(_PlatformAndroidSdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
+      <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
+    </DownloadUri>
+    <DownloadUri
+        SourceUris="@(_PlatformAndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip')"
+        DestinationFiles="@(_PlatformAndroidNdkItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
       <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
     </DownloadUri>
     <DownloadUri
@@ -54,16 +54,6 @@
         DestinationFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')">
       <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
     </DownloadUri>
-    <DownloadUri
-        SourceUris="@(_PlatformChromeItem->'$(ChromeUri)/%(RelUrl)%(Identity).zip')"
-        DestinationFiles="@(_PlatformChromeItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')"
-        HashHeader="%(_PlatformChromeItem.HashHeader)">
-      <Output TaskParameter="DestinationFiles" ItemName="_DownloadedItem" />
-      <Output TaskParameter="DestinationFiles" ItemName="_DownloadedChromeItem" />
-    </DownloadUri>
-    <ItemGroup>
-      <_SdkStampFiles Include="@(_DownloadedChromeItem->'$(ChromeToolsDirectory)\.stamp-%(FileName)')" />
-    </ItemGroup>
   </Target>
   <Target Name="_UnzipFiles"
       DependsOnTargets="_DetermineItems"
@@ -82,8 +72,8 @@
       <Output TaskParameter="Include" ItemName="_AndroidNdkItems"/>
     </CreateItem>
 
-    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory);$(ChromeToolsDirectory)" />
-    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory);$(ChromeToolsDirectory)" />
+    <RemoveDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
+    <MakeDir Directories="$(AndroidSdkDirectory);$(AndroidNdkDirectory);$(AntDirectory)" />
 
     <UnzipDirectoryChildren
         HostOS="$(HostOS)"
@@ -103,22 +93,7 @@
         SourceFiles="@(_PlatformAntItem->'$(AndroidToolchainCacheDirectory)\%(Identity).zip')"
         DestinationFolder="$(AntDirectory)"
     />
-    <UnzipDirectoryChildren
-        HostOS="$(HostOS)"
-        NoSubdirectory="%(_DownloadedChromeItem.NoSubdirectory)"
-        SourceFiles="@(_DownloadedChromeItem)"
-        DestinationFolder="$(ChromeToolsDirectory)"
-    />
     <AcceptAndroidSdkLicenses AndroidSdkDirectory="$(AndroidSdkDirectory)" JavaSdkDirectory="$(JavaSdkDirectory)" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$([System.IO.Path]::GetFullPath('$(ChromeToolsDirectory)'))$(PathSeparator)$(_OriginalPath)"
-    />
-    <Exec Command="gclient --version" />
-    <Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable
-        Name="PATH"
-        Value="$(_OriginalPath)"
-    />
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk"
         AlwaysCreate="True"

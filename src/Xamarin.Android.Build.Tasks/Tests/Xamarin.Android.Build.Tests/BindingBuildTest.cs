@@ -31,6 +31,17 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				//A list of properties we check exist in binding projects
+				var properties = new [] {
+					"AndroidSdkBuildToolsVersion",
+					"AndroidSdkPlatformToolsVersion",
+					"AndroidSdkToolsVersion",
+					"AndroidNdkVersion",
+				};
+				foreach (var property in properties) {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+				}
 			}
 		}
 

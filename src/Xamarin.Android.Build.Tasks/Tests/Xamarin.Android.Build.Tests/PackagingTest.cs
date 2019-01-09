@@ -67,19 +67,26 @@ namespace Xamarin.Android.Build.Tests
 				//NOTE: Windows is still generating mdb files here
 				extension = IsWindows ? "dll.mdb" : "pdb";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-" + abi + "-Signed.apk"))) {
-						var data = ZipHelper.ReadFileFromZip (apk, "environment");
-						var env = Encoding.ASCII.GetString (data);
-						var lines = env.Split (new char [] { '\n' });
-						Assert.IsTrue (lines.Any (x => x.Contains ("XAMARIN_BUILD_ID")),
-							"The environment should contain a XAMARIN_BUIL_ID");
-						var buildID = lines.First (x => x.StartsWith ("XAMARIN_BUILD_ID", StringComparison.InvariantCultureIgnoreCase));
-						buildIds.Add (abi, buildID);
-					}
-				}
-				Assert.IsFalse (buildIds.Values.Any (x => buildIds.Values.Any (v => v != x)),
-					"All the XAMARIN_BUILD_ID values should be the same");
+				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
+							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
+				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
+
+				string[] lines = File.ReadAllLines (javaEnv);
+
+				Assert.IsTrue (lines.Any (x => x.Contains ("\"XAMARIN_BUILD_ID\",")),
+					       "The environment should contain a XAMARIN_BUILD_ID");
+
+				string buildID = lines.First (x => x.Contains ("\"XAMARIN_BUILD_ID\","))
+					.Trim ()
+					.Replace ("\", \"", "=")
+					.Replace ("\",", String.Empty)
+					.Replace ("\"", String.Empty);
+				buildIds.Add ("all", buildID);
+
+				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
+				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
+				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
+					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
 
 				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);
@@ -196,6 +203,53 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void EmbeddedDSOs ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
+	<uses-sdk />
+	<application android:label=""{proj.ProjectName}"" android:extractNativeLibs=""false"">
+	</application>
+</manifest>";
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				AssertEmbeddedDSOs (apk);
+
+				//Delete the apk & build again
+				File.Delete (apk);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+				AssertEmbeddedDSOs (apk);
+			}
+		}
+
+		void AssertEmbeddedDSOs (string apk)
+		{
+			FileAssert.Exists (apk);
+
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				foreach (var entry in zip) {
+					if (entry.FullName.EndsWith (".so")) {
+						Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+					} else if (entry.FullName == "environment") {
+						using (var stream = new MemoryStream ()) {
+							entry.Extract (stream);
+							stream.Position = 0;
+							using (var reader = new StreamReader (stream)) {
+								string environment = reader.ReadToEnd ();
+								StringAssert.Contains ("__XA_DSO_IN_APK=1", environment, "`__XA_DSO_IN_APK=1` should be set via @(AndroidEnvironment)");
+							}
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void ExplicitPackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -240,7 +294,9 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 
-				proj.AndroidResources.First ().Timestamp = null;
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
 						"Second build should not contain warnings!  Contains\n" +

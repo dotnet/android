@@ -23,13 +23,15 @@ namespace Xamarin.Android.Build.Tests
 			if (Directory.Exists ("temp/RepetitiveBuild"))
 				Directory.Delete ("temp/RepetitiveBuild", true);
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetitiveBuild")) {
+			using (var b = CreateApkBuilder ("temp/RepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				proj.AndroidResources.Last ().Timestamp = null; // means "always build"
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
@@ -92,16 +94,6 @@ using System.Runtime.CompilerServices;
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
 					Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "Target `_BuildAdditionalResourcesCache` should be skipped!");
-					var items = new List<string> ();
-					string first = null;
-					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
-							var matches = regEx.Matches (File.ReadAllText (file));
-							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
-						}
-						first = items.First ();
-						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
-					}
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
@@ -117,13 +109,13 @@ using System.Runtime.CompilerServices;
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
-					items.Clear ();
+					var items = new List<string> ();
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android", "src"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
-						first = items.First ();
+						var first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
 				}
@@ -264,6 +256,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void Check9PatchFilesAreProcessed ([Values(false, true)] bool explicitCrunch)
 		{
 			var projectPath = string.Format ("temp/Check9PatchFilesAreProcessed_{0}", explicitCrunch.ToString ());
@@ -315,6 +308,7 @@ using System.Runtime.CompilerServices;
 		}
 
 		[Test]
+		[NonParallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
@@ -1225,7 +1219,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckMaxResWarningIsEmittedAsAWarning()
+		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
@@ -1237,6 +1231,7 @@ namespace Lib1 {
 					},
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1248,8 +1243,12 @@ namespace Lib1 {
 					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
 				}
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
-				StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
+				if (useAapt2) {
+					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
+				} else {
+					var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
+					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
+				}
 			}
 		}
 
@@ -1411,6 +1410,7 @@ namespace UnnamedProject
 
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
+		[NonParallelizable]
 		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();

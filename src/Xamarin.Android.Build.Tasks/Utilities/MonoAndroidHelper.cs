@@ -386,6 +386,21 @@ namespace Xamarin.Android.Tasks
 			return Files.CopyIfChanged (source, destination);
 		}
 
+		public static bool CopyIfStringChanged (string contents, string destination)
+		{
+			return Files.CopyIfStringChanged (contents, destination);
+		}
+
+		public static bool CopyIfBytesChanged (byte [] bytes, string destination)
+		{
+			return Files.CopyIfBytesChanged (bytes, destination);
+		}
+
+		public static bool CopyIfStreamChanged (Stream source, string destination)
+		{
+			return Files.CopyIfStreamChanged (source, destination);
+		}
+
 		public static bool CopyIfZipChanged (Stream source, string destination)
 		{
 			return Files.CopyIfZipChanged (source, destination);
@@ -532,20 +547,17 @@ namespace Xamarin.Android.Tasks
 			return map;
 		}
 
-		public static void SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
+		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
 			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
-			var temp = Path.GetTempFileName ();
-			try {
-				using (var m = new StreamWriter (temp)) {
-					foreach (var i in map.OrderBy (x => x.Key)) {
-						foreach (var v in i.Value.OrderBy (x => x))
-							m.WriteLine ($"{i.Key};{v}");
-					}
+			using (var stream = new MemoryStream ())
+			using (var writer = new StreamWriter (stream)) {
+				foreach (var i in map.OrderBy (x => x.Key)) {
+					foreach (var v in i.Value.OrderBy (x => x))
+						writer.WriteLine ($"{i.Key};{v}");
 				}
-				CopyIfChanged (temp, mapFile);
-			} finally {
-				File.Delete (temp);
+				writer.Flush ();
+				return CopyIfStreamChanged (stream, mapFile);
 			}
 		}
 

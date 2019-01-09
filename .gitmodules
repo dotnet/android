@@ -38,14 +38,10 @@
     path = external/proguard
     url = https://github.com/xamarin/proguard.git
     branch = master
-[submodule "external/r8"]
-    path = external/r8
-    url = https://r8.googlesource.com/r8
-    branch = d8-1.2
 [submodule "external/sqlite"]
     path = external/sqlite
     url = https://github.com/xamarin/sqlite.git
-    branch = 3.25.2
+    branch = 3.26.0
 [submodule "external/xamarin-android-api-compatibility"]
     path = external/xamarin-android-api-compatibility
     url = https://github.com/xamarin/xamarin-android-api-compatibility.git

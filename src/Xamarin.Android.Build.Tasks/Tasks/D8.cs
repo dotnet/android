@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks
 			return GetCommandLineBuilder ().ToString ();
 		}
 
+		protected virtual string MainClass => "com.android.tools.r8.D8";
+
 		protected virtual CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = new CommandLineBuilder ();
@@ -52,7 +54,8 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch (JavaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);
-			cmd.AppendSwitchIfNotNull ("-jar ", JarPath);
+			cmd.AppendSwitchIfNotNull ("-classpath ", JarPath);
+			cmd.AppendSwitch (MainClass);
 
 			if (!string.IsNullOrEmpty (ExtraArguments))
 				cmd.AppendSwitch (ExtraArguments); // it should contain "--dex".

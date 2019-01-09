@@ -83,6 +83,9 @@ set(TEST_COMPILER_ARGS
   finline-limit=300
   fvisibility=hidden
   fstack-protector
+  fno-rtti
+  fno-exceptions
+  flto
   Wa,--noexecstack
   Wformat
   Werror=format-security
@@ -100,8 +103,8 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 else()
   set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} g fomit-frame-pointer O2)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DRELEASE")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -DRELEASE")
 endif()
 
 foreach(arg ${TEST_COMPILER_ARGS})
@@ -199,6 +202,10 @@ if (ENABLE_TIMING)
   add_definitions("-DMONODROID_TIMING=1")
 endif()
 
+if (WIN32)
+  include_directories(BEFORE "jni/win32")
+endif()
+
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
 add_definitions("-DDYLIB_MONO")
@@ -226,6 +233,7 @@ check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
 set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
+  ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc
@@ -233,6 +241,7 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
+  ${SOURCES_DIR}/logger.c
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/timezones.cc
@@ -240,7 +249,6 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/zip/ioapi.c
   ${SOURCES_DIR}/zip/unzip.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-logger.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.c
   )

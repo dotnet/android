@@ -13,7 +13,6 @@ namespace xamarin { namespace android { namespace internal
 	extern char *external_override_dir;
 	extern char *external_legacy_override_dir;
 	extern char *runtime_libdir;
-	extern int   embedded_dso_mode;
 
 	class MonodroidRuntime
 	{

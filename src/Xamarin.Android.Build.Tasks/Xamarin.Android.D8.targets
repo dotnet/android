@@ -31,10 +31,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     </PropertyGroup>
 
     <Error
-        Condition=" !Exists('$(AndroidD8JarPath)') "
-        Text="d8.jar does not exist (AndroidD8JarPath property has to point to a valid file (current value: '$(AndroidD8JarPath)')."
-    />
-    <Error
         Condition=" !Exists('$(AndroidR8JarPath)') "
         Text="r8.jar does not exist (AndroidR8JarPath property has to point to a valid file (current value: '$(AndroidR8JarPath)')."
     />
@@ -114,7 +110,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
-        JarPath="$(AndroidD8JarPath)"
+        JarPath="$(AndroidR8JarPath)"
         AndroidManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
         OutputDirectory="$(IntermediateOutputPath)android\bin"
         Debug="$(AndroidIncludeDebugSymbols)"

@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 		public string ProguardCommonXamarinConfiguration { get; set; }
 		public string ProguardConfigurationFiles { get; set; }
 
+		protected override string MainClass => "com.android.tools.r8.SwissArmyKnife";
+
 		string temp;
 
 		public override bool Execute ()

@@ -55,42 +55,6 @@
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Android.App\ApplicationTest.cs" />
-    <Compile Include="Android.Content\IntentTest.cs" />
-    <Compile Include="Android.Graphics\GraphicsTest.cs" />
-    <Compile Include="Android.Runtime\CharSequenceTest.cs" />
-    <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
-    <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
-    <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
-    <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
-    <Compile Include="Android.Widget\AdapterTests.cs" />
-    <Compile Include="Java.Interop\JavaConvertTest.cs" />
-    <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
-    <Compile Include="Java.Lang\ObjectTest.cs" />
-    <Compile Include="Java.Interop\JnienvTest.cs" />
-    <Compile Include="System\AppDomainTest.cs" />
-    <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
-    <Compile Include="System\ExceptionTest.cs" />
-    <Compile Include="System\TimeZoneTest.cs" />
-    <Compile Include="System.IO\DriveInfoTest.cs" />
-    <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
-    <Compile Include="System.Net\ProxyTest.cs" />
-    <Compile Include="System.Net\SslTest.cs" />
-    <Compile Include="System.Net\NetworkInterfaces.cs" />
-    <Compile Include="System.Threading\InterlockedTest.cs" />
-    <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
-    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
-    <Compile Include="Android.OS\BundleTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />
@@ -107,6 +71,10 @@
     <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="Assets\asset1.txt" />
+    <AndroidAsset Include="Assets\subfolder\asset2.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-Tests.targets" />

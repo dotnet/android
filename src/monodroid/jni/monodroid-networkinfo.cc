@@ -117,7 +117,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	if (!ret)
 		log_warn (LOG_NET, "Unable to determine interface '%s' state using Java API", ifname);
 
-	if (networkInterface != NULL && env != NULL) {
+	if (networkInterface != nullptr && env != nullptr) {
 		env->DeleteLocalRef (networkInterface);
 	}
 
@@ -128,14 +128,14 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 MONO_API mono_bool
 _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up)
 {
-	return _monodroid_get_network_interface_state (ifname, is_up, NULL);
+	return _monodroid_get_network_interface_state (ifname, is_up, nullptr);
 }
 
 /* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.NetworkInterface) */
 MONO_API mono_bool
 _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast)
 {
-	return _monodroid_get_network_interface_state (ifname, NULL, supports_multicast);
+	return _monodroid_get_network_interface_state (ifname, nullptr, supports_multicast);
 }
 
 /* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.UnixIPInterfaceProperties) */
@@ -146,7 +146,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in");
 		return -1;
 	}
-	*dns_servers_array = NULL;
+	*dns_servers_array = nullptr;
 
 	size_t  len;
 	char   *dns;
@@ -157,7 +157,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 		prop_name [7] = (char)(i + 0x31);
 		len = monodroid_get_system_property (prop_name, &dns);
 		if (len == 0) {
-			dns_servers [i] = NULL;
+			dns_servers [i] = nullptr;
 			continue;
 		}
 		dns_servers [i] = strndup (dns, len);

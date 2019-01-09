@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] RemovedAndroidResourceFiles { get; set; }
 
+		public string FlatArchivesDirectory { get; set; }
+
 		[Required]
 		public string ResourceDirectory { get; set; }
 
@@ -48,8 +50,9 @@ namespace Xamarin.Android.Tasks
 					subdirInfo.Create ();
 			}
 
-			var compiledArchive = Path.Combine (ResourceDirectory, "..", "compiled.flata");
+			var compiledArchive = Path.Combine (FlatArchivesDirectory, "compiled.flata");
 			if (File.Exists (compiledArchive)) {
+				Log.LogDebugMessage ($"Coping: {compiledArchive} to {outDirInfo.FullName}");
 				MonoAndroidHelper.CopyIfChanged (compiledArchive, Path.Combine (outDirInfo.FullName, "compiled.flata"));
 			}
 

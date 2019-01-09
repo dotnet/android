@@ -111,6 +111,7 @@ prepare-deps: prepare-external
 	mkdir -p bin/Build$(CONFIGURATION)
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
 	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
+	$(call MSBUILD_BINLOG,prepare-restore) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
 
 prepare-props: prepare-deps
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
@@ -183,6 +184,8 @@ $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,F
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
 run-all-tests:
+	@echo "PRINTING MONO VERSION"
+	mono --version
 	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
 	$(MAKE) run-api-compatibility-tests
 
@@ -204,8 +207,12 @@ endif # $(SKIP_NUNIT_TESTS) == ''
 run-ji-tests:
 	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
 
+ifneq ($(PACKAGES),)
+APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
+endif
+
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests
+	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 
 run-performance-tests:
 	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests

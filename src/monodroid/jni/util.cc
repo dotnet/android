@@ -28,6 +28,59 @@ extern "C" {
 
 using namespace xamarin::android;
 
+#if defined (ANDROID) || defined (LINUX)
+using timestruct = timespec;
+#else
+using timestruct = timeval;
+#endif
+
+static const char hex_chars [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+void timing_point::mark ()
+{
+	int ret;
+	uint64_t tail;
+	timestruct tv_ctm;
+
+#if defined (ANDROID) || defined (LINUX)
+	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
+	tail = tv_ctm.tv_nsec;
+#else
+	ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
+	tail = tv_ctm.tv_usec * 1000LL;
+#endif
+	if (ret != 0) {
+		sec = 0ULL;
+		ns = 0ULL;
+		return;
+	}
+
+	sec = tv_ctm.tv_sec;
+	ns = tail;
+}
+
+timing_diff::timing_diff (const timing_period &period)
+{
+	uint64_t nsec;
+	if (period.end.ns < period.start.ns) {
+		sec = period.end.sec - period.start.sec - 1;
+		if (sec < 0)
+			sec = 0;
+		nsec = 1000000000ULL + period.end.ns - period.start.ns;
+	} else {
+		sec = period.end.sec - period.start.sec;
+		nsec = period.end.ns - period.start.ns;
+	}
+
+	ms = nsec / ms_in_nsec;
+	if (ms >= 1000) {
+		sec += ms / 1000;
+		ms = ms % 1000;
+	}
+
+	ns = nsec % ms_in_nsec;
+}
+
 int
 Util::ends_with (const char *str, const char *end)
 {
@@ -35,18 +88,18 @@ Util::ends_with (const char *str, const char *end)
 
 	p = const_cast<char*> (strstr (str, end));
 
-	return p != NULL && p [strlen (end)] == 0;
+	return p != nullptr && p [strlen (end)] == 0;
 }
 
 char*
 Util::path_combine(const char *path1, const char *path2)
 {
-	// Don't let erroneous NULL parameters situation propagate
-	assert (path1 != NULL || path2 != NULL);
+	// Don't let erroneous nullptr parameters situation propagate
+	assert (path1 != nullptr || path2 != nullptr);
 
-	if (path1 == NULL)
+	if (path1 == nullptr)
 		return strdup (path2);
-	if (path2 == NULL)
+	if (path2 == nullptr)
 		return strdup (path1);
 	return monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR "%s", path1, path2);
 }
@@ -54,7 +107,7 @@ Util::path_combine(const char *path1, const char *path2)
 void
 Util::add_to_vector (char ***vector, int size, char *token)
 {
-	*vector = *vector == NULL ? 
+	*vector = *vector == nullptr ? 
 		(char **)xmalloc(2 * sizeof(*vector)) :
 		(char **)xrealloc(*vector, (size + 1) * sizeof(*vector));
 		
@@ -65,9 +118,9 @@ void
 Util::monodroid_strfreev (char **str_array)
 {
 	char **orig = str_array;
-	if (str_array == NULL)
+	if (str_array == nullptr)
 		return;
-	while (*str_array != NULL){
+	while (*str_array != nullptr){
 		free (*str_array);
 		str_array++;
 	}
@@ -87,7 +140,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens
 		size++;
 		str += strlen (delimiter);
 	} else {
-		vector = NULL;
+		vector = nullptr;
 	}
 
 	while (*str && !(max_tokens > 0 && size >= max_tokens)) {
@@ -132,11 +185,11 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens
 		size++;
 	}
 	
-	if (vector == NULL) {
+	if (vector == nullptr) {
 		vector = (char **) xmalloc (2 * sizeof (vector));
-		vector [0] = NULL;
+		vector [0] = nullptr;
 	} else if (size > 0) {
-		vector[size - 1] = NULL;
+		vector[size - 1] = nullptr;
 	}
 	
 	return vector;
@@ -195,14 +248,52 @@ Util::recv_uninterrupted (int fd, void *buf, int len)
 	return total;
 }
 
+#if WINDOWS
+//
+// This version should be removed once MXE we have on mac can build the glorious version in the
+// #else below.
+//
+// Currently mxe fails with:
+//
+//  Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
+// collect2 : error : ld returned 1 exit status
+//   [/Users/builder/jenkins/workspace/xamarin-android-pr-builder-debug/xamarin-android/src/monodroid/monodroid.csproj]
+//
+void Util::package_hash_to_hex (uint32_t hash)
+{
+	for (uint32_t idx = 0; idx < 8; idx++) {
+		package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
+	}
+	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
+}
+#else
+template<typename IdxType>
+inline void
+Util::package_hash_to_hex (IdxType /* idx */)
+{
+	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
+}
+
+template<typename IdxType, typename ...Indices>
+inline void
+Util::package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices)
+{
+	package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
+	package_hash_to_hex <IdxType> (hash, indices...);
+}
+#endif
+
 void
 Util::monodroid_store_package_name (const char *name)
 {
-	const char *ch;
-	int hash;
-
-	memset (package_property_suffix, 0, sizeof (package_property_suffix));
-	if (!name || strlen (name) == 0)
+	if (!name || *name == '\0')
 		return;
 
 	/* Android properties can be at most 32 bytes long (!) and so we mustn't append the package name
@@ -211,34 +302,44 @@ Util::monodroid_store_package_name (const char *name)
 	 * as a stream of bytes assumming it's an ASCII string using a simplified version of the hash
 	 * algorithm used by BCL's String.GetHashCode ()
 	 */
-	ch = name;
-	hash = 0;
+	const char *ch = name;
+	uint32_t hash = 0;
 	while (*ch)
 		hash = (hash << 5) - (hash + *ch++);
-	snprintf (package_property_suffix, sizeof (package_property_suffix), "%08x", hash);
+
+#if WINDOWS
+	package_hash_to_hex (hash);
+#else
+	// In C++14 or newer we could use std::index_sequence, but in C++11 it's a bit too much ado
+	// for this simple case, so a manual sequence it is.
+	//
+	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
+	// that would be boring, wouldn't it? :)
+	package_hash_to_hex (hash, 0, 1, 2, 3, 4, 5, 6, 7);
+#endif
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
 int
 Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	char *local_value = NULL;
+	char *local_value = nullptr;
 	int result = -1;
 
 	if (value)
-		*value = NULL;
+		*value = nullptr;
 
 	if (strlen (package_property_suffix) > 0) {
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
 		char *propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
 		if (propname) {
-			result = monodroid_get_system_property (propname, &local_value);
+			result = androidSystem.monodroid_get_system_property (propname, &local_value);
 			free (propname);
 		}
 	}
 
 	if (result <= 0 || !local_value)
-		result = monodroid_get_system_property (name, &local_value);
+		result = androidSystem.monodroid_get_system_property (name, &local_value);
 
 	if (result > 0) {
 		if (strlen (local_value) == 0) {
@@ -270,10 +371,10 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 
 	if (domain != current) {
 		monoFunctions.domain_set (domain, FALSE);
-		assm  = monoFunctions.assembly_load_full (aname, NULL, &status, 0);
+		assm  = monoFunctions.assembly_load_full (aname, nullptr, &status, 0);
 		monoFunctions.domain_set (current, FALSE);
 	} else {
-		assm  = monoFunctions.assembly_load_full (aname, NULL, &status, 0);
+		assm  = monoFunctions.assembly_load_full (aname, nullptr, &status, 0);
 	}
 
 	monoFunctions.assembly_name_free (aname);
@@ -324,16 +425,16 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 	MonoObject *setup = monoFunctions.object_new (parent_domain, appdomain_setup_klass);
 	MonoString *mono_friendly_name = monoFunctions.string_new (parent_domain, friendly_name);
 	MonoString *mono_shadow_copy = monoFunctions.string_new (parent_domain, shadow_copy ? "true" : "false");
-	MonoString *mono_shadow_copy_dirs = shadow_directories == NULL ? NULL : monoFunctions.string_new (parent_domain, shadow_directories);
+	MonoString *mono_shadow_copy_dirs = shadow_directories == nullptr ? nullptr : monoFunctions.string_new (parent_domain, shadow_directories);
 
-	monodroid_property_set (parent_domain, shadow_copy_prop, setup, reinterpret_cast<void**> (&mono_shadow_copy), NULL);
-	if (mono_shadow_copy_dirs != NULL)
-		monodroid_property_set (parent_domain, shadow_copy_dirs_prop, setup, reinterpret_cast<void**> (&mono_shadow_copy_dirs), NULL);
+	monodroid_property_set (parent_domain, shadow_copy_prop, setup, reinterpret_cast<void**> (&mono_shadow_copy), nullptr);
+	if (mono_shadow_copy_dirs != nullptr)
+		monodroid_property_set (parent_domain, shadow_copy_dirs_prop, setup, reinterpret_cast<void**> (&mono_shadow_copy_dirs), nullptr);
 
-	void *args[3] = { mono_friendly_name, NULL, setup };
-	MonoObject *appdomain = monodroid_runtime_invoke (parent_domain, create_domain, NULL, args, NULL);
-	if (appdomain == NULL)
-		return NULL;
+	void *args[3] = { mono_friendly_name, nullptr, setup };
+	MonoObject *appdomain = monodroid_runtime_invoke (parent_domain, create_domain, nullptr, args, nullptr);
+	if (appdomain == nullptr)
+		return nullptr;
 
 	return monoFunctions.domain_from_appdomain (appdomain);
 }
@@ -404,9 +505,9 @@ Util::set_user_executable (const char *path)
 MonoClass*
 Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
-	MonoAssembly *assm = NULL;
-	MonoImage *image = NULL;
-	MonoClass *result = NULL;
+	MonoAssembly *assm = nullptr;
+	MonoImage *image = nullptr;
+	MonoClass *result = nullptr;
 	MonoAssemblyName *aname = monoFunctions.assembly_name_new (assembly);
 	MonoDomain *current = monoFunctions.domain_get ();
 
@@ -414,7 +515,7 @@ Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, c
 		monoFunctions.domain_set (domain, FALSE);
 
 	assm = monoFunctions.assembly_loaded (aname);
-	if (assm != NULL) {
+	if (assm != nullptr) {
 		image = monoFunctions.assembly_get_image (assm);
 		result = monoFunctions.class_from_name (image, _namespace, type);
 	}
@@ -430,7 +531,7 @@ Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, c
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
-	MonoClass *result = NULL;
+	MonoClass *result = nullptr;
 	MonoDomain *current = monoFunctions.domain_get ();
 
 	if (domain != current)
@@ -589,6 +690,22 @@ Util::is_path_rooted (const char *path)
 #else
 	return path [0] == MONODROID_PATH_SEPARATOR_CHAR;
 #endif
+}
+
+jclass
+Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref)
+{
+	static constexpr char java_lang_class_sig[] = "Ljava/lang/Class;";
+
+	jfieldID fieldID = env->GetStaticFieldID (runtime, name, java_lang_class_sig);
+	if (fieldID == nullptr)
+		return nullptr;
+
+	jobject field = env->GetStaticObjectField (runtime, fieldID);
+	if (field == nullptr)
+		return nullptr;
+
+	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
 }
 
 extern "C" void

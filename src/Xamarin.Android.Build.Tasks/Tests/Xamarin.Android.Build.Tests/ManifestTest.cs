@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.Tools.Zip;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -608,6 +609,86 @@ public class TestActivity2 : FragmentActivity {
 					Assert.IsNotNull (e.Element ("intent-filter"), "TestActivity2 should have an intent-filter");
 					Assert.IsNotNull (e.Element ("intent-filter").Element ("action"), "TestActivity2 should have an intent-filter/action");
 				}
+			}
+		}
+
+		[Test]
+		public void AllActivityAttributeProperties ()
+		{
+			const string expectedOutput = "android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enabled=\"true\" android:enableVrMode=\"foo\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:name=\"com.contoso.TestActivity\" android:noHistory=\"true\" android:parentActivityName=\"md52d9cf6333b8e95e8683a477bc589eda5.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
+
+			var proj = new XamarinAndroidApplicationProject ();
+
+			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+				TextContent = () => @"using Android.App;
+using Android.Content.PM;
+using Android.Views;
+[Activity (
+	AllowEmbedded              = true,
+	AllowTaskReparenting       = true,
+	AlwaysRetainTaskState      = true,
+	AutoRemoveFromRecents      = true,
+	Banner                     = ""@drawable/icon"",
+	ClearTaskOnLaunch          = true,
+	ColorMode                  = ""hdr"",
+	ConfigurationChanges       = ConfigChanges.Mcc,
+	Description                = ""@string/app_name"",
+	DirectBootAware            = true,
+	DocumentLaunchMode         = DocumentLaunchMode.Never,
+	Enabled                    = true,
+	EnableVrMode               = ""foo"",
+	ExcludeFromRecents         = true,
+	Exported                   = true,
+	FinishOnCloseSystemDialogs = true,
+	FinishOnTaskLaunch         = true,
+	HardwareAccelerated        = true,
+	Icon                       = ""@drawable/icon"",
+	Immersive                  = true,
+	Label                      = ""TestActivity"",
+	LaunchMode                 = LaunchMode.SingleTop,
+	LockTaskMode               = ""normal"",
+	Logo                       = ""@drawable/icon"",
+	MaxAspectRatio             = 1.2F,
+	MaxRecents                 = 1,
+	MultiProcess               = true,
+	Name                       = ""com.contoso.TestActivity"",
+	NoHistory                  = true,
+	ParentActivity             = typeof (UnnamedProject.MainActivity),
+	Permission                 = ""com.contoso.permission.TEST_ACTIVITY"",
+	PersistableMode            = ActivityPersistableMode.Never,
+	Process                    = ""com.contoso.process.testactivity_process"",
+	RecreateOnConfigChanges    = ConfigChanges.Mcc,
+	RelinquishTaskIdentity     = true,
+	ResizeableActivity         = true,
+	ResumeWhilePausing         = true,
+	RotationAnimation          = WindowRotationAnimation.Crossfade,
+	RoundIcon                  = ""@drawable/icon"",
+	ScreenOrientation          = ScreenOrientation.Portrait,
+	ShowForAllUsers            = true,
+	ShowOnLockScreen           = true,
+	ShowWhenLocked             = true,
+	SingleUser                 = true,
+	StateNotNeeded             = true,
+	SupportsPictureInPicture   = true,
+	TaskAffinity               = ""com.contoso"",
+	Theme                      = ""@android:style/Theme.Light"",
+	TurnScreenOn               = true,
+	UiOptions                  = UiOptions.SplitActionBarWhenNarrow,
+	VisibleToInstantApps       = true,
+	WindowSoftInputMode        = Android.Views.SoftInput.StateUnchanged)]
+class TestActivity : Activity { }"
+			});
+
+			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+				var doc = XDocument.Parse (manifest);
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
+				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
+				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
+				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
 			}
 		}
 	}
