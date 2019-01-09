@@ -225,7 +225,7 @@ setup_bundled_app (const char *dso_name)
 		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
 		libapp = androidSystem.load_dso_from_any_directories (dso_name, dlopen_flags);
 	} else {
-		mono_bool needs_free = FALSE;
+		bool needs_free = false;
 		log_info (LOG_DEFAULT, "bundle app: normal mode");
 		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, &needs_free);
 		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<nullptr>");
