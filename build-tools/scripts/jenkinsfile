@@ -11,7 +11,7 @@ MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True 
 pipeline {
     
     agent {
-        label 'xamarin-android-master-pipeline-eval'
+        label 'xamarin-android-master'      // Build bots: https://jenkins.mono-project.com/computer/
     }
 
     options {
