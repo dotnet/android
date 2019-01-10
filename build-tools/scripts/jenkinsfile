@@ -19,10 +19,6 @@ pipeline {
         skipStagesAfterUnstable()
     }
 
-    environment {        
-        PUBLISH_PATH = "${env.JOB_NAME}"
-    }
-    
     stages {
         stage('clean') {
             steps {
@@ -150,7 +146,6 @@ pipeline {
                     } else {
                         echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
                     }
-
                 }
             }
         }
