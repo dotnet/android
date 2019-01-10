@@ -1,6 +1,6 @@
 // This file is based on the Jenkins declarative pipeline syntax (as opposed to the scripted pipeline syntax)
-// https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 // https://jenkins.io/doc/book/pipeline/syntax/
+// https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
 repoUrl = "https://github.com/xamarin/xamarin-android.git"
 XADir = "xamarin-android"
@@ -89,7 +89,7 @@ pipeline {
                     sh('cp xamarin.android-oss*.zip ../package')
                     sh('cp bin/Release/bundle-*.zip ../package')
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
-                    sh('cp xa-build-status* ../package')
+                    sh('cp xa-build-status* ../package')                                // At a minimum includes the build status ZIP file
                     sh('cp build-status* ../package 2>/dev/null')                       // Files may not exist and so pipe to null
                     sh('cp prepare-image-dependencies.sh ../package 2>/dev/null')       // Files may not exist and so pipe to null
                 }
@@ -100,7 +100,7 @@ pipeline {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
                 dir('package') {
-                    // Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview
+                    echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
                     step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
                         doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
                         filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
@@ -136,24 +136,24 @@ pipeline {
         stage('publish test error logs to Azure') {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
-                dir('package.tests') {
-                    // Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview
-                    
-                    // UNDONE: TEST: Verify that anything under the 'dir' command only executes if the directory actually exists
-                    echo "package.tests exists ... publish"
+                script {                                    // Enter scripted/groovy mode
+                    if (fileExists('package.tests')) {      // Note: fileExists works for directories too
+                        dir('package.tests') {
+                            echo "Publishing contents of the package.tests directory to Azure storage"
+                            echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
+                            step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                                filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+                                uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+                            ])
+                        }
+                    } else {
+                        echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
+                    }
 
-                    // UNDONE: Enable the following publishing step
-                    /*
-                    step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,                    
-                        doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
-                        filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-                        uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-                    ])
-                    */
                 }
             }
         }
-
         
         stage ('Plot build times') {
             options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
