@@ -40,7 +40,7 @@ pipeline {
                     for f in xa-build-status*.zip; do
                         [ -f "$f" ] || continue
                         echo "Cleaning file '${f}'"
-                        rm xa-build-status*.zip 2>/dev/null         # Avoid failing the build
+                        rm "$f" 2>/dev/null         # Avoid failing the build
                     done
 
                     for dir in `ls -d xa-build-status*`; do
