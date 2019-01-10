@@ -768,6 +768,8 @@ namespace MonoDroid.Generation {
 			string delegate_type = method.GetDelegateType ();
 			writer.WriteLine ("{0}static Delegate {1};", indent, method.EscapedCallbackName);
 			writer.WriteLine ("#pragma warning disable 0169");
+			if (method.Deprecated != null)
+				writer.WriteLine($"{indent}[Obsolete]");
 			writer.WriteLine ("{0}static Delegate {1} ()", indent, method.ConnectorName);
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\tif ({1} == null)", indent, method.EscapedCallbackName);
@@ -775,6 +777,8 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}\treturn {1};", indent, method.EscapedCallbackName);
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
+			if (method.Deprecated != null)
+				writer.WriteLine($"{indent}[Obsolete]");
 			writer.WriteLine ("{0}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, method.RetVal.NativeType, method.Name + method.IDSignature, method.Parameters.GetCallbackSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\t{1} __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
@@ -852,7 +856,13 @@ namespace MonoDroid.Generation {
 					writer.WriteLine ("{0}// Metadata.xml XPath method reference: path=\"{1}\"", indent, method.GetMetadataXPathReference (method.DeclaringType));
 				writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, method.JavaName, method.JniSignature, method.ConnectorName, method.AdditionalAttributeString ());
 				WriteMethodCustomAttributes (method, writer, indent);
-				writer.WriteLine ("{0}{1} abstract {2} {3} ({4});", indent, method.Visibility, opt.GetOutputName (method.RetVal.FullName), name, GenBase.GetSignature (method, opt));
+				writer.WriteLine ("{0}{1}{2} abstract {3} {4} ({5});",
+						indent,
+						impl.RequiresNew (method.Name) ? "new " : "",
+						method.Visibility,
+						opt.GetOutputName (method.RetVal.FullName),
+						name,
+						GenBase.GetSignature (method, opt));
 				writer.WriteLine ();
 
 				if (gen_as_formatted || method.Parameters.HasCharSequence)

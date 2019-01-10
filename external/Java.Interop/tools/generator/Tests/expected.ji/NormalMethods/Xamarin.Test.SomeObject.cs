@@ -68,7 +68,7 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getType' and count(parameter)=0]"
 		[Register ("getType", "()[I", "GetGetTypeHandler")]
-		public virtual unsafe int[] GetType ()
+		public new virtual unsafe int[] GetType ()
 		{
 			const string __id = "getType.()[I";
 			try {
@@ -260,6 +260,7 @@ namespace Xamarin.Test {
 
 		static Delegate cb_ObsoleteMethod;
 #pragma warning disable 0169
+		[Obsolete]
 		static Delegate GetObsoleteMethodHandler ()
 		{
 			if (cb_ObsoleteMethod == null)
@@ -267,6 +268,7 @@ namespace Xamarin.Test {
 			return cb_ObsoleteMethod;
 		}
 
+		[Obsolete]
 		static int n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
 		{
 			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);

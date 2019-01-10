@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml;
 
 using MonoDroid.Utils;
@@ -197,10 +198,10 @@ namespace MonoDroid.Generation {
 
 		public bool RequiresNew (string memberName)
 		{
-			if (Array.BinarySearch (ObjectRequiresNew, memberName, StringComparer.OrdinalIgnoreCase) >= 0) {
+			if (ObjectRequiresNew.Contains (memberName)) {
 				return true;
 			}
-			if (IsThrowable () && Array.BinarySearch (ThrowableRequiresNew, memberName, StringComparer.OrdinalIgnoreCase) >= 0) {
+			if (IsThrowable () && ThrowableRequiresNew.Contains (memberName)) {
 				return true;
 			}
 			return false;
@@ -529,20 +530,30 @@ namespace MonoDroid.Generation {
 			return GetAllDerivedInterfaces ().All (iface => !iface.Properties.Any (p => p.Name == "Is" + m.PropertyName && p.Setter == null));
 		}
 
-		// Keep sorted alphabetically
-		static readonly string[]    ObjectRequiresNew       = new string[]{
-			"Handle",
-		};
+		static readonly HashSet<string>         ObjectRequiresNew       = new HashSet<string>(
+			typeof (object)
+				.GetMethods ()
+				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
+						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
+				.Select (m => m.Name)
+				.Concat (new[] { "Handle" }),
+			StringComparer.OrdinalIgnoreCase);
 
-		static readonly string[]    ThrowableRequiresNew    = new string []{
-			"Message",
-		};
+		static readonly HashSet<string>         ThrowableRequiresNew    = new HashSet<string>(
+			typeof (System.Exception)
+				.GetMethods ()
+				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
+						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
+				.Select (m => m.Name)
+				.Concat (typeof (System.Exception).GetProperties ().Select (p => p.Name))
+				.Concat (new[] { "Handle" }),
+			StringComparer.OrdinalIgnoreCase);
 
 		bool IsInfrastructural (string name)
 		{
 			// some names are reserved for use by us, e.g. we don't want another
 			// Handle property, as that conflicts with Java.Lang.Object.Handle.
-			return Array.BinarySearch (ObjectRequiresNew, name) >= 0;
+			return ObjectRequiresNew.Contains (name);
 		}
 
 		protected void GenCharSequenceEnumerator (StreamWriter sw, string indent, CodeGenerationOptions opt)

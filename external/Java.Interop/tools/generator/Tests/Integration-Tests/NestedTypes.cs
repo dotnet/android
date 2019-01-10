@@ -9,8 +9,6 @@ namespace generatortests
 		[Test]
 		public void GeneratedOK ()
 		{
-			//hides inherited member `Java.Lang.Object.class_ref'
-			AllowWarnings = true;
 			RunAllTargets (
 					outputRelativePath:     "NestedTypes",
 					apiDescriptionFile:     "expected/NestedTypes/NestedTypes.xml",
