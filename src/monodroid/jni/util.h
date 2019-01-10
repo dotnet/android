@@ -63,6 +63,16 @@ extern "C" {
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
 #define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
 
+#if __cplusplus >= 201703L
+#define UNUSED_ARG [[maybe_unused]]
+#else
+#if defined (__GNUC__)
+#define UNUSED_ARG __attribute__((__unused__))
+#else
+#define UNUSED_ARG
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
