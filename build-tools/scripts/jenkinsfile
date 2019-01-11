@@ -222,16 +222,6 @@ pipeline {
                         group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
                     )
 
-                    // UNDONE: Safe to remove?
-                    //plot(
-                    //    title: '[History] (before the graphs were split up)',
-                    //    csvFileName: 'plot-build-times.csv',
-                    //    csvSeries: [[
-                    //        displayTableFlag: true, file: 'TestResult-MSBuild-times.csv', inclusionFlag: 'OFF'
-                    //    ]],
-                    //    group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    //)        			
-
                     plot(
                         title: 'Hello World',
                         csvFileName: 'plot-hello-world-build-times.csv',
