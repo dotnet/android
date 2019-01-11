@@ -101,15 +101,6 @@ pipeline {
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
                     sh('cp xa-build-status*.zip ../package')
 
-                    sh '''
-                    for f in build-status*; do
-                        [ -f "$f" ] || continue
-                        echo "Staging files build-status* for publishing"
-                        cp build-status* ../package
-                        break
-                    done
-                    '''
-
                     script {
                         if (fileExists('prepare-image-dependencies.sh')) {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
