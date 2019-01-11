@@ -1,21 +1,18 @@
 // Copyright (C) 2011, Xamarin Inc.
 // Copyright (C) 2010, Novell Inc.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Mono.Cecil;
 using MonoDroid.Tuner;
-using System.IO;
-using System.Text;
-using Xamarin.Android.Tools;
-using NuGet.Common;
 using NuGet.Frameworks;
 using NuGet.ProjectModel;
-
-using Java.Interop.Tools.Cecil;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Text;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -62,7 +59,7 @@ namespace Xamarin.Android.Tasks
 			Yield ();
 			try {
 				System.Threading.Tasks.Task.Run (() => {
-					using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
+					using (var resolver = new MetadataResolver ()) {
 						Execute (resolver);
 					}
 				}, Token).ContinueWith (Complete);
@@ -72,14 +69,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void Execute (DirectoryAssemblyResolver resolver)
+		void Execute (MetadataResolver resolver)
 		{
-			foreach (var dir in ReferenceAssembliesDirectory.Split (new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-				resolver.SearchDirectories.Add (dir);
+			foreach (var dir in ReferenceAssembliesDirectory.Split (new char [] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+				resolver.AddSearchDirectory (dir);
 
-			var assemblies = new Dictionary<string, ITaskItem> ();
-
-			var topAssemblyReferences = new List<AssemblyDefinition> ();
+			var assemblies = new Dictionary<string, ITaskItem> (Assemblies.Length);
+			var topAssemblyReferences = new List<string> (Assemblies.Length);
 			var logger = new NuGetLogger((s) => {
 				LogDebugMessage ("{0}", s);
 			});
@@ -92,32 +88,28 @@ namespace Xamarin.Android.Tasks
 			try {
 				foreach (var assembly in Assemblies) {
 					var assembly_path = Path.GetDirectoryName (assembly.ItemSpec);
-
-					if (!resolver.SearchDirectories.Contains (assembly_path))
-						resolver.SearchDirectories.Add (assembly_path);
+					resolver.AddSearchDirectory (assembly_path);
 
 					// Add each user assembly and all referenced assemblies (recursive)
-					var assemblyDef = resolver.Load (assembly.ItemSpec);
-					if (assemblyDef == null)
-						throw new InvalidOperationException ("Failed to load assembly " + assembly.ItemSpec);
-					if (MonoAndroidHelper.IsReferenceAssembly (assemblyDef)) {
+					string resolved_assembly = resolver.Resolve (assembly.ItemSpec);
+					if (MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
 						// Resolve "runtime" library
-						var asmFullPath = Path.GetFullPath (assembly.ItemSpec);
 						if (lockFile != null)
-							assemblyDef = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, resolver, asmFullPath);
-						if (lockFile == null || assemblyDef == null) {
-							LogCodedWarning ("XA0107", asmFullPath, 0, "Ignoring {0} as it is a Reference Assembly", asmFullPath);
+							resolved_assembly = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, assembly.ItemSpec);
+						if (lockFile == null || resolved_assembly == null) {
+							LogCodedWarning ("XA0107", resolved_assembly, 0, "Ignoring {0} as it is a Reference Assembly", resolved_assembly);
 							continue;
 						}
 					}
-					topAssemblyReferences.Add (assemblyDef);
+					topAssemblyReferences.Add (resolved_assembly);
 					var taskItem = new TaskItem (assembly) {
-						ItemSpec = Path.GetFullPath (assemblyDef.MainModule.FileName),
+						ItemSpec = Path.GetFullPath (resolved_assembly),
 					};
 					if (string.IsNullOrEmpty (taskItem.GetMetadata ("ReferenceAssembly"))) {
 						taskItem.SetMetadata ("ReferenceAssembly", taskItem.ItemSpec);
 					}
-					assemblies [assemblyDef.Name.Name] = taskItem;
+					string assemblyName = Path.GetFileNameWithoutExtension (resolved_assembly);
+					assemblies [assemblyName] = taskItem;
 				}
 			} catch (Exception ex) {
 				LogError ("Exception while loading assemblies: {0}", ex);
@@ -171,7 +163,7 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary<string, int> api_levels = new Dictionary<string, int> ();
 		int indent = 2;
 
-		AssemblyDefinition ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, DirectoryAssemblyResolver resolver, string assemblyPath)
+		string ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, string assemblyPath)
 		{
 			if (string.IsNullOrEmpty(TargetMoniker)) 
 				return null;
@@ -200,16 +192,16 @@ namespace Xamarin.Android.Tasks
 				path = Path.Combine (folder.Path, libraryPath.Path, runtime.Path).Replace('/', Path.DirectorySeparatorChar);
 				if (!File.Exists (path))
 					continue;
-				LogDebugMessage ($"Attempting to load {path}");
-				return resolver.Load (path, forceLoad: true);
+				return path;
 			}
 			return null;
 		}
 
-		void AddAssemblyReferences (DirectoryAssemblyResolver resolver, Dictionary<string, ITaskItem> assemblies, AssemblyDefinition assembly, List<string> resolutionPath)
+		void AddAssemblyReferences (MetadataResolver resolver, Dictionary<string, ITaskItem> assemblies, string assemblyPath, List<string> resolutionPath)
 		{
-			var assemblyName = assembly.Name.Name;
-			var fullPath = Path.GetFullPath (assembly.MainModule.FileName);
+			var reader = resolver.GetAssemblyReader (assemblyPath);
+			var assembly = reader.GetAssemblyDefinition ();
+			var assemblyName = reader.GetString (assembly.Name);
 
 			// Don't repeat assemblies we've already done
 			bool topLevel = resolutionPath == null;
@@ -219,22 +211,23 @@ namespace Xamarin.Android.Tasks
 			if (resolutionPath == null)
 				resolutionPath = new List<string>();
 
-			CheckAssemblyAttributes (assembly);
+			CheckAssemblyAttributes (assembly, reader);
 
-			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assembly.Name);
-			resolutionPath.Add (assembly.Name.Name);
+			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assemblyName);
+			resolutionPath.Add (assemblyName);
 			indent += 2;
 
 			// Add this assembly
 			if (!topLevel) {
-				assemblies [assemblyName] = CreateAssemblyTaskItem (fullPath);
+				assemblies [assemblyName] = CreateAssemblyTaskItem (Path.GetFullPath (assemblyPath));
 			}
 
 			// Recurse into each referenced assembly
-			foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
-				AssemblyDefinition reference_assembly;
+			foreach (var handle in reader.AssemblyReferences) {
+				var reference = reader.GetAssemblyReference (handle);
+				string reference_assembly;
 				try {
-					reference_assembly = resolver.Resolve (reference);
+					reference_assembly = resolver.Resolve (reader.GetString (reference.Name));
 				} catch (FileNotFoundException ex) {
 					var references = new StringBuilder ();
 					for (int i = 0; i < resolutionPath.Count; i++) {
@@ -245,7 +238,10 @@ namespace Xamarin.Android.Tasks
 						references.Append ('`');
 					}
 
-					string missingAssembly = Path.GetFileNameWithoutExtension (ex.FileName);
+					string missingAssembly = ex.FileName;
+					if (missingAssembly.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+						missingAssembly = Path.GetFileNameWithoutExtension (missingAssembly);
+					}
 					string message = $"Can not resolve reference: `{missingAssembly}`, referenced by {references}.";
 					if (MonoAndroidHelper.IsFrameworkAssembly (ex.FileName)) {
 						LogCodedError ("XA2002", $"{message} Perhaps it doesn't exist in the Mono for Android profile?");
@@ -261,25 +257,30 @@ namespace Xamarin.Android.Tasks
 			resolutionPath.RemoveAt (resolutionPath.Count - 1);
 		}
 
-		void CheckAssemblyAttributes (AssemblyDefinition assembly)
+		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader)
 		{
-			foreach (var att in assembly.CustomAttributes) {
-				switch (att.AttributeType.FullName) {
+			foreach (var handle in assembly.GetCustomAttributes ()) {
+				var attribute = reader.GetCustomAttribute (handle);
+				switch (reader.GetCustomAttributeFullName (attribute)) {
 					case "Java.Interop.DoNotPackageAttribute": {
-							string file = (string)att.ConstructorArguments.First ().Value;
-							if (string.IsNullOrWhiteSpace (file))
-								LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.FullName);
-							do_not_package_atts.Add (Path.GetFileName (file));
+							var decoded = attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
+							if (decoded.FixedArguments.Length > 0) {
+								string file = decoded.FixedArguments [0].Value?.ToString ();
+								if (string.IsNullOrWhiteSpace (file))
+									LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.GetAssemblyName ().FullName);
+								do_not_package_atts.Add (Path.GetFileName (file));
+							}
 						}
 						break;
 					case "System.Runtime.Versioning.TargetFrameworkAttribute": {
-							foreach (var p in att.ConstructorArguments) {
-								var value = p.Value.ToString ();
-								if (value.StartsWith ("MonoAndroid")) {
+							var decoded = attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
+							foreach (var p in decoded.FixedArguments) {
+								var value = p.Value?.ToString ();
+								if (value != null && value.StartsWith ("MonoAndroid", StringComparison.Ordinal)) {
 									var values = value.Split ('=');
 									var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (values [1]);
 									if (apiLevel != null) {
-										var assemblyName = assembly.Name.Name;
+										var assemblyName = reader.GetString (assembly.Name);
 										Log.LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
 										api_levels [assemblyName] = apiLevel.Value;
 									}
@@ -305,7 +306,7 @@ namespace Xamarin.Android.Tasks
 			return mode;
 		}
 
-		void AddI18nAssemblies (DirectoryAssemblyResolver resolver, Dictionary<string, ITaskItem> assemblies)
+		void AddI18nAssemblies (MetadataResolver resolver, Dictionary<string, ITaskItem> assemblies)
 		{
 			var i18n = Linker.ParseI18nAssemblies (I18nAssemblies);
 			var link = ParseLinkMode (LinkMode);
@@ -332,10 +333,10 @@ namespace Xamarin.Android.Tasks
 				ResolveI18nAssembly (resolver, "I18N.West", assemblies);
 		}
 
-		void ResolveI18nAssembly (DirectoryAssemblyResolver resolver, string name, Dictionary<string, ITaskItem> assemblies)
+		void ResolveI18nAssembly (MetadataResolver resolver, string name, Dictionary<string, ITaskItem> assemblies)
 		{
-			var assembly = resolver.Resolve (AssemblyNameReference.Parse (name));
-			var assemblyFullPath = Path.GetFullPath (assembly.MainModule.FileName);
+			var assembly = resolver.Resolve (name);
+			var assemblyFullPath = Path.GetFullPath (assembly);
 			assemblies [name] = CreateAssemblyTaskItem (assemblyFullPath);
 		}
 
