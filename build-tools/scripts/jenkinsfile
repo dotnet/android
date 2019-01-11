@@ -129,7 +129,25 @@ pipeline {
             options { timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
             steps {
                 dir("$XADir") {
-                    sh("make run-all-tests CONFIGURATION=${BuildFlavor} V=1")
+                    script {
+                        def status = 0
+                        try
+                        {
+                            echo "running tests"
+                            status = sh(
+                                script: "make run-all-tests CONFIGURATION=${BuildFlavor} V=1",
+                                returnStatus: true
+                            );
+                        } catch (error) {
+                            echo "stage 'run all tests' failed. Error: ${error}"
+                            status = 1;
+                        } finally {
+                            if (status != 0) {
+                                echo "test run failed marking build as UNSTABLE"
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
                 }
             }   
         }
@@ -151,7 +169,7 @@ pipeline {
         stage('publish test error logs to Azure') {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
-                script {                                    // Enter scripted/groovy mode
+                script {
                     if (fileExists('package.tests')) {      // Note: fileExists works for directories too
                         dir('package.tests') {
                             echo "Publishing contents of the package.tests directory to Azure storage"
