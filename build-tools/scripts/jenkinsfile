@@ -141,7 +141,7 @@ pipeline {
                     sh '''
                     if [ -d "xamarin-android/xa-test-errors" ]; then
                         mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
-                        cp xamarin-android/xa-test-errors/* ../package.tests 2>/dev/null
+                        cp xamarin-android/xa-test-errors/*.zip ../package.tests
                     fi
                     '''
                 }
