@@ -35,18 +35,15 @@ pipeline {
                 }
 
                 dir('xamarin-android') {
-                    sh '''
                     echo "Cleaning build status files "
-                    for f in xa-build-status*.zip; do
-                        [ -f "$f" ] || continue
-                        echo "Cleaning file '${f}'"
-                        rm "$f" 2>/dev/null         # Avoid failing the build
-                    done
 
+                    sh "rm -f xa-build-status*.zip"
+
+                    sh '''
                     for dir in `ls -d xa-build-status*`; do
                         [ -d "$dir" ] || continue
                         echo "Cleaning directory '${dir}''"
-                        rm -rf "$dir" 2>/dev/null                   # Avoid failing the build
+                        rm -f "$dir"
                     done
                     '''
                 }
@@ -103,8 +100,22 @@ pipeline {
                     sh('cp bin/Release/bundle-*.zip ../package')
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
                     sh('cp xa-build-status*.zip ../package')                            // UNDONE: Are there other xa-build-status files besides the ZIP file that need to be published?  XA build currently publishes xa-build-status*
-                    sh('cp build-status* ../package 2>/dev/null')                       // Files may not exist and so pipe to null
-                    sh('cp prepare-image-dependencies.sh ../package 2>/dev/null')       // Files may not exist and so pipe to null
+
+                    sh '''
+                    for f in build-status*; do
+                        [ -f "$f" ] || continue
+                        echo "Staging files build-status* for publishing"
+                        cp build-status* ../package
+                        break
+                    done
+                    '''
+
+                    script {
+                        if (fileExists('prepare-image-dependencies.sh')) {
+                            echo 'Staging prepare-image-dependencies.sh for publishing'
+                            sh 'cp prepare-image-dependencies.sh ../package'
+                        }
+                    }
                 }
             }
         }
