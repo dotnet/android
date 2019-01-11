@@ -169,10 +169,10 @@ pipeline {
             }
         }
         
-        stage ('Plot build times') {
+        stage ('Plot build & test metrics') {
             options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
             steps {
-                dir("$XADir") {                    
+                dir("$XADir") {
                     plot(
                         title: 'Jcw',                        
                         csvFileName: 'plot-jcw-test-times.csv',       
@@ -239,6 +239,25 @@ pipeline {
                         ]],
                         group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
                     )
+                }
+            }
+        }
+
+        stage('Upload test results') {
+            options { timeout(time: 30, unit: 'SECONDS') }
+            steps {
+                dir("$XADir") {
+                    xunit thresholds: [
+                            failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                            skipped(unstableNewThreshold: '0', unstableThreshold: '0')
+                        ],
+                        tools: [
+                            NUnit2(deleteOutputFiles: true,
+                            failIfNotNew: true,
+                            pattern: 'TestResult-*.xml',
+                            skipNoTestFiles: true,
+                            stopProcessingIfError: false)
+                        ]
                 }
             }
         }
