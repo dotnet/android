@@ -2164,6 +2164,15 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				var count = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
 				Assert.AreEqual (expectedCount, count, "The same number of resource directories should have been resolved.");
 
+				//NOTE: the designer requires the paths to be full paths
+				foreach (var paths in doc.Elements ("Paths")) {
+					foreach (var element in paths.Elements ()) {
+						var path = element.Value;
+						if (!string.IsNullOrEmpty (path)) {
+							Assert.IsTrue (path == Path.GetFullPath (path), $"`{path}` is not a full path!");
+						}
+					}
+				}
 			}
 		}
 
