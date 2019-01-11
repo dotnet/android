@@ -43,7 +43,7 @@ pipeline {
                     for dir in `ls -d xa-build-status*`; do
                         [ -d "$dir" ] || continue
                         echo "Cleaning directory '${dir}''"
-                        rm -f "$dir"
+                        rm -rf "$dir"
                     done
                     '''
                 }
