@@ -537,11 +537,10 @@ try_load_typemaps_from_directory (const char *path)
 			if (len > 0 && val != nullptr) {
 				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
 					if (!add_type_mapping (&managed_to_java_maps, file_path, nullptr, ((const char*)val)))
-						free (val);
-				}
-				if (utils.monodroid_dirent_hasextension (e, ".jm")) {
+						delete[] val;
+				} else if (utils.monodroid_dirent_hasextension (e, ".jm")) {
 					if (!add_type_mapping (&java_to_managed_maps, file_path, nullptr, ((const char*)val)))
-						free (val);
+						delete[] val;
 				}
 			}
 		}
