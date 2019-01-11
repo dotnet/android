@@ -99,7 +99,7 @@ pipeline {
                     sh('cp xamarin.android-oss*.zip ../package')
                     sh('cp bin/Release/bundle-*.zip ../package')
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
-                    sh('cp xa-build-status*.zip ../package')                            // UNDONE: Are there other xa-build-status files besides the ZIP file that need to be published?  XA build currently publishes xa-build-status*
+                    sh('cp xa-build-status*.zip ../package')
 
                     sh '''
                     for f in build-status*; do
