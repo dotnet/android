@@ -172,7 +172,7 @@ pipeline {
                     script {
                         def status = publishPackages()
                         if (status != 0) {
-                            currentBuild.result = 'FAILED'
+                            currentBuild.result = 'FAILURE'
                         } else {
                             buildStatusUploaded = true
                         }
@@ -345,7 +345,7 @@ pipeline {
             }
         }
 
-        failed {
+        failure {
             script {
                 processAndUploadBuildLogs()
             }
