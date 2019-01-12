@@ -53,7 +53,7 @@ def publishPackages() {
     return status
 }
 
-def processAndUploadBuildLogs() {
+def processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded) {
     def status = 0
     if (!buildStatusProcessed) {
         status = processAndStageBuildResults()
@@ -341,13 +341,13 @@ pipeline {
         // Attempt to process & upload build results even if the build was unstable or failed
         unstable {
             script {
-                processAndUploadBuildLogs()
+                processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded)
             }
         }
 
         failure {
             script {
-                processAndUploadBuildLogs()
+                processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded)
             }
         }
     }
