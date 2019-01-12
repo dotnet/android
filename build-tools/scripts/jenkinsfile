@@ -43,7 +43,7 @@ pipeline {
                     for dir in `ls -d xa-build-status*`; do
                         [ -d "$dir" ] || continue
                         echo "Cleaning directory '${dir}''"
-                        rm -f "$dir"
+                        rm -rf "$dir"
                     done
                     '''
                 }
@@ -99,16 +99,7 @@ pipeline {
                     sh('cp xamarin.android-oss*.zip ../package')
                     sh('cp bin/Release/bundle-*.zip ../package')
                     sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
-                    sh('cp xa-build-status*.zip ../package')                            // UNDONE: Are there other xa-build-status files besides the ZIP file that need to be published?  XA build currently publishes xa-build-status*
-
-                    sh '''
-                    for f in build-status*; do
-                        [ -f "$f" ] || continue
-                        echo "Staging files build-status* for publishing"
-                        cp build-status* ../package
-                        break
-                    done
-                    '''
+                    sh('cp xa-build-status*.zip ../package')
 
                     script {
                         if (fileExists('prepare-image-dependencies.sh')) {
@@ -138,7 +129,25 @@ pipeline {
             options { timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
             steps {
                 dir("$XADir") {
-                    sh("make run-all-tests CONFIGURATION=${BuildFlavor} V=1")
+                    script {
+                        def status = 0
+                        try
+                        {
+                            echo "running tests"
+                            status = sh(
+                                script: "make run-all-tests CONFIGURATION=${BuildFlavor} V=1",
+                                returnStatus: true
+                            );
+                        } catch (error) {
+                            echo "stage 'run all tests' failed. Error: ${error}"
+                            status = 1;
+                        } finally {
+                            if (status != 0) {
+                                echo "test run failed marking build as UNSTABLE"
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
                 }
             }   
         }
@@ -150,7 +159,7 @@ pipeline {
                     sh '''
                     if [ -d "xamarin-android/xa-test-errors" ]; then
                         mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
-                        cp xamarin-android/xa-test-errors/* ../package.tests 2>/dev/null
+                        cp xamarin-android/xa-test-errors/*.zip ../package.tests
                     fi
                     '''
                 }
@@ -160,7 +169,7 @@ pipeline {
         stage('publish test error logs to Azure') {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
-                script {                                    // Enter scripted/groovy mode
+                script {
                     if (fileExists('package.tests')) {      // Note: fileExists works for directories too
                         dir('package.tests') {
                             echo "Publishing contents of the package.tests directory to Azure storage"
@@ -178,10 +187,10 @@ pipeline {
             }
         }
         
-        stage ('Plot build times') {
+        stage ('Plot build & test metrics') {
             options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
             steps {
-                dir("$XADir") {                    
+                dir("$XADir") {
                     plot(
                         title: 'Jcw',                        
                         csvFileName: 'plot-jcw-test-times.csv',       
@@ -231,16 +240,6 @@ pipeline {
                         group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
                     )
 
-                    // UNDONE: Safe to remove?
-                    //plot(
-                    //    title: '[History] (before the graphs were split up)',
-                    //    csvFileName: 'plot-build-times.csv',
-                    //    csvSeries: [[
-                    //        displayTableFlag: true, file: 'TestResult-MSBuild-times.csv', inclusionFlag: 'OFF'
-                    //    ]],
-                    //    group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    //)        			
-
                     plot(
                         title: 'Hello World',
                         csvFileName: 'plot-hello-world-build-times.csv',
@@ -258,6 +257,25 @@ pipeline {
                         ]],
                         group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
                     )
+                }
+            }
+        }
+
+        stage('Upload test results') {
+            options { timeout(time: 30, unit: 'SECONDS') }
+            steps {
+                dir("$XADir") {
+                    xunit thresholds: [
+                            failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                            skipped(unstableNewThreshold: '0', unstableThreshold: '0')
+                        ],
+                        tools: [
+                            NUnit2(deleteOutputFiles: true,
+                            failIfNotNew: true,
+                            pattern: 'TestResult-*.xml',
+                            skipNoTestFiles: true,
+                            stopProcessingIfError: false)
+                        ]
                 }
             }
         }
