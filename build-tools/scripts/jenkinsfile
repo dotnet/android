@@ -2,15 +2,15 @@
 // https://jenkins.io/doc/book/pipeline/syntax/
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
-repoUrl = "https://github.com/xamarin/xamarin-android.git"
-XADir = "xamarin-android"
+def repoUrl = "https://github.com/xamarin/xamarin-android.git"
+def XADir = "xamarin-android"
 
-MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
+def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def processAndStageBuildResults() {
+def processAndStageBuildResults(xaDir) {
     def status = 0
     try {
         def packageDir = "${env.WORKSPACE}/package"
@@ -21,6 +21,7 @@ def processAndStageBuildResults() {
         }
 
         echo "processing & packaging build status"
+        sh "cd ${env.WORKSPACE}/${xaDir}"
         sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
         sh 'cp xa-build-status*.zip ${packageDir}'
 
@@ -53,10 +54,10 @@ def publishPackages() {
     return status
 }
 
-def processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded) {
+def processAndUploadBuildLogs(xaDir, buildStatusProcessed, buildStatusUploaded) {
     def status = 0
     if (!buildStatusProcessed) {
-        status = processAndStageBuildResults()
+        status = processAndStageBuildResults(xaDir)
     }
 
     if (status == 0 && !buildStatusUploaded) {
@@ -148,7 +149,7 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        def status = processAndStageBuildResults()
+                        def status = processAndStageBuildResults(XADir)
 
                         if (fileExists('prepare-image-dependencies.sh')) {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
@@ -341,13 +342,13 @@ pipeline {
         // Attempt to process & upload build results even if the build was unstable or failed
         unstable {
             script {
-                processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded)
+                processAndUploadBuildLogs(XADir, buildStatusProcessed, buildStatusUploaded)
             }
         }
 
         failure {
             script {
-                processAndUploadBuildLogs(buildStatusProcessed, buildStatusUploaded)
+                processAndUploadBuildLogs(XADir, buildStatusProcessed, buildStatusUploaded)
             }
         }
     }
