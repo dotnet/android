@@ -23,7 +23,7 @@ def processAndStageBuildResults(xaDir) {
         echo "processing & packaging build status"
         sh "cd ${env.WORKSPACE}/${xaDir}"
         sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
-        sh 'cp xa-build-status*.zip ${packageDir}'
+        sh "cp xa-build-status*.zip ${packageDir}"
 
     } catch (error) {
         echo "processAndStageBuildResults: Unexpected error: ${error}"
