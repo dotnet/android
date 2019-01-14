@@ -2,11 +2,57 @@
 // https://jenkins.io/doc/book/pipeline/syntax/
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
-repoUrl = "https://github.com/xamarin/xamarin-android.git"
-XADir = "xamarin-android"
-WorkDir = "~/jenkins/workspace/$XADir"
+def repoUrl = "https://github.com/xamarin/xamarin-android.git"
+def XADir = "xamarin-android"
 
-MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
+def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
+
+def buildStatusProcessed = false
+def buildStatusUploaded = false
+
+def processAndStageBuildResults(xaDir) {
+    def status = 0
+    try {
+        def packageDir = "${env.WORKSPACE}/package"
+        echo "packageDir is set to '${packageDir}'"
+
+        if (!fileExists(packageDir)) {
+            sh "mkdir -p \"${packageDir}\""
+        }
+
+        echo "processing & packaging build status"
+        sh "cd ${env.WORKSPACE}/${xaDir}"
+        sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
+        sh "cp xa-build-status*.zip ${packageDir}"
+
+    } catch (error) {
+        echo "processAndStageBuildResults: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
+
+def publishPackages() {
+    def status = 0
+    try {
+        def packageDir = "${env.WORKSPACE}/package"
+        sh "cd ${packageDir}"
+
+        echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
+        step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+            doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+            filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+            uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+        ])
+
+    } catch (error) {
+        echo "publishPackages: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
 
 pipeline {
     
@@ -72,8 +118,6 @@ pipeline {
             options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
             steps {
                 dir("$XADir") {
-                    // UNDONE: What was the reason within the freestyle build for returning true on failure - is okay to ignore VSIX creation failures?
-                    // sh "make create-vsix CONFIGURATION=${BuildFlavor} V=1 || true"
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
                 }
             }
@@ -93,15 +137,13 @@ pipeline {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 1 minute
             steps {
                 dir("$XADir") {
-                    sh('mkdir -p ../package')
-                    sh("make package-build-status CONFIGURATION=${env.BuildFlavor}")
-                    
-                    sh('cp xamarin.android-oss*.zip ../package')
-                    sh('cp bin/Release/bundle-*.zip ../package')
-                    sh('cp bin/Build*/Xamarin.Android.Sdk*.vsix ../package')
-                    sh('cp xa-build-status*.zip ../package')
-
                     script {
+                        def status = processAndStageBuildResults(XADir)
+
+                        if (status == 0) {
+                            buildStatusProcessed = true
+                        }
+
                         if (fileExists('prepare-image-dependencies.sh')) {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
                             sh 'cp prepare-image-dependencies.sh ../package'
@@ -115,12 +157,12 @@ pipeline {
             options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
                 dir('package') {
-                    echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-                    step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                        doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
-                        filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-                        uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-                    ])
+                    script {
+                        def status = publishPackages()
+                        if (status == 0) {
+                            buildStatusUploaded = true
+                        }
+                    }
                 }
             }
         }
@@ -276,6 +318,35 @@ pipeline {
                             skipNoTestFiles: true,
                             stopProcessingIfError: false)
                         ]
+                }
+            }
+        }
+    }
+
+    post {
+        // Attempt to process & upload build results even if the build was unstable or failed
+        always {
+            script {
+                def status = 0
+                if (!buildStatusUploaded) {
+                    echo "ERROR: RETRYING: Build status logs failed during the 'package build' and/or 'publish packages to Azure' stages"
+
+                    if (!buildStatusProcessed) {
+                        echo "Retrying packaging of build status logs"
+                        status = processAndStageBuildResults(xaDir)
+                    }
+
+                    if (status == 0) {
+                        echo "Retrying publishing of build status logs"
+                        status = publishPackages()
+
+                        if (status != 0) {
+                            echo "ERROR: Publishing of build status logs failed"
+                        }
+
+                    } else {
+                        echo "ERROR: Packaging of build status logs failed"
+                    }
                 }
             }
         }
