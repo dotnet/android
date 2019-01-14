@@ -54,17 +54,6 @@ def publishPackages() {
     return status
 }
 
-def processAndUploadBuildLogs(xaDir, buildStatusProcessed, buildStatusUploaded) {
-    def status = 0
-    if (!buildStatusProcessed) {
-        status = processAndStageBuildResults(xaDir)
-    }
-
-    if (status == 0 && !buildStatusUploaded) {
-        status = publishPackages()
-    }
-}
-
 pipeline {
     
     agent {
@@ -151,15 +140,13 @@ pipeline {
                     script {
                         def status = processAndStageBuildResults(XADir)
 
+                        if (status == 0) {
+                            buildStatusProcessed = true
+                        }
+
                         if (fileExists('prepare-image-dependencies.sh')) {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
                             sh 'cp prepare-image-dependencies.sh ../package'
-                        }
-
-                        if (status != 0) {
-                            currentBuild.result = 'UNSTABLE'
-                        } else {
-                            buildStatusProcessed = true
                         }
                     }
                 }
@@ -172,9 +159,7 @@ pipeline {
                 dir('package') {
                     script {
                         def status = publishPackages()
-                        if (status != 0) {
-                            currentBuild.result = 'FAILURE'
-                        } else {
+                        if (status == 0) {
                             buildStatusUploaded = true
                         }
                     }
@@ -340,15 +325,29 @@ pipeline {
 
     post {
         // Attempt to process & upload build results even if the build was unstable or failed
-        unstable {
+        always {
             script {
-                processAndUploadBuildLogs(XADir, buildStatusProcessed, buildStatusUploaded)
-            }
-        }
+                def status = 0
+                if (!buildStatusUploaded) {
+                    echo "ERROR: RETRYING: Build status logs failed during the 'package build' and/or 'publish packages to Azure' stages"
 
-        failure {
-            script {
-                processAndUploadBuildLogs(XADir, buildStatusProcessed, buildStatusUploaded)
+                    if (!buildStatusProcessed) {
+                        echo "Retrying packaging of build status logs"
+                        status = processAndStageBuildResults(xaDir)
+                    }
+
+                    if (status == 0) {
+                        echo "Retrying publishing of build status logs"
+                        status = publishPackages()
+
+                        if (status != 0) {
+                            echo "ERROR: Publishing of build status logs failed"
+                        }
+
+                    } else {
+                        echo "ERROR: Packaging of build status logs failed"
+                    }
+                }
             }
         }
     }
