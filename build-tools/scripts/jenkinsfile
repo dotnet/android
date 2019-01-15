@@ -329,7 +329,7 @@ pipeline {
 
                     if (!buildStatusProcessed) {
                         echo "Retrying packaging of build status logs"
-                        status = processAndStageBuildResults(xaDir)
+                        status = processAndStageBuildResults(XADir)
                     }
 
                     if (status == 0) {
