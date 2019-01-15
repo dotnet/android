@@ -95,7 +95,6 @@ static struct timeval wait_tv;
 static struct timespec wait_ts;
 #endif  // def DEBUG
 char *xamarin::android::internal::runtime_libdir;
-static int register_debug_symbols;
 static MonoMethod* registerType;
 /*
  * If set, monodroid will spin in a loop until the debugger breaks the wait by
@@ -225,7 +224,7 @@ setup_bundled_app (const char *dso_name)
 		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
 		libapp = androidSystem.load_dso_from_any_directories (dso_name, dlopen_flags);
 	} else {
-		mono_bool needs_free = FALSE;
+		bool needs_free = false;
 		log_info (LOG_DEFAULT, "bundle app: normal mode");
 		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, &needs_free);
 		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<nullptr>");
@@ -438,21 +437,17 @@ open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *use
 }
 #endif
 
-int
-should_register_file (const char *filename, void *user_data)
+bool
+should_register_file (const char *filename)
 {
 #ifndef RELEASE
-	int i;
-	for (i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-		int exists;
-		char *p;
-
+	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *odir = androidSystem.get_override_dir (i);
 		if (odir == nullptr)
 			continue;
 
-		p       = utils.path_combine (odir, filename);
-		exists  = utils.file_exists (p);
+		char *p       = utils.path_combine (odir, filename);
+		bool  exists  = utils.file_exists (p);
 		free (p);
 
 		if (exists) {
@@ -461,30 +456,28 @@ should_register_file (const char *filename, void *user_data)
 		}
 	}
 #endif
-	return 1;
+	return true;
 }
 
 static void
-gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, mono_bool register_debug_symbols, int *out_user_assemblies_count)
+gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, int *out_user_assemblies_count)
 {
-	monodroid_embedded_assemblies_set_register_debug_symbols (register_debug_symbols);
-	monodroid_embedded_assemblies_set_should_register (should_register_file, nullptr);
 #ifndef RELEASE
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *p = androidSystem.get_override_dir (i);
 		if (!utils.directory_exists (p))
 			continue;
 		log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
-		try_load_typemaps_from_directory (p);
+		embeddedAssemblies.try_load_typemaps_from_directory (p);
 	}
 #endif
 
 	int prev_num_assemblies = 0;
 	for (int32_t i = runtimeApks.get_length () - 1; i >= 0; --i) {
-		int              cur_num_assemblies;
+		size_t           cur_num_assemblies;
 		jstring_wrapper &apk_file = runtimeApks [i];
 
-		cur_num_assemblies  = monodroid_embedded_assemblies_register_from (&monoFunctions, apk_file.get_cstr ());
+		cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
 
 		if (strstr (apk_file.get_cstr (), "/Mono.Android.DebugRuntime") == nullptr &&
 		    strstr (apk_file.get_cstr (), "/Mono.Android.Platform.ApiLevel_") == nullptr)
@@ -722,7 +715,7 @@ set_debug_options (void)
 	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
 		return;
 
-	register_debug_symbols = 1;
+	embeddedAssemblies.set_register_debug_symbols (true);
 	monoFunctions.debug_init (MONO_DEBUG_FORMAT_MONO);
 }
 
@@ -801,7 +794,7 @@ mono_runtime_init (char *runtime_args)
 		char *debug_arg;
 		char *debug_options [2];
 
-		register_debug_symbols = 1;
+		embeddedAssemblies.set_register_debug_symbols (true);
 
 		debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1", options.loglevel, options.host, options.sdb_port,
 				options.server ? "server=y," : "");
@@ -938,7 +931,7 @@ mono_runtime_init (char *runtime_args)
 	 * Looking for assemblies from the update dir takes precedence over
 	 * everything else, and thus must go LAST.
 	 */
-	monodroid_embedded_assemblies_install_preload_hook (&monoFunctions);
+	embeddedAssemblies.install_preload_hooks ();
 #ifndef RELEASE
 	monoFunctions.install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
@@ -950,7 +943,7 @@ create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeA
 	MonoDomain *domain;
 	int user_assemblies_count   = 0;;
 
-	gather_bundled_assemblies (env, runtimeApks, register_debug_symbols, &user_assemblies_count);
+	gather_bundled_assemblies (env, runtimeApks, embeddedAssemblies.get_register_debug_symbols (), &user_assemblies_count);
 
 	if (!mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
@@ -1648,7 +1641,7 @@ start_debugging (void)
 	if (!sdb_fd)
 		return;
 
-	register_debug_symbols = 1;
+	embeddedAssemblies.set_register_debug_symbols (true);
 
 	debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	debug_options[0] = debug_arg;

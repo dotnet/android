@@ -92,7 +92,7 @@ Util::ends_with (const char *str, const char *end)
 }
 
 char*
-Util::path_combine(const char *path1, const char *path2)
+Util::path_combine (const char *path1, const char *path2)
 {
 	// Don't let erroneous nullptr parameters situation propagate
 	assert (path1 != nullptr || path2 != nullptr);
@@ -343,7 +343,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 
 	if (result > 0) {
 		if (strlen (local_value) == 0) {
-			free (local_value);
+			delete[] local_value;
 			return 0;
 		}
 
@@ -352,7 +352,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 		if (value)
 			*value = local_value;
 		else
-			free (local_value);
+			delete[] local_value;
 		return result;
 	}
 
