@@ -17,5 +17,10 @@ namespace Xamarin.Android.Tasks
 			}
 			return null;
 		}
+
+		public static CustomAttributeValue<object> GetCustomAttributeArguments (this CustomAttribute attribute)
+		{
+			return attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
+		}
 	}
 }

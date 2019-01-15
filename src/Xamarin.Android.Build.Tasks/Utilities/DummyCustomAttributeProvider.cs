@@ -8,6 +8,8 @@ namespace Xamarin.Android.Tasks
 	/// This interface allows usage such as:
 	///		CustomAttribute attribute = reader.GetCustomAttribute (handle);
 	///		CustomAttributeValue<object> decoded = attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
+	/// Or better yet, used via the extension method:
+	///		CustomAttributeValue<object> decoded = attribute.GetCustomAttributeArguments ();
 	/// </summary>
 	public class DummyCustomAttributeProvider : ICustomAttributeTypeProvider<object>
 	{

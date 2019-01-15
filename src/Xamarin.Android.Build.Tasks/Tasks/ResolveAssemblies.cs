@@ -263,9 +263,9 @@ namespace Xamarin.Android.Tasks
 				var attribute = reader.GetCustomAttribute (handle);
 				switch (reader.GetCustomAttributeFullName (attribute)) {
 					case "Java.Interop.DoNotPackageAttribute": {
-							var decoded = attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
-							if (decoded.FixedArguments.Length > 0) {
-								string file = decoded.FixedArguments [0].Value?.ToString ();
+							var arguments = attribute.GetCustomAttributeArguments ();
+							if (arguments.FixedArguments.Length > 0) {
+								string file = arguments.FixedArguments [0].Value?.ToString ();
 								if (string.IsNullOrWhiteSpace (file))
 									LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.GetAssemblyName ().FullName);
 								do_not_package_atts.Add (Path.GetFileName (file));
@@ -273,8 +273,8 @@ namespace Xamarin.Android.Tasks
 						}
 						break;
 					case "System.Runtime.Versioning.TargetFrameworkAttribute": {
-							var decoded = attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
-							foreach (var p in decoded.FixedArguments) {
+							var arguments = attribute.GetCustomAttributeArguments ();
+							foreach (var p in arguments.FixedArguments) {
 								var value = p.Value?.ToString ();
 								if (value != null && value.StartsWith ("MonoAndroid", StringComparison.Ordinal)) {
 									var values = value.Split ('=');
