@@ -83,5 +83,4 @@ namespace xamarin { namespace android { namespace internal {
 }}}
 
 MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
-
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */
