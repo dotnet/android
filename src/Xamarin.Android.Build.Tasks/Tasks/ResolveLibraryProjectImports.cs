@@ -214,7 +214,7 @@ namespace Xamarin.Android.Tasks
 				//string binAssemblyDir = Path.Combine (importsDir, "bin", "assets");
 #endif
 				string resDir = Path.Combine (importsDir, "res");
-				string assemblyDir = Path.Combine (importsDir, "assets");
+				string assetsDir = Path.Combine (importsDir, "assets");
 
 				// Skip already-extracted resources.
 				var stamp = new FileInfo (Path.Combine (outdir.FullName, assemblyIdentName + ".stamp"));
@@ -229,15 +229,15 @@ namespace Xamarin.Android.Tasks
 						resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
 					if (Directory.Exists (resDir)) {
-						var taskItem = new TaskItem (resDir, new Dictionary<string, string> {
+						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
 						});
 						if (assembliesToSkip.Contains (assemblyFileName))
 							taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
 						resolvedResourceDirectories.Add (taskItem);
 					}
-					if (Directory.Exists (assemblyDir))
-						resolvedAssetDirectories.Add (assemblyDir);
+					if (Directory.Exists (assetsDir))
+						resolvedAssetDirectories.Add (Path.GetFullPath (assetsDir));
 					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
 						resolvedEnvironments.Add (env);
 					}
@@ -350,15 +350,15 @@ namespace Xamarin.Android.Tasks
 							resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
 						if (Directory.Exists (resDir)) {
-							var taskItem = new TaskItem (resDir, new Dictionary<string, string> {
+							var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
 							});
 							if (assembliesToSkip.Contains (assemblyFileName))
 								taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
 							resolvedResourceDirectories.Add (taskItem);
 						}
-						if (Directory.Exists (assemblyDir))
-							resolvedAssetDirectories.Add (assemblyDir);
+						if (Directory.Exists (assetsDir))
+							resolvedAssetDirectories.Add (Path.GetFullPath (assetsDir));
 					}
 				}
 
@@ -382,12 +382,12 @@ namespace Xamarin.Android.Tasks
 				var stamp = new FileInfo (Path.Combine (outdir.FullName, Path.GetFileNameWithoutExtension (aarFile.ItemSpec) + ".stamp"));
 				if (stamp.Exists && stamp.LastWriteTimeUtc > new FileInfo (aarFile.ItemSpec).LastWriteTimeUtc) {
 					if (Directory.Exists (resDir))
-						resolvedResourceDirectories.Add (new TaskItem (resDir, new Dictionary<string, string> {
+						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
 							{ SkipAndroidResourceProcessing, "True" },
 						}));
 					if (Directory.Exists (assetsDir))
-						resolvedAssetDirectories.Add (assetsDir);
+						resolvedAssetDirectories.Add (Path.GetFullPath (assetsDir));
 					continue;
 				}
 				// temporarily extracted directory will look like:
@@ -415,12 +415,12 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (Directory.Exists (resDir))
-					resolvedResourceDirectories.Add (new TaskItem (resDir, new Dictionary<string, string> {
+					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
 						{ SkipAndroidResourceProcessing, "True" },
 					}));
 				if (Directory.Exists (assetsDir))
-					resolvedAssetDirectories.Add (assetsDir);
+					resolvedAssetDirectories.Add (Path.GetFullPath (assetsDir));
 			}
 			foreach (var f in outdir.EnumerateFiles ("*.jar", SearchOption.AllDirectories)
 					.Select (fi => fi.FullName)) {

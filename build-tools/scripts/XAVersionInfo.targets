@@ -51,7 +51,7 @@
   <Target Name="GetXAVersionInfo"
       DependsOnTargets="_GetSubmodulesVersionInfo">
     <GitBlame
-        FileName="$(XamarinAndroidSourcePath)\Configuration.props"
+        FileName="Configuration.props"
         LineFilter="&lt;ProductVersion&gt;"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"

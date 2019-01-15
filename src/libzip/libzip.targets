@@ -33,9 +33,7 @@
     />
   </Target>
   <ItemGroup>
-    <Content Include="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="@(_LibZipTarget->'$(_LibZipOutputPath)%(OutputLibrary)')" />
   </ItemGroup>
   <ItemGroup>
     <_LibZipTargetMakefile Include="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)\Makefile')" />

@@ -92,16 +92,25 @@ Util::ends_with (const char *str, const char *end)
 }
 
 char*
-Util::path_combine(const char *path1, const char *path2)
+Util::path_combine (const char *path1, const char *path2)
 {
 	// Don't let erroneous nullptr parameters situation propagate
 	assert (path1 != nullptr || path2 != nullptr);
 
 	if (path1 == nullptr)
-		return strdup (path2);
+		return strdup_new (path2);
 	if (path2 == nullptr)
-		return strdup (path1);
-	return monodroid_strdup_printf ("%s" MONODROID_PATH_SEPARATOR "%s", path1, path2);
+		return strdup_new (path1);
+
+	size_t len = strlen (path1) + strlen (path2) + 2;
+	char *ret = new char [len];
+	*ret = '\0';
+
+	strcat (ret, path1);
+	strcat (ret, MONODROID_PATH_SEPARATOR);
+	strcat (ret, path2);
+
+	return ret;
 }
 
 void
@@ -331,11 +340,18 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 
 	if (strlen (package_property_suffix) > 0) {
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
-		char *propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
-		if (propname) {
-			result = androidSystem.monodroid_get_system_property (propname, &local_value);
-			free (propname);
-		}
+		char *propname;
+#if WINDOWS
+		propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
+#else
+		propname = string_concat (name, ".", package_property_suffix);
+#endif
+		result = androidSystem.monodroid_get_system_property (propname, &local_value);
+#if WINDOWS
+		free (propname);
+#else
+		delete[] propname;
+#endif
 	}
 
 	if (result <= 0 || !local_value)
@@ -343,7 +359,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 
 	if (result > 0) {
 		if (strlen (local_value) == 0) {
-			free (local_value);
+			delete[] local_value;
 			return 0;
 		}
 
@@ -352,7 +368,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 		if (value)
 			*value = local_value;
 		else
-			free (local_value);
+			delete[] local_value;
 		return result;
 	}
 

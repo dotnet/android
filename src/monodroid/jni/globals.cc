@@ -7,6 +7,7 @@ DylibMono monoFunctions;
 Util utils;
 AndroidSystem androidSystem;
 OSBridge osBridge;
+EmbeddedAssemblies embeddedAssemblies;
 
 #ifdef DEBUG
 Debug debug;
