@@ -62,7 +62,6 @@ pipeline {
 
     options {
         timestamps()
-        skipStagesAfterUnstable()
     }
 
     stages {
@@ -180,12 +179,9 @@ pipeline {
                                 script: "make run-all-tests CONFIGURATION=${BuildFlavor} V=1",
                                 returnStatus: true
                             );
-                        } catch (error) {
-                            echo "stage 'run all tests' failed. Error: ${error}"
-                            status = 1;
                         } finally {
                             if (status != 0) {
-                                echo "test run failed marking build as UNSTABLE"
+                                echo "test run failed with status ${status}. Marking build as UNSTABLE"
                                 currentBuild.result = 'UNSTABLE'
                             }
                         }
@@ -324,7 +320,7 @@ pipeline {
     }
 
     post {
-        // Attempt to process & upload build results even if the build was unstable or failed
+        // Attempt to process & upload build results if the initial attempt to process and upload the logs failed
         always {
             script {
                 def status = 0
