@@ -1486,5 +1486,54 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 			}
 		}
+
+		[Test]
+		public void SetupDependenciesForDesigner ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
+						TextContent =  () => "Bar",
+					},
+				},
+			};
+			var proj = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+			};
+			proj.Imports.Add (new Import ("Designer.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<PropertyGroup>
+  <AndroidUseManagedDesignTimeResourceGenerator>False</AndroidUseManagedDesignTimeResourceGenerator>
+  <SetupDependenciesForDesignerDependsOn>
+    UpdateAndroidResources;
+    _AdjustJavacVersionArguments;
+    _GeneratePackageManagerJavaForDesigner;
+    _GetMonoPlatformJarPath;
+    _DetermineJavaLibrariesToCompile;
+  </SetupDependenciesForDesignerDependsOn>
+</PropertyGroup>
+<Target Name=""SetupDependenciesForDesigner"" DependsOnTargets=""$(SetupDependenciesForDesignerDependsOn)"">
+</Target>
+<Target Name=""_GeneratePackageManagerJavaForDesigner"" DependsOnTargets=""_AddStaticResources;_ResolveAssemblies"">
+</Target>
+</Project>
+",
+			});
+			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				libb.Save (lib);
+				appb.Target = "SetupDependenciesForDesigner";
+				Assert.IsTrue (appb.Build (proj, parameters: new [] { "DesignTimeBuild=True" }), "design-time build should have succeeded.");
+
+				//Now a full build
+				Assert.IsTrue (libb.Build (proj), "library build should have succeeded.");
+				appb.Target = "SignAndroidPackage";
+				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
+			}
+		}
 	}
 }

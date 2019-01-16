@@ -1917,9 +1917,9 @@ because xbuild doesn't support framework reference assemblies.
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
 		<FilteredAssemblies Include="@(ReferenceCopyLocalPaths)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' "/>
+				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "/>
 		<FilteredAssemblies Include="@(ReferencePath)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' "/>
+				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(ReferencePath.Identity)') "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies
