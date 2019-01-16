@@ -37,7 +37,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Reflection.Metadata">
+      <HintPath>..\..\packages\System.Reflection.Metadata.1.6.0\lib\netstandard2.0\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Irony">
@@ -157,8 +163,11 @@
     <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
+    <Compile Include="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="Utilities\InvalidActivityNameException.cs" />
     <Compile Include="Utilities\JavaResourceParser.cs" />
+    <Compile Include="Utilities\MetadataResolver.cs" />
+    <Compile Include="Utilities\MetadataExtensions.cs" />
     <Compile Include="Utilities\ResourceParser.cs" />
     <Compile Include="Utilities\ManagedResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />
@@ -769,11 +778,6 @@
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="pdb2mdb\" />
-    <Folder Include="Linker\Linker\" />
-    <Folder Include="utils\" />
   </ItemGroup>
   <Import Project="ILRepack.targets" />
 </Project>

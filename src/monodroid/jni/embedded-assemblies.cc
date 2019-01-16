@@ -53,7 +53,7 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)
 		delete[] assemblies_prefix_override;
-	assemblies_prefix_override = prefix != nullptr ? strdup (prefix) : nullptr;
+	assemblies_prefix_override = prefix != nullptr ? utils.strdup_new (prefix) : nullptr;
 }
 
 MonoAssembly*
