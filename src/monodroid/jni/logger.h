@@ -21,6 +21,13 @@ void init_logging_categories ();
 
 void init_reference_logging (const char *override_dir);
 
+typedef enum _LogTimingCategories {
+	LOG_TIMING_DEFAULT = 0,
+	LOG_TIMING_BARE = 1 << 0,
+} LogTimingCategories;
+
+extern unsigned int log_timing_categories;
+
 #if DEBUG
 extern int gc_spew_enabled;
 #endif
