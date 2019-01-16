@@ -37,6 +37,7 @@ typedef struct dirent monodroid_dirent_t;
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -62,6 +63,16 @@ extern "C" {
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
 #define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
+
+#if __cplusplus >= 201703L
+#define UNUSED_ARG [[maybe_unused]]
+#else
+#if defined (__GNUC__)
+#define UNUSED_ARG __attribute__((__unused__))
+#else
+#define UNUSED_ARG
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,7 +168,35 @@ namespace xamarin { namespace android
 		bool             file_copy (const char *to, const char *from);
 		jclass           get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref = false);
 
-#ifdef WINDOWS
+		char            *strdup_new (const char* s)
+		{
+			assert (s != nullptr);
+
+			size_t slen = strlen (s);
+			char *ret = new char [slen + 1];
+			memcpy (ret, s, slen);
+			ret[slen] = '\0';
+
+			return ret;
+		}
+#if !defined (WINDOWS)
+		// Without <type_traits> it's a little bit open for abuse (bad stuff will happen if
+		// a type different than `char*` is used to specialize the function and we can't
+		// assert this condition on compile time), but we can take that risk since it's
+		// internal, controlled API
+		template<typename StringType = const char*, typename ...Strings>
+		char* string_concat (const char *s1, StringType s2, Strings... strings)
+		{
+			size_t len = calculate_length (s1, s2, strings...);
+
+			char *ret = new char [len + 1];
+			*ret = '\0';
+
+			concatenate_strings_into (ret, s1, s2, strings...);
+
+			return ret;
+		}
+#else // def WINDOWS
 		/* Those two conversion functions are only properly implemented on Windows
 		 * because that's the only place where they should be useful.
 		 */
@@ -170,7 +209,7 @@ namespace xamarin { namespace android
 		{
 			return ::utf8_to_utf16 (mbstr);
 		}
-#endif // def WINDOWS
+#endif // !def WINDOWS
 		bool            is_path_rooted (const char *path);
 
 		void *xmalloc (size_t size)
@@ -206,8 +245,30 @@ namespace xamarin { namespace android
 
 		template<typename IdxType = size_t, typename ...Indices>
 		void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
-#endif
 
+		template<typename StringType = const char*, typename ...Strings>
+		void concatenate_strings_into (UNUSED_ARG char *dest)
+		{}
+
+		template<typename StringType = const char*, typename ...Strings>
+		void concatenate_strings_into (char *dest, StringType s1, Strings... strings)
+		{
+			strcat (dest, s1);
+			concatenate_strings_into (dest, strings...);
+		}
+
+		template<typename StringType = const char*>
+		size_t calculate_length (StringType s)
+		{
+			return strlen (s);
+		}
+
+		template<typename StringType = const char*, typename ...Strings>
+		size_t calculate_length (StringType s1, Strings... strings)
+		{
+			return strlen (s1) + calculate_length (strings...);
+		}
+#endif
 		int make_directory (const char *path, int mode)
 		{
 #if WINDOWS

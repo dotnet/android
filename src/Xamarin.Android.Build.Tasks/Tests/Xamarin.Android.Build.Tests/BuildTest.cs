@@ -2164,6 +2164,15 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				var count = doc.Elements ("Paths").Elements ("ResolvedResourceDirectories").Count ();
 				Assert.AreEqual (expectedCount, count, "The same number of resource directories should have been resolved.");
 
+				//NOTE: the designer requires the paths to be full paths
+				foreach (var paths in doc.Elements ("Paths")) {
+					foreach (var element in paths.Elements ()) {
+						var path = element.Value;
+						if (!string.IsNullOrEmpty (path)) {
+							Assert.IsTrue (path == Path.GetFullPath (path), $"`{path}` is not a full path!");
+						}
+					}
+				}
 			}
 		}
 
@@ -3353,6 +3362,94 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 				//NOTE: only $(AndroidFastDeploymentType) containing "dexes" should add this to the manifest
 				Assert.IsFalse (StringAssertEx.ContainsText (content, type), $"`{type}` should not exist in `AndroidManifest.xml`!");
+			}
+		}
+
+		[Test]
+		public void DuplicateJCWNames ()
+		{
+			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
+			var library1 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("EmptyClass.cs") {
+						TextContent = () => source
+					}
+				}
+			};
+			var library2 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library2",
+				Sources = {
+					new BuildItem.Source ("EmptyClass.cs") {
+						TextContent = () => source
+					}
+				}
+			};
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App1",
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj")
+				},
+			};
+			var projectPath = Path.Combine ("temp", TestName);
+			using (var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false)) {
+				Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
+				Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
+				using (var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName))) {
+					appb.ThrowOnBuildFailure = false;
+					Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
+					IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
+					Assert.NotNull (errors, "Error should be XA4215");
+					StringAssertEx.Contains ("EmptyClass", errors, "Error should mention the conflicting type name");
+					StringAssertEx.Contains ("Library1", errors, "Error should mention all of the assemblies with conflicts");
+					StringAssertEx.Contains ("Library2", errors, "Error should mention all of the assemblies with conflicts");
+				}
+			}
+		}
+
+		[Test]
+		public void DuplicateManagedNames ()
+		{
+			var source = @"public class EmptyClass : Java.Lang.Object { }";
+			var library1 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("EmptyClass.cs") {
+						TextContent = () => source
+					}
+				}
+			};
+			var library2 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library2",
+				Sources = {
+					new BuildItem.Source ("EmptyClass.cs") {
+						TextContent = () => source
+					}
+				}
+			};
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App1",
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj")
+				},
+			};
+			var projectPath = Path.Combine ("temp", TestName);
+			using (var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false)) {
+				Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
+				Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
+				using (var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName))) {
+					appb.ThrowOnBuildFailure = false;
+					Assert.IsTrue (appb.Build (app), "Build of App1 should have succeeded");
+					IEnumerable<string> warnings = appb.LastBuildOutput.Where (x => x.Contains ("warning XA4214"));
+					Assert.NotNull (warnings, "Warning should be XA4214");
+					StringAssertEx.Contains ("EmptyClass", warnings, "Warning should mention the conflicting type name");
+					StringAssertEx.Contains ("Library1", warnings, "Warning should mention all of the assemblies with conflicts");
+					StringAssertEx.Contains ("Library2", warnings, "Warning should mention all of the assemblies with conflicts");
+				}
 			}
 		}
 	}
