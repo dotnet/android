@@ -862,7 +862,7 @@ mono_runtime_init (char *runtime_args)
 #endif
 
 	profile_events = MonoProfileFlags::MONO_PROFILE_THREADS;
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		char *jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
 		jit_log = utils.monodroid_fopen (jit_log_path, "a");
 		utils.set_world_accessable (jit_log_path);
@@ -873,7 +873,7 @@ mono_runtime_init (char *runtime_args)
 	monoFunctions.profiler_install ((MonoProfiler*)&monodroid_profiler, nullptr);
 	monoFunctions.profiler_set_events (profile_events);
 	monoFunctions.profiler_install_thread (reinterpret_cast<void*> (thread_start), reinterpret_cast<void*> (thread_end));
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE))
 		monoFunctions.profiler_install_jit_end (jit_end);
 
 	parse_gdb_options ();
@@ -1885,7 +1885,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	}
 	androidSystem.setup_process_args (env, runtimeApks);
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		monoFunctions.counters_enable (XA_LOG_COUNTERS);
 		char *counters_path = utils.path_combine (androidSystem.get_override_dir (0), "counters.txt");
 		log_info_nocheck (LOG_TIMING, "counters path: %s", counters_path);

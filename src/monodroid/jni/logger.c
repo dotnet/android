@@ -58,6 +58,7 @@ __android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
 #endif
 
 unsigned int log_categories;
+unsigned int log_timing_categories;
 int gc_spew_enabled;
 
 static FILE*
@@ -125,6 +126,7 @@ init_logging_categories ()
 #if !ANDROID
 	log_categories = LOG_DEFAULT;
 #endif
+	log_timing_categories = LOG_TIMING_DEFAULT;
 	if (monodroid_get_namespaced_system_property (DEBUG_MONO_LOG_PROPERTY, &value) == 0)
 		return;
 
@@ -170,6 +172,10 @@ init_logging_categories ()
 		} else if (!strncmp (arg, "lref-", 5)) {
 			log_categories  |= LOG_LREF;
 			light_lref       = 1;
+		}
+
+		if (!strncmp (arg, "timing=bare", 11)) {
+			log_timing_categories |= LOG_TIMING_BARE;
 		}
 	}
 
