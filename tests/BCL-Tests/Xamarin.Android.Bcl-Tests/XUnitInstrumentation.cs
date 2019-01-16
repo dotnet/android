@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 using Android.App;
 using Android.Runtime;
-using Xamarin.Android.UnitTests;
+
 using Xamarin.Android.UnitTests.XUnit;
 
 namespace xUnitTestRunner
@@ -35,6 +34,7 @@ namespace xUnitTestRunner
 
 		void CommonInit ()
 		{
+			TestAssembliesGlobPattern = "*_xunit-test.dll";
 			string cacheDir = Path.Combine (Application.Context.CacheDir.AbsolutePath, DefaultLogTag);
 			using (var files = typeof (XUnitInstrumentation).Assembly.GetManifestResourceStream ("bcl-tests.zip")) {
 				ExtractAssemblies (cacheDir, files);
@@ -78,18 +78,6 @@ namespace xUnitTestRunner
 			}
 
 			runner.SetFilters (filters);
-		}
-
-		protected override IEnumerable<TestAssemblyInfo> GetTestAssembliesFromDirectory (string directoryPath)
-		{
-			using (var reader = new StreamReader (typeof (XUnitInstrumentation).Assembly.GetManifestResourceStream ("xunit-assemblies.txt")))
-			{
-				string line;
-				while ((line = reader.ReadLine ()) != null)
-				{
-					yield return LoadTestAssembly (Path.Combine (directoryPath, line));
-				}
-			}
 		}
 	}
 }
