@@ -65,6 +65,7 @@ extern "C" {
 #include "mkbundle-api.h"
 #include "monodroid-glue-internal.h"
 #include "globals.h"
+#include "typemap.h"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -215,6 +216,9 @@ mono_mkbundle_initialize_mono_api_ptr mono_mkbundle_initialize_mono_api;
 static void
 setup_bundled_app (const char *dso_name)
 {
+	if (!application_config.is_a_bundled_app)
+		return;
+
 	static int dlopen_flags = RTLD_LAZY;
 	void *libapp = nullptr;
 
@@ -479,7 +483,7 @@ should_register_file (const char *filename)
 static void
 gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, int *out_user_assemblies_count)
 {
-#ifndef RELEASE
+#if defined(DEBUG) || !defined (ANDROID)
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *p = androidSystem.get_override_dir (i);
 		if (!utils.directory_exists (p))
@@ -1174,6 +1178,7 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobj
 		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
 	}
 
+	// TODO: try looking up the method by its token
 	runtime                             = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "JNIEnv");
 	method                              = monoFunctions.class_get_method_from_name (runtime, "Initialize", 1);
 
@@ -1804,8 +1809,7 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName,
-                                jint apiLevel, jobjectArray environmentVariables)
+                                jobjectArray externalStorageDirs, jobjectArray assemblies, jint apiLevel)
 {
 	init_logging_categories ();
 
@@ -1818,13 +1822,12 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 
 	TimeZone_class = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
-	jstring_wrapper jstr (env, packageName);
-	utils.monodroid_store_package_name (jstr.get_cstr ());
+	utils.monodroid_store_package_name (application_config.android_package_name);
 
-	jstr = lang;
+	jstring_wrapper jstr (env, lang);
 	set_environment_variable (env, "LANG", jstr);
 
-	androidSystem.setup_environment (env, environmentVariables);
+	androidSystem.setup_environment ();
 
 	jstr = reinterpret_cast <jstring> (env->GetObjectArrayElement (appDirs, 1));
 	set_environment_variable_for_directory (env, "TMPDIR", jstr);

@@ -46,6 +46,12 @@ public class MonoPackageManager {
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
 
+				// Preload DSOs libmonodroid.so depends on so that the dynamic
+				// linker can resolve them when loading monodroid. This is not
+				// needed in the latest Android versions but is required in at least
+				// API 16 and since there's no inherent negative effect of doing it,
+				// we can do it unconditionally.
+				System.loadLibrary("xamarin-app");
 				System.loadLibrary("monodroid");
 
 				Runtime.init (
@@ -63,9 +69,7 @@ public class MonoPackageManager {
 							externalLegacyDir
 						},
 						MonoPackageManager_Resources.Assemblies,
-						context.getPackageName (),
-						android.os.Build.VERSION.SDK_INT,
-						mono.android.app.XamarinAndroidEnvironmentVariables.Variables);
+						android.os.Build.VERSION.SDK_INT);
 				
 				mono.android.app.ApplicationRegistration.registerApplications ();
 				

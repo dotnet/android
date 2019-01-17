@@ -1,9 +1,11 @@
 ﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -13,8 +15,6 @@ namespace Xamarin.Android.Tasks
 {
 	public class GeneratePackageManagerJava : Task
 	{
-		const string EnvironmentFileName = "XamarinAndroidEnvironmentVariables.java";
-
 		Guid buildId = Guid.NewGuid ();
 
 		[Required]
@@ -40,6 +40,15 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string Manifest { get; set; }
+
+		[Required]
+		public bool IsBundledApplication { get; set; }
+
+		[Required]
+		public string SupportedAbis { get; set; }
+
+		[Required]
+		public string AndroidPackageName { get; set; }
 
 		public string Debug { get; set; }
 		public ITaskItem[] Environments { get; set; }
@@ -131,17 +140,17 @@ namespace Xamarin.Android.Tasks
 
 		void AddEnvironment ()
 		{
-			var environment = new StringWriter () {
-				NewLine = "\n",
-			};
-
-			if (EnableLLVM) {
-				WriteEnvironment ("mono.llvm", "true");
-			}
+			bool usesEmbeddedDSOs = false;
+			bool usesMonoAOT = false;
+			uint monoAOTMode = 0;
+			string androidPackageName = null;
+			var environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
+			var systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
 
 			AotMode aotMode;
 			if (AndroidAotMode != null && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode)) {
-				WriteEnvironment ("mono.aot", aotMode.ToString ().ToLowerInvariant());
+				usesMonoAOT = true;
+				monoAOTMode = (uint)aotMode;
 			}
 
 			bool haveLogLevel = false;
@@ -156,7 +165,6 @@ namespace Xamarin.Android.Tasks
 				sequencePointsMode = SequencePointsMode.None;
 
 			foreach (ITaskItem env in Environments ?? new TaskItem[0]) {
-				environment.WriteLine ("\t\t// Source File: {0}", env.ItemSpec);
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					var lineToWrite = line;
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))
@@ -174,72 +182,106 @@ namespace Xamarin.Android.Tasks
 						haveHttpMessageHandler = true;
 					if (lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
 						haveTlsProvider = true;
-					WriteEnvironmentLine (lineToWrite);
+					if (lineToWrite.StartsWith ("__XA_DSO_IN_APK", StringComparison.Ordinal)) {
+						usesEmbeddedDSOs = true;
+						continue;
+					}
+
+					AddEnvironmentVariableLine (lineToWrite);
 				}
 			}
 
 			if (_Debug && !haveLogLevel) {
-				WriteEnvironment (defaultLogLevel[0], defaultLogLevel[1]);
+				AddEnvironmentVariable (defaultLogLevel[0], defaultLogLevel[1]);
 			}
 
 			if (sequencePointsMode != SequencePointsMode.None && !haveMonoDebug) {
-				WriteEnvironment (defaultMonoDebug[0], defaultMonoDebug[1]);
+				AddEnvironmentVariable (defaultMonoDebug[0], defaultMonoDebug[1]);
 			}
 
 			if (!havebuildId)
-				WriteEnvironment ("XAMARIN_BUILD_ID", BuildId);
+				AddEnvironmentVariable ("XAMARIN_BUILD_ID", BuildId);
 
 			if (!haveHttpMessageHandler) {
 				if (HttpClientHandlerType == null)
-					WriteEnvironment (defaultHttpMessageHandler[0], defaultHttpMessageHandler[1]);
+					AddEnvironmentVariable (defaultHttpMessageHandler[0], defaultHttpMessageHandler[1]);
 				else
-					WriteEnvironment ("XA_HTTP_CLIENT_HANDLER_TYPE", HttpClientHandlerType.Trim ());
+					AddEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE", HttpClientHandlerType.Trim ());
 			}
 
 			if (!haveTlsProvider) {
 				if (TlsProvider == null)
-					WriteEnvironment (defaultTlsProvider[0], defaultTlsProvider[1]);
+					AddEnvironmentVariable (defaultTlsProvider[0], defaultTlsProvider[1]);
 				else
-					WriteEnvironment ("XA_TLS_PROVIDER", TlsProvider.Trim ());
+					AddEnvironmentVariable ("XA_TLS_PROVIDER", TlsProvider.Trim ());
 			}
 
 			if (!haveMonoGCParams) {
 				if (EnableSGenConcurrent)
-					WriteEnvironment ("MONO_GC_PARAMS", "major=marksweep-conc");
+					AddEnvironmentVariable ("MONO_GC_PARAMS", "major=marksweep-conc");
 				else
-					WriteEnvironment ("MONO_GC_PARAMS", "major=marksweep");
+					AddEnvironmentVariable ("MONO_GC_PARAMS", "major=marksweep");
 			}
 
-			string environmentTemplate;
-			using (var sr = new StreamReader (typeof (BuildApk).Assembly.GetManifestResourceStream (EnvironmentFileName))) {
-				environmentTemplate = sr.ReadToEnd ();
-			}
+			foreach (string abi in SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+				NativeAssemblerTargetProvider asmTargetProvider;
+				string asmFileName = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}.s");
+				switch (abi.Trim ()) {
+					case "armeabi-v7a":
+						asmTargetProvider = new ARMNativeAssemblerTargetProvider (false);
+						break;
 
-			using (var ms = new MemoryStream ()) {
-				using (var sw = new StreamWriter (ms)) {
-					sw.Write (environmentTemplate.Replace ("//@ENVVARS@", environment.ToString ()));
-					sw.Flush ();
+					case "arm64-v8a":
+						asmTargetProvider = new ARMNativeAssemblerTargetProvider (true);
+						break;
 
-					string dest = Path.GetFullPath (Path.Combine (EnvironmentOutputDirectory, EnvironmentFileName));
-					MonoAndroidHelper.CopyIfStreamChanged (ms, dest);
+					case "x86":
+						asmTargetProvider = new X86NativeAssemblerTargetProvider (false);
+						break;
+
+					case "x86_64":
+						asmTargetProvider = new X86NativeAssemblerTargetProvider (true);
+						break;
+
+					default:
+						throw new InvalidOperationException ($"Unknown ABI {abi}");
+				}
+
+				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, environmentVariables, systemProperties) {
+					IsBundledApp = IsBundledApplication,
+					UsesEmbeddedDSOs = usesEmbeddedDSOs,
+					UsesMonoAOT = usesMonoAOT,
+					UsesMonoLLVM = EnableLLVM,
+					MonoAOTMode = monoAOTMode.ToString ().ToLowerInvariant (),
+					AndroidPackageName = AndroidPackageName,
+				};
+
+				using (var ms = new MemoryStream ()) {
+					using (var sw = new StreamWriter (ms, new UTF8Encoding (false))) {
+						asmgen.Write (sw, asmFileName);
+						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFileName);
+					}
 				}
 			}
 
-			void WriteEnvironment (string name, string value)
+			void AddEnvironmentVariable (string name, string value)
 			{
-				environment.WriteLine ($"\t\t\"{ValidJavaString (name)}\", \"{ValidJavaString (value)}\",");
+				if (Char.IsUpper(name [0]) || !Char.IsLetter(name [0]))
+					environmentVariables [ValidAssemblerString (name)] = ValidAssemblerString (value);
+				else
+					systemProperties [ValidAssemblerString (name)] = ValidAssemblerString (value);
 			}
 
-			void WriteEnvironmentLine (string line)
+			void AddEnvironmentVariableLine (string line)
 			{
 				if (String.IsNullOrEmpty (line))
 					return;
 
 				string[] nv = line.Split (new char[]{'='}, 2);
-				WriteEnvironment (nv[0].Trim (), nv.Length < 2 ? String.Empty : nv[1].Trim ());
+				AddEnvironmentVariable (nv[0].Trim (), nv.Length < 2 ? String.Empty : nv[1].Trim ());
 			}
 
-			string ValidJavaString (string s)
+			string ValidAssemblerString (string s)
 			{
 				return s.Replace ("\"", "\\\"");
 			}

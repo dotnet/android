@@ -1750,6 +1750,8 @@ namespace App1
 		[Test]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
 				IsRelease = true,
@@ -1769,25 +1771,27 @@ namespace App1
 			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
-				string javaEnv = Path.Combine (Root, appb.ProjectDirectory,
-							       app.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-				string[] lines = File.ReadAllLines (javaEnv);
-				Assert.IsTrue (lines.Any (x => x.Contains ("MONO_DEBUG") &&
-						x.Contains ("soft-breakpoints") &&
-						string.IsNullOrEmpty (sequencePointsMode) ? true : x.Contains ("gen-compact-seq-points")),
-						"The values from Mono.env should have been merged into environment");
+				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
-				string dexFile = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes.dex");
-				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
-				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, appb.AndroidSdkDirectory),
-					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
+				string monoDebugVar;
+				Assert.IsTrue (envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar), "Environment should contain MONO_DEBUG");
+				Assert.IsFalse (String.IsNullOrEmpty (monoDebugVar), "Environment must contain MONO_DEBUG with a value");
+				Assert.IsTrue (monoDebugVar.IndexOf ("soft-breakpoints") >= 0, "Environment must contain MONO_DEBUG with 'soft-breakpoints' in its value");
+
+				if (!String.IsNullOrEmpty (sequencePointsMode))
+					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points") >= 0, "The values from Mono.env should have been merged into environment");
+
+				EnvironmentHelper.AssertValidEnvironmentDSO (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 
 				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
 				var rp = new ReaderParameters { ReadSymbols = false };
@@ -1807,29 +1811,32 @@ namespace App1
 		[Test]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
-							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-				string[] lines = File.ReadAllLines (javaEnv);
-				Assert.IsTrue (lines.Any (x =>
-							  string.IsNullOrEmpty (sequencePointsMode)
-							  ? !x.Contains ("MONO_DEBUG")
-							  : x.Contains ("MONO_DEBUG") && x.Contains ("gen-compact-seq-points")),
-					       "environment {0} contain MONO_DEBUG=gen-compact-seq-points",
-					       string.IsNullOrEmpty (sequencePointsMode) ? "should not" : "should");
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
-				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
-				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
-				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
-					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
+				string monoDebugVar;
+				bool monoDebugVarFound = envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar);
+				if (String.IsNullOrEmpty (sequencePointsMode))
+					Assert.IsFalse (monoDebugVarFound, $"environment should not contain MONO_DEBUG={monoDebugVar}");
+				else {
+					Assert.IsTrue (monoDebugVarFound, "environment should contain MONO_DEBUG");
+					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
+				}
+
+				EnvironmentHelper.AssertValidEnvironmentDSO (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 			}
 		}
 

@@ -103,6 +103,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Proguard" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMultiDexMainDexClassList" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationDSOs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
 <!--
 *******************************************
@@ -274,6 +276,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
 	<_AndroidBuildIdFile>$(IntermediateOutputPath)buildid.txt</_AndroidBuildIdFile>
+        <_AndroidApplicationDSOPath>$(IntermediateOutputPath)app_dsos\</_AndroidApplicationDSOPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
@@ -317,6 +320,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
+        <_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 </PropertyGroup>
 
 <Choose>
@@ -2302,10 +2306,22 @@ because xbuild doesn't support framework reference assemblies.
   </CreateItem>
 </Target>
 
+<Target Name="_PrepareNativeAssemblySources">
+  <ItemGroup>
+    <_BuiltAbis Include="$(_BuildTargetAbis)" />
+    <_TypeMapAssemblySource Include="$(_NativeAssemblySourceDir)typemap.jm.%(_BuiltAbis.Identity).s">
+      <abi>%(_BuiltAbis.Identity)</abi>
+    </_TypeMapAssemblySource>
+    <_TypeMapAssemblySource Include="$(_NativeAssemblySourceDir)typemap.mj.%(_BuiltAbis.Identity).s">
+      <abi>%(_BuiltAbis.Identity)</abi>
+    </_TypeMapAssemblySource>
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateJavaStubs"
-  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
+  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies);_PrepareNativeAssemblySources"
   Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
-  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+  Outputs="@(_TypeMapAssemblySource);$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
@@ -2330,8 +2346,8 @@ because xbuild doesn't support framework reference assemblies.
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
 	AcwMapFile="$(_AcwMapFile)"
-	CacheFile="$(IntermediateOutputPath)javastubs.cache">
-  </GenerateJavaStubs>
+	CacheFile="$(IntermediateOutputPath)javastubs.cache"
+	SupportedAbis="$(_BuildTargetAbis)"/>
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"
 	CustomViewMapFile="$(_CustomViewMapFile)"
@@ -2386,17 +2402,26 @@ because xbuild doesn't support framework reference assemblies.
   </GetAddOnPlatformLibraries>
 </Target>
 
+<Target Name="_PrepareEnvironmentAssemblySources">
+  <ItemGroup>
+    <_BuiltAbis Include="$(_BuildTargetAbis)" />
+    <_EnvironmentAssemblySource Include="$(_NativeAssemblySourceDir)environment.%(_BuiltAbis.Identity).s">
+      <abi>%(_BuiltAbis.Identity)</abi>
+    </_EnvironmentAssemblySource>
+  </ItemGroup>
+</Target>
+
 <Target Name="_GeneratePackageManagerJava"
-  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
+  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies;_PrepareEnvironmentAssemblySources"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
+  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp;@(_EnvironmentAssemblySource)">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
     OutputDirectory="$(IntermediateOutputPath)android\src\mono"
-    EnvironmentOutputDirectory="$(IntermediateOutputPath)android\src\mono\android\app"
+    EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
@@ -2408,6 +2433,9 @@ because xbuild doesn't support framework reference assemblies.
     Debug="$(AndroidIncludeDebugSymbols)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+    IsBundledApplication="$(BundleAssemblies)"
+    SupportedAbis="$(_BuildTargetAbis)"
+    AndroidPackageName="$(_AndroidPackage)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2848,6 +2876,56 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
+<Target Name="_PrepareNativeAssemblyItems">
+  <ItemGroup>
+    <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->Replace('.s', '.o'))">
+      <abi>%(_TypeMapAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_EnvironmentAssemblySource->Replace('.s', '.o'))">
+      <abi>%(_EnvironmentAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
+  </ItemGroup>
+</Target>
+
+<Target Name="_CompileNativeAssemblySources"
+        DependsOnTargets="_PrepareNativeAssemblyItems"
+        Inputs="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource)"
+        Outputs="@(_NativeAssemblyTarget)">
+        <CompileNativeAssembly
+            Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource)"
+            DebugBuild="$(AndroidIncludeDebugSymbols)"
+            WorkingDirectory="$(_NativeAssemblySourceDir)"/>
+</Target>
+
+<Target Name="_PrepareApplicationDSOItems">
+  <ItemGroup>
+    <_XARuntimeArchitecture Include="$(_Android32bitArchitectures)"/>
+    <_XARuntimeArchitecture Include="$(_Android64bitArchitectures)"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ApplicationDSO Include="$(_AndroidApplicationDSOPath)%(_XARuntimeArchitecture.Identity)\libxamarin-app.so"
+                     Condition=" $(_BuildTargetAbis.Contains ('%(_XARuntimeArchitecture.Identity)')) ">
+      <abi>%(_XARuntimeArchitecture.Identity)</abi>
+    </_ApplicationDSO>
+  </ItemGroup>
+</Target>
+
+<Target Name="_CreateApplicationDSOs"
+        DependsOnTargets="_CompileNativeAssemblySources;_PrepareApplicationDSOItems"
+        Inputs="@(_NativeAssemblyTarget)"
+        Outputs="@(_ApplicationDSO)">
+        <LinkApplicationDSOs
+            ObjectFiles="@(_NativeAssemblyTarget)"
+            ApplicationDSOs="@(_ApplicationDSO)"
+            DebugBuild="$(AndroidIncludeDebugSymbols)"
+            AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+            />
+  <ItemGroup>
+    <FileWrites Include="@(_ApplicationDSO)" />
+  </ItemGroup>
+</Target>
+
 <PropertyGroup>
 	<_PrepareBuildApkDependsOnTargets>
 		_SetLatestTargetFrameworkVersion;
@@ -2864,7 +2942,8 @@ because xbuild doesn't support framework reference assemblies.
 		_CreateBaseApk;
 		_PrepareAssemblies;
 		_ResolveSatellitePaths;
-		_CheckApkPerAbiFlag
+		_CheckApkPerAbiFlag;
+		_CreateApplicationDSOs;
 		;_LintChecks
 		;_IncludeNativeSystemLibraries
 	</_PrepareBuildApkDependsOnTargets>
@@ -2934,6 +3013,7 @@ because xbuild doesn't support framework reference assemblies.
  	<Output TaskParameter="OutputNativeLibraries" PropertyName="_BundleResultNativeLibraries" />
   </MakeBundleNativeCodeExternal>
   <!-- Put the assemblies and native libraries in the apk -->
+  <!--    TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)" -->
   <BuildApk
     AndroidNdkDirectory="$(_AndroidNdkDirectory)"
     ApkInputPath="$(_PackagedResources)"
@@ -2944,6 +3024,7 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
     ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
     NativeLibraries="@(AndroidNativeLibrary)"
+    ApplicationDSOs="@(_ApplicationDSO)"
     AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
     EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
     DalvikClasses="@(_DexFile)"
@@ -2952,7 +3033,6 @@ because xbuild doesn't support framework reference assemblies.
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     Debug="$(AndroidIncludeDebugSymbols)"
     PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
-    TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"

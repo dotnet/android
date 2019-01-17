@@ -223,6 +223,13 @@ if(UNIX)
     )
 endif()
 
+set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
+add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
+set_target_properties(xamarin-app
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+  )
+
 set(SOURCES_FRAGMENT_FILE "sources.projitems")
 file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
 <Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
@@ -247,4 +254,4 @@ elseif(NOT ANDROID)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 
-target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS})
+target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
