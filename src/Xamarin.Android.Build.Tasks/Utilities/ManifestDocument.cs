@@ -667,11 +667,12 @@ namespace Xamarin.Android.Tasks {
 		{
 			var processAttrName = androidNs.GetName ("directBootAware");
 			var appAttr = app.Attribute (processAttrName);
-			if (appAttr != null && bool.TryParse (appAttr.Value, out bool value) && value)
-					return true;
+			bool value;
+			if (appAttr != null && bool.TryParse (appAttr.Value, out value) && value)
+				return true;
 			foreach (XElement el in app.Elements ()) {
 				var elAttr = el.Attribute (processAttrName);
-				if (elAttr != null && bool.TryParse (elAttr.Value, out bool value) && value)
+				if (elAttr != null && bool.TryParse (elAttr.Value, out value) && value)
 					return true;
 			}
 
