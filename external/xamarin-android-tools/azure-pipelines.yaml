@@ -1,0 +1,53 @@
+name: Xamarin.Android.Tools $(Rev:r)
+jobs:
+- job: windows
+  displayName: windows
+  pool: Hosted VS2017
+  steps:
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore'
+    inputs:
+      restoreSolution: Xamarin.Android.Tools.sln
+  - task: MSBuild@1
+    displayName: 'Build solution Xamarin.Android.Tools.sln'
+    inputs:
+      solution: Xamarin.Android.Tools.sln
+  - task: VSTest@2
+    displayName: 'VsTest - NUnit3'
+    inputs:
+      testAssemblyVer2: 'bin\TestDebug\*-Tests.dll'
+      pathtoCustomTestAdapters: 'packages\NUnit3TestAdapter.3.12.0\build\net35'
+  - powershell: |
+      $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
+      $commitsSinceVersionChange = & "git" "rev-list" "--count" "$hashOfLastVersionChange..HEAD"
+      $majorMinor = Get-Content "nuget.version"
+      $version = "$majorMinor.$commitsSinceVersionChange"
+      Write-Host "##vso[task.setvariable variable=xat.nuget.version]$version"
+  - task: NuGetCommand@2
+    displayName: NuGet pack
+    inputs:
+      command: custom
+      arguments: pack src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj -Version $(xat.nuget.version) -OutputDirectory $(Build.ArtifactStagingDirectory)
+  - task: PublishBuildArtifacts@1
+    displayName: upload artifacts
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+- job: mac
+  displayName: mac
+  pool: Hosted macOS
+  steps:
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore'
+    inputs:
+      restoreSolution: Xamarin.Android.Tools.sln
+  - task: MSBuild@1
+    displayName: 'Build solution Xamarin.Android.Tools.sln'
+    inputs:
+      solution: Xamarin.Android.Tools.sln
+  - script: mono packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
+    displayName: Run NUnit Tests
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFormat: NUnit
+      testResultsFiles: TestResult.xml

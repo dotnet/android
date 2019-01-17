@@ -77,6 +77,7 @@ namespace Xamarin.Android.Tools.Tests
 				Console.WriteLine ($"[{level}] {message}");
 			};
 			var oldPath = Environment.GetEnvironmentVariable ("PATH");
+			var oldJavaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
 			try {
 				var paths   = new List<string> () {
 					Path.Combine (jdk, "bin"),
@@ -85,6 +86,9 @@ namespace Xamarin.Android.Tools.Tests
 				};
 				paths.AddRange (oldPath.Split (new[]{Path.PathSeparator}, StringSplitOptions.RemoveEmptyEntries));
 				Environment.SetEnvironmentVariable ("PATH", string.Join (Path.PathSeparator.ToString (), paths));
+				if (!string.IsNullOrEmpty (oldJavaHome)) {
+					Environment.SetEnvironmentVariable ("JAVA_HOME", string.Empty);
+				}
 
 				var info    = new AndroidSdkInfo (logger);
 
@@ -94,6 +98,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 			finally {
 				Environment.SetEnvironmentVariable ("PATH", oldPath);
+				if (!string.IsNullOrEmpty (oldJavaHome)) {
+					Environment.SetEnvironmentVariable ("JAVA_HOME", oldJavaHome);
+				}
 				Directory.Delete (root, recursive: true);
 			}
 		}
