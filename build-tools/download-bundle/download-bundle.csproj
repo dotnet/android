@@ -5,7 +5,6 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="download-bundle.targets" />

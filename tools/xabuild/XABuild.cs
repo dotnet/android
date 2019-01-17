@@ -100,7 +100,8 @@ namespace Xamarin.Android.Build
 			SetProperty (toolsets, "MSBuildToolsPath64", paths.MSBuildBin);
 			SetProperty (toolsets, "MSBuildExtensionsPath", paths.MSBuildExtensionsPath);
 			SetProperty (toolsets, "MSBuildExtensionsPath32", paths.MSBuildExtensionsPath);
-			SetProperty (toolsets, "RoslynTargetsPath", Path.Combine (paths.MSBuildBin, "Roslyn"));
+			if (!string.IsNullOrEmpty (paths.RoslynTargetsPath))
+				SetProperty (toolsets, "RoslynTargetsPath", paths.RoslynTargetsPath);
 			SetProperty (toolsets, "NuGetProps", paths.NuGetProps);
 			SetProperty (toolsets, "NuGetTargets", paths.NuGetTargets);
 			SetProperty (toolsets, "NuGetRestoreTargets", paths.NuGetRestoreTargets);

@@ -55,13 +55,6 @@ namespace Monodroid {
 			UpdateXmlResource (null, e, acwMap);
 		}
 
-		internal static IEnumerable<T> Prepend<T> (this IEnumerable<T> l, T another) where T : XNode
-		{
-			yield return another;
-			foreach (var e in l)
-				yield return e;
-		}
-		
 		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string> registerCustomView = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
