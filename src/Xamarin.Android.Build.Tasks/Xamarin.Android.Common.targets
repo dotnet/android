@@ -3163,7 +3163,21 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
 
-<Target Name="SignAndroidPackage" DependsOnTargets="Build;Package;_Sign">
+<PropertyGroup>
+  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">
+    Build;
+    Package;
+    _Sign;
+  </SignAndroidPackageDependsOn>
+  <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
+  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">
+    _CreatePropertiesCache;
+    ResolveReferences;
+    _CopyPackage;
+    _Sign;
+  </SignAndroidPackageDependsOn>
+</PropertyGroup>
+<Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
 <PropertyGroup>
