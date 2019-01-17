@@ -1943,13 +1943,13 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="ResolvedDoNotPackageAttributes" ItemName="_ResolvedDoNotPackageAttributes" />
   </ResolveAssemblies>
   <Hash ItemsToHash="@(ResolvedAssemblies)">
-	<Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
+    <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
   </Hash>
   <WriteLinesToFile
-	File="$(_ResolvedUserAssembliesHashFile)"
-	Lines="$(_ResolvedUserAssembliesHash)"
-	Overwrite="true"
-	WriteOnlyWhenDifferent="true"
+      File="$(_ResolvedUserAssembliesHashFile)"
+      Lines="$(_ResolvedUserAssembliesHash)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
   />
   <ItemGroup>
     <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
@@ -2379,7 +2379,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Output TaskParameter="AddOnPlatformLibraries" ItemName="AddOnPlatformLibraries" />
   </GetAddOnPlatformLibraries>
 </Target>
-	
+
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
@@ -2407,10 +2407,10 @@ because xbuild doesn't support framework reference assemblies.
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <WriteLinesToFile
-    File="$(_AndroidBuildIdFile)"
-    Lines="$(_XamarinBuildId)"
-    Overwrite="true"
-    WriteOnlyWhenDifferent="true"
+      File="$(_AndroidBuildIdFile)"
+      Lines="$(_XamarinBuildId)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
   />
   <ItemGroup>
     <FileWrites Include="$(_AndroidBuildIdFile)" />
@@ -3033,7 +3033,7 @@ because xbuild doesn't support framework reference assemblies.
     File="$(IntermediateOutputPath)$(CleanFile)"
     Lines="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
     Overwrite="false"/>
-    
+
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
 </Target>
 
