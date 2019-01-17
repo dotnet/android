@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-merge", "build-tools\ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "remap-assembly-ref", "build-tools\remap-assembly-ref\remap-assembly-ref.csproj", "{C876DA71-8573-4CEF-9149-716D72455ED4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fetch-windows-assemblers", "build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj", "{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{04E3E11E-B47D-4599-8AFC-50515A95E715}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
@@ -197,6 +199,10 @@ Global
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{C876DA71-8573-4CEF-9149-716D72455ED4}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|AnyCPU.ActiveCfg = Release|Any CPU

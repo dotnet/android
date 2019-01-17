@@ -26,16 +26,6 @@ constexpr int FALSE = 0;
 #define MONODROID_PATH_SEPARATOR_CHAR '/'
 #endif
 
-#if WINDOWS
-typedef struct _stat monodroid_stat_t;
-#define monodroid_dir_t _WDIR
-typedef struct _wdirent monodroid_dirent_t;
-#else
-typedef struct stat monodroid_stat_t;
-#define monodroid_dir_t DIR
-typedef struct dirent monodroid_dirent_t;
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -49,6 +39,16 @@ typedef struct dirent monodroid_dirent_t;
 #include "monodroid.h"
 #include "dylib-mono.h"
 #include "jni-wrappers.h"
+
+#if WINDOWS
+typedef struct _stat monodroid_stat_t;
+#define monodroid_dir_t _WDIR
+typedef struct _wdirent monodroid_dirent_t;
+#else
+typedef struct stat monodroid_stat_t;
+#define monodroid_dir_t DIR
+typedef struct dirent monodroid_dirent_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

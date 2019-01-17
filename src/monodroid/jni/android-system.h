@@ -11,6 +11,7 @@
 #include "util.h"
 #include "cpu-arch.h"
 #include "cppcompat.h"
+#include "xamarin-app.h"
 
 namespace xamarin { namespace android {
 	class jstring_wrapper;
@@ -19,22 +20,18 @@ namespace xamarin { namespace android {
 
 namespace xamarin { namespace android { namespace internal
 {
+#if defined (DEBUG) || !defined (ANDROID)
 	struct BundledProperty;
-
-	struct KnownEnvironmentVariables
-	{
-		static constexpr bool AssemblyPreloadDefault = true;
-
-		bool        DSOInApk = false;
-		MonoAotMode MonoAOT = MonoAotMode::MONO_AOT_MODE_NONE;
-		bool        MonoLLVM = false;
-		bool        EnableAssemblyPreload = AssemblyPreloadDefault;
-	};
+#endif
 
 	class AndroidSystem
 	{
 	private:
+#if defined (DEBUG) || !defined (ANDROID)
+		static constexpr char OVERRIDE_ENVIRONMENT_FILE_NAME[] = "environment";
+		static constexpr uint32_t OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE = 22;
 		static BundledProperty *bundled_properties;
+#endif
 		static const char* android_abi_names[CPU_KIND_X86_64+1];
 #if defined (WINDOWS)
 		static std::mutex readdir_mutex;
@@ -92,7 +89,7 @@ namespace xamarin { namespace android { namespace internal
 		static size_t app_lib_directories_size;
 
 	public:
-		void  setup_environment (JNIEnv *env, jobjectArray environmentVariables);
+		void  setup_environment ();
 		void  setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks);
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property_from_overrides (const char *name, char ** value);
@@ -139,32 +136,43 @@ namespace xamarin { namespace android { namespace internal
 #endif
 		bool is_assembly_preload_enabled () const
 		{
-			return knownEnvVars.EnableAssemblyPreload;
+			return application_config.uses_assembly_preload;
 		}
 
 		bool is_mono_llvm_enabled () const
 		{
-			return knownEnvVars.MonoLLVM;
+			return application_config.uses_mono_llvm;
+		}
+
+		bool is_mono_aot_enabled () const
+		{
+			return application_config.uses_mono_aot;
 		}
 
 		bool is_embedded_dso_mode_enabled () const
 		{
-			return knownEnvVars.DSOInApk;
+			return application_config.uses_embedded_dsos;
 		}
 
 		MonoAotMode get_mono_aot_mode () const
 		{
-			return knownEnvVars.MonoAOT;
+			return aotMode;
 		}
 
 	private:
+#if defined (DEBUG) || !defined (ANDROID)
 		void add_system_property (const char *name, const char *value);
-		int  get_max_gref_count_from_system ();
-		void setup_environment (jstring_wrapper& name, jstring_wrapper& value);
+		void setup_environment (const char *name, const char *value);
+		void setup_environment_from_override_file (const char *path);
 		BundledProperty* lookup_system_property (const char *name);
+#endif
+		const char* lookup_system_property (const char *name, uint32_t &value_len);
+		int  get_max_gref_count_from_system ();
 		void setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data);
 		int  _monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len);
+#if defined (DEBUG) || !defined (ANDROID)
 		int  _monodroid_get_system_property_from_file (const char *path, char **value);
+#endif
 		void  copy_native_libraries_to_internal_location ();
 		void  copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 		void  add_apk_libdir (const char *apk, int index, int apk_count, void *user_data);
@@ -188,7 +196,7 @@ namespace xamarin { namespace android { namespace internal
 #endif // !ANDROID
 	private:
 		int max_gref_count = 0;
-		KnownEnvironmentVariables knownEnvVars;
+		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
 	};
 }}}
 #endif // !__ANDROID_SYSTEM_H

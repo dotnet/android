@@ -11,6 +11,7 @@ using System.Xml.XPath;
 
 using Microsoft.Build.Framework;
 using NUnit.Framework;
+using Xamarin.Android.Build.Tests;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
@@ -18,9 +19,9 @@ using XABuildPaths = global::Xamarin.Android.Build.Paths;
 
 namespace EmbeddedDSOUnitTests
 {
-	sealed class LocalBuilder : Builder
+	sealed class LocalBuilder : ProjectBuilder
 	{
-		public LocalBuilder ()
+		public LocalBuilder (string projectDir) : base (projectDir)
 		{
 			BuildingInsideVisualStudio = false;
 		}
@@ -71,8 +72,13 @@ namespace EmbeddedDSOUnitTests
 		{
 			testProjectPath = PrepareProject (ProjectName);
 			string projectPath = Path.Combine (testProjectPath, $"{ProjectName}.csproj");
-			LocalBuilder builder = GetBuilder ("EmbeddedDSO");
-			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true" });
+			LocalBuilder builder = GetBuilder ("EmbeddedDSO", testProjectPath);
+			string targetAbis = Xamarin.Android.Tools.XABuildConfig.SupportedABIs.Replace (";", ":");
+			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] {
+					"UnitTestsMode=true",
+					$"Configuration={XABuildPaths.Configuration}",
+					$"AndroidSupportedTargetJitAbis=\"{targetAbis}\"",
+				});
 
 			Assert.That (success, Is.True, "Should have been built");
 
@@ -102,28 +108,11 @@ namespace EmbeddedDSOUnitTests
 		[Test]
 		public void EnvironmentFileContents ()
 		{
-			string javaEnv = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-			Assert.That (new FileInfo (javaEnv), Does.Exist, $"File {javaEnv} should exist");
-
-			string[] envLines = File.ReadAllLines (javaEnv);
-			Assert.That (envLines.Any (l => !String.IsNullOrEmpty (l)), Is.True, $"Environment file {javaEnv} must contain at least one non-empty line");
-
-			bool found = false;
-			foreach (string line in envLines) {
-				if (String.IsNullOrEmpty (line))
-					continue;
-
-				if (line.IndexOf ("\"__XA_DSO_IN_APK\",") >= 0) {
-					found = true;
-					break;
-				}
-			}
-
-			Assert.That (found, Is.True, $"The `__XA_DSO_IN_APK` variable wasn't found in the environment file {javaEnv}");
-
-			string dexFile = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "bin", "classes.dex");
-			Assert.That (new FileInfo (dexFile), Does.Exist, $"File {dexFile} should exist");
-			Assert.That (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, androidSdkDir), Is.True, $"Dex file {dexFile} should contain the XamarinAndroidEnvironmentVariables class");
+			string intermediateOutputDir = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration);
+			List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, Xamarin.Android.Tools.XABuildConfig.SupportedABIs, true);
+			EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+			Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+			Assert.That (app_config.uses_embedded_dsos, Is.True, "'uses_embedded_dsos' must be true in application_config");
 		}
 
 		[Test]
@@ -283,9 +272,9 @@ namespace EmbeddedDSOUnitTests
 			File.Copy (from, to, true);
 		}
 
-		LocalBuilder GetBuilder (string baseLogFileName)
+		LocalBuilder GetBuilder (string baseLogFileName, string projectDir)
 		{
-			return new LocalBuilder {
+			return new LocalBuilder (projectDir) {
 				Verbosity = LoggerVerbosity.Diagnostic,
 				BuildLogFile = $"{baseLogFileName}.log"
 			};

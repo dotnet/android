@@ -163,6 +163,7 @@
     <Compile Include="Tasks\ResolveSdksTask.cs" />
     <Compile Include="Tasks\CompileToDalvik.cs" />
     <Compile Include="Tasks\AndroidToolTask.cs" />
+    <Compile Include="Tasks\PrepareAbiItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Mono.Android\ApplicationAttribute.Partial.cs" />
     <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
@@ -599,6 +600,15 @@
     <Compile Include="Tasks\LayoutWidget.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
     <Compile Include="Tasks\CheckGoogleSdkRequirements.cs" />
+    <Compile Include="Utilities\NativeAssemblyDataStream.cs" />
+    <Compile Include="Utilities\NativeAssemblyGenerator.cs" />
+    <Compile Include="Utilities\NativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\ARMNativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\X86NativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\TypeMappingNativeAssemblyGenerator.cs" />
+    <Compile Include="Utilities\ApplicationConfigNativeAssemblyGenerator.cs" />
+    <Compile Include="Tasks\CompileNativeAssembly.cs" />
+    <Compile Include="Tasks\LinkApplicationSharedLibraries.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -696,9 +706,6 @@
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\XamarinAndroidEnvironmentVariables.java">
-      <LogicalName>XamarinAndroidEnvironmentVariables.java</LogicalName>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj">
@@ -787,6 +794,10 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj">
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj">
+      <Project>{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}</Project>
+      <Name>fetch-windows-assemblers</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="ILRepack.targets" />
