@@ -2,7 +2,7 @@
 // https://jenkins.io/doc/book/pipeline/syntax/
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
-def botLabel = 'xamarin-android-master-pipeline-eval'
+def botLabel = 'xamarin-android-master'
 
 def repoUrl = "https://github.com/xamarin/xamarin-android.git"
 def XADir = "xamarin-android"
