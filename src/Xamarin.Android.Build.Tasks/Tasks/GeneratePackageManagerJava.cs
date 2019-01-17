@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!havebuildId)
-				WriteEnvironment ("XAMARIN_BUILD_ID", buildId.ToString ());
+				WriteEnvironment ("XAMARIN_BUILD_ID", BuildId);
 
 			if (!haveHttpMessageHandler) {
 				if (HttpClientHandlerType == null)
