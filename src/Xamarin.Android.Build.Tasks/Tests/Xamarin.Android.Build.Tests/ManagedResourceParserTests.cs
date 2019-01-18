@@ -8,7 +8,6 @@ using Microsoft.Build.Framework;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
-using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
