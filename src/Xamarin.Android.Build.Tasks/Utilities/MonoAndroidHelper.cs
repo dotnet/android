@@ -2,20 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
-using Mono.Security.Cryptography;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
-using Mono.Cecil;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif
-
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -307,16 +304,18 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsReferenceAssembly (string assembly)
 		{
-			var rp = new ReaderParameters { ReadSymbols = false };
-			using (var a = AssemblyDefinition.ReadAssembly (assembly, rp))
-				return IsReferenceAssembly (a);
-		}
-
-		public static bool IsReferenceAssembly (AssemblyDefinition assembly)
-		{
-			if (!assembly.HasCustomAttributes)
+			using (var stream = File.OpenRead (assembly))
+			using (var pe = new PEReader (stream)) {
+				var reader = pe.GetMetadataReader ();
+				var assemblyDefinition = reader.GetAssemblyDefinition ();
+				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
+					var attribute = reader.GetCustomAttribute (handle);
+					var attributeName = reader.GetCustomAttributeFullName (attribute);
+					if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
+						return true;
+				}
 				return false;
-			return assembly.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
+			}
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)

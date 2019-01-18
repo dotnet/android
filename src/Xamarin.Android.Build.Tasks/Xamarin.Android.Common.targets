@@ -273,6 +273,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
+	<_AndroidBuildIdFile>$(IntermediateOutputPath)buildid.txt</_AndroidBuildIdFile>
+	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
 
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition=" '$(AndroidEnableProguard)' == '' ">$(EnableProguard)</AndroidEnableProguard>
@@ -1920,9 +1922,9 @@ because xbuild doesn't support framework reference assemblies.
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
 		<FilteredAssemblies Include="@(ReferenceCopyLocalPaths)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' "/>
+				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "/>
 		<FilteredAssemblies Include="@(ReferencePath)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' "/>
+				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(ReferencePath.Identity)') "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies
@@ -1940,6 +1942,18 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="ResolvedSymbols" ItemName="ResolvedSymbols" />
       <Output TaskParameter="ResolvedDoNotPackageAttributes" ItemName="_ResolvedDoNotPackageAttributes" />
   </ResolveAssemblies>
+  <Hash ItemsToHash="@(ResolvedAssemblies)">
+    <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
+  </Hash>
+  <WriteLinesToFile
+      File="$(_ResolvedUserAssembliesHashFile)"
+      Lines="$(_ResolvedUserAssembliesHash)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CreatePackageWorkspace">
@@ -2368,7 +2382,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
-  Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);@(_ResolvedUserAssemblies);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
+  Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -2387,10 +2401,20 @@ because xbuild doesn't support framework reference assemblies.
     TlsProvider="$(AndroidTlsProvider)"
     Debug="$(AndroidIncludeDebugSymbols)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
-    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
+    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+  >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
+  <WriteLinesToFile
+      File="$(_AndroidBuildIdFile)"
+      Lines="$(_XamarinBuildId)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidBuildIdFile)" />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2986,6 +3010,10 @@ because xbuild doesn't support framework reference assemblies.
     DestinationFolder="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)"
     SkipUnchangedFiles="true"
   />
+		
+  <ReadLinesFromFile File="$(_AndroidBuildIdFile)" Condition="Exists('$(_AndroidBuildIdFile)') And '$(_XamarinBuildId)' == ''">
+    <Output TaskParameter="Lines" PropertyName="_XamarinBuildId"/>
+  </ReadLinesFromFile>
 
   <CreateMsymManifest
      Condition=" '$(_XamarinBuildId)' != '' And '$(MonoSymbolArchive)' == 'True' "
@@ -3246,6 +3274,8 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidAapt2VersionFile)" />
 	<Delete Files="$(IntermediateOutputPath)R.txt" />
 	<Delete Files="$(_AndroidMainDexListFile)" />
+	<Delete Files="$(_AndroidBuildIdFile)" />
+	<Delete Files="$(_ResolvedUserAssembliesHashFile)" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
