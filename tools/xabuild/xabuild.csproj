@@ -11,6 +11,7 @@
     <RootNamespace>Xamarin.Android.Build</RootNamespace>
     <AssemblyName>xabuild</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(VisualStudioVersion)' != '' And '$(VisualStudioVersion)' &gt;= '16.0'">v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <_MSBuildExtension Condition=" '$(OS)' == 'Windows_NT' ">exe</_MSBuildExtension>
