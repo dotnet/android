@@ -1530,7 +1530,7 @@ namespace UnnamedProject
 				Assert.IsTrue (appb.Build (proj, parameters: new [] { "DesignTimeBuild=True" }), "design-time build should have succeeded.");
 
 				//Now a full build
-				Assert.IsTrue (libb.Build (proj), "library build should have succeeded.");
+				Assert.IsTrue (libb.Build (lib), "library build should have succeeded.");
 				appb.Target = "SignAndroidPackage";
 				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
 			}

@@ -266,6 +266,8 @@ namespace Bug12935
 				Assert.IsNotNull (le, "no activity element found");
 				Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
 						   "'activity' element is not generated as expected.");
+				Assert.IsTrue (doc.XPathSelectElements ("//provider[@android:name='mono.MonoRuntimeProvider' and @android:directBootAware='true']", nsResolver).Any (),
+						   "'provider' element is not generated as expected.");
 			}
 		}
 
