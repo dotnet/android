@@ -630,10 +630,12 @@ namespace Xamarin.Android.Tasks {
 
 		XElement CreateMonoRuntimeProvider (string name, string processName, int initOrder)
 		{
+			var directBootAware = DirectBootAware ();
 			return new XElement ("provider",
 						new XAttribute (androidNs + "name", name),
 						new XAttribute (androidNs + "exported", "false"),
 						new XAttribute (androidNs + "initOrder", initOrder),
+						directBootAware ? new XAttribute (androidNs + "directBootAware", "true") : null,
 						processName == null ? null : new XAttribute (androidNs + "process", processName),
 						new XAttribute (androidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 		}
@@ -656,6 +658,26 @@ namespace Xamarin.Android.Tasks {
 
 			// If android:extractNativeLibs is omitted, returns true.
 			return true;
+		}
+
+		/// <summary>
+		/// Returns true if an element has the @android:directBootAware attribute and its 'true'
+		/// </summary>
+		public bool DirectBootAware ()
+		{
+			var processAttrName = androidNs.GetName ("directBootAware");
+			var appAttr = app.Attribute (processAttrName);
+			bool value;
+			if (appAttr != null && bool.TryParse (appAttr.Value, out value) && value)
+				return true;
+			foreach (XElement el in app.Elements ()) {
+				var elAttr = el.Attribute (processAttrName);
+				if (elAttr != null && bool.TryParse (elAttr.Value, out value) && value)
+					return true;
+			}
+
+			// If android:directBootAware is omitted, returns false.
+			return false;
 		}
 
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
