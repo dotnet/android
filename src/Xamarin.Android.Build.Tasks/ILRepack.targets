@@ -1,28 +1,24 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\packages\ILRepack.Lib.MSBuild.Task.2.0.15.4\build\ILRepack.Lib.MSBuild.Task.dll" TaskName="ILRepack" />
-	<PropertyGroup>
-		<_ILRepacker_stamp>$(IntermediateOutputPath)ILRepacker.stamp</_ILRepacker_stamp>
-	</PropertyGroup>
-	<Target Name="ILRepacker" Condition=" '$(HostOS)' != 'Linux' "
-			AfterTargets="AfterBuild"
-			Inputs="$(OutputPath)\$(AssemblyName).dll"
-			Outputs="$(_ILRepacker_stamp)">
-		<ItemGroup>
-			<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
-			<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Protocol.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Frameworks.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.LibraryModel.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Versioning.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.Core.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.DependencyResolver.Core.dll" />
-			<InputAssemblies Include="$(OutputPath)\NuGet.Configuration.dll" />
-			<InputAssemblies Include="$(OutputPath)\System.Collections.Immutable.dll" />
-			<InputAssemblies Include="$(OutputPath)\System.Reflection.Metadata.dll" />
-		</ItemGroup>
+	<ItemGroup>
+		<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Common.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Configuration.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.DependencyResolver.Core.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Frameworks.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.LibraryModel.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.Core.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.ProjectModel.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Protocol.dll" />
+		<InputAssemblies Include="$(OutputPath)\NuGet.Versioning.dll" />
+		<InputAssemblies Include="$(OutputPath)\System.Collections.Immutable.dll" />
+		<InputAssemblies Include="$(OutputPath)\System.Reflection.Metadata.dll" />
+	</ItemGroup>
+	<Target Name="ILRepacker"
+			AfterTargets="CopyFilesToOutputDirectory"
+			Condition="Exists ('$(OutputPath)\NuGet.ProjectModel.dll') And '$(HostOS)' != 'Linux' ">
 		<ILRepack Parallel="true"
 				Internalize="true"
 				Verbose="true"
@@ -34,6 +30,5 @@
 				OutputFile="$(OutputPath)\$(AssemblyName).dll"
 		/>
 		<Delete Files="@(InputAssemblies)" />
-		<Touch AlwaysCreate="True" Files="$(_ILRepacker_stamp)" />
 	</Target>
 </Project>
