@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Xml;
 
@@ -15,6 +16,18 @@ namespace Xamarin.Android.Build
 		{
 			var paths = new XABuildPaths ();
 			try {
+				//HACK: running on Mono, MSBuild cannot resolve System.Reflection.Metadata
+				if (!paths.IsWindows) {
+					AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
+						var name = new AssemblyName (args.Name);
+						if (name.Name == "System.Reflection.Metadata") {
+							var path = Path.Combine (paths.MSBuildBin, $"{name.Name}.dll");
+							return Assembly.LoadFile (path);
+						}
+						//Return null, to revert to default .NET behavior
+						return null;
+					};
+				}
 				if (!Directory.Exists (paths.XamarinAndroidBuildOutput)) {
 					Console.WriteLine ($"Unable to find Xamarin.Android build output at {paths.XamarinAndroidBuildOutput}");
 					return 1;
