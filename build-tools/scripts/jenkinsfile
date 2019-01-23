@@ -6,26 +6,58 @@ def botLabel = 'xamarin-android-master-pipeline-eval'
 
 def repoUrl = "https://github.com/xamarin/xamarin-android.git"
 def XADir = "xamarin-android"
+def PackageDir = "${env.WORKSPACE}/package"
 
 def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def processAndStageBuildResults(xaDir) {
+def ensurePackageDirExists(packageDir) {
+    def status = 0
+
+    if (packageDir == null || packageDir == "") {
+        echo "ERROR: ensurePackageDirExists: packageDir not set"
+        status = 1
+    }
+
+    if (!fileExists(packageDir)) {
+        echo "Creating package directory '${packageDir}'"
+        sh "mkdir -p \"${packageDir}\""
+    }
+
+    return status
+}
+
+def stagePackages(xaDir, packageDir) {
+    def status = ensurePackageDirExists(packageDir)
+
+    if (status == 0) {
+        try {
+            sh "cp xamarin.android-oss*.zip ${packageDir}"
+            sh "cp bin/Release/bundle-*.zip ${packageDir}"
+            sh "cp bin/Build*/Xamarin.Android.Sdk*.vsix ${packageDir}"
+            sh "cp xa-build-status*.zip ${packageDir}"
+        } catch (error) {
+            echo "stagePackages: Unexpected error: ${error}"
+            status = 1
+        }
+    }
+
+    return status
+}
+
+def processAndStageBuildResults(xaDir, packageDir) {
     def status = 0
     try {
-        def packageDir = "${env.WORKSPACE}/package"
-        echo "packageDir is set to '${packageDir}'"
+        def status = ensurePackageDirExists(packageDir)
 
-        if (!fileExists(packageDir)) {
-            sh "mkdir -p \"${packageDir}\""
+        if (status == 0) {
+            echo "processing & packaging build status"
+            sh "cd ${env.WORKSPACE}/${xaDir}"
+            sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
+            sh "cp xa-build-status*.zip ${packageDir}"
         }
-
-        echo "processing & packaging build status"
-        sh "cd ${env.WORKSPACE}/${xaDir}"
-        sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
-        sh "cp xa-build-status*.zip ${packageDir}"
 
     } catch (error) {
         echo "processAndStageBuildResults: Unexpected error: ${error}"
@@ -157,15 +189,20 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        def status = processAndStageBuildResults(XADir)
+                        def statusStagePackages = stagePackages(XADir, PackageDir)
+                        def statusStageBuildResults = processAndStageBuildResults(XADir, PackageDir)
 
-                        if (status == 0) {
+                        if (statusStageBuildResults == 0) {
                             buildStatusProcessed = true
                         }
 
                         if (fileExists('prepare-image-dependencies.sh')) {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
                             sh 'cp prepare-image-dependencies.sh ../package'
+                        }
+
+                        if (statusStagePackages != 0) {
+                            currentBuild.result = 'FAILURE'
                         }
                     }
                 }
@@ -373,7 +410,7 @@ pipeline {
 
                     if (!buildStatusProcessed) {
                         echo "Retrying packaging of build status logs"
-                        status = processAndStageBuildResults(XADir)
+                        status = processAndStageBuildResults(XADir, PackageDir)
                     }
 
                     if (status == 0) {
