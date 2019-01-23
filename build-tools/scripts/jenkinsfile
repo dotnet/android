@@ -234,7 +234,7 @@ pipeline {
                         {
                             echo "running tests"
                             status = sh(
-                                script: "make run-all-tests CONFIGURATION=${BuildFlavor} V=1",
+                                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1",
                                 returnStatus: true
                             );
                         } finally {
