@@ -98,7 +98,7 @@ pipeline {
         }
     
         stage('prepare deps') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 2 minutes
+            options { timestamps(), timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 2 minutes
             steps {
                 dir("$XADir") {
                     sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
@@ -107,7 +107,7 @@ pipeline {
         }
         
         stage('build') {
-            options { timeout(time: 3, unit: 'HOURS') }     // Typically takes less than 2 hours
+            options { timestamps(), timeout(time: 3, unit: 'HOURS') }     // Typically takes less than 2 hours
             steps {
                 dir("$XADir") {
                     sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
@@ -116,7 +116,7 @@ pipeline {
         }
         
         stage('create vsix') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
+            options { timestamps(), timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
             steps {
                 dir("$XADir") {
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
@@ -125,7 +125,7 @@ pipeline {
         }
         
         stage('build tests') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes 10 minutes
+            options { timestamps(), timeout(time: 30, unit: 'MINUTES') }     // Typically takes 10 minutes
 
             steps {
                 dir("$XADir") {
@@ -135,7 +135,7 @@ pipeline {
         }
         
         stage('package build') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 1 minute
+            options { timestamps(), timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 1 minute
             steps {
                 dir("$XADir") {
                     script {
@@ -155,7 +155,7 @@ pipeline {
         }
         
         stage('publish packages to Azure') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            options { timestamps(), timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
                 dir('package') {
                     script {
@@ -169,7 +169,7 @@ pipeline {
         }
         
         stage('run all tests') {
-            options { timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
+            options { timestamps(), timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
             steps {
                 dir("$XADir") {
                     script {
@@ -193,7 +193,7 @@ pipeline {
         }
         
         stage('package tests') {
-            options { timeout(time: 30, unit: 'SECONDS') }
+            options { timestamps(), timeout(time: 30, unit: 'SECONDS') }
             steps {
                 dir("$XADir") {                    
                     sh '''
@@ -207,7 +207,7 @@ pipeline {
         }
 
         stage('publish test error logs to Azure') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            options { timestamps(), timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
             steps {
                 script {
                     if (fileExists('package.tests')) {      // Note: fileExists works for directories too
@@ -228,7 +228,7 @@ pipeline {
         }
         
         stage ('Plot build & test metrics') {
-            options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
+            options { timestamps(), timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
             steps {
                 dir("$XADir") {
                     plot(
@@ -302,7 +302,7 @@ pipeline {
         }
 
         stage('Upload test results') {
-            options { timeout(time: 30, unit: 'SECONDS') }
+            options { timestamps(), timeout(time: 30, unit: 'SECONDS') }
             steps {
                 dir("$XADir") {
                     xunit thresholds: [
