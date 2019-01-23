@@ -12,6 +12,9 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
+def packageDir = null
+def builderType = null
+
 def ensurePackageDirExists(packageDir) {
     def status = 0
 
@@ -102,6 +105,11 @@ pipeline {
     }
 
     stages {
+        stage('init') {
+            packageDir = "${env.WORKSPACE}/package"
+            echo "init: packageDir: ${packageDir}"
+        }
+
         stage('clean') {
             steps {
                 dir('package') {
@@ -187,7 +195,6 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        def packageDir = "${env.WORKSPACE}/package"
                         def statusStagePackages = stagePackages(XADir, packageDir)
                         def statusStageBuildResults = processAndStageBuildResults(XADir, packageDir)
 
@@ -216,7 +223,6 @@ pipeline {
             steps {
                 dir('package') {
                     script {
-                        def packageDir = "${env.WORKSPACE}/package"
                         def status = publishPackages(packageDir)
                         if (status == 0) {
                             buildStatusUploaded = true
@@ -399,7 +405,6 @@ pipeline {
         always {
             script {
                 def status = 0
-                def packageDir = "${env.WORKSPACE}/package"
                 if (!buildStatusUploaded) {
                     echo "ERROR: RETRYING: Build status logs failed during the 'package build' and/or 'publish packages to Azure' stages"
 
