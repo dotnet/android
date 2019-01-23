@@ -13,7 +13,6 @@ def buildStatusProcessed = false
 def buildStatusUploaded = false
 
 def packageDir = null
-def builderType = null
 
 def ensurePackageDirExists(packageDir) {
     def status = 0
