@@ -6,7 +6,6 @@ def botLabel = 'xamarin-android-master-pipeline-eval'
 
 def repoUrl = "https://github.com/xamarin/xamarin-android.git"
 def XADir = "xamarin-android"
-def PackageDir = "${env.WORKSPACE}/package"
 
 def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
@@ -39,7 +38,7 @@ def stagePackages(xaDir, packageDir) {
             sh "cp bin/Build*/Xamarin.Android.Sdk*.vsix ${packageDir}"
             sh "cp xa-build-status*.zip ${packageDir}"
         } catch (error) {
-            echo "stagePackages: Unexpected error: ${error}"
+            echo "ERROR: stagePackages: Unexpected error: ${error}"
             status = 1
         }
     }
@@ -60,28 +59,32 @@ def processAndStageBuildResults(xaDir, packageDir) {
         }
 
     } catch (error) {
-        echo "processAndStageBuildResults: Unexpected error: ${error}"
+        echo "ERROR: processAndStageBuildResults: Unexpected error: ${error}"
         status = 1
     }
 
     return status
 }
 
-def publishPackages() {
+def publishPackages(packageDir) {
     def status = 0
     try {
-        def packageDir = "${env.WORKSPACE}/package"
-        sh "cd ${packageDir}"
+        if (fileExists(packageDir)) {
+            sh "cd ${packageDir}"
 
-        echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-        step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-            doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
-            filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-            uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-        ])
+            echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
+            step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+                uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+            ])
+        } else {
+            echo "ERROR: publishPackages: packageDir '${packageDir}' does not exist"
+            status = 1
+        }
 
     } catch (error) {
-        echo "publishPackages: Unexpected error: ${error}"
+        echo "ERROR: publishPackages: Unexpected error: ${error}"
         status = 1
     }
 
@@ -184,8 +187,9 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        def statusStagePackages = stagePackages(XADir, PackageDir)
-                        def statusStageBuildResults = processAndStageBuildResults(XADir, PackageDir)
+                        def packageDir = "${env.WORKSPACE}/package"
+                        def statusStagePackages = stagePackages(XADir, packageDir)
+                        def statusStageBuildResults = processAndStageBuildResults(XADir, packageDir)
 
                         if (statusStageBuildResults == 0) {
                             buildStatusProcessed = true
@@ -212,7 +216,8 @@ pipeline {
             steps {
                 dir('package') {
                     script {
-                        def status = publishPackages()
+                        def packageDir = "${env.WORKSPACE}/package"
+                        def status = publishPackages(packageDir)
                         if (status == 0) {
                             buildStatusUploaded = true
                         }
@@ -394,17 +399,18 @@ pipeline {
         always {
             script {
                 def status = 0
+                def packageDir = "${env.WORKSPACE}/package"
                 if (!buildStatusUploaded) {
                     echo "ERROR: RETRYING: Build status logs failed during the 'package build' and/or 'publish packages to Azure' stages"
 
                     if (!buildStatusProcessed) {
                         echo "Retrying packaging of build status logs"
-                        status = processAndStageBuildResults(XADir, PackageDir)
+                        status = processAndStageBuildResults(XADir, packageDir)
                     }
 
                     if (status == 0) {
                         echo "Retrying publishing of build status logs"
-                        status = publishPackages()
+                        status = publishPackages(packageDir)
 
                         if (status != 0) {
                             echo "ERROR: Publishing of build status logs failed"
