@@ -131,7 +131,6 @@ pipeline {
     
         stage('prepare deps') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 2 minutes
             }
 
@@ -144,7 +143,6 @@ pipeline {
         
         stage('build') {
             options {
-                timestamps()
                 timeout(time: 3, unit: 'HOURS')     // Typically takes less than 2 hours
             }
             steps {
@@ -156,7 +154,6 @@ pipeline {
         
         stage('create vsix') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 5 minutes
             }
 
@@ -169,7 +166,6 @@ pipeline {
         
         stage('build tests') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'MINUTES')       // Typically takes 10 minutes
             }
 
@@ -182,7 +178,6 @@ pipeline {
         
         stage('package build') {
             options {
-                timestamps()
                 timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 1 minute
             }
 
@@ -211,7 +206,6 @@ pipeline {
         
         stage('publish packages to Azure') {
             options {
-                timestamps()
                 timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 2 minutes
             }
 
@@ -229,7 +223,6 @@ pipeline {
         
         stage('run all tests') {
             options {
-                timestamps()
                 timeout(time: 160, unit: 'MINUTES')     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
             }
 
@@ -257,7 +250,6 @@ pipeline {
         
         stage('package tests') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'SECONDS')
             }
 
@@ -275,7 +267,6 @@ pipeline {
 
         stage('publish test error logs to Azure') {
             options {
-                timestamps()
                 timeout(time: 10, unit: 'MINUTES')        // Typically takes less than 2 minutes
             }
 
@@ -300,7 +291,6 @@ pipeline {
         
         stage ('Plot build & test metrics') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'SECONDS')      // Typically takes less than a second
             }
 
@@ -378,7 +368,6 @@ pipeline {
 
         stage('Upload test results') {
             options {
-                timestamps()
                 timeout(time: 30, unit: 'SECONDS')
             }
 
