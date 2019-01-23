@@ -98,22 +98,24 @@ MSBUILD_PREPARE_PROJS = \
 	src/mono-runtimes/mono-runtimes.csproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
-prepare-external:
+prepare-deps:
 	git submodule update --init --recursive
+	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
+	mkdir -p bin/Build$(CONFIGURATION)
+	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
+
+prepare-external: prepare-deps
 	nuget restore $(SOLUTION)
 	nuget restore Xamarin.Android-Tests.sln
 	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
 	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 
-prepare-deps: prepare-external
-	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	mkdir -p bin/Build$(CONFIGURATION)
-	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
+prepare-bundle: prepare-external
 	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
 	$(call MSBUILD_BINLOG,prepare-restore) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
 
-prepare-props: prepare-deps
+prepare-props: prepare-bundle
 	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
 	cp "$(call GetPath,JavaInterop)/product.snk" "$(call GetPath,MonoSource)"
 	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
