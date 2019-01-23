@@ -16,9 +16,15 @@
 		<InputAssemblies Include="$(OutputPath)\System.Collections.Immutable.dll" />
 		<InputAssemblies Include="$(OutputPath)\System.Reflection.Metadata.dll" />
 	</ItemGroup>
+	<Target Name="_GetInputAssembliesThatExist">
+		<ItemGroup>
+			<_InputAssembliesThatExist Include="@(InputAssemblies)" Condition="Exists('%(Identity)')" />
+		</ItemGroup>
+	</Target>
 	<Target Name="ILRepacker"
+			DependsOnTargets="_GetInputAssembliesThatExist"
 			AfterTargets="CopyFilesToOutputDirectory"
-			Condition="Exists ('$(OutputPath)\NuGet.ProjectModel.dll') And '$(HostOS)' != 'Linux' ">
+			Condition=" '@(_InputAssembliesThatExist)' != '' And '$(HostOS)' != 'Linux' ">
 		<ILRepack Parallel="true"
 				Internalize="true"
 				Verbose="true"
