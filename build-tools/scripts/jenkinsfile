@@ -50,7 +50,7 @@ def stagePackages(xaDir, packageDir) {
 def processAndStageBuildResults(xaDir, packageDir) {
     def status = 0
     try {
-        def status = ensurePackageDirExists(packageDir)
+        status = ensurePackageDirExists(packageDir)
 
         if (status == 0) {
             echo "processing & packaging build status"
