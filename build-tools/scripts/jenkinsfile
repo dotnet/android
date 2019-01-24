@@ -112,7 +112,7 @@ pipeline {
                     echo "init: packageDir: ${packageDir}"
 
                     echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
-                    if (env.JOB_BASE_NAME?.equalsIgnoreCase("xamarin-android-pr")) {
+                    if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
                         builderType = "PR"
                     } else {
                         builderType = "CI"
