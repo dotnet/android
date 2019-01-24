@@ -184,6 +184,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			foreach (var assembly in assemblies) {
 				try {
 					CreateMarshalMethodAssembly (assembly);
+					definedTypes.Clear ();
 				} catch (Exception e) {
 					Error ($"Unable to process assembly '{assembly}'{Environment.NewLine}{e.Message}{Environment.NewLine}{e}");
 					Environment.Exit (1);
@@ -328,9 +329,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 				var existingMarshalMethodsType = td.GetNestedType (TypeMover.NestedName);
 				if (existingMarshalMethodsType != null && !forceRegeneration) {
-					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName ()}' already exists. Skipped generation of marshal methods. Use -f to force regeneration when desired.");
+					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName ()}' already exists. Skipped generation of marshal methods in assembly '{assemblyName}'. Use -f to force regeneration when desired.");
 
-					continue;
+					return;
 				}
 
 				if (Verbose)
@@ -426,8 +427,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			if (!keepTemporary)
 				FilesToDelete.Add (dstAssembly.MainModule.FileName);
-
-			definedTypes.Clear ();
 		}
 
 		static  readonly    MethodInfo          Delegate_CreateDelegate             = typeof (Delegate).GetMethod ("CreateDelegate", new[] {
