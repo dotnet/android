@@ -106,18 +106,20 @@ pipeline {
 
     stages {
         stage('init') {
-            script {
-                packageDir = "${env.WORKSPACE}/package"
-                echo "init: packageDir: ${packageDir}"
+            steps {
+                script {
+                    packageDir = "${env.WORKSPACE}/package"
+                    echo "init: packageDir: ${packageDir}"
 
-                echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
-                if (env.JOB_BASE_NAME?.equalsIgnoreCase("xamarin-android-pr")) {
-                    builderType = "PR"
-                } else {
-                    builderType = "CI"
+                    echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
+                    if (env.JOB_BASE_NAME?.equalsIgnoreCase("xamarin-android-pr")) {
+                        builderType = "PR"
+                    } else {
+                        builderType = "CI"
+                    }
+
+                    echo "init: builderType: ${builderType}"
                 }
-
-                echo "init: builderType: ${builderType}"
             }
         }
 
