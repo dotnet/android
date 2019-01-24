@@ -20,6 +20,8 @@
 			<InputAssemblies Include="$(OutputPath)\NuGet.Packaging.Core.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.DependencyResolver.Core.dll" />
 			<InputAssemblies Include="$(OutputPath)\NuGet.Configuration.dll" />
+			<InputAssemblies Include="$(OutputPath)\System.Collections.Immutable.dll" />
+			<InputAssemblies Include="$(OutputPath)\System.Reflection.Metadata.dll" />
 		</ItemGroup>
 		<ILRepack Parallel="true"
 				Internalize="true"
