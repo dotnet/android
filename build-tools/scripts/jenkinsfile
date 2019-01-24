@@ -39,7 +39,6 @@ def stagePackages(xaDir, packageDir) {
             sh "cp xamarin.android-oss*.zip ${packageDir}"
             sh "cp bin/Release/bundle-*.zip ${packageDir}"
             sh "cp bin/Build*/Xamarin.Android.Sdk*.vsix ${packageDir}"
-            sh "cp xa-build-status*.zip ${packageDir}"
         } catch (error) {
             echo "ERROR: stagePackages: Unexpected error: ${error}"
             status = 1
