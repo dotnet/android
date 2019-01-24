@@ -172,7 +172,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParameters);
 					resolver.AddToCache (ad);
 				} catch (Exception) {
-					Warning ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
+					if (Verbose)
+						Warning ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
 					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParametersNoSymbols);
 					resolver.AddToCache (ad);
 				}
