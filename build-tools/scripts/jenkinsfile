@@ -13,6 +13,7 @@ def buildStatusProcessed = false
 def buildStatusUploaded = false
 
 def packageDir = null
+def builderType = null      // PR or CI
 
 def ensurePackageDirExists(packageDir) {
     def status = 0
@@ -105,8 +106,19 @@ pipeline {
 
     stages {
         stage('init') {
-            packageDir = "${env.WORKSPACE}/package"
-            echo "init: packageDir: ${packageDir}"
+            script {
+                packageDir = "${env.WORKSPACE}/package"
+                echo "init: packageDir: ${packageDir}"
+
+                echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
+                if (env.JOB_BASE_NAME?.equalsIgnoreCase("xamarin-android-pr")) {
+                    builderType = "PR"
+                } else {
+                    builderType = "CI"
+                }
+
+                echo "init: builderType: ${builderType}"
+            }
         }
 
         stage('clean') {
@@ -157,7 +169,15 @@ pipeline {
             }
             steps {
                 dir("$XADir") {
-                    sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    script {
+                        if (builderType?.equalsIgnoreCase("PR")) {
+                            echo "PR build definition detected: building with 'make all'"
+                            sh "make all CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                        } else {
+                            echo "PR build definition *not* detected: building with 'make jenkins'"
+                            sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                        }
+                    }
                 }
             }
         }
