@@ -18,12 +18,12 @@ def builderType = null      // PR or CI
 def ensurePackageDirExists(packageDir) {
     def status = 0
 
-    if (packageDir == null || packageDir == "") {
+    if (!packageDir) {
         echo "ERROR: ensurePackageDirExists: packageDir not set"
         status = 1
     }
 
-    if (!fileExists(packageDir)) {
+    if (status == 0 && !fileExists(packageDir)) {
         echo "Creating package directory '${packageDir}'"
         sh "mkdir -p \"${packageDir}\""
     }
