@@ -167,7 +167,7 @@ pipeline {
         
         stage('build') {
             options {
-                timeout(time: 3, unit: 'HOURS')     // Typically takes less than 2 hours
+                timeout(time: 6, unit: 'HOURS')     // Typically takes less than 2 hours
             }
             steps {
                 dir("$XADir") {
