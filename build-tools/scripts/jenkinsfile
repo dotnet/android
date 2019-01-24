@@ -2,6 +2,8 @@
 // https://jenkins.io/doc/book/pipeline/syntax/
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
+def botLabel = 'xamarin-android-master-pipeline-eval'
+
 def repoUrl = "https://github.com/xamarin/xamarin-android.git"
 def XADir = "xamarin-android"
 
@@ -10,44 +12,80 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def processAndStageBuildResults(xaDir) {
+def packageDir = null
+
+def ensurePackageDirExists(packageDir) {
+    def status = 0
+
+    if (!packageDir) {
+        echo "ERROR: ensurePackageDirExists: packageDir not set"
+        status = 1
+    }
+
+    if (status == 0 && !fileExists(packageDir)) {
+        echo "Creating package directory '${packageDir}'"
+        sh "mkdir -p \"${packageDir}\""
+    }
+
+    return status
+}
+
+def stagePackages(xaDir, packageDir) {
+    def status = ensurePackageDirExists(packageDir)
+
+    if (status == 0) {
+        try {
+            sh "cp xamarin.android-oss*.zip ${packageDir}"
+            sh "cp bin/Release/bundle-*.zip ${packageDir}"
+            sh "cp bin/Build*/Xamarin.Android.Sdk*.vsix ${packageDir}"
+        } catch (error) {
+            echo "ERROR: stagePackages: Unexpected error: ${error}"
+            status = 1
+        }
+    }
+
+    return status
+}
+
+def processAndStageBuildResults(xaDir, packageDir) {
     def status = 0
     try {
-        def packageDir = "${env.WORKSPACE}/package"
-        echo "packageDir is set to '${packageDir}'"
+        status = ensurePackageDirExists(packageDir)
 
-        if (!fileExists(packageDir)) {
-            sh "mkdir -p \"${packageDir}\""
+        if (status == 0) {
+            echo "processing & packaging build status"
+            sh "cd ${env.WORKSPACE}/${xaDir}"
+            sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
+            sh "cp xa-build-status*.zip ${packageDir}"
         }
 
-        echo "processing & packaging build status"
-        sh "cd ${env.WORKSPACE}/${xaDir}"
-        sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
-        sh "cp xa-build-status*.zip ${packageDir}"
-
     } catch (error) {
-        echo "processAndStageBuildResults: Unexpected error: ${error}"
+        echo "ERROR: processAndStageBuildResults: Unexpected error: ${error}"
         status = 1
     }
 
     return status
 }
 
-def publishPackages() {
+def publishPackages(packageDir) {
     def status = 0
     try {
-        def packageDir = "${env.WORKSPACE}/package"
-        sh "cd ${packageDir}"
+        if (fileExists(packageDir)) {
+            sh "cd ${packageDir}"
 
-        echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-        step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-            doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
-            filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-            uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-        ])
+            echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
+            step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+                uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+            ])
+        } else {
+            echo "ERROR: publishPackages: packageDir '${packageDir}' does not exist"
+            status = 1
+        }
 
     } catch (error) {
-        echo "publishPackages: Unexpected error: ${error}"
+        echo "ERROR: publishPackages: Unexpected error: ${error}"
         status = 1
     }
 
@@ -57,7 +95,7 @@ def publishPackages() {
 pipeline {
     
     agent {
-        label 'xamarin-android-master-pipeline-eval'
+        label "${botLabel}"
     }
 
     options {
@@ -65,6 +103,15 @@ pipeline {
     }
 
     stages {
+        stage('init') {
+            steps {
+                script {
+                    packageDir = "${env.WORKSPACE}/package"
+                    echo "init: packageDir: ${packageDir}"
+                }
+            }
+        }
+
         stage('clean') {
             steps {
                 dir('package') {
@@ -96,7 +143,10 @@ pipeline {
         }
     
         stage('prepare deps') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 2 minutes
+            options {
+                timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 2 minutes
+            }
+
             steps {
                 dir("$XADir") {
                     sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
@@ -105,16 +155,23 @@ pipeline {
         }
         
         stage('build') {
-            options { timeout(time: 3, unit: 'HOURS') }     // Typically takes less than 2 hours
+            options {
+                timeout(time: 6, unit: 'HOURS')     // Typically takes less than 2 hours
+            }
             steps {
                 dir("$XADir") {
-                    sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    script {
+                        sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    }
                 }
             }
         }
         
         stage('create vsix') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes less than 5 minutes
+            options {
+                timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 5 minutes
+            }
+
             steps {
                 dir("$XADir") {
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
@@ -123,7 +180,9 @@ pipeline {
         }
         
         stage('build tests') {
-            options { timeout(time: 30, unit: 'MINUTES') }     // Typically takes 10 minutes
+            options {
+                timeout(time: 30, unit: 'MINUTES')       // Typically takes 10 minutes
+            }
 
             steps {
                 dir("$XADir") {
@@ -133,13 +192,17 @@ pipeline {
         }
         
         stage('package build') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 1 minute
+            options {
+                timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 1 minute
+            }
+
             steps {
                 dir("$XADir") {
                     script {
-                        def status = processAndStageBuildResults(XADir)
+                        def statusStagePackages = stagePackages(XADir, packageDir)
+                        def statusStageBuildResults = processAndStageBuildResults(XADir, packageDir)
 
-                        if (status == 0) {
+                        if (statusStageBuildResults == 0) {
                             buildStatusProcessed = true
                         }
 
@@ -147,17 +210,24 @@ pipeline {
                             echo 'Staging prepare-image-dependencies.sh for publishing'
                             sh 'cp prepare-image-dependencies.sh ../package'
                         }
+
+                        if (statusStagePackages != 0) {
+                            currentBuild.result = 'FAILURE'
+                        }
                     }
                 }
             }
         }
         
         stage('publish packages to Azure') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            options {
+                timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 2 minutes
+            }
+
             steps {
                 dir('package') {
                     script {
-                        def status = publishPackages()
+                        def status = publishPackages(packageDir)
                         if (status == 0) {
                             buildStatusUploaded = true
                         }
@@ -167,7 +237,10 @@ pipeline {
         }
         
         stage('run all tests') {
-            options { timeout(time: 160, unit: 'MINUTES') }     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
+            options {
+                timeout(time: 160, unit: 'MINUTES')     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
+            }
+
             steps {
                 dir("$XADir") {
                     script {
@@ -176,7 +249,7 @@ pipeline {
                         {
                             echo "running tests"
                             status = sh(
-                                script: "make run-all-tests CONFIGURATION=${BuildFlavor} V=1",
+                                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1",
                                 returnStatus: true
                             );
                         } finally {
@@ -191,7 +264,10 @@ pipeline {
         }
         
         stage('package tests') {
-            options { timeout(time: 30, unit: 'SECONDS') }
+            options {
+                timeout(time: 30, unit: 'SECONDS')
+            }
+
             steps {
                 dir("$XADir") {                    
                     sh '''
@@ -205,7 +281,10 @@ pipeline {
         }
 
         stage('publish test error logs to Azure') {
-            options { timeout(time: 10, unit: 'MINUTES') }  // Typically takes less than 2 minutes
+            options {
+                timeout(time: 10, unit: 'MINUTES')        // Typically takes less than 2 minutes
+            }
+
             steps {
                 script {
                     if (fileExists('package.tests')) {      // Note: fileExists works for directories too
@@ -226,7 +305,10 @@ pipeline {
         }
         
         stage ('Plot build & test metrics') {
-            options { timeout(time: 30, unit: 'SECONDS') }      // Typically takes less than a second
+            options {
+                timeout(time: 30, unit: 'SECONDS')      // Typically takes less than a second
+            }
+
             steps {
                 dir("$XADir") {
                     plot(
@@ -300,7 +382,10 @@ pipeline {
         }
 
         stage('Upload test results') {
-            options { timeout(time: 30, unit: 'SECONDS') }
+            options {
+                timeout(time: 30, unit: 'SECONDS')
+            }
+
             steps {
                 dir("$XADir") {
                     xunit thresholds: [
@@ -329,12 +414,12 @@ pipeline {
 
                     if (!buildStatusProcessed) {
                         echo "Retrying packaging of build status logs"
-                        status = processAndStageBuildResults(XADir)
+                        status = processAndStageBuildResults(XADir, packageDir)
                     }
 
                     if (status == 0) {
                         echo "Retrying publishing of build status logs"
-                        status = publishPackages()
+                        status = publishPackages(packageDir)
 
                         if (status != 0) {
                             echo "ERROR: Publishing of build status logs failed"
