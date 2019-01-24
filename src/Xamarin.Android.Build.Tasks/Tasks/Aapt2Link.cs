@@ -72,6 +72,7 @@ namespace Xamarin.Android.Tasks {
 		public bool NonConstantId { get; set; }
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
+		List<string> tempFiles = new List<string> ();
 
 		public override bool Execute ()
 		{
@@ -96,16 +97,23 @@ namespace Xamarin.Android.Tasks {
 
 		void DoExecute ()
 		{
-			LoadResourceCaseMap ();
+			try {
+				LoadResourceCaseMap ();
 
-			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
+				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
+				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
+					CancellationToken = Token,
+					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
+				};
 
-			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
+				ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
+			} finally {
+				foreach (var temp in tempFiles) {
+					File.Delete (temp);
+				}
+				tempFiles.Clear ();
+			}
 		}
 
 		string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
@@ -258,7 +266,7 @@ namespace Xamarin.Android.Tasks {
 
 			var defaultAbi = new string [] { null };
 			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			var outputFile = string.IsNullOrEmpty (OutputFile) ? Path.GetTempFileName () : OutputFile;
+			var outputFile = string.IsNullOrEmpty (OutputFile) ? GetTempFile () : OutputFile;
 			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", outputFile, abi) : outputFile;
 				if (!string.IsNullOrEmpty (currentResourceOutputFile) && !Path.IsPathRooted (currentResourceOutputFile))
@@ -267,8 +275,13 @@ namespace Xamarin.Android.Tasks {
 					Cancel ();
 				}
 			}
+		}
 
-			return;
+		string GetTempFile ()
+		{
+			var temp = Path.GetTempFileName ();
+			tempFiles.Add (temp);
+			return temp;
 		}
 	}
 
