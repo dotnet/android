@@ -13,6 +13,7 @@ def buildStatusProcessed = false
 def buildStatusUploaded = false
 
 def packageDir = null
+def packageTestsDir = null
 def builderType = null      // PR or CI
 
 def ensurePackageDirExists(packageDir) {
@@ -93,6 +94,31 @@ def publishPackages(packageDir) {
     return status
 }
 
+def processAndStageTestErrors(xaDir, packageDir) {
+    def status = 0
+    try {
+        status = ensurePackageDirExists(packageDir)
+
+        if (status == 0) {
+            echo "processing & packaging xa-test-errors"
+            sh "cd ${env.WORKSPACE}/${xaDir}"
+            sh "make package-test-errors CONFIGURATION=${env.BuildFlavor}"
+            sh '''
+                if [ -d "xamarin-android/xa-test-errors" ]; then
+                    mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
+                    cp xamarin-android/xa-test-errors/*.zip ../package.tests
+                fi
+            '''
+        }
+
+    } catch (error) {
+        echo "ERROR : processAndStageTestErrors: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
+
 pipeline {
     
     agent {
@@ -109,6 +135,9 @@ pipeline {
                 script {
                     packageDir = "${env.WORKSPACE}/package"
                     echo "init: packageDir: ${packageDir}"
+
+                    packageTestsDir = "${env.WORKSPACE}/package.tests"
+                    echo "init: packageTestsDir: ${packageTestsDir}"
 
                     echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
                     if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
@@ -285,13 +314,11 @@ pipeline {
             }
 
             steps {
-                dir("$XADir") {                    
-                    sh '''
-                    if [ -d "xamarin-android/xa-test-errors" ]; then
-                        mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
-                        cp xamarin-android/xa-test-errors/*.zip ../package.tests
-                    fi
-                    '''
+                script {
+                    def status = processAndStageTestErrors(XADir, packageTestsDir)
+                    if (status != 0) {
+                        echo "ERROR : package test errors failed"
+                    }
                 }
             }
         }
@@ -303,8 +330,8 @@ pipeline {
 
             steps {
                 script {
-                    if (fileExists('package.tests')) {      // Note: fileExists works for directories too
-                        dir('package.tests') {
+                    if (fileExists(packageTestsDir)) {      // Note: fileExists works for directories too
+                        dir(packageTestsDir) {
                             echo "Publishing contents of the package.tests directory to Azure storage"
                             echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
                             step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
