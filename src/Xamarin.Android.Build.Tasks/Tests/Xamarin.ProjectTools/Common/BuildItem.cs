@@ -137,9 +137,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public string WebContentFileNameFromAzure {
 			get { throw new NotSupportedException (); }
-			// UNDONE: xamarin-android PIPE evaluation: mono-jenkins -> mono-jenkins-eval
-			// set { WebContent = $"https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/{value}"; }
-			set { WebContent = $"https://xamjenkinsartifact.azureedge.net/mono-jenkins-eval/xamarin-android-test/{value}"; }
+			set { WebContent = $"https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/{value}"; }
 		}
 
 		public string MetadataValues {
