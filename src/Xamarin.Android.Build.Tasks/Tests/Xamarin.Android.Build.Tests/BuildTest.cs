@@ -653,7 +653,7 @@ namespace UnamedProject
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:minSdkVersion=""10"" />
+	<uses-sdk android:minSdkVersion=""{Xamarin.Android.Tools.XABuildConfig.NDKMinimumApiAvailable}"" />
 	<application android:label=""{proj.ProjectName}"">
 	</application>
 </manifest>";
@@ -672,8 +672,8 @@ namespace UnamedProject
 				if (checkMinLlvmPath && !IsWindows) {
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
-					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
-					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-9.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
+					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
+					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-16.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
 					var m           = rightLibc.Match (string.Join ("\n",b.LastBuildOutput));
 					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}

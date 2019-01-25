@@ -22,6 +22,16 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 
+if (ANDROID_NDK_MAJOR GREATER 17)
+  # For some reason NDK 18 doesn't set this *required* macro...
+  add_definitions("-D__ANDROID_API__=${ANDROID_NATIVE_API_LEVEL}")
+endif()
+
+if (ANDROID_NDK_MAJOR LESS 20)
+  # This is missing from the older NDKs api-leve.h file
+  add_definitions("-D__ANDROID_API_Q__=29")
+endif()
+
 add_definitions("-DNO_ANDROID_FUNCS=1")
 add_definitions("-DNDEBUG=1")
 add_definitions("-DHAVE_USLEEP=1")
@@ -56,7 +66,7 @@ endif()
 
 add_definitions("-Dfdatasync=fdatasync")
 
-if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 17)
+if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 20)
   add_definitions("-D__ANDROID_API_Q__=29")
 endif()
 
