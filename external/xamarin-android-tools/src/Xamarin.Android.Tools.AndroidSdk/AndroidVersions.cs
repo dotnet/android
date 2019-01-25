@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tools
 				KnownVersions.FirstOrDefault (v => MatchesId (v, id))?.FrameworkVersion;
 		}
 
-		static readonly AndroidVersion [] KnownVersions = new [] {
+		public static readonly AndroidVersion [] KnownVersions = new [] {
 			new AndroidVersion (4,  "1.6",   "Donut"),
 			new AndroidVersion (5,  "2.0",   "Eclair"),
 			new AndroidVersion (6,  "2.0.1", "Eclair"),
