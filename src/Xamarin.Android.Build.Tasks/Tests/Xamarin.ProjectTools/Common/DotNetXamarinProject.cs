@@ -30,7 +30,6 @@ namespace Xamarin.ProjectTools
 			SetProperty ("ConsolePause", "false");
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
-			SetProperty ("BuildingInsideVisualStudio", "True");
 			SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
 
 			SetProperty (DebugProperties, "DebugSymbols", "true");

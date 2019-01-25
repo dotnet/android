@@ -3104,7 +3104,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
-			app1.SetProperty ("BuildingInsideVisualStudio", "False");
+			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
@@ -3450,6 +3450,38 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 					StringAssertEx.Contains ("Library1", warnings, "Warning should mention all of the assemblies with conflicts");
 					StringAssertEx.Contains ("Library2", warnings, "Warning should mention all of the assemblies with conflicts");
 				}
+			}
+		}
+
+		[Test]
+		public void BuildOutsideVisualStudio ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo { }",
+					}
+				},
+			};
+			var proj = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				},
+			};
+			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				libb.BuildingInsideVisualStudio =
+					appb.BuildingInsideVisualStudio = false;
+				appb.Target = "SignAndroidPackage";
+				//Save, but don't build
+				libb.Save (lib);
+				Assert.IsTrue (appb.Build (proj), "build should have succeeded.");
 			}
 		}
 	}

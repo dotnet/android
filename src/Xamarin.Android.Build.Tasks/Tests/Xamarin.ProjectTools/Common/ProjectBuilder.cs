@@ -76,35 +76,31 @@ namespace Xamarin.ProjectTools
 
 		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
 		{
-			var oldTarget = Target;
-			Target = "Restore";
-			try {
-				return Build (project, doNotCleanupOnUpdate);
-			} finally {
-				Target = oldTarget;
-			}
+			return RunTarget (project, "Restore", doNotCleanupOnUpdate);
 		}
 
 		public bool Clean (XamarinProject project, bool doNotCleanupOnUpdate = false)
 		{
-			var oldTarget = Target;
-			Target = "Clean";
-			try {
-				return Build (project, doNotCleanupOnUpdate);
-			}
-			finally {
-				Target = oldTarget;
-			}
+			return RunTarget (project, "Clean", doNotCleanupOnUpdate);
 		}
 
 		public bool UpdateAndroidResources (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
+			return RunTarget (project, "UpdateAndroidResources", doNotCleanupOnUpdate, parameters, environmentVariables);
+		}
+
+		public bool DesignTimeBuild (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		{
+			return RunTarget (project, "Compile", doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
+		}
+
+		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+		{
 			var oldTarget = Target;
-			Target = "UpdateAndroidResources";
+			Target = target;
 			try {
 				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables);
-			}
-			finally {
+			} finally {
 				Target = oldTarget;
 			}
 		}
