@@ -118,7 +118,7 @@
       </LicenseText>
       <SourceUrl>https://github.com/mono/mono/tree/master/mcs/class/Mono.Options</SourceUrl>
     </ThirdPartyNotice>
-    <ThirdPartyNotice Include="HtmlAgilityPack">
+    <ThirdPartyNotice Include="zzzprojects/HtmlAgilityPack">
       <LicenseText>
         The MIT License (MIT)
         Permission is hereby granted, free of charge, to any person obtaining a copy
