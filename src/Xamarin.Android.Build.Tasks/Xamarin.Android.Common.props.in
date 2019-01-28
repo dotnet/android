@@ -27,4 +27,18 @@
 			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
 		</AndroidResource>
 	</ItemDefinitionGroup>
+        <ItemGroup>
+          <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
+            <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="arm64-v8a">
+            <ApiLevel>@NDK_ARM64_V8A_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="x86">
+            <ApiLevel>@NDK_X86_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="x86_64">
+            <ApiLevel>@NDK_X86_64_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+        </ItemGroup>
 </Project>

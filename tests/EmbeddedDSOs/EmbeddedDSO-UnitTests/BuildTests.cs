@@ -20,6 +20,11 @@ namespace EmbeddedDSOUnitTests
 {
 	sealed class LocalBuilder : Builder
 	{
+		public LocalBuilder ()
+		{
+			BuildingInsideVisualStudio = false;
+		}
+
 		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);

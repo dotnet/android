@@ -14,7 +14,8 @@ namespace Xamarin.Android.Build.Tests
 		public static ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
 		{
 			var ret = CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
-			ret.Target = "SignAndroidPackage";
+			//NOTE: since $(BuildingInsideVisualStudio) is set, Build will not happen by default
+			ret.Target = "Build,SignAndroidPackage";
 			return ret;
 		}
 
