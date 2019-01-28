@@ -65,6 +65,36 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void Ndk_PathInSdk()
+		{
+			if (!OS.IsWindows)
+				Assert.Ignore("This only works in Windows");
+
+			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
+
+			var logs = new StringWriter();
+			Action<TraceLevel, string> logger = (level, message) => {
+				logs.WriteLine($"[{level}] {message}");
+			};
+
+			try
+			{
+				var ndkPath = Path.Combine(sdk, "ndk-bundle");
+				Directory.CreateDirectory(ndkPath);
+				Directory.CreateDirectory(Path.Combine(ndkPath, "toolchains"));
+				File.WriteAllText(Path.Combine(ndkPath, "ndk-stack.cmd"), "");
+
+				var info = new AndroidSdkInfo(logger, androidSdkPath: sdk, androidNdkPath: null, javaSdkPath: jdk);
+				
+				Assert.AreEqual(ndkPath, info.AndroidNdkPath, "AndroidNdkPath not found inside sdk!");
+			}
+			finally
+			{
+				Directory.Delete(root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void Constructor_SetValuesFromPath ()
 		{
 			if (OS.IsWindows)

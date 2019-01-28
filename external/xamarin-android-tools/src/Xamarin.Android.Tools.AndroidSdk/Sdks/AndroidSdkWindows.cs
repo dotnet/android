@@ -194,6 +194,17 @@ namespace Xamarin.Android.Tools
 
 			Logger (TraceLevel.Info, "Looking for Android NDK...");
 
+			// Check for the "ndk-bundle" directory inside the SDK directories
+			string ndk;
+
+			var sdks = GetAllAvailableAndroidSdks().ToList();
+			sdks.Add(AndroidSdkPath);
+	
+			foreach(var sdk in sdks.Distinct())
+				if (Directory.Exists(ndk = Path.Combine(sdk, "ndk-bundle")))
+					if (ValidateAndroidNdkLocation(ndk))
+						yield return ndk;
+
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
 				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack))
