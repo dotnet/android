@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			string extension = OS.IsWindows ? ".exe" : string.Empty;
 			List<string> toolPaths  = null;
 			foreach (var platbase in toolchains) {
-				string path = Path.Combine (platbase, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", GetNdkToolchainPrefix (arch) + tool + extension);
+				string path = MonoAndroidHelper.GetExecutablePath (Path.Combine (platbase, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin"), GetNdkToolchainPrefix (arch) + tool);
 				if (File.Exists (path))
 					return path;
 				if (toolPaths == null)
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks
 				toolPaths.Add (path);
 			}
 			{
-				string path = Path.Combine (androidNdkPath, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", tool);
+				string path = MonoAndroidHelper.GetExecutablePath (Path.Combine (androidNdkPath, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin"), tool);
 				if (File.Exists (path))
 					return path;
 				if (toolPaths == null)
