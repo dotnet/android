@@ -153,7 +153,9 @@ namespace Xamarin.Android.Tasks
 				toolName = $"{toolName}{extension}";
 			else
 				toolName = $"{toolchainPrefix}-{toolName}{extension}";
-			string toolPath  = Path.Combine (toolchainDir, "bin", toolName);
+
+			string toolExe  = MonoAndroidHelper.GetExecutablePath (binDir, toolName);
+			string toolPath  = Path.Combine (toolchainDir, "bin", toolExe);
 			if (File.Exists (toolPath))
 				return toolPath;
 
