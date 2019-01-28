@@ -100,15 +100,19 @@ def processAndStageTestErrors(xaDir, packageDir) {
         status = ensurePackageDirExists(packageDir)
 
         if (status == 0) {
+            def testErrorsDir = "${env.WORKSPACE}/${xaDir}/package-test-errors"
+
             echo "processing & packaging xa-test-errors"
-            sh "cd ${env.WORKSPACE}/${xaDir}"
-            sh "make package-test-errors CONFIGURATION=${env.BuildFlavor}"
-            sh '''
-                if [ -d "xamarin-android/xa-test-errors" ]; then
+            echo "  testErrorsDir: ${testErrorsDir}"
+
+            sh "cd ${testErrorsDir}"
+            sh "make package-test-errors"
+            sh """
+                if [ -d "${testErrorsDir}" ]; then
                     mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
-                    cp xamarin-android/xa-test-errors/*.zip ../package.tests
+                    cp ${testErrorsDir}/*.zip ../package.tests
                 fi
-            '''
+            """
         }
 
     } catch (error) {
@@ -315,10 +319,14 @@ pipeline {
 
             steps {
                 script {
+                    // UNDONE: Skip this step
+                    echo 'SKIPPED: Package tests disabled'
+                    /*
                     def status = processAndStageTestErrors(XADir, packageTestsDir)
                     if (status != 0) {
                         echo "ERROR : package test errors failed"
                     }
+                    */
                 }
             }
         }
@@ -330,6 +338,9 @@ pipeline {
 
             steps {
                 script {
+                    // UNDONE: Skip this step
+                    echo "SKIPPED: Test error log publishing skipped"
+                    /*
                     if (fileExists(packageTestsDir)) {      // Note: fileExists works for directories too
                         dir(packageTestsDir) {
                             echo "Publishing contents of the package.tests directory to Azure storage"
@@ -343,6 +354,7 @@ pipeline {
                     } else {
                         echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
                     }
+                    */
                 }
             }
         }
