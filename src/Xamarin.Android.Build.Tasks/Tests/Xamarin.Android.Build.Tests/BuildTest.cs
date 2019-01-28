@@ -653,7 +653,7 @@ namespace UnamedProject
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:minSdkVersion=""10"" />
+	<uses-sdk android:minSdkVersion=""{Xamarin.Android.Tools.XABuildConfig.NDKMinimumApiAvailable}"" />
 	<application android:label=""{proj.ProjectName}"">
 	</application>
 </manifest>";
@@ -672,8 +672,8 @@ namespace UnamedProject
 				if (checkMinLlvmPath && !IsWindows) {
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
-					// Since we overrode minSdkVersion=10, that means we should use libc.so from android-9.
-					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-9.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
+					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
+					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-16.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
 					var m           = rightLibc.Match (string.Join ("\n",b.LastBuildOutput));
 					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}
@@ -3104,7 +3104,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
-			app1.SetProperty ("BuildingInsideVisualStudio", "False");
+			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
@@ -3450,6 +3450,38 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 					StringAssertEx.Contains ("Library1", warnings, "Warning should mention all of the assemblies with conflicts");
 					StringAssertEx.Contains ("Library2", warnings, "Warning should mention all of the assemblies with conflicts");
 				}
+			}
+		}
+
+		[Test]
+		public void BuildOutsideVisualStudio ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo { }",
+					}
+				},
+			};
+			var proj = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				},
+			};
+			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				libb.BuildingInsideVisualStudio =
+					appb.BuildingInsideVisualStudio = false;
+				appb.Target = "SignAndroidPackage";
+				//Save, but don't build
+				libb.Save (lib);
+				Assert.IsTrue (appb.Build (proj), "build should have succeeded.");
 			}
 		}
 	}

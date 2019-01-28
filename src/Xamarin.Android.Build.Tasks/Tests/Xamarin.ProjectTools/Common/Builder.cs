@@ -24,6 +24,10 @@ namespace Xamarin.ProjectTools
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
+		/// <summary>
+		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
+		/// </summary>
+		public bool BuildingInsideVisualStudio { get; set; } = true;
 		public LoggerVerbosity Verbosity { get; set; }
 		public IEnumerable<string> LastBuildOutput {
 			get {
@@ -341,10 +345,10 @@ namespace Xamarin.ProjectTools
 			var psi   = new ProcessStartInfo (XABuildExe);
 			args.AppendFormat ("{0} /t:{1} /restore {2}",
 				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (RunningMSBuild)
+			args.Append ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
+			if (BuildingInsideVisualStudio && RunningMSBuild) {
 				args.Append (" /p:BuildingOutOfProcess=true");
-			else
-				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
+			}
 			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
 				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
 			}

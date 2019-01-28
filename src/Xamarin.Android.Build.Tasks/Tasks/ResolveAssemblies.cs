@@ -211,15 +211,21 @@ namespace Xamarin.Android.Tasks
 			if (resolutionPath == null)
 				resolutionPath = new List<string>();
 
-			CheckAssemblyAttributes (assembly, reader);
+			CheckAssemblyAttributes (assembly, reader, out string targetFrameworkIdentifier);
 
 			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assemblyName);
 			resolutionPath.Add (assemblyName);
 			indent += 2;
 
 			// Add this assembly
-			if (!topLevel) {
-				assemblies [assemblyName] = CreateAssemblyTaskItem (Path.GetFullPath (assemblyPath));
+			if (topLevel) {
+				if (!string.IsNullOrEmpty (targetFrameworkIdentifier) && assemblies.TryGetValue (assemblyName, out ITaskItem taskItem)) {
+					if (string.IsNullOrEmpty (taskItem.GetMetadata ("TargetFrameworkIdentifier"))) {
+						taskItem.SetMetadata ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
+					}
+				}
+			} else {
+				assemblies [assemblyName] = CreateAssemblyTaskItem (assemblyPath, targetFrameworkIdentifier);
 			}
 
 			// Recurse into each referenced assembly
@@ -257,8 +263,10 @@ namespace Xamarin.Android.Tasks
 			resolutionPath.RemoveAt (resolutionPath.Count - 1);
 		}
 
-		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader)
+		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader, out string targetFrameworkIdentifier)
 		{
+			targetFrameworkIdentifier = null;
+
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
 				switch (reader.GetCustomAttributeFullName (attribute)) {
@@ -275,14 +283,26 @@ namespace Xamarin.Android.Tasks
 					case "System.Runtime.Versioning.TargetFrameworkAttribute": {
 							var arguments = attribute.GetCustomAttributeArguments ();
 							foreach (var p in arguments.FixedArguments) {
+								// Of the form "MonoAndroid,Version=v8.1"
 								var value = p.Value?.ToString ();
-								if (value != null && value.StartsWith ("MonoAndroid", StringComparison.Ordinal)) {
-									var values = value.Split ('=');
-									var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (values [1]);
-									if (apiLevel != null) {
-										var assemblyName = reader.GetString (assembly.Name);
-										Log.LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
-										api_levels [assemblyName] = apiLevel.Value;
+								if (!string.IsNullOrEmpty (value)) {
+									int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
+									if (commaIndex != -1) {
+										targetFrameworkIdentifier = value.Substring (0, commaIndex);
+										if (targetFrameworkIdentifier == "MonoAndroid") {
+											const string match = "Version=";
+											var versionIndex = value.IndexOf (match, commaIndex, StringComparison.Ordinal);
+											if (versionIndex != -1) {
+												versionIndex += match.Length;
+												string version = value.Substring (versionIndex, value.Length - versionIndex);
+												var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (version);
+												if (apiLevel != null) {
+													var assemblyName = reader.GetString (assembly.Name);
+													Log.LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
+													api_levels [assemblyName] = apiLevel.Value;
+												}
+											}
+										}
 									}
 								}
 							}
@@ -336,15 +356,18 @@ namespace Xamarin.Android.Tasks
 		void ResolveI18nAssembly (MetadataResolver resolver, string name, Dictionary<string, ITaskItem> assemblies)
 		{
 			var assembly = resolver.Resolve (name);
-			var assemblyFullPath = Path.GetFullPath (assembly);
-			assemblies [name] = CreateAssemblyTaskItem (assemblyFullPath);
+			assemblies [name] = CreateAssemblyTaskItem (assembly);
 		}
 
-		static ITaskItem CreateAssemblyTaskItem (string assemblyFullPath)
+		static ITaskItem CreateAssemblyTaskItem (string assembly, string targetFrameworkIdentifier = null)
 		{
-			return new TaskItem (assemblyFullPath, new Dictionary<string, string> {
-				{ "ReferenceAssembly", assemblyFullPath }
-			});
+			var assemblyFullPath = Path.GetFullPath (assembly);
+			var dictionary = new Dictionary<string, string> (2) {
+				{ "ReferenceAssembly", assemblyFullPath },
+			};
+			if (!string.IsNullOrEmpty (targetFrameworkIdentifier))
+				dictionary.Add ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
+			return new TaskItem (assemblyFullPath, dictionary);
 		}
 	}
 }

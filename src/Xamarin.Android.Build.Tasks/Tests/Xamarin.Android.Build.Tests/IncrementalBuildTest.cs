@@ -97,7 +97,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
-			proj.SetProperty ("BuildingInsideVisualStudio", "True");
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
