@@ -76,8 +76,8 @@ def publishPackages(packageDir) {
             sh "cd ${packageDir}"
 
             echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-            step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+            step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
                 filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
                 uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
             ])
@@ -345,8 +345,8 @@ pipeline {
                         dir(packageTestsDir) {
                             echo "Publishing contents of the package.tests directory to Azure storage"
                             echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-                            step([$class: 'WAStoragePublisher', allowAnonymousAccess: false, cleanUpContainer: false, cntPubAccess: false, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: false, excludeFilesPath: '',
+                            step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
                                 filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
                                 uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
                             ])
