@@ -24,7 +24,8 @@ namespace Xamarin.ProjectTools
 			foreach (var p in Projects) {
 				using (var pb = new ProjectBuilder (Path.Combine (SolutionPath, p.ProjectName))) {
 					pb.Save (p);
-					p.NuGetRestore (Path.Combine (SolutionPath, p.ProjectName), Path.Combine (SolutionPath, "packages"));
+					if (AutomaticNuGetRestore)
+						p.NuGetRestore (Path.Combine (SolutionPath, p.ProjectName), Path.Combine (SolutionPath, "packages"));
 				}
 			}
 			// write a sln.
@@ -66,7 +67,7 @@ namespace Xamarin.ProjectTools
 
 		public bool BuildProject(XamarinProject project, string target = "Build")
 		{
-			BuildSucceeded = BuildInternal(Path.Combine (SolutionPath, project.ProjectName, project.ProjectFilePath), target);
+			BuildSucceeded = BuildInternal(Path.Combine (SolutionPath, project.ProjectName, project.ProjectFilePath), target, restore: project.PackageReferences?.Count > 0);
 			return BuildSucceeded;
 		}
 
