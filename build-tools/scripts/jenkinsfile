@@ -182,6 +182,25 @@ pipeline {
                     done
                     '''
                 }
+
+                dir('xamarin-android') {
+                    script {
+                        // Avoid: EXEC : error : jnimarshalmethod-gen: Unable to create Java VM
+                        def XAInstallPrefix = "bin/${env.BuildFlavor}/lib/xamarin.android"
+
+                        def javaInteropDllConfigFile = "${XAInstallPrefix}/xbuild/Xamarin/Android/Java.Interop.dll.config"
+                        if (fileExists(javaInteropDllConfigFile)) {
+                            echo "Cleansing file '${javaInteropDllConfigFile}'"
+                            sh "rm -f ${javaInteropDllConfigFile}"
+                        }
+
+                        def javaEnvironmentConfigFile = "${XAInstallPrefix}/xbuild/Xamarin/Android/Java.Runtime.Environment.dll.config"
+                        if (fileExists(javaEnvironmentConfigFile)) {
+                            echo "Cleansing file '${javaEnvironmentConfigFile}'"
+                            sh "rm -f ${javaEnvironmentConfigFile}"
+                        }
+                    }
+                }
             }   
         }
     
