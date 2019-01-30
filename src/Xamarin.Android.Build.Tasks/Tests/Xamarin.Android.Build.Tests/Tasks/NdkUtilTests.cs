@@ -41,7 +41,8 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				Assert.IsTrue (NdkUtil.ValidateNdkPlatform (log, ndkDir, arch, enableLLVM: false));
 				Assert.AreEqual (0, errors.Count, "NdkUtil.ValidateNdkPlatform should not have returned false.");
 				int level = NdkUtil.GetMinimumApiLevelFor (arch, ndkDir);
-				Assert.AreEqual (14, level, $"Min Api Level for {arch} should be 14.");
+				int expected = IsWindows ? 16 : 14;
+				Assert.AreEqual (expected, level, $"Min Api Level for {arch} should be {expected}.");
 				var compilerNoQuotes = NdkUtil.GetNdkTool (ndkDir, arch, "gcc", level);
 				Assert.AreEqual (0, errors.Count, "NdkUtil.GetNdkTool should not have errored.");
 				Assert.NotNull (compilerNoQuotes, "NdkUtil.GetNdkTool returned null.");
