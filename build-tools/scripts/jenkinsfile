@@ -320,11 +320,16 @@ pipeline {
                                 script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1",
                                 returnStatus: true
                             );
+                        } catch (error) {
+                            echo "ERROR : Unexpected error: ${error}"
+                            status = 1
                         } finally {
                             if (status != 0) {
-                                echo "test run failed with status ${status}. Marking build as UNSTABLE"
+                                echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
                                 currentBuild.result = 'UNSTABLE'
                             }
+
+                            echo "Run all tests status: ${status} / current build result: ${currentBuild.result}"
                         }
                     }
                 }
