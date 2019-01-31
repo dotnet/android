@@ -265,8 +265,8 @@ namespace Xamarin.Android.Tasks {
 			if (uses.Attribute (androidNs + "minSdkVersion") == null) {
 				int minSdkVersion;
 				if (!int.TryParse (SdkVersionName, out minSdkVersion))
-					minSdkVersion = 11;
-				minSdkVersion = Math.Min (minSdkVersion, 11);
+					minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
+				minSdkVersion = Math.Min (minSdkVersion, XABuildConfig.NDKMinimumApiAvailable);
 				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersion.ToString ());
 			}
 

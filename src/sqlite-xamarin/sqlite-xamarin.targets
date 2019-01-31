@@ -12,17 +12,17 @@
   <Target Name="_BuildSqlite" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
 
   <Target Name="_ConfigureSqlite"
-	  Inputs="CMakeLists.txt"
+	  Inputs="CMakeLists.txt;..\..\build-tools\scripts\Ndk.targets"
 	  Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja')">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)"
     />
   </Target>
 
   <Target Name="_BuildAndroidSqlite"
-	  Inputs="@(_SqliteSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configure)\build.ninja')"
+	  Inputs="@(_SqliteSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configure)\build.ninja');;..\..\build-tools\scripts\Ndk.targets"
 	  Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\$(_SqliteLibName)')">
     <Exec
         Command="$(NinjaPath) -v"

@@ -360,7 +360,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
-				/* expected */ "211012;311012",
+				/* expected */ "216012;316012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -370,7 +370,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
-				/* expected */ "21124012;31124012",
+				/* expected */ "21624012;31624012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -380,7 +380,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
-				/* expected */ "211241012;311241012",
+				/* expected */ "216241012;316241012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -390,7 +390,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
-				/* expected */ "2112401012;3112401012",
+				/* expected */ "2162401012;3162401012",
 			},
 		};
 
@@ -502,7 +502,7 @@ namespace Bug12935
 				using (var zip = ZipArchive.Create (ms)) {
 					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-    <uses-sdk android:minSdkVersion='14'/>
+    <uses-sdk android:minSdkVersion='16'/>
     <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
     <application>
         <activity android:name='.signin.internal.SignInHubActivity' />

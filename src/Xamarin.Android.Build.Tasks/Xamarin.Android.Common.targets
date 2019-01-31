@@ -2294,6 +2294,12 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
     <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
   </CreateItem>
+
+  <CreateItem
+    Include="@(_ResolvedUserAssemblies)"
+    Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid'">
+    <Output TaskParameter="Include" ItemName="_ResolvedUserMonoAndroidAssemblies" />
+  </CreateItem>
 </Target>
 
 <Target Name="_GenerateJavaStubs"
@@ -2302,7 +2308,7 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
-    ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+    ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
     ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
 	ManifestTemplate="$(_AndroidManifestAbs)"
 	MergedManifestDocuments="@(ExtractedManifestDocuments)"
@@ -3164,7 +3170,21 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
 
-<Target Name="SignAndroidPackage" DependsOnTargets="Build;Package;_Sign">
+<PropertyGroup>
+  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">
+    Build;
+    Package;
+    _Sign;
+  </SignAndroidPackageDependsOn>
+  <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
+  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">
+    _CreatePropertiesCache;
+    ResolveReferences;
+    _CopyPackage;
+    _Sign;
+  </SignAndroidPackageDependsOn>
+</PropertyGroup>
+<Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
 <PropertyGroup>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.NDKInfo" />
+
+  <Target Name="GetNDKVersionInfo">
+    <NDKInfo
+        NDKDirectory="$(AndroidNdkDirectory)">
+      <Output TaskParameter="NDKRevision" PropertyName="_NDKRevision" />
+      <Output TaskParameter="NDKMinimumApiAvailable" PropertyName="_NDKMinimumApiAvailable" />
+      <Output TaskParameter="NDKVersionMajor" PropertyName="_NDKVersionMajor" />
+      <Output TaskParameter="NDKVersionMinor" PropertyName="_NDKVersionMinor" />
+      <Output TaskParameter="NDKVersionMicro" PropertyName="_NDKVersionMicro" />
+    </NDKInfo>
+  </Target>
+</Project>

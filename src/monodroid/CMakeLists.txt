@@ -10,6 +10,7 @@ option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 include(CheckIncludeFiles)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
+include("../../build-tools/cmake/xa_macros.cmake")
 
 set(JAVA_INTEROP_SRC_PATH "../../external/Java.Interop/src/java-interop")
 string(REPLACE "\\" "/" TOP_DIR ${CMAKE_SOURCE_DIR})
@@ -55,62 +56,17 @@ if(MINGW)
   endif()
 endif()
 
-# Trying to perform the tests in the foreach loop unfortunately fails...
-# CMake appears to run the check only once, for the first entry in the list,
-# probably caching the result using the <var> name and so further tests aren't
-# performed.
-macro(c_compiler_has_flag _flag)
-  check_c_compiler_flag(-${_flag} HAS_${_flag}_C)
-  if (HAS_${_flag}_C)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -${_flag}")
-  endif()
-endmacro(c_compiler_has_flag)
-
-macro(cxx_compiler_has_flag _flag)
-  check_cxx_compiler_flag(-${_flag} HAS_${_flag}_CXX)
-  if (HAS_${_flag}_CXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -${_flag}")
-  endif()
-endmacro(cxx_compiler_has_flag)
-
-macro(linker_has_flag _flag)
-  set(CMAKE_REQUIRED_FLAGS "-${_flag}")
-  check_c_compiler_flag("" HAS_${_flag}_LINKER)
-  if(HAS_${_flag}_LINKER)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -${_flag}")
-  endif()
-endmacro()
-
+xa_common_prepare()
 # Don't put the leading '-' in options
-set(TEST_COMPILER_ARGS
-  fno-strict-aliasing
-  ffunction-sections
-  funswitch-loops
-  finline-limit=300
-  fvisibility=hidden
-  fstack-protector
+set(TEST_COMPILER_ARGS ${XA_COMPILER_FLAGS}
   fno-rtti
   fno-exceptions
-  flto
-  Wa,--noexecstack
-  Wformat
-  Werror=format-security
-  Wall
-  mindirect-branch=thunk-inline
-  mfunction-return=thunk-inline
   )
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   if(NOT DISABLE_DEBUG)
     add_definitions("-DDEBUG=1")
   endif()
-  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
-else()
-  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} g fomit-frame-pointer O2)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DRELEASE")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -DRELEASE")
 endif()
 
 foreach(arg ${TEST_COMPILER_ARGS})
@@ -118,24 +74,7 @@ foreach(arg ${TEST_COMPILER_ARGS})
   cxx_compiler_has_flag(${arg})
 endforeach(arg)
 
-set(TEST_LINKER_ARGS
-  Wl,-z,now
-  Wl,-z,relro
-  Wl,-z,noexecstack
-  Wl,--no-undefined
-  )
-
-if(MINGW)
-  set(TEST_LINKER_ARGS
-    ${TEST_LINKER_ARGS}
-    Wl,--export-all-symbols
-    )
-else()
-  set(TEST_LINKER_ARGS
-    ${TEST_LINKER_ARGS}
-    Wl,--export-dynamic
-    )
-endif()
+set(TEST_LINKER_ARGS ${XA_LINKER_ARGS})
 
 foreach(arg ${TEST_LINKER_ARGS})
   linker_has_flag(${arg})
@@ -151,6 +90,16 @@ if(ENABLE_NDK)
   add_definitions("-DLINUX -Dlinux -D__linux__")
   if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
     add_definitions("-DANDROID64")
+  endif()
+
+  if (ANDROID_NDK_MAJOR GREATER 17)
+    # For some reason NDK 18 (and 19b2 as of this time) doesn't set this *required* macro...
+    add_definitions("-D__ANDROID_API__=${ANDROID_NATIVE_API_LEVEL}")
+  endif()
+
+  if (ANDROID_NDK_MAJOR LESS 20)
+    # This is missing from the current NDK releases headers (that includes NDK r19b2)
+    add_definitions("-D__ANDROID_API_Q__=29")
   endif()
 else()
   # MinGW/mxe need it for {v,a}sprintf

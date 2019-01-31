@@ -88,6 +88,7 @@
     <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
     <Compile Include="ZipArchiveExTests.cs" />
     <Compile Include="ConvertResourcesCasesTests.cs" />
+    <Compile Include="..\..\..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

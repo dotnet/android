@@ -14,84 +14,151 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public static class NdkUtil {
+	public static class NdkUtil
+	{
+		static bool usingClangNDK;
+
+		public static bool UsingClangNDK => usingClangNDK;
+
+		public static void Init (string ndkPath)
+		{
+			Version ndkVersion;
+			usingClangNDK = GetNdkToolchainRelease (ndkPath, out ndkVersion) && ndkVersion.Major >= 19;
+		}
 
 		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
 		{
+			if (!UsingClangNDK)
+				return NdkUtilOld.ValidateNdkPlatform (log, ndkPath, arch, enableLLVM);
+
 			// Check that we have a compatible NDK version for the targeted ABIs.
-			NdkUtil.NdkVersion ndkVersion;
-			bool hasNdkVersion = NdkUtil.GetNdkToolchainRelease (ndkPath, out ndkVersion);
+			Version ndkVersion;
+			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath, out ndkVersion);
 
-			if (NdkUtil.IsNdk64BitArch(arch) && hasNdkVersion && ndkVersion.Version < 10) {
+			if (hasNdkVersion && ndkVersion.Major < 19) {
 				log.LogMessage (MessageImportance.High,
-						"The detected Android NDK version is incompatible with the targeted 64-bit architecture, " +
-						"please upgrade to NDK r10 or newer.");
-			}
-
-			// NDK r10d is buggy and cannot link x86_64 ABI shared libraries because they are 32-bits.
-			// See https://code.google.com/p/android/issues/detail?id=161421
-			if (enableLLVM && ndkVersion.Version == 10 && ndkVersion.Revision == "d" && arch == AndroidTargetArch.X86_64) {
-				log.LogCodedError ("XA3004", "Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. " +
-						"See https://code.google.com/p/android/issues/detail?id=161422.");
-				return false;
-			}
-
-			if (enableLLVM && (ndkVersion.Version < 10 || (ndkVersion.Version == 10 && ndkVersion.Revision[0] < 'd'))) {
-				log.LogCodedError ("XA3005",
-						"The detected Android NDK version is incompatible with the targeted LLVM configuration, " +
-						"please upgrade to NDK r10d or newer.");
+						"The detected Android NDK version is incompatible with this version of Xamarin.Android, " +
+						"please upgrade to NDK r19 or newer.");
 			}
 
 			return true;
 		}
 
-		public static string GetNdkToolPrefix (string androidNdkPath, AndroidTargetArch arch)
+		public static string GetNdkToolPrefix (string androidNdkPath, AndroidTargetArch arch, int apiLevel)
 		{
-			var path = GetNdkTool (androidNdkPath, arch, "as");
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkToolPrefix (androidNdkPath, arch);
+
+			var path = GetNdkTool (androidNdkPath, arch, "as", apiLevel);
 			if (path != null)
 				path = path.Substring (0, path.LastIndexOf ("-") + 1);
 			return path;
 		}
 
-		public static List<string> GetNdkToolchainPath(string androidNdkPath, AndroidTargetArch arch)
+		// See the "NDK r19 bug" comment in the "GetNdkTool" method below for explanation of the issue
+		// this method fixes.
+		public static string GetCompilerTargetParameters (string androidNdkPath, AndroidTargetArch arch, int apiLevel, bool forCPlusPlus = false)
 		{
-			var toolchains  = GetNdkToolchainDirectories (Path.Combine (androidNdkPath, "toolchains"), arch);
-			if (!toolchains.Any ())
-				Diagnostic.Error (5101,
-						"Toolchain directory for target {0} was not found.",
-						arch);
-			// Sort the toolchains paths in reverse so that we prefer the latest versions.
-			Array.Sort(toolchains);
-			Array.Reverse(toolchains);
+			if (!UsingClangNDK || !OS.IsWindows)
+				return String.Empty;
 
-			return new List<string>(toolchains);
+			string targetPrefix;
+			string otherParams = String.Empty;
+			switch (arch) {
+				case AndroidTargetArch.Arm:
+					targetPrefix = "--target=armv7a-linux-androideabi";
+					break;
+
+				case AndroidTargetArch.Arm64:
+					targetPrefix = "--target=aarch64-linux-android";
+					break;
+
+				case AndroidTargetArch.X86:
+					targetPrefix = "--target=i686-linux-android";
+					otherParams = "-mstackrealign";
+					break;
+
+				case AndroidTargetArch.X86_64:
+					targetPrefix = "--target=x86_64-linux-android";
+					break;
+
+				default:
+					throw new InvalidOperationException ($"Unsupported target architecture {arch}");
+			}
+
+			string stdlib = String.Empty;
+			if (forCPlusPlus)
+				stdlib = "-stdlib=libc++";
+
+			return $"{targetPrefix}{apiLevel} {otherParams} -fno-addrsig {stdlib}";
 		}
 
-		public static string GetNdkTool (string androidNdkPath, AndroidTargetArch arch, string tool)
+		public static string GetNdkTool (string androidNdkPath, AndroidTargetArch arch, string tool, int apiLevel)
 		{
-			var toolchains = GetNdkToolchainPath(androidNdkPath, arch);
-			string extension = OS.IsWindows ? ".exe" : string.Empty;
-			List<string> toolPaths  = null;
-			foreach (var platbase in toolchains) {
-				string path = Path.Combine (platbase, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", GetNdkToolchainPrefix (arch) + tool + extension);
-				if (File.Exists (path))
-					return path;
-				if (toolPaths == null)
-					toolPaths = new List<string>();
-				toolPaths.Add (path);
-			}
-			{
-				string path = Path.Combine (androidNdkPath, "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform, "bin", tool);
-				if (File.Exists (path))
-					return path;
-				if (toolPaths == null)
-					toolPaths = new List<string>();
-				toolPaths.Add (path);
-                       }
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkTool (androidNdkPath, arch, tool);
+
+			string toolchainDir = Path.Combine (androidNdkPath, "toolchains", "llvm", "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform);
+			string toolName;
+			bool forCompiler = false;
+
+			if (String.Compare (tool, "gcc", StringComparison.Ordinal) == 0 ||
+				String.Compare (tool, "clang", StringComparison.Ordinal) == 0) {
+				forCompiler = true;
+				toolName = "clang";
+			} else if (String.Compare (tool, "g++", StringComparison.Ordinal) == 0 ||
+					String.Compare (tool, "clang++", StringComparison.Ordinal) == 0) {
+				forCompiler = true;
+				toolName = "clang++";
+			} else
+				toolName = tool;
+
+			//
+			// NDK r19 bug.
+			//
+			// The llvm toolchain directory contains a selection of shell scripts (both Unix and Windows)
+			// which call `clang/clang++` with different `-target` parameters depending on both the target
+			// architecture and API level. For instance, the clang/clang++ compilers targetting aarch64 on API level
+			// 28 will have the following Unix shell scripts present in the toolchain `bin` directory:
+			//
+			//   aarch64-linux-android28-clang
+			//   aarch64-linux-android28-clang++
+			//
+			// However, the Windows version of the NDK has a bug where there is only one  Windows
+			// counterpart to the above Unix scripts:
+			//
+			//   aarch64-linux-android28-clang.cmd
+			//
+			// This script, despite its name suggesting that it calls `clang.exe` in fact calls
+			// `clang++.exe` which breaks compilation of some C programs (including the code generated by
+			// Mono's mkbundle utility) because `clang++` treats the input as C++. There is no corresponding
+			// `aarch64-linux-android28-clang++.cmd` and so invocation of `clang.exe` becomes harder and,
+			// most certainly, non-standard as far as cross-platform NDK compatibility is concerned.
+			//
+			// The code below tries to rectify the situation by special-casing the compiler tool handling to
+			// return path to the actual .exe instead of the CMD. Unfortunately, the caller of this code
+			// will need to provide the correct parameters for the compilers.
+			//
+			string toolchainPrefix;
+			if (forCompiler) {
+				if (!OS.IsWindows)
+					toolchainPrefix = $"{GetNdkToolchainPrefix (arch, true)}{apiLevel}";
+				else
+					toolchainPrefix = String.Empty;
+			} else
+				toolchainPrefix = GetNdkToolchainPrefix (arch, false);
+
+			string extension = OS.IsWindows ? ".exe" : String.Empty;
+			if (forCompiler && OS.IsWindows)
+				toolName = $"{toolName}{extension}";
+			else
+				toolName = $"{toolchainPrefix}-{toolName}{extension}";
+			string toolPath  = Path.Combine (toolchainDir, "bin", toolName);
+			if (File.Exists (toolPath))
+				return toolPath;
 
 			Diagnostic.Error (5101,
-					"C compiler for target {0} was not found. Tried paths: \"{1}\"",
-					arch, string.Join ("; ", toolPaths));
+					$"Toolchain utility '{toolName}' for target {arch} was not found. Tried in path: \"{toolchainDir}\"");
 			return null;
 		}
 
@@ -100,85 +167,71 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (androidNdkPath, "sysroot", "usr", "include");
 		}
 
-		static string GetPerPlatformHeadersPath (string androidNdkPath, AndroidTargetArch arch, int level)
+		public static string GetArchDirName (AndroidTargetArch arch)
 		{
-			return Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", "include");
-		}
-
-		public static string GetNdkAsmIncludePath (string androidNdkPath, AndroidTargetArch arch, int level)
-		{
-			string path = GetPerPlatformHeadersPath (androidNdkPath, arch, level);
-			if (Directory.Exists (path))
-				return null;
-
-			path = GetUnifiedHeadersPath (androidNdkPath);
-			if (!Directory.Exists (path))
-				return null;
-
-			string archDir = null;
 			switch (arch) {
 				case AndroidTargetArch.Arm:
-					archDir = "arm-linux-androideabi";
-					break;
+					return "arm-linux-androideabi";
 
 				case AndroidTargetArch.Arm64:
-					archDir = "aarch64-linux-android";
-					break;
-
-				case AndroidTargetArch.Mips:
-					archDir = "mipsel-linux-android";
-					break;
+					return "aarch64-linux-android";
 
 				case AndroidTargetArch.X86:
-					archDir = "i686-linux-android";
-					break;
+					return "i686-linux-android";
 
 				case AndroidTargetArch.X86_64:
-					archDir = "x86_64-linux-android";
-					break;
-			}
+					return "x86_64-linux-android";
 
-			if (archDir == null)
-				return null;
+				default:
+					throw new InvalidOperationException ($"Unsupported architecture {arch}");
+			}
+		}
+
+		public static string GetNdkAsmIncludePath (string androidNdkPath, AndroidTargetArch arch, int apiLevel)
+		{
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkAsmIncludePath (androidNdkPath, arch, apiLevel);
+
+			string path = GetUnifiedHeadersPath (androidNdkPath);
+			string archDir = GetArchDirName (arch);
 
 			return Path.Combine (path, archDir);
 		}
 
-		public static string GetNdkPlatformIncludePath (string androidNdkPath, AndroidTargetArch arch, int level)
+		public static string GetNdkPlatformIncludePath (string androidNdkPath, AndroidTargetArch arch, int apiLevel)
 		{
-			// This is for NDK older than r16 which isn't configured to use unified headers. We
-			string path = GetPerPlatformHeadersPath (androidNdkPath, arch, level);
-			if (!Directory.Exists (path)) {
-				// This is for NDK r15 (if configured to use unified headers) or NDK r16+ (which doesn't have
-				// the per-platform includes anymore)
-				path = GetUnifiedHeadersPath (androidNdkPath);
-				if (Directory.Exists (path))
-					return path;
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkPlatformIncludePath (androidNdkPath, arch, apiLevel);
 
-				throw new InvalidOperationException (String.Format ("Platform header files for target {0} and API Level {1} was not found. Expected path is \"{2}\"", arch, level, path));
-			}
+			string path = GetUnifiedHeadersPath (androidNdkPath);
+			if (Directory.Exists (path))
+				return path;
 
-			return path;
+			throw new InvalidOperationException ($"Android include path not found. Tried: {path}");
 		}
 
-		public static string GetNdkPlatformLibPath (string androidNdkPath, AndroidTargetArch arch, int level)
+		public static string GetNdkPlatformLibPath (string androidNdkPath, AndroidTargetArch arch, int apiLevel)
 		{
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkPlatformLibPath (androidNdkPath, arch, apiLevel);
+
 			string lib = arch == AndroidTargetArch.X86_64 ? "lib64" : "lib";
-			string path = Path.Combine (androidNdkPath, "platforms", "android-" + level, "arch-" + GetPlatformArch (arch), "usr", lib);
+			string path = Path.Combine (androidNdkPath, "platforms", $"android-{apiLevel}", $"arch-{GetPlatformArch (arch)}", "usr", lib);
 			if (!Directory.Exists (path))
-				throw new InvalidOperationException (String.Format ("Platform library directory for target {0} and API Level {1} was not found. Expected path is \"{2}\"", arch, level, path));
+				throw new InvalidOperationException ($"Platform library directory for target {arch} and API Level {apiLevel} was not found. Expected path is \"{path}\"");
 			return path;
 		}
 
 		static string GetPlatformArch (AndroidTargetArch arch)
 		{
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetPlatformArch (arch);
+
 			switch (arch) {
 			case AndroidTargetArch.Arm:
 				return "arm";
 			case AndroidTargetArch.Arm64:
 				return "arm64";
-			case AndroidTargetArch.Mips:
-				return "mips";
 			case AndroidTargetArch.X86:
 				return "x86";
 			case AndroidTargetArch.X86_64:
@@ -187,41 +240,20 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		static string[] GetNdkToolchainDirectories (string toolchainsPath, AndroidTargetArch arch)
+		static string GetNdkToolchainPrefix (AndroidTargetArch arch, bool forCompiler)
 		{
-			if (!Directory.Exists (toolchainsPath))
-				Diagnostic.Error (5101,
-						"Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.",
-						toolchainsPath);
-			switch (arch) {
-			case AndroidTargetArch.Arm:
-				return Directory.GetDirectories (toolchainsPath, "arm-linux-androideabi-*");
-			case AndroidTargetArch.Arm64:
-				return Directory.GetDirectories (toolchainsPath, "aarch64-linux-android-*");
-			case AndroidTargetArch.X86:
-				return Directory.GetDirectories (toolchainsPath, "x86-*");
-			case AndroidTargetArch.X86_64:
-				return Directory.GetDirectories (toolchainsPath, "x86_64-*");
-			case AndroidTargetArch.Mips:
-				return Directory.GetDirectories (toolchainsPath, "mipsel-linux-android-*");
-			default: // match any directory that contains the arch name.
-				return Directory.GetDirectories (toolchainsPath, "*" + arch + "*");
-			}
-		}
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetNdkToolchainPrefix (arch);
 
-		static string GetNdkToolchainPrefix (AndroidTargetArch arch)
-		{
 			switch (arch) {
 			case AndroidTargetArch.Arm:
-				return "arm-linux-androideabi-";
+				return forCompiler ? "armv7a-linux-androideabi" : "arm-linux-androideabi";
 			case AndroidTargetArch.Arm64:
-				return "aarch64-linux-android-";
+				return "aarch64-linux-android";
 			case AndroidTargetArch.X86:
-				return "i686-linux-android-";
+				return "i686-linux-android";
 			case AndroidTargetArch.X86_64:
-				return "x86_64-linux-android-";
-			case AndroidTargetArch.Mips:
-				return "mipsel-linux-android-";
+				return "x86_64-linux-android";
 			default:
 				// return empty. Since this method returns the "prefix", the resulting
 				// tool path just becomes the tool name i.e. "gcc" becomes "gcc".
@@ -230,61 +262,33 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static bool GetNdkToolchainRelease (string androidNdkPath, out string version)
+		public static bool GetNdkToolchainRelease (string androidNdkPath, out NdkUtilOld.NdkVersion ndkVersion)
 		{
-			var releaseVersionPath = Path.Combine (androidNdkPath, "RELEASE.txt");
-			if (!File.Exists (releaseVersionPath))
-			{
-				version = string.Empty;
-				return false;
-			}
-
-			version = File.ReadAllText (releaseVersionPath).Trim();
-			return true;
+			return NdkUtilOld.GetNdkToolchainRelease (androidNdkPath, out ndkVersion);
 		}
 
-		static bool GetNdkToolchainSourceProperties (string androidNdkPath, out NdkVersion version)
+		public static bool GetNdkToolchainRelease (string androidNdkPath, out Version ndkVersion)
 		{
-			version = new NdkVersion ();
-			var sourcePropertiesPath = Path.Combine (androidNdkPath, "source.properties");
+			ndkVersion = new Version ();
+			string sourcePropertiesPath = Path.Combine (androidNdkPath, "source.properties");
 			if (!File.Exists (sourcePropertiesPath)) {
 				return false;
 			}
-			var match = Regex.Match (File.ReadAllText (sourcePropertiesPath).Trim (), "^Pkg.Revision\\s*=\\s*([.0-9]+)$", RegexOptions.Multiline);
-			if (!match.Success) {
-				return false;
-			}
-			var numbers = match.Groups[1].Value.Trim().Split ('.');
-			version.Version = int.Parse (numbers [0]);
-			version.Revision = Convert.ToChar (int.Parse (numbers [1]) + (int)'a').ToString ();
-			return true;
-		}
 
-		public struct NdkVersion
-		{
-			public int Version;
-			public string Revision;
-		}
+			foreach (string l in File.ReadAllLines (sourcePropertiesPath)) {
+				string line = l.Trim ();
+				if (!line.StartsWith ("Pkg.Revision", StringComparison.Ordinal))
+					continue;
+				string[] parts = line.Split (new char[] {'='}, 2);
+				if (parts.Length != 2)
+					return false;
 
-		public static bool GetNdkToolchainRelease (string androidNdkPath, out NdkVersion ndkVersion)
-		{
-			ndkVersion = new NdkVersion ();
-
-			string version;
-			if (!GetNdkToolchainRelease (androidNdkPath, out version)) {
-				if (GetNdkToolchainSourceProperties (androidNdkPath, out ndkVersion))
+				if (Version.TryParse (parts [1].Trim (), out ndkVersion))
 					return true;
-				return false;
+				break;
 			}
 
-			var match = Regex.Match(version, @"r(\d+)\s*(.*)\s+.*");
-			if( !match.Success)
-				return false;
-
-			ndkVersion.Version = int.Parse (match.Groups[1].Value.Trim());
-			ndkVersion.Revision = match.Groups[2].Value.Trim().ToLowerInvariant();
-
-			return true;
+			return false;
 		}
 
 		public static bool IsNdk64BitArch (AndroidTargetArch arch)
@@ -303,21 +307,17 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static readonly Dictionary<AndroidTargetArch, string> archPathMap = new Dictionary<AndroidTargetArch, string> () {
-			{ AndroidTargetArch.Arm, "arm"},
-			{ AndroidTargetArch.Arm64, "arm64"},
-			{ AndroidTargetArch.Mips, "mips"},
-			{ AndroidTargetArch.None, "none"},
-			{ AndroidTargetArch.Other, "other"},
-			{ AndroidTargetArch.X86, "x86"},
-			{ AndroidTargetArch.X86_64, "x86_64"},
-		};
-
 		public static int GetMinimumApiLevelFor (AndroidTargetArch arch, string androidNdkPath)
 		{
-			var minValue = NdkUtil.IsNdk64BitArch (arch) ? 21 : 14;
-			var platforms = GetSupportedPlatforms (androidNdkPath).OrderBy (x => x).Where (x => x >= minValue);
-			return platforms.First (x => Directory.Exists (Path.Combine (androidNdkPath, "platforms", $"android-{x}", $"arch-{archPathMap[arch]}")));
+			if (!UsingClangNDK)
+				return NdkUtilOld.GetMinimumApiLevelFor (arch, androidNdkPath);
+
+			int minValue = 0;
+			string archName = GetPlatformArch (arch);
+			if (!XABuildConfig.ArchAPILevels.TryGetValue (archName, out minValue))
+				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
+
+			return minValue;
 		}
 	}
 }
