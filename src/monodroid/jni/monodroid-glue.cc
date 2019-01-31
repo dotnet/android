@@ -866,9 +866,9 @@ mono_runtime_init (char *runtime_args)
 	}
 
 	profiler_handle = monoFunctions.profiler_create ();
-	monoFunctions.profiler_install_thread (profiler_handle, reinterpret_cast<void*> (thread_start), reinterpret_cast<void*> (thread_end));
+	monoFunctions.profiler_install_thread (profiler_handle, thread_start, thread_end);
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE))
-		monoFunctions.profiler_set_jit_done_callback (profiler_handle, reinterpret_cast<void*> (jit_done));
+		monoFunctions.profiler_set_jit_done_callback (profiler_handle, jit_done);
 
 	parse_gdb_options ();
 

@@ -674,7 +674,7 @@ DylibMono::profiler_create ()
 }
 
 void
-DylibMono::profiler_install_thread (MonoProfilerHandle handle, void *start_ftn, void *end_ftn)
+DylibMono::profiler_install_thread (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn, MonoThreadStoppedEventFunc end_ftn)
 {
 	if (mono_profiler_set_thread_started_callback == nullptr || mono_profiler_set_thread_stopped_callback == nullptr)
 		return;
@@ -684,7 +684,7 @@ DylibMono::profiler_install_thread (MonoProfilerHandle handle, void *start_ftn, 
 }
 
 void
-DylibMono::profiler_set_jit_done_callback (MonoProfilerHandle handle, void *done_ftn)
+DylibMono::profiler_set_jit_done_callback (MonoProfilerHandle handle, MonoJitDoneEventFunc done_ftn)
 {
 	if (mono_profiler_set_jit_done_callback == nullptr)
 		return;
