@@ -19,6 +19,7 @@ namespace Xamarin.ProjectTools
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
+		static string frameworkSDKRoot = null;
 
 		string root;
 		string buildLogFullPath;
@@ -141,8 +142,11 @@ namespace Xamarin.ProjectTools
 			get {
 				string path;
 				if (IsUnix) {
-					path = System.IO.Path.Combine ("/usr", "local", "share", "dotnet", "sdk");
-					return FindLatestDotNetSdk (path);
+					path = FindLatestDotNetSdk (frameworkSDKRoot);
+					if (!string.IsNullOrEmpty (path))
+						return path;
+	
+					return string.Empty;
 				}
 				var visualStudioDirectory = GetVisualStudio2017Directory ();
 				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
@@ -270,6 +274,20 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 			Console.WriteLine ($"Using {XABuildExe}");
 			Console.WriteLine ($"Using {(RunningMSBuild ? "msbuild" : "xbuild")}");
+			if (IsUnix && string.IsNullOrEmpty (frameworkSDKRoot)) {
+				var psi = new ProcessStartInfo ("msbuild") {
+					RedirectStandardOutput = true,
+					UseShellExecute = false,
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					WorkingDirectory = Root,
+					Arguments = $" {Path.Combine (Root, "FrameworkPath.targets")} /v:minimal /nologo",
+				};
+				using (var process = Process.Start (psi)) {
+					process.WaitForExit ();
+					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
+				}
+			}
 		}
 
 		public void Dispose ()
@@ -519,14 +537,23 @@ namespace Xamarin.ProjectTools
 		string FindLatestDotNetSdk (string dotNetPath)
 		{
 			if (Directory.Exists (dotNetPath)) {
-				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
-					let version = GetVersionFromDirectory (dir)
-					where version != null && File.Exists (Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))
-					orderby version descending
-					select Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk");
-				return directories.FirstOrDefault ();
+				Version latest = new Version (0,0);
+				string Sdk = null;
+				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
+					var version = GetVersionFromDirectory (dir);
+					var sdksDir = Path.Combine (dir, "Sdks");
+					if (!Directory.Exists (sdksDir))
+						sdksDir = Path.Combine (dir, "bin", "Sdks");
+					if (version != null && version > latest) {
+						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
+							latest = version;
+							Sdk = Path.Combine (sdksDir, "Microsoft.NET.Sdk");
+						}
+					}
+				}
+				return Sdk;
 			}
-			return string.Empty;
+			return null;
 		}
 
 		static Version GetVersionFromDirectory (string dir)
