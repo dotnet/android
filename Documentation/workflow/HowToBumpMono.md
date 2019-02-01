@@ -172,7 +172,7 @@ Ensure that `make all` builds *first*.  Once that builds, move on to using
 `make jenkins`, which adds support for *all* ABIs, *plus* AOT and LLVM
 compilers, plus Windows binaries.
 
-See [`Documentation/building/unix-instructions.md`](../building/unix-instructions.md).
+See [`Documentation/building/unix/instructions.md`](../building/unix/instructions.md).
 
 
 <a name="unit-tests" />
@@ -183,7 +183,7 @@ Run the unit tests by using `make all-tests run-all-tests`.
 
 All unit tests should pass.
 
-See [`Documentation/building/unix-instructions.md`](../building/unix-instructions.md).
+See [`Documentation/building/unix/instructions.md`](../building/unix/instructions.md).
 
 
 <a name="create-pr" />

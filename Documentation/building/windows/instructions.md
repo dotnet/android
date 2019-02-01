@@ -54,7 +54,8 @@ be built with:
 
 	msbuild Xamarin.Android-Tests.sln /p:XAIntegratedTests=False
 
-*NOTE*: There is currently no equivalent to [`make jenkins`](unix-instructions.md) on Windows.
+*NOTE*: There is currently no equivalent to [`make
+jenkins`](../unix/instructions.md) on Windows.
 
 *Troubleshooting*: Ensure you check your MSBuild version (`msbuild -version`)
 and path for the proper version of MSBuild.
