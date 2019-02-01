@@ -152,9 +152,9 @@ pipeline {
 
                     echo "init: builderType: ${builderType}"
                 }
-            }
 
-            echo "Stage result: init: ${currentBuild.currentResult}"
+                echo "Stage result: init: ${currentBuild.currentResult}"
+            }
         }
 
         stage('clean') {
