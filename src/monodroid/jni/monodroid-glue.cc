@@ -100,6 +100,8 @@ static int wait_for_gdb;
 static volatile int monodroid_gdb_wait = TRUE;
 static int android_api_level = 0;
 
+static timing_period jit_time;
+
 #include "config.include"
 #include "machine.config.include"
 
@@ -369,13 +371,34 @@ thread_end (MonoProfiler *prof, uintptr_t tid)
 FILE *jit_log;
 
 static void
-jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
+jit_begin (MonoProfiler *prof, MonoMethod *method)
 {
-	char *name;
+	jit_time.mark_end ();
+
 	if (!jit_log)
 		return;
-	name = monoFunctions.method_full_name (method, 1);
-	fprintf (jit_log, "JITed method: %s\n", name);
+
+	char* name = monoFunctions.method_full_name (method, 1);
+
+	timing_diff diff (jit_time);
+	fprintf (jit_log, "JIT method begin: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
+
+	free (name);
+}
+
+static void
+jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
+{
+	if (!jit_log)
+		return;
+
+	char* name = monoFunctions.method_full_name (method, 1);
+
+	jit_time.mark_end ();
+
+	timing_diff diff (jit_time);
+	fprintf (jit_log, "JIT method  done: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
+
 	free (name);
 }
 
@@ -858,7 +881,8 @@ mono_runtime_init (char *runtime_args)
 	set_debug_options ();
 #endif
 
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
+	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
+	if (XA_UNLIKELY (log_methods)) {
 		char *jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
 		jit_log = utils.monodroid_fopen (jit_log_path, "a");
 		utils.set_world_accessable (jit_log_path);
@@ -867,8 +891,11 @@ mono_runtime_init (char *runtime_args)
 
 	profiler_handle = monoFunctions.profiler_create ();
 	monoFunctions.profiler_install_thread (profiler_handle, thread_start, thread_end);
-	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE))
+	if (XA_UNLIKELY (log_methods)) {
+		jit_time.mark_start ();
+		monoFunctions.profiler_set_jit_begin_callback (profiler_handle, jit_begin);
 		monoFunctions.profiler_set_jit_done_callback (profiler_handle, jit_done);
+	}
 
 	parse_gdb_options ();
 
