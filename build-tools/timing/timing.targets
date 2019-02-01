@@ -76,7 +76,7 @@
     />
     <Git
         Condition=" '%(XACaptureBuildTimingProject.Repo)' != '' "
-        Arguments="clone &quot;%(XACaptureBuildTimingProject.Repo)&quot; --depth=1 &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
+        Arguments="clone &quot;%(XACaptureBuildTimingProject.Repo)&quot; &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
         WorkingDirectory="$(_TopDir)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)"

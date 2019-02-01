@@ -144,8 +144,9 @@ namespace Xamarin.Android.Tasks
 					CreateNoWindow = true,
 					WindowStyle = ProcessWindowStyle.Hidden,
 				};
+				string windowsCompilerSwitches = NdkUtil.GetCompilerTargetParameters (AndroidNdkDirectory, arch, level);
 				var compilerNoQuotes = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "gcc", level);
-				var compiler = '"' + compilerNoQuotes + '"';
+				var compiler = $"\"{compilerNoQuotes}\" {windowsCompilerSwitches}".Trim ();
 				var gas = '"' + NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "as", level) + '"';
 				psi.EnvironmentVariables ["CC"] = compiler;
 				psi.EnvironmentVariables ["AS"] = gas;
@@ -169,6 +170,11 @@ namespace Xamarin.Android.Tasks
 				// then compile temp.c into temp.o and ...
 
 				clb = new CommandLineBuilder ();
+
+				// See NdkUtils.GetNdkTool for reasons why
+				if (!String.IsNullOrEmpty (windowsCompilerSwitches))
+					clb.AppendTextUnquoted (windowsCompilerSwitches);
+
 				clb.AppendSwitch ("-c");
 
 				// This is necessary only when unified headers are in use but it won't hurt to have it
