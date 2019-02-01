@@ -491,7 +491,7 @@ pipeline {
                 dir("$XADir") {
                     xunit thresholds: [
                             failed(unstableNewThreshold: '0', unstableThreshold: '0'),
-                            skipped(unstableNewThreshold: '0', unstableThreshold: '0')
+                            skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
                         ],
                         tools: [
                             NUnit2(deleteOutputFiles: true,
