@@ -43,6 +43,10 @@ namespace Xamarin.ProjectTools
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
 		public bool RequiresMSBuild { get; set; }
+		/// <summary>
+		/// True if NuGet restore occurs automatically (default)
+		/// </summary>
+		public bool AutomaticNuGetRestore { get; set; } = true;
 
 		string GetVisualStudio2017Directory ()
 		{
@@ -324,7 +328,7 @@ namespace Xamarin.ProjectTools
 			RegexOptions.Multiline | RegexOptions.Compiled
 		);
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true)
 		{
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -343,8 +347,11 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} /restore {2}",
+			args.AppendFormat ("{0} /t:{1} {2}",
 				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
+			if (AutomaticNuGetRestore && restore) {
+				args.Append (" /restore");
+			}
 			args.Append ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
 			if (BuildingInsideVisualStudio && RunningMSBuild) {
 				args.Append (" /p:BuildingOutOfProcess=true");

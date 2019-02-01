@@ -89,6 +89,7 @@
     <Compile Include="ZipArchiveExTests.cs" />
     <Compile Include="ConvertResourcesCasesTests.cs" />
     <Compile Include="..\..\..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
+    <Compile Include="Tasks\NdkUtilTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

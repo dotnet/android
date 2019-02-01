@@ -256,7 +256,7 @@ typedef struct {
 	void *dummy;
 } MonoDroidProfiler;
 
-static MonoDroidProfiler monodroid_profiler;
+static MonoProfilerHandle profiler_handle;
 
 static jclass     TimeZone_class;
 
@@ -369,12 +369,10 @@ thread_end (MonoProfiler *prof, uintptr_t tid)
 FILE *jit_log;
 
 static void
-jit_end (MonoProfiler *prof, MonoMethod   *method,   MonoJitInfo* jinfo,   int result)
+jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
 {
 	char *name;
 	if (!jit_log)
-		return;
-	if (static_cast <MonoProfileResult> (result) != MonoProfileResult::MONO_PROFILE_OK)
 		return;
 	name = monoFunctions.method_full_name (method, 1);
 	fprintf (jit_log, "JITed method: %s\n", name);
@@ -772,7 +770,6 @@ enable_soft_breakpoints (void)
 static void
 mono_runtime_init (char *runtime_args)
 {
-	MonoProfileFlags profile_events;
 #if DEBUG
 	RuntimeOptions options;
 	int64_t cur_time;
@@ -861,20 +858,17 @@ mono_runtime_init (char *runtime_args)
 	set_debug_options ();
 #endif
 
-	profile_events = MonoProfileFlags::MONO_PROFILE_THREADS;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		char *jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
 		jit_log = utils.monodroid_fopen (jit_log_path, "a");
 		utils.set_world_accessable (jit_log_path);
 		delete[] jit_log_path;
-
-		profile_events |= MonoProfileFlags::MONO_PROFILE_JIT_COMPILATION;
 	}
-	monoFunctions.profiler_install ((MonoProfiler*)&monodroid_profiler, nullptr);
-	monoFunctions.profiler_set_events (profile_events);
-	monoFunctions.profiler_install_thread (reinterpret_cast<void*> (thread_start), reinterpret_cast<void*> (thread_end));
+
+	profiler_handle = monoFunctions.profiler_create ();
+	monoFunctions.profiler_install_thread (profiler_handle, thread_start, thread_end);
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE))
-		monoFunctions.profiler_install_jit_end (jit_end);
+		monoFunctions.profiler_set_jit_done_callback (profiler_handle, jit_done);
 
 	parse_gdb_options ();
 

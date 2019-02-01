@@ -137,6 +137,10 @@ inline MonoCounters& operator |= (MonoCounters& left, MonoCounters right)
 	typedef struct _MonoProfiler {} MonoProfiler;
 #endif
 
+#ifndef MonoProfilerHandle
+	typedef struct _MonoProfilerDesc {} * MonoProfilerHandle;
+#endif
+
 #ifndef MonoProperty
 	typedef struct _MonoProperty {} MonoProperty;
 #endif
@@ -158,6 +162,9 @@ inline MonoCounters& operator |= (MonoCounters& left, MonoCounters right)
 #endif
 
 typedef void (*MonoDomainFunc) (MonoDomain *domain, void* user_data);
+typedef void (*MonoJitDoneEventFunc) (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
+typedef void (*MonoThreadStartedEventFunc) (MonoProfiler *prof, uintptr_t tid);
+typedef void (*MonoThreadStoppedEventFunc) (MonoProfiler *prof, uintptr_t tid);
 
 #ifdef __cplusplus
 enum class MonoDlKind {
@@ -442,6 +449,10 @@ class DylibMono
 	typedef void                   (*monodroid_mono_install_assembly_refonly_preload_hook_fptr) (MonoAssemblyPreLoadFunc func, void *user_data);
 	typedef int                    (*monodroid_mono_runtime_set_main_args_fptr) (int argc, char* argv[]);
 	typedef void                   (*mono_aot_register_module_fptr) (void* aot_info);
+	typedef MonoProfilerHandle     (*monodroid_mono_profiler_create_fptr) (MonoProfiler* profiler);
+	typedef void                   (*monodroid_mono_profiler_set_jit_done_callback_fptr) (MonoProfilerHandle handle, MonoJitDoneEventFunc done_ftn);
+	typedef void                   (*monodroid_mono_profiler_set_thread_started_callback_fptr) (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn);
+	typedef void                   (*monodroid_mono_profiler_set_thread_stopped_callback_fptr) (MonoProfilerHandle handle, MonoThreadStoppedEventFunc stopped_ftn);
 
 #ifdef __cplusplus
 private:
@@ -534,6 +545,10 @@ struct DylibMono {
 	monodroid_mono_domain_from_appdomain_fptr                       mono_domain_from_appdomain;
 	monodroid_mono_thread_current_fptr                              mono_thread_current;
 	mono_aot_register_module_fptr                                   mono_aot_register_module;
+	monodroid_mono_profiler_create_fptr                             mono_profiler_create;
+	monodroid_mono_profiler_set_jit_done_callback_fptr              mono_profiler_set_jit_done_callback;
+	monodroid_mono_profiler_set_thread_started_callback_fptr        mono_profiler_set_thread_started_callback;
+	monodroid_mono_profiler_set_thread_stopped_callback_fptr        mono_profiler_set_thread_stopped_callback;
 
 #ifdef __cplusplus
 	bool initialized;
@@ -635,10 +650,9 @@ public:
 	MonoClass* object_get_class (MonoObject *obj);
 	MonoObject* object_new (MonoDomain *domain, MonoClass *klass);
 	void* object_unbox (MonoObject *obj);
-	void profiler_install (void *profiler, void *callback);
-	void profiler_install_jit_end (MonoProfileJitResult end);
-	void profiler_install_thread (void *start_ftn, void *end_ftn);
-	void profiler_set_events (MonoProfileFlags events);
+	MonoProfilerHandle profiler_create ();
+	void profiler_install_thread (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn, MonoThreadStoppedEventFunc end_ftn);
+	void profiler_set_jit_done_callback (MonoProfilerHandle handle, MonoJitDoneEventFunc done_ftn);
 	void property_set_value (MonoProperty *prop, void *obj, void **params, MonoObject **exc);
 	void register_bundled_assemblies (const MonoBundledAssembly **assemblies);
 	void register_config_for_assembly (const char* assembly_name, const char* config_xml);
