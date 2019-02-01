@@ -153,6 +153,8 @@ pipeline {
                     echo "init: builderType: ${builderType}"
                 }
             }
+
+            echo "Stage result: init: ${currentBuild.currentResult}"
         }
 
         stage('clean') {
@@ -201,6 +203,8 @@ pipeline {
                         }
                     }
                 }
+
+                echo "Stage result: clean: ${currentBuild.currentResult}"
             }   
         }
     
@@ -213,6 +217,8 @@ pipeline {
                 dir("$XADir") {
                     sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
+
+                echo "Stage result: prepare deps: ${currentBuild.currentResult}"
             }
         }
         
@@ -232,6 +238,8 @@ pipeline {
                         }
                     }
                 }
+
+                echo "Stage result: build: ${currentBuild.currentResult}"
             }
         }
         
@@ -244,6 +252,8 @@ pipeline {
                 dir("$XADir") {
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
                 }
+
+                echo "Stage result: create vsix: ${currentBuild.currentResult}"
             }
         }
         
@@ -256,6 +266,8 @@ pipeline {
                 dir("$XADir") {
                     sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
                 }
+
+                echo "Stage result: build tests: ${currentBuild.currentResult}"
             }
         }
         
@@ -284,6 +296,8 @@ pipeline {
                         }
                     }
                 }
+
+                echo "Stage result: package build: ${currentBuild.currentResult}"
             }
         }
         
@@ -301,6 +315,8 @@ pipeline {
                         }
                     }
                 }
+
+                echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
             }
         }
         
@@ -328,9 +344,9 @@ pipeline {
                                 echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
                                 currentBuild.result = 'UNSTABLE'
                             }
-
-                            echo "Run all tests status: ${status} / current build result: ${currentBuild.result}"
                         }
+
+                        echo "Stage result: run all tests: status: ${status} / current build result: ${currentBuild.currentResult}"
                     }
                 }
             }   
@@ -351,6 +367,8 @@ pipeline {
                         echo "ERROR : package test errors failed"
                     }
                     */
+
+                    echo "Stage result: package tests: ${currentBuild.currentResult}"
                 }
             }
         }
@@ -379,6 +397,8 @@ pipeline {
                         echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
                     }
                     */
+
+                    echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult}"
                 }
             }
         }
@@ -457,6 +477,8 @@ pipeline {
                         group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
                     )
                 }
+
+                echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
             }
         }
 
@@ -479,6 +501,8 @@ pipeline {
                             stopProcessingIfError: false)
                         ]
                 }
+
+                echo "Stage result: Upload test results: ${currentBuild.currentResult}"
             }
         }
     }
