@@ -484,7 +484,7 @@ pipeline {
 
         stage('Upload test results') {
             options {
-                timeout(time: 60, unit: 'MINUTES')
+                timeout(time: 5, unit: 'MINUTES')       // Typically takes under 1 minute to upload test results
             }
 
             steps {
