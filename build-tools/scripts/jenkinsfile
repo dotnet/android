@@ -105,7 +105,7 @@ def processAndStageTestErrors(xaDir, packageDir) {
             echo "processing & packaging xa-test-errors"
             echo "  testErrorsDir: ${testErrorsDir}"
 
-            sh "cd ${testErrorsDir}"
+            sh "cd ${env.WORKSPACE}/${xaDir}"
             sh "make package-test-errors"
             sh """
                 if [ -d "${testErrorsDir}" ]; then
@@ -359,14 +359,10 @@ pipeline {
 
             steps {
                 script {
-                    // UNDONE: Skip this step
-                    echo 'SKIPPED: Package tests disabled'
-                    /*
                     def status = processAndStageTestErrors(XADir, packageTestsDir)
                     if (status != 0) {
                         echo "ERROR : package test errors failed"
                     }
-                    */
 
                     echo "Stage result: package tests: ${currentBuild.currentResult}"
                 }
@@ -380,10 +376,9 @@ pipeline {
 
             steps {
                 script {
-                    // UNDONE: Skip this step
-                    echo "SKIPPED: Test error log publishing skipped"
-                    /*
                     if (fileExists(packageTestsDir)) {      // Note: fileExists works for directories too
+                        echo "SKIP publishing of test error logs even though they exist. Manually check the size of the .ZIP file that we'd otherwise upload"
+                        /*
                         dir(packageTestsDir) {
                             echo "Publishing contents of the package.tests directory to Azure storage"
                             echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
@@ -393,10 +388,10 @@ pipeline {
                                 uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
                             ])
                         }
+                        */
                     } else {
                         echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
                     }
-                    */
 
                     echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult}"
                 }
