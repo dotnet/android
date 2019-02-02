@@ -16,6 +16,8 @@ def packageDir = null
 def packageTestsDir = null
 def builderType = null      // PR or CI
 
+def testErrorsDir = null
+
 def ensurePackageDirExists(packageDir) {
     def status = 0
 
@@ -94,20 +96,21 @@ def publishPackages(packageDir) {
     return status
 }
 
-def processAndStageTestErrors(xaDir, packageDir) {
+def processAndStageTestErrors(xaDir, packageDir, testErrorsDir) {
     def status = 0
     try {
         status = ensurePackageDirExists(packageDir)
 
         if (status == 0) {
-            def testErrorsDir = "${env.WORKSPACE}/${xaDir}/package-test-errors"
-
             echo "processing & packaging xa-test-errors"
+            echo "  xaDir: ${xaDir}"
+            echo "  packageDir: ${packageDir}"
             echo "  testErrorsDir: ${testErrorsDir}"
 
-            sh "cd ${env.WORKSPACE}/${xaDir}"
-            sh "make package-test-errors"
             sh """
+                cd ${env.WORKSPACE}/${xaDir}
+                make package-test-errors
+
                 if [ -d "${testErrorsDir}" ]; then
                     mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
                     cp ${testErrorsDir}/*.zip ../package.tests
@@ -143,6 +146,9 @@ pipeline {
                     packageTestsDir = "${env.WORKSPACE}/package.tests"
                     echo "init: packageTestsDir: ${packageTestsDir}"
 
+                    testErrorsDir = "${env.WORKSPACE}/${XADir}/package-test-errors"
+                    echo "init: testErrorsDir: ${testErrorsDir}"
+
                     echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
                     if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
                         builderType = "PR"
@@ -168,6 +174,10 @@ pipeline {
                 }
 
                 dir('xamarin-android@tmp') {
+                    deleteDir()
+                }
+
+                dir ('xamarin-android/package-test-errors') {
                     deleteDir()
                 }
 
@@ -361,9 +371,9 @@ pipeline {
 
             steps {
                 script {
-                    def status = processAndStageTestErrors(XADir, packageTestsDir)
+                    def status = processAndStageTestErrors(XADir, packageTestsDir, testErrorsDir)
                     if (status != 0) {
-                        echo "ERROR : NON-CRITICAL : package test errors failed"
+                        echo "ERROR : NON-FATAL : package test errors failed"       // Note: Simply log that an error occurred, but intentionally don't set the build result to an error state such as 'UNSTABLE'
                     }
 
                     echo "Stage result: package tests: ${currentBuild.currentResult}"
