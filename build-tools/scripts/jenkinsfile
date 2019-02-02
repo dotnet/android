@@ -14,7 +14,7 @@ def buildStatusUploaded = false
 
 def packageDir = null
 def packageTestsDir = null
-def builderType = null      // PR or CI
+def isPR = false                // Default to CI
 
 def testErrorsDir = null
 
@@ -151,12 +151,11 @@ pipeline {
 
                     echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
                     if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
-                        builderType = "PR"
+                        echo "Build type: PR"
+                        isPR = true
                     } else {
-                        builderType = "CI"
+                        echo "Build type: CI"
                     }
-
-                    echo "init: builderType: ${builderType}"
                 }
 
                 echo "Stage result: init: ${currentBuild.currentResult}"
@@ -241,7 +240,7 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        if (builderType?.equalsIgnoreCase("PR")) {
+                        if (isPR) {
                             echo "PR build definition detected: building with 'make all'"
                             sh "make all CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                         } else {
@@ -365,6 +364,10 @@ pipeline {
         }
         
         stage('package tests') {
+            when {
+                isPR true
+            }
+
             options {
                 timeout(time: 30, unit: 'SECONDS')
             }
@@ -375,13 +378,16 @@ pipeline {
                     if (status != 0) {
                         echo "ERROR : NON-FATAL : package test errors failed"       // Note: Simply log that an error occurred, but intentionally don't set the build result to an error state such as 'UNSTABLE'
                     }
-
                     echo "Stage result: package tests: ${currentBuild.currentResult}"
                 }
             }
         }
 
         stage('publish test error logs to Azure') {
+            when {
+                isPR true
+            }
+
             options {
                 timeout(time: 10, unit: 'MINUTES')        // Typically takes less than 2 minutes
             }
@@ -390,17 +396,21 @@ pipeline {
                 script {
                     if (fileExists(packageTestsDir)) {      // Note: fileExists works for directories too
                         echo "SKIP publishing of test error logs even though they exist. Manually check the size of the .ZIP file that we'd otherwise upload"
-                        /*
+
                         dir(packageTestsDir) {
                             echo "Publishing contents of the package.tests directory to Azure storage"
                             echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-                            step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
-                                filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-                                uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-                            ])
+
+                            try {
+                                step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+                                    doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
+                                    filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+                                    uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+                                ])
+                            } catch (error) {
+                                echo "ERROR : NON-FATAL : Unexpected error: ${error}"    // Capture and log an error when attempting to upload test error logs, but don't fail the build
+                            }
                         }
-                        */
                     } else {
                         echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
                     }
