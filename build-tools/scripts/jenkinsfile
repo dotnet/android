@@ -173,8 +173,10 @@ pipeline {
 
                 dir('xamarin-android') {
                     echo "Cleaning build status files "
-
                     sh "rm -f xa-build-status*.zip"
+
+                    echo "Cleaning test result files"
+                    sh "rm -f TestResult-*.xml"
 
                     sh '''
                     for dir in `ls -d xa-build-status*`; do
@@ -361,7 +363,7 @@ pipeline {
                 script {
                     def status = processAndStageTestErrors(XADir, packageTestsDir)
                     if (status != 0) {
-                        echo "ERROR : package test errors failed"
+                        echo "ERROR : NON-CRITICAL : package test errors failed"
                     }
 
                     echo "Stage result: package tests: ${currentBuild.currentResult}"
@@ -484,17 +486,24 @@ pipeline {
 
             steps {
                 dir("$XADir") {
-                    xunit thresholds: [
-                            failed(unstableNewThreshold: '0', unstableThreshold: '0'),
-                            skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
-                        ],
-                        tools: [
-                            NUnit2(deleteOutputFiles: true,
-                            failIfNotNew: true,
-                            pattern: 'TestResult-*.xml',
-                            skipNoTestFiles: true,
-                            stopProcessingIfError: false)
-                        ]
+                    script {
+                        try {
+                            xunit thresholds: [
+                                    failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                                    skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
+                                ],
+                                tools: [
+                                    NUnit2(deleteOutputFiles: true,
+                                    failIfNotNew: true,
+                                    pattern: 'TestResult-*.xml',
+                                    skipNoTestFiles: true,
+                                    stopProcessingIfError: false)
+                                ]
+                        } catch (error) {
+                            echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+                            currentBuild.result = 'UNSTABLE'
+                        }
+                    }
                 }
 
                 echo "Stage result: Upload test results: ${currentBuild.currentResult}"
