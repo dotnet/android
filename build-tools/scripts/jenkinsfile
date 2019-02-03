@@ -48,6 +48,47 @@ def publishPackages(filePaths) {
     return status
 }
 
+def cleanFiles(path) {
+    // path can include wildcard characters
+
+    def status = 0
+
+    try {
+        """
+        for file in ${path}; do
+            [ -f "$file" ] || continue
+            echo "Cleaning file '${file}''"
+            rm -f "$file"
+        done
+        """
+    } catch (error) {
+        echo "ERROR : cleanFiles: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
+
+def cleanDirectories(path) {
+    // path can include wildcard characters
+
+    def status = 0
+
+    try {
+        """
+        for dir in `ls -d ${path}`; do
+            [ -d "$dir" ] || continue
+            echo "Cleaning directory '${dir}''"
+            rm -rf "$dir"
+        done        """
+    } catch (error) {
+        echo "ERROR : cleanFiles: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
+
 pipeline {
     
     agent {
@@ -102,23 +143,27 @@ pipeline {
                 }
 
                 dir('xamarin-android') {
-                    echo "Cleaning build status files "
-                    sh "rm -f xa-build-status*.zip"
-
-                    echo "Cleaning test result files"
-                    sh "rm -f TestResult-*.xml"
-
-                    sh '''
-                    for dir in `ls -d xa-build-status*`; do
-                        [ -d "$dir" ] || continue
-                        echo "Cleaning directory '${dir}''"
-                        rm -rf "$dir"
-                    done
-                    '''
-                }
-
-                dir('xamarin-android') {
                     script {
+                        echo "Cleaning build outputs: xamarin.android-oss*.zip, bin/${env.BuildFlavor}/bundle-*.zip, bin/Build*/Xamarin.Android.Sdk*.vsix"
+                        cleanFiles("xamarin.android-oss*.zip")
+                        cleanFiles("bin/${env.BuildFlavor}/bundle-*.zip")
+                        cleanFiles("bin/Build*/Xamarin.Android.Sdk*.vsix")
+
+                        echo "Cleaning xa-build-status*"
+                        cleanFiles("xa-build-status*.zip")
+                        cleanDirectories("xa-build-status*")
+                        cleanFiles("build-status*")
+
+                        echo "Cleaning xa-test-errors*"
+                        cleanFiles("xa-test-errors*.zip")
+                        cleanDirectories("xa-test-errors*")
+
+                        echo "Cleaning prepare-image-dependencies.sh"
+                        sh "rm -f prepare-image-dependencies.sh"
+
+                        echo "Cleaning test result files 'TestResult-*.xml'"
+                        cleanFiles("TestResult-*.xml")
+
                         // Avoid: EXEC : error : jnimarshalmethod-gen: Unable to create Java VM
                         def XAInstallPrefix = "bin/${env.BuildFlavor}/lib/xamarin.android"
 
