@@ -365,7 +365,7 @@ pipeline {
         
         stage('package tests') {
             when {
-                isPR true
+                expression { isPR == true }
             }
 
             options {
@@ -385,7 +385,7 @@ pipeline {
 
         stage('publish test error logs to Azure') {
             when {
-                isPR true
+                expression { isPR == true }
             }
 
             options {
