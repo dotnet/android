@@ -54,13 +54,11 @@ def cleanFiles(path) {
     def status = 0
 
     try {
-        echo "MULTILINE SHELL COMMAND!!!"
         sh """
-            echo "IN MULTILINE SHELL COMMAND!!!"
-            for file in ${path}; do
-                [ -f "$file" ] || continue
-                echo "Cleaning file '${file}''"
-                rm -f "$file"
+            for f in ${path}; do
+                [ -f "$f" ] || continue
+                echo "Cleaning file '${f}'"
+                rm -f "$f"
             done
         """
     } catch (error) {
