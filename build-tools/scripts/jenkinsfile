@@ -57,7 +57,7 @@ def cleanFiles(path) {
 
         script {
             sh """
-            # Note: Escape dollar \$ even in comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
+            # Note: Escape dollar \$ even in bash comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
             for file in `ls ${path}`; do
                 [ -f "\$file" ] || continue
                 echo "Cleaning file '\${file}''"
@@ -81,7 +81,7 @@ def cleanDirectories(path) {
 
     try {
         sh """
-            # Note: Escape dollar \$ even in comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
+            # Note: Escape dollar \$ even in bash comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
             for dir in `ls -d ${path}`; do
                 [ -d "\$dir" ] || continue
                 echo "Cleaning directory '\${dir}''"
