@@ -54,7 +54,7 @@ def cleanFiles(path) {
     def status = 0
 
     try {
-        """
+        sh """
         for file in ${path}; do
             [ -f "$file" ] || continue
             echo "Cleaning file '${file}''"
@@ -75,7 +75,7 @@ def cleanDirectories(path) {
     def status = 0
 
     try {
-        """
+        sh """
         for dir in `ls -d ${path}`; do
             [ -d "$dir" ] || continue
             echo "Cleaning directory '${dir}''"
