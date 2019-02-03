@@ -54,13 +54,18 @@ def cleanFiles(path) {
     def status = 0
 
     try {
-        sh """
-            for f in ${path}; do
-                [ -f "$f" ] || continue
-                echo "Cleaning file '${f}'"
-                rm -f "$f"
+
+        script {
+            sh """
+            # Note: Escape dollar \$ even in comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
+            for file in `ls ${path}`; do
+                [ -f "\$file" ] || continue
+                echo "Cleaning file '\${file}''"
+                rm -f "\$file"
             done
-        """
+            """
+        }
+
     } catch (error) {
         echo "ERROR : cleanFiles: Unexpected error: ${error}"
         status = 1
@@ -76,14 +81,15 @@ def cleanDirectories(path) {
 
     try {
         sh """
+            # Note: Escape dollar \$ even in comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
             for dir in `ls -d ${path}`; do
-                [ -d "$dir" ] || continue
-                echo "Cleaning directory '${dir}''"
-                rm -rf "$dir"
+                [ -d "\$dir" ] || continue
+                echo "Cleaning directory '\${dir}''"
+                rm -rf "\$dir"
             done
         """
     } catch (error) {
-        echo "ERROR : cleanFiles: Unexpected error: ${error}"
+        echo "ERROR : cleanDirectories: Unexpected error: ${error}"
         status = 1
     }
 
