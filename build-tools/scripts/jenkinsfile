@@ -110,7 +110,6 @@ pipeline {
         stage('init') {
             steps {
                 script {
-                    echo "BRANCH_NAME: ${env.BRANCH_NAME}"
                     echo "GIT_BRANCH: ${env.GIT_BRANCH}"
                     echo "CHANGE_TARGET: ${env.CHANGE_TARGET}"
 
