@@ -427,24 +427,22 @@ pipeline {
             }
 
             steps {
-                dir("$XADir") {
-                    script {
-                        try {
-                            xunit thresholds: [
-                                    failed(unstableNewThreshold: '0', unstableThreshold: '0'),
-                                    skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
-                                ],
-                                tools: [
-                                    NUnit2(deleteOutputFiles: true,
-                                    failIfNotNew: true,
-                                    pattern: 'TestResult-*.xml',
-                                    skipNoTestFiles: true,
-                                    stopProcessingIfError: false)
-                                ]
-                        } catch (error) {
-                            echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
-                            currentBuild.result = 'UNSTABLE'
-                        }
+                script {
+                    try {
+                        xunit thresholds: [
+                                failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                                skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
+                            ],
+                            tools: [
+                                NUnit2(deleteOutputFiles: true,
+                                failIfNotNew: true,
+                                pattern: 'xamarin-android/TestResult-*.xml',
+                                skipNoTestFiles: true,
+                                stopProcessingIfError: false)
+                            ]
+                    } catch (error) {
+                        echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
 
