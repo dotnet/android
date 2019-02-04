@@ -110,6 +110,10 @@ pipeline {
         stage('init') {
             steps {
                 script {
+                    echo "BRANCH_NAME: ${env.BRANCH_NAME}"
+                `   echo "GIT_BRANCH: ${env.GIT_BRANCH}"
+                    echo "CHANGE_TARGET: ${env.CHANGE_TARGET}"
+
                     publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
                     echo "init: publishBuildFilePaths: ${publishBuildFilePaths}"
 
