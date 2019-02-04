@@ -671,9 +671,6 @@
     <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
       <LogicalName>proguard_xamarin.cfg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoPackageManager.api4.java">
-      <LogicalName>MonoPackageManager.api4.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\NotifyTimeZoneChanges.java">
       <LogicalName>NotifyTimeZoneChanges.java</LogicalName>
     </EmbeddedResource>
