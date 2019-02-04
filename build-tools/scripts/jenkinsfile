@@ -4,89 +4,41 @@
 
 def botLabel = 'xamarin-android-master-pipeline-eval'
 
-def repoUrl = "https://github.com/xamarin/xamarin-android.git"
 def XADir = "xamarin-android"
+
+def publishBuildFilePaths = null
+def publishTestFilePaths = null
 
 def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def packageDir = null
-def packageTestsDir = null
 def isPR = false                // Default to CI
 
-def testErrorsDir = null
-
-def ensurePackageDirExists(packageDir) {
+def processBuildStatus() {
     def status = 0
 
-    if (!packageDir) {
-        echo "ERROR : ensurePackageDirExists: packageDir not set"
-        status = 1
-    }
-
-    if (status == 0 && !fileExists(packageDir)) {
-        echo "Creating package directory '${packageDir}'"
-        sh "mkdir -p \"${packageDir}\""
-    }
-
-    return status
-}
-
-def stagePackages(xaDir, packageDir) {
-    def status = ensurePackageDirExists(packageDir)
-
-    if (status == 0) {
-        try {
-            sh "cp xamarin.android-oss*.zip ${packageDir}"
-            sh "cp bin/Release/bundle-*.zip ${packageDir}"
-            sh "cp bin/Build*/Xamarin.Android.Sdk*.vsix ${packageDir}"
-        } catch (error) {
-            echo "ERROR : stagePackages: Unexpected error: ${error}"
-            status = 1
-        }
-    }
-
-    return status
-}
-
-def processAndStageBuildResults(xaDir, packageDir) {
-    def status = 0
     try {
-        status = ensurePackageDirExists(packageDir)
-
-        if (status == 0) {
-            echo "processing & packaging build status"
-            sh "cd ${env.WORKSPACE}/${xaDir}"
-            sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
-            sh "cp xa-build-status*.zip ${packageDir}"
-        }
-
+        echo "processing build status"
+        sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
     } catch (error) {
-        echo "ERROR : processAndStageBuildResults: Unexpected error: ${error}"
+        echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
         status = 1
     }
 
     return status
 }
 
-def publishPackages(packageDir) {
+def publishPackages(filePaths) {
     def status = 0
     try {
-        if (fileExists(packageDir)) {
-            sh "cd ${packageDir}"
-
-            echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-            step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
-                filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-                uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-            ])
-        } else {
-            echo "ERROR : publishPackages: packageDir '${packageDir}' does not exist"
-            status = 1
-        }
+        echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
+        step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
+            doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
+            filesPath: "${filePaths}", storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
+            uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
+        ])
 
     } catch (error) {
         echo "ERROR : publishPackages: Unexpected error: ${error}"
@@ -96,30 +48,48 @@ def publishPackages(packageDir) {
     return status
 }
 
-def processAndStageTestErrors(xaDir, packageDir, testErrorsDir) {
+def cleanFiles(path) {
+    // path can include wildcard characters
+
     def status = 0
+
     try {
-        status = ensurePackageDirExists(packageDir)
 
-        if (status == 0) {
-            echo "processing & packaging xa-test-errors"
-            echo "  xaDir: ${xaDir}"
-            echo "  packageDir: ${packageDir}"
-            echo "  testErrorsDir: ${testErrorsDir}"
-
+        script {
             sh """
-                cd ${env.WORKSPACE}/${xaDir}
-                make package-test-errors
-
-                if [ -d "${testErrorsDir}" ]; then
-                    mkdir -p ../package.tests                                           // Note: Signal publishing of the test error logs by creating the directory
-                    cp ${testErrorsDir}/*.zip ../package.tests
-                fi
+            # Note: Escape dollar \$ even in bash comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
+            for file in `ls ${path}`; do
+                [ -f "\$file" ] || continue
+                echo "Cleaning file '\${file}''"
+                rm -f "\$file"
+            done
             """
         }
 
     } catch (error) {
-        echo "ERROR : processAndStageTestErrors: Unexpected error: ${error}"
+        echo "ERROR : cleanFiles: Unexpected error: ${error}"
+        status = 1
+    }
+
+    return status
+}
+
+def cleanDirectories(path) {
+    // path can include wildcard characters
+
+    def status = 0
+
+    try {
+        sh """
+            # Note: Escape dollar \$ even in bash comments to avoid groovy templating errors; use non-escaped dollar to expand groovy variables
+            for dir in `ls -d ${path}`; do
+                [ -d "\$dir" ] || continue
+                echo "Cleaning directory '\${dir}''"
+                rm -rf "\$dir"
+            done
+        """
+    } catch (error) {
+        echo "ERROR : cleanDirectories: Unexpected error: ${error}"
         status = 1
     }
 
@@ -140,14 +110,11 @@ pipeline {
         stage('init') {
             steps {
                 script {
-                    packageDir = "${env.WORKSPACE}/package"
-                    echo "init: packageDir: ${packageDir}"
+                    publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
+                    echo "init: publishBuildFilePaths: ${publishBuildFilePaths}"
 
-                    packageTestsDir = "${env.WORKSPACE}/package.tests"
-                    echo "init: packageTestsDir: ${packageTestsDir}"
-
-                    testErrorsDir = "${env.WORKSPACE}/${XADir}/package-test-errors"
-                    echo "init: testErrorsDir: ${testErrorsDir}"
+                    publishTestFilePaths = "xamarin-android/xa-test-errors*"
+                    echo "init: publishTestFilePaths: ${publishTestFilePaths}"
 
                     echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
                     if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
@@ -164,6 +131,8 @@ pipeline {
 
         stage('clean') {
             steps {
+
+                // Note: 'package' and 'package.tests' directories are deprecated locations. Keep the cleansing in place for now to remove these locations off the build bots
                 dir('package') {
                     deleteDir()
                 }
@@ -181,23 +150,27 @@ pipeline {
                 }
 
                 dir('xamarin-android') {
-                    echo "Cleaning build status files "
-                    sh "rm -f xa-build-status*.zip"
-
-                    echo "Cleaning test result files"
-                    sh "rm -f TestResult-*.xml"
-
-                    sh '''
-                    for dir in `ls -d xa-build-status*`; do
-                        [ -d "$dir" ] || continue
-                        echo "Cleaning directory '${dir}''"
-                        rm -rf "$dir"
-                    done
-                    '''
-                }
-
-                dir('xamarin-android') {
                     script {
+                        echo "Cleaning build outputs: xamarin.android-oss*.zip, bin/${env.BuildFlavor}/bundle-*.zip, bin/Build*/Xamarin.Android.Sdk*.vsix"
+                        cleanFiles("xamarin.android-oss*.zip")
+                        cleanFiles("bin/${env.BuildFlavor}/bundle-*.zip")
+                        cleanFiles("bin/Build*/Xamarin.Android.Sdk*.vsix")
+
+                        echo "Cleaning xa-build-status*"
+                        cleanFiles("xa-build-status*.zip")
+                        cleanDirectories("xa-build-status*")
+                        cleanFiles("build-status*")
+
+                        echo "Cleaning xa-test-errors*"
+                        cleanFiles("xa-test-errors*.zip")
+                        cleanDirectories("xa-test-errors*")
+
+                        echo "Cleaning prepare-image-dependencies.sh"
+                        sh "rm -f prepare-image-dependencies.sh"
+
+                        echo "Cleaning test result files 'TestResult-*.xml'"
+                        cleanFiles("TestResult-*.xml")
+
                         // Avoid: EXEC : error : jnimarshalmethod-gen: Unable to create Java VM
                         def XAInstallPrefix = "bin/${env.BuildFlavor}/lib/xamarin.android"
 
@@ -282,48 +255,36 @@ pipeline {
             }
         }
         
-        stage('package build') {
+        stage ('process build status') {
             options {
-                timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 1 minute
+                timeout(time: 10, unit: 'MINUTES')      // Typically takes less than a minute
             }
 
             steps {
-                dir("$XADir") {
-                    script {
-                        def statusStagePackages = stagePackages(XADir, packageDir)
-                        def statusStageBuildResults = processAndStageBuildResults(XADir, packageDir)
+                script {
+                    dir("$XADir") {
+                        def status = processBuildStatus()
 
-                        if (statusStageBuildResults == 0) {
+                        if (status == 0) {
                             buildStatusProcessed = true
-                        }
-
-                        if (fileExists('prepare-image-dependencies.sh')) {
-                            echo 'Staging prepare-image-dependencies.sh for publishing'
-                            sh 'cp prepare-image-dependencies.sh ../package'
-                        }
-
-                        if (statusStagePackages != 0) {
-                            currentBuild.result = 'FAILURE'
                         }
                     }
                 }
 
-                echo "Stage result: package build: ${currentBuild.currentResult}"
+                echo "Stage result: process build status: ${currentBuild.currentResult}"
             }
         }
-        
+
         stage('publish packages to Azure') {
             options {
                 timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 2 minutes
             }
 
             steps {
-                dir('package') {
-                    script {
-                        def status = publishPackages(packageDir)
-                        if (status == 0) {
-                            buildStatusUploaded = true
-                        }
+                script {
+                    def status = publishPackages(publishBuildFilePaths)
+                    if (status == 0) {
+                        buildStatusUploaded = true
                     }
                 }
 
@@ -363,26 +324,6 @@ pipeline {
             }   
         }
         
-        stage('package tests') {
-            when {
-                expression { isPR == true }
-            }
-
-            options {
-                timeout(time: 30, unit: 'SECONDS')
-            }
-
-            steps {
-                script {
-                    def status = processAndStageTestErrors(XADir, packageTestsDir, testErrorsDir)
-                    if (status != 0) {
-                        echo "ERROR : NON-FATAL : package test errors failed"       // Note: Simply log that an error occurred, but intentionally don't set the build result to an error state such as 'UNSTABLE'
-                    }
-                    echo "Stage result: package tests: ${currentBuild.currentResult}"
-                }
-            }
-        }
-
         stage('publish test error logs to Azure') {
             when {
                 expression { isPR == true }
@@ -394,28 +335,9 @@ pipeline {
 
             steps {
                 script {
-                    if (fileExists(packageTestsDir)) {      // Note: fileExists works for directories too
-                        echo "SKIP publishing of test error logs even though they exist. Manually check the size of the .ZIP file that we'd otherwise upload"
+                    def status = publishPackages(publishTestFilePaths)
 
-                        dir(packageTestsDir) {
-                            echo "Publishing contents of the package.tests directory to Azure storage"
-                            echo "Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-
-                            try {
-                                step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-                                    doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
-                                    filesPath: '*.*', storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-                                    uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-                                ])
-                            } catch (error) {
-                                echo "ERROR : NON-FATAL : Unexpected error: ${error}"    // Capture and log an error when attempting to upload test error logs, but don't fail the build
-                            }
-                        }
-                    } else {
-                        echo "package.tests directory containing xa-test-error logs does not exist and so skipping publishing of those logs"
-                    }
-
-                    echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult}"
+                    echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
                 }
             }
         }
@@ -505,24 +427,22 @@ pipeline {
             }
 
             steps {
-                dir("$XADir") {
-                    script {
-                        try {
-                            xunit thresholds: [
-                                    failed(unstableNewThreshold: '0', unstableThreshold: '0'),
-                                    skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
-                                ],
-                                tools: [
-                                    NUnit2(deleteOutputFiles: true,
-                                    failIfNotNew: true,
-                                    pattern: 'TestResult-*.xml',
-                                    skipNoTestFiles: true,
-                                    stopProcessingIfError: false)
-                                ]
-                        } catch (error) {
-                            echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
-                            currentBuild.result = 'UNSTABLE'
-                        }
+                script {
+                    try {
+                        xunit thresholds: [
+                                failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                                skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
+                            ],
+                            tools: [
+                                NUnit2(deleteOutputFiles: true,
+                                failIfNotNew: true,
+                                pattern: 'xamarin-android/TestResult-*.xml',
+                                skipNoTestFiles: true,
+                                stopProcessingIfError: false)
+                            ]
+                    } catch (error) {
+                        echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
 
@@ -535,25 +455,24 @@ pipeline {
         // Attempt to process & upload build results if the initial attempt to process and upload the logs failed
         always {
             script {
-                def status = 0
-                if (!buildStatusUploaded) {
-                    echo "ERROR : RETRYING: Build status logs failed during the 'package build' and/or 'publish packages to Azure' stages"
+                dir ("$XADir") {
+                    def status = 0
 
-                    if (!buildStatusProcessed) {
-                        echo "Retrying packaging of build status logs"
-                        status = processAndStageBuildResults(XADir, packageDir)
-                    }
+                    if (!buildStatusUploaded) {
+                        echo "ERROR : RETRYING: Build status logs failed during 'publish packages to Azure' stage"
 
-                    if (status == 0) {
-                        echo "Retrying publishing of build status logs"
-                        status = publishPackages(packageDir)
+                        if (!buildStatusProcessed) {
+                            echo "Retrying processing of build status logs"
+                            status = processBuildStatus()
+                        }
+
+                        if (status == 0) {
+                            status = publishPackages(publishBuildFilePaths)
+                        }
 
                         if (status != 0) {
                             echo "ERROR : Publishing of build status logs failed"
                         }
-
-                    } else {
-                        echo "ERROR : Packaging of build status logs failed"
                     }
                 }
             }
