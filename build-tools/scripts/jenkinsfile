@@ -14,7 +14,7 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def isPR = false                // Default to CI
+def isPr = false                // Default to CI
 
 def processBuildStatus() {
     def status = 0
@@ -224,7 +224,7 @@ pipeline {
         
         stage('publish test error logs to Azure') {
             when {
-                expression { isPR == true }
+                expression { isPr == true }
             }
 
             options {
