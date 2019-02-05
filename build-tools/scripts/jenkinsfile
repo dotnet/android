@@ -14,7 +14,7 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 def buildStatusProcessed = false
 def buildStatusUploaded = false
 
-def isPR = false                // Default to CI
+def isPr = false                // Default to CI
 
 def processBuildStatus() {
     def status = 0
@@ -113,7 +113,7 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        if (isPR) {
+                        if (isPr) {
                             echo "PR build definition detected: building with 'make all'"
                             sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                         } else {
