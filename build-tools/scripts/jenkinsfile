@@ -82,20 +82,6 @@ pipeline {
                 echo "Stage result: init: ${currentBuild.currentResult}"
             }
         }
-
-        stage('clean') {
-            steps {
-                script {
-                    def status = 0
-
-                    dir('xamarin-android') {
-                        status = sh(script: 'git clean -xdff', returnStatus: true)
-                    }
-
-                    echo "Stage result: clean: ${currentBuild.currentResult} / git clean status: ${status}"
-                }
-            }   
-        }
     
         stage('prepare deps') {
             options {
