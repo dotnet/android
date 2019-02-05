@@ -33,13 +33,16 @@ def processBuildStatus() {
 def publishPackages(filePaths) {
     def status = 0
     try {
-        echo "Publishing to Azure storage account: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/7b4817ae-218f-464a-bab1-a9df2d99e1e5/resourceGroups/Group/providers/Microsoft.ClassicStorage/storageAccounts/xamjenkinsartifact/overview"
-        step([$class: 'WAStoragePublisher', allowAnonymousAccess: true, cleanUpContainer: false, cntPubAccess: true, containerName: "${env.ContainerName}", doNotFailIfArchivingReturnsNothing: false,
-            doNotUploadIndividualFiles: false, doNotWaitForPreviousBuild: true, excludeFilesPath: '',
-            filesPath: "${filePaths}", storageAccName: "${env.StorageAccountName}", storageCredentialId: "${env.StorageCredentialId}",
-            uploadArtifactsOnlyIfSuccessful: false, usploadZips: false, virtualPath: "${env.StorageVirtualPath}", storageType: 'blobstorage'
-        ])
-
+         // Note: The following function is provided by the Azure Blob Jenkins plugin
+         azureUpload(storageCredentialId: "${env.StorageCredentialId}",
+                                storageType: "blobstorage",
+                                containerName: "${env.ContainerName}",
+                                virtualPath: "${env.StorageVirtualPath}",
+                                filesPath: "${filePaths}",
+                                allowAnonymousAccess: true,
+                                pubAccessible: true,
+                                doNotWaitForPreviousBuild: true,
+                                uploadArtifactsOnlyIfSuccessful: true)
     } catch (error) {
         echo "ERROR : publishPackages: Unexpected error: ${error}"
         status = 1
