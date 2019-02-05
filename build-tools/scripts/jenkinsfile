@@ -65,22 +65,27 @@ pipeline {
         stage('init') {
             steps {
                 script {
-                    echo "GIT_BRANCH: ${env.GIT_BRANCH}"
-                    echo "CHANGE_TARGET: ${env.CHANGE_TARGET}"
+                    // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
+                    isPr = env.ghprbActualCommit != null
+                    def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
+                    def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
+                    def buildType = isPr ? 'PR' : 'CI'
+
+                    echo "Job: ${env.JOB_BASE_NAME}"
+                    echo "Branch: ${branch}"
+                    echo "Commit: ${commit}"
+                    echo "Build type: ${buildType}"
+                    if (isPr) {
+                        echo "PR id: ${env.ghprbPullId}"
+                        echo "PR link: ${env.ghprbPullLink}"
+                    }
 
                     publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                    echo "init: publishBuildFilePaths: ${publishBuildFilePaths}"
+                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
 
                     publishTestFilePaths = "xamarin-android/xa-test-errors*"
-                    echo "init: publishTestFilePaths: ${publishTestFilePaths}"
+                    echo "publishTestFilePaths: ${publishTestFilePaths}"
 
-                    echo "init: env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}"
-                    if (env.JOB_BASE_NAME?.toLowerCase().startsWith("xamarin-android-pr")) {
-                        echo "Build type: PR"
-                        isPR = true
-                    } else {
-                        echo "Build type: CI"
-                    }
                 }
 
                 echo "Stage result: init: ${currentBuild.currentResult}"
