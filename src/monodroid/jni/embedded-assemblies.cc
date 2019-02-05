@@ -47,6 +47,7 @@ const char *EmbeddedAssemblies::suffixes[] = {
 };
 
 constexpr char EmbeddedAssemblies::assemblies_prefix[];
+constexpr char EmbeddedAssemblies::override_typemap_entry_name[];
 
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
@@ -500,10 +501,10 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 			int len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
 			if (len > 0 && val != nullptr) {
 				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
-					if (!add_type_mapping (&managed_to_java_maps, file_path, nullptr, ((const char*)val)))
+					if (!add_type_mapping (&managed_to_java_maps, file_path, override_typemap_entry_name, ((const char*)val)))
 						delete[] val;
 				} else if (utils.monodroid_dirent_hasextension (e, ".jm")) {
-					if (!add_type_mapping (&java_to_managed_maps, file_path, nullptr, ((const char*)val)))
+					if (!add_type_mapping (&java_to_managed_maps, file_path, override_typemap_entry_name, ((const char*)val)))
 						delete[] val;
 				}
 			}
