@@ -78,8 +78,7 @@ namespace Xamarin.Android.Tasks
 			using (var stream = new MemoryStream ())
 			using (var pkgmgr = new StreamWriter (stream)) {
 				// Write the boilerplate from the MonoPackageManager.java resource
-				var packageManagerResource = minApiVersion < 9 ? "MonoPackageManager.api4.java" : "MonoPackageManager.java";
-				using (var template = new StreamReader (Assembly.GetExecutingAssembly ().GetManifestResourceStream (packageManagerResource))) {
+				using (var template = new StreamReader (Assembly.GetExecutingAssembly ().GetManifestResourceStream ("MonoPackageManager.java"))) {
 					string line;
 					while ((line = template.ReadLine ()) != null) {
 						pkgmgr.WriteLine (line);

@@ -90,7 +90,7 @@ pipeline {
                 echo "Stage result: init: ${currentBuild.currentResult}"
             }
         }
-    
+
         stage('prepare deps') {
             options {
                 timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 2 minutes
