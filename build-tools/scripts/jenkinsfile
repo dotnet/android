@@ -86,20 +86,6 @@ pipeline {
                 echo "Stage result: init: ${currentBuild.currentResult}"
             }
         }
-
-        stage('clean') {
-            steps {
-                script {
-                    def status = 0
-
-                    dir('xamarin-android') {
-                        status = sh(script: 'git clean -xdff', returnStatus: true)
-                    }
-
-                    echo "Stage result: clean: ${currentBuild.currentResult} / git clean status: ${status}"
-                }
-            }   
-        }
     
         stage('prepare deps') {
             options {
@@ -210,8 +196,7 @@ pipeline {
                 dir("$XADir") {
                     script {
                         def status = 0
-                        try
-                        {
+                        try {
                             echo "running tests"
                             status = sh(
                                 script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
