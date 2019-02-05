@@ -303,8 +303,7 @@ pipeline {
                 dir("$XADir") {
                     script {
                         def status = 0
-                        try
-                        {
+                        try {
                             echo "running tests"
                             status = sh(
                                 script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1",
