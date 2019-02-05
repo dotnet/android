@@ -205,7 +205,7 @@ pipeline {
 
             steps {
                 dir("$XADir") {
-                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
 
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
@@ -221,10 +221,10 @@ pipeline {
                     script {
                         if (isPR) {
                             echo "PR build definition detected: building with 'make all'"
-                            sh "make all CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                         } else {
                             echo "PR build definition *not* detected: building with 'make jenkins'"
-                            sh "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                         }
                     }
                 }
@@ -240,7 +240,7 @@ pipeline {
 
             steps {
                 dir("$XADir") {
-                    sh "make create-vsix CONFIGURATION=${env.BuildFlavor} V=1"
+                    sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
                 }
 
                 echo "Stage result: create vsix: ${currentBuild.currentResult}"
@@ -254,7 +254,7 @@ pipeline {
 
             steps {
                 dir("$XADir") {
-                    sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
+                    sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
                 }
 
                 echo "Stage result: build tests: ${currentBuild.currentResult}"
@@ -311,7 +311,7 @@ pipeline {
                         {
                             echo "running tests"
                             status = sh(
-                                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1",
+                                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
                                 returnStatus: true
                             );
                         } catch (error) {
