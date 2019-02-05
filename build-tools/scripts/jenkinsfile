@@ -92,7 +92,7 @@ pipeline {
                 script {
                     def status = 0
 
-                    dir('xamarin-android') { {
+                    dir('xamarin-android') {
                         status = sh(script: 'git clean -xdff', returnStatus: true)
                     }
 
