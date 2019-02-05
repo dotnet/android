@@ -223,16 +223,17 @@ pipeline {
         }
         
         stage('publish test error logs to Azure') {
-            when {
-                expression { isPr == true }
-            }
-
             options {
                 timeout(time: 10, unit: 'MINUTES')        // Typically takes less than 2 minutes
             }
 
             steps {
                 script {
+                    dir('xamarin-android') {
+                        echo "packaging test error logs"
+                        sh "make package-test-errors"
+                    }
+
                     def status = publishPackages(publishTestFilePaths)
 
                     echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
