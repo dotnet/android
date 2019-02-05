@@ -54,14 +54,14 @@ namespace Xamarin.Android.Tasks
 								platform = target_sdk.Value;
 
 							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
-							if (!int.TryParse (min_sdk?.Value, out int minSdkVersion) || minSdkVersion < MinSupportedSdkVersion) {
+							if (min_sdk != null && (!int.TryParse (min_sdk.Value, out int minSdkVersion) || minSdkVersion < MinSupportedSdkVersion)) {
 								LogWarningForManifest (
 										warningCode:      "XA4216",
 										attribute:        min_sdk,
 										message:          "AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.",
 										messageArgs:      new object [] { min_sdk?.Value, MinSupportedSdkVersion }
 								);
-							} else if (!int.TryParse (target_sdk?.Value, out int targetSdkVersion) || targetSdkVersion < MinSupportedSdkVersion) {
+							} else if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < MinSupportedSdkVersion)) {
 								LogWarningForManifest (
 										warningCode:      "XA4216",
 										attribute:        target_sdk,
