@@ -65,32 +65,26 @@ pipeline {
         stage('init') {
             steps {
                 script {
-                    try {
-                        echo "Init: setting up the environment"
-                        // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
-                        isPr = env.ghprbActualCommit != null
-                        def branch = env.GIT_BRANCH
-                        def commit = isPr ? env.ghprbActualCommit : env.GIT_COMMIT
-                        def buildType = isPr ? 'PR' : 'CI'
+                    // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
+                    isPr = env.ghprbActualCommit != null
+                    def branch = env.GIT_BRANCH
+                    def commit = isPr ? env.ghprbActualCommit : env.GIT_COMMIT
+                    def buildType = isPr ? 'PR' : 'CI'
 
-                        echo "Job: ${env.JOB_BASE_NAME}"
-                        echo "Branch: ${branch}"
-                        echo "Commit: ${commit}"
-                        echo "Build type: ${buildType}"
-                        if (isPr) {
-                            echo "PR id: ${env.ghprbPullId}"
-                            echo "PR link: ${env.ghprbPullLink}"
-                        }
-
-                        publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                        echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-
-                        publishTestFilePaths = "xamarin-android/xa-test-errors*"
-                        echo "publishTestFilePaths: ${publishTestFilePaths}"
-
-                    } catch(error) {
-                        echo "init: Unexpected error: ${error}"
+                    echo "Job: ${env.JOB_BASE_NAME}"
+                    echo "Branch: ${branch}"
+                    echo "Commit: ${commit}"
+                    echo "Build type: ${buildType}"
+                    if (isPr) {
+                        echo "PR id: ${env.ghprbPullId}"
+                        echo "PR link: ${env.ghprbPullLink}"
                     }
+
+                    publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
+                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+
+                    publishTestFilePaths = "xamarin-android/xa-test-errors*"
+                    echo "publishTestFilePaths: ${publishTestFilePaths}"
                 }
 
                 echo "Stage result: init: ${currentBuild.currentResult}"
