@@ -112,7 +112,7 @@ pipeline {
             steps {
                 dir("$XADir") {
                     script {
-                        if (isPR) {
+                        if (isPr) {
                             echo "PR build definition detected: building with 'make all'"
                             sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                         } else {
