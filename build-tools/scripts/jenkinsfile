@@ -216,7 +216,7 @@ pipeline {
                             }
                         }
 
-                        echo "Stage result: run all tests: status: ${status} / current build result: ${currentBuild.currentResult}"
+                        echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
                     }
                 }
             }   
