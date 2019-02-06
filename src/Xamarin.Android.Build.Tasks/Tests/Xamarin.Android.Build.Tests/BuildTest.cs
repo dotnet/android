@@ -3357,6 +3357,23 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				Assert.IsFalse (StringAssertEx.ContainsText (content, type), $"`{type}` should not exist in `AndroidManifest.xml`!");
 			}
 		}
+
+		[Test]
+		public void WarningForMinSdkVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"8\" />");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (
+					StringAssertEx.ContainsText (
+						b.LastBuildOutput,
+						"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '8' is less than API-9, this configuration is not supported."
+					),
+					"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"8\""
+				);
+			}
+		}
 	}
 }
 
