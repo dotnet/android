@@ -106,7 +106,7 @@ pipeline {
                     currentBuild.result = 'UNSTABLE'
                     manager.buildUnstable()
                     // warning "This build is unstable"
-                    // exit 0
+                    exit 0
                 }
 
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
