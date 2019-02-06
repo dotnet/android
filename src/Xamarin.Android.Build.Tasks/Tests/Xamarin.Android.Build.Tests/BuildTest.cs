@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -3488,16 +3489,18 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void WarningForMinSdkVersion ()
 		{
+			int minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
+			int tooLowSdkVersion = minSdkVersion - 1;
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"8\" />");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{tooLowSdkVersion}\" />");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
 					StringAssertEx.ContainsText (
 						b.LastBuildOutput,
-						"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '8' is less than API-9, this configuration is not supported."
+						$"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{tooLowSdkVersion}' is less than API-{minSdkVersion}, this configuration is not supported."
 					),
-					"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"8\""
+					$"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"{tooLowSdkVersion}\""
 				);
 			}
 		}
