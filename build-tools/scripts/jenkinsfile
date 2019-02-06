@@ -81,10 +81,7 @@ pipeline {
                     }
 
                     publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-
                     publishTestFilePaths = "xamarin-android/xa-test-errors*"
-                    echo "publishTestFilePaths: ${publishTestFilePaths}"
                 }
 
                 echo "Stage result: init: ${currentBuild.currentResult}"
@@ -181,6 +178,7 @@ pipeline {
 
             steps {
                 script {
+                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
                     def status = publishPackages(publishBuildFilePaths)
                     if (status == 0) {
                         buildStatusUploaded = true
@@ -234,6 +232,7 @@ pipeline {
                         sh "make package-test-errors"
                     }
 
+                    echo "publishTestFilePaths: ${publishTestFilePaths}"
                     def status = publishPackages(publishTestFilePaths)
 
                     echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
