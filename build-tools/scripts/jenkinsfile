@@ -102,6 +102,12 @@ pipeline {
                 }
 
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
+
+                // UNDONE: Test setting the build to unstable
+                currentBuild.result = 'UNSTABLE'
+                manager.buildUnstable()
+                // warning "This build is unstable"
+                // exit 0
             }
         }
         
