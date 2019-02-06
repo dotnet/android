@@ -216,7 +216,7 @@ pipeline {
                             }
                         }
 
-                        echo "Stage result: run all tests: status: ${status} / current build result: ${currentBuild.currentResult}"
+                        echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
                     }
                 }
             }   
@@ -230,6 +230,7 @@ pipeline {
             steps {
                 script {
                     dir('xamarin-android') {
+                        echo "packaging test error logs"
                         sh "make package-test-errors"
                     }
 
