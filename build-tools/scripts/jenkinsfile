@@ -101,14 +101,6 @@ pipeline {
                     sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
 
-                script {
-                    // UNDONE: Test setting the build to unstable
-                    currentBuild.result = 'UNSTABLE'
-                    manager.buildUnstable()
-                    // warning "This build is unstable"
-                    exit 0
-                }
-
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
             }
         }
