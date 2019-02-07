@@ -57,7 +57,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("SupportedAbis: {0}", SupportedAbis);
 			Log.LogDebugMessage ("AutoDeps: {0}", AutoDeps);
 
-			NdkUtil.Init (AndroidNdkDirectory);
+			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
+				return false;
 
 			try {
 				return DoExecute ();
