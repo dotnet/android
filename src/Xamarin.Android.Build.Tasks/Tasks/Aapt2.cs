@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected string ResourceDirectoryFullPath (string resourceDirectory)
 		{
-			return resourceDirectory.TrimEnd ('\\');
+			return (Path.IsPathRooted (resourceDirectory) ? resourceDirectory : Path.Combine (WorkingDirectory, resourceDirectory)).TrimEnd ('\\');
 		}
 
 		protected string GenerateFullPathToTool ()
