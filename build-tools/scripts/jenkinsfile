@@ -58,7 +58,9 @@ timestamps {
                     scmVars = checkout scm
                 }
             }
+        }
 
+        timeout(time: 30, unit: 'SECONDS')  {   // Typically takes less than a second
             stage('init') {
                 // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
                 isPr = env.ghprbActualCommit != null
