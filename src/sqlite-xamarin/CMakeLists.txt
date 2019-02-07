@@ -70,6 +70,7 @@ if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 20)
   add_definitions("-D__ANDROID_API_Q__=29")
 endif()
 
+set(DSO_SYMBOL_VISIBILITY "default")
 xa_common_prepare()
 # Don't put the leading '-' in options
 set(TEST_COMPILER_ARGS ${XA_COMPILER_FLAGS})

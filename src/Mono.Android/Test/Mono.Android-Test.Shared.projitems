@@ -44,5 +44,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)\Android.OS\BundleTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\Mono.Data.Sqlite\SqliteTests.cs" />
   </ItemGroup>
 </Project>
