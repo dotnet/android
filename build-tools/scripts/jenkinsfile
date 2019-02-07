@@ -11,9 +11,6 @@ def publishTestFilePaths = null
 
 def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
-def buildStatusProcessed = false
-def buildStatusUploaded = false
-
 def isPr = false                // Default to CI
 
 def processBuildStatus() {
@@ -127,11 +124,7 @@ timestamps {
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
             stage('process build results') {
                 dir("$XADir") {
-                    def status = processBuildStatus()
-
-                    if (status == 0) {
-                        buildStatusProcessed = true
-                    }
+                    processBuildStatus()
                 }
 
                 echo "Stage result: process build results: ${currentBuild.currentResult}"
@@ -139,15 +132,22 @@ timestamps {
         }
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
-            stage('publish packages to Azure') {
-                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                def status = publishPackages(publishBuildFilePaths)
-                if (status == 0) {
-                    buildStatusUploaded = true
+            try {
+                stage('publish packages to Azure') {
+                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+                    def status = publishPackages(publishBuildFilePaths)
+
+                    if (status != 0) {
+                        throw new Exception("publish packages to Azure FAILED")
+                    }
                 }
 
-                echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
+            } catch (error) {
+                echo "ERROR : package publish failed with status ${status}. Marking build as UNSTABLE"
+                currentBuild.result = 'UNSTABLE'
             }
+
+            echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
         }
 
         timeout(time: 160, unit: 'MINUTES') {    // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
@@ -162,7 +162,7 @@ timestamps {
                         );
 
                         if (status != 0) {
-                            throw new Exception("run-all-tests FAILED")     // This will cause the stage to be labeled as 'failed' within the context of the stage being marked 'UNSTABLE'
+                            throw new Exception("run-all-tests FAILED")     // This will cause the stage to be labeled as 'failed' (red text) within the context of the stage being marked 'UNSTABLE' (yellow background)
                         }
                     }
                 }
