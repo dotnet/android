@@ -54,8 +54,8 @@ timestamps {
             stage('init') {
                 // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
                 isPr = env.ghprbActualCommit != null
-                def branch = env.GIT_BRANCH
-                def commit = isPr ? env.ghprbActualCommit : env.GIT_COMMIT
+                def branch = "${env.GIT_BRANCH}"
+                def commit = isPr ? "${env.ghprbActualCommit}" : "${env.GIT_COMMIT}"
                 def buildType = isPr ? 'PR' : 'CI'
 
                 echo "Job: ${env.JOB_BASE_NAME}"
