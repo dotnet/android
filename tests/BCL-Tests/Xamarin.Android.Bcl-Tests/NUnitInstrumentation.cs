@@ -35,7 +35,6 @@ namespace UnitTestRunner
 
 		void CommonInit ()
 		{
-			TestAssembliesGlobPattern = "*_test.dll";
 			string cacheDir = Path.Combine (Application.Context.CacheDir.AbsolutePath, DefaultLogTag);
 			using (var files = typeof (NUnitInstrumentation).Assembly.GetManifestResourceStream ("bcl-tests.zip")) {
 				ExtractAssemblies (cacheDir, files);
@@ -82,6 +81,18 @@ namespace UnitTestRunner
 			ret.Add (new TestAssemblyInfo (asm, asm.Location ?? String.Empty));
 
 			return ret;
+		}
+
+		protected override IEnumerable<TestAssemblyInfo> GetTestAssembliesFromDirectory (string directoryPath)
+		{
+			using (var reader = new StreamReader (typeof (NUnitInstrumentation).Assembly.GetManifestResourceStream ("nunit-assemblies.txt")))
+			{
+				string line;
+				while ((line = reader.ReadLine ()) != null)
+				{
+					yield return LoadTestAssembly (Path.Combine (directoryPath, line));
+				}
+			}
 		}
 	}
 }

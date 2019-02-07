@@ -70,163 +70,163 @@
     <Compile Include="$(XamarinAndroidSourcePath)\src\Mono.Android\Android.Runtime\CPUArchitecture.cs">
       <Link>Android.Runtime\CPUArchitecture.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Assembly\AssemblyInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Assembly\AssemblyInfo.cs">
       <Link>Assembly\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSink.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSink.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSink.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSinkProvider.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSinkProvider.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixBinaryClientFormatterSinkProvider.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryCore.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryCore.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixBinaryCore.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSink.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSink.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSink.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSinkProvider.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSinkProvider.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixBinaryServerFormatterSinkProvider.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixChannel.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixChannel.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixChannel.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientChannel.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientChannel.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixClientChannel.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSink.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSink.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixClientTransportSink.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSinkProvider.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixClientTransportSinkProvider.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixClientTransportSinkProvider.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixConnectionPool.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixConnectionPool.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixConnectionPool.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixMessageIO.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixMessageIO.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixMessageIO.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerChannel.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerChannel.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixServerChannel.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerTransportSink.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Remoting.Channels.Unix\UnixServerTransportSink.cs">
       <Link>Mono.Remoting.Channels.Unix\UnixServerTransportSink.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\CdeclFunction.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\CdeclFunction.cs">
       <Link>Mono.Unix.Native\CdeclFunction.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\FileNameMarshaler.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\FileNameMarshaler.cs">
       <Link>Mono.Unix.Native\FileNameMarshaler.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\MapAttribute.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\MapAttribute.cs">
       <Link>Mono.Unix.Native\MapAttribute.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.cs">
       <Link>Mono.Unix.Native\NativeConvert.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Android\AndroidUtils.cs">
       <Link>Mono.Unix.Android\AndroidUtils.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.generated.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\NativeConvert.generated.cs">
       <Link>Mono.Unix.Native\NativeConvert.generated.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\RealTimeSignum.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\RealTimeSignum.cs">
       <Link>Mono.Unix.Native\RealTimeSignum.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\Stdlib.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\Stdlib.cs">
       <Link>Mono.Unix.Native\Stdlib.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\Syscall.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\Syscall.cs">
       <Link>Mono.Unix.Native\Syscall.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix.Native\TypeAttributes.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix.Native\TypeAttributes.cs">
       <Link>Mono.Unix.Native\TypeAttributes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\AbstractUnixEndPoint.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\AbstractUnixEndPoint.cs">
       <Link>Mono.Unix\AbstractUnixEndPoint.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\Catalog.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\Catalog.cs">
       <Link>Mono.Unix\Catalog.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPattern.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPattern.cs">
       <Link>Mono.Unix\FileAccessPattern.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPermissions.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\FileAccessPermissions.cs">
       <Link>Mono.Unix\FileAccessPermissions.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileHandleOperations.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\FileHandleOperations.cs">
       <Link>Mono.Unix\FileHandleOperations.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileSpecialAttributes.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\FileSpecialAttributes.cs">
       <Link>Mono.Unix\FileSpecialAttributes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\FileTypes.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\FileTypes.cs">
       <Link>Mono.Unix\FileTypes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\PeerCred.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\PeerCred.cs">
       <Link>Mono.Unix\PeerCred.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\StdioFileStream.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\StdioFileStream.cs">
       <Link>Mono.Unix\StdioFileStream.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixClient.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixClient.cs">
       <Link>Mono.Unix\UnixClient.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixDirectoryInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixDirectoryInfo.cs">
       <Link>Mono.Unix\UnixDirectoryInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixDriveInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixDriveInfo.cs">
       <Link>Mono.Unix\UnixDriveInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEncoding.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixEncoding.cs">
       <Link>Mono.Unix\UnixEncoding.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEndPoint.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixEndPoint.cs">
       <Link>Mono.Unix\UnixEndPoint.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixEnvironment.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixEnvironment.cs">
       <Link>Mono.Unix\UnixEnvironment.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixFileInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixFileInfo.cs">
       <Link>Mono.Unix\UnixFileInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixFileSystemInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixFileSystemInfo.cs">
       <Link>Mono.Unix\UnixFileSystemInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixGroupInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixGroupInfo.cs">
       <Link>Mono.Unix\UnixGroupInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixIOException.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixIOException.cs">
       <Link>Mono.Unix\UnixIOException.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixListener.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixListener.cs">
       <Link>Mono.Unix\UnixListener.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixMarshal.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixMarshal.cs">
       <Link>Mono.Unix\UnixMarshal.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixPath.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixPath.cs">
       <Link>Mono.Unix\UnixPath.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixPipes.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixPipes.cs">
       <Link>Mono.Unix\UnixPipes.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixProcess.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixProcess.cs">
       <Link>Mono.Unix\UnixProcess.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixSignal.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixSignal.cs">
       <Link>Mono.Unix\UnixSignal.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixStream.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixStream.cs">
       <Link>Mono.Unix\UnixStream.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixSymbolicLinkInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixSymbolicLinkInfo.cs">
       <Link>Mono.Unix\UnixSymbolicLinkInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\class\Mono.Posix\Mono.Unix\UnixUserInfo.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\class\Mono.Posix\Mono.Unix\UnixUserInfo.cs">
       <Link>Mono.Unix\UnixUserInfo.cs</Link>
     </Compile>
-    <Compile Include="$(MonoSourceDirectory)\mcs\build\common\Locale.cs">
+    <Compile Include="$(MonoSourceFullPath)\mcs\build\common\Locale.cs">
       <Link>Locale.cs</Link>
     </Compile>
     <Compile Include="..\..\bin\$(Configuration)\include\Consts.cs">

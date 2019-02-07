@@ -19,12 +19,6 @@ if(NOT DEFINED SGEN_BRIDGE_VERSION)
   message(FATAL_ERROR "Please set the SGEN_BRIDGE_VERSION variable on command line (-DSGEN_BRIDGE_VERSION=VERSION)")
 endif()
 
-if(NOT DEFINED MONO_PATH)
-  message(FATAL_ERROR "Please set the MONO_PATH variable on command line (-DMONO_PATH=PATH)")
-else()
-  string(REPLACE "\\" "/" MONO_PATH ${MONO_PATH})
-endif()
-
 if(NOT ANDROID)
   if (NOT DEFINED JDK_INCLUDE)
     message(FATAL_ERROR "Please set the JDK_INCLUDE variable on command line (-DJDK_INCLUDE)")
@@ -182,7 +176,6 @@ if (DEFINED CONFIGURATION)
   include_directories("../../bin/${CONFIGURATION}/include")
   include_directories("../../bin/${CONFIGURATION}/include/${ANDROID_ABI}/eglib")
 endif()
-include_directories("${MONO_PATH}/mono/eglib")
 include_directories("jni/zip")
 include_directories("${JAVA_INTEROP_SRC_PATH}")
 
@@ -192,7 +185,6 @@ check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
 set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
-  ${MONO_PATH}/support/zlib-helper.c
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
@@ -216,7 +208,6 @@ set(MONODROID_SOURCES
 if(UNIX)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${MONO_PATH}/support/nl.c
     ${SOURCES_DIR}/debug.cc
     ${SOURCES_DIR}/monodroid-networkinfo.cc
     ${SOURCES_DIR}/xamarin_getifaddrs.cc

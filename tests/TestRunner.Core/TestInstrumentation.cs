@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 
 using Android.App;
@@ -249,6 +250,10 @@ namespace Xamarin.Android.UnitTests
 				return false;
 			}
 
+			Log.Info (LogTag, "Test assemblies:");
+			foreach (var asm in assemblies)
+				Log.Info (LogTag, $"\t{asm.FullPath}");
+
 			TRunner runner = CreateRunner (Logger, arguments);
 			runner.LogTag = LogTag;
 			ConfigureFilters (runner);
@@ -288,51 +293,36 @@ namespace Xamarin.Android.UnitTests
 
 		protected virtual IList<TestAssemblyInfo> GetTestAssemblies ()
 		{
-			var ret = new List<TestAssemblyInfo> ();
+			if (TestAssemblyDirectories == null || TestAssemblyDirectories.Count == 0)
+				return Array.Empty<TestAssemblyInfo>();
 
-			if (TestAssemblyDirectories != null && TestAssemblyDirectories.Count > 0) {
-				foreach (string adir in TestAssemblyDirectories)
-					GetTestAssembliesFromDirectory (adir, TestAssembliesGlobPattern, ret);
-			}
-
-			return ret;
+			return TestAssemblyDirectories.SelectMany (adir => GetTestAssembliesFromDirectory (adir)).Where (asm => asm != null).ToList();
 		}
 
-		protected virtual void GetTestAssembliesFromDirectory (string directoryPath, string globPattern, IList<TestAssemblyInfo> assemblies)
+		protected virtual IEnumerable<TestAssemblyInfo> GetTestAssembliesFromDirectory (string directoryPath)
 		{
 			if (String.IsNullOrEmpty (directoryPath))
 				throw new ArgumentException ("must not be null or empty", nameof (directoryPath));
 
-			if (assemblies == null)
-				throw new ArgumentNullException (nameof (assemblies));
+			return Directory.EnumerateFiles (directoryPath, TestAssembliesGlobPattern ?? "*.dll", SearchOption.AllDirectories)
+			                .Select (file => LoadTestAssembly (file));
+		}
 
-			string pattern = String.IsNullOrEmpty (globPattern) ? "*.dll" : globPattern;
-			foreach (string file in Directory.EnumerateFiles (directoryPath, pattern, SearchOption.AllDirectories)) {
-				Log.Info (LogTag, $"Adding test assembly: {file}");
-				Assembly asm;
-				Exception ex = null;
-				try {
-					asm = LoadTestAssembly (file);
-				} catch (Exception e) {
-					asm = null;
-					ex = e;
-				}
+		protected TestAssemblyInfo LoadTestAssembly (string filePath)
+		{
+			Log.Info (LogTag, $"Adding test assembly: {filePath}");
 
-				if (asm == null) {
-					if (ex == null)
-						continue;
-					throw new InvalidOperationException ($"Unable to load test assembly: {file}", ex);
-				}
+			try {
+				Assembly asm = Assembly.LoadFrom (filePath);
+				if (asm == null)
+					return null;
 
 				// We store full path since Assembly.Location is not reliable on Android - it may hold a relative
 				// path or no path at all
-				assemblies.Add (new TestAssemblyInfo (asm, file));
+				return new TestAssemblyInfo (asm, filePath);
+			} catch (Exception e) {
+				throw new InvalidOperationException ($"Unable to load test assembly: {filePath}", e);
 			}
-		}
-
-		protected virtual Assembly LoadTestAssembly (string filePath)
-		{
-			return Assembly.LoadFrom (filePath);
 		}
 
 		protected Dictionary<string, string> GetStringExtrasFromBundle ()
@@ -368,7 +358,7 @@ namespace Xamarin.Android.UnitTests
 			}
 
 			Log.Info (LogTag, "Extracted assemblies:");
-			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll")) {
+			foreach (string fi in Directory.EnumerateFiles (targetDir, "*.dll", SearchOption.AllDirectories)) {
 				Log.Info (LogTag, $"  {fi}");
 			}
 		}
