@@ -51,62 +51,43 @@ def publishPackages(filePaths) {
     return status
 }
 
-pipeline {
-    
-    agent {
-        label "${botLabel}"
-    }
+timestamps {
+    node("${botLabel}") {
+        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+            stage('init') {
+                // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
+                isPr = env.ghprbActualCommit != null
+                def branch = env.GIT_BRANCH
+                def commit = isPr ? env.ghprbActualCommit : env.GIT_COMMIT
+                def buildType = isPr ? 'PR' : 'CI'
 
-    options {
-        timestamps()
-    }
-
-    stages {
-        stage('init') {
-            steps {
-                script {
-                    // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
-                    isPr = env.ghprbActualCommit != null
-                    def branch = env.GIT_BRANCH
-                    def commit = isPr ? env.ghprbActualCommit : env.GIT_COMMIT
-                    def buildType = isPr ? 'PR' : 'CI'
-
-                    echo "Job: ${env.JOB_BASE_NAME}"
-                    echo "Branch: ${branch}"
-                    echo "Commit: ${commit}"
-                    echo "Build type: ${buildType}"
-                    if (isPr) {
-                        echo "PR id: ${env.ghprbPullId}"
-                        echo "PR link: ${env.ghprbPullLink}"
-                    }
-
-                    publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                    publishTestFilePaths = "xamarin-android/xa-test-errors*"
+                echo "Job: ${env.JOB_BASE_NAME}"
+                echo "Branch: ${branch}"
+                echo "Commit: ${commit}"
+                echo "Build type: ${buildType}"
+                if (isPr) {
+                    echo "PR id: ${env.ghprbPullId}"
+                    echo "PR link: ${env.ghprbPullLink}"
                 }
 
-                echo "Stage result: init: ${currentBuild.currentResult}"
+                publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
+                publishTestFilePaths = "xamarin-android/xa-test-errors*"
             }
         }
 
-        stage('prepare deps') {
-            options {
-                timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 2 minutes
-            }
+        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
+            stage('prepare deps') {
 
-            steps {
                 dir("$XADir") {
-                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                        sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
 
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
             }
         }
-        
-        stage('build') {
-            options {
-                timeout(time: 6, unit: 'HOURS')     // Typically takes less than 2 hours
-            }
-            steps {
+
+        timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
+            stage('build') {
                 dir("$XADir") {
                     script {
                         if (isPr) {
@@ -122,13 +103,9 @@ pipeline {
                 echo "Stage result: build: ${currentBuild.currentResult}"
             }
         }
-        
-        stage('create vsix') {
-            options {
-                timeout(time: 30, unit: 'MINUTES')  // Typically takes less than 5 minutes
-            }
 
-            steps {
+        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
+            stage('create vsix') {
                 dir("$XADir") {
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
                 }
@@ -136,13 +113,9 @@ pipeline {
                 echo "Stage result: create vsix: ${currentBuild.currentResult}"
             }
         }
-        
-        stage('build tests') {
-            options {
-                timeout(time: 30, unit: 'MINUTES')       // Typically takes 10 minutes
-            }
 
-            steps {
+        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
+            stage('build tests') {
                 dir("$XADir") {
                     sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
                 }
@@ -150,20 +123,14 @@ pipeline {
                 echo "Stage result: build tests: ${currentBuild.currentResult}"
             }
         }
-        
-        stage ('process build results') {
-            options {
-                timeout(time: 10, unit: 'MINUTES')      // Typically takes less than a minute
-            }
 
-            steps {
-                script {
-                    dir("$XADir") {
-                        def status = processBuildStatus()
+        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
+            stage('process build results') {
+                dir("$XADir") {
+                    def status = processBuildStatus()
 
-                        if (status == 0) {
-                            buildStatusProcessed = true
-                        }
+                    if (status == 0) {
+                        buildStatusProcessed = true
                     }
                 }
 
@@ -171,81 +138,58 @@ pipeline {
             }
         }
 
-        stage('publish packages to Azure') {
-            options {
-                timeout(time: 10, unit: 'MINUTES')    // Typically takes less than 2 minutes
-            }
-
-            steps {
-                script {
-                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                    def status = publishPackages(publishBuildFilePaths)
-                    if (status == 0) {
-                        buildStatusUploaded = true
-                    }
+        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
+            stage('publish packages to Azure') {
+                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+                def status = publishPackages(publishBuildFilePaths)
+                if (status == 0) {
+                    buildStatusUploaded = true
                 }
 
                 echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
             }
         }
-        
-        stage('run all tests') {
-            options {
-                timeout(time: 160, unit: 'MINUTES')     // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
-            }
 
-            steps {
-                dir("$XADir") {
-                    script {
-                        def status = 0
-                        try {
-                            echo "running tests"
-                            status = sh(
-                                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
-                                returnStatus: true
-                            );
-                        } catch (error) {
-                            echo "ERROR : Unexpected error: ${error}"
-                            status = 1
-                        } finally {
-                            if (status != 0) {
-                                echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
-                                currentBuild.result = 'UNSTABLE'
-                            }
+        timeout(time: 160, unit: 'MINUTES') {    // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
+            def status = 0
+            try {
+                stage('run all tests') {
+                    dir("$XADir") {
+                        echo "running tests"
+                        status = sh(
+                            script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
+                            returnStatus: true
+                        );
+
+                        if (status != 0) {
+                            throw new Exception("run-all-tests FAILED")     // This will cause the stage to be labeled as 'failed' within the context of the stage being marked 'UNSTABLE'
                         }
-
-                        echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
                     }
                 }
-            }   
-        }
-        
-        stage('publish test error logs to Azure') {
-            options {
-                timeout(time: 10, unit: 'MINUTES')        // Typically takes less than 2 minutes
+            } catch (error) {
+                echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
+                currentBuild.result = 'UNSTABLE'
             }
 
-            steps {
-                script {
-                    dir('xamarin-android') {
-                        echo "packaging test error logs"
-                        sh "make package-test-errors"
-                    }
+            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
+        }
 
-                    echo "publishTestFilePaths: ${publishTestFilePaths}"
-                    def status = publishPackages(publishTestFilePaths)
-
-                    echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
+        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than 2 minutes
+            stage('publish test error logs to Azure') {
+                dir('xamarin-android') {
+                    echo "packaging test error logs"
+                    sh "make package-test-errors"
                 }
+
+                echo "publishTestFilePaths: ${publishTestFilePaths}"
+                def status = publishPackages(publishTestFilePaths)
+
+                echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
             }
         }
-        
-        stage ('Plot build & test metrics') {
-            options {
-                timeout(time: 30, unit: 'SECONDS')      // Typically takes less than a second
-            }
 
-            steps {
+        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+            stage('Plot build & test metrics') {
                 dir("$XADir") {
                     plot(
                         title: 'Jcw',                        
@@ -319,14 +263,9 @@ pipeline {
             }
         }
 
-        stage('Upload test results') {
-            options {
-                timeout(time: 5, unit: 'MINUTES')       // Typically takes under 1 minute to upload test results
-            }
-
-            steps {
-                script {
-                    try {
+        timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
+            try {
+                stage('Upload test results') {
                         xunit thresholds: [
                                 failed(unstableNewThreshold: '0', unstableThreshold: '0'),
                                 skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
@@ -338,42 +277,14 @@ pipeline {
                                 skipNoTestFiles: true,
                                 stopProcessingIfError: false)
                             ]
-                    } catch (error) {
-                        echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
-                        currentBuild.result = 'UNSTABLE'
-                    }
                 }
 
-                echo "Stage result: Upload test results: ${currentBuild.currentResult}"
+            } catch (error) {
+                echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+                currentBuild.result = 'UNSTABLE'
             }
-        }
-    }
 
-    post {
-        // Attempt to process & upload build results if the initial attempt to process and upload the logs failed
-        always {
-            script {
-                dir ("$XADir") {
-                    def status = 0
-
-                    if (!buildStatusUploaded) {
-                        echo "ERROR : RETRYING: Build status logs failed during 'publish packages to Azure' stage"
-
-                        if (!buildStatusProcessed) {
-                            echo "Retrying processing of build status logs"
-                            status = processBuildStatus()
-                        }
-
-                        if (status == 0) {
-                            status = publishPackages(publishBuildFilePaths)
-                        }
-
-                        if (status != 0) {
-                            echo "ERROR : Publishing of build status logs failed"
-                        }
-                    }
-                }
-            }
+            echo "Stage result: Upload test results: ${currentBuild.currentResult}"
         }
     }
 }
