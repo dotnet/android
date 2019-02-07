@@ -52,7 +52,7 @@ timestamps {
     node("${botLabel}") {
         def scmVars
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+        timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on many changes need to be brought down
             stage('checkout') {
                 dir(XADir) {
                     scmVars = checkout scm
