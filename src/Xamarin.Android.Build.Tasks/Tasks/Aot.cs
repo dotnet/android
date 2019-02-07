@@ -305,10 +305,6 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (AotOutputDirectory))
 				Directory.CreateDirectory (AotOutputDirectory);
 
-			// Check that we have a compatible NDK version for the targeted ABIs.
-			NdkUtil.NdkVersion ndkVersion;
-			bool hasNdkVersion = NdkUtil.GetNdkToolchainRelease (AndroidNdkDirectory, out ndkVersion);
-
 			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
 
 			var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);

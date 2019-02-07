@@ -57,10 +57,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("SupportedAbis: {0}", SupportedAbis);
 			Log.LogDebugMessage ("AutoDeps: {0}", AutoDeps);
 			try {
-				if (String.IsNullOrEmpty (AndroidNdkDirectory)) {
-					Log.LogCodedError ("XA5101", "Could not locate Android NDK. Please make sure to configure path to NDK in SDK Locations or set via /p:AndroidNdkDirectory in the MSBuild/xbuild argument.");
-					return false;
-				}
 				return DoExecute ();
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);

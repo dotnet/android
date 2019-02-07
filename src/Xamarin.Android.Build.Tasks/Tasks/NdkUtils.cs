@@ -20,7 +20,14 @@ namespace Xamarin.Android.Tasks
 		{
 			// Check that we have a compatible NDK version for the targeted ABIs.
 			NdkUtil.NdkVersion ndkVersion;
-			bool hasNdkVersion = NdkUtil.GetNdkToolchainRelease (ndkPath, out ndkVersion);
+			bool hasNdkVersion = NdkUtil.GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
+
+			if (!hasNdkVersion) {
+				log.LogCodedError ("XA5101",
+						"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
+						"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
+				return false;
+			}
 
 			if (NdkUtil.IsNdk64BitArch(arch) && hasNdkVersion && ndkVersion.Version < 10) {
 				log.LogMessage (MessageImportance.High,
