@@ -74,14 +74,14 @@ namespace Java.Interop {
 					type = Enum.GetUnderlyingType (type);
 
 #if !XA_INTEGRATION
-				foreach (var mapping in JniBuiltinTypeNameMappings) {
+				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
 					if (mapping.Key == type) {
 						var r = mapping.Value;
 						yield return r.AddArrayRank (rank);
 					}
 				}
 
-				foreach (var mapping in JniBuiltinArrayMappings) {
+				foreach (var mapping in JniBuiltinArrayMappings.Value) {
 					if (mapping.Key == type) {
 						var r = mapping.Value;
 						yield return r.AddArrayRank (rank);
@@ -202,7 +202,7 @@ namespace Java.Interop {
 			IEnumerable<Type> CreateGetTypesForSimpleReferenceEnumerator (string jniSimpleReference)
 			{
 #if !XA_INTEGRATION
-				foreach (var mapping in JniBuiltinTypeNameMappings) {
+				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
 					if (mapping.Value.SimpleReference == jniSimpleReference)
 						yield return mapping.Key;
 				}

@@ -10,49 +10,59 @@ namespace Java.Interop {
 
 	partial class JniRuntime {
 
-		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
+		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinTypeNameMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinTypeNameMappings);
 
-			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
+		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinTypeNameMappings ()
+		{
+			return new []{
+				new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
 
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean),     new JniTypeSignature ("Z", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean?),    new JniTypeSignature ("java/lang/Boolean")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (SByte),     new JniTypeSignature ("B", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (SByte?),    new JniTypeSignature ("java/lang/Byte")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Char),     new JniTypeSignature ("C", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Char?),    new JniTypeSignature ("java/lang/Character")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int16),     new JniTypeSignature ("S", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int16?),    new JniTypeSignature ("java/lang/Short")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int32),     new JniTypeSignature ("I", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int32?),    new JniTypeSignature ("java/lang/Integer")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int64),     new JniTypeSignature ("J", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Int64?),    new JniTypeSignature ("java/lang/Long")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Single),     new JniTypeSignature ("F", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Single?),    new JniTypeSignature ("java/lang/Float")),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Double),     new JniTypeSignature ("D", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (Double?),    new JniTypeSignature ("java/lang/Double")),
-		};
+				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
 
-		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniBuiltinMarshalers = new []{
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte?),  JniNullableSByteValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Char),   JniCharValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Char?),  JniNullableCharValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16),   JniInt16ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16?),  JniNullableInt16ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32),   JniInt32ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32?),  JniNullableInt32ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64),   JniInt64ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64?),  JniNullableInt64ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Single),   JniSingleValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Single?),  JniNullableSingleValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Double),   JniDoubleValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Double?),  JniNullableDoubleValueMarshaler.Instance),
-		};
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean),     new JniTypeSignature ("Z", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean?),    new JniTypeSignature ("java/lang/Boolean")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (SByte),     new JniTypeSignature ("B", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (SByte?),    new JniTypeSignature ("java/lang/Byte")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Char),     new JniTypeSignature ("C", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Char?),    new JniTypeSignature ("java/lang/Character")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int16),     new JniTypeSignature ("S", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int16?),    new JniTypeSignature ("java/lang/Short")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int32),     new JniTypeSignature ("I", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int32?),    new JniTypeSignature ("java/lang/Integer")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int64),     new JniTypeSignature ("J", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Int64?),    new JniTypeSignature ("java/lang/Long")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Single),     new JniTypeSignature ("F", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Single?),    new JniTypeSignature ("java/lang/Float")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Double),     new JniTypeSignature ("D", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (Double?),    new JniTypeSignature ("java/lang/Double")),
+			};
+		}
+
+		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);
+
+		static KeyValuePair<Type, JniValueMarshaler>[] InitJniBuiltinMarshalers ()
+		{
+			return new []{
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte?),  JniNullableSByteValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Char),   JniCharValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Char?),  JniNullableCharValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16),   JniInt16ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16?),  JniNullableInt16ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32),   JniInt32ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32?),  JniNullableInt32ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64),   JniInt64ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64?),  JniNullableInt64ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Single),   JniSingleValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Single?),  JniNullableSingleValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Double),   JniDoubleValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Double?),  JniNullableDoubleValueMarshaler.Instance),
+			};
+		}
 	}
 
 	static class JniBoolean {

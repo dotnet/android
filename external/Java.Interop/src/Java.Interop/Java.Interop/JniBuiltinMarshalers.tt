@@ -27,33 +27,43 @@ namespace Java.Interop {
 
 	partial class JniRuntime {
 
-		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinTypeNameMappings = new []{
-			new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
+		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinTypeNameMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinTypeNameMappings);
 
-			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
+		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinTypeNameMappings ()
+		{
+			return new []{
+				new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
+
+				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
 
 <#
 	foreach (var type in types) {
 #>
-			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("<#= type.JniType #>", 0, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>?),    new JniTypeSignature ("java/lang/<#= type.Name #>")),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("<#= type.JniType #>", 0, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>?),    new JniTypeSignature ("java/lang/<#= type.Name #>")),
 <#
 	}
 #>
-		};
+			};
+		}
 
-		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniBuiltinMarshalers = new []{
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
+		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);
+
+		static KeyValuePair<Type, JniValueMarshaler>[] InitJniBuiltinMarshalers ()
+		{
+			return new []{
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
 <#
 	foreach (var type in types) {
 #>
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>),   Jni<#= type.Type #>ValueMarshaler.Instance),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>?),  JniNullable<#= type.Type #>ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>),   Jni<#= type.Type #>ValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= type.Type #>?),  JniNullable<#= type.Type #>ValueMarshaler.Instance),
 <#
 	}
 #>
-		};
+			};
+		}
 	}
 <#
 	foreach (var type in types) {

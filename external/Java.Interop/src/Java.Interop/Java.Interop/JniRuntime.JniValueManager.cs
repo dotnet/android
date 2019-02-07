@@ -500,7 +500,7 @@ namespace Java.Interop
 				if (typeof (void) == type)
 					return VoidValueMarshaler.Instance;
 
-				foreach (var marshaler in JniBuiltinMarshalers) {
+				foreach (var marshaler in JniBuiltinMarshalers.Value) {
 					if (marshaler.Key == type)
 						return marshaler.Value;
 				}
@@ -515,7 +515,7 @@ namespace Java.Interop
 				if (listType != null) {
 					var elementType = listType.GenericTypeArguments [0];
 					if (elementType.GetTypeInfo ().IsValueType) {
-						foreach (var marshaler in JniPrimitiveArrayMarshalers) {
+						foreach (var marshaler in JniPrimitiveArrayMarshalers.Value) {
 							if (info.IsAssignableFrom (marshaler.Key.GetTypeInfo ()))
 								return marshaler.Value;
 						}

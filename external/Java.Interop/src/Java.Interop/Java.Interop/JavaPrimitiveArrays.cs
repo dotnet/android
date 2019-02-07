@@ -10,59 +10,69 @@ using System.Linq.Expressions;
 namespace Java.Interop {
 
 	partial class JniRuntime {
-		static readonly KeyValuePair<Type, JniTypeSignature>[] JniBuiltinArrayMappings = new[]{
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Boolean>),  new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Boolean>),           new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<SByte>),  new JniTypeSignature ("B", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<SByte>),           new JniTypeSignature ("B", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Char>),  new JniTypeSignature ("C", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Char>),           new JniTypeSignature ("C", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int16>),  new JniTypeSignature ("S", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int16>),           new JniTypeSignature ("S", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int32>),  new JniTypeSignature ("I", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int32>),           new JniTypeSignature ("I", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int64>),  new JniTypeSignature ("J", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int64>),           new JniTypeSignature ("J", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Single>),  new JniTypeSignature ("F", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Single>),           new JniTypeSignature ("F", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Double>),  new JniTypeSignature ("D", arrayRank: 1, keyword: true)),
-			new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Double>),           new JniTypeSignature ("D", arrayRank: 1, keyword: true)),
-		};
+		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinArrayMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinArrayMappings);
 
-		static readonly KeyValuePair<Type, JniValueMarshaler>[] JniPrimitiveArrayMarshalers = new []{
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean[]),                   JavaBooleanArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Boolean>),          JavaBooleanArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Boolean>), JavaBooleanArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaBooleanArray),            JavaBooleanArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte[]),                   JavaSByteArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<SByte>),          JavaSByteArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<SByte>), JavaSByteArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSByteArray),            JavaSByteArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Char[]),                   JavaCharArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Char>),          JavaCharArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Char>), JavaCharArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaCharArray),            JavaCharArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16[]),                   JavaInt16Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int16>),          JavaInt16Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int16>), JavaInt16Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt16Array),            JavaInt16Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32[]),                   JavaInt32Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int32>),          JavaInt32Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int32>), JavaInt32Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt32Array),            JavaInt32Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64[]),                   JavaInt64Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int64>),          JavaInt64Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int64>), JavaInt64Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt64Array),            JavaInt64Array.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Single[]),                   JavaSingleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Single>),          JavaSingleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Single>), JavaSingleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSingleArray),            JavaSingleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (Double[]),                   JavaDoubleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Double>),          JavaDoubleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Double>), JavaDoubleArray.ArrayMarshaler),
-			new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaDoubleArray),            JavaDoubleArray.ArrayMarshaler),
-		};
+		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinArrayMappings ()
+		{
+			return new[] {
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Boolean>),  new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Boolean>),           new JniTypeSignature ("Z", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<SByte>),  new JniTypeSignature ("B", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<SByte>),           new JniTypeSignature ("B", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Char>),  new JniTypeSignature ("C", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Char>),           new JniTypeSignature ("C", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int16>),  new JniTypeSignature ("S", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int16>),           new JniTypeSignature ("S", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int32>),  new JniTypeSignature ("I", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int32>),           new JniTypeSignature ("I", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Int64>),  new JniTypeSignature ("J", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Int64>),           new JniTypeSignature ("J", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Single>),  new JniTypeSignature ("F", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Single>),           new JniTypeSignature ("F", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<Double>),  new JniTypeSignature ("D", arrayRank: 1, keyword: true)),
+				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<Double>),           new JniTypeSignature ("D", arrayRank: 1, keyword: true)),
+			};
+		}
+
+		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniPrimitiveArrayMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniPrimitiveArrayMarshalers);
+
+		static KeyValuePair<Type, JniValueMarshaler>[] InitJniPrimitiveArrayMarshalers ()
+		{
+			return new [] {
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean[]),                   JavaBooleanArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Boolean>),          JavaBooleanArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Boolean>), JavaBooleanArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaBooleanArray),            JavaBooleanArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte[]),                   JavaSByteArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<SByte>),          JavaSByteArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<SByte>), JavaSByteArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSByteArray),            JavaSByteArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Char[]),                   JavaCharArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Char>),          JavaCharArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Char>), JavaCharArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaCharArray),            JavaCharArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16[]),                   JavaInt16Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int16>),          JavaInt16Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int16>), JavaInt16Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt16Array),            JavaInt16Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32[]),                   JavaInt32Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int32>),          JavaInt32Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int32>), JavaInt32Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt32Array),            JavaInt32Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64[]),                   JavaInt64Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Int64>),          JavaInt64Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Int64>), JavaInt64Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaInt64Array),            JavaInt64Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Single[]),                   JavaSingleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Single>),          JavaSingleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Single>), JavaSingleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaSingleArray),            JavaSingleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Double[]),                   JavaDoubleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<Double>),          JavaDoubleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<Double>), JavaDoubleArray.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaDoubleArray),            JavaDoubleArray.ArrayMarshaler),
+			};
+		}
 	}
 
 	public sealed class JniBooleanArrayElements : JniArrayElements {
