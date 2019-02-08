@@ -20,18 +20,8 @@ namespace Xamarin.Android.Tasks
 
 		public static bool UsingClangNDK => usingClangNDK;
 
-		public static void Init (string ndkPath)
+		public static bool Init (TaskLoggingHelper log, string ndkPath)
 		{
-			Version ndkVersion;
-			usingClangNDK = GetNdkToolchainRelease (ndkPath, out ndkVersion) && ndkVersion.Major >= 19;
-		}
-
-		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
-		{
-			if (!UsingClangNDK)
-				return NdkUtilOld.ValidateNdkPlatform (log, ndkPath, arch, enableLLVM);
-
-			// Check that we have a compatible NDK version for the targeted ABIs.
 			Version ndkVersion;
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
 
@@ -41,6 +31,20 @@ namespace Xamarin.Android.Tasks
 						"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
 				return false;
 			}
+
+			usingClangNDK = ndkVersion.Major >= 19;
+
+			return true;
+		}
+
+		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
+		{
+			if (!UsingClangNDK)
+				return NdkUtilOld.ValidateNdkPlatform (log, ndkPath, arch, enableLLVM);
+
+			// Check that we have a compatible NDK version for the targeted ABIs.
+			Version ndkVersion;
+			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath, out ndkVersion);
 
 			if (hasNdkVersion && ndkVersion.Major < 19) {
 				log.LogMessage (MessageImportance.High,
