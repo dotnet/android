@@ -54,7 +54,7 @@ timestamps {
 
         timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on many changes need to be brought down
             stage('checkout') {
-                dir(XADir) {
+                dir("$XADir") {
                     scmVars = checkout scm
 
                     // UNDONE: Repo should have been post-checkout, but builds act as if no cleaning took place
@@ -111,7 +111,7 @@ timestamps {
         timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
             stage('prepare deps') {
 
-                dir(XADir) {
+                dir("$XADir") {
                         sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
 
@@ -121,7 +121,7 @@ timestamps {
 
         timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
             stage('build') {
-                dir(XADir) {
+                dir("$XADir") {
                     script {
                         if (isPr) {
                             echo "PR build definition detected: building with 'make all'"
@@ -139,7 +139,7 @@ timestamps {
 
         timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
             stage('create vsix') {
-                dir(XADir) {
+                dir("$XADir") {
                     sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
                 }
 
@@ -149,7 +149,7 @@ timestamps {
 
         timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
             stage('build tests') {
-                dir(XADir) {
+                dir("$XADir") {
                     sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
                 }
 
@@ -159,7 +159,7 @@ timestamps {
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
             stage('process build results') {
-                dir(XADir) {
+                dir("$XADir") {
                     processBuildStatus()
                 }
 
@@ -190,7 +190,7 @@ timestamps {
             def status = 0
             try {
                 stage('run all tests') {
-                    dir(XADir) {
+                    dir("$XADir") {
                         echo "running tests"
                         status = sh(
                             script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
@@ -212,7 +212,7 @@ timestamps {
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than 2 minutes
             stage('publish test error logs to Azure') {
-                dir(XADir) {
+                dir("$XADir") {
                     echo "packaging test error logs"
                     sh "make package-test-errors"
                 }
@@ -226,7 +226,7 @@ timestamps {
 
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
             stage('Plot build & test metrics') {
-                dir(XADir) {
+                dir("$XADir") {
                     plot(
                         title: 'Jcw',                        
                         csvFileName: 'plot-jcw-test-times.csv',       
