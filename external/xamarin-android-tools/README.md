@@ -15,10 +15,10 @@ submodule the entire **xamarin-android** repo, which is gigantic.
 | **Windows**           | [![Windows Build Status][azure-Windows-icon]][azure-Windows-status] |
 
 
-[azure-macOS-icon]: https://dev.azure.com/xamarin/Xamarin/_apis/build/status/Xamarin.Android.Tools
-[azure-macOS-status]: https://dev.azure.com/xamarin/Xamarin/_build/latest?definitionId=2
-[azure-Windows-icon]: https://dev.azure.com/xamarin/Xamarin/_apis/build/status/Xamarin.Android.Tools
-[azure-Windows-status]: https://dev.azure.com/xamarin/Xamarin/_build/latest?definitionId=2
+[azure-macOS-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin-android-tools
+[azure-macOS-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=3
+[azure-Windows-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin-android-tools
+[azure-Windows-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=3
 
 
 # Build Requirements
