@@ -56,7 +56,16 @@ timestamps {
             stage('checkout') {
                 dir(XADir) {
                     scmVars = checkout scm
+
+                    // UNDONE: Repo should have been post-checkout, but builds act as if no cleaning took place
+                    echo "CLEAN: Explicitly cleaning the repo with 'git clean -xdff'"
+                    def status = sh(script: 'git clean -xdff', returnStatus: true)
+                    if (status != 0) {
+                        echo "git clean failed. status: ${status}"
+                    }
                 }
+
+                echo "Stage result: checkout: ${currentBuild.currentResult}"
             }
         }
 
