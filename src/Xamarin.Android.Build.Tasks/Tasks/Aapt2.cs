@@ -144,9 +144,16 @@ namespace Xamarin.Android.Tasks {
 				// double clicks the error, it won't take them to the obj/Debug copy
 				if (ResourceDirectories != null) {
 					foreach (var dir in ResourceDirectories) {
-						var resourceDirectoryFullPath = ResourceDirectoryFullPath (dir.ItemSpec);
+						var resourceDirectory = dir.ItemSpec;
+						var resourceDirectoryFullPath = ResourceDirectoryFullPath (resourceDirectory);
+						string newfile = null;
+						if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+							newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
+						}
 						if (file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-							var newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
+							newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
+						}
+						if (!string.IsNullOrEmpty (newfile)) {
 							newfile = resource_name_case_map.ContainsKey (newfile) ? resource_name_case_map [newfile] : newfile;
 							newfile = Path.Combine ("Resources", newfile);
 							file = newfile;

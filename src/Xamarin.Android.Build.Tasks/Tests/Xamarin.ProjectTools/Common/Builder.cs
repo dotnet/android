@@ -365,37 +365,40 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
+			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.rsp");
 			args.AppendFormat ("{0} /t:{1} {2}",
-				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
+					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
-			args.Append ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
-			if (BuildingInsideVisualStudio && RunningMSBuild) {
-				args.Append (" /p:BuildingOutOfProcess=true");
-			}
-			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
-				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
-			}
-			if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
-				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
-			}
-			if (parameters != null) {
-				foreach (var param in parameters) {
-					args.AppendFormat (" /p:{0}", param);
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
+				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
+				if (BuildingInsideVisualStudio && RunningMSBuild) {
+					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
-			}
-			var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
-			if (!string.IsNullOrEmpty (msbuildArgs)) {
-				args.Append (msbuildArgs);
-			}
-			if (RunningMSBuild) {
-				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-				args.Append ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
-			}
-			if (environmentVariables != null) {
-				foreach (var kvp in environmentVariables) {
-					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+				if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
+					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
+				}
+				if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
+					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
+				}
+				if (parameters != null) {
+					foreach (var param in parameters) {
+						sw.WriteLine (" /p:{0}", param);
+					}
+				}
+				var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
+				if (!string.IsNullOrEmpty (msbuildArgs)) {
+					sw.WriteLine (msbuildArgs);
+				}
+				if (RunningMSBuild) {
+					psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+					sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				}
+				if (environmentVariables != null) {
+					foreach (var kvp in environmentVariables) {
+						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+					}
 				}
 			}
 
