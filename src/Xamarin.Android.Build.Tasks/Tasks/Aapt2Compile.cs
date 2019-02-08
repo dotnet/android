@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks {
 			cmd.AppendSwitchIfNotNull ("-o ", outputArchive);
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
-			cmd.AppendSwitchIfNotNull ("--dir ", dir.ItemSpec.TrimEnd ("\\"));
+			cmd.AppendSwitchIfNotNull ("--dir ", dir.ItemSpec.TrimEnd ('\\'));
 			if (ExplicitCrunch)
 				cmd.AppendSwitch ("--no-crunch");
 			if (!string.IsNullOrEmpty (ExtraArgs))
