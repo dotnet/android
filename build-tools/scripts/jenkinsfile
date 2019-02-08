@@ -89,6 +89,8 @@ timestamps {
 
                 publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
                 publishTestFilePaths = "xamarin-android/xa-test-errors*"
+
+                echo "Stage result: init: ${currentBuild.currentResult}"
             }
         }
 
@@ -101,6 +103,8 @@ timestamps {
                 if (fileExists('TestResult.xml')) {
                     sh('rm TestResult.xml')
                 }
+
+                echo "Stage result: clean: ${currentBuild.currentResult}"
             }
         }
 
