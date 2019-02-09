@@ -165,7 +165,7 @@ timestamps {
                     def status = publishPackages(publishBuildFilePaths)
 
                     if (status != 0) {
-                        throw new Exception("publish packages to Azure FAILED")
+                        error "publish packages to Azure FAILED"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                     }
                 }
 
@@ -189,7 +189,7 @@ timestamps {
                         );
 
                         if (status != 0) {
-                            throw new Exception("run-all-tests FAILED")     // This will cause the stage to be labeled as 'failed' (red text) within the context of the stage being marked 'UNSTABLE' (yellow background)
+                            error "run-all-tests FAILED"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                         }
                     }
                 }
