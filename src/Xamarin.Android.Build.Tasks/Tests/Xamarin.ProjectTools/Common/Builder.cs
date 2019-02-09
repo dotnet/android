@@ -19,6 +19,7 @@ namespace Xamarin.ProjectTools
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
+		static string frameworkSDKRoot = null;
 
 		string root;
 		string buildLogFullPath;
@@ -141,8 +142,11 @@ namespace Xamarin.ProjectTools
 			get {
 				string path;
 				if (IsUnix) {
-					path = System.IO.Path.Combine ("/usr", "local", "share", "dotnet", "sdk");
-					return FindLatestDotNetSdk (path);
+					path = FindLatestDotNetSdk (frameworkSDKRoot);
+					if (!string.IsNullOrEmpty (path))
+						return path;
+	
+					return string.Empty;
 				}
 				var visualStudioDirectory = GetVisualStudio2017Directory ();
 				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
@@ -270,6 +274,20 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 			Console.WriteLine ($"Using {XABuildExe}");
 			Console.WriteLine ($"Using {(RunningMSBuild ? "msbuild" : "xbuild")}");
+			if (IsUnix && string.IsNullOrEmpty (frameworkSDKRoot)) {
+				var psi = new ProcessStartInfo ("msbuild") {
+					RedirectStandardOutput = true,
+					UseShellExecute = false,
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					WorkingDirectory = Root,
+					Arguments = $" {Path.Combine (Root, "FrameworkPath.targets")} /v:minimal /nologo",
+				};
+				using (var process = Process.Start (psi)) {
+					process.WaitForExit ();
+					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
+				}
+			}
 		}
 
 		public void Dispose ()
@@ -347,37 +365,40 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
+			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.rsp");
 			args.AppendFormat ("{0} /t:{1} {2}",
-				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
+					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
-			args.Append ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
-			if (BuildingInsideVisualStudio && RunningMSBuild) {
-				args.Append (" /p:BuildingOutOfProcess=true");
-			}
-			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
-				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
-			}
-			if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
-				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
-			}
-			if (parameters != null) {
-				foreach (var param in parameters) {
-					args.AppendFormat (" /p:{0}", param);
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
+				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
+				if (BuildingInsideVisualStudio && RunningMSBuild) {
+					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
-			}
-			var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
-			if (!string.IsNullOrEmpty (msbuildArgs)) {
-				args.Append (msbuildArgs);
-			}
-			if (RunningMSBuild) {
-				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-				args.Append ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
-			}
-			if (environmentVariables != null) {
-				foreach (var kvp in environmentVariables) {
-					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+				if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
+					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
+				}
+				if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
+					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
+				}
+				if (parameters != null) {
+					foreach (var param in parameters) {
+						sw.WriteLine (" /p:{0}", param);
+					}
+				}
+				var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
+				if (!string.IsNullOrEmpty (msbuildArgs)) {
+					sw.WriteLine (msbuildArgs);
+				}
+				if (RunningMSBuild) {
+					psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+					sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				}
+				if (environmentVariables != null) {
+					foreach (var kvp in environmentVariables) {
+						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+					}
 				}
 			}
 
@@ -519,14 +540,23 @@ namespace Xamarin.ProjectTools
 		string FindLatestDotNetSdk (string dotNetPath)
 		{
 			if (Directory.Exists (dotNetPath)) {
-				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
-					let version = GetVersionFromDirectory (dir)
-					where version != null && File.Exists (Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))
-					orderby version descending
-					select Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk");
-				return directories.FirstOrDefault ();
+				Version latest = new Version (0,0);
+				string Sdk = null;
+				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
+					var version = GetVersionFromDirectory (dir);
+					var sdksDir = Path.Combine (dir, "Sdks");
+					if (!Directory.Exists (sdksDir))
+						sdksDir = Path.Combine (dir, "bin", "Sdks");
+					if (version != null && version > latest) {
+						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
+							latest = version;
+							Sdk = Path.Combine (sdksDir, "Microsoft.NET.Sdk");
+						}
+					}
+				}
+				return Sdk;
 			}
-			return string.Empty;
+			return null;
 		}
 
 		static Version GetVersionFromDirectory (string dir)

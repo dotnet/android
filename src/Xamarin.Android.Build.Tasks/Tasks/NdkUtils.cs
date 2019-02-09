@@ -20,10 +20,21 @@ namespace Xamarin.Android.Tasks
 
 		public static bool UsingClangNDK => usingClangNDK;
 
-		public static void Init (string ndkPath)
+		public static bool Init (TaskLoggingHelper log, string ndkPath)
 		{
 			Version ndkVersion;
-			usingClangNDK = GetNdkToolchainRelease (ndkPath, out ndkVersion) && ndkVersion.Major >= 19;
+			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
+
+			if (!hasNdkVersion) {
+				log.LogCodedError ("XA5101",
+						"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
+						"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
+				return false;
+			}
+
+			usingClangNDK = ndkVersion.Major >= 19;
+
+			return true;
 		}
 
 		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
