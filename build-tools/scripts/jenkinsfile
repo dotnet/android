@@ -62,29 +62,37 @@ timestamps {
             }
         }
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('init') {
-                // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
-                isPr = env.ghprbActualCommit != null
-                def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
-                def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
+        try {
+            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+                stage('init') {
+                    // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
+                    isPr = env.ghprbActualCommit != null
+                    def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
+                    def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
 
-                def buildType = isPr ? 'PR' : 'CI'
+                    def buildType = isPr ? 'PR' : 'CI'
 
-                echo "Job: ${env.JOB_BASE_NAME}"
-                echo "Branch: ${branch}"
-                echo "Commit: ${commit}"
-                echo "Build type: ${buildType}"
-                if (isPr) {
-                    echo "PR id: ${env.ghprbPullId}"
-                    echo "PR link: ${env.ghprbPullLink}"
+                    echo "Job: ${env.JOB_BASE_NAME}"
+                    echo "Branch: ${branch}"
+                    echo "Commit: ${commit}"
+                    echo "Build type: ${buildType}"
+                    if (isPr) {
+                        echo "PR id: ${env.ghprbPullId}"
+                        echo "PR link: ${env.ghprbPullLink}"
+                    }
+
+                    publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
+                    publishTestFilePaths = "xamarin-android/xa-test-errors*"
+
+                    // UNDONE: Experiment to see if failure gets properly flagged as red in pipeline steps view
+                    error "TEST: Init failure"
+
+                    echo "Stage result: init: ${currentBuild.currentResult}"
                 }
-
-                publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                publishTestFilePaths = "xamarin-android/xa-test-errors*"
-
-                echo "Stage result: init: ${currentBuild.currentResult}"
             }
+        } catch (error) {
+            echo "ERROR : init failed. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
         }
 
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
