@@ -202,92 +202,102 @@ timestamps {
         }
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than 2 minutes
-            stage('publish test error logs to Azure') {
-                dir(XADir) {
-                    echo "packaging test error logs"
-                    sh "make package-test-errors"
+            try {
+                stage('publish test error logs to Azure') {
+                    dir(XADir) {
+                        echo "packaging test error logs"
+                        sh "make package-test-errors"
+                    }
+
+                    echo "publishTestFilePaths: ${publishTestFilePaths}"
+                    def status = publishPackages(publishTestFilePaths)
                 }
-
-                echo "publishTestFilePaths: ${publishTestFilePaths}"
-                def status = publishPackages(publishTestFilePaths)
-
-                echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
+            } catch (error) {
+                echo "ERROR : publish test error logs to Azure failed with status ${status}. Marking build as UNSTABLE"
+                currentBuild.result = 'UNSTABLE'
             }
+
+            echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
         }
 
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('Plot build & test metrics') {
-                dir(XADir) {
-                    plot(
-                        title: 'Jcw',                        
-                        csvFileName: 'plot-jcw-test-times.csv',       
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Locale',
-                        csvFileName: 'plot-locale-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Runtime test sizes',
-                        csvFileName: 'plot-runtime-test-sizes.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Runtime merged',
-                        csvFileName: 'plot-runtime-merged-test-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Xamarin.Forms app startup',
-                        csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Xamarin.Forms app',
-                        csvFileName: 'plot-xamarin-forms-tests-size.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
+            try {
+                stage('Plot build & test metrics') {
+                    dir(XADir) {
+                        plot(
+                            title: 'Jcw',
+                            csvFileName: 'plot-jcw-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Locale',
+                            csvFileName: 'plot-locale-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Runtime test sizes',
+                            csvFileName: 'plot-runtime-test-sizes.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Runtime merged',
+                            csvFileName: 'plot-runtime-merged-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Xamarin.Forms app startup',
+                            csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Xamarin.Forms app',
+                            csvFileName: 'plot-xamarin-forms-tests-size.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
 
-                    plot(
-                        title: 'Hello World',
-                        csvFileName: 'plot-hello-world-build-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    
-                    plot(
-                        title: 'Xamarin.Forms',
-                        csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
+                        plot(
+                            title: 'Hello World',
+                            csvFileName: 'plot-hello-world-build-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+
+                        plot(
+                            title: 'Xamarin.Forms',
+                            csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                    }
                 }
-
-                echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
+            } catch (error) {
+                echo "ERROR : Plot build & test metrics: Unexpected error: ${error}. Marking build as UNSTABLE"
+                currentBuild.result = 'UNSTABLE'
             }
+
+            echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
         }
 
         timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
