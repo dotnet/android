@@ -103,7 +103,7 @@ timestamps {
             stage('prepare deps') {
 
                 dir(XADir) {
-                        sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
                 }
 
                 echo "Stage result: prepare deps: ${currentBuild.currentResult}"
