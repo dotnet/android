@@ -1,4 +1,4 @@
-# Build Dependencies
+# Build Dependencies for Linux and macOS
 
 Building Xamarin.Android requires:
 
