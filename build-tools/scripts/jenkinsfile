@@ -2,8 +2,6 @@
 // https://jenkins.io/doc/book/pipeline/syntax/
 // https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
 
-def botLabel = 'xamarin-android-master-pipeline-eval'
-
 def XADir = "xamarin-android"
 
 def publishBuildFilePaths = null
@@ -49,7 +47,7 @@ def publishPackages(filePaths) {
 }
 
 timestamps {
-    node("${botLabel}") {
+    node("${env.BotLabel}") {
         def scmVars
 
         timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on many changes need to be brought down
