@@ -48,6 +48,8 @@ def publishPackages(filePaths) {
 
 timestamps {
     node("${env.BotLabel}") {
+        def scmVars
+
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
             stage('checkout') {
                 dir(XADir) {
