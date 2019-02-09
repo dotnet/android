@@ -11,7 +11,7 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 
 def isPr = false                // Default to CI
 
-def stageResult = 0
+def stageStatus = 0
 
 def processBuildStatus() {
     def status = 0
@@ -52,7 +52,7 @@ timestamps {
     node("${env.BotLabel}") {
         def scmVars
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
                 stage('checkout') {
@@ -68,7 +68,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                 stage('init') {
@@ -99,7 +99,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                 stage('clean') {
@@ -119,7 +119,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
                 stage('prepare deps') {
@@ -136,7 +136,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
                 stage('build') {
@@ -160,7 +160,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
                 stage('create vsix') {
@@ -176,7 +176,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
                 stage('build tests') {
@@ -192,7 +192,7 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
                 stage('process build results') {
@@ -208,48 +208,48 @@ timestamps {
             currentBuild.result = 'FAILURE'
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             stage('publish packages to Azure') {
                 echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                stageResult = publishPackages(publishBuildFilePaths)
+                stageStatus = publishPackages(publishBuildFilePaths)
 
-                if (stageResult != 0) {
+                if (stageStatus != 0) {
                     error "publish packages to Azure FAILED"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                 }
             }
         } catch (error) {
-            echo "ERROR : package publish: Unexpected error: ${error} / status ${stageResult}. Marking build as UNSTABLE"
+            echo "ERROR : package publish: Unexpected error: ${error} / status ${stageStatus}. Marking build as UNSTABLE"
             currentBuild.result = 'UNSTABLE'
         } finally {
             echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 160, unit: 'MINUTES') {
                 stage('run all tests') {
                     dir(XADir) {
                         echo "running tests"
-                        stageResult = sh(
+                        stageStatus = sh(
                             script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
                             returnStatus: true
                         );
 
-                        if (stageResult != 0) {
+                        if (stageStatus != 0) {
                             error "run-all-tests FAILED"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                         }
                     }
                 }
             }
         } catch (error) {
-            echo "ERROR : test run: Unexpected error: ${error} / status ${stageResult}. Marking build as UNSTABLE"
+            echo "ERROR : test run: Unexpected error: ${error} / status ${stageStatus}. Marking build as UNSTABLE"
             currentBuild.result = 'UNSTABLE'
         } finally {
-            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / stageResult: ${stageResult}"
+            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / stageStatus: ${stageStatus}"
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             stage('publish test error logs to Azure') {
                 dir(XADir) {
@@ -258,16 +258,16 @@ timestamps {
                     }
 
                     echo "publishTestFilePaths: ${publishTestFilePaths}"
-                    stageResult = publishPackages(publishTestFilePaths)
+                    stageStatus = publishPackages(publishTestFilePaths)
                 }
         } catch (error) {
-            echo "ERROR : publish test error logs: Unexpected error: ${error} / status: ${stageResult}. Marking build as UNSTABLE"
+            echo "ERROR : publish test error logs: Unexpected error: ${error} / status: ${stageStatus}. Marking build as UNSTABLE"
             currentBuild.result = 'UNSTABLE'
         } finally {
             echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult}"
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                 stage('Plot build & test metrics') {
@@ -348,7 +348,7 @@ timestamps {
             echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
         }
 
-        stageResult = 0
+        stageStatus = 0
         try {
             timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
                 stage('Upload test results') {
