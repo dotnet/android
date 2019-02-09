@@ -52,14 +52,19 @@ timestamps {
     node("${env.BotLabel}") {
         def scmVars
 
-        timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-            stage('checkout') {
-                dir(XADir) {
-                    scmVars = checkout scm
-                }
+        try {
+            timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
+                stage('checkout') {
+                    dir(XADir) {
+                        scmVars = checkout scm
+                    }
 
-                echo "Stage result: checkout: ${currentBuild.currentResult}"
+                    echo "Stage result: checkout: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : checkout: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
         try {
@@ -88,81 +93,111 @@ timestamps {
                 }
             }
         } catch (error) {
-            echo "ERROR : init failed. Marking build as FAILURE"
+            echo "ERROR : init: Unexpected error: ${error}"
             currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('clean') {
-                dir('xamarin-android@tmp') {
-                    deleteDir()
-                }
+        try {
+            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+                stage('clean') {
+                    dir('xamarin-android@tmp') {
+                        deleteDir()
+                    }
 
-                if (fileExists('TestResult.xml')) {
-                    sh('rm TestResult.xml')
-                }
+                    if (fileExists('TestResult.xml')) {
+                        sh('rm TestResult.xml')
+                    }
 
-                echo "Stage result: clean: ${currentBuild.currentResult}"
+                    echo "Stage result: clean: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : clean: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
-            stage('prepare deps') {
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
+                stage('prepare deps') {
 
-                dir(XADir) {
-                    sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    dir(XADir) {
+                        sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                    }
+
+                    echo "Stage result: prepare deps: ${currentBuild.currentResult}"
                 }
-
-                echo "Stage result: prepare deps: ${currentBuild.currentResult}"
             }
+        } catch (error) {
+            echo "ERROR : prepare deps: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
-            stage('build') {
-                dir(XADir) {
-                    script {
-                        if (isPr) {
-                            echo "PR build definition detected: building with 'make all'"
-                            sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
-                        } else {
-                            echo "PR build definition *not* detected: building with 'make jenkins'"
-                            sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+        try {
+            timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
+                stage('build') {
+                    dir(XADir) {
+                        script {
+                            if (isPr) {
+                                echo "PR build definition detected: building with 'make all'"
+                                sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            } else {
+                                echo "PR build definition *not* detected: building with 'make jenkins'"
+                                sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            }
                         }
                     }
-                }
 
-                echo "Stage result: build: ${currentBuild.currentResult}"
+                    echo "Stage result: build: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : build: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
-            stage('create vsix') {
-                dir(XADir) {
-                    sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
-                }
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
+                stage('create vsix') {
+                    dir(XADir) {
+                        sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
+                    }
 
-                echo "Stage result: create vsix: ${currentBuild.currentResult}"
+                    echo "Stage result: create vsix: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : create vsix: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
-            stage('build tests') {
-                dir(XADir) {
-                    sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
-                }
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
+                stage('build tests') {
+                    dir(XADir) {
+                        sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
+                    }
 
-                echo "Stage result: build tests: ${currentBuild.currentResult}"
+                    echo "Stage result: build tests: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : build tests: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
-            stage('process build results') {
-                dir(XADir) {
-                    processBuildStatus()
-                }
+        try {
+            timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
+                stage('process build results') {
+                    dir(XADir) {
+                        processBuildStatus()
+                    }
 
-                echo "Stage result: process build results: ${currentBuild.currentResult}"
+                    echo "Stage result: process build results: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : process build results: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
