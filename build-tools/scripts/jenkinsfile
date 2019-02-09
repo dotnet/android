@@ -47,13 +47,7 @@ def publishPackages(filePaths) {
 }
 
 timestamps {
-<<<<<<< HEAD
     node("${env.BotLabel}") {
-=======
-    node("${botLabel}") {
-        def scmVars
-
->>>>>>> 0be69f44... scripted pipeline requires an explicit call to Source Control Management (SCM) checkout
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
             stage('checkout') {
                 dir(XADir) {
