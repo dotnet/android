@@ -11,6 +11,8 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 
 def isPr = false                // Default to CI
 
+def stageResult = 0
+
 def processBuildStatus() {
     def status = 0
 
@@ -177,29 +179,29 @@ timestamps {
             echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
         }
 
-        timeout(time: 160, unit: 'MINUTES') {    // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
-            def status = 0
-            try {
+        stageResult = 0
+        try {
+            timeout(time: 160, unit: 'MINUTES') {
                 stage('run all tests') {
                     dir(XADir) {
                         echo "running tests"
-                        status = sh(
+                        stageResult = sh(
                             script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
                             returnStatus: true
                         );
 
-                        if (status != 0) {
+                        if (stageResult != 0) {
                             error "run-all-tests FAILED"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                         }
                     }
                 }
-            } catch (error) {
-                echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
-                currentBuild.result = 'UNSTABLE'
             }
-
-            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
+        } catch (error) {
+            echo "ERROR : test run failed with status ${stageResult}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
         }
+
+        echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / stageResult: ${stageResult}"
 
         timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than 2 minutes
             try {
