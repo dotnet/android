@@ -84,15 +84,12 @@ timestamps {
                     publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
                     publishTestFilePaths = "xamarin-android/xa-test-errors*"
 
-                    // UNDONE: Experiment to see if failure gets properly flagged as red in pipeline steps view
-                    error "TEST: Init failure"
-
                     echo "Stage result: init: ${currentBuild.currentResult}"
                 }
             }
         } catch (error) {
-            echo "ERROR : init failed. Marking build as UNSTABLE"
-            currentBuild.result = 'UNSTABLE'
+            echo "ERROR : init failed. Marking build as FAILURE"
+            currentBuild.result = 'FAILURE'
         }
 
         timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
