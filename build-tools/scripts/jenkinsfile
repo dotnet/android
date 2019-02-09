@@ -50,7 +50,7 @@ timestamps {
     node("${env.BotLabel}") {
         def scmVars
 
-        timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on many changes need to be brought down
+        timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
             stage('checkout') {
                 dir(XADir) {
                     scmVars = checkout scm
@@ -60,7 +60,7 @@ timestamps {
             }
         }
 
-        timeout(time: 30, unit: 'SECONDS')  {   // Typically takes less than a second
+        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
             stage('init') {
                 // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
                 isPr = env.ghprbActualCommit != null

@@ -28,13 +28,17 @@ macro(linker_has_flag _flag)
 endmacro()
 
 macro(xa_common_prepare)
+  if(NOT DSO_SYMBOL_VISIBILITY)
+    set(DSO_SYMBOL_VISIBILITY "hidden")
+  endif()
+
   # Don't put the leading '-' in options
   set(XA_COMPILER_FLAGS
     fno-strict-aliasing
     ffunction-sections
     funswitch-loops
     finline-limit=300
-    fvisibility=hidden
+    fvisibility=${DSO_SYMBOL_VISIBILITY}
     fstack-protector
     flto
     Wa,--noexecstack

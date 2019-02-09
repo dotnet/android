@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -2374,7 +2375,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 </Project>
 ",
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InIt({enableMultiDex}{dexTool}{linkTool})"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InItAndÜmläüts({enableMultiDex}{dexTool}{linkTool})"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
@@ -2602,7 +2603,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
 				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Xamarin.Android.Support.v4.dll: extracted files are up to date"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v4.dll`!");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
@@ -2610,6 +2611,53 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNuGetsChange`!");
 				FileAssert.Exists (build_props, "build.props should exist after third build.");
+			}
+		}
+
+		[Test]
+		[NonParallelizable]
+		public void CompileBeforeUpgradingNuGet ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+
+			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");
+
+				proj.PackageReferences.Clear ();
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_1_0_697729);
+				proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+				proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+				proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 			}
 		}
 
@@ -3488,16 +3536,18 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void WarningForMinSdkVersion ()
 		{
+			int minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
+			int tooLowSdkVersion = minSdkVersion - 1;
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"8\" />");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{tooLowSdkVersion}\" />");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
 					StringAssertEx.ContainsText (
 						b.LastBuildOutput,
-						"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '8' is less than API-9, this configuration is not supported."
+						$"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{tooLowSdkVersion}' is less than API-{minSdkVersion}, this configuration is not supported."
 					),
-					"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"8\""
+					$"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"{tooLowSdkVersion}\""
 				);
 			}
 		}
