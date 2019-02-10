@@ -11,6 +11,8 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 
 def isPr = false                // Default to CI
 
+def stageStatus = 0
+
 def processBuildStatus() {
     def status = 0
 
@@ -50,248 +52,305 @@ timestamps {
     node("${env.BotLabel}") {
         def scmVars
 
-        timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-            stage('checkout') {
-                dir(XADir) {
-                    scmVars = checkout scm
-                }
+        stageStatus = 0
+        try {
+            timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
+                stage('checkout') {
+                    dir(XADir) {
+                        scmVars = checkout scm
+                    }
 
-                echo "Stage result: checkout: ${currentBuild.currentResult}"
+                    echo "Stage result: checkout: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : checkout: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('init') {
-                // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
-                isPr = env.ghprbActualCommit != null
-                def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
-                def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+                stage('init') {
+                    // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
+                    isPr = env.ghprbActualCommit != null
+                    def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
+                    def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
 
-                def buildType = isPr ? 'PR' : 'CI'
+                    def buildType = isPr ? 'PR' : 'CI'
 
-                echo "Job: ${env.JOB_BASE_NAME}"
-                echo "Branch: ${branch}"
-                echo "Commit: ${commit}"
-                echo "Build type: ${buildType}"
-                if (isPr) {
-                    echo "PR id: ${env.ghprbPullId}"
-                    echo "PR link: ${env.ghprbPullLink}"
+                    echo "Job: ${env.JOB_BASE_NAME}"
+                    echo "Branch: ${branch}"
+                    echo "Commit: ${commit}"
+                    echo "Build type: ${buildType}"
+                    if (isPr) {
+                        echo "PR id: ${env.ghprbPullId}"
+                        echo "PR link: ${env.ghprbPullLink}"
+                    }
+
+                    publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
+                    publishTestFilePaths = "xamarin-android/xa-test-errors*"
+
+                    echo "Stage result: init: ${currentBuild.currentResult}"
                 }
-
-                publishBuildFilePaths = "xamarin-android/xamarin.android-oss*.zip,xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip,xamarin-android/bin/Build*/Xamarin.Android.Sdk*.vsix,xamarin-android/prepare-image-dependencies.sh,xamarin-android/build-status*,xamarin-android/xa-build-status*";
-                publishTestFilePaths = "xamarin-android/xa-test-errors*"
-
-                echo "Stage result: init: ${currentBuild.currentResult}"
             }
+        } catch (error) {
+            echo "ERROR : init: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('clean') {
-                dir('xamarin-android@tmp') {
-                    deleteDir()
-                }
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+                stage('clean') {
+                    dir('xamarin-android@tmp') {
+                        deleteDir()
+                    }
 
-                if (fileExists('TestResult.xml')) {
-                    sh('rm TestResult.xml')
-                }
+                    if (fileExists('TestResult.xml')) {
+                        sh('rm TestResult.xml')
+                    }
 
-                echo "Stage result: clean: ${currentBuild.currentResult}"
+                    echo "Stage result: clean: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : clean: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
-            stage('prepare deps') {
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
+                stage('prepare deps') {
 
-                dir(XADir) {
+                    dir(XADir) {
                         sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
-                }
+                    }
 
-                echo "Stage result: prepare deps: ${currentBuild.currentResult}"
+                    echo "Stage result: prepare deps: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : prepare deps: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
-            stage('build') {
-                dir(XADir) {
-                    script {
-                        if (isPr) {
-                            echo "PR build definition detected: building with 'make all'"
-                            sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
-                        } else {
-                            echo "PR build definition *not* detected: building with 'make jenkins'"
-                            sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+        stageStatus = 0
+        try {
+            timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
+                stage('build') {
+                    dir(XADir) {
+                        script {
+                            if (isPr) {
+                                echo "PR build definition detected: building with 'make all'"
+                                sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            } else {
+                                echo "PR build definition *not* detected: building with 'make jenkins'"
+                                sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                            }
                         }
                     }
-                }
 
-                echo "Stage result: build: ${currentBuild.currentResult}"
+                    echo "Stage result: build: ${currentBuild.currentResult}"
+                }
             }
+        } catch (error) {
+            echo "ERROR : build: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
         }
 
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
-            stage('create vsix') {
-                dir(XADir) {
-                    sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
-                }
-
-                echo "Stage result: create vsix: ${currentBuild.currentResult}"
-            }
-        }
-
-        timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
-            stage('build tests') {
-                dir(XADir) {
-                    sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
-                }
-
-                echo "Stage result: build tests: ${currentBuild.currentResult}"
-            }
-        }
-
-        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
-            stage('process build results') {
-                dir(XADir) {
-                    processBuildStatus()
-                }
-
-                echo "Stage result: process build results: ${currentBuild.currentResult}"
-            }
-        }
-
-        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
-            try {
-                stage('publish packages to Azure') {
-                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                    def status = publishPackages(publishBuildFilePaths)
-
-                    if (status != 0) {
-                        throw new Exception("publish packages to Azure FAILED")
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
+                stage('create vsix') {
+                    dir(XADir) {
+                        sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
                     }
+
+                    echo "Stage result: create vsix: ${currentBuild.currentResult}"
                 }
-
-            } catch (error) {
-                echo "ERROR : package publish failed with status ${status}. Marking build as UNSTABLE"
-                currentBuild.result = 'UNSTABLE'
             }
+        } catch (error) {
+            echo "ERROR : create vsix: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
+        }
 
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
+                stage('build tests') {
+                    dir(XADir) {
+                        sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
+                    }
+
+                    echo "Stage result: build tests: ${currentBuild.currentResult}"
+                }
+            }
+        } catch (error) {
+            echo "ERROR : build tests: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
+        }
+
+        stageStatus = 0
+        try {
+            timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
+                stage('process build results') {
+                    dir(XADir) {
+                        processBuildStatus()
+                    }
+
+                    echo "Stage result: process build results: ${currentBuild.currentResult}"
+                }
+            }
+        } catch (error) {
+            echo "ERROR : process build results: Unexpected error: ${error}"
+            currentBuild.result = 'FAILURE'
+        }
+
+        stageStatus = 0
+        try {
+            stage('publish packages to Azure') {
+                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+                stageStatus = publishPackages(publishBuildFilePaths)
+
+                if (stageStatus != 0) {
+                    error "publish packages to Azure FAILED"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                }
+            }
+        } catch (error) {
+            echo "ERROR : package publish: Unexpected error: ${error} / status ${stageStatus}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
+        } finally {
             echo "Stage result: publish packages to Azure: ${currentBuild.currentResult}"
         }
 
-        timeout(time: 160, unit: 'MINUTES') {    // XA tests typically take 1 hr, 40 minutes to run; timeout after 2 hrs, 40 minutes
-            def status = 0
-            try {
+        stageStatus = 0
+        try {
+            timeout(time: 160, unit: 'MINUTES') {
                 stage('run all tests') {
                     dir(XADir) {
                         echo "running tests"
-                        status = sh(
+                        stageStatus = sh(
                             script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
                             returnStatus: true
                         );
 
-                        if (status != 0) {
-                            throw new Exception("run-all-tests FAILED")     // This will cause the stage to be labeled as 'failed' (red text) within the context of the stage being marked 'UNSTABLE' (yellow background)
+                        if (stageStatus != 0) {
+                            error "run-all-tests FAILED"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                         }
                     }
                 }
-            } catch (error) {
-                echo "ERROR : test run failed with status ${status}. Marking build as UNSTABLE"
-                currentBuild.result = 'UNSTABLE'
             }
-
-            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / status: ${status}"
+        } catch (error) {
+            echo "ERROR : test run: Unexpected error: ${error} / status ${stageStatus}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
+        } finally {
+            echo "Stage result: run all tests: current build result: ${currentBuild.currentResult} / stageStatus: ${stageStatus}"
         }
 
-        timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than 2 minutes
+        stageStatus = 0
+        try {
             stage('publish test error logs to Azure') {
                 dir(XADir) {
-                    echo "packaging test error logs"
-                    sh "make package-test-errors"
+                        echo "packaging test error logs"
+                        sh "make package-test-errors"
+                    }
+
+                    echo "publishTestFilePaths: ${publishTestFilePaths}"
+                    stageStatus = publishPackages(publishTestFilePaths)
                 }
-
-                echo "publishTestFilePaths: ${publishTestFilePaths}"
-                def status = publishPackages(publishTestFilePaths)
-
-                echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult} / status: ${status}"
-            }
+        } catch (error) {
+            echo "ERROR : publish test error logs: Unexpected error: ${error} / status: ${stageStatus}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
+        } finally {
+            echo "Stage result: publish test error logs to Azure: ${currentBuild.currentResult}"
         }
 
-        timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-            stage('Plot build & test metrics') {
-                dir(XADir) {
-                    plot(
-                        title: 'Jcw',                        
-                        csvFileName: 'plot-jcw-test-times.csv',       
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Locale',
-                        csvFileName: 'plot-locale-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Runtime test sizes',
-                        csvFileName: 'plot-runtime-test-sizes.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Runtime merged',
-                        csvFileName: 'plot-runtime-merged-test-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Xamarin.Forms app startup',
-                        csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    plot(
-                        title: 'Xamarin.Forms app',
-                        csvFileName: 'plot-xamarin-forms-tests-size.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
+        stageStatus = 0
+        try {
+            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
+                stage('Plot build & test metrics') {
+                    dir(XADir) {
+                        plot(
+                            title: 'Jcw',
+                            csvFileName: 'plot-jcw-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Locale',
+                            csvFileName: 'plot-locale-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Runtime test sizes',
+                            csvFileName: 'plot-runtime-test-sizes.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Runtime merged',
+                            csvFileName: 'plot-runtime-merged-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Xamarin.Forms app startup',
+                            csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                        plot(
+                            title: 'Xamarin.Forms app',
+                            csvFileName: 'plot-xamarin-forms-tests-size.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
 
-                    plot(
-                        title: 'Hello World',
-                        csvFileName: 'plot-hello-world-build-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
-                    
-                    plot(
-                        title: 'Xamarin.Forms',
-                        csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
-                        csvSeries: [[
-                            displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
-                        ]],
-                        group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
-                    )
+                        plot(
+                            title: 'Hello World',
+                            csvFileName: 'plot-hello-world-build-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+
+                        plot(
+                            title: 'Xamarin.Forms',
+                            csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
+                            csvSeries: [[
+                                displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
+                            ]],
+                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                        )
+                    }
                 }
-
-                echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
             }
+        } catch (error) {
+            echo "ERROR : Plot build & test metrics: Unexpected error: ${error}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
+        } finally {
+            echo "Stage result: Plot build & test metrics: ${currentBuild.currentResult}"
         }
 
-        timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
-            try {
+        stageStatus = 0
+        try {
+            timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
                 stage('Upload test results') {
                         xunit thresholds: [
                                 failed(unstableNewThreshold: '0', unstableThreshold: '0'),
@@ -305,12 +364,11 @@ timestamps {
                                 stopProcessingIfError: false)
                             ]
                 }
-
-            } catch (error) {
-                echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
-                currentBuild.result = 'UNSTABLE'
             }
-
+        } catch (error) {
+            echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+            currentBuild.result = 'UNSTABLE'
+        } finally {
             echo "Stage result: Upload test results: ${currentBuild.currentResult}"
         }
     }
