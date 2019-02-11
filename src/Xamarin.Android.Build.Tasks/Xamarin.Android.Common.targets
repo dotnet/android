@@ -317,6 +317,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
+
+	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
+	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">True</AndroidEnablePreloadAssemblies>
 </PropertyGroup>
 
 <Choose>
@@ -2386,8 +2389,23 @@ because xbuild doesn't support framework reference assemblies.
   </GetAddOnPlatformLibraries>
 </Target>
 
+<Target Name="_SetupAssemblyPreload"
+    Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' "
+    Inputs="$(IntermediateOutputPath)javastubs.cache"
+    Outputs="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt">
+  <WriteLinesToFile
+      File="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt"
+      Lines="mono.enable_assembly_preload=0"
+      Overwrite="True"
+  />
+  <ItemGroup>
+    <AndroidEnvironment Include="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt" />
+    <FileWrites         Include="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GeneratePackageManagerJava"
-  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies"
+  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies;_SetupAssemblyPreload"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
