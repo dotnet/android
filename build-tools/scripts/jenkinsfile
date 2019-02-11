@@ -1,6 +1,5 @@
-// This file is based on the Jenkins declarative pipeline syntax (as opposed to the scripted pipeline syntax)
-// https://jenkins.io/doc/book/pipeline/syntax/
-// https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
+// This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
+// https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
 
 def XADir = "xamarin-android"
 
