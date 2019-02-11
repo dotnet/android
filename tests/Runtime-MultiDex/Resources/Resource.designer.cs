@@ -35,6 +35,7 @@ namespace Xamarin.Android.RuntimeTests
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultMessage = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultMessage;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultResultState = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultResultState;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultRunSingleMethodTest = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultRunSingleMethodTest;
+			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultStackTrace = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultStackTrace;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsFailed = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsFailed;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsId = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsId;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsIgnored = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsIgnored;
@@ -42,7 +43,6 @@ namespace Xamarin.Android.RuntimeTests
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsMessage = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsMessage;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsPassed = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsPassed;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultsResult = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultsResult;
-			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.ResultStackTrace = global::Xamarin.Android.RuntimeTests.Resource.Id.ResultStackTrace;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.RunTestsButton = global::Xamarin.Android.RuntimeTests.Resource.Id.RunTestsButton;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Id.TestSuiteListView = global::Xamarin.Android.RuntimeTests.Resource.Id.TestSuiteListView;
 			global::Xamarin.Android.UnitTests.NUnit.Resource.Layout.options = global::Xamarin.Android.RuntimeTests.Resource.Layout.options;
@@ -90,20 +90,20 @@ namespace Xamarin.Android.RuntimeTests
 		public partial class Drawable
 		{
 			
-			// aapt resource value: 0x7F010003
-			public const int AndroidPressed = 2130771971;
+			// aapt resource value: 0x7f020000
+			public const int android_button = 2130837504;
 			
-			// aapt resource value: 0x7F010000
-			public const int android_button = 2130771968;
+			// aapt resource value: 0x7f020001
+			public const int android_focused = 2130837505;
 			
-			// aapt resource value: 0x7F010001
-			public const int android_focused = 2130771969;
+			// aapt resource value: 0x7f020002
+			public const int android_normal = 2130837506;
 			
-			// aapt resource value: 0x7F010002
-			public const int android_normal = 2130771970;
+			// aapt resource value: 0x7f020003
+			public const int AndroidPressed = 2130837507;
 			
-			// aapt resource value: 0x7F010004
-			public const int Icon = 2130771972;
+			// aapt resource value: 0x7f020004
+			public const int Icon = 2130837508;
 			
 			static Drawable()
 			{
@@ -118,80 +118,80 @@ namespace Xamarin.Android.RuntimeTests
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7F020012
-			public const int csharp_full_assembly = 2130837522;
+			// aapt resource value: 0x7f060008
+			public const int OptionHostName = 2131099656;
 			
-			// aapt resource value: 0x7F020013
-			public const int csharp_legacy_fragment = 2130837523;
+			// aapt resource value: 0x7f060009
+			public const int OptionPort = 2131099657;
 			
-			// aapt resource value: 0x7F020014
-			public const int csharp_partial_assembly = 2130837524;
+			// aapt resource value: 0x7f060007
+			public const int OptionRemoteServer = 2131099655;
 			
-			// aapt resource value: 0x7F020015
-			public const int csharp_simple_fragment = 2130837525;
+			// aapt resource value: 0x7f060017
+			public const int OptionsButton = 2131099671;
 			
-			// aapt resource value: 0x7F020016
-			public const int first_text_view = 2130837526;
+			// aapt resource value: 0x7f060012
+			public const int ResultFullName = 2131099666;
 			
-			// aapt resource value: 0x7F020017
-			public const int my_scroll_view = 2130837527;
+			// aapt resource value: 0x7f060014
+			public const int ResultMessage = 2131099668;
 			
-			// aapt resource value: 0x7F020000
-			public const int OptionHostName = 2130837504;
+			// aapt resource value: 0x7f060013
+			public const int ResultResultState = 2131099667;
 			
-			// aapt resource value: 0x7F020001
-			public const int OptionPort = 2130837505;
+			// aapt resource value: 0x7f060011
+			public const int ResultRunSingleMethodTest = 2131099665;
 			
-			// aapt resource value: 0x7F020002
-			public const int OptionRemoteServer = 2130837506;
+			// aapt resource value: 0x7f060015
+			public const int ResultStackTrace = 2131099669;
 			
-			// aapt resource value: 0x7F020003
-			public const int OptionsButton = 2130837507;
+			// aapt resource value: 0x7f06000d
+			public const int ResultsFailed = 2131099661;
 			
-			// aapt resource value: 0x7F020004
-			public const int ResultFullName = 2130837508;
+			// aapt resource value: 0x7f06000a
+			public const int ResultsId = 2131099658;
 			
-			// aapt resource value: 0x7F020005
-			public const int ResultMessage = 2130837509;
+			// aapt resource value: 0x7f06000e
+			public const int ResultsIgnored = 2131099662;
 			
-			// aapt resource value: 0x7F020006
-			public const int ResultResultState = 2130837510;
+			// aapt resource value: 0x7f06000f
+			public const int ResultsInconclusive = 2131099663;
 			
-			// aapt resource value: 0x7F020007
-			public const int ResultRunSingleMethodTest = 2130837511;
+			// aapt resource value: 0x7f060010
+			public const int ResultsMessage = 2131099664;
 			
-			// aapt resource value: 0x7F020009
-			public const int ResultsFailed = 2130837513;
+			// aapt resource value: 0x7f06000c
+			public const int ResultsPassed = 2131099660;
 			
-			// aapt resource value: 0x7F02000A
-			public const int ResultsId = 2130837514;
+			// aapt resource value: 0x7f06000b
+			public const int ResultsResult = 2131099659;
 			
-			// aapt resource value: 0x7F02000B
-			public const int ResultsIgnored = 2130837515;
+			// aapt resource value: 0x7f060016
+			public const int RunTestsButton = 2131099670;
 			
-			// aapt resource value: 0x7F02000C
-			public const int ResultsInconclusive = 2130837516;
+			// aapt resource value: 0x7f060018
+			public const int TestSuiteListView = 2131099672;
 			
-			// aapt resource value: 0x7F02000D
-			public const int ResultsMessage = 2130837517;
+			// aapt resource value: 0x7f060003
+			public const int csharp_full_assembly = 2131099651;
 			
-			// aapt resource value: 0x7F02000E
-			public const int ResultsPassed = 2130837518;
+			// aapt resource value: 0x7f060001
+			public const int csharp_legacy_fragment = 2131099649;
 			
-			// aapt resource value: 0x7F02000F
-			public const int ResultsResult = 2130837519;
+			// aapt resource value: 0x7f060002
+			public const int csharp_partial_assembly = 2131099650;
 			
-			// aapt resource value: 0x7F020008
-			public const int ResultStackTrace = 2130837512;
+			// aapt resource value: 0x7f060000
+			public const int csharp_simple_fragment = 2131099648;
 			
-			// aapt resource value: 0x7F020010
-			public const int RunTestsButton = 2130837520;
+			// aapt resource value: 0x7f060004
+			public const int first_text_view = 2131099652;
 			
-			// aapt resource value: 0x7F020018
-			public const int second_text_view = 2130837528;
+			// aapt resource value: 0x7f060006
+			public const int my_scroll_view = 2131099654;
 			
-			// aapt resource value: 0x7F020011
-			public const int TestSuiteListView = 2130837521;
+			// aapt resource value: 0x7f060005
+			public const int second_text_view = 2131099653;
 			
 			static Id()
 			{
@@ -206,22 +206,22 @@ namespace Xamarin.Android.RuntimeTests
 		public partial class Layout
 		{
 			
-			// aapt resource value: 0x7F030000
+			// aapt resource value: 0x7f030000
 			public const int FragmentFixup = 2130903040;
 			
-			// aapt resource value: 0x7F030001
+			// aapt resource value: 0x7f030001
 			public const int Main = 2130903041;
 			
-			// aapt resource value: 0x7F030002
+			// aapt resource value: 0x7f030002
 			public const int options = 2130903042;
 			
-			// aapt resource value: 0x7F030003
+			// aapt resource value: 0x7f030003
 			public const int results = 2130903043;
 			
-			// aapt resource value: 0x7F030004
+			// aapt resource value: 0x7f030004
 			public const int test_result = 2130903044;
 			
-			// aapt resource value: 0x7F030005
+			// aapt resource value: 0x7f030005
 			public const int test_suite = 2130903045;
 			
 			static Layout()
@@ -237,8 +237,8 @@ namespace Xamarin.Android.RuntimeTests
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7F040000
-			public const int library_name = 2130968576;
+			// aapt resource value: 0x7f050000
+			public const int library_name = 2131034112;
 			
 			static String()
 			{
@@ -253,8 +253,8 @@ namespace Xamarin.Android.RuntimeTests
 		public partial class Xml
 		{
 			
-			// aapt resource value: 0x7F050000
-			public const int XmlReaderResourceParser = 2131034112;
+			// aapt resource value: 0x7f040000
+			public const int XmlReaderResourceParser = 2130968576;
 			
 			static Xml()
 			{

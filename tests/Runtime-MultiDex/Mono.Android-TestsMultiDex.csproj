@@ -75,6 +75,14 @@
       <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
   </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\asset1.txt">
+      <Link>Assets\asset1.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\asset2.txt">
+      <Link>Assets\subfolder\asset2.txt</Link>
+    </AndroidAsset>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-TestsMultiDex.targets" />
   <ItemGroup>
