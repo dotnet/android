@@ -754,6 +754,30 @@ when packaing Release applications.
 
     Added in Xamarin.Android 8.3.
 
+- **AndroidEnablePreloadAssemblies** &ndash; A boolean property which controls
+    whether or not all managed assemblies bundled within the application package
+    are loaded during process startup or not.
+    
+    When set to `True`, all assemblies bundled within the application package
+    will be loaded during process startup, before any application code is invoked.
+    This is consistent with what Xamarin.Android did in releases prior to
+    Xamarin.Andorid 9.2.
+    
+    When set to `False`, assemblies will only be loaded on an as-needed basis.
+    This allows applications to startup faster, and is also more consistent with
+    desktop .NET semantics.  To see the time savings, set the `debug.mono.log`
+    System Property to include `timing`, and look for the
+    `Finished loading assemblies: preloaded` message within `adb logcat`.
+    
+    Applications or libraries which use dependency injection may *require* that
+    this property be `True` if they in turn require that
+    `AppDomain.CurrentDomain.GetAssemblies()` return all assemblies within the
+    application bundle, even if the assembly wouldn't otherwise have been needed.
+
+    By default this value will be set to `True`.
+
+    Added in Xamarin.Android 9.2.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with
