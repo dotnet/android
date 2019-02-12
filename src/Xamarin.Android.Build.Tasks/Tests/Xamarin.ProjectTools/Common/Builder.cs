@@ -288,6 +288,7 @@ namespace Xamarin.ProjectTools
 					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
 				}
 			}
+			Console.WriteLine ($"Using $(FrameworkSDKRoot): {frameworkSDKRoot}");
 		}
 
 		public void Dispose ()
