@@ -53,8 +53,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-                stage('checkout') {
+            stage('checkout') {
+                timeout(time: 60, unit: 'MINUTES') {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
                     dir(XADir) {
                         scmVars = checkout scm
                     }
@@ -69,8 +69,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-                stage('init') {
+            stage('init') {
+                timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                     // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
                     isPr = env.ghprbActualCommit != null
                     def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -100,8 +100,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-                stage('clean') {
+            stage('clean') {
+                timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                     dir('xamarin-android_tmp') {
                         deleteDir()
                     }
@@ -116,8 +116,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
-                stage('prepare deps') {
+            stage('prepare deps') {
+                timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 2 minutes
 
                     dir(XADir) {
                         sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
@@ -133,8 +133,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour
-                stage('build') {
+            stage('build') {
+                timeout(time: 6, unit: 'HOURS') {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
                     dir(XADir) {
                         script {
                             if (isPr) {
@@ -157,8 +157,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
-                stage('create vsix') {
+            stage('create vsix') {
+                timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 5 minutes
                     dir(XADir) {
                         sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
                     }
@@ -173,8 +173,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
-                stage('build tests') {
+            stage('build tests') {
+                timeout(time: 30, unit: 'MINUTES') {    // Typically takes less than 10 minutes
                     dir(XADir) {
                         sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
                     }
@@ -189,8 +189,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
-                stage('process build results') {
+            stage('process build results') {
+                timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
                     dir(XADir) {
                         processBuildStatus()
                     }
@@ -206,11 +206,13 @@ timestamps {
         stageStatus = 0
         try {
             stage('publish packages to Azure') {
-                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                stageStatus = publishPackages(publishBuildFilePaths)
+                timeout(time: 10, unit: 'MINUTES') {    // Typically takes less than a minute
+                    echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+                    stageStatus = publishPackages(publishBuildFilePaths)
 
-                if (stageStatus != 0) {
-                    error "publish packages to Azure FAILED"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                    if (stageStatus != 0) {
+                        error "publish packages to Azure FAILED"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                    }
                 }
             }
         } catch (error) {
@@ -222,8 +224,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 160, unit: 'MINUTES') {
-                stage('run all tests') {
+            stage('run all tests') {
+                timeout(time: 160, unit: 'MINUTES') {   // Typically takes 1hr and 50 minutes (or 110 minutes)
                     dir(XADir) {
                         echo "running tests"
                         stageStatus = sh(
@@ -247,6 +249,7 @@ timestamps {
         stageStatus = 0
         try {
             stage('publish test error logs to Azure') {
+                timeout(time: 10, unit 'MINUTES') {  // Typically takes less than a minute
                 dir(XADir) {
                         echo "packaging test error logs"
                         sh "make package-test-errors"
@@ -255,6 +258,7 @@ timestamps {
                     echo "publishTestFilePaths: ${publishTestFilePaths}"
                     stageStatus = publishPackages(publishTestFilePaths)
                 }
+            }
         } catch (error) {
             echo "ERROR : publish test error logs: Unexpected error: ${error} / status: ${stageStatus}. Marking build as UNSTABLE"
             currentBuild.result = 'UNSTABLE'
@@ -264,8 +268,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
-                stage('Plot build & test metrics') {
+            stage('Plot build & test metrics') {
+                timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                     dir(XADir) {
                         plot(
                             title: 'Jcw',
@@ -345,8 +349,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
-                stage('Upload test results') {
+            stage('Upload test results') {
+                timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
                         xunit thresholds: [
                                 failed(unstableNewThreshold: '0', unstableThreshold: '0'),
                                 skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
