@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <assert.h>
+#include <limits.h>
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -56,7 +57,7 @@ namespace xamarin { namespace android
 #ifdef DEBUG
 using namespace xamarin::android;
 
-int Debug::conn_port = 0;
+uint16_t Debug::conn_port = 0;
 pthread_t Debug::conn_thread_id = 0;
 
 inline void
@@ -66,14 +67,19 @@ Debug::parse_options (char *options, ConnOptions *opts)
 
 	log_info (LOG_DEFAULT, "Connection options: '%s'", options);
 
-	args = utils.monodroid_strsplit (options, ",", -1);
+	args = utils.monodroid_strsplit (options, ",", 0);
 
 	for (ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
 
 		if (strstr (arg, "port=") == arg) {
-			conn_port = atoi (arg + strlen ("port="));
+			int port = atoi (arg + strlen ("port="));
+			if (port < 0 || port > USHRT_MAX) {
+				log_error (LOG_DEFAULT, "Invalid debug port value %d", port);
+				continue;
+			}
 
+			conn_port = static_cast<uint16_t>(port);
 			log_info (LOG_DEFAULT, "XS port = %d", conn_port);
 		} else if (strstr (arg, "timeout=") == arg) {
 			char *endp;
@@ -141,7 +147,7 @@ Debug::process_connection (int fd)
 
 	while (TRUE) {
 		char command [257];
-		int rv;
+		ssize_t rv;
 		unsigned char cmd_len;
 
 		rv = utils.recv_uninterrupted (fd, &cmd_len, 1);
@@ -174,7 +180,7 @@ Debug::process_connection (int fd)
 inline int
 Debug::handle_server_connection (void)
 {
-	int listen_port = conn_port;
+	uint16_t listen_port = conn_port;
 	struct sockaddr_in listen_addr;
 	int listen_socket;
 	socklen_t len;

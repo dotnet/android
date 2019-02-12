@@ -64,18 +64,23 @@ gc_cross_references_cb (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, Mon
 	osBridge.gc_cross_references (num_sccs, sccs, num_xrefs, xrefs);
 }
 
+#ifdef WINDOWS
+typedef int tid_type;
+#else
+typedef pid_t tid_type;
+#endif
 // glibc does *not* have a wrapper for the gettid syscall, Android NDK has it
 #if !defined (ANDROID)
-static pid_t gettid ()
+static tid_type gettid ()
 {
 #ifdef WINDOWS
 	return GetCurrentThreadId ();
 #elif defined (LINUX) || defined (__linux__) || defined (__linux)
-	return syscall (SYS_gettid);
+	return static_cast<tid_type>(syscall (SYS_gettid));
 #else
 	uint64_t tid;
 	pthread_threadid_np (nullptr, &tid);
-	return (pid_t)tid;
+	return static_cast<tid_type>(tid);
 #endif
 }
 #endif // ANDROID
@@ -99,14 +104,14 @@ OSBridge::get_gc_bridge_index (MonoClass *klass)
 {
 	uint32_t f = 0;
 
-	for (uint32_t i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
+	for (size_t i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
 		MonoClass *k = mono_java_gc_bridge_info [i].klass;
 		if (k == nullptr) {
 			f++;
 			continue;
 		}
 		if (klass == k || monoFunctions.class_is_subclass_of (klass, k, 0))
-			return i;
+			return static_cast<int>(i);
 	}
 	return f == NUM_GC_BRIDGE_TYPES
 		? static_cast<int>(-NUM_GC_BRIDGE_TYPES)
@@ -690,7 +695,7 @@ OSBridge::target_from_jobject (jobject jobj)
 int
 OSBridge::scc_get_stashed_index (MonoGCBridgeSCC *scc)
 {
-	assert ( (scc->num_objs < 0) || !"Attempted to load stashed index from an object which does not contain one." );
+	assert ( (scc->num_objs < 0) || "Attempted to load stashed index from an object which does not contain one." == nullptr);
 	return -scc->num_objs - 1;
 }
 
@@ -742,7 +747,7 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 		MonoGCBridgeSCC *scc = sccs [i];
 
 		/* num_objs < 0 case: This is a violation of the bridge API invariants. */
-		assert ( (scc->num_objs >= 0) || !"Bridge processor submitted an SCC with a negative number of objects." );
+		assert ( (scc->num_objs >= 0) || "Bridge processor submitted an SCC with a negative number of objects." == nullptr);
 
 		/* num_objs > 1 case: The SCC contains many objects which must be collected as one.
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
@@ -773,7 +778,7 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 				ArrayList_add = env->GetMethodID (ArrayList_class, "add", "(Ljava/lang/Object;)Z");
 				ArrayList_get = env->GetMethodID (ArrayList_class, "get", "(I)Ljava/lang/Object;");
 
-				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get) || !"Failed to load classes required for JNI" );
+				assert ( (ArrayList_class && ArrayList_ctor && ArrayList_get) || "Failed to load classes required for JNI" == nullptr);
 			}
 
 			/* Once per gc_prepare_for_java_collection call, create a list to hold the temporary
@@ -1069,7 +1074,7 @@ OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 	assert (env != nullptr);
 	GCUserPeer_class      = utils.get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor       = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
-	assert ( (GCUserPeer_class && GCUserPeer_ctor) || !"Failed to load mono.android.GCUserPeer!" );
+	assert ( (GCUserPeer_class && GCUserPeer_ctor) || "Failed to load mono.android.GCUserPeer!" == nullptr);
 }
 
 void

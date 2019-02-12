@@ -32,6 +32,12 @@ macro(xa_common_prepare)
     set(DSO_SYMBOL_VISIBILITY "hidden")
   endif()
 
+  #
+  # Currently not supported by NDK clang, but worth considering when it is eventually supported:
+  #
+  #  -fsanitize=safe-stack
+  #
+
   # Don't put the leading '-' in options
   set(XA_COMPILER_FLAGS
     fno-strict-aliasing
@@ -39,11 +45,10 @@ macro(xa_common_prepare)
     funswitch-loops
     finline-limit=300
     fvisibility=${DSO_SYMBOL_VISIBILITY}
-    fstack-protector
+    fstack-protector-strong
+    fstrict-return
     Wa,--noexecstack
-    Wformat
-    Werror=format-security
-    Wall
+    fPIC
     )
 
   if(NOT MINGW AND NOT WIN32)

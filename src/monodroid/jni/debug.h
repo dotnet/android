@@ -47,7 +47,7 @@ namespace xamarin { namespace android
 		friend void* conn_thread (void *arg);
 
 	private:
-		static int conn_port;
+		static uint16_t  conn_port;
 		static pthread_t conn_thread_id;
 
 #endif

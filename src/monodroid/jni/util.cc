@@ -12,6 +12,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
+#ifdef HAVE_BSD_STRING_H
+#include <bsd/string.h>
+#endif
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -42,7 +45,7 @@ void timing_point::mark ()
 
 #if defined (ANDROID) || defined (LINUX)
 	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
-	tail = tv_ctm.tv_nsec;
+	tail = static_cast<uint64_t>(tv_ctm.tv_nsec);
 #else
 	ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
 	tail = tv_ctm.tv_usec * 1000LL;
@@ -70,13 +73,13 @@ timing_diff::timing_diff (const timing_period &period)
 		nsec = period.end.ns - period.start.ns;
 	}
 
-	ms = nsec / ms_in_nsec;
+	ms = static_cast<uint32_t>(nsec / ms_in_nsec);
 	if (ms >= 1000) {
 		sec += ms / 1000;
 		ms = ms % 1000;
 	}
 
-	ns = nsec % ms_in_nsec;
+	ns = static_cast<uint32_t>(nsec % ms_in_nsec);
 }
 
 int
@@ -112,12 +115,12 @@ Util::path_combine (const char *path1, const char *path2)
 }
 
 void
-Util::add_to_vector (char ***vector, int size, char *token)
+Util::add_to_vector (char ***vector, size_t size, char *token)
 {
-	*vector = *vector == nullptr ? 
+	*vector = *vector == nullptr ?
 		(char **)xmalloc(2 * sizeof(*vector)) :
 		(char **)xrealloc(*vector, (size + 1) * sizeof(*vector));
-		
+
 	(*vector)[size - 1] = token;
 }
 
@@ -134,13 +137,13 @@ Util::monodroid_strfreev (char **str_array)
 	free (orig);
 }
 
-char ** 
-Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens)
+char **
+Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
 {
 	const char *c;
 	char *token, **vector;
-	int size = 1;
-	
+	size_t size = 1;
+
 	if (strncmp (str, delimiter, strlen (delimiter)) == 0) {
 		vector = (char **)xmalloc (2 * sizeof(vector));
 		vector[0] = strdup ("");
@@ -161,7 +164,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens
 			}
 
 			if (*str) {
-				int toklen = (str - c);
+				size_t toklen = static_cast<size_t>((str - c));
 				token = new char [toklen + 1];
 				strncpy (token, c, toklen);
 				token [toklen] = '\0';
@@ -177,7 +180,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens
 				token = strdup (c);
 			}
 		}
-			
+
 		add_to_vector (&vector, size, token);
 		size++;
 	}
@@ -191,14 +194,14 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, int max_tokens
 		}
 		size++;
 	}
-	
+
 	if (vector == nullptr) {
 		vector = (char **) xmalloc (2 * sizeof (vector));
 		vector [0] = nullptr;
 	} else if (size > 0) {
 		vector[size - 1] = nullptr;
 	}
-	
+
 	return vector;
 }
 
@@ -224,35 +227,49 @@ Util::monodroid_strdup_vprintf (const char *format, va_list vargs)
 }
 
 int
-Util::send_uninterrupted (int fd, void *buf, int len)
+Util::send_uninterrupted (int fd, void *buf, size_t len)
 {
-	int res;
+	ssize_t res;
 #ifdef WINDOWS
 	const char *buffer = static_cast<const char*> (buf);
 #else
 	void *buffer = buf;
 #endif
 	do {
-		res = send (fd, buffer, len, 0);
+		res = send (
+			fd,
+			buffer,
+#ifdef WINDOWS
+			static_cast<int>(len),
+#else
+			len,
+#endif
+			0
+		);
 	} while (res == -1 && errno == EINTR);
 
-	return res == len;
+	return static_cast<size_t>(res) == len;
 }
 
-int
-Util::recv_uninterrupted (int fd, void *buf, int len)
+ssize_t
+Util::recv_uninterrupted (int fd, void *buf, size_t len)
 {
-	int res;
-	int total = 0;
+	ssize_t res;
+	size_t total = 0;
 	int flags = 0;
-
-	do { 
-		res = recv (fd, (char *) buf + total, len - total, flags); 
+#ifdef WINDOWS
+	int nbytes;
+#else
+	size_t nbytes;
+#endif
+	do {
+		nbytes = len - total;
+		res = recv (fd, (char *) buf + total, nbytes, flags);
 		if (res > 0)
-			total += res;
+			total += static_cast<size_t>(res);
 	} while ((res > 0 && total < len) || (res == -1 && errno == EINTR));
 
-	return total;
+	return static_cast<ssize_t>(total);
 }
 
 #if WINDOWS
@@ -312,7 +329,7 @@ Util::monodroid_store_package_name (const char *name)
 	const char *ch = name;
 	uint32_t hash = 0;
 	while (*ch)
-		hash = (hash << 5) - (hash + *ch++);
+		hash = (hash << 5) - (hash + static_cast<uint32_t>(*ch++));
 
 #if WINDOWS
 	package_hash_to_hex (hash);
@@ -322,16 +339,16 @@ Util::monodroid_store_package_name (const char *name)
 	//
 	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
 	// that would be boring, wouldn't it? :)
-	package_hash_to_hex (hash, 0, 1, 2, 3, 4, 5, 6, 7);
+	package_hash_to_hex (hash, 0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u);
 #endif
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
-int
+size_t
 Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 {
 	char *local_value = nullptr;
-	int result = -1;
+	ssize_t result = 0;
 
 	if (value)
 		*value = nullptr;
@@ -367,7 +384,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 			*value = local_value;
 		else
 			delete[] local_value;
-		return result;
+		return static_cast<size_t>(result);
 	}
 
 	return androidSystem.monodroid_get_system_property_from_overrides (name, value);
@@ -454,7 +471,7 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 }
 
 int
-Util::create_directory (const char *pathname, int mode)
+Util::create_directory (const char *pathname, mode_t mode)
 {
 	if (mode <= 0)
 		mode = DEFAULT_DIRECTORY_MODE;
@@ -463,8 +480,12 @@ Util::create_directory (const char *pathname, int mode)
 		errno = EINVAL;
 		return -1;
 	}
-
-	mode_t oldumask = umask (022);
+#ifdef WINDOWS
+	int oldumask;
+#else
+	mode_t oldumask;
+#endif
+	oldumask = umask (022);
 	char *path = strdup (pathname);
 	int rv, ret = 0;
 	for (char *d = path; *d; ++d) {
@@ -729,7 +750,7 @@ monodroid_strfreev (char **str_array)
 }
 
 extern "C" char**
-monodroid_strsplit (const char *str, const char *delimiter, int max_tokens)
+monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
 {
 	return utils.monodroid_strsplit (str, delimiter, max_tokens);
 }
@@ -755,7 +776,7 @@ monodroid_store_package_name (const char *name)
 extern "C" int
 monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	return utils.monodroid_get_namespaced_system_property (name, value);
+	return static_cast<int>(utils.monodroid_get_namespaced_system_property (name, value));
 }
 
 extern "C" FILE*
@@ -767,13 +788,17 @@ monodroid_fopen (const char* filename, const char* mode)
 extern "C" int
 send_uninterrupted (int fd, void *buf, int len)
 {
-	return utils.send_uninterrupted (fd, buf, len);
+	if (len < 0)
+		len = 0;
+	return utils.send_uninterrupted (fd, buf, static_cast<size_t>(len));
 }
 
 extern "C" int
 recv_uninterrupted (int fd, void *buf, int len)
 {
-	return utils.recv_uninterrupted (fd, buf, len);
+	if (len < 0)
+		len = 0;
+	return static_cast<int>(utils.recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
 }
 
 extern "C" void

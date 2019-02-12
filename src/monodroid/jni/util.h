@@ -28,6 +28,9 @@ constexpr int FALSE = 0;
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_BSD_STRING_H
+#include <bsd/string.h>
+#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -70,7 +73,7 @@ typedef struct dirent monodroid_dirent_t;
 extern "C" {
 #endif // __cplusplus
 	MONO_API  void    monodroid_strfreev (char **str_array);
-	MONO_API  char  **monodroid_strsplit (const char *str, const char *delimiter, int max_tokens);
+	MONO_API  char  **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 	MONO_API  char   *monodroid_strdup_printf (const char *format, ...);
 	MONO_API  void    monodroid_store_package_name (const char *name);
 	MONO_API  int     monodroid_get_namespaced_system_property (const char *name, char **value);
@@ -137,11 +140,11 @@ namespace xamarin { namespace android
 		int              monodroid_closedir (monodroid_dir_t *dirp);
 		int              monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
 		void             monodroid_strfreev (char **str_array);
-		char           **monodroid_strsplit (const char *str, const char *delimiter, int max_tokens);
+		char           **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 		char            *monodroid_strdup_printf (const char *format, ...);
 		char            *monodroid_strdup_vprintf (const char *format, va_list vargs);
 		void             monodroid_store_package_name (const char *name);
-		int              monodroid_get_namespaced_system_property (const char *name, char **value);
+		size_t           monodroid_get_namespaced_system_property (const char *name, char **value);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
@@ -149,10 +152,10 @@ namespace xamarin { namespace android
 		MonoClass       *monodroid_get_class_from_image (MonoDomain *domain, MonoImage* image, const char *_namespace, const char *type);
 		int              ends_with (const char *str, const char *end);
 		char*            path_combine(const char *path1, const char *path2);
-		int              send_uninterrupted (int fd, void *buf, int len);
-		int              recv_uninterrupted (int fd, void *buf, int len);
+		int              send_uninterrupted (int fd, void *buf, size_t len);
+		ssize_t          recv_uninterrupted (int fd, void *buf, size_t len);
 		void             create_public_directory (const char *dir);
-		int              create_directory (const char *pathname, int mode);
+		int              create_directory (const char *pathname, mode_t mode);
 		void             set_world_accessable (const char *path);
 		void             set_user_executable (const char *path);
 		bool             file_exists (const char *file);
@@ -184,7 +187,7 @@ namespace xamarin { namespace android
 			char *ret = new char [len + 1];
 			*ret = '\0';
 
-			concatenate_strings_into (ret, s1, s2, strings...);
+			concatenate_strings_into (len, ret, s1, s2, strings...);
 
 			return ret;
 		}
@@ -226,7 +229,7 @@ namespace xamarin { namespace android
 
 	private:
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
-		void  add_to_vector (char ***vector, int size, char *token);
+		void  add_to_vector (char ***vector, size_t size, char *token);
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
 
 #if WINDOWS
@@ -239,14 +242,14 @@ namespace xamarin { namespace android
 		void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
 
 		template<typename StringType = const char*, typename ...Strings>
-		void concatenate_strings_into (UNUSED_ARG char *dest)
+		void concatenate_strings_into (UNUSED_ARG size_t len, UNUSED_ARG char *dest)
 		{}
 
 		template<typename StringType = const char*, typename ...Strings>
-		void concatenate_strings_into (char *dest, StringType s1, Strings... strings)
+		void concatenate_strings_into (size_t len, char *dest, StringType s1, Strings... strings)
 		{
 			strcat (dest, s1);
-			concatenate_strings_into (dest, strings...);
+			concatenate_strings_into (len, dest, strings...);
 		}
 
 		template<typename StringType = const char*>
@@ -261,7 +264,7 @@ namespace xamarin { namespace android
 			return strlen (s1) + calculate_length (strings...);
 		}
 #endif
-		int make_directory (const char *path, int mode)
+		int make_directory (const char *path, mode_t mode)
 		{
 #if WINDOWS
 			return mkdir (path);

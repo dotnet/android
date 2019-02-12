@@ -24,6 +24,15 @@
     <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
   </Target>
 
+  <Target Name="RunStaticAnalysis"
+          Condition=" '$(HostOS)' != 'Windows' "
+          Inputs="jni\*.cc;jni\**\*.c"
+          Outputs="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt')">
+    <Exec
+        Command="clang-check -analyze -p=$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug jni\*.cc jni\**\*.c > @(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt 2>&amp;1')"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
   <Target Name="_ConfigureHostRuntimes"
       Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props;..\..\build-tools\scripts\Ndk.targets"
       Outputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">

@@ -2,12 +2,20 @@ cmake_minimum_required(VERSION 3.6.0)
 
 project(libmonodroid C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
 option(ENABLE_NDK "Build with Android's NDK" ON)
 option(STRIP_DEBUG "Strip debugging information when linking" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 
 include(CheckIncludeFiles)
+include(CheckCXXSymbolExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include("../../build-tools/cmake/xa_macros.cmake")
@@ -56,10 +64,20 @@ endif()
 
 xa_common_prepare()
 # Don't put the leading '-' in options
-set(TEST_COMPILER_ARGS ${XA_COMPILER_FLAGS}
+set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
   fno-rtti
   fno-exceptions
+  Wall
+  Wconversion
+  Wdeprecated
+  Werror=format-security
+  Wformat
+  Wformat-security
+  Wsign-compare
+  Wuninitialized
   )
+
+set(TEST_COMPILER_ARGS_C ${XA_COMPILER_FLAGS})
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   if(NOT DISABLE_DEBUG)
@@ -67,9 +85,12 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   endif()
 endif()
 
-foreach(arg ${TEST_COMPILER_ARGS})
-  c_compiler_has_flag(${arg})
+foreach(arg ${TEST_COMPILER_ARGS_CPP})
   cxx_compiler_has_flag(${arg})
+endforeach(arg)
+
+foreach(arg ${TEST_COMPILER_ARGS_C})
+  c_compiler_has_flag(${arg})
 endforeach(arg)
 
 set(TEST_LINKER_ARGS ${XA_LINKER_ARGS})
@@ -170,8 +191,8 @@ add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
 add_definitions("-DSGEN_BRIDGE_VERSION=${SGEN_BRIDGE_VERSION}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS} -std=c99")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS} -std=c++11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
 
 include_directories("jni")
 include_directories("../../bin/${CMAKE_BUILD_TYPE}/include")
@@ -187,6 +208,10 @@ include_directories("${JAVA_INTEROP_SRC_PATH}")
 
 check_include_files("linux/netlink.h" HAVE_LINUX_NETLINK_H)
 check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
+check_include_files("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+
+configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
 
 set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
