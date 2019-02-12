@@ -102,12 +102,8 @@ timestamps {
         try {
             timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                 stage('clean') {
-                    dir('xamarin-android@tmp') {
+                    dir('xamarin-android_tmp') {
                         deleteDir()
-                    }
-
-                    if (fileExists('TestResult.xml')) {
-                        sh('rm TestResult.xml')
                     }
 
                     echo "Stage result: clean: ${currentBuild.currentResult}"
