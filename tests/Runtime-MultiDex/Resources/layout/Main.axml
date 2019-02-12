@@ -18,19 +18,26 @@
       android:editable="false"
   />
   <ScrollView
-      android:id="@+id/my_scroll_view">
-    <TextView
-        android:id="@+id/first_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:editable="false"
-    />
-    <TextView
-        android:id="@+id/second_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:editable="false"
-    />
+      android:id="@+id/my_scroll_view"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+      <TextView
+          android:id="@+id/first_text_view"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:editable="false"
+      />
+      <TextView
+          android:id="@+id/second_text_view"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:editable="false"
+      />
+    </LinearLayout>
   </ScrollView>
 
   <fragment
