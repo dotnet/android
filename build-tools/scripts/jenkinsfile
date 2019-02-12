@@ -1,6 +1,5 @@
-// This file is based on the Jenkins declarative pipeline syntax (as opposed to the scripted pipeline syntax)
-// https://jenkins.io/doc/book/pipeline/syntax/
-// https://jenkins.io/blog/2017/02/03/declarative-pipeline-ga/
+// This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
+// https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
 
 def XADir = "xamarin-android"
 
@@ -103,12 +102,8 @@ timestamps {
         try {
             timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                 stage('clean') {
-                    dir('xamarin-android@tmp') {
+                    dir('xamarin-android_tmp') {
                         deleteDir()
-                    }
-
-                    if (fileExists('TestResult.xml')) {
-                        sh('rm TestResult.xml')
                     }
 
                     echo "Stage result: clean: ${currentBuild.currentResult}"
