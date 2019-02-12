@@ -249,8 +249,8 @@ timestamps {
         stageStatus = 0
         try {
             stage('publish test error logs to Azure') {
-                timeout(time: 10, unit 'MINUTES') {  // Typically takes less than a minute
-                dir(XADir) {
+                timeout(time: 10, unit: 'MINUTES') {  // Typically takes less than a minute
+                    dir(XADir) {
                         echo "packaging test error logs"
                         sh "make package-test-errors"
                     }
