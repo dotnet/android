@@ -287,8 +287,18 @@ namespace Xamarin.ProjectTools
 					process.WaitForExit ();
 					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
 				}
+
+				//NOTE: some machines aren't returning /msbuild/ on the end
+				//      macOS should be /Library/Frameworks/Mono.framework/Versions/5.18.0/lib/mono/msbuild/
+				var dir = Path.GetFileName (frameworkSDKRoot.TrimEnd (Path.DirectorySeparatorChar));
+				if (dir != "msbuild") {
+					var path = Path.Combine (frameworkSDKRoot, "msbuild");
+					if (Directory.Exists (path))
+						frameworkSDKRoot = path;
+				}
 			}
-			Console.WriteLine ($"Using $(FrameworkSDKRoot): {frameworkSDKRoot}");
+			if (!string.IsNullOrEmpty (frameworkSDKRoot))
+				Console.WriteLine ($"Using $(FrameworkSDKRoot): {frameworkSDKRoot}");
 		}
 
 		public void Dispose ()
