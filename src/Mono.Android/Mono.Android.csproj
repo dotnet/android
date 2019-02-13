@@ -77,6 +77,10 @@
       <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Drawing.Common.dll">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Drawing.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
