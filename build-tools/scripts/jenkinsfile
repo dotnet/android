@@ -349,8 +349,8 @@ timestamps {
 
         stageStatus = 0
         try {
-            stage('Upload test results') {
-                timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to upload test results
+            stage('Publish test results') {
+                timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to publish test results
                     xunit thresholds: [
                             failed(unstableNewThreshold: '0', unstableThreshold: '0'),
                             skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
@@ -365,10 +365,10 @@ timestamps {
                 }
             }
         } catch (error) {
-            echo "ERROR : Upload test results: Unexpected error: ${error}. Marking build as UNSTABLE"
+            echo "ERROR : Publish test results: Unexpected error: ${error}. Marking build as UNSTABLE"
             currentBuild.result = 'UNSTABLE'
         } finally {
-            echo "Stage result: Upload test results: ${currentBuild.currentResult}"
+            echo "Stage result: Publish test results: ${currentBuild.currentResult}"
         }
     }
 }
