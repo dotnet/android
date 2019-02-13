@@ -27,7 +27,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " />
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' " />
-  <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Compile Include="AndroidSdkPackage.cs" />
     <Content Include="Resources\AndroidSdkPackage.ico">

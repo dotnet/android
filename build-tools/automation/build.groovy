@@ -4,9 +4,11 @@ import groovy.json.JsonSlurper
 
 def XADir = "xamarin-android"
 
-def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
+def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def isPr = false                // Default to CI
+
+def hasPrLabelFullMonoIntegrationBuild = false
 
 def buildTarget = 'jenkins'
 
@@ -120,9 +122,17 @@ timestamps {
                 env.ghprbPullLongDescription = ''
 
                 if (hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                    hasPrLabelFullMonoIntegrationBuild = true
                     buildTarget = 'jenkins'
                 } else {
                     buildTarget = 'all'
+                    // Also compile host libs for windows so that a complete VSIX can be created
+                    if (isUnix()) {
+                        def uname = sh script: 'uname', returnStdout: true
+                        if (uname.startsWith("Darwin")) {
+                            EXTRA_MSBUILD_ARGS += " /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64"
+                        }
+                    }
                 }
             }
 
@@ -137,15 +147,22 @@ timestamps {
         }
 
         stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
-            sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+            sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
-        stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
+        stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            if (isPr) {
+                // Override _MSBUILD_ARGS to ensure we only package the `AndroidSupportedTargetJitAbis` which are built.
+                // Also ensure that we don't require mono bundle components in the installer if this is not a full mono integration build.
+                def msbuildInstallerArgs = hasPrLabelFullMonoIntegrationBuild ? '' : '/p:IncludeMonoBundleComponents=False'
+                sh "make create-installers CONFIGURATION=${env.BuildFlavor} _MSBUILD_ARGS='${msbuildInstallerArgs}'"
+            } else {
+                sh "make create-installers CONFIGURATION=${env.BuildFlavor}"
+            }
         }
 
         stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
@@ -166,7 +183,7 @@ timestamps {
         }
 
         stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/build-status*,${XADir}/xa-build-status*";
+            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
                 publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
@@ -185,7 +202,6 @@ timestamps {
             def skipNunitTests = false
 
             if (isPr) {
-                def hasPrLabelFullMonoIntegrationBuild = hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')
                 def hasPrLabelRunTestsRelease = hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
                 skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
                 echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
