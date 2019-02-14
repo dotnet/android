@@ -184,6 +184,32 @@ namespace UnnamedProject
 			}
 		}
 
+		[Test]
+		public void SetupDependenciesForDesigner ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
+						TextContent =  () => "Bar",
+					},
+				},
+			};
+			var proj = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "App1",
+				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+			};
+			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				libb.Save (lib);
+				Assert.IsTrue (appb.RunTarget (proj, "SetupDependenciesForDesigner", parameters: new [] { "DesignTimeBuild=True" }), "design-time build should have succeeded.");
+				//Now a full build
+				Assert.IsTrue (libb.Build (lib), "library build should have succeeded.");
+				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
+			}
+		}
+
 		string GetAssembliesFromPackageManager (string packageManagerPath)
 		{
 			FileAssert.Exists (packageManagerPath);
