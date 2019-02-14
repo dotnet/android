@@ -16,7 +16,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<Target Name="GetExtraLibraryLocationsForDesigner" Returns="ExtraJarLocation;ExtraResourceLocation" DependsOnTargets="_SetupDesignTimeBuildForCompile">
+<Target Name="GetExtraLibraryLocationsForDesigner"
+    DependsOnTargets="_SetupDesignTimeBuildForCompile"
+    Returns="ExtraJarLocation;ExtraResourceLocation">
   <ReadAdditionalResourcesFromAssemblyCache
       Condition="Exists('$(_AndroidResourcePathsCache)')"
       CacheFile="$(_AndroidResourcePathsCache)">
@@ -49,36 +51,37 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     DependsOnTargets="_AddStaticResources;_ResolveAssemblies"
     Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
     Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
-  <Copy SourceFiles="@(ResolvedAssemblies)"
-    DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+  <Copy
+      SourceFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
   />
   <GenerateJavaStubs
-    ResolvedAssemblies="@(ResolvedAssemblies)"
-    ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-    ManifestTemplate="$(_AndroidManifestAbs)"
-    MergedManifestDocuments="@(ExtractedManifestDocuments)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    NeedsInternet="$(AndroidNeedsInternetPermission)"
-    AndroidSdkPlatform="$(_AndroidApiLevel)"
-    AndroidSdkDir="$(_AndroidSdkDirectory)"
-    PackageName="$(_AndroidPackage)"
-    OutputDirectory="$(IntermediateOutputPath)android"
-    MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
-    EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-    BundledWearApplicationName="$(BundledWearApplicationPackageName)"
-    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-    ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-    FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-    AcwMapFile="$(_AcwMapFile)">
+      ResolvedAssemblies="@(ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(ExtractedManifestDocuments)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      PackageName="$(_AndroidPackage)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
   <ConvertCustomView
-    Condition="Exists('$(_CustomViewMapFile)')"
-    CustomViewMapFile="$(_CustomViewMapFile)"
-    AcwMapFile="$(_AcwMapFile)"
-    ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+      Condition="Exists('$(_CustomViewMapFile)')"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AcwMapFile="$(_AcwMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -107,16 +110,17 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Inputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
     Outputs="$(IntermediateOutputPath)android\bin\classes\mono\MonoPackageManager.class">
   <Javac
-    JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
-    TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
-    StubSourceDirectory="$(IntermediateOutputPath)android\src"
-    JavaSourceFiles=""
-    ToolPath="$(JavacToolPath)"
-    ToolExe="$(JavacToolExe)"
-    Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
-    JavacTargetVersion="$(JavacTargetVersion)"
-    JavacSourceVersion="$(JavacSourceVersion)" />
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+      TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
+      StubSourceDirectory="$(IntermediateOutputPath)android\src"
+      JavaSourceFiles=""
+      ToolPath="$(JavacToolPath)"
+      ToolExe="$(JavacToolExe)"
+      Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+      JavacTargetVersion="$(JavacTargetVersion)"
+      JavacSourceVersion="$(JavacSourceVersion)"
+  />
 </Target>
 
 </Project>
