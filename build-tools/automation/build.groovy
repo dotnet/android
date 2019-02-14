@@ -351,7 +351,7 @@ timestamps {
         try {
             stage('Publish test results') {
                 timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to publish test results
-                    def enterStageResult = currentBuild.currentResult
+                    def initialStageResult = currentBuild.currentResult
 
                     xunit thresholds: [
                             failed(unstableNewThreshold: '0', unstableThreshold: '0'),
@@ -365,7 +365,7 @@ timestamps {
                             stopProcessingIfError: false)
                         ]
 
-                    if (enterStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
+                    if (initialStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
                         error "One or more tests failed"                // Force an error condition if there was a test failure to indicate that this stage was the source of the build failure
                     }
                 }
