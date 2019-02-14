@@ -774,10 +774,15 @@ namespace UnamedProject
 					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), "-keep class md52d9cf6333b8e95e8683a477bc589eda5.MainActivity"), "`md52d9cf6333b8e95e8683a477bc589eda5.MainActivity` should exist in `proguard_project_primary.cfg`!");
 				}
 
-				var className = "Lmono/MonoRuntimeProvider;";
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				var classes = new [] {
+					"Lmono/MonoRuntimeProvider;",
+					"Landroid/runtime/UncaughtExceptionHandler;",
+				};
+				foreach (var className in classes) {
+					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				}
 			}
 		}
 
