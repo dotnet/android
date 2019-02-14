@@ -525,11 +525,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
  </CreateItem>
 </Target>
 
-<Target Name="_CheckGoogleSdkRequirements" Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
-	<CheckGoogleSdkRequirements
-		TargetFrameworkVersion="$(TargetFrameworkVersion)"
-		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-	/>
+<Target Name="_CheckGoogleSdkRequirements"
+    Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
+  <CheckGoogleSdkRequirements
+      TargetFrameworkVersion="$(TargetFrameworkVersion)"
+      ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+  />
 </Target>
 
 <!--
