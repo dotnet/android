@@ -362,6 +362,10 @@ timestamps {
                             skipNoTestFiles: true,
                             stopProcessingIfError: false)
                         ]
+
+                    if (currentBuild.currentResult == 'UNSTABLE') {
+                        error "One or more tests failed"                // Force an error condition if there was a test failure to indicate that this stage was the source of the build failure
+                    }
                 }
             }
         } catch (error) {
