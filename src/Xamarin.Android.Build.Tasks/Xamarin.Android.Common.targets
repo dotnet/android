@@ -3392,6 +3392,7 @@ because xbuild doesn't support framework reference assemblies.
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets')"/>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets')"/>
