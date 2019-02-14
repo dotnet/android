@@ -351,6 +351,8 @@ timestamps {
         try {
             stage('Publish test results') {
                 timeout(time: 5, unit: 'MINUTES') {    // Typically takes under 1 minute to publish test results
+                    def enterStageResult = currentBuild.currentResult
+
                     xunit thresholds: [
                             failed(unstableNewThreshold: '0', unstableThreshold: '0'),
                             skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
@@ -363,7 +365,7 @@ timestamps {
                             stopProcessingIfError: false)
                         ]
 
-                    if (currentBuild.currentResult == 'UNSTABLE') {
+                    if (enterStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
                         error "One or more tests failed"                // Force an error condition if there was a test failure to indicate that this stage was the source of the build failure
                     }
                 }
