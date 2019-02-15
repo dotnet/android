@@ -3381,6 +3381,22 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			}
 		}
 
+		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
+		[Test]
+		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				DexTool = dexTool,
+			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
+				"<uses-library android:name=\"org.apache.http.legacy\" android:required=\"false\" /></application>");
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
+			}
+		}
+
 		[Test]
 		[TestCase ("armeabi;armeabi-v7a", TestName = "XA0115")]
 		[TestCase ("armeabi,armeabi-v7a", TestName = "XA0115Commas")]
