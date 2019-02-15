@@ -31,14 +31,14 @@ def publishPackages(filePaths) {
     try {
          // Note: The following function is provided by the Azure Blob Jenkins plugin
          azureUpload(storageCredentialId: "${env.StorageCredentialId}",
-                                storageType: "blobstorage",
-                                containerName: "${env.ContainerName}",
-                                virtualPath: "${env.StorageVirtualPath}",
-                                filesPath: "${filePaths}",
-                                allowAnonymousAccess: true,
-                                pubAccessible: true,
-                                doNotWaitForPreviousBuild: true,
-                                uploadArtifactsOnlyIfSuccessful: true)
+                 storageType: "blobstorage",
+                 containerName: "${env.ContainerName}",
+                 virtualPath: "${env.StorageVirtualPath}",
+                 filesPath: "${filePaths}",
+                 allowAnonymousAccess: true,
+                 pubAccessible: true,
+                 doNotWaitForPreviousBuild: true,
+                 uploadArtifactsOnlyIfSuccessful: true)
     } catch (error) {
         echo "ERROR : publishPackages: Unexpected error: ${error}"
         status = 1
@@ -272,70 +272,94 @@ timestamps {
                 timeout(time: 30, unit: 'SECONDS') {    // Typically takes less than a second
                     dir(XADir) {
                         plot(
-                            title: 'Jcw',
-                            csvFileName: 'plot-jcw-test-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Jcw',
+                                csvFileName: 'plot-jcw-test-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Xamarin.Android.JcwGen_Tests-times.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                         plot(
-                            title: 'Locale',
-                            csvFileName: 'plot-locale-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Locale',
+                                csvFileName: 'plot-locale-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Xamarin.Android.Locale_Tests-times.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                         plot(
-                            title: 'Runtime test sizes',
-                            csvFileName: 'plot-runtime-test-sizes.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Runtime test sizes',
+                                csvFileName: 'plot-runtime-test-sizes.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests size',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                         plot(
-                            title: 'Runtime merged',
-                            csvFileName: 'plot-runtime-merged-test-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Runtime merged',
+                                csvFileName: 'plot-runtime-merged-test-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-times.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                         plot(
-                            title: 'Xamarin.Forms app startup',
-                            csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Xamarin.Forms app startup',
+                                csvFileName: 'plot-xamarin-forms-startup-test-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Test-times.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                         plot(
-                            title: 'Xamarin.Forms app',
-                            csvFileName: 'plot-xamarin-forms-tests-size.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Tests size', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Xamarin.Forms app',
+                                csvFileName: 'plot-xamarin-forms-tests-size.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Tests size', 
+                                ogarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
 
                         plot(
-                            title: 'Hello World',
-                            csvFileName: 'plot-hello-world-build-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Hello World',
+                                csvFileName: 'plot-hello-world-build-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Timing-HelloWorld.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Build times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
 
                         plot(
-                            title: 'Xamarin.Forms',
-                            csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
-                            csvSeries: [[
-                                displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
-                            ]],
-                            group: 'Build times', logarithmic: true, style: 'line', yaxis: 'ms'
+                                title: 'Xamarin.Forms',
+                                csvFileName: 'plot-xamarin-forms-integration-build-times.csv',
+                                csvSeries: [[
+                                    displayTableFlag: true, file: 'TestResult-Timing-Xamarin.Forms-Integration.csv', inclusionFlag: 'OFF'
+                                ]],
+                                group: 'Build times',
+                                logarithmic: true,
+                                style: 'line',
+                                yaxis: 'ms'
                         )
                     }
                 }
@@ -359,10 +383,10 @@ timestamps {
                         ],
                         tools: [
                             NUnit2(deleteOutputFiles: true,
-                            failIfNotNew: true,
-                            pattern: 'xamarin-android/TestResult-*.xml',
-                            skipNoTestFiles: true,
-                            stopProcessingIfError: false)
+                                    failIfNotNew: true,
+                                    pattern: 'xamarin-android/TestResult-*.xml',
+                                    skipNoTestFiles: true,
+                                    stopProcessingIfError: false)
                         ]
 
                     if (initialStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
