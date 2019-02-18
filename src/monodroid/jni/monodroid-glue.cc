@@ -371,7 +371,7 @@ thread_end (MonoProfiler *prof, uintptr_t tid)
 FILE *jit_log;
 
 static void
-jit_begin (MonoProfiler *prof, MonoMethod *method)
+log_jit_event (MonoMethod *method, const char *event_name)
 {
 	jit_time.mark_end ();
 
@@ -381,25 +381,27 @@ jit_begin (MonoProfiler *prof, MonoMethod *method)
 	char* name = monoFunctions.method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method begin: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%lu::%lu\n", event_name, name, diff.sec, diff.ms, diff.ns);
 
 	free (name);
 }
 
 static void
+jit_begin (MonoProfiler *prof, MonoMethod *method)
+{
+	log_jit_event (method, "begin");
+}
+
+static void
+jit_failed (MonoProfiler *prof, MonoMethod *method)
+{
+	log_jit_event (method, "failed");
+}
+
+static void
 jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
 {
-	if (!jit_log)
-		return;
-
-	char* name = monoFunctions.method_full_name (method, 1);
-
-	jit_time.mark_end ();
-
-	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method  done: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
-
-	free (name);
+	log_jit_event (method, "done");
 }
 
 #ifndef RELEASE
@@ -895,6 +897,7 @@ mono_runtime_init (char *runtime_args)
 		jit_time.mark_start ();
 		monoFunctions.profiler_set_jit_begin_callback (profiler_handle, jit_begin);
 		monoFunctions.profiler_set_jit_done_callback (profiler_handle, jit_done);
+		monoFunctions.profiler_set_jit_failed_callback (profiler_handle, jit_failed);
 	}
 
 	parse_gdb_options ();

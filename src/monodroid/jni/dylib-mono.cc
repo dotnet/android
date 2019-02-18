@@ -145,6 +145,7 @@ bool DylibMono::init (void *libmono_handle)
 	LOAD_SYMBOL(mono_profiler_create)
 	LOAD_SYMBOL(mono_profiler_set_jit_begin_callback)
 	LOAD_SYMBOL(mono_profiler_set_jit_done_callback)
+	LOAD_SYMBOL(mono_profiler_set_jit_failed_callback)
 	LOAD_SYMBOL(mono_profiler_set_thread_started_callback)
 	LOAD_SYMBOL(mono_profiler_set_thread_stopped_callback)
 
@@ -700,6 +701,15 @@ DylibMono::profiler_set_jit_done_callback (MonoProfilerHandle handle, MonoJitDon
 		return;
 
 	mono_profiler_set_jit_done_callback (handle, done_ftn);
+}
+
+void
+DylibMono::profiler_set_jit_failed_callback (MonoProfilerHandle handle, MonoJitFailedEventFunc failed_ftn)
+{
+	if (mono_profiler_set_jit_failed_callback == nullptr)
+		return;
+
+	mono_profiler_set_jit_failed_callback (handle, failed_ftn);
 }
 
 void
