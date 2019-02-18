@@ -113,7 +113,8 @@ namespace Xamarin.Android.Tasks {
 			return minAttr.Value;
 		}
 
-		public string GetTargetSdk () {
+		public string GetTargetSdk ()
+		{
 			var targetAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "targetSdkVersion");
 			if (targetAttr == null) {
 				return SdkVersionName;
