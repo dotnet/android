@@ -778,6 +778,14 @@ when packaing Release applications.
 
     Added in Xamarin.Android 9.2.
 
+- **AndroidEnableGooglePlayStoreChecks** &ndash; A bool property
+    which allows developers to disable the following Google Play
+    Store checks, XA1004, XA1005 and XA1006. This is useful for 
+    developers who are not targeting the Google Play Store and do
+    not wish to run those checks.
+
+    Added in Xamarin.Android 9.4.
+
 ### Binding Project Build Properties
 
 The following MSBuild properties are used with
