@@ -784,7 +784,7 @@ when packaing Release applications.
     developers who are not targeting the Google Play Store and do
     not wish to run those checks.
 
-    Added in Xamarin.Android 9.2.
+    Added in Xamarin.Android 9.4.
 
 ### Binding Project Build Properties
 
