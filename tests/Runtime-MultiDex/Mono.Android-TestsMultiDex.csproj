@@ -61,6 +61,8 @@
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
+    <Compile Remove="..\..\src\Mono.Android\Test\Resources\Resource.designer.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\Icon.png" />
@@ -71,9 +73,6 @@
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
     <AndroidBoundLayout Include="Resources\layout\Main.axml" />
-    <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
-      <Link>Resources\Drawable\Image.9.png</Link>
-    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\asset1.txt">
