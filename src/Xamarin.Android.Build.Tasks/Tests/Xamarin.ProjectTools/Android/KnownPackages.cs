@@ -681,6 +681,16 @@ namespace Xamarin.ProjectTools
 				}
 			},
 		};
+		public static Package Xamarin_GooglePlayServices_Maps = new Package {
+			Id = "Xamarin.GooglePlayServices.Maps",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Maps") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Maps.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Maps.dll"
+				}
+			},
+		};
 	}
 }
 

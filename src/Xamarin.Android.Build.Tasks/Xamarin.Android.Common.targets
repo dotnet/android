@@ -63,7 +63,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetAddOnPlatformLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAdditionalResourcesFromAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -89,6 +88,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2343,8 +2343,7 @@ because xbuild doesn't support framework reference assemblies.
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-	AcwMapFile="$(_AcwMapFile)"
-	CacheFile="$(IntermediateOutputPath)javastubs.cache">
+	AcwMapFile="$(_AcwMapFile)">
   </GenerateJavaStubs>
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"
@@ -2354,20 +2353,23 @@ because xbuild doesn't support framework reference assemblies.
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
-  <ItemGroup>
-    <FileWrites Include="$(IntermediateOutputPath)javastubs.cache" Condition="Exists('$(IntermediateOutputPath)javastubs.cache')" />
-  </ItemGroup>
 </Target>
 
-<Target Name="_ReadJavaStubsCache">
-  <ReadJavaStubsCache CacheFile="$(IntermediateOutputPath)javastubs.cache">
+<Target Name="_ReadAndroidManifest"
+    DependsOnTargets="_GenerateJavaStubs">
+  <ReadAndroidManifest
+      ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+      AndroidApiLevel="$(_AndroidApiLevel)">
     <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
-  </ReadJavaStubsCache>
+    <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
+  </ReadAndroidManifest>
 </Target>
 
 <Target Name="_SetupEmbeddedDSOs"
+    DependsOnTargets="_ReadAndroidManifest"
     Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' "
-    Inputs="$(IntermediateOutputPath)javastubs.cache"
+    Inputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
     Outputs="$(IntermediateOutputPath)dsoenvironment.txt">
   <WriteLinesToFile
       File="$(IntermediateOutputPath)dsoenvironment.txt"
@@ -2383,31 +2385,13 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<PropertyGroup>
-  <_GetAddOnPlatformLibrariesDependsOn>
-    _GenerateJavaStubs;
-    _ReadJavaStubsCache;
-    _SetupEmbeddedDSOs;
-  </_GetAddOnPlatformLibrariesDependsOn>
-</PropertyGroup>
-
-<Target Name="_GetAddOnPlatformLibraries" DependsOnTargets="$(_GetAddOnPlatformLibrariesDependsOn)">
-  <GetAddOnPlatformLibraries
-	AndroidSdkPlatform="$(_AndroidApiLevel)"
-	AndroidSdkDir="$(_AndroidSdkDirectory)"
-	Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml">
-	<Output TaskParameter="AddOnPlatformLibraries" ItemName="AddOnPlatformLibraries" />
-  </GetAddOnPlatformLibraries>
-</Target>
-
 <Target Name="_SetupAssemblyPreload"
-    Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' "
-    Inputs="$(IntermediateOutputPath)javastubs.cache"
-    Outputs="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt">
+    Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' ">
   <WriteLinesToFile
       File="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt"
       Lines="mono.enable_assembly_preload=0"
       Overwrite="True"
+      WriteOnlyWhenDifferent="True"
   />
   <ItemGroup>
     <AndroidEnvironment Include="$(IntermediateOutputPath)preloadAssembliesEnvironment.txt" />
@@ -2415,8 +2399,20 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ReadAndroidManifest;_SetupEmbeddedDSOs;_SetupAssemblyPreload" />
+
+<PropertyGroup>
+  <_GeneratePackageManagerJavaDependsOn>
+    _GenerateJavaStubs;
+    _GenerateEnvironmentFiles;
+    _AddStaticResources;
+    $(_AfterAddStaticResources);
+    _PrepareAssemblies;
+  </_GeneratePackageManagerJavaDependsOn>
+</PropertyGroup>
+
 <Target Name="_GeneratePackageManagerJava"
-  DependsOnTargets="_GetAddOnPlatformLibraries;_AddStaticResources;$(_AfterAddStaticResources);_PrepareAssemblies;_SetupAssemblyPreload"
+  DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
@@ -2454,7 +2450,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
-		_GetAddOnPlatformLibraries;
+		_GenerateJavaStubs;
+		_GenerateEnvironmentFiles;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		_GetAdditionalResourcesFromAssemblies;
@@ -2574,7 +2571,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GetAddOnPlatformLibraries">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_GenerateEnvironmentFiles;">
   <CreateItem
     Include="$(IntermediateOutputPath)android\src\\**\*.java">
     <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
@@ -2617,7 +2614,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileJava"
   DependsOnTargets="$(_CompileJavaDependsOnTargets)"
-  Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource);@(AddOnPlatformLibraries)"
+  Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource)"
   Outputs="$(IntermediateOutputPath)_javac.stamp">
 
   <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
@@ -2886,7 +2883,8 @@ because xbuild doesn't support framework reference assemblies.
 		_CopyPdbFiles;
 		_CopyMdbFiles;
 		_LinkAssemblies;
-		_GetAddOnPlatformLibraries;
+		_GenerateJavaStubs;
+		_GenerateEnvironmentFiles;
 		_CompileJava;
 		_CompileDex;
 		$(_AfterCompileDex);
