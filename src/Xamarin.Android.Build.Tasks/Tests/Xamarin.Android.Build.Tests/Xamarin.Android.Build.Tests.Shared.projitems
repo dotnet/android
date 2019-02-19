@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BindingBuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildAssetsTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DesignerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncrementalBuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PackagingTest.cs" />

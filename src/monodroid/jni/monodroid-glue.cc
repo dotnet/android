@@ -371,7 +371,7 @@ thread_end (MonoProfiler *prof, uintptr_t tid)
 FILE *jit_log;
 
 static void
-jit_begin (MonoProfiler *prof, MonoMethod *method)
+log_jit_event (MonoMethod *method, const char *event_name)
 {
 	jit_time.mark_end ();
 
@@ -381,25 +381,27 @@ jit_begin (MonoProfiler *prof, MonoMethod *method)
 	char* name = monoFunctions.method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method begin: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%lu::%lu\n", event_name, name, diff.sec, diff.ms, diff.ns);
 
 	free (name);
 }
 
 static void
+jit_begin (MonoProfiler *prof, MonoMethod *method)
+{
+	log_jit_event (method, "begin");
+}
+
+static void
+jit_failed (MonoProfiler *prof, MonoMethod *method)
+{
+	log_jit_event (method, "failed");
+}
+
+static void
 jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
 {
-	if (!jit_log)
-		return;
-
-	char* name = monoFunctions.method_full_name (method, 1);
-
-	jit_time.mark_end ();
-
-	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method  done: %s elapsed: %lis:%lu::%lu\n", name, diff.sec, diff.ms, diff.ns);
-
-	free (name);
+	log_jit_event (method, "done");
 }
 
 #ifndef RELEASE
@@ -895,6 +897,7 @@ mono_runtime_init (char *runtime_args)
 		jit_time.mark_start ();
 		monoFunctions.profiler_set_jit_begin_callback (profiler_handle, jit_begin);
 		monoFunctions.profiler_set_jit_done_callback (profiler_handle, jit_done);
+		monoFunctions.profiler_set_jit_failed_callback (profiler_handle, jit_failed);
 	}
 
 	parse_gdb_options ();
@@ -957,7 +960,7 @@ mono_runtime_init (char *runtime_args)
 }
 
 static MonoDomain*
-create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jstring assembly, jobject loader, bool is_root_domain)
+create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobject loader, bool is_root_domain)
 {
 	MonoDomain *domain;
 	int user_assemblies_count   = 0;;
@@ -1780,20 +1783,74 @@ _monodroid_counters_dump (const char *format, ...)
 }
 
 static void
+load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrapper &assembly)
+{
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
+	const char *assm_name = assembly.get_cstr ();
+	MonoAssemblyName *aname;
+
+	aname = monoFunctions.assembly_name_new (assm_name);
+
+	if (domain != monoFunctions.domain_get ()) {
+		MonoDomain *current = monoFunctions.domain_get ();
+		monoFunctions.domain_set (domain, FALSE);
+		monoFunctions.assembly_load_full (aname, NULL, NULL, 0);
+		monoFunctions.domain_set (current, FALSE);
+	} else {
+		monoFunctions.assembly_load_full (aname, NULL, NULL, 0);
+	}
+
+	monoFunctions.assembly_name_free (aname);
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info (LOG_TIMING, "Assembly load: %s preloaded; elapsed: %lis:%lu::%lu", assm_name, diff.sec, diff.ms, diff.ns);
+	}
+}
+
+static void
+load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies)
+{
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
+	/* skip element 0, as that's loaded in create_domain() */
+	for (size_t i = 1; i < assemblies.get_length (); ++i) {
+		jstring_wrapper &assembly = assemblies [i];
+		load_assembly (domain, env, assembly);
+	}
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+
+		timing_diff diff (total_time);
+		log_info (LOG_TIMING, "Finished loading assemblies: preloaded %u assemblies; wasted time: %lis:%lu::%lu", assemblies.get_length (), diff.sec, diff.ms, diff.ns);
+	}
+}
+
+static void
 monodroid_Mono_UnhandledException_internal (MonoException *ex)
 {
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
 }
 
 static MonoDomain*
-create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobjectArray assemblies, jobject loader, bool is_root_domain)
+create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jstring_array_wrapper &assemblies, jobject loader, bool is_root_domain)
 {
-	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, reinterpret_cast <jstring> (env->GetObjectArrayElement (assemblies, 0)), loader, is_root_domain);
+	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, loader, is_root_domain);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if (is_running_on_desktop && is_root_domain)
 		return domain;
 
+	if (androidSystem.is_assembly_preload_enabled ())
+		load_assemblies (domain, env, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
 
 	osBridge.add_monodroid_domain (domain);
@@ -1804,7 +1861,7 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName,
+                                jobjectArray externalStorageDirs, jobjectArray assembliesJava, jstring packageName,
                                 jint apiLevel, jobjectArray environmentVariables)
 {
 	init_logging_categories ();
@@ -1987,6 +2044,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		log_info_nocheck (LOG_TIMING, "Runtime.init: Mono runtime init; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
 	}
 
+	jstring_array_wrapper assemblies (env, assembliesJava);
 	/* the first assembly is used to initialize the AppDomain name */
 	create_and_initialize_domain (env, klass, runtimeApks, assemblies, loader, /*is_root_domain:*/ true);
 
@@ -2070,7 +2128,7 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 }
 
 JNIEXPORT jint
-JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assemblies, jobject loader)
+JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobject loader)
 {
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
@@ -2078,6 +2136,7 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 	monoFunctions.jit_thread_attach (root_domain);
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
+	jstring_array_wrapper assemblies (env, assembliesJava);
 	MonoDomain *domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, loader, /*is_root_domain:*/ false);
 	monoFunctions.domain_set (domain, FALSE);
 	int domain_id = monoFunctions.domain_get_id (domain);

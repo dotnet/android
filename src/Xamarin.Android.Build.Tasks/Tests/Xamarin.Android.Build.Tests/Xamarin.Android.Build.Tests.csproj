@@ -90,6 +90,7 @@
     <Compile Include="ZipArchiveExTests.cs" />
     <Compile Include="ConvertResourcesCasesTests.cs" />
     <Compile Include="Tasks\NdkUtilTests.cs" />
+    <Compile Include="Tasks\CheckGoogleSdkRequirementsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

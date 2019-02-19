@@ -287,7 +287,18 @@ namespace Xamarin.ProjectTools
 					process.WaitForExit ();
 					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
 				}
+
+				//NOTE: some machines aren't returning /msbuild/ on the end
+				//      macOS should be /Library/Frameworks/Mono.framework/Versions/5.18.0/lib/mono/msbuild/
+				var dir = Path.GetFileName (frameworkSDKRoot.TrimEnd (Path.DirectorySeparatorChar));
+				if (dir != "msbuild") {
+					var path = Path.Combine (frameworkSDKRoot, "msbuild");
+					if (Directory.Exists (path))
+						frameworkSDKRoot = path;
+				}
 			}
+			if (!string.IsNullOrEmpty (frameworkSDKRoot))
+				Console.WriteLine ($"Using $(FrameworkSDKRoot): {frameworkSDKRoot}");
 		}
 
 		public void Dispose ()
@@ -365,12 +376,13 @@ namespace Xamarin.ProjectTools
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.rsp");
+			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
+			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
 				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
 				if (BuildingInsideVisualStudio && RunningMSBuild) {

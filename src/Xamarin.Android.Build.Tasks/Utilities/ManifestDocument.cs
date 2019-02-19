@@ -113,6 +113,15 @@ namespace Xamarin.Android.Tasks {
 			return minAttr.Value;
 		}
 
+		public string GetTargetSdk ()
+		{
+			var targetAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "targetSdkVersion");
+			if (targetAttr == null) {
+				return SdkVersionName;
+			}
+			return targetAttr.Value;
+		}
+
 		TaskLoggingHelper log;
 
 		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
