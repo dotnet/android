@@ -8,7 +8,10 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	public class DesignerTests : BaseTest {
+	public class DesignerTests : BaseTest
+	{
+		static readonly string [] DesignerParameters = new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" };
+
 		/// <summary>
 		/// NOTE: we shouldn't break these targets, or they will break the Xamarin.Android designer
 		/// https://github.com/xamarin/designer/blob/603b9e322cc63b1fc00382ff11fc3ffae38976a6/Xamarin.Designer.Android/Xamarin.AndroidDesigner/Xamarin.AndroidDesigner/MSBuildConstants.cs#L21-L22
@@ -77,7 +80,7 @@ namespace UnnamedProject
 				// Save the library project, but don't build it yet
 				libb.Save (lib);
 				appb.Target = target;
-				Assert.IsTrue (appb.Build (proj, parameters: new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" }), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
 				var customViewPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "res", "layout", "custom_text.xml");
 				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
@@ -97,7 +100,7 @@ namespace UnnamedProject
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
 					"unnamedproject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
 				appb.Target = target;
-				Assert.IsTrue (appb.Build (proj, parameters: new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" }), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
 				doc = XDocument.Load (customViewPath);
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
@@ -124,11 +127,11 @@ namespace UnnamedProject
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "GetExtraLibraryLocationsForDesigner"), false, false)) {
 				b.Target = target;
-				Assert.IsTrue (b.Build (proj, parameters: new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" }), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				b.Target = "Build";
 				Assert.IsTrue (b.Build (proj));
 				b.Target = target;
-				Assert.IsTrue (b.Build (proj, parameters: new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" }), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 			}
 		}
 
@@ -136,7 +139,6 @@ namespace UnnamedProject
 		public void DesignerBeforeNuGetRestore ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			var parameters = new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" };
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
 				Sources = {
@@ -166,7 +168,7 @@ namespace UnnamedProject
 				// Save the library project, but don't build it yet
 				libb.Save (lib);
 				appb.Target = "SetupDependenciesForDesigner";
-				Assert.IsTrue (appb.Build (proj, parameters: parameters), "first build should have succeeded");
+				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "first build should have succeeded");
 
 				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
@@ -174,39 +176,13 @@ namespace UnnamedProject
 
 				libb.AutomaticNuGetRestore =
 					appb.AutomaticNuGetRestore = true;
-				Assert.IsTrue (appb.Build (proj, parameters: parameters), "second build should have succeeded");
+				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "second build should have succeeded");
 
 				var after = GetAssembliesFromPackageManager (packageManagerPath);
 				Assert.AreNotEqual (before, after, $"After second `{appb.Target}`, assemblies list should *not* be empty.");
 				foreach (var assembly in new [] { "Xamarin.Forms.Core.dll", "Xamarin.Forms.Platform.Android.dll" }) {
 					StringAssert.Contains (assembly, after);
 				}
-			}
-		}
-
-		[Test]
-		public void SetupDependenciesForDesigner ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			var lib = new XamarinAndroidLibraryProject {
-				ProjectName = "Library1",
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
-						TextContent =  () => "Bar",
-					},
-				},
-			};
-			var proj = new XamarinFormsAndroidApplicationProject {
-				ProjectName = "App1",
-				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
-			};
-			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
-				libb.Save (lib);
-				Assert.IsTrue (appb.RunTarget (proj, "SetupDependenciesForDesigner", parameters: new [] { "DesignTimeBuild=True" }), "design-time build should have succeeded.");
-				//Now a full build
-				Assert.IsTrue (libb.Build (lib), "library build should have succeeded.");
-				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
 			}
 		}
 
