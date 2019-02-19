@@ -1,0 +1,126 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Common.Designer.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2016 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+<Target Name="GetExtraLibraryLocationsForDesigner"
+    DependsOnTargets="_SetupDesignTimeBuildForCompile"
+    Returns="ExtraJarLocation;ExtraResourceLocation">
+  <ReadAdditionalResourcesFromAssemblyCache
+      Condition="Exists('$(_AndroidResourcePathsCache)')"
+      CacheFile="$(_AndroidResourcePathsCache)">
+    <Output TaskParameter="AdditionalAndroidResourcePaths"  ItemName="_AdditionalAndroidResourcePaths" />
+    <Output TaskParameter="AdditionalJavaLibraryReferences" ItemName="_AdditionalJavaLibraryReferences" />
+  </ReadAdditionalResourcesFromAssemblyCache>
+  <ReadLibraryProjectImportsCache
+      Condition="Exists('$(_AndroidLibraryProjectImportsCache)')"
+      CacheFile="$(_AndroidLibraryProjectImportsCache)">
+    <Output TaskParameter="ResolvedResourceDirectories" ItemName="_LibraryResourceDirectories" />
+    <Output TaskParameter="Jars" ItemName="_LibraryJars" />
+  </ReadLibraryProjectImportsCache>
+  <ItemGroup>
+    <ExtraJarLocation Include="@(_AdditionalJavaLibraryReferences)">
+      <Source>AssemblyCache</Source>
+    </ExtraJarLocation>
+    <ExtraJarLocation Include="@(_LibraryJars)">
+      <Source>LibraryImport</Source>
+    </ExtraJarLocation>
+    <ExtraResourceLocation Include="@(_AdditionalAndroidResourcePaths->'%(Identity)\res')">
+      <Source>AssemblyCache</Source>
+    </ExtraResourceLocation>
+    <ExtraResourceLocation Include="@(_LibraryResourceDirectories)">
+      <Source>LibraryImport</Source>
+    </ExtraResourceLocation>
+  </ItemGroup>
+</Target>
+
+<Target Name="_GeneratePackageManagerJavaForDesigner"
+    DependsOnTargets="_AddStaticResources;_ResolveAssemblies"
+    Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
+    Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
+  <Copy
+      SourceFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+  />
+  <GenerateJavaStubs
+      ResolvedAssemblies="@(ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(ExtractedManifestDocuments)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      PackageName="$(_AndroidPackage)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      AcwMapFile="$(_AcwMapFile)">
+  </GenerateJavaStubs>
+  <ConvertCustomView
+      Condition="Exists('$(_CustomViewMapFile)')"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AcwMapFile="$(_AcwMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+  />
+  <!-- Create java needed for Mono runtime -->
+  <GeneratePackageManagerJava
+      ResolvedAssemblies="@(ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
+      MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
+      OutputDirectory="$(IntermediateOutputPath)android\src\mono"
+      EnvironmentOutputDirectory="$(IntermediateOutputPath)android\src\mono\android\app"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      TargetFrameworkVersion="$(TargetFrameworkVersion)"
+      Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+      AndroidAotMode="$(AndroidAotMode)"
+      EnableLLVM="$(EnableLLVM)"
+      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+      TlsProvider="$(AndroidTlsProvider)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      AndroidSequencePointsMode="$(_SequencePointsMode)"
+      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
+    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+  </GeneratePackageManagerJava>
+</Target>
+
+<Target Name="SetupDependenciesForDesigner"
+    DependsOnTargets="UpdateAndroidResources;_AdjustJavacVersionArguments;_GeneratePackageManagerJavaForDesigner;_GetMonoPlatformJarPath;_DetermineJavaLibrariesToCompile"
+    Inputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
+    Outputs="$(IntermediateOutputPath)android\bin\classes\mono\MonoPackageManager.class">
+  <Javac
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+      TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
+      StubSourceDirectory="$(IntermediateOutputPath)android\src"
+      JavaSourceFiles=""
+      ToolPath="$(JavacToolPath)"
+      ToolExe="$(JavacToolExe)"
+      Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+      JavacTargetVersion="$(JavacTargetVersion)"
+      JavacSourceVersion="$(JavacSourceVersion)"
+  />
+</Target>
+
+</Project>

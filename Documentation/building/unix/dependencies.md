@@ -1,4 +1,4 @@
-# Build Dependencies
+# Build Dependencies for Linux and macOS
 
 Building Xamarin.Android requires:
 
@@ -14,7 +14,7 @@ If you would like `make prepare` to automatically install
 required dependencies, set the `$(AutoProvision)` MSBuild property to True
 and (if necessary) set the `$(AutoProvisionUsesSudo)` property to True.
 (This is not supported on all operating systems;
-see [configuration.md](configuration.md) for details.)
+see [configuration.md](../configuration.md) for details.)
 
 If `$(AutoProvision)` is False (the default) and a dependency is missing,
 then the build will fail and an error message will be displayed attempting
@@ -87,7 +87,7 @@ The files that will be downloaded and installed are controlled by
 via the `@(AndroidNdkItem)` and `@(AndroidSdkItem)` item groups, and the
 URL to download files from is controlled by the `$(AndroidUri)` property.
 
-[android-toolchain.projitems]: ../../build-tools/android-toolchain/android-toolchain.projitems
+[android-toolchain.projitems]: ../../../build-tools/android-toolchain/android-toolchain.projitems
 
 
 <a name="Linux" />
@@ -114,9 +114,9 @@ and to enable it again, issue the following command:
 
 ## macOS Dependencies
 
-The [`android-toolchain.projitems`](../../build-tools/android-toolchain/android-toolchain.projitems),
-[`libzip.projitems`](../../src/libzip/libzip.projitems), and
-[`monodroid.projitems`](../../src/monodroid/monodroid.projitems) project files, among
+The [`android-toolchain.projitems`](../../../build-tools/android-toolchain/android-toolchain.projitems),
+[`libzip.projitems`](../../../src/libzip/libzip.projitems), and
+[`monodroid.projitems`](../../../src/monodroid/monodroid.projitems) project files, among
 others, use the `@(RequiredProgram)` build action to check for the existence
 of a program within `$PATH` during the build. If a required program doesn't
 exist, then the build will fail and a suggested `brew install` command line

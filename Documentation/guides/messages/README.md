@@ -53,6 +53,9 @@
 + [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
 + [XA1004](xa1004.md): There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again.
 + [XA1005](xa1005.md): Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'
++ [XA1006](xa1006.md): Your application is running on a version of Android ({compileSdk}) that is more recent than your targetSdkVersion specifies ({targetSdk}). Set your targetSdkVersion to the highest version of Android available to match your TargetFrameworkVersion ({compileSdk}).
++ [XA1007](xa1007.md): The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).
++ [XA1008](xa1008.md): The TargetFrameworkVersion ({compileSdk}) should not be lower than targetSdkVersion ({targetSdk})
 
 ### XA2xxx Linker
 

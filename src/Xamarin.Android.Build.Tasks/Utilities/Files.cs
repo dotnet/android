@@ -281,61 +281,46 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static bool ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
-			Func<string, bool> deleteCallback = null, bool forceUpdate = true)
+		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
+			Func<string, bool> deleteCallback = null)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
 			bool updated = false;
 			HashSet<string> files = new HashSet<string> ();
-			foreach (var entry in zip) {
-				progressCallback?.Invoke (i++, total);
-				if (entry.FullName.Contains ("/__MACOSX/") ||
-						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
-						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
-					continue;
-				var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
-				if (entry.IsDirectory) {
+			using (var memoryStream = new MemoryStream ()) {
+				foreach (var entry in zip) {
+					progressCallback?.Invoke (i++, total);
+					if (entry.IsDirectory)
+						continue;
+					if (entry.FullName.Contains ("/__MACOSX/") ||
+							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+							entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+						continue;
+					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
+					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
+					files.Add (outfile);
+					memoryStream.SetLength (0); //Reuse the stream
+					entry.Extract (memoryStream);
 					try {
-						Directory.CreateDirectory (Path.Combine (destination, fullName));
-					} catch (NotSupportedException ex) {
-						//NOTE: invalid paths, such as `:` on Windows can cause this
-						throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
-					}
-					continue;
-				}
-				try {
-					Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
-				} catch (NotSupportedException ex) {
-					//NOTE: invalid paths, such as `:` on Windows can cause this
-					throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
-				}
-				var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
-				files.Add (outfile);
-				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;
-				if (forceUpdate || entry.ModificationTime > dt) {
-					try {
-						entry.Extract (destination, fullName, FileMode.Create);
-						MonoAndroidHelper.SetWriteable (outfile);
-						var utcNow = DateTime.UtcNow;
-						File.SetLastWriteTimeUtc (outfile, utcNow);
-						File.SetLastAccessTimeUtc (outfile, utcNow);
+						updated |= MonoAndroidHelper.CopyIfStreamChanged (memoryStream, outfile);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
 					}
-					updated = true;
 				}
 			}
-			foreach (var file in Directory.GetFiles (destination, "*.*", SearchOption.AllDirectories)) {
-				var outfile = Path.GetFullPath (file);
-				if (outfile.Contains ("/__MACOSX/") ||
-				    		outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
-						outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
-						outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
-					continue;
-				if (!files.Contains (outfile) && !(deleteCallback?.Invoke (outfile) ?? true)) {
-					File.Delete (outfile);
-					updated = true;
+			if (Directory.Exists (destination)) {
+				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
+					var outfile = Path.GetFullPath (file);
+					if (outfile.Contains ("/__MACOSX/") ||
+							outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
+							outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+							outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+						continue;
+					if (!files.Contains (outfile) && (deleteCallback?.Invoke (outfile) ?? true)) {
+						File.Delete (outfile);
+						updated = true;
+					}
 				}
 			}
 			return updated;

@@ -14,7 +14,7 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  3. Navigate to the `xamarin-android` directory
 
- 4. (Optional) [Configure the build](configuration.md).
+ 4. (Optional) [Configure the build](../configuration.md).
 
  5. Prepare the project:
 
@@ -120,8 +120,8 @@ or with msbuild:
 
 Another possibility is to run them manually as described below.
 
-See also the [`tests/RunApkTests.targets`](../../tests/RunApkTests.targets) and
-[`build-tools/scripts/TestApks.targets`](../../build-tools/scripts/TestApks.targets)
+See also the [`tests/RunApkTests.targets`](../../../tests/RunApkTests.targets) and
+[`build-tools/scripts/TestApks.targets`](../../../build-tools/scripts/TestApks.targets)
 files.
 
 All `.apk`-based unit test projects provide the following targets:
@@ -214,8 +214,8 @@ There are a few ways to do it:
   
     where *LEVEL* is one of the [API levels from the `$(API_LEVELS)` variable][api-levels].
 
-[override-props]: ../README.md#build-configuration
-[api-levels]: ../../build-tools/scripts/BuildEverything.mk#L31
+[override-props]: ../../README.md#build-configuration
+[api-levels]: ../../../build-tools/scripts/BuildEverything.mk#L31
 
 # How do I rebuild the Mono Runtime and Native Binaries?
 
@@ -285,7 +285,7 @@ The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
 building; see the `$(AndroidSupportedHostJitAbis)`,
 `$(AndroidSupportedTargetAotAbis)`, and `$(AndroidSupportedTargetJitAbis)`
-MSBuild properties within [README.md](../README.md). This may not always be
+MSBuild properties within [README.md](../../README.md). This may not always be
 desirable, for example if you're trying to fix a Mono runtime bug for a
 specific ABI, and improving turnaround time is paramount.
 (Building for all ABIs can be time consuming.)
@@ -295,7 +295,7 @@ where the "relevant directory" is the target of interest within
 `src/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
 invoke the `_InstallRuntimes` target so that the updated native libraries
 are copied into `bin/$(Configuration)/lib`, which will allow subsequent
-top-level `make` and [`xabuild`](../../tools/xabuild) invocations to use them.
+top-level `make` and [`xabuild`](../../../tools/xabuild) invocations to use them.
 
 For example, to rebuild Mono for armeabi-v7a:
 
