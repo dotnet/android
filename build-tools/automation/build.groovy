@@ -75,10 +75,6 @@ timestamps {
             }
         }
 
-        stageWithTimeout('clean', 30, 'SECONDS', 'xamarin-android_tmp', true) {    // Typically takes less than a second
-            deleteDir()
-        }
-
         stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
