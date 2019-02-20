@@ -1423,13 +1423,17 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
+	<ItemGroup>
+		<_HashStampFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')" />
+		<_HashFlataFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')" />
+	</ItemGroup>
 	<Touch
-			Files="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
+			Files="@(_HashStampFiles)"
 			AlwaysCreate="True"
 	/>
 	<ItemGroup>
-		<FileWrites Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')" />
-		<FileWrites Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')" />
+		<FileWrites Include="@(_HashStampFiles)" />
+		<FileWrites Include="@(_HashFlataFiles)" />
 	</ItemGroup>
 </Target>
 
