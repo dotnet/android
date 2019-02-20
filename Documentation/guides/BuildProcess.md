@@ -155,9 +155,9 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     debuggable.
 
     - **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](LayoutCodeBehind.md)
-	  if set to `true` or disables it completely if set to `false`. The
-	  default value is `false`.
-	
+      if set to `true` or disables it completely if set to `false`. The
+      default value is `false`.
+
 ### Install Properties
 
 Install properties control the behavior of the `Install` and
@@ -682,21 +682,21 @@ when packaging Release applications.
 
     Added in Xamarin.Android 8.2.
 
--  **AndroidLintEnabled** &ndash; A bool property which allows the developer to 
+-  **AndroidLintEnabled** &ndash; A bool property which allows the developer to
     run the android `lint` tool as part of the packaging process.
 
-    -   **AndroidLintEnabledIssues** &ndash; A comma seperated list of lint issues to enable.
+    -   **AndroidLintEnabledIssues** &ndash; A comma separated list of lint issues to enable.
 
-    -   **AndroidLintDisabledIssues** &ndash; A comma seperated list of lint issues to disable.
+    -   **AndroidLintDisabledIssues** &ndash; A comma separated list of lint issues to disable.
 
-    -   **AndroidLintCheckIssues** &ndash; A comma seperated list of lint issues to check. 
+    -   **AndroidLintCheckIssues** &ndash; A comma separated list of lint issues to check.
        Note: only these issues will be checked.
 
     -   **AndroidLintConfig** &ndash; This is a Build action for a lint style config file. This
        can be used to enabled/disable issues to check. Multiple files can use this build
        action as their contents will be merged.
 
-    See [Lint Help](http://www.androiddocs.com/tools/help/lint.html) for more details on
+    See [Lint Help](https://developer.android.com/studio/write/lint) for more details on
     the android `lint` tooling.
 
 -  **AndroidGenerateJniMarshalMethods** &ndash; A bool property which
@@ -709,7 +709,7 @@ when packaging Release applications.
 
         <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
 
-    in their csproj. Alternatively provide the property on the command
+    in their .csproj. Alternatively provide the property on the command
     line via
 
         /p:AndroidGenerateJniMarshalMethods=True
@@ -723,7 +723,7 @@ when packaging Release applications.
    debugging, so that options such as `-v`, `-d`, or `--keeptemp` can
    be used.
 
-   Default value is empty string. It can be set in the csproj file or
+   Default value is empty string. It can be set in the .csproj file or
    on the command line. For example:
 
         <AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
@@ -734,9 +734,9 @@ when packaging Release applications.
     Added in Xamarin.Android 9.2.
 
 - **AndroidMultiDexClassListExtraArgs** &ndash; A string property
-    which allows developers to pass additional arguments to the 
-    `com.android.multidex.MainDexListBuilder` when generating the 
-    `multidex.keep` file. 
+    which allows developers to pass additional arguments to the
+    `com.android.multidex.MainDexListBuilder` when generating the
+    `multidex.keep` file.
 
     One specific case is if you are getting the following error
     during the `dx` compilation.
@@ -756,18 +756,18 @@ when packaging Release applications.
 - **AndroidEnablePreloadAssemblies** &ndash; A boolean property which controls
     whether or not all managed assemblies bundled within the application package
     are loaded during process startup or not.
-    
+
     When set to `True`, all assemblies bundled within the application package
     will be loaded during process startup, before any application code is invoked.
     This is consistent with what Xamarin.Android did in releases prior to
-    Xamarin.Andorid 9.2.
-    
+    Xamarin.Android 9.2.
+
     When set to `False`, assemblies will only be loaded on an as-needed basis.
     This allows applications to startup faster, and is also more consistent with
     desktop .NET semantics.  To see the time savings, set the `debug.mono.log`
     System Property to include `timing`, and look for the
     `Finished loading assemblies: preloaded` message within `adb logcat`.
-    
+
     Applications or libraries which use dependency injection may *require* that
     this property be `True` if they in turn require that
     `AppDomain.CurrentDomain.GetAssemblies()` return all assemblies within the
@@ -779,7 +779,7 @@ when packaging Release applications.
 
 - **AndroidEnableGooglePlayStoreChecks** &ndash; A bool property
     which allows developers to disable the following Google Play
-    Store checks, XA1004, XA1005 and XA1006. This is useful for 
+    Store checks, XA1004, XA1005 and XA1006. This is useful for
     developers who are not targeting the Google Play Store and do
     not wish to run those checks.
 
@@ -883,10 +883,10 @@ resources.
     By default this will be set to false and we will use `aapt`.
     If the developer wishes to use the new `aapt2` functionality
     they can set
-        
+
         <AndroidUseAapt2>True</AndroidUseAapt2>
-        
-    in their csproj. Alternatively provide the property on the command line 
+
+    in their .csproj. Alternatively provide the property on the command line
     via
 
         /p:AndroidUseAapt2=True
@@ -1073,7 +1073,7 @@ with layout files:
 
 ### AndroidFragmentType
 
-Specifies the default fully qualified type to be used for all `<fragment>` layout 
+Specifies the default fully qualified type to be used for all `<fragment>` layout
 elements when generating the layout bindings code. The property defaults to the standard
 Android `Android.App.Fragment` type.
 
@@ -1124,13 +1124,13 @@ and .jar files will be included in the appropriate item groups.
 
 ### AndroidLintConfig
 
-The Build action 'AndroidLintConfig' should be used in conjunction with 
+The Build action 'AndroidLintConfig' should be used in conjunction with
 the `AndroidLintEnabled` build property. Files with this build action
 will be merged together and passed to the android `lint` tooling. They
-should be xml files which contain information on which tests to 
-enabled/disabled.
+should be XML files which contain information on which tests to
+enable and disable.
 
-See the [lint documentation](http://www.androiddocs.com/tools/help/lint.html)
+See the [lint documentation](https://developer.android.com/studio/write/lint)
 for more details.
 
 ### Content
