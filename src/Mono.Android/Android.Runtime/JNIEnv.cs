@@ -195,6 +195,8 @@ namespace Android.Runtime {
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
 #endif // JAVA_INTEROP
 
+			Mono.SystemDependencyProvider.Initialize ();
+
 			if (Logger.LogTiming) {
 				elapsed = stopper.ElapsedMilliseconds;
 				totalElapsed += elapsed;
