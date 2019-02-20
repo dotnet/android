@@ -25,13 +25,6 @@
   <Import Project="libzip-windows.projitems" />
   <Import Project="libzip-windows.targets" />
   <Import Project="..\libzip\libzip.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj" Condition=" '$(HostOS)' != 'Windows' ">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
   <Target Name="Clean" />
 </Project>
