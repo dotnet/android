@@ -757,7 +757,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			ProjectFilePath="$(MSBuildProjectFullPath)"			
 			LintToolPath="$(LintToolPath)"
-			ZipAlignPath="$(ZipAlignToolPath)">
+			ZipAlignPath="$(ZipAlignToolPath)"
+			AndroidApplication="$(AndroidApplication)">
 		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
 		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
