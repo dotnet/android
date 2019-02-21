@@ -11,7 +11,7 @@ namespace Xamarin.Android.Build.Tests
 		// In general here I don't make use of IDisposable pattern for ProjectBuilder because
 		// in case it failed I rather want to preserve the files to investigate.
 
-		public static ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
+		public static ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
 			var ret = CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 			//NOTE: since $(BuildingInsideVisualStudio) is set, Build will not happen by default
@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 			return ret;
 		}
 
-		public static ProjectBuilder CreateDllBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
+		public static ProjectBuilder CreateDllBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
 			return new ProjectBuilder (directory) {
 				CleanupAfterSuccessfulBuild = cleanupAfterSuccessfulBuild,
