@@ -98,7 +98,8 @@ timestamps {
                         env
                         killall -9 qemu-system-x86_64 || true
                         if [ -d "\$HOME/.android/avd/XamarinAndroidTestRunner.avd" ]; then
-                            rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*                fi
+                            rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*
+                        fi
                         """,
                 returnStatus: true
             );
@@ -161,7 +162,7 @@ timestamps {
                 commandStatus = sh(
                     script: """
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
-                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"\|"name": "run-tests-release"' >/dev/null 2>&1 ; then
+                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build" |"name": "run-tests-release"' >/dev/null 2>&1 ; then
                             make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
                         else
                             make run-all-tests CONFIGURATION=${env.BuildFlavor}
