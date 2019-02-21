@@ -16,7 +16,7 @@ MSBuild version 15 or later is required.
 
  3. Navigate to the `xamarin-android` directory
 
- 4. (Optional) [Configure the build](configuration.md).
+ 4. (Optional) [Configure the build](../configuration.md).
 
  5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
@@ -55,6 +55,22 @@ changes to Xamarin.Android.Build.Tasks, one way to avoid this issue is to open
 `Xamarin.Android.Build.Tasks.sln` instead.  But if you are working on changes
 outside of the build tasks, then you might prefer to work in an editor like
 Visual Studio Code instead and build via the command-line.
+
+## Alternatives to Developer Command Prompt
+
+The [Developer Command Prompt][developer-prompt] is not explicitly required,
+you mostly just need a way to easily invoke `MSBuild.exe`.
+
+So for example:
+
+* You *could* use:
+  `"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe"`.
+* You could add `MSBuild.exe` to your `%PATH%` via
+  [Windows environment variables GUI][windows_path].
+* You could setup a powershell alias to `msbuild` using [Set-Alias][set_alias].
+
+[windows_path]: https://www.java.com/en/download/help/path.xml
+[set_alias]: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6
 
 # Building Unit Tests
 
