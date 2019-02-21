@@ -7,6 +7,8 @@ def MSBUILD_AUTOPROVISION_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=T
 
 def isPr = false                // Default to CI
 
+def buildTarget = 'jenkins'
+
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, Closure body) {
     try {
         stage(stageName) {
@@ -72,6 +74,37 @@ timestamps {
             if (isPr) {
                 echo "PR id: ${env.ghprbPullId}"
                 echo "PR link: ${env.ghprbPullLink}"
+
+                buildTarget = sh(
+                    script: """
+                        # If PR has the 'full-mono-integration-build' label, build everything
+                        # Note: echo statements are return values via stdout
+                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"' >/dev/null 2>&1 ; then
+                            echo "jenkins"
+                        else
+                            echo "all"
+                        fi
+                    """,
+                    returnStdout: true
+                ).trim()
+            }
+        }
+
+        stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+            def commandStatus = sh(
+                script: """
+                        # We need to make sure there's no test AVD present and that the Android emulator isn't running
+                        # This is to assure that all tests start from the same state
+                        env
+                        killall -9 qemu-system-x86_64 || true
+                        if [ -d "\$HOME/.android/avd/XamarinAndroidTestRunner.avd" ]; then
+                            rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*                fi
+                        """,
+                returnStatus: true
+            );
+
+            if (commandStatus != 0) {
+                error "ERROR : Attempt to remove test AVD failed"
             }
         }
 
@@ -81,15 +114,19 @@ timestamps {
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             if (isPr) {
-                echo "PR build definition detected: building with 'make all'"
-                sh "make all CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                echo "PR build definition detected: building with 'make ${buildTarget}'"
+                sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
             } else {
-                echo "PR build definition *not* detected: building with 'make jenkins'"
-                sh "make jenkins CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+                echo "PR build definition *not* detected: building with 'make ${buildTarget}'"
+                sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
             }
         }
 
         stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            if (isPr) {
+                sh "make package-oss"
+            }
+
             sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
         }
 
@@ -117,12 +154,29 @@ timestamps {
 
         stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
-            def stageStatus = sh(
-                script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
-                returnStatus: true
-            );
 
-            if (stageStatus != 0) {
+            def commandStatus = 0
+
+            if (isPr) {
+                commandStatus = sh(
+                    script: """
+                        # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
+                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"\|"name": "run-tests-release"' >/dev/null 2>&1 ; then
+                            make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
+                        else
+                            make run-all-tests CONFIGURATION=${env.BuildFlavor}
+                        fi
+                    """,
+                    returnStatus: true
+                )
+            } else {
+                commandStatus = sh(
+                    script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
+                    returnStatus: true
+                )
+            }
+
+            if (commandStatus != 0) {
                 error "run-all-tests FAILED, status: ${stageStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
