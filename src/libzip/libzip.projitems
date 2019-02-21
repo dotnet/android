@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_CMakeCommonFlags>-GNinja -DBUILD_SHARED_LIBS=ON</_CMakeCommonFlags>
+  </PropertyGroup>
   <ItemGroup>
     <_LibZipTarget Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
-      <CMake>cmake</CMake>
-      <CMakeFlags>-C$(MSBuildThisFileDirectory)/CMakeCacheInitialOSX.txt -DCMAKE_OSX_ARCHITECTURES=&quot;x86_64&quot; -DBUILD_SHARED_LIBS=ON</CMakeFlags>
+      <CMakeFlags>-C$(MSBuildThisFileDirectory)/CMakeCacheInitialOSX.txt -DCMAKE_OSX_ARCHITECTURES=&quot;x86_64&quot; $(_CMakeCommonFlags)</CMakeFlags>
       <OutputLibrary>libzip.5.0.dylib</OutputLibrary>
       <OutputLibraryPath>lib/libzip.5.0.dylib</OutputLibraryPath>
     </_LibZipTarget>
     <_LibZipTarget Include="host-Linux" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) AND '$(_LinuxBuildLibZip)' == 'true' ">
-      <CMake>cmake</CMake>
-      <CMakeFlags>-DBUILD_SHARED_LIBS=ON</CMakeFlags>
+      <CMakeFlags> $(_CMakeCommonFlags)</CMakeFlags>
       <OutputLibrary>libzip.so</OutputLibrary>
       <OutputLibraryPath>lib/libzip.so</OutputLibraryPath>
     </_LibZipTarget>
-  </ItemGroup>
-  <ItemGroup>
-    <RequiredProgram Include="cmake" />
-    <RequiredProgram Include="make" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
 </Project>

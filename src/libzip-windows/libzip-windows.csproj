@@ -27,4 +27,11 @@
   <Import Project="..\libzip\libzip.targets" />
   <Target Name="Build" DependsOnTargets="$(BuildDependsOnLocal)" />
   <Target Name="Clean" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\mingw-dependencies\mingw-dependencies.csproj">
+      <Project>{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}</Project>
+      <Name>mingw-dependencies</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

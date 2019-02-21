@@ -101,9 +101,14 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				return;
 			}
 			if (string.Equals (HostOS, "Darwin", StringComparison.OrdinalIgnoreCase)) {
+				string tap  = Program.GetMetadata ("HomebrewTap");
+				if (!string.IsNullOrEmpty (tap)) {
+					tap = $"{SudoBrew}brew tap '{tap}';";
+				}
+
 				var brew    = Program.GetMetadata ("Homebrew");
 				if (!string.IsNullOrEmpty (brew)) {
-					InstallCommand = $"{SudoBrew}brew install '{brew}'";
+					InstallCommand = $"{tap}{SudoBrew}brew install '{brew}'";
 				}
 				return;
 			}

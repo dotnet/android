@@ -9,7 +9,6 @@
       ResolveReferences;
       _DownloadItems;
       _UnzipFiles;
-      _CreateMxeToolchains;
     </BuildDependsOn>
   </PropertyGroup>
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
@@ -97,24 +96,6 @@
     <Touch
         Files="@(_SdkStampFiles);$(AndroidToolchainDirectory)\ndk\.stamp-ndk-$(AndroidNdkVersion)"
         AlwaysCreate="True"
-    />
-  </Target>
-  <Target Name="_CreateMxeToolchains"
-      Condition=" '$(HostOS)' != 'Windows' And '$(NeedMxe)' == 'true' And ($(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')))"
-      Outputs="$(AndroidMxeFullPath)\.stamp">
-    <GitCommitHash
-        WorkingDirectory="..\..\external\mxe"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash" PropertyName="_MxeHash" />
-    </GitCommitHash>
-    <Error
-        Condition=" !$(AndroidMxeFullPath.EndsWith ($(_MxeHash))) "
-        Text="%24(AndroidMxeFullPath) value of `$(AndroidMxeFullPath)` MUST end with `$(_MxeHash)`!"
-    />
-    <Exec
-        Command="make $(MakeConcurrency) provision-mxe DISABLE_IOS=1 MXE_SRC=&quot;$(MSBuildThisFileDirectory)\..\..\external\mxe&quot; MXE_PREFIX_DIR=&quot;$(AndroidToolchainDirectory)&quot;"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
   </Target>
 
