@@ -9,6 +9,7 @@
       <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-v7a-clang\bin\arm-linux-androideabi-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
@@ -18,6 +19,7 @@
       <Strip>$(AndroidToolchainDirectory)\toolchains\arm64-v8a-clang\bin\aarch64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
@@ -27,6 +29,7 @@
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
@@ -36,6 +39,7 @@
       <Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename>libmono-btls-shared</OutputMonoBtlsFilename>
@@ -43,11 +47,19 @@
     </_MonoRuntime>
   </ItemGroup>
 
+  <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <CanStripWin32DLL>False</CanStripWin32DLL>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' != 'Linux' ">
+    <CanStripWin32DLL>True</CanStripWin32DLL>
+  </PropertyGroup>
+
   <ItemGroup>
     <_MonoRuntime Include="host-mxe-Win64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win64:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix64)-strip</Strip>
-      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' Or '$(HostOS)' == 'Linux' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
@@ -56,8 +68,9 @@
     </_MonoRuntime>
     <_MonoRuntime Include="host-mxe-Win32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':linux-Win32:'))">
       <Strip>$(AndroidMxeFullPath)\bin\$(MingwCommandPrefix32)-strip</Strip>
-      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' ">..\bin\</NativeLibraryPrefix>
+      <NativeLibraryPrefix Condition=" '$(HostOS)' == 'Darwin' Or '$(HostOS)' == 'Linux' ">..\bin\</NativeLibraryPrefix>
       <NativeLibraryExtension>dll</NativeLibraryExtension>
+      <CanStripNativeLibrary>$(CanStripWin32DLL)</CanStripNativeLibrary>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <OutputProfilerFilename></OutputProfilerFilename>
       <OutputAotProfilerFilename></OutputAotProfilerFilename>
@@ -70,6 +83,7 @@
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</NativeLibraryExtension>
       <NativeLibraryExtension Condition=" '$(HostOS)' == 'Linux' ">so</NativeLibraryExtension>
+      <CanStripNativeLibrary>True</CanStripNativeLibrary>
       <OutputProfilerFilename>libmono-profiler-log</OutputProfilerFilename>
       <OutputAotProfilerFilename>libmono-profiler-aot</OutputAotProfilerFilename>
       <OutputMonoBtlsFilename></OutputMonoBtlsFilename>

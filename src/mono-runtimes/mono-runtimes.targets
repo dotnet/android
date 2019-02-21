@@ -396,7 +396,7 @@
         DestinationFiles="@(_InstallUnstrippedRuntimeOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.CanStripNativeLibrary)' == 'True' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallRuntimeOutput);@(_InstallUnstrippedRuntimeOutput)" />
@@ -458,7 +458,7 @@
         DestinationFiles="@(_InstallUnstrippedMonoPosixHelperOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' And '%(_MonoRuntime.CanStripNativeLibrary)' == 'True' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />
