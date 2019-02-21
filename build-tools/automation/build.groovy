@@ -75,9 +75,6 @@ timestamps {
                 echo "PR id: ${env.ghprbPullId}"
                 echo "PR link: ${env.ghprbPullLink}"
 
-                echo "PR title: ${env.ghprbPullTitle}"
-                echo "PR description: ${env.ghprbPullLongDescription}"
-
                 // Clear out the PR title and description. This is the equivalent of $JENKINS_HOME/global-pre-script/remove-problematic-ghprb-parameters.groovy used by freestyle builds
                 echo "Clearing the PR title and description environment variables to avoid any special characters contained within from tripping up the build"
                 env.ghprbPullTitle = ''
