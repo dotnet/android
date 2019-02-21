@@ -749,6 +749,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<ResolveAndroidTooling
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidApiLevel="$(AndroidApiLevel)"
+			AndroidApplication="$(AndroidApplication)"
 			AndroidSdkPath="$(_AndroidSdkDirectory)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
@@ -757,8 +758,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			ProjectFilePath="$(MSBuildProjectFullPath)"			
 			LintToolPath="$(LintToolPath)"
-			ZipAlignPath="$(ZipAlignToolPath)"
-			AndroidApplication="$(AndroidApplication)">
+			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
 		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
 		<Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
