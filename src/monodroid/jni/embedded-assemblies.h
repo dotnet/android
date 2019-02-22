@@ -15,7 +15,6 @@ namespace xamarin { namespace android { namespace internal {
 	{
 	private:
 		static constexpr char assemblies_prefix[] = "assemblies/";
-		static constexpr char override_typemap_entry_name[] = ".__override__";
 		static const char *suffixes[];
 
 	public:

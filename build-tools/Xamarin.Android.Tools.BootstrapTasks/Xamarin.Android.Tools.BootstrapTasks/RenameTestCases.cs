@@ -10,8 +10,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif  // !APP
 
-using Xamarin.Android.BuildTools.PrepTasks;
-
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
 #if !APP
@@ -139,11 +137,55 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 			}
 
-			var message = $"Error processing `{sourceFile}`.  " +
-				$"Check the build log for execution errors.{Environment.NewLine}" +
-				$"File contents:{Environment.NewLine}";
-
-			ErrorResultsHelper.CreateErrorResultsFile (destFile, testSuiteName, testCaseName, e, message, contents.ToString ());
+			var doc       = new XDocument (
+				new XElement ("test-results",
+					new XAttribute ("date", DateTime.Now.ToString ("yyyy-MM-dd")),
+					new XAttribute ("errors", "1"),
+					new XAttribute ("failures", "0"),
+					new XAttribute ("ignored", "0"),
+					new XAttribute ("inconclusive", "0"),
+					new XAttribute ("invalid", "0"),
+					new XAttribute ("name", destFile),
+					new XAttribute ("not-run", "0"),
+					new XAttribute ("skipped", "0"),
+					new XAttribute ("time", DateTime.Now.ToString ("HH:mm:ss")),
+					new XAttribute ("total", "1"),
+					new XElement ("environment",
+						new XAttribute ("nunit-version", "3.6.0.0"),
+						new XAttribute ("clr-version", "4.0.30319.42000"),
+						new XAttribute ("os-version", "Unix 15.6.0.0"),
+						new XAttribute ("platform", "Unix"),
+						new XAttribute ("cwd", Environment.CurrentDirectory),
+						new XAttribute ("machine-name", Environment.MachineName),
+						new XAttribute ("user", Environment.UserName),
+						new XAttribute ("user-domain", Environment.MachineName)),
+					new XElement ("culture-info",
+						new XAttribute ("current-culture", "en-US"),
+						new XAttribute ("current-uiculture", "en-US")),
+					new XElement ("test-suite",
+						new XAttribute ("type", "APK-File"),
+						new XAttribute ("name", testSuiteName),
+						new XAttribute ("executed", "True"),
+						new XAttribute ("result", "Failure"),
+						new XAttribute ("success", "False"),
+						new XAttribute ("time", "0"),
+						new XAttribute ("asserts", "0"),
+						new XElement ("results",
+							new XElement ("test-case",
+								new XAttribute ("name", testCaseName),
+								new XAttribute ("executed", "True"),
+								new XAttribute ("result", "Error"),
+								new XAttribute ("success", "False"),
+								new XAttribute ("time", "0.0"),
+								new XAttribute ("asserts", "1"),
+								new XElement ("failure",
+									new XElement ("message",
+										$"Error processing `{sourceFile}`.  " +
+										$"Check the build log for execution errors.{Environment.NewLine}" +
+										$"File contents:{Environment.NewLine}",
+										new XCData (contents.ToString ())),
+									new XElement ("stack-trace", e.ToString ())))))));
+			doc.Save (destFile);
 		}
 
 		// Example `SourceFile`:
@@ -170,9 +212,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 #if APP
 	// Compile:
-	//   csc build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/RenameTestCases.cs /out:test.exe /d:APP /r:System.Xml.Linq.dll /r:bin/BuildDebug/xa-prep-tasks.dll
+	//   csc build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/RenameTestCases.cs /out:test.exe /d:APP /r:System.Xml.Linq.dll
 	// Run:
-	//   MONO_PATH=bin/BuildDebug mono test.exe test.xml
+	//   mono test.exe test.xml
 	// Validate:
 	//   curl -o Results.xsd https://nunit.org/docs/files/Results.xsd
 	//   MONO_XMLTOOL_ERROR_DETAILS=yes mono-xmltool  --validate Results.xsd test.xml

@@ -76,6 +76,7 @@ namespace Xamarin.Android.Tasks {
 		};
 		
 		public string PackageName { get; set; }
+		public List<string> Addons { get; private set; }
 		public string ApplicationName { get; set; }
 		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
@@ -112,20 +113,12 @@ namespace Xamarin.Android.Tasks {
 			return minAttr.Value;
 		}
 
-		public string GetTargetSdk ()
-		{
-			var targetAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "targetSdkVersion");
-			if (targetAttr == null) {
-				return SdkVersionName;
-			}
-			return targetAttr.Value;
-		}
-
 		TaskLoggingHelper log;
 
 		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
 		{
 			this.log = log;
+			Addons = new List<string> ();
 			Assemblies = new List<string> ();
 
 			attName = androidNs + "name";
@@ -388,6 +381,8 @@ namespace Xamarin.Android.Tasks {
 
 			if (!embed)
 				AddFastDeployPermissions ();
+
+			AddAddOns (app, SdkDir, SdkVersionName, Addons);
 
 			// If the manifest has android:installLocation, but we are targeting
 			// API 7 or lower, remove it for the user and show a warning
@@ -652,6 +647,20 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		/// <summary>
+		/// Returns the value of //application/@android:extractNativeLibs.
+		/// </summary>
+		public bool ExtractNativeLibraries ()
+		{
+			string text = app?.Attribute (androidNs + "extractNativeLibs")?.Value;
+			if (bool.TryParse (text, out bool value)) {
+				return value;
+			}
+
+			// If android:extractNativeLibs is omitted, returns true.
+			return true;
+		}
+
+		/// <summary>
 		/// Returns true if an element has the @android:directBootAware attribute and its 'true'
 		/// </summary>
 		public bool DirectBootAware ()
@@ -756,6 +765,57 @@ namespace Xamarin.Android.Tasks {
 				if (!filter.Elements (e.Key).Any (x => ((string) x.Attribute (attName)) == e.Value))
 					filter.Add (new XElement (e.Key, new XAttribute (attName, e.Value)));
 			}
+		}
+		
+		internal static void AddAddOns (XElement app, string sdkDir, string sdkVersionName, IList<string> addonList)
+		{
+			List<AndroidAddOnManifest> manifests = AndroidAddOnManifest.GetAddOnManifests (sdkDir).ToList ();
+			foreach (string library in app.Elements ("uses-library")
+					.Select (ul => {
+						var n = (string) ul.Attribute (androidNs + "name");
+						return n != null ? n.Trim () : n; 
+					})
+					.Where (ul => !string.IsNullOrEmpty (ul))) {
+				AndroidAddOn addOn = GetAddOn (manifests, sdkVersionName, library);
+				// uses-library could be used to specify such library that does not exist in
+				// application or even on the host (even if "required" is true). The target
+				// may contain that library. "android.test.runner" is such an example.
+				if (addOn != null)
+					addonList.Add (addOn.JarPath);
+			}
+		}
+		
+		static AndroidAddOn GetAddOn (List<AndroidAddOnManifest> manifests, string sdkVersionName, string libraryName)
+		{
+			// try exact match
+			AndroidAddOn addon = manifests.SelectMany (manifest => manifest.Libraries)
+				.Where (ao => ao.Name == libraryName && ao.ApiLevel == sdkVersionName)
+				.FirstOrDefault ();
+			if (addon != null)
+				return addon;
+			
+			// Try to grab an addon with level <= sdkVersion
+			// Requires that sdkVersion & AndroidAddOn.ApiLevel be convertible to System.Int32.
+			//
+			// So far preview L does not come up with google add-on, so it's OK to leave it unsupported.
+			int targetLevel;
+			if (!int.TryParse (sdkVersionName, out targetLevel)) {
+				return null;
+			}
+			int curLevel = int.MinValue;
+			foreach (AndroidAddOn attempt in manifests.SelectMany (manifest => manifest.Libraries)
+					.Where (ao => ao.Name == libraryName)) {
+				int level;
+				if (!int.TryParse (attempt.ApiLevel, out level))
+					continue;
+				if (curLevel > level)
+					continue;
+				if (level > targetLevel)
+					continue;
+				curLevel = level;
+				addon = attempt;
+			}
+			return addon;
 		}
 
 		public void AddInternetPermissionForDebugger ()

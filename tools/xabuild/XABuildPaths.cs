@@ -224,24 +224,15 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		string FindLatestDotNetSdk (string dotNetPath)
+		string FindLatestDotNetSdk(string dotNetPath)
 		{
-			if (Directory.Exists (dotNetPath)) {
-				Version latest = new Version (0,0);
-				string Sdk = null;
-				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
-					var version = GetVersionFromDirectory (dir);
-					var sdksDir = Path.Combine (dir, "Sdks");
-					if (!Directory.Exists (sdksDir))
-						sdksDir = Path.Combine (dir, "bin", "Sdks");
-					if (version != null && version > latest) {
-						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
-							latest = version;
-							Sdk = sdksDir;
-						}
-					}
-				}
-				return Sdk;
+			if (Directory.Exists(dotNetPath)) {
+				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
+				                  let version = GetVersionFromDirectory (dir)
+				                  where version != null
+				                  orderby version descending
+				                  select Path.Combine (dir, "Sdks");
+				return directories.FirstOrDefault ();
 			}
 			return null;
 		}

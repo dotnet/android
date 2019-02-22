@@ -25,7 +25,6 @@
 // THE SOFTWARE.
 
 using System;
-using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.IO;
@@ -97,8 +96,8 @@ namespace Xamarin.Android.Tasks
 					if (string.IsNullOrEmpty (rel)) {
 						rel = item.GetMetadata ("Identity");
 						if (!string.IsNullOrEmpty (ProjectDir)) {
-							var fullRelPath = Path.GetFullPath (rel).Normalize (NormalizationForm.FormC);
-							var fullProjectPath = Path.GetFullPath (ProjectDir).Normalize (NormalizationForm.FormC);
+							var fullRelPath = Path.GetFullPath (rel);
+							var fullProjectPath = Path.GetFullPath (ProjectDir);
 							if (fullRelPath.StartsWith (fullProjectPath)) {
 								rel = fullRelPath.Replace (fullProjectPath, string.Empty);
 							}

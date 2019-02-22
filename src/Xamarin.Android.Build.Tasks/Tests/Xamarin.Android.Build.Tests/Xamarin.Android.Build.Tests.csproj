@@ -85,12 +85,10 @@
     <Compile Include="Tasks\CopyResourceTests.cs" />
     <Compile Include="Tasks\KeyToolTests.cs" />
     <Compile Include="Aapt2Tests.cs" />
-    <Compile Include="Tasks\MakeBundleNativeCodeExternalTests.cs" />
     <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
     <Compile Include="ZipArchiveExTests.cs" />
     <Compile Include="ConvertResourcesCasesTests.cs" />
-    <Compile Include="Tasks\NdkUtilTests.cs" />
-    <Compile Include="Tasks\CheckGoogleSdkRequirementsTests.cs" />
+    <Compile Include="..\..\..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

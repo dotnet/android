@@ -32,8 +32,6 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,7 +59,6 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessLogcatTiming.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\CreateFilePaths.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\NDKInfo.cs" />
-    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ErrorResultsHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">

@@ -43,17 +43,15 @@
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
-    <AndroidGenerateJniMarshalMethods Condition=" '$(HostOS)' == 'Darwin' ">True</AndroidGenerateJniMarshalMethods>
+    <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="Mono.Android" />
     <Reference Include="Mono.Android.Export" />
-    <Reference Include="Mono.Data.Sqlite" />
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +68,9 @@
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
     <AndroidBoundLayout Include="Resources\layout\Main.axml" />
+    <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
+      <Link>Resources\Drawable\Image.9.png</Link>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="Assets\asset1.txt" />

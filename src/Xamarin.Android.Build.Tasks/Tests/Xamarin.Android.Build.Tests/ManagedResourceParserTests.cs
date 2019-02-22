@@ -74,9 +74,9 @@ namespace Xamarin.Android.Build.Tests {
 ";
 
 		[Test]
-		public void GenerateDesignerFileWithÜmläüts ()
+		public void GenerateDesignerFile ()
 		{
-			var path = Path.Combine ("temp", TestName + " Some Space");
+			var path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "transition"));
 

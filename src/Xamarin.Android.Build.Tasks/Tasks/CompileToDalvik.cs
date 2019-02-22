@@ -82,18 +82,11 @@ namespace Xamarin.Android.Tasks
 					cmd.AppendSwitch (JavaOptions);		
 				}
 
-				cmd.AppendSwitchIfNotNull ("-Dfile.encoding=", "UTF8");
 				// Add the specific -XmxN to override the default heap size for the JVM
 				// N can be in the form of Nm or NGB (e.g 100m or 1GB ) 
 				cmd.AppendSwitchIfNotNull("-Xmx", JavaMaximumHeapSize);
 
 				cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (DxJarPath));
-			} else {
-				// To pass additional java parameters to `dx` you must 
-				// provide the parameter without the leading `-` 
-				// the dx tool will add that in after stripping off
-				// the `-J`
-				cmd.AppendSwitchIfNotNull ("-JDfile.encoding=", "UTF8");
 			}
 
 			cmd.AppendSwitch (DxExtraArguments);

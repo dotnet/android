@@ -59,15 +59,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			if (File.Exists (InputFilename))
 				return true;
 
-			var errorMessage = $"Input file '{InputFilename}' doesn't exist.";
-			Log.LogError (errorMessage);
-
-			ErrorResultsHelper.CreateErrorResultsFile (
-				Path.ChangeExtension (ResultsFilename, null) + LabelSuffix + ".xml",
-				ApplicationPackageName,
-				"logcat output",
-				new Exception (errorMessage),
-				$"Input file '{InputFilename}' doesn't exist. It might be caused by various reasons. Among them: the test crashed or test did not run.");
+			Log.LogError ($"Input file '{InputFilename}' doesn't exist.");
 
 			return false;
 		}

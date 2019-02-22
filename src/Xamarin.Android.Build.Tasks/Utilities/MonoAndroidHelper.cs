@@ -583,14 +583,15 @@ namespace Xamarin.Android.Tasks
 
 		public static IEnumerable<string> Executables (string executable)
 		{
+			yield return executable;
 			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-			if (pathExts != null) {
-				foreach (var ext in pathExts)
-					yield return Path.ChangeExtension (executable, ext);
-			}
-			yield return executable;
+			if (pathExts == null)
+				yield break;
+
+			foreach (var ext in pathExts)
+				yield return Path.ChangeExtension (executable, ext);
 		}
 
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform)

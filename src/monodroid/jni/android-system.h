@@ -23,12 +23,9 @@ namespace xamarin { namespace android { namespace internal
 
 	struct KnownEnvironmentVariables
 	{
-		static constexpr bool AssemblyPreloadDefault = true;
-
 		bool        DSOInApk = false;
 		MonoAotMode MonoAOT = MonoAotMode::MONO_AOT_MODE_NONE;
 		bool        MonoLLVM = false;
-		bool        EnableAssemblyPreload = AssemblyPreloadDefault;
 	};
 
 	class AndroidSystem
@@ -136,10 +133,6 @@ namespace xamarin { namespace android { namespace internal
 #if defined (WINDOWS)
 		int setenv (const char *name, const char *value, int overwrite);
 #endif
-		bool is_assembly_preload_enabled () const
-		{
-			return knownEnvVars.EnableAssemblyPreload;
-		}
 
 		bool is_mono_llvm_enabled () const
 		{

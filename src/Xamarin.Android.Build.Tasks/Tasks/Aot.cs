@@ -81,8 +81,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
-				return false;
+			NdkUtil.Init (AndroidNdkDirectory);
 
 			try {
 				return DoExecute ();
