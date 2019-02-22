@@ -67,10 +67,13 @@ timestamps {
 
             def buildType = isPr ? 'PR' : 'CI'
 
+            echo "Git URL: ${env.GIT_URL}"
+            echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
+
             if (isPr) {
                 echo "PR id: ${env.ghprbPullId}"
                 echo "PR link: ${env.ghprbPullLink}"
@@ -84,7 +87,7 @@ timestamps {
                     script: """
                         # If PR has the 'full-mono-integration-build' label, build everything
                         # Note: echo return values via stdout
-                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"' >/dev/null 2>&1 ; then
+                        if curl https://api.github.com/repos/${env.GitRepo}/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"' >/dev/null 2>&1 ; then
                             echo "jenkins"
                         else
                             echo "all"
@@ -169,7 +172,7 @@ timestamps {
             if (isPr) {
                 commandStatus = sh(
                     script: """
-                        curlCommand="curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId}"
+                        curlCommand="curl https://api.github.com/repos/${env.GitRepo}/issues/${env.ghprbPullId}"
 
                         curlResult=`\${curlCommand} 2>&1`
                         if [ "\$curlResult" == "" ]; then
