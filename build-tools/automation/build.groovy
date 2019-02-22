@@ -39,7 +39,7 @@ def publishPackages(filePaths) {
                  storageType: "blobstorage",
                  containerName: env.ContainerName,
                  virtualPath: env.StorageVirtualPath,
-                 filesPath: $filePaths,
+                 filesPath: filePaths,
                  allowAnonymousAccess: true,
                  pubAccessible: true,
                  doNotWaitForPreviousBuild: true,
