@@ -170,12 +170,20 @@ timestamps {
             if (isPr) {
                 commandStatus = sh(
                     script: """
-                        curlResult=`curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1`
+                        curlCommand="curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId}"
+
+                        curlResult=`\${curlCommand} 2>&1`
+                        if [ "\$curlResult" == "" ]; then
+                          echo "ERROR : NON-FATAL: Run all tests: Empty result returned from '\${curlCommand}' preventing any labels on the PR from being found"
+                        fi
+
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
                         if echo \$curlResult | grep '"name": "full-mono-integration-build"' ||
                            echo \$curlResult | grep '"name": "run-tests-release"' >/dev/null 2>&1 ; then
+                            echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels has been found on the PR"
                             make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
                         else
+                            echo "Run all tests: Neither of the 'full-mono-integration-build' or 'run-tests-release' labels has been found on the PR"
                             make run-all-tests CONFIGURATION=${env.BuildFlavor}
                         fi
                     """,
