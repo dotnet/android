@@ -93,7 +93,10 @@ timestamps {
                     """,
                     returnStdout: true
                 ).trim()
+
             }
+
+            echo "${buildType} buildTarget: ${buildTarget}"
         }
 
         stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
