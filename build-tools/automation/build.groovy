@@ -167,8 +167,10 @@ timestamps {
             if (isPr) {
                 commandStatus = sh(
                     script: """
+                        curlResult=`curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1`
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
-                        if curl https://api.github.com/repos/xamarin/xamarin-android/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build" |"name": "run-tests-release"' >/dev/null 2>&1 ; then
+                        if echo \$curlResult | grep '"name": "full-mono-integration-build"' ||
+                           echo \$curlResult | grep '"name": "run-tests-release"' >/dev/null 2>&1 ; then
                             make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
                         else
                             make run-all-tests CONFIGURATION=${env.BuildFlavor}
