@@ -1,0 +1,60 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
+  <PropertyGroup>
+    <Aapt2Version>3.3.1-5013011</Aapt2Version>
+    <BuildDependsOn>
+      ResolveReferences;
+      _DownloadAapt2;
+    </BuildDependsOn>
+    <CleanDependsOn>
+      _CleanAapt2;
+    </CleanDependsOn>
+    <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\</_Destination>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_Aapt2Download Include="aapt2-$(Aapt2Version)-osx.zip">
+        <Platform>osx</Platform>
+        <HostOS>Darwin</HostOS>
+    </_Aapt2Download>
+    <_Aapt2Download Include="aapt2-$(Aapt2Version)-linux.zip">
+        <Platform>linux</Platform>
+        <HostOS>Linux</HostOS>
+    </_Aapt2Download>
+    <_Aapt2Download Include="aapt2-$(Aapt2Version)-windows.zip">
+        <Platform>windows</Platform>
+        <HostOS></HostOS>
+    </_Aapt2Download>
+  </ItemGroup>
+
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
+
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+
+  <Target Name="_DownloadAapt2">
+    <ItemGroup>
+        <_DownloadUrl Include="%(_Aapt2Download.Identity)">
+            <Platform>%(_Aapt2Download.Platform)</Platform>
+            <HostOS>%(_Aapt2Download.HostOS)</HostOS>
+            <Url>https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/$(Aapt2Version)/aapt2-$(Aapt2Version)-%(_Aapt2Download.Platform).jar</Url>
+        </_DownloadUrl>
+    </ItemGroup>
+
+    <DownloadUri
+        SourceUris="%(_DownloadUrl.Url)"
+        DestinationFiles="@(_DownloadUrl->'$(AndroidToolchainCacheDirectory)\%(Filename)%(Extension)')"
+    />
+    <UnzipDirectoryChildren
+        NoSubdirectory="True"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_DownloadUrl.Filename)%(_DownloadUrl.Extension)"
+        DestinationFolder="$(_Destination)%(_DownloadUrl.HostOS)"
+    />
+  </Target>
+
+  <Target Name="_CleanAapt2">
+    <Delete Files="@(_Aapt2Download->'$(_Destination)\%(HostOS)')" />
+  </Target>
+
+</Project>

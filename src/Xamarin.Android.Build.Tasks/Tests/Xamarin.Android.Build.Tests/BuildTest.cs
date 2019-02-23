@@ -341,7 +341,7 @@ namespace UnamedProject
 					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
 					//"_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponent",
+					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};
@@ -446,7 +446,7 @@ namespace UnamedProject
 				var targetsToBeSkipped = new [] {
 					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponent",
+					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};

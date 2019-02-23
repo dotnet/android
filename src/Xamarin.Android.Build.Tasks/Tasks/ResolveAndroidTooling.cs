@@ -67,6 +67,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string Aapt2Version { get; set; }
 
+		[Output]
+		public string Aapt2ToolPath { get; set; }
+
 		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string Aapt = IsWindows ? "aapt.exe" : "aapt";
@@ -133,7 +136,14 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
-			bool aapt2Installed = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
+				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
+				var aapt2 = Path.Combine (osBinPath, Aapt2);
+				if (File.Exists (aapt2))
+					Aapt2ToolPath = osBinPath;
+			}
+
+			bool aapt2Installed = !string.IsNullOrEmpty (Aapt2ToolPath) && File.Exists (Path.Combine (Aapt2ToolPath, Aapt2));
 			if (aapt2Installed && AndroidUseAapt2) {
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
@@ -224,7 +234,7 @@ namespace Xamarin.Android.Tasks
 		bool GetAapt2Version ()
 		{
 			var sb = new StringBuilder ();
-			var aapt2Tool = Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2);
+			var aapt2Tool = Path.Combine (Aapt2ToolPath, Aapt2);
 			try {
 				MonoAndroidHelper.RunProcess (aapt2Tool, "version", (s, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
