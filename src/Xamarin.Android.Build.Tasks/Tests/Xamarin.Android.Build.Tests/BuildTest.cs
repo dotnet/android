@@ -3332,6 +3332,27 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			}
 		}
 
+		//NOTE: tests type forwarders in Mono.Android.dll to System.Drawing.Common.dll
+		[Test]
+		public void SystemDrawingCommon ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "class Foo { System.Drawing.Color bar; }"
+					}
+				},
+				PackageReferences = {
+					KnownPackages.Acr_UserDialogs,
+					KnownPackages.Xamarin_Build_Download_0_4_11,
+				}
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		[Test]
 		[TestCase ("armeabi;armeabi-v7a", TestName = "XA0115")]
 		[TestCase ("armeabi,armeabi-v7a", TestName = "XA0115Commas")]
