@@ -182,13 +182,6 @@ timestamps {
 
                 commandStatus = sh(
                     script: """
-                        curlCommand="curl https://api.github.com/repos/${env.GitRepo}/issues/${env.ghprbPullId}"
-
-                        curlResult=`\${curlCommand} 2>&1`
-                        if [ "\$curlResult" == "" ]; then
-                          echo "ERROR : NON-FATAL: Run all tests: Empty result returned from '\${curlCommand}' preventing any labels on the PR from being found"
-                        fi
-
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
                         if ${hasPrLabelFullMonoIntegrationBuild} || ${hasPrLabelRunTestsRelease}; then
                             echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels have been found on the PR"
