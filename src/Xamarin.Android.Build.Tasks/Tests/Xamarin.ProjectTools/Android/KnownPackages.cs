@@ -681,6 +681,19 @@ namespace Xamarin.ProjectTools
 				}
 			},
 		};
+		public static Package Acr_UserDialogs = new Package {
+			Id = "Acr.UserDialogs",
+			Version = "6.5.1",
+			TargetFramework = "MonoAndroid10",
+			References = {
+				new BuildItem.Reference ("Acr.UserDialogs") {
+					MetadataValues = "HintPath=..\\packages\\Acr.UserDialogs.6.5.1\\lib\\MonoAndroid10\\Acr.UserDialogs.dll"
+				},
+				new BuildItem.Reference ("Acr.UserDialogs.Interfaces") {
+					MetadataValues = "HintPath=..\\packages\\Acr.UserDialogs.6.5.1\\lib\\MonoAndroid10\\Acr.UserDialogs.Interfaces.dll"
+				}
+			},
+		};
 	}
 }
 
