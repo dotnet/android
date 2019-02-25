@@ -191,10 +191,10 @@ timestamps {
 
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
                         if ${hasPrLabelFullMonoIntegrationBuild} || ${hasPrLabelRunTestsRelease}; then
-                            echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels has been found on the PR"
+                            echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels have been found on the PR"
                             make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
                         else
-                            echo "Run all tests: Neither of the 'full-mono-integration-build' or 'run-tests-release' labels has been found on the PR"
+                            echo "Run all tests: Neither of the 'full-mono-integration-build' or 'run-tests-release' labels have been found on the PR"
                             make run-all-tests CONFIGURATION=${env.BuildFlavor}
                         fi
                     """,
