@@ -51,7 +51,7 @@ def publishPackages(filePaths) {
     return status
 }
 
-prInfos = [:]  // Globally defined without 'def' and so accessible within the hasLabel function
+prInfos = [:]  // Globally defined without 'def' such that it is accessible within the hasLabel function
 
 def hasLabel (gitRepo, prId, prLabel) {
     if (!prInfos.containsKey(prLabel)) {
