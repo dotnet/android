@@ -65,8 +65,7 @@ timestamps {
 
             def buildType = isPr ? 'PR' : 'CI'
 
-            echo "Job base name: ${env.JOB_BASE_NAME}"
-            echo "Job name: ${env.JOB_NAME}"
+            echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
