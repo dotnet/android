@@ -51,6 +51,22 @@ def publishPackages(filePaths) {
     return status
 }
 
+prInfos = [:]  // Globally defined without 'def' and so accessible within the hasLabel function
+
+def hasLabel (gitRepo, prId, prLabel) {
+    if (!prInfos.containsKey(prLabel)) {
+        def curlCommand = "curl https://api.github.com/repos/${gitRepo}/issues/${prId}"
+
+        def grepResult = sh(script: """${curlCommand} | grep '"name": "${prLabel}"' >/dev/null 2>&1""",
+                            returnStatus: true)
+
+        def prInfoContainsLabel = (grepResult == 0)
+        prInfos.put(prLabel, prInfoContainsLabel)
+    }
+
+    return prInfos.get(prLabel)
+}
+
 timestamps {
     node("${env.BotLabel}") {
         def scmVars
@@ -82,19 +98,11 @@ timestamps {
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
 
-                buildTarget = sh(
-                    script: """
-                        # If PR has the 'full-mono-integration-build' label, build everything
-                        # Note: echo return values via stdout
-                        if curl https://api.github.com/repos/${env.GitRepo}/issues/${env.ghprbPullId} 2>&1 | grep '"name": "full-mono-integration-build"' >/dev/null 2>&1 ; then
-                            echo "jenkins"
-                        else
-                            echo "all"
-                        fi
-                    """,
-                    returnStdout: true
-                ).trim()
-
+                if (hasLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                    buildTarget = 'jenkins'
+                } else {
+                    buildTarget = 'all'
+                }
             }
 
             echo "${buildType} buildTarget: ${buildTarget}"
@@ -169,6 +177,9 @@ timestamps {
             def commandStatus = 0
 
             if (isPr) {
+                def hasPrLabelFullMonoIntegrationBuild = hasLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')
+                def hasPrLabelRunTestsRelease = hasLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
+
                 commandStatus = sh(
                     script: """
                         curlCommand="curl https://api.github.com/repos/${env.GitRepo}/issues/${env.ghprbPullId}"
@@ -179,8 +190,7 @@ timestamps {
                         fi
 
                         # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
-                        if echo \$curlResult | grep '"name": "full-mono-integration-build"' ||
-                           echo \$curlResult | grep '"name": "run-tests-release"' >/dev/null 2>&1 ; then
+                        if ${hasPrLabelFullMonoIntegrationBuild} || ${hasPrLabelRunTestsRelease}; then
                             echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels has been found on the PR"
                             make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
                         else
