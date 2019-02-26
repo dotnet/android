@@ -163,7 +163,12 @@ timestamps {
         }
 
         stageWithTimeout('publish packages to Azure', 10, 'MINUTES', '', true) {    // Typically takes less than a minute
-            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/${env.BuildFlavor}/bundle-*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/prepare-image-dependencies.sh,${XADir}/build-status*,${XADir}/xa-build-status*";
+            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/build-status*,${XADir}/xa-build-status*";
+
+            if (!isPr) {
+                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip,${XADir}/prepare-image-dependencies.sh"
+            }
+
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
             def stageStatus = publishPackages(publishBuildFilePaths)
             if (stageStatus != 0) {
@@ -211,6 +216,10 @@ timestamps {
             sh "make -C ${XADir} -k package-test-errors"
 
             def publishTestFilePaths = "${XADir}/xa-test-errors*"
+            if (isPr) {
+                publishTestFilePaths = "${publishTestFilePaths},${XADir}/test-errors.zip"
+            }
+
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def stageStatus = publishPackages(publishTestFilePaths)
             if (stageStatus != 0) {
