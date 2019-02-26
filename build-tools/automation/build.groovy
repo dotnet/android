@@ -209,10 +209,7 @@ timestamps {
 
             sh "make -C ${XADir} -k package-test-errors"
 
-            def publishTestFilePaths = "${XADir}/xa-test-errors*"
-            if (isPr) {
-                publishTestFilePaths = "${publishTestFilePaths},${XADir}/test-errors.zip"
-            }
+            def publishTestFilePaths = "${XADir}/xa-test-errors*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def stageStatus = publishPackages(publishTestFilePaths)
