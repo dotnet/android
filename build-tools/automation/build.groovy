@@ -110,8 +110,8 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish packages to Azure', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
-            def publishBuildFilePaths = "xamarin.android-oss*.zip,bin/${env.BuildFlavor}/bundle-*.zip,bin/Build*/Xamarin.Android.Sdk*.vsix,prepare-image-dependencies.sh,build-status*,xa-build-status*";
+        stageWithTimeout('publish packages to Azure', 10, 'MINUTES', '', true) {    // Typically takes less than a minute
+            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/${env.BuildFlavor}/bundle-*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/prepare-image-dependencies.sh,${XADir}/build-status*,${XADir}/xa-build-status*";
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
             def stageStatus = publishPackages(publishBuildFilePaths)
             if (stageStatus != 0) {
@@ -131,11 +131,12 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', XADir, false) {  // Typically takes less than a minute
+        stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false) {  // Typically takes less than a minute
             echo "packaging test error logs"
-            sh "make package-test-errors"
 
-            def publishTestFilePaths = "xa-test-errors*"
+            sh "make -C ${XADir} -k package-test-errors"
+
+            def publishTestFilePaths = "${XADir}/xa-test-errors*"
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def stageStatus = publishPackages(publishTestFilePaths)
             if (stageStatus != 0) {
