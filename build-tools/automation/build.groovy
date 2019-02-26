@@ -51,7 +51,7 @@ def publishPackages(filePaths) {
     return status
 }
 
-prInfos = [:]  // Globally defined "static" variable such that it is accessible within the hasPrLabel function
+prInfos = [:]  // Globally defined "static" variable accessible within the hasPrLabel function
 
 def hasPrLabel (gitRepo, prId, prLabel) {
     if (!prInfos.containsKey(prLabel)) {
