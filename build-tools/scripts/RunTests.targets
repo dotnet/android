@@ -115,10 +115,10 @@
     <PropertyGroup>
       <_HostOS>$(HostOS)</_HostOS>
       <_ExeExtension></_ExeExtension>
-      <_HostOS Condition="'$(_HostOS)' == 'Windows'"></_HostOS>
-      <_ExeExtension Condition="'$(_HostOS)' == 'Windows'">.exe</_ExeExtension>
-      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin-android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">False</_CrossCompilerAvailable>
-      <_CrossCompilerAvailable Condition="'$(_CrossCompilerAvailable)' == ''">False</_CrossCompilerAvailable>
+      <_HostOS Condition=" '$(_HostOS)' == 'Windows' "></_HostOS>
+      <_ExeExtension Condition=" '$(_HostOS)' == 'Windows' ">.exe</_ExeExtension>
+      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin-android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
+      <_CrossCompilerAvailable Condition=" '$(_CrossCompilerAvailable)' == '' ">False</_CrossCompilerAvailable>
     </PropertyGroup>
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
       <_ApkTestProjectAot>
@@ -127,12 +127,12 @@
     </ItemGroup>
     <Exec 
         Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AotAssemblies=True"
-        Condition=" '$(Configuration)' == 'Release' And '$(_CrossCompilerAvailable)' == 'True' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
     />
     <MSBuild 
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
-        Condition=" '$(Configuration)' == 'Release' And '$(_CrossCompilerAvailable)' == 'True' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AotAssemblies=True"
     />
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
@@ -142,12 +142,12 @@
     </ItemGroup>
     <Exec
         Command="$(_XABuild) %(_ApkTestProjectBundle.Identity) %(_ApkTestProjectBundle._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:BundleAssemblies=True /p:EmbedAssembliesIntoApk=True"
-        Condition=" '$(Configuration)' == 'Release' And '$(_CrossCompilerAvailable)' == 'True' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
     />
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
-        Condition=" '$(Configuration)' == 'Release' And '$(_CrossCompilerAvailable)' == 'True' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="BundleAssemblies=True"
     />
   </Target>
