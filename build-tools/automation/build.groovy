@@ -132,13 +132,7 @@ timestamps {
         }
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            if (isPr) {
-                echo "PR build definition detected: building with 'make ${buildTarget}'"
-                sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
-            } else {
-                echo "PR build definition *not* detected: building with 'make ${buildTarget}'"
-                sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
-            }
+            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
 
         stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
