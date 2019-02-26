@@ -1,5 +1,6 @@
 // This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
+import groovy.json.JsonSlurper
 
 def XADir = "xamarin-android"
 
@@ -51,20 +52,27 @@ def publishPackages(filePaths) {
     return status
 }
 
-prInfos = [:]  // Globally defined "static" variable accessible within the hasPrLabel function
+prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
 
 def hasPrLabel (gitRepo, prId, prLabel) {
-    if (!prInfos.containsKey(prLabel)) {
-        def curlCommand = "curl https://api.github.com/repos/${gitRepo}/issues/${prId}"
+    if (!prLabels) {
+        prLabels = []
 
-        def grepResult = sh(script: """${curlCommand} | grep '"name": "${prLabel}"' >/dev/null 2>&1""",
-                            returnStatus: true)
+        def url = "https://api.github.com/repos/${gitRepo}/issues/${prId}"
+        def jsonContent = new URL(url).getText()
+        if (!jsonContent) {
+            throw "ERROR : Unable to obtain json content containing PR labels from '${url}'"
+        }
 
-        def prInfoContainsLabel = (grepResult == 0)
-        prInfos.put(prLabel, prInfoContainsLabel)
+        def jsonSlurper = new JsonSlurper()             // http://groovy-lang.org/json.html
+        def json = jsonSlurper.parseText(jsonContent)   // Note: We must use parseText instead of parse(url). parse(url) leads to error 'Scripts not permitted to use method groovy.json.JsonSlurper parse java.net.URL'
+
+        for (label in json.labels) {
+            prLabels.add(label.name)
+        }
     }
 
-    return prInfos.get(prLabel)
+    return prLabels.contains(prLabel)
 }
 
 timestamps {
