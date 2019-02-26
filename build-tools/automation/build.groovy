@@ -51,9 +51,9 @@ def publishPackages(filePaths) {
     return status
 }
 
-prInfos = [:]  // Globally defined such that it is accessible within the hasLabel function
+prInfos = [:]  // Globally defined "static" variable such that it is accessible within the hasPrLabel function
 
-def hasLabel (gitRepo, prId, prLabel) {
+def hasPrLabel (gitRepo, prId, prLabel) {
     if (!prInfos.containsKey(prLabel)) {
         def curlCommand = "curl https://api.github.com/repos/${gitRepo}/issues/${prId}"
 
@@ -98,7 +98,7 @@ timestamps {
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
 
-                if (hasLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                if (hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
                     buildTarget = 'jenkins'
                 } else {
                     buildTarget = 'all'
@@ -177,8 +177,8 @@ timestamps {
             def commandStatus = 0
 
             if (isPr) {
-                def hasPrLabelFullMonoIntegrationBuild = hasLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')
-                def hasPrLabelRunTestsRelease = hasLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
+                def hasPrLabelFullMonoIntegrationBuild = hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')
+                def hasPrLabelRunTestsRelease = hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
 
                 commandStatus = sh(
                     script: """
