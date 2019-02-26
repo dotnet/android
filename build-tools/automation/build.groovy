@@ -166,7 +166,7 @@ timestamps {
             def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip,${XADir}/prepare-image-dependencies.sh"
+                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
             }
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
