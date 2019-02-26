@@ -136,11 +136,11 @@ timestamps {
         }
 
         stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            if (isPr) {
-                sh "make package-oss"
-            }
-
             sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
+        }
+
+        stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            sh "make package-oss"
         }
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
