@@ -80,6 +80,7 @@ timestamps {
         def scmVars
 
         stageWithTimeout('checkout', 60, 'MINUTES', XADir, true) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
+            sh "env"
             scmVars = checkout scm
         }
 
@@ -117,22 +118,10 @@ timestamps {
         }
 
         stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
-            def commandStatus = sh(
-                script: """
-                        # We need to make sure there's no test AVD present and that the Android emulator isn't running
-                        # This is to assure that all tests start from the same state
-                        env
-                        killall -9 qemu-system-x86_64 || true
-                        if [ -d "\$HOME/.android/avd/XamarinAndroidTestRunner.avd" ]; then
-                            rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*
-                        fi
-                        """,
-                returnStatus: true
-            );
-
-            if (commandStatus != 0) {
-                error "ERROR : Attempt to remove test AVD failed"
-            }
+            // We need to make sure there's no test AVD present and that the Android emulator isn't running
+            // This is to assure that all tests start from the same state
+            sh "killall -9 qemu-system-x86_64 || true"
+            sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
         stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
