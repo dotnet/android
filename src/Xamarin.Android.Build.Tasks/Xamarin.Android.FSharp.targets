@@ -42,6 +42,9 @@ Copyright (C) 2012 Xamarin. All rights reserved.
     </PropertyGroup>
     <!-- xbuild searches multiple MSBuildExtensionsPath32, but only in the Import element, so we can't determine this with a variable -->
     <Import
+      Condition="'$(Language)' != 'F#' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\FSharp\Microsoft.FSharp.Targets')"
+      Project="$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\FSharp\Microsoft.FSharp.Targets" />
+    <Import
       Condition="'$(Language)' != 'F#' And Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')"
       Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets" />
     <Import
