@@ -16,7 +16,7 @@
     <RequiredProgram Include="automake"             Condition=" '$(HostOS)' == 'Darwin' ">
       <Homebrew>automake</Homebrew>
     </RequiredProgram>
-    <RequiredPackage Include="mingw-zlib"           Condition=" '$(HostOS)' == 'Darwin' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) )">
+    <RequiredPackage Include="mingw-zlib"           Condition=" '$(HostOS)' == 'Darwin' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) )">
       <Homebrew>xamarin/xamarin-android-windeps/mingw-zlib</Homebrew>
       <HomebrewTap>xamarin/xamarin-android-windeps</HomebrewTap>
     </RequiredPackage>
