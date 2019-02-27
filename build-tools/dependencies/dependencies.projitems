@@ -7,7 +7,7 @@
   <ItemGroup>
     <RequiredProgram Include="$(HostCcName)"        Condition=" '$(HostOS)' != 'Windows' " />
     <RequiredProgram Include="$(HostCxxName)"       Condition=" '$(HostOS)' != 'Windows' " />
-    <RequiredProgram Include="x86_64-w64-mingw32-g++" Condition=" '$(HostOS)' == 'Darwin' " >
+    <RequiredProgram Include="x86_64-w64-mingw32-g++" Condition=" '$(HostOS)' == 'Darwin' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" >
       <Homebrew>mingw-w64</Homebrew>
     </RequiredProgram>
     <RequiredProgram Include="autoconf"             Condition=" '$(HostOS)' == 'Darwin' ">
@@ -16,7 +16,7 @@
     <RequiredProgram Include="automake"             Condition=" '$(HostOS)' == 'Darwin' ">
       <Homebrew>automake</Homebrew>
     </RequiredProgram>
-    <RequiredPackage Include="mingw-zlib"           Condition=" '$(HostOS)' == 'Darwin'">
+    <RequiredPackage Include="mingw-zlib"           Condition=" '$(HostOS)' == 'Darwin' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) )">
       <Homebrew>xamarin/xamarin-android-windeps/mingw-zlib</Homebrew>
       <HomebrewTap>xamarin/xamarin-android-windeps</HomebrewTap>
     </RequiredPackage>
