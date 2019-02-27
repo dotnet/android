@@ -170,32 +170,16 @@ timestamps {
         stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
-            def commandStatus = 0
+            def skipNunitTests = false
 
             if (isPr) {
                 def hasPrLabelFullMonoIntegrationBuild = hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')
                 def hasPrLabelRunTestsRelease = hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
-
-                commandStatus = sh(
-                    script: """
-                        # If PR has the 'full-mono-integration-build' or 'run-tests-release' label, run w/ SKIP_NUNIT_TESTS set
-                        if ${hasPrLabelFullMonoIntegrationBuild} || ${hasPrLabelRunTestsRelease}; then
-                            echo "Run all tests: The 'full-mono-integration-build' and/or 'run-tests-release' labels have been found on the PR"
-                            make run-all-tests CONFIGURATION=${env.BuildFlavor} SKIP_NUNIT_TESTS=1
-                        else
-                            echo "Run all tests: Neither of the 'full-mono-integration-build' or 'run-tests-release' labels have been found on the PR"
-                            make run-all-tests CONFIGURATION=${env.BuildFlavor}
-                        fi
-                    """,
-                    returnStatus: true
-                )
-            } else {
-                commandStatus = sh(
-                    script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}",
-                    returnStatus: true
-                )
+                skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
+                echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
             }
 
+            commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
             if (commandStatus != 0) {
                 error "run-all-tests FAILED, status: ${stageStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
