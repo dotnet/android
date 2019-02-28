@@ -2655,9 +2655,10 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
   </DetermineJavaLibrariesToCompile>
   
-  <CreateItem Include="@(_JavaLibrariesToCompile)" Condition="'$(_InstantRunEnabled)' != 'True'">
-    <Output TaskParameter="Include" ItemName="_JavaLibrariesToCompileForAppDx" />
-  </CreateItem>
+  <ItemGroup>
+    <_JavaLibrariesToCompileForApp Include="@(_JavaLibrariesToCompile)" Condition=" '$(_InstantRunEnabled)' != 'True' " />
+    <AndroidExternalJavaLibrary    Include="@(_JavaLibrariesToCompile)" Condition=" '$(_InstantRunEnabled)' == 'True' " />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -2670,7 +2671,7 @@ because xbuild doesn't support framework reference assemblies.
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
 		$(MSBuildAllProjects)
-		;@(_JavaLibrariesToCompileForAppDx)
+		;@(_JavaLibrariesToCompileForApp)
 		;@(AndroidExternalJavaLibrary)
 		;$(IntermediateOutputPath)android\bin\classes.zip
 		;@(ProguardConfiguration)
@@ -2697,7 +2698,7 @@ because xbuild doesn't support framework reference assemblies.
     ToolPath="$(JavaToolPath)"
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
-    InputJars="@(_JavaLibrariesToCompileForAppDx)"
+    InputJars="@(_JavaLibrariesToCompileForApp)"
     ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
     <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
@@ -2785,7 +2786,7 @@ because xbuild doesn't support framework reference assemblies.
     UseDx="$(UseDx)"
     MultiDexEnabled="$(AndroidEnableMultiDex)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
-    JavaLibrariesToCompile="@(_JavaLibrariesToCompileForAppDx)"
+    JavaLibrariesToCompile="@(_JavaLibrariesToCompileForApp)"
     AlternativeJarFiles="@(_AlternativeJarForAppDx)"
   />
   <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
