@@ -44,14 +44,13 @@ NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.7.0/tools/nunit3-console.exe
 
 BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
 
-all: $(BUILD_PROPS)  src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config \
-		$(PACKAGES) $(DEPENDENCIES) $(TESTS)
+all: $(DEPENDENCIES) $(TESTS)
 
 run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
 
 include build-tools/scripts/msbuild.mk
 
-prepare:: src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+prepare:: $(BUILD_PROPS) src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 prepare:: prepare-bootstrap
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Restore Java.Interop.sln
