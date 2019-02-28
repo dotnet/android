@@ -192,6 +192,10 @@ namespace Xamarin.Android.Tasks
 				path = Path.Combine (folder.Path, libraryPath.Path, runtime.Path).Replace('/', Path.DirectorySeparatorChar);
 				if (!File.Exists (path))
 					continue;
+				// _._ means its provided by the framework. However if we get here
+				// its NOT. So lets use what we got in the first place.
+				if (Path.GetFileName (path) == "_._")
+					return assemblyPath;
 				return path;
 			}
 			return null;
