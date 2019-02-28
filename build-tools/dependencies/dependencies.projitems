@@ -7,33 +7,19 @@
   <ItemGroup>
     <RequiredProgram Include="$(HostCcName)"        Condition=" '$(HostOS)' != 'Windows' " />
     <RequiredProgram Include="$(HostCxxName)"       Condition=" '$(HostOS)' != 'Windows' " />
-    <RequiredProgram Include="7za"                  Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>p7zip</Homebrew>
+    <RequiredProgram Include="x86_64-w64-mingw32-g++" Condition=" '$(HostOS)' == 'Darwin' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) )" >
+      <Homebrew>mingw-w64</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="autoconf"             Condition=" '$(HostOS)' != 'Windows' ">
+    <RequiredProgram Include="autoconf"             Condition=" '$(HostOS)' == 'Darwin' ">
       <Homebrew>autoconf</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="automake"             Condition=" '$(HostOS)' != 'Windows' ">
+    <RequiredProgram Include="automake"             Condition=" '$(HostOS)' == 'Darwin' ">
       <Homebrew>automake</Homebrew>
     </RequiredProgram>
-    <RequiredProgram Include="cmake"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>cmake</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="gdk-pixbuf-csource"   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>gdk-pixbuf</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="gettext"              Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>gettext</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="glibtool"             Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>libtool</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="gsed"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>gnu-sed</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="intltoolize"          Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>intltool</Homebrew>
-    </RequiredProgram>
+    <RequiredPackage Include="mingw-zlib"           Condition=" '$(HostOS)' == 'Darwin' And ( $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:')) Or $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:')) )">
+      <Homebrew>xamarin/xamarin-android-windeps/mingw-zlib</Homebrew>
+      <HomebrewTap>xamarin/xamarin-android-windeps</HomebrewTap>
+    </RequiredPackage>
     <RequiredProgram Include="$(JavaCPath)">
       <MinimumVersion>1.8</MinimumVersion>
       <CurrentVersionCommand                        Condition=" '$(HostOS)' != 'Windows' ">$(MSBuildThisFileDirectory)..\scripts\javac-version</CurrentVersionCommand>
@@ -41,19 +27,6 @@
       <UbuntuInstall>$(_AptGetInstall) openjdk-8-jdk</UbuntuInstall>
     </RequiredProgram>
     <RequiredProgram Include="make"                 Condition=" '$(HostOS)' != 'Windows' " />
-    <RequiredProgram Include="pkg-config"           Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>pkg-config</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="ruby"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
-    <RequiredProgram Include="scons"                Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>scons</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="wget"                 Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>wget</Homebrew>
-    </RequiredProgram>
-    <RequiredProgram Include="xz"                   Condition=" '$(NeedMxe)' == 'true' And $(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
-      <Homebrew>xz</Homebrew>
-    </RequiredProgram>
     <RequiredProgram Include="$(ManagedRuntime)"    Condition=" '$(ManagedRuntime)' != '' ">
       <MinimumVersion>$(MonoRequiredMinimumVersion)</MinimumVersion>
       <MaximumVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' Or '$(IgnoreMaxMonoVersion)' == 'False' " >$(MonoRequiredMaximumVersion)</MaximumVersion>

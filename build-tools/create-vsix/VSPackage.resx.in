@@ -137,7 +137,6 @@
     Java.Interop: @JAVA_INTEROP_COMMIT@
     LibZipSharp: @LIBZIPSHARP_COMMIT@
     LibZip: @LIBZIP_COMMIT@
-    MXE: @MXE_COMMIT@
     ProGuard: @PROGUARD_COMMIT@
     SQLite: @SQLITE_COMMIT@
     Xamarin.Android Tools: @XAMARIN_ANDROID_TOOLS_COMMIT@

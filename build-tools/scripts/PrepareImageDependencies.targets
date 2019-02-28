@@ -31,6 +31,18 @@
         Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Homebrew)' != '' "
         Include="@(RequiredProgram->'%(Homebrew)')"
       />
+      <_BrewTap
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredProgram.Homebrew)' != '' And '%(RequiredProgram.HomebrewTap)' != '' "
+        Include="@(RequiredProgram->'%(HomebrewTap)')"
+      />
+      <_Brew
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredPackage.Homebrew)' != '' "
+        Include="@(RequiredPackage->'%(Homebrew)')"
+      />
+      <_BrewTap
+        Condition=" '$(HostOS)' == 'Darwin' And '%(RequiredPackage.Homebrew)' != '' And '%(RequiredPackage.HomebrewTap)' != '' "
+        Include="@(RequiredPackage->'%(HomebrewTap)')"
+      />
     </ItemGroup>
     <ItemGroup>
       <_DarwinPkg
@@ -45,13 +57,15 @@
 ')</_Dirs>
       <_Brews>@(_Brew->'%(Identity)', '
 ')</_Brews>
+      <_BrewTaps>@(_BrewTap->'%(Identity)', '
+')</_BrewTaps>
       <_DarwinPkgs>@(_DarwinPkg->'%(Identity)', '
 ')</_DarwinPkgs>
     </PropertyGroup>
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)prepare-image-dependencies.sh.in"
         DestinationFile="$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\prepare-image-dependencies.sh"
-        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews);@PKG_URLS@=$(_DarwinPkgs)">
+        Replacements="@TOOLCHAIN_DIRS@=$(_Dirs);@PACKAGES@=$(_Packages);@BREWS@=$(_Brews);@BREW_TAPS@=$(_BrewTaps);@PKG_URLS@=$(_DarwinPkgs)">
     </ReplaceFileContents>
   </Target>
 </Project>

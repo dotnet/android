@@ -115,6 +115,8 @@ function getInfo_Linux()
         HOST_TRIPLET64="false"
         HOST_TRIPLET="$HOST_TRIPLET32"
     fi
+
+    HOST_HOMEBREW_PREFIX=""
 }
 
 function getInfo_Darwin()
@@ -136,6 +138,7 @@ function getInfo_Darwin()
     HOST_CC64=clang
     HOST_CXX64=clang++
     HOST_OS_FLAVOR=macOS
+    HOST_HOMEBREW_PREFIX="$(brew --prefix)"
 }
 
 if [ -z "$1" ]; then
@@ -191,6 +194,7 @@ cat <<EOF > "$1"
         <HostCxx64 Condition=" '\$(HostCxx64)' == '' ">$HOST_CXX64</HostCxx64>
         <JavaCPath Condition=" '\$(JavaCPath)' == '' ">javac</JavaCPath>
         <JarPath Condition=" '\$(JarPath)' == '' ">jar</JarPath>
+        <HostHomebrewPrefix Condition=" '\$(HostHomebrewPrefix)' == '' ">$HOST_HOMEBREW_PREFIX</HostHomebrewPrefix>
     </PropertyGroup>
 </Project>
 EOF

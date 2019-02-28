@@ -25,11 +25,10 @@
   </Target>
 
   <Target Name="_ConfigureHostRuntimes"
-      DependsOnTargets="_CreateMacMxeCmakeToolchainFiles"
       Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props;..\..\build-tools\scripts\Ndk.targets"
       Outputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug" />
-    <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mxe/mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
+    <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
          and so in order to put libmono-android.*.dll in the output dir we need to set this property. Since we build no executables here, it won't affect the non-DLL outputs.  -->
     <Exec
         Command="$(CmakePath) %(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)"
@@ -130,21 +129,6 @@
       <_OutputReleasePath       Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.d.%(_HostRuntime.NativeLibraryExtension)" />
       <_OutputReleaseStripPath  Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.%(_HostRuntime.NativeLibraryExtension)" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_CreateMacMxeCmakeToolchainFiles"
-      Inputs="mxe-32.cmake.in;mxe-64.cmake.in"
-      Outputs="$(IntermediateOutputPath)\mxe-32.cmake;$(IntermediateOutputPath)\mxe-64.cmake">
-    <ReplaceFileContents
-        SourceFile="mxe-32.cmake.in"
-        DestinationFile="$(IntermediateOutputPath)\mxe-32.cmake"
-        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
-    />
-    <ReplaceFileContents
-        SourceFile="mxe-64.cmake.in"
-        DestinationFile="$(IntermediateOutputPath)\mxe-64.cmake"
-        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
-    />
   </Target>
 
   <Target Name="CoreCompile"
