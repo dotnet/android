@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			foreach (var directory in Directories) {
+				if (!Directory.Exists (directory.ItemSpec))
+					continue;
 				var firstFile = Directory.EnumerateFiles(directory.ItemSpec, "*.*", SearchOption.AllDirectories).FirstOrDefault ();
 				if (firstFile != null) {
 					var taskItem = new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
