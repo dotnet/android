@@ -2780,6 +2780,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
     ToolPath="$(DxToolPath)"
     ToolExe="$(DxToolExe)"
     UseDx="$(UseDx)"

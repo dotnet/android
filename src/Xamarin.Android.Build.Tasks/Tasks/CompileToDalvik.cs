@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
+		public string ClassesZip { get; set; }
+
 		public string DxJarPath { get; set; }
 
 		public string DxExtraArguments { get; set; }
@@ -124,10 +126,9 @@ namespace Xamarin.Android.Tasks
 					}
 				} else {
 					Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
-					var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
-					if (File.Exists (zip)) {
-						Log.LogDebugMessage ($"    {zip}");
-						sw.WriteLine (Path.GetFullPath (zip));
+					if (!string.IsNullOrEmpty (ClassesZip) && File.Exists (ClassesZip)) {
+						Log.LogDebugMessage ($"    {ClassesZip}");
+						sw.WriteLine (Path.GetFullPath (ClassesZip));
 					}
 					foreach (var jar in JavaLibrariesToCompile) {
 						var fullPath = Path.GetFullPath (jar.ItemSpec);
