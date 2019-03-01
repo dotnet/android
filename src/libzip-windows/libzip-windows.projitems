@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' ">
-    <CMakeFlagsCommon>-GNinja -DCMAKE_POLICY_DEFAULT_CMP0074=NEW</CMakeFlagsCommon>
+    <CMakeFlagsCommon>-GNinja -DCMAKE_MAKE_PROGRAM="$(NinjaPath)" -DCMAKE_POLICY_DEFAULT_CMP0074=NEW</CMakeFlagsCommon>
     <CMakeFlags32>-DCMAKE_TOOLCHAIN_FILE=..\..\bin\Build$(Configuration)\mingw-32.cmake $(CMakeFlagsCommon) -DZLIB_ROOT=$(MingwZlibRootDirectory32) -DZLIB_LIBRARY=$(MingwZlibRootDirectory32)\lib\$(MingwZlibLibraryName) -DZLIB_INCLUDE_DIR=$(MingwZlibRootDirectory32)\include</CMakeFlags32>
     <CMakeFlags64>-DCMAKE_TOOLCHAIN_FILE=..\..\bin\Build$(Configuration)\mingw-64.cmake $(CMakeFlagsCommon) -DZLIB_ROOT=$(MingwZlibRootDirectory64) -DZLIB_LIBRARY=$(MingwZlibRootDirectory64)\lib\$(MingwZlibLibraryName) -DZLIB_INCLUDE_DIR=$(MingwZlibRootDirectory64)\include</CMakeFlags64>
   </PropertyGroup>

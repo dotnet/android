@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_CMakeCommonFlags>-GNinja -DBUILD_SHARED_LIBS=ON</_CMakeCommonFlags>
+    <_CMakeCommonFlags>-GNinja -DCMAKE_MAKE_PROGRAM="$(NinjaPath)" -DBUILD_SHARED_LIBS=ON</_CMakeCommonFlags>
   </PropertyGroup>
   <ItemGroup>
     <_LibZipTarget Include="host-Darwin" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))">
