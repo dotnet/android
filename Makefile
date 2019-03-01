@@ -205,7 +205,7 @@ $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.a
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version
-	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
+	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests
 	$(MAKE) run-api-compatibility-tests
 
 clean:
@@ -220,21 +220,21 @@ distclean:
 
 run-nunit-tests:
 ifeq ($(SKIP_NUNIT_TESTS),)
-	$(call MSBUILD_BINLOG,run-nunit-tests) $(TEST_TARGETS) /t:RunNUnitTests
+	$(call MSBUILD_BINLOG,run-nunit-tests,,Test) $(TEST_TARGETS) /t:RunNUnitTests
 endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
-	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
+	$(call MSBUILD_BINLOG,run-ji-tests,,Test) $(TEST_TARGETS) /t:RunJavaInteropTests
 
 ifneq ($(PACKAGES),)
 APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
 endif
 
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 
 run-performance-tests:
-	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests
+	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests
 
 list-nunit-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests

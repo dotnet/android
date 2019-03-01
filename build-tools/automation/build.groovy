@@ -188,9 +188,9 @@ timestamps {
         stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false) {  // Typically takes less than a minute
             echo "packaging test error logs"
 
-            sh "make -C ${XADir} -k package-test-errors"
+            sh "make -C ${XADir} -k package-test-results"
 
-            def publishTestFilePaths = "${XADir}/xa-test-errors*,${XADir}/test-errors.zip"
+            def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def stageStatus = publishPackages(publishTestFilePaths)

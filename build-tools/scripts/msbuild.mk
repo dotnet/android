@@ -37,10 +37,10 @@ endif   # $(MSBUILD) == msbuild
 
 ifeq ($(USE_MSBUILD),1)
 
-# $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD))
+# $(call MSBUILD_BINLOG,name,msbuild=$(MSBUILD),outdir=Build)
 define MSBUILD_BINLOG
 	$(if $(2),$(2),$(MSBUILD)) $(MSBUILD_FLAGS) /v:normal \
-		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
+		/binaryLogger:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/$(if $(3),$(3),Build)$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
 else    # $(MSBUILD) != 1
