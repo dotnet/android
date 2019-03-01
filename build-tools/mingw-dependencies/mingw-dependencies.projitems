@@ -3,7 +3,7 @@
   <PropertyGroup>
     <_OutputSubdir32>x86</_OutputSubdir32>
     <_OutputSubdir64>x86_64</_OutputSubdir64>
-    <_CommonCmakeProjectFlags>-GNinja -DBUILD_TESTS=OFF</_CommonCmakeProjectFlags>
+    <_CommonCmakeProjectFlags>-DCMAKE_MAKE_PROGRAM=$(NinjaPath) -GNinja -DBUILD_TESTS=OFF</_CommonCmakeProjectFlags>
     <_CmakeNoSharedLibsFlags>-DBUILD_SHARED_LIBS=OFF</_CmakeNoSharedLibsFlags>
     <_CmakeWithSharedLibsFlags>-DBUILD_SHARED_LIBS=ON</_CmakeWithSharedLibsFlags>
     <_CMakeFlags32>-DCMAKE_INSTALL_PREFIX=$(MingwDependenciesRootDirectory)\$(_OutputSubdir32)</_CMakeFlags32>
