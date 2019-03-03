@@ -137,7 +137,7 @@ timestamps {
         }
 
         stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            sh "make package-oss"
+            sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
         }
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
@@ -188,7 +188,7 @@ timestamps {
         stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false) {  // Typically takes less than a minute
             echo "packaging test error logs"
 
-            sh "make -C ${XADir} -k package-test-results"
+            sh "make -C ${XADir} -k package-test-results CONFIGURATION={env.BuildFlavor}"
 
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
