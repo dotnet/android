@@ -15,6 +15,35 @@ namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Self)]
 	public class ConvertResourcesCasesTests  : BaseTest {
 		[Test]
+		public void CheckAdaptiveIconIsConverted ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var resPath = Path.Combine (path, "res");
+			Directory.CreateDirectory (Path.Combine (resPath, "mipmap-anydpi-v26"));
+			Directory.CreateDirectory (Path.Combine (resPath, "mipmap-mdpi"));
+			File.WriteAllText (Path.Combine (resPath, "mipmap-anydpi-v26", "adaptiveicon.xml"), @"<adaptive-icon xmlns:android=""http://schemas.android.com/apk/res/android"">
+<background android:drawable=""@mipmap/AdaptiveIcon_background"" />
+<foreground android:drawable=""@mipmap/AdaptiveIcon_foreground"" />
+</adaptive-icon>");
+			File.WriteAllText (Path.Combine (resPath, "mipmap-mdpi", "adaptiveicon.png"), "");
+			File.WriteAllText (Path.Combine (resPath, "mipmap-mdpi", "adaptiveicon_background.png"), "");
+			File.WriteAllText (Path.Combine (resPath, "mipmap-mdpi", "adaptiveicon_foreground.png"), "");
+			var errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			var task = new ConvertResourcesCases {
+				BuildEngine = engine
+			};
+			task.ResourceDirectories = new ITaskItem [] {
+				new TaskItem (resPath),
+			};
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully");
+			var output = File.ReadAllText (Path.Combine (resPath, "mipmap-anydpi-v26", "adaptiveicon.xml"));
+			StringAssert.DoesNotContain ("AdaptiveIcon_background", output, "AdaptiveIcon_background should have been replaced with adaptiveicon_background");
+			StringAssert.DoesNotContain ("AdaptiveIcon_foreground", output, "AdaptiveIcon_foreground should have been replaced with adaptiveicon_foreground");
+			Directory.Delete (path, recursive: true);
+		}
+		[Test]
 		public void CheckClassIsReplacedWithMd5 ()
 		{
 			var path = Path.Combine (Root, "temp", "CheckClassIsReplacedWithMd5");

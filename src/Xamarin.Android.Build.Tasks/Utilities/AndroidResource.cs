@@ -37,7 +37,7 @@ namespace Monodroid {
 
 		static readonly XNamespace android = "http://schemas.android.com/apk/res/android";
 		static readonly XNamespace res_auto = "http://schemas.android.com/apk/res-auto";
-		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$", RegexOptions.Compiled);
+		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu|mipmap)/(?<file>.*)$", RegexOptions.Compiled);
 		static readonly string[] fixResourcesAliasPaths = {
 			"/resources/item",
 			"/resources/integer-array/item",
