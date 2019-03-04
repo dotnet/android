@@ -273,6 +273,41 @@ In general, if a target *writes* files, it should be incremental. If
 it needs to run every time in order to support other targets, do not
 use `Inputs` or `Outputs`.
 
+## Should I use BeforeTargets or AfterTargets?
+
+NO!
+
+Let's look at a simple example of why. Let's assume we have a target
+that runs the linker after `Build`:
+
+```xml
+<Target Name="_LinkAssemblies" AfterTargets="Build">
+  <LinkAssemblies ... />
+</Target>
+```
+
+Let's imagine the case where the project has a C# compiler error.
+`_LinkAssemblies` will run, regardless if `Build` succeeded or not!
+
+This causes a confusing set of errors:
+
+1. A `<LinkAssemblies/>` failure due to a missing assembly.
+2. The real problem: a syntax error in C# code.
+
+Instead you should use:
+```xml
+<PropertyGroup>
+  <BuildDependsOn>
+    $(BuildDependsOn);
+    _LinkAssemblies;
+  </BuildDependsOn>
+</PropertyGrou>
+```
+
+Unfortunately, not all targets will have a `$(XDependsOn)` property.
+In some cases, `BeforeTargets` or `AfterTargets` is the only option.
+Consider what happens if the target fails in that case.
+
 # Best Practices for Xamarin.Android MSBuild targets
 
 ## Naming in Xamarin.Android targets
@@ -366,33 +401,41 @@ For MSBuild, we should instead do:
 
 Then we just let MSBuild and `IncrementalClean` do their thing.
 
-## IncrementalClean and `_CleanGetCurrentAndPriorFileWrites`
+## Run a Target Before IncrementalClean
 
 If you have a target that needs to run before `IncrementalClean`, such
 as:
 
 ```xml
-<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
+<Target Name="_AddFilesToFileWrites">
   <ItemGroup>
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
   </ItemGroup>
 </Target>
 ```
 
-Unfortunately, due to the ordering of MSBuild's core targets. These
-files won't get added to the `FileWrites` list appropriately!
-`IncrementalClean` depends on a `_CleanGetCurrentAndPriorFileWrites`
-target which does the actual work of persisting the contents of
-`FileWrites`. The above target runs after
-`_CleanGetCurrentAndPriorFileWrites`.
+There is no `$(IncrementalCleanDependsOn)` property, what do you do?
 
-The only working fix I've found so far is to add:
+Since using `BeforeTargets` and `AfterTargets` is a no-no, we have
+modified `$(CoreBuildDependsOn)` so you can run a target *before*
+`IncrementalClean`:
 
+```xml
+<PropertyGroup>
+  <!--Add to this property as needed here-->
+  <_BeforeIncrementalClean>
+    _AddFilesToFileWrites;
+  </_BeforeIncrementalClean>
+  <CoreBuildDependsOn>
+    $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
+  </CoreBuildDependsOn>
+</PropertyGroup>
 ```
-BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
-```
 
-In the meantime, see the following links about this problem:
+This is the current recommendation from the MSBuild team to run a
+target before `IncrementalClean`.
+
+See the following links about this problem:
 
   * [MSBuild Github Issue #3916][msbuild_issue]
   * [MSBuild Repro][msbuild_repro]
