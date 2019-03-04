@@ -2868,19 +2868,19 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_IncludeNativeSystemLibraries">
-	<PropertyGroup>
-		<_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
-	</PropertyGroup>
-    <ItemGroup>
-      <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
-    </ItemGroup>
-    <ItemGroup>
-      <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
-    </ItemGroup>
-    <ItemGroup>
-      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
-      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
-    </ItemGroup>
+  <PropertyGroup>
+    <_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
+  </ItemGroup>
+  <ItemGroup>
+    <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
+    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
