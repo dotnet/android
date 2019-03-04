@@ -2871,10 +2871,16 @@ because xbuild doesn't support framework reference assemblies.
 	<PropertyGroup>
 		<_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
 	</PropertyGroup>
-	<ItemGroup>
-		<AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)\lib\*\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
-		<AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)\lib\*\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
-	</ItemGroup>
+    <ItemGroup>
+      <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
+    </ItemGroup>
+    <ItemGroup>
+      <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
+    </ItemGroup>
+    <ItemGroup>
+      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
+      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
+    </ItemGroup>
 </Target>
 
 <PropertyGroup>
