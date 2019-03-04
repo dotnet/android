@@ -191,6 +191,8 @@ namespace Android.Runtime {
 			else
 				IdentityHash = v => v;
 
+			Mono.SystemDependencyProvider.Initialize ();
+
 #if JAVA_INTEROP
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
 #endif // JAVA_INTEROP
