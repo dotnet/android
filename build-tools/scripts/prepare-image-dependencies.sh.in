@@ -13,6 +13,10 @@ PACKAGES="
 @PACKAGES@
 "
 
+BREW_TAPS="
+@BREW_TAPS@
+"
+
 BREW_PACKAGES="
 @BREWS@
 "
@@ -66,6 +70,13 @@ echo "$PACKAGES" | while read line ; do
 	fi
 	Download $line
 	Install $line
+done
+
+echo "$BREW_TAPS" | while read line ; do
+	if [ -z "$line" ]; then
+		continue
+	fi
+	brew tap $line || true
 done
 
 echo "$BREW_PACKAGES" | while read line ; do

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Xamarin.ProjectTools
 {
@@ -678,6 +678,16 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("Xamarin.GooglePlayServices.Gcm") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Gcm.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Gcm.dll"
+				}
+			},
+		};
+		public static Package Xamarin_GooglePlayServices_Maps = new Package {
+			Id = "Xamarin.GooglePlayServices.Maps",
+			Version = "60.1142.1",
+			TargetFramework = "MonoAndroid80",
+			References = {
+				new BuildItem.Reference ("Xamarin.GooglePlayServices.Maps") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Maps.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Maps.dll"
 				}
 			},
 		};

@@ -51,14 +51,18 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="Mono.Android" />
     <Reference Include="Mono.Android.Export" />
+    <Reference Include="Mono.Data.Sqlite" />
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
+    <Compile Remove="..\..\src\Mono.Android\Test\Resources\Resource.designer.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\Icon.png" />
@@ -69,9 +73,14 @@
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
     <AndroidBoundLayout Include="Resources\layout\Main.axml" />
-    <AndroidResource Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
-      <Link>Resources\Drawable\Image.9.png</Link>
-    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\asset1.txt">
+      <Link>Assets\asset1.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\asset2.txt">
+      <Link>Assets\subfolder\asset2.txt</Link>
+    </AndroidAsset>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-TestsMultiDex.targets" />

@@ -779,6 +779,16 @@ AndroidSystem::setup_environment (jstring_wrapper& name, jstring_wrapper& value)
 			knownEnvVars.MonoLLVM = true;
 			return;
 		}
+
+		if (strcmp (k, "mono.enable_assembly_preload") == 0) {
+			if (*v == '\0')
+				knownEnvVars.EnableAssemblyPreload = KnownEnvironmentVariables::AssemblyPreloadDefault;
+			else if (v[0] == '1')
+				knownEnvVars.EnableAssemblyPreload = true;
+			else
+				knownEnvVars.EnableAssemblyPreload = false;
+			return;
+		}
 	}
 
 	add_system_property (k, v);

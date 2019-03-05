@@ -128,7 +128,7 @@
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
     <Compile Include="Tasks\GetFilesThatExist.cs" />
-    <Compile Include="Tasks\ReadJavaStubsCache.cs" />
+    <Compile Include="Tasks\ReadAndroidManifest.cs" />
     <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
     <Compile Include="Tasks\GetMonoPlatformJar.cs" />
     <Compile Include="Tasks\GeneratePackageManagerJava.cs" />
@@ -160,7 +160,6 @@
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
     <Compile Include="Tasks\SetVsMonoAndroidRegistryKey.cs" />
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
-    <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
     <Compile Include="Utilities\DummyCustomAttributeProvider.cs" />
@@ -230,7 +229,6 @@
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
     <Compile Include="Tasks\ImportJavaDoc.cs" />
     <Compile Include="Tasks\MDoc.cs" />
-    <Compile Include="Tasks\GetAddOnPlatformLibraries.cs" />
     <Compile Include="Tasks\ParseAndroidWearProjectAndManifest.cs" />
     <Compile Include="Tasks\PrepareWearApplicationFiles.cs" />
     <Compile Include="Tasks\CopyAndConvertResources.cs" />
@@ -456,7 +454,6 @@
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
     <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
-    <Compile Include="Tasks\Dx.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
     <Compile Include="Utilities\AndroidResource.cs">
       <Link>Utilities\AndroidResource.cs</Link>
@@ -591,6 +588,7 @@
     <Compile Include="Tasks\LayoutWidget.cs" />
     <Compile Include="Tasks\CancelableTask.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
+    <Compile Include="Tasks\CheckGoogleSdkRequirements.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -673,9 +671,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
       <LogicalName>proguard_xamarin.cfg</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoPackageManager.api4.java">
-      <LogicalName>MonoPackageManager.api4.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\NotifyTimeZoneChanges.java">
       <LogicalName>NotifyTimeZoneChanges.java</LogicalName>

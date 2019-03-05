@@ -58,11 +58,20 @@ package-deb: $(ZIP_OUTPUT)
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
 
-_TEST_ERRORS_BASENAME   = xa-test-errors-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)
+_TEST_RESULTS_BUNDLE_INCLUDE = \
+	$(wildcard bin/Test$(CONFIGURATION)/temp) \
+	$(wildcard TestResult-*.xml) \
+	$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt) \
+	$(wildcard bin/Test$(CONFIGURATION)/Timing_*) \
+	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
+	$(wildcard *.csv)
 
-"$(_TEST_ERRORS_BASENAME).zip" package-test-errors:
-	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_ERRORS_BASENAME)" bin/Test*/temp TestResult-*.xml bin/Test*/TestOutput-*.txt bin/Test*/Timing_* *.csv
-	zip -r "$(_TEST_ERRORS_BASENAME).zip" "$(_TEST_ERRORS_BASENAME)"
+_TEST_RESULTS_BASENAME   = xa-test-results-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
+
+"$(_TEST_RESULTS_BASENAME).zip" package-test-results:
+	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_RESULTS_BASENAME)" $(_TEST_RESULTS_BUNDLE_INCLUDE) \
+		$(XA_TEST_ERRORS_EXTRA)
+	zip -r "$(_TEST_RESULTS_BASENAME).zip" "$(_TEST_RESULTS_BASENAME)"
 
 _BUILD_STATUS_BUNDLE_INCLUDE = \
 	Configuration.OperatingSystem.props \

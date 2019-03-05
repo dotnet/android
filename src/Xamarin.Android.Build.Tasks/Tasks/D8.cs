@@ -29,7 +29,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnableDesugar { get; set; } = true;
 
 		// Java libraries to embed or reference
-		[Required]
 		public string ClassesZip { get; set; }
 		[Required]
 		public string JavaPlatformJarPath { get; set; }
@@ -83,7 +82,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else if (JavaLibrariesToEmbed != null) {
 				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
-				if (File.Exists (ClassesZip)) {
+				if (!string.IsNullOrEmpty (ClassesZip) && File.Exists (ClassesZip)) {
 					injars.Add (ClassesZip);
 				}
 				foreach (var jar in JavaLibrariesToEmbed) {

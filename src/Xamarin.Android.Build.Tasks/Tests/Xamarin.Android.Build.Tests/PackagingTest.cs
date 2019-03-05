@@ -426,6 +426,10 @@ namespace XamFormsSample
 					KnownPackages.SupportCompat_25_4_0_1,
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 					KnownPackages.XamarinForms_2_3_4_231,
+					new Package () {
+						Id = "System.Runtime.Loader",
+						Version = "4.3.0",
+					},
 				}
 			};
 			app.MainActivity = @"using System;
@@ -496,7 +500,7 @@ namespace App1
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			using (var builder = CreateDllBuilder (Path.Combine (path, netStandardProject.ProjectName), cleanupOnDispose: false)) {
 				if (!Directory.Exists (builder.MicrosoftNetSdkDirectory))
-					Assert.Ignore ("Microsoft.NET.Sdk not found.");
+					Assert.Fail ($"Microsoft.NET.Sdk not found: {builder.MicrosoftNetSdkDirectory}");
 				using (var ab = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: false)) {
 					builder.RequiresMSBuild =
 						ab.RequiresMSBuild = true;

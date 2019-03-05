@@ -24,9 +24,6 @@
       <_SubmoduleBranchInfo Include="external/libzip">
         <OutputPropertyName>_BuildInfo_LibZipCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/mxe">
-        <OutputPropertyName>_BuildInfo_MxeCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/proguard">
         <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>

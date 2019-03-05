@@ -11,6 +11,9 @@ API_LEVEL     ?=
 
 ifeq ($(OS_NAME),Darwin)
 export MACOSX_DEPLOYMENT_TARGET := 10.11
+HOMEBREW_PREFIX ?= $(shell brew --prefix)
+else
+HOMEBREW_PREFIX := $prefix
 endif
 
 ifneq ($(V),0)
@@ -98,11 +101,25 @@ MSBUILD_PREPARE_PROJS = \
 	src/mono-runtimes/mono-runtimes.csproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
-prepare-deps:
+prepare-deps: prepare-cmake-mingw-toolchain
 	git submodule update --init --recursive
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	mkdir -p bin/Build$(CONFIGURATION)
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
+
+#
+# $(1): output file name
+#
+define create_cmake_toolchain
+prepare-cmake-mingw-toolchain:: bin/Build$(CONFIGURATION)/$(1)
+
+bin/Build$(CONFIGURATION)/$(1): build-tools/scripts/$(1).in
+	mkdir -p $$(dir $$@)
+	sed -e 's;@HOMEBREW_PREFIX@;$$(HOMEBREW_PREFIX);g' < $$< > $$@
+endef
+
+$(eval $(call create_cmake_toolchain,mingw-32.cmake))
+$(eval $(call create_cmake_toolchain,mingw-64.cmake))
 
 prepare-external: prepare-deps
 	nuget restore $(SOLUTION)
@@ -188,7 +205,7 @@ $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.a
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version
-	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
+	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests
 	$(MAKE) run-api-compatibility-tests
 
 clean:
@@ -203,21 +220,21 @@ distclean:
 
 run-nunit-tests:
 ifeq ($(SKIP_NUNIT_TESTS),)
-	$(call MSBUILD_BINLOG,run-nunit-tests) $(TEST_TARGETS) /t:RunNUnitTests
+	$(call MSBUILD_BINLOG,run-nunit-tests,,Test) $(TEST_TARGETS) /t:RunNUnitTests
 endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
-	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
+	$(call MSBUILD_BINLOG,run-ji-tests,,Test) $(TEST_TARGETS) /t:RunJavaInteropTests
 
 ifneq ($(PACKAGES),)
 APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
 endif
 
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 
 run-performance-tests:
-	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests
+	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests
 
 list-nunit-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests

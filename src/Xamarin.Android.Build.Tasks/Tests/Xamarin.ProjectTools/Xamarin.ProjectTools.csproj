@@ -143,19 +143,16 @@
     <Content Include="..\..\..\..\.nuget\NuGet.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="FrameworkPath.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\external\LibZipSharp\libZipSharp.csproj">
-      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
-      <Name>libZipSharp</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)\Xamarin.ProjectTools.Darwin.projitems" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Darwin:'))" />
-  <Import Project="$(MSBuildThisFileDirectory)\Xamarin.ProjectTools.Linux.projitems" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':Linux:')) And '$(_LinuxBuildLibZip)' == 'True' " />
-  <Import Project="$(MSBuildThisFileDirectory)\Xamarin.ProjectTools.Windows.projitems" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))" />
+  <Import Project="..\..\..\..\build-tools\scripts\libzip-references.projitems" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
