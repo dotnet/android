@@ -301,7 +301,7 @@ Instead you should use:
     $(BuildDependsOn);
     _LinkAssemblies;
   </BuildDependsOn>
-</PropertyGrou>
+</PropertyGroup>
 ```
 
 Unfortunately, not all targets will have a `$(XDependsOn)` property.
