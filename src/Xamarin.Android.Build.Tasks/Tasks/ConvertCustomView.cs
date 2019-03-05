@@ -84,8 +84,8 @@ namespace Xamarin.Android.Tasks {
 				if (resdir == null) {
 					continue;
 				}
-				var hash = resdir?.GetMetadata ("Hash") ?? null;
-				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
+				var hash = resdir.GetMetadata ("Hash");
+				var stamp = resdir.GetMetadata ("StampFile");
 				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
 				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
 				Log.LogDebugMessage ($"{filename} {stampFile}");
