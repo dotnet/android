@@ -110,8 +110,14 @@ namespace UnnamedProject
 			}
 		}
 
+		/// <summary>
+		/// This target should work in three cases:
+		/// * Called on a clean project
+		/// * Called after SetupDependenciesForDesigner
+		/// * Called after a full Build
+		/// </summary>
 		[Test]
-		public void CustomDesignerTargetGetExtraLibraryLocationsForDesigner ()
+		public void GetExtraLibraryLocationsForDesigner ()
 		{
 			var target = "GetExtraLibraryLocationsForDesigner";
 			var proj = new XamarinAndroidApplicationProject () {
@@ -125,13 +131,15 @@ namespace UnnamedProject
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "GetExtraLibraryLocationsForDesigner"), false, false)) {
-				b.Target = target;
-				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
-				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj));
-				b.Target = target;
-				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
+				var setup = "SetupDependenciesForDesigner";
+				Assert.IsTrue (b.RunTarget (proj, setup, parameters: DesignerParameters),  $"build should have succeeded for target `{setup}`");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 2");
+				Assert.IsTrue (b.Build (proj), "build should have succeeded");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 3");
 			}
 		}
 
