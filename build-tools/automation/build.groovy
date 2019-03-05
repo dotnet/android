@@ -188,6 +188,17 @@ timestamps {
         stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false) {  // Typically takes less than a minute
             echo "packaging test error logs"
 
+            publishHTML target: [
+                allowMissing:           true,
+                alwaysLinkToLastBuild:  false,
+                escapeUnderscores:      true,
+                includes:               '**/*',
+                keepAll:                true,
+                reportDir:              "xamarin-android/bin/Test${env.BuildFlavor}/compatibility",
+                reportFiles:            '*.html',
+                reportName:             'API Compatibility Checks'
+            ]
+
             sh "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}"
 
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
