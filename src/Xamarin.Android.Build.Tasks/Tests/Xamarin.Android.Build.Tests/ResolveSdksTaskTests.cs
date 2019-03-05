@@ -188,6 +188,7 @@ namespace Xamarin.Android.Build.Tests {
 				UseLatestAndroidPlatformSdk = useLatestAndroidSdk,
 				AotAssemblies = false,
 				SequencePointsMode = "None",
+				AndroidApplication = true,
 			};
 			Assert.AreEqual (expectedTaskResult, resolveSdks.Execute () && validateJavaVersion.Execute () && androidTooling.Execute (), $"Tasks should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
 			Assert.AreEqual (expectedTargetFramework, androidTooling.TargetFrameworkVersion, $"TargetFrameworkVersion should be {expectedTargetFramework} but was {androidTooling.TargetFrameworkVersion}");
@@ -240,6 +241,7 @@ namespace Xamarin.Android.Build.Tests {
 				UseLatestAndroidPlatformSdk = false,
 				AotAssemblies = false,
 				SequencePointsMode = "None",
+				AndroidApplication = true,
 			};
 			var start = DateTime.UtcNow;
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
@@ -400,6 +402,7 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				UseLatestAndroidPlatformSdk = true,
 				TargetFrameworkVersion = userSelected,
+				AndroidApplication = true,
 			};
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");

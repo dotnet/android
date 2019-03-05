@@ -735,6 +735,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<ResolveAndroidTooling
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidApiLevel="$(AndroidApiLevel)"
+			AndroidApplication="$(AndroidApplication)"
 			AndroidSdkPath="$(_AndroidSdkDirectory)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
@@ -2754,6 +2755,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
     ToolPath="$(DxToolPath)"
     ToolExe="$(DxToolExe)"
     UseDx="$(UseDx)"

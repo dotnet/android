@@ -426,6 +426,10 @@ namespace XamFormsSample
 					KnownPackages.SupportCompat_25_4_0_1,
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 					KnownPackages.XamarinForms_2_3_4_231,
+					new Package () {
+						Id = "System.Runtime.Loader",
+						Version = "4.3.0",
+					},
 				}
 			};
 			app.MainActivity = @"using System;

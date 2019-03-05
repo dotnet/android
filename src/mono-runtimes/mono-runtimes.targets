@@ -45,7 +45,7 @@
     <_MonoSdksLlvmSrc>$(MSBuildThisFileDirectory)..\..\external\llvm</_MonoSdksLlvmSrc>
     <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
     <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
-    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=true IGNORE_PROVISION_ANDROID=true ANDROID_NDK_VERSION=r$(AndroidNdkVersion) ANDROID_SDK_VERSION_armeabi-v7a=$(AndroidNdkApiLevel_ArmV7a) ANDROID_SDK_VERSION_arm64-v8a=$(AndroidNdkApiLevel_ArmV8a) ANDROID_SDK_VERSION_x86=$(AndroidNdkApiLevel_X86) ANDROID_SDK_VERSION_x86_64=$(AndroidNdkApiLevel_X86_64) ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=false IGNORE_PROVISION_ANDROID=true ANDROID_NDK_VERSION=r$(AndroidNdkVersion) ANDROID_SDK_VERSION_armeabi-v7a=$(AndroidNdkApiLevel_ArmV7a) ANDROID_SDK_VERSION_arm64-v8a=$(AndroidNdkApiLevel_ArmV8a) ANDROID_SDK_VERSION_x86=$(AndroidNdkApiLevel_X86) ANDROID_SDK_VERSION_x86_64=$(AndroidNdkApiLevel_X86_64) ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -414,7 +414,7 @@
         DestinationFiles="@(_InstallUnstrippedRuntimeOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.CanStripNativeLibrary)' == 'True' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Exec
@@ -480,7 +480,7 @@
         DestinationFiles="@(_InstallUnstrippedMonoPosixHelperOutput)"
     />
     <Exec
-        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' "
+        Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.OutputMonoPosixHelperFilename)' != '' And '%(_MonoRuntime.CanStripNativeLibrary)' == 'True' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputMonoPosixHelperFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallMonoPosixHelperOutput);@(_InstallUnstrippedMonoPosixHelperOutput)" />

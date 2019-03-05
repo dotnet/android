@@ -28,7 +28,7 @@
       Outputs="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)\Makefile">
     <MakeDir Directories="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)')" /> 
     <Exec
-        Command="%(_LibZipTarget.CMake) %(_LibZipTarget.CMakeFlags) $(LibZipSourceFullPath)"
+        Command="$(CmakePath) %(_LibZipTarget.CMakeFlags) $(LibZipSourceFullPath)"
         WorkingDirectory="@(_LibZipTarget->'$(IntermediateOutputPath)\%(Identity)')"
     />
   </Target>
@@ -43,7 +43,7 @@
       Inputs="@(_LibZipTargetMakefile)"
       Outputs="@(Content)">
     <Exec
-        Command="make VERBOSE=1"
+        Command="$(NinjaPath) -v $(MakeConcurrency)"
         WorkingDirectory="$(IntermediateOutputPath)\%(_LibZipTarget.Identity)"
      /> 
     <Copy

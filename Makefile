@@ -11,6 +11,9 @@ API_LEVEL     ?=
 
 ifeq ($(OS_NAME),Darwin)
 export MACOSX_DEPLOYMENT_TARGET := 10.11
+HOMEBREW_PREFIX ?= $(shell brew --prefix)
+else
+HOMEBREW_PREFIX := $prefix
 endif
 
 ifneq ($(V),0)
@@ -98,11 +101,25 @@ MSBUILD_PREPARE_PROJS = \
 	src/mono-runtimes/mono-runtimes.csproj \
 	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
 
-prepare-deps:
+prepare-deps: prepare-cmake-mingw-toolchain
 	git submodule update --init --recursive
 	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
 	mkdir -p bin/Build$(CONFIGURATION)
 	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
+
+#
+# $(1): output file name
+#
+define create_cmake_toolchain
+prepare-cmake-mingw-toolchain:: bin/Build$(CONFIGURATION)/$(1)
+
+bin/Build$(CONFIGURATION)/$(1): build-tools/scripts/$(1).in
+	mkdir -p $$(dir $$@)
+	sed -e 's;@HOMEBREW_PREFIX@;$$(HOMEBREW_PREFIX);g' < $$< > $$@
+endef
+
+$(eval $(call create_cmake_toolchain,mingw-32.cmake))
+$(eval $(call create_cmake_toolchain,mingw-64.cmake))
 
 prepare-external: prepare-deps
 	nuget restore $(SOLUTION)

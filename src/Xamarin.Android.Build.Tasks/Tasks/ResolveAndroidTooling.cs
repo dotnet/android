@@ -29,6 +29,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool AotAssemblies { get; set; }
 
+		public bool AndroidApplication { get; set; } = true;
+
 		[Output]
 		public string TargetFrameworkVersion { get; set; }
 
@@ -185,11 +187,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			int apiLevel;
-			if (int.TryParse (AndroidApiLevel, out apiLevel)) {
+			if (AndroidApplication && int.TryParse (AndroidApiLevel, out apiLevel)) {
 				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
-				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0114", $"Google Play requires that application updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
+					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
 				if (apiLevel < 19)
 					Log.LogCodedWarning ("XA0117", $"The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.");
 			}
