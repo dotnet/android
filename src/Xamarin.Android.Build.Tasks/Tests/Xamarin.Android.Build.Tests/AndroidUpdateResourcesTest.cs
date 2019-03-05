@@ -91,7 +91,8 @@ using System.Runtime.CompilerServices;
 					b.Target = "Compile";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
 						"first build failed");
-					Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "Target `_BuildAdditionalResourcesCache` should be skipped!");
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "DesignTimeBuild=True. Skipping download of "),
+						"failed to skip the downloading of files.");
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
