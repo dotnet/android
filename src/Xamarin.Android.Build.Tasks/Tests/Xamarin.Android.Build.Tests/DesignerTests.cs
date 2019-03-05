@@ -113,6 +113,7 @@ namespace UnnamedProject
 		/// <summary>
 		/// This target should work in three cases:
 		/// * Called on a clean project
+		/// * Called after a design-time build
 		/// * Called after SetupDependenciesForDesigner
 		/// * Called after a full Build
 		/// </summary>
@@ -132,14 +133,36 @@ namespace UnnamedProject
 				},
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
+
+				// GetExtraLibraryLocationsForDesigner after DTB
+				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
+				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
+				FileAssert.Exists (resourcepathscache);
+				var expected = File.ReadAllText (resourcepathscache);
+				StringAssert.DoesNotContain ("<Jars/>", expected);
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 2");
+
+				// GetExtraLibraryLocationsForDesigner after SetupDependenciesForDesigner
 				var setup = "SetupDependenciesForDesigner";
 				Assert.IsTrue (b.RunTarget (proj, setup, parameters: DesignerParameters),  $"build should have succeeded for target `{setup}`");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 2");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 3");
+				FileAssert.Exists (resourcepathscache);
+				var actual = File.ReadAllText (resourcepathscache);
+				StringAssert.DoesNotContain ("<Jars/>", actual);
+				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
+
+				// GetExtraLibraryLocationsForDesigner after Build
 				Assert.IsTrue (b.Build (proj), "build should have succeeded");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 3");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 4");
+				FileAssert.Exists (resourcepathscache);
+				actual = File.ReadAllText (resourcepathscache);
+				StringAssert.DoesNotContain ("<Jars/>", actual);
+				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
 			}
 		}
 
