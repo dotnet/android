@@ -125,11 +125,11 @@ timestamps {
         }
 
         stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
-            sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+            sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
+            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
 
         stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
@@ -141,7 +141,7 @@ timestamps {
         }
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
-            sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
+            sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
         }
 
         stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
@@ -179,7 +179,7 @@ timestamps {
                 echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
             }
 
-            commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
+            commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
             if (commandStatus != 0) {
                 error "run-all-tests FAILED, status: ${stageStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
