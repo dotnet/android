@@ -165,7 +165,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish packages to Azure', 10, 'MINUTES', '', true, 3) {    // Typically takes less than a minute
+        stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
@@ -197,7 +197,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false, 3) {  // Typically takes less than a minute
+        stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
 
             publishHTML target: [
