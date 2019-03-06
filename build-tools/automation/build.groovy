@@ -10,12 +10,12 @@ def isPr = false                // Default to CI
 
 def buildTarget = 'jenkins'
 
-def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts, Closure body) {
+def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
         stage(stageName) {
             def retryAttempt = 0
             def waitSecondsBeforeRetry = 15
-            retry(ctAttempts) {
+            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
                 timeout(time: timeoutValue, unit: timeoutUnit) {
                     dir(directory) {
                         if (retryAttempt > 0) {
@@ -96,7 +96,7 @@ timestamps {
             scmVars = checkout scm
         }
 
-        stageWithTimeout('init', 30, 'SECONDS', XADir, true, 0) {    // Typically takes less than a second
+        stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -129,34 +129,34 @@ timestamps {
             echo "${buildType} buildTarget: ${buildTarget}"
         }
 
-        stageWithTimeout('clean', 30, 'SECONDS', XADir, true, 0) {    // Typically takes less than a second
+        stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // We need to make sure there's no test AVD present and that the Android emulator isn't running
             // This is to assure that all tests start from the same state
             sh "killall -9 qemu-system-x86_64 || true"
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true, 0) {    // Typically takes less than 2 minutes
+        stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
 
-        stageWithTimeout('build', 6, 'HOURS', XADir, true, 0) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+        stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} MSBUILD_ARGS='$MSBUILD_AUTOPROVISION_ARGS'"
         }
 
-        stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true, 0) {    // Typically takes less than 5 minutes
+        stageWithTimeout('create vsix', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             sh "make create-vsix CONFIGURATION=${env.BuildFlavor}"
         }
 
-        stageWithTimeout('package oss', 30, 'MINUTES', XADir, true, 0) {    // Typically takes less than 5 minutes
+        stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
         }
 
-        stageWithTimeout('build tests', 30, 'MINUTES', XADir, true, 0) {    // Typically takes less than 10 minutes
+        stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             sh "make all-tests CONFIGURATION=${env.BuildFlavor}"
         }
 
-        stageWithTimeout('process build results', 10, 'MINUTES', XADir, true, 0) {    // Typically takes less than a minute
+        stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
@@ -179,7 +179,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false, 0) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
+        stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
             def skipNunitTests = false
