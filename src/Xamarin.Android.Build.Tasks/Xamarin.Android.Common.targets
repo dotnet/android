@@ -2883,7 +2883,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
-    <AndroidNativeLibrary Include="$(_TargetLibDir.Identity)\libmono-native.so"  />
+    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-native.so"  />
   </ItemGroup>
 </Target>
 
