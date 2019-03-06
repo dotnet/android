@@ -1412,8 +1412,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
-		Inputs="%(_LibraryResourceHashDirectories.StampFile)"
-		Outputs="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
+		Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
+		Outputs="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
 	>
 	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<Aapt2Compile
@@ -1426,20 +1426,24 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
+	<ItemGroup>
+		<_HashStampFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')" />
+		<_HashFlataFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')" />
+	</ItemGroup>
 	<Touch
-			Files="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp"
+			Files="@(_HashStampFiles)"
 			AlwaysCreate="True"
 	/>
 	<ItemGroup>
-		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).flata" />
-		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)%(_LibraryResourceHashDirectories.Hash).stamp" />
+		<FileWrites Include="@(_HashStampFiles)" />
+		<FileWrites Include="@(_HashFlataFiles)" />
 	</ItemGroup>
 </Target>
 
 <Target Name="_CompileResources"
 		Condition="'$(_AndroidUseAapt2)' == 'True'"
 		Inputs="@(AndroidResource)"
-		Outputs="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
+		Outputs="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp"
 	>
 	<MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<!-- Change cases so we support mixed case resource names -->
@@ -1462,8 +1466,10 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(Aapt2ToolPath)"
 		ToolExe="$(Aapt2ToolExe)"
 	/>
+	<Touch Files="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp" AlwaysCreate="True" />
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata" />
+		<FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp" />
 	</ItemGroup>
 </Target>
 
@@ -2353,8 +2359,28 @@ because xbuild doesn't support framework reference assemblies.
 	Condition="Exists('$(_CustomViewMapFile)')"
 	CustomViewMapFile="$(_CustomViewMapFile)"
 	AcwMapFile="$(_AcwMapFile)"
-	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+  >
+    <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />	
+  </ConvertCustomView>
+  <Delete Files="@(_ProcessedCustomViews->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
+    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+  />
+  <Aapt2Compile
+    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+    ContinueOnError="$(DesignTimeBuild)"
+    ResourceDirectories="@(_LibraryResourceHashDirectories);$(MonoAndroidResDirIntermediate)"
+    ExplicitCrunch="$(AndroidExplicitCrunch)"
+    ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+    FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+    ToolPath="$(Aapt2ToolPath)"
+    ToolExe="$(Aapt2ToolExe)">
+    <Output TaskParameter="CompiledResourceFlatArchives" ItemName="_UpdatedFlatArchives" />	
+  </Aapt2Compile>
+  <Touch Files="@(_UpdatedFlatArchives->'$(_AndroidLibraryFlatArchivesDirectory)\%(Filename).stamp')"
+    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_UpdatedFlatArchives)' != '' "
+    AlwaysCreate="True"
   />
   <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
 </Target>
