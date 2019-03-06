@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -518,6 +519,59 @@ namespace Lib2
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 			}
+		}
+
+		[Test]
+		public void ResolveLibraryProjectImports ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var cacheFile = Path.Combine (intermediate, "libraryprojectimports.cache");
+				FileAssert.Exists (cacheFile);
+				var expected = ReadCache (cacheFile);
+				Assert.AreNotEqual (0, expected.Jars.Length,
+					$"{nameof (expected.Jars)} should not be empty");
+				Assert.AreNotEqual (0, expected.ResolvedResourceDirectories.Length,
+					$"{nameof (expected.ResolvedResourceDirectories)} should not be empty");
+
+				// Delete the stamp file; this triggers <ResolveLibraryProjectImports/> to re-run.
+				// However, the task will skip everything, since the hashes of each assembly will be the same.
+				var stamp = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
+				FileAssert.Exists (stamp);
+				File.Delete (stamp);
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				var actual = ReadCache (cacheFile);
+				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
+					expected.Jars.Select (j => j.ItemSpec));
+				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec),
+					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec));
+
+				// Add a new AAR file to the project
+				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
+					WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				};
+				proj.OtherBuildItems.Add (aar);
+
+				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
+				actual = ReadCache (cacheFile);
+				Assert.AreEqual (expected.Jars.Length + 1, actual.Jars.Length,
+					$"{nameof (expected.Jars)} should have one more item");
+				Assert.AreEqual (expected.ResolvedResourceDirectories.Length + 1, actual.ResolvedResourceDirectories.Length,
+					$"{nameof (expected.ResolvedResourceDirectories)} should have one more item");
+			}
+		}
+
+		ReadLibraryProjectImportsCache ReadCache (string cacheFile)
+		{
+			var task = new ReadLibraryProjectImportsCache {
+				BuildEngine = new MockBuildEngine (new StringWriter ()),
+				CacheFile = cacheFile,
+			};
+			Assert.IsTrue (task.Execute (), $"{nameof (ReadLibraryProjectImportsCache)} should have succeeded.");
+			return task;
 		}
 	}
 }

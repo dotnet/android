@@ -233,6 +233,11 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (binAssemblyDir))
 						resolvedAssetDirectories.Add (binAssemblyDir);
 #endif
+					if (Directory.Exists (importsDir)) {
+						foreach (var file in Directory.EnumerateFiles (importsDir, "*.jar", SearchOption.AllDirectories)) {
+							AddJar (jars, Path.GetFullPath (file));
+						}
+					}
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
@@ -376,6 +381,11 @@ namespace Xamarin.Android.Tasks
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				if (aarHash == stampHash) {
 					Log.LogDebugMessage ("Skipped {0}: extracted files are up to date", aarFile.ItemSpec);
+					if (Directory.Exists (importsDir)) {
+						foreach (var file in Directory.EnumerateFiles (importsDir, "*.jar", SearchOption.AllDirectories)) {
+							AddJar (jars, Path.GetFullPath (file));
+						}
+					}
 					if (Directory.Exists (resDir))
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
@@ -428,12 +438,16 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void AddJar (ICollection<string> jars, string destination, string path)
+		static void AddJar (ICollection<string> jars, string destination, string path)
 		{
-			var dir = Path.GetFullPath (destination);
-			var jar = Path.Combine (dir, path);
-			if (!jars.Contains (jar))
-				jars.Add (jar);
+			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
+			AddJar (jars, fullPath);
+		}
+
+		static void AddJar (ICollection<string> jars, string fullPath)
+		{
+			if (!jars.Contains (fullPath))
+				jars.Add (fullPath);
 		}
 
 		void WriteAllText (string path, string contents, bool preserveTimestamp)
