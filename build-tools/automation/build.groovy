@@ -19,7 +19,7 @@ def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctA
                 timeout(time: timeoutValue, unit: timeoutUnit) {
                     dir(directory) {
                         if (retryAttempt > 0) {
-                            echo "ERROR : Stage ${stageName} failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
+                            echo "WARNING : Stage ${stageName} failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
                             sleep(waitSecondsBeforeRetry)
                             echo "Retrying ..."
                             waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
