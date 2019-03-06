@@ -583,6 +583,20 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     $(BuildDependsOn);
   </BuildDependsOn>
 </PropertyGroup>
+
+<PropertyGroup>
+  <_BeforeIncrementalClean Condition=" '$(AndroidApplication)' == 'True' ">
+    _PrepareAssemblies;
+    _CompileDex;
+    _AddFilesToFileWrites;
+  </_BeforeIncrementalClean>
+  <_BeforeIncrementalClean Condition=" '$(AndroidApplication)' != 'True' ">
+    _AddFilesToFileWrites;
+  </_BeforeIncrementalClean>
+  <CoreBuildDependsOn>
+    $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
+  </CoreBuildDependsOn>
+</PropertyGroup>
   
  <PropertyGroup>
    <CompileDependsOn>
@@ -696,9 +710,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" AlwaysCreate="true" />
 </Target>
 
-<Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
-</Target>
-
 <Target Name="_AddAndroidDefines"
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
@@ -711,13 +722,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
+<!--
+  NOTE:
+  This target runs during Restore, and there is no $(RestoreDependsOn) property.
+  There appears to be no other way to do this other than use BeforeTargets.
+-->
 <Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
     Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
     BeforeTargets="_GetRestoreTargetFrameworksOutput"
     DependsOnTargets="_SetLatestTargetFrameworkVersion">
 </Target>
 
-<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
+<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_ResolveSdks;_CreateAapt2VersionCache">
+</Target>
+
+<Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<ResolveSdks
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
@@ -823,7 +842,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_CreateAapt2VersionCache"
 		DependsOnTargets="_ReadAapt2VersionCache"
-		AfterTargets="_SetLatestTargetFrameworkVersion"
 		Condition="'$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
 	>
 	<MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
@@ -841,21 +859,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
 </Target>
 
-<Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks" DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">
-	<PropertyGroup>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
-	</PropertyGroup>
-	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
-</Target>
-
-
 <PropertyGroup>
 	<_OnResolveMonoAndroidSdks>
 		_ResolveMonoAndroidSdks
 		;_ValidateAndroidPackageProperties
 		;$(_AfterResolveMonoAndroidSdks)
 	</_OnResolveMonoAndroidSdks>
+	<_ResolveMonoAndroidSdksDependsOn>
+		GetReferenceAssemblyPaths;
+	</_ResolveMonoAndroidSdksDependsOn>
 </PropertyGroup>
 
 <!--
@@ -863,7 +875,7 @@ Resolves tools paths and SDK paths, and verifies everything is installed.
 If the framework directories haven't been resolved, it takes care of those too,
 because xbuild doesn't support framework reference assemblies.
  -->
-<Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
+<Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="$(_ResolveMonoAndroidSdksDependsOn)">
 
 	<Error Text="Could not locate MonoAndroid SDK." Condition="'$(MonoAndroidToolsDirectory)'==''" />
 	<Error Text="Could not locate Android SDK. Please set via /p:AndroidSdkDirectory." Condition="'$(_AndroidSdkDirectory)'==''" />
@@ -1051,6 +1063,13 @@ because xbuild doesn't support framework reference assemblies.
 	<PropertyGroup>
 		<DefineConstants>$(DefineConstants);@(AndroidDefineConstants)</DefineConstants>
 	</PropertyGroup>
+
+	<!-- Setup $(AndroidApplicationJavaClass) -->
+	<PropertyGroup>
+		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
+	</PropertyGroup>
+	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks)" />
@@ -2248,15 +2267,10 @@ because xbuild doesn't support framework reference assemblies.
 		;_CopyMdbFiles
 		;_LinkAssemblies
 	</_PrepareAssembliesDependsOnTargets>
-	<_PrepareAssembliesBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
-		IncrementalClean;
-		_CleanGetCurrentAndPriorFileWrites;
-	</_PrepareAssembliesBeforeTargets>
 </PropertyGroup>
   
 <Target Name="_PrepareAssemblies"
-    DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)"
-    BeforeTargets="$(_PrepareAssembliesBeforeTargets)">
+    DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
   <!-- Update our assembly lists to the copies for linking.  We also need to verify
        they still exist cause linking will delete them if they aren't used -->
   <GetFilesThatExist
@@ -2832,15 +2846,10 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileToDalvikWithDx;
 		_CompileToDalvikWithD8;
 	</_CompileDexDependsOn>
-	<_CompileDexBeforeTargets Condition=" '$(AndroidApplication)' == 'True' ">
-		IncrementalClean;
-		_CleanGetCurrentAndPriorFileWrites;
-	</_CompileDexBeforeTargets>
 </PropertyGroup>
 
 <Target Name="_CompileDex"
-		DependsOnTargets="$(_CompileDexDependsOn)"
-		BeforeTargets="$(_CompileDexBeforeTargets)">
+		DependsOnTargets="$(_CompileDexDependsOn)">
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />
@@ -3288,7 +3297,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Cleaning -->
 
-<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean;_CleanGetCurrentAndPriorFileWrites">
+<Target Name="_AddFilesToFileWrites">
   <ItemGroup>
     <!-- When following the naming convention for stamp files, this target handles FileWrites -->
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
