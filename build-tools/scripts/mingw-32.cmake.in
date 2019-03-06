@@ -22,3 +22,17 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(BUILD_SHARED_LIBS ON)
+
+set(XA_COMPILER_FLAGS "-static-libgcc")
+
+# Set or retrieve the cached flags.
+# This is necessary in case the user sets/changes flags in subsequent
+# configures. If we included our flags in here, they would get
+# overwritten.
+set(CMAKE_C_FLAGS ""
+        CACHE STRING "Flags used by the compiler during all build types.")
+set(CMAKE_CXX_FLAGS ""
+        CACHE STRING "Flags used by the compiler during all build types.")
+
+set(CMAKE_C_FLAGS             "${XA_COMPILER_FLAGS} ${CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS           "${XA_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS}")
