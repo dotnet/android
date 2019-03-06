@@ -59,11 +59,12 @@ package-deb: $(ZIP_OUTPUT)
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
 
 _TEST_RESULTS_BUNDLE_INCLUDE = \
-	$(wildcard bin/Test$(CONFIGURATION)/temp) \
 	$(wildcard TestResult-*.xml) \
+	$(wildcard bin/Test$(CONFIGURATION)/compatibility) \
+	$(wildcard bin/Test$(CONFIGURATION)/temp) \
+	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
 	$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt) \
 	$(wildcard bin/Test$(CONFIGURATION)/Timing_*) \
-	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
 	$(wildcard *.csv)
 
 _TEST_RESULTS_BASENAME   = xa-test-results-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
