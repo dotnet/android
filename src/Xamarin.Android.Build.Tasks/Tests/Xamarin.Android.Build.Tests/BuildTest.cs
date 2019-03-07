@@ -3597,6 +3597,20 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				);
 			}
 		}
+
+		[Test]
+		public void CompilerErrorShouldNotRunLinkAssemblies ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem.Source ("SyntaxError.cs") {
+				TextContent = () => "class SyntaxError {"
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "The \"LinkAssemblies\" task failed unexpectedly"), "The LinkAssemblies MSBuild task should not run!");
+			}
+		}
 	}
 }
 

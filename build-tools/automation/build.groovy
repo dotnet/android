@@ -10,12 +10,24 @@ def isPr = false                // Default to CI
 
 def buildTarget = 'jenkins'
 
-def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, Closure body) {
+def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
         stage(stageName) {
-            timeout(time: timeoutValue, unit: timeoutUnit) {
-                dir(directory) {
-                    body()
+            def retryAttempt = 0
+            def waitSecondsBeforeRetry = 15
+            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
+                timeout(time: timeoutValue, unit: timeoutUnit) {
+                    dir(directory) {
+                        if (retryAttempt > 0) {
+                            echo "WARNING : Stage ${stageName} failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
+                            sleep(waitSecondsBeforeRetry)
+                            echo "Retrying ..."
+                            waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
+                        }
+
+                        retryAttempt++
+                        body()
+                    }
                 }
             }
         }
@@ -79,7 +91,7 @@ timestamps {
     node("${env.BotLabel}") {
         def scmVars
 
-        stageWithTimeout('checkout', 60, 'MINUTES', XADir, true) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
+        stageWithTimeout('checkout', 60, 'MINUTES', XADir, true, 3) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
             sh "env"
             scmVars = checkout scm
         }
@@ -153,7 +165,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish packages to Azure', 10, 'MINUTES', '', true) {    // Typically takes less than a minute
+        stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk*.vsix,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
@@ -161,9 +173,9 @@ timestamps {
             }
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def stageStatus = publishPackages(publishBuildFilePaths)
-            if (stageStatus != 0) {
-                error "publish packages to Azure FAILED, status: ${stageStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+            def commandStatus = publishPackages(publishBuildFilePaths)
+            if (commandStatus != 0) {
+                error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
@@ -181,25 +193,36 @@ timestamps {
 
             commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
             if (commandStatus != 0) {
-                error "run-all-tests FAILED, status: ${stageStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                error "run-all-tests FAILED, status: ${commandStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 20, 'MINUTES', '', false) {  // Typically takes less than a minute
+        stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
+
+            publishHTML target: [
+                allowMissing:           true,
+                alwaysLinkToLastBuild:  false,
+                escapeUnderscores:      true,
+                includes:               '**/*',
+                keepAll:                true,
+                reportDir:              "xamarin-android/bin/Test${env.BuildFlavor}/compatibility",
+                reportFiles:            '*.html',
+                reportName:             'API Compatibility Checks'
+            ]
 
             sh "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}"
 
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def stageStatus = publishPackages(publishTestFilePaths)
-            if (stageStatus != 0) {
-                error "publish test error logs to Azure FAILED, status: ${stageStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+            def commandStatus = publishPackages(publishTestFilePaths)
+            if (commandStatus != 0) {
+                error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false) {    // Typically takes less than a second
+        stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
             if (isPr) {
                 echo "Skipping plot metrics for PR build"
                 return
@@ -297,7 +320,7 @@ timestamps {
             )
         }
 
-        stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false) {    // Typically takes under 1 minute to publish test results
+        stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
             def initialStageResult = currentBuild.currentResult
 
             xunit thresholds: [
