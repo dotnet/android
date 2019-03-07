@@ -173,9 +173,9 @@ timestamps {
             }
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def stageStatus = publishPackages(publishBuildFilePaths)
-            if (stageStatus != 0) {
-                error "publish packages to Azure FAILED, status: ${stageStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+            def commandStatus = publishPackages(publishBuildFilePaths)
+            if (commandStatus != 0) {
+                error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
@@ -193,7 +193,7 @@ timestamps {
 
             commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor}" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
             if (commandStatus != 0) {
-                error "run-all-tests FAILED, status: ${stageStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                error "run-all-tests FAILED, status: ${commandStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
@@ -216,9 +216,9 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def stageStatus = publishPackages(publishTestFilePaths)
-            if (stageStatus != 0) {
-                error "publish test error logs to Azure FAILED, status: ${stageStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+            def commandStatus = publishPackages(publishTestFilePaths)
+            if (commandStatus != 0) {
+                error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
