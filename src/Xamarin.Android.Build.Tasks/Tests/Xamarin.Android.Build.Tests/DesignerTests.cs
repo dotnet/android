@@ -167,7 +167,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void DesignerBeforeNuGetRestore ()
+		public void DesignerBeforeNuGetRestore ([Values (true, false)] bool restoreInSingleCall)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
@@ -205,8 +205,14 @@ namespace UnnamedProject
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
 				Assert.AreEqual ("", before, $"After first `{appb.Target}`, assemblies list would be empty.");
 
-				libb.AutomaticNuGetRestore =
-					appb.AutomaticNuGetRestore = true;
+				// NuGet restore, either with /t:Restore in a separate MSBuild call or /restore in a single call
+				if (restoreInSingleCall) {
+					libb.AutomaticNuGetRestore =
+						appb.AutomaticNuGetRestore = true;
+				} else {
+					Assert.IsTrue (libb.RunTarget (proj, "Restore", parameters: DesignerParameters), "lib nuget restore should have succeeded");
+					Assert.IsTrue (appb.RunTarget (proj, "Restore", parameters: DesignerParameters), "app nuget restore should have succeeded");
+				}
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "second build should have succeeded");
 
 				var after = GetAssembliesFromPackageManager (packageManagerPath);
