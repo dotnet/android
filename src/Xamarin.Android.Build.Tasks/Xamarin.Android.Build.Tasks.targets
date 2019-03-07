@@ -196,6 +196,7 @@
   <ItemGroup>
     <_MonoScript Include="mono-symbolicate" />
     <_MonoScript Include="illinkanalyzer" />
+    <_MonoScript Include="jit-times" />
     <_MonoScriptSource Include="@(_MonoScript->'$(_MonoScriptSourceDirectory)\%(Identity)')" />
     <_MonoScriptDestination Include="@(_MonoScript->'$(_MonoScriptDestinationDirectory)\%(Identity)')" />
   </ItemGroup>
