@@ -204,6 +204,10 @@
       <SourcePath>corlib</SourcePath>
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
+      <SourcePath>System</SourcePath>
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.CJK_test.dll">
       <SourcePath>I18N/CJK</SourcePath>
     </MonoTestAssembly>

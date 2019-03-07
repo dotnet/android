@@ -185,7 +185,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 10, 'MINUTES', '', false) {  // Typically takes less than a minute
+        stageWithTimeout('publish test error logs to Azure', 20, 'MINUTES', '', false) {  // Typically takes less than a minute
             echo "packaging test error logs"
 
             publishHTML target: [
