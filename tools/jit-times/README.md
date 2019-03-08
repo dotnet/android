@@ -1,4 +1,4 @@
-﻿**jit-times** is a tool to process methods.txt file produced by Xamarin.Android
+**jit-times** is a tool to process methods.txt file produced by Xamarin.Android
 applications
 
 	Usage: jit-times.exe OPTIONS* <methods-file>
@@ -18,7 +18,7 @@ applications
 
 ### Getting the `methods.txt` file
 
-The `methods.txt` file can be aquired from Xamarin.Android application like this:
+The `methods.txt` file can be acquired from Xamarin.Android application like this:
 
 * Enable `debug.mono.log`
 
