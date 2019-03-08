@@ -325,6 +325,7 @@
         Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') "
         Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_MonoRuntime->'package-android-%(Identity)', ' ') @(_MonoCrossRuntime->'package-android-%(Identity)', ' ') @(_MonoBcl->'package-android-%(Identity)', ' ') @(_LlvmRuntime->'provision-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
+        StandardOutputImportance="Low"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
     <Touch
@@ -638,6 +639,7 @@
         Condition=" '@(_MonoRuntime)' != '' Or '@(_MonoCrossRuntime)' != '' Or '@(_LlvmRuntime)' != '' "
         Command="make $(MakeConcurrency) @(_MonoRuntime->'clean-android-%(Identity)', ' ') @(_MonoCrossRuntime->'clean-android-%(Identity)', ' ') @(_MonoBcl->'clean-android-%(Identity)', ' ') @(_LlvmRuntime->'clean-llvm-%(Identity)', ' ') $(_MonoSdksParameters)"
         IgnoreStandardErrorWarningFormat="True"
+        StandardOutputImportance="Low"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />
 
