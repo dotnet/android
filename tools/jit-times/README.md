@@ -20,21 +20,23 @@ applications
 
 The `methods.txt` file can be acquired from Xamarin.Android application like this:
 
-* Enable `debug.mono.log`
+ 1. Set the `debug.mono.log` system property to include `timing`:
 
-	`adb shell setprop debug.mono.log timing`
+        adb shell setprop debug.mono.log timing`
 
-* Run the application
+ 2. Run the application
 
-* Collect the file - replace the `${PACKAGE}` with your application package name
+ 3. Grab `methods.txt`:
 
-	`adb shell run-as ${PACKAGE} cat /data/data/${PACKAGE}/files/.__override__/methods.txt > methods.txt`
+        adb shell run-as @PACKAGE_NAME@ cat files/.__override__/methods.txt > methods.txt
 
 ### Example usage:
 
-* Display JIT times for `System.Reflection.Emit` methods
+To display JIT times for `System.Reflection.Emit` methods
 
-	`mono jit-times.exe -m ^System.Reflection.Emit methods.txt`
+	mono jit-times.exe -m ^System.Reflection.Emit methods.txt
+
+Results in:
 
 ```
 Total (ms) |  Self (ms) | Method
