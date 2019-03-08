@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -1928,6 +1928,10 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 							Assert.IsNotNull (data, "libMonoPosixHelper.so for x86 should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libMonoPosixHelper.so");
 							Assert.IsNotNull (data, "libMonoPosixHelper.so for armeabi-v7a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libmono-native.so");
+							Assert.IsNotNull (data, "libmono-native.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libmono-native.so");
+							Assert.IsNotNull (data, "libmono-native.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}
@@ -3394,6 +3398,27 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
+			}
+		}
+
+		//NOTE: tests type forwarders in Mono.Android.dll to System.Drawing.Common.dll
+		[Test]
+		public void SystemDrawingCommon ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "class Foo { System.Drawing.Color bar; }"
+					}
+				},
+				PackageReferences = {
+					KnownPackages.Acr_UserDialogs,
+					KnownPackages.Xamarin_Build_Download_0_4_11,
+				}
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
 
