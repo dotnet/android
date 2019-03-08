@@ -18,6 +18,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public  ITaskItem   DestinationFile     { get; set; }
 
 		public  string[]    Replacements        { get; set; }
+		public  string      ReplacementFilePath { get; set; }
 
 		public override bool Execute ()
 		{
@@ -25,13 +26,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (SourceFile)}: {SourceFile.ItemSpec}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (DestinationFile)}: {DestinationFile.ItemSpec}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (Replacements)}:");
-			foreach (var replacement in Replacements) {
-				Log.LogMessage (MessageImportance.Low, $"    {replacement}");
+			if (Replacements != null) {
+				foreach (var replacement in Replacements) {
+					Log.LogMessage (MessageImportance.Low, $"    {replacement}");
+				}
 			}
 
 			File.Delete (DestinationFile.ItemSpec);
 
-			var r   = GetReplacementInfo (Replacements);
+			string[] replacements;
+			if (!String.IsNullOrEmpty (ReplacementFilePath))
+				replacements = File.ReadAllLines (ReplacementFilePath);
+			else
+				replacements = Replacements;
+			var r   = GetReplacementInfo (replacements);
 			using (var i    = File.OpenText (SourceFile.ItemSpec))
 			using (var o    = File.CreateText (DestinationFile.ItemSpec)) {
 				string line;

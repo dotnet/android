@@ -21,16 +21,6 @@
   </PropertyGroup>
   <Import Project="monodroid.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\dependencies\dependencies.csproj">
-      <Project>{C845ECC0-2ED3-498E-8EA8-02EF7AC6E9AD}</Project>
-      <Name>dependencies</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <!--
       `jnimarshalmethod-gen.exe` needs to be built first because our
       `_CreateJavaInteropDllConfigs` target replaces
@@ -43,16 +33,6 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj">
       <Project>{D1295A8F-4F42-461D-A046-564476C10002}</Project>
       <Name>jnimarshalmethod-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\mono-runtimes\mono-runtimes.csproj">
-      <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
-      <Name>mono-runtimes</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\mingw-dependencies\mingw-dependencies.csproj">
-      <Project>{2C1C68CD-CFED-4DEB-A2D3-61D6932F3E8E}</Project>
-      <Name>mingw-dependencies</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

@@ -167,7 +167,7 @@ timestamps {
                                 fi
 
                                 echo 'STAGE: build'
-                                make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'
+                                make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12' PREPARE_CI=1
 
                                 if [[ "${isPr}" != "true" ]]; then
                                     echo 'STAGE: package deb'
