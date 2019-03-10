@@ -34,6 +34,14 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public override bool Execute ()
 		{
+			var key = (WorkingDirectory, XASourceDirectory, SubmoduleName, GitRemoteName);
+			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build) as string;
+			if (!string.IsNullOrEmpty (cached)) {
+				Log.LogMessage (MessageImportance.Normal, "Using cached information from earlier in the build");
+				CommitInfo = cached;
+				goto outOfHere;
+			}
+
 			if (String.IsNullOrEmpty (GitPath?.Trim ()))
 				GitPath = "git";
 
@@ -147,6 +155,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  Repository: {repo}");
 
 			CommitInfo = $"{organization}/{repo}/{branch}@{commit}";
+			BuildEngine4.RegisterTaskObject (key, CommitInfo, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 
 		  outOfHere:
 			return !Log.HasLoggedErrors;
