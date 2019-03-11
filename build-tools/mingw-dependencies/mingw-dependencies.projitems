@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <CMake>cmake</CMake>
+    <Ninja>ninja</Ninja>
     <_OutputSubdir32>x86</_OutputSubdir32>
     <_OutputSubdir64>x86_64</_OutputSubdir64>
-    <_CommonCmakeProjectFlags>-DCMAKE_MAKE_PROGRAM=$(NinjaPath) -GNinja -DBUILD_TESTS=OFF</_CommonCmakeProjectFlags>
+    <_CommonCmakeProjectFlags>-DCMAKE_MAKE_PROGRAM=$(Ninja) -GNinja -DBUILD_TESTS=OFF</_CommonCmakeProjectFlags>
     <_CmakeNoSharedLibsFlags>-DBUILD_SHARED_LIBS=OFF</_CmakeNoSharedLibsFlags>
     <_CmakeWithSharedLibsFlags>-DBUILD_SHARED_LIBS=ON</_CmakeWithSharedLibsFlags>
     <_CMakeFlags32>-DCMAKE_INSTALL_PREFIX=$(MingwDependenciesRootDirectory)\$(_OutputSubdir32)</_CMakeFlags32>
@@ -11,6 +13,8 @@
   </PropertyGroup>
   <ItemGroup>
     <_CmakeMingwDependency Include="dlfcn-win32-64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <CMake>$(CMake)</CMake>
+      <Ninja>$(Ninja)</Ninja>
       <Submodule>dlfcn-win32</Submodule>
       <CMakeToolchainFile>..\..\bin\Build$(Configuration)\mingw-64.cmake</CMakeToolchainFile>
       <CMakeExtraFlags>$(_CommonCmakeProjectFlags) $(_CMakeFlags64) $(_CmakeNoSharedLibsFlags)</CMakeExtraFlags>
@@ -19,6 +23,8 @@
     </_CmakeMingwDependency>
 
     <_CmakeMingwDependency Include="dlfcn-win32-32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
+      <CMake>$(CMake)</CMake>
+      <Ninja>$(Ninja)</Ninja>
       <Submodule>dlfcn-win32</Submodule>
       <CMakeToolchainFile>..\..\bin\Build$(Configuration)\mingw-32.cmake</CMakeToolchainFile>
       <CMakeExtraFlags>$(_CommonCmakeProjectFlags) $(_CMakeFlags32) $(_CmakeNoSharedLibsFlags)</CMakeExtraFlags>
@@ -27,6 +33,8 @@
     </_CmakeMingwDependency>
 
     <_CmakeMingwDependency Include="mman-win32-64" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win64:'))">
+      <CMake>$(CMake)</CMake>
+      <Ninja>$(Ninja)</Ninja>
       <Submodule>mman-win32</Submodule>
       <CMakeToolchainFile>..\..\bin\Build$(Configuration)\mingw-64.cmake</CMakeToolchainFile>
       <CMakeExtraFlags>$(_CommonCmakeProjectFlags) $(_CMakeFlags64) $(_CmakeNoSharedLibsFlags)</CMakeExtraFlags>
@@ -35,6 +43,8 @@
     </_CmakeMingwDependency>
 
     <_CmakeMingwDependency Include="mman-win32-32" Condition="$(AndroidSupportedHostJitAbisForConditionalChecks.Contains (':mxe-Win32:'))">
+      <CMake>$(CMake)</CMake>
+      <Ninja>$(Ninja)</Ninja>
       <Submodule>mman-win32</Submodule>
       <CMakeToolchainFile>..\..\bin\Build$(Configuration)\mingw-32.cmake</CMakeToolchainFile>
       <CMakeExtraFlags>$(_CommonCmakeProjectFlags) $(_CMakeFlags32) $(_CmakeNoSharedLibsFlags)</CMakeExtraFlags>
