@@ -14,7 +14,9 @@
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
 
-  <Target Name="_BuildR8">
+  <Target Name="_BuildR8"
+      Inputs="$(MSBuildThisFile);build.gradle"
+      Outputs="$(_Destination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
@@ -23,8 +25,8 @@
     <Copy
         SourceFiles="build\libs\r8.jar"
         DestinationFiles="$(_Destination)"
-        SkipUnchangedFiles="True"
     />
+    <Touch Files="$(_Destination)" />
   </Target>
 
   <Target Name="_CleanR8">
