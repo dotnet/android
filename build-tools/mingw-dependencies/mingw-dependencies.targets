@@ -30,7 +30,7 @@
       Outputs="$(IntermediateOutputPath)\%(_CmakeMingwDependency.Identity)\build.ninja">
     <MakeDir Directories="@(_CmakeMingwDependency->'$(IntermediateOutputPath)\%(Identity)')" />
     <Exec
-        Command="$(CmakePath) -DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\%(_CmakeMingwDependency.CMakeToolchainFile) %(_CmakeMingwDependency.CMakeExtraFlags) $(_SubmoduleTopDir)\%(_CmakeMingwDependency.Submodule)"
+        Command="%(_CmakeMingwDependency.CMake) -DCMAKE_TOOLCHAIN_FILE=$(MSBuildThisFileDirectory)\%(_CmakeMingwDependency.CMakeToolchainFile) %(_CmakeMingwDependency.CMakeExtraFlags) $(_SubmoduleTopDir)\%(_CmakeMingwDependency.Submodule)"
         WorkingDirectory="$(IntermediateOutputPath)\%(_CmakeMingwDependency.Identity)"
     />
   </Target>
@@ -40,11 +40,11 @@
       Inputs="$(IntermediateOutputPath)\%(_CmakeMingwDependency.Identity)\build.ninja"
       Outputs="@(_CmakeMingwDependency->'%(DestinationDirectory)\%(OutputLibrary)')">
     <Exec
-        Command="$(NinjaPath) -v $(MakeConcurrency)"
+        Command="%(_CmakeMingwDependency.Ninja) -v $(MakeConcurrency)"
         WorkingDirectory="$(IntermediateOutputPath)\%(_CmakeMingwDependency.Identity)"
     />
     <Exec
-        Command="$(NinjaPath) -v install"
+        Command="%(_CmakeMingwDependency.Ninja) -v install"
         WorkingDirectory="$(IntermediateOutputPath)\%(_CmakeMingwDependency.Identity)"
     />
     <Touch Files="@(_CmakeMingwDependency->'%(DestinationDirectory)\%(OutputLibrary)')" />
