@@ -435,6 +435,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
