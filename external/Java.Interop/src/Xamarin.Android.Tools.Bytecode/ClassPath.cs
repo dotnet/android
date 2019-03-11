@@ -46,7 +46,17 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (!IsJarFile (jarFile))
 				throw new ArgumentException ("'jarFile' is not a valid .jar file.", "jarFile");
 
-			using (var jar = CreateZipArchive (jarFile)) {
+			using (var jarStream = File.OpenRead (jarFile)) { 
+				Load (jarStream);
+			}
+		}
+
+		public void Load (Stream jarStream, bool leaveOpen = false)
+		{
+			if (jarStream == null)
+				throw new ArgumentNullException (nameof (jarStream));
+
+			using (var jar = CreateZipArchive (jarStream, leaveOpen)) {
 				foreach (var entry in jar.Entries) {
 					if (entry.Length == 0)
 						continue;
@@ -67,11 +77,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
-		static ZipArchive CreateZipArchive (string jarFile)
+		static ZipArchive CreateZipArchive (Stream jarStream, bool leaveOpen)
 		{
 			var encoding    = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
 
-			return new ZipArchive (File.OpenRead (jarFile), ZipArchiveMode.Read, leaveOpen: false, entryNameEncoding: encoding);
+			return new ZipArchive (jarStream, ZipArchiveMode.Read, leaveOpen: leaveOpen, entryNameEncoding: encoding);
 		}
 
 		public void Add (ClassFile classFile)
