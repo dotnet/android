@@ -449,7 +449,7 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
     </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\KnownMembers.cs">
       <Link>Linker\Linker\KnownMembers.cs</Link>
     </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
