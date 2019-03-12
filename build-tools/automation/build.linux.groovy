@@ -2,6 +2,7 @@
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
 
 def XADir = "xamarin-android"
+def pBuilderBindMounts = null
 def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
 
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
@@ -58,10 +59,10 @@ def publishPackages(filePaths) {
     return status
 }
 
-def execChRootCommand(chRootName, chRootPackages, makeCommand) {
+def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeCommand) {
     chroot chrootName: chRootName,
         additionalPackages: chRootPackages,
-        bindMounts: '/home/builder',
+        bindMounts: pBuilderBindMounts,
         command: """
             export LC_ALL=en_US.UTF-8
             export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
@@ -92,29 +93,32 @@ timestamps {
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
+
+            pBuilderBindMounts = "/home/${env.USER}"
+            echo "pBuilderBindMounts: ${pBuilderBindMounts}"
         }
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            execChRootCommand(env.ChRootName, chRootPackages,
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                 "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'")
         }
 
         stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            execChRootCommand(env.ChRootName, chRootPackages,
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                 "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
             // We'll install mono/2018-02 on the build machines and try using that, which requires
-            execChRootCommand(env.ChRootName, chRootPackages,
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                 "xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
         stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
-                execChRootCommand(env.ChRootName, chRootPackages,
+                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                     "make package-build-status CONFIGURATION=${env.BuildFlavor}")
             } catch (error) {
                 echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
@@ -140,7 +144,7 @@ timestamps {
         stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
-            execChRootCommand(env.ChRootName, chRootPackages,
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                     """
                         xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
                         killall adb || true
@@ -151,7 +155,7 @@ timestamps {
             echo "packaging test error logs"
 
             // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
-            execChRootCommand(env.ChRootName, chRootPackages,
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                 "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
 
             // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
