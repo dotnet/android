@@ -122,7 +122,6 @@ timestamps {
 
                             # Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
                             # We'll install mono/2018-02 on the build machines and try using that, which requires
-                            # overriding the $(MonoRequiredMinimumVersion) property to allow things to build.
                             xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1
                         """
         }
