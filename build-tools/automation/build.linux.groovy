@@ -4,6 +4,7 @@
 def XADir = "xamarin-android"
 def pBuilderBindMounts = null
 def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
+def utils = null
 
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
@@ -38,27 +39,6 @@ def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctA
     }
 }
 
-def publishPackages(filePaths) {
-    def status = 0
-    try {
-         // Note: The following function is provided by the Azure Blob Jenkins plugin
-         azureUpload(storageCredentialId: env.StorageCredentialId,
-                 storageType: "blobstorage",
-                 containerName: env.ContainerName,
-                 virtualPath: env.StorageVirtualPath,
-                 filesPath: filePaths,
-                 allowAnonymousAccess: true,
-                 pubAccessible: true,
-                 doNotWaitForPreviousBuild: true,
-                 uploadArtifactsOnlyIfSuccessful: true)
-    } catch (error) {
-        echo "ERROR : publishPackages: Unexpected error: ${error}"
-        status = 1
-    }
-
-    return status
-}
-
 def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeCommand) {
     chroot chrootName: chRootName,
         additionalPackages: chRootPackages,
@@ -82,6 +62,8 @@ timestamps {
         }
 
         stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+            utils = load "build-tools/automation/utils.groovy"
+
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             def branch = scmVars.GIT_BRANCH
             def commit = scmVars.GIT_COMMIT
@@ -135,7 +117,7 @@ timestamps {
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status-*"
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def commandStatus = publishPackages(publishBuildFilePaths)
+            def commandStatus = utils.publishPackages(publishBuildFilePaths)
             if (commandStatus != 0) {
                 error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
@@ -162,7 +144,7 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def commandStatus = publishPackages(publishTestFilePaths)
+            def commandStatus = utils.publishPackages(publishTestFilePaths)
             if (commandStatus != 0) {
                 error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
