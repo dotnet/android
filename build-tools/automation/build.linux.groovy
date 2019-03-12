@@ -80,16 +80,6 @@ timestamps {
             echo "Build type: ${buildType}"
         }
 
-        /*
-        UNDONE: Would similar cleaning be recommended for Linux builds?
-        stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
-            // We need to make sure there's no test AVD present and that the Android emulator isn't running
-            // This is to assure that all tests start from the same state
-            sh "killall -9 qemu-system-x86_64 || true"
-            sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
-        }
-        */
-
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             chroot chrootName: 'debian-9-amd64multiarchi386-preview', 
                    additionalPackages: chRootPackages,
