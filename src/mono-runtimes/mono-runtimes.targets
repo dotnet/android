@@ -301,18 +301,18 @@
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
     <DownloadUri
-        SourceUris="https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/$(_MonoArchiveName).tar.gz"
-        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
+        SourceUris="https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/$(_MonoArchiveName).zip"
+        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         ContinueOnError="True"
     />
     <Exec
-        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
-        Command="tar -xvf $(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz"
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
+        Command="unzip $(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\out"
     />
     <Touch
-        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).tar.gz') "
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
         Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"
         AlwaysCreate="True"
     />
