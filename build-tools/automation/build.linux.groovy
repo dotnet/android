@@ -73,7 +73,6 @@ timestamps {
 
             def buildType = 'CI'
 
-            echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
