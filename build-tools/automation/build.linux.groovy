@@ -58,6 +58,19 @@ def publishPackages(filePaths) {
     return status
 }
 
+def execChRootCommand(chRootName, chRootPackages, makeCommand) {
+    chroot chrootName: chRootName,
+        additionalPackages: chRootPackages,
+        bindMounts: '/home/builder',
+        command: """
+            export LC_ALL=en_US.UTF-8
+            export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+            locale
+
+            ${makeCommand}
+            """
+}
+
 timestamps {
     node("${env.BotLabel}") {
         def scmVars
@@ -82,56 +95,27 @@ timestamps {
         }
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            chroot chrootName: 'debian-9-amd64multiarchi386-preview', 
-                   additionalPackages: chRootPackages,
-                   bindMounts: '/home/builder',
-                   command: """
-                                export LC_ALL=en_US.UTF-8
-                                export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-                                locale
-
-                                make jenkins      CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true  MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'
-                            """
+            execChRootCommand(env.ChRootName, chRootPackages,
+                                "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'")
         }
 
         stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            chroot chrootName: 'debian-9-amd64multiarchi386-preview', 
-                   additionalPackages: chRootPackages,
-                   command: """
-                                export LC_ALL=en_US.UTF-8
-                                export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-                                locale
-
-                                make package-deb  CONFIGURATION=${env.BuildFlavor} V=1
-                            """
+            execChRootCommand(env.ChRootName, chRootPackages,
+                                "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
-            chroot chrootName: 'debian-9-amd64multiarchi386-preview',
-                    additionalPackages: chRootPackages,
-                    command: """
-                            export LC_ALL=en_US.UTF-8
-                            export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-                            locale
-
-                            # Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
-                            # We'll install mono/2018-02 on the build machines and try using that, which requires
-                            xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1
-                        """
+            // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
+            // We'll install mono/2018-02 on the build machines and try using that, which requires
+            execChRootCommand(env.ChRootName, chRootPackages,
+                                "xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
         stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
-                chroot chrootName: 'debian-9-amd64multiarchi386-preview',
-                       additionalPackages: chRootPackages,
-                       command: """
-                                export LC_ALL=en_US.UTF-8
-                                export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-                                locale
-
-                                make package-build-status CONFIGURATION=${env.BuildFlavor}
-                            """
+                execChRootCommand(env.ChRootName, chRootPackages,
+                                    "make package-build-status CONFIGURATION=${env.BuildFlavor}")
             } catch (error) {
                 echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
             }
@@ -156,28 +140,19 @@ timestamps {
         stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
-            chroot chrootName: 'debian-9-amd64multiarchi386-preview',
-                    additionalPackages: chRootPackages,
-                    command: """
-                        export LC_ALL=en_US.UTF-8
-                        export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+            execChRootCommand(env.ChRootName, chRootPackages,
+                    """
                         xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
                         killall adb || true
-                        """
+                    """)
         }
 
         stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
 
-            chroot chrootName: 'debian-9-amd64multiarchi386-preview',
-                    additionalPackages: chRootPackages,
-                    command: """
-                        export LC_ALL=en_US.UTF-8
-                        export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-                        
-                        # UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
-                        make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}                        
-                        """
+            // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
+            execChRootCommand(env.ChRootName, chRootPackages,
+                                "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
 
             // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
