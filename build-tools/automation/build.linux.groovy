@@ -2,6 +2,8 @@
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
 
 def XADir = "xamarin-android"
+def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev curl'
+def chRootPackagesRunTests = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
 
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
@@ -91,19 +93,20 @@ timestamps {
 
         stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             chroot chrootName: 'debian-9-amd64multiarchi386-preview', 
+                   additionalPackages: chRootPackages,
+                   bindMounts: '/home/builder',
                    command: """
                                 export LC_ALL=en_US.UTF-8
                                 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
                                 locale
 
-                                make jenkins      CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true  MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'                                
-
-                                xvfb-run -a -- make all-tests V=1
+                                make jenkins      CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true  MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'
                             """
         }
 
         stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             chroot chrootName: 'debian-9-amd64multiarchi386-preview', 
+                   additionalPackages: chRootPackages,
                    command: """
                                 export LC_ALL=en_US.UTF-8
                                 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
@@ -115,6 +118,7 @@ timestamps {
 
         stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             chroot chrootName: 'debian-9-amd64multiarchi386-preview',
+                    additionalPackages: chRootPackages,
                     command: """
                             export LC_ALL=en_US.UTF-8
                             export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
@@ -130,6 +134,7 @@ timestamps {
             try {
                 echo "processing build status"
                 chroot chrootName: 'debian-9-amd64multiarchi386-preview',
+                       additionalPackages: chRootPackagesRunTests,
                        command: """
                                 export LC_ALL=en_US.UTF-8
                                 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
@@ -162,6 +167,7 @@ timestamps {
             echo "running tests"
 
             chroot chrootName: 'debian-9-amd64multiarchi386-preview',
+                    additionalPackages: chRootPackagesRunTests,
                     command: """
                         export LC_ALL=en_US.UTF-8
                         export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
@@ -174,6 +180,7 @@ timestamps {
             echo "packaging test error logs"
 
             chroot chrootName: 'debian-9-amd64multiarchi386-preview',
+                    additionalPackages: chRootPackagesRunTests,
                     command: """
                         export LC_ALL=en_US.UTF-8
                         export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
