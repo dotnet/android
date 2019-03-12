@@ -58,8 +58,8 @@
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.6.4111459</AndroidCmakeVersion>
-    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion)</AndroidCmakeVersionPath>
+    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
+    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
     <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\$(AndroidCmakeVersionPath)</AndroidSdkCmakeDirectory>
     <CmakePath Condition=" '$(CmakePath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\cmake</CmakePath>
     <NinjaPath Condition=" '$(NinjaPath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\ninja</NinjaPath>
