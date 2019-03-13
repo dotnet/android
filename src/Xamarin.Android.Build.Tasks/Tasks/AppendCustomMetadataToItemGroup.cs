@@ -19,15 +19,24 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			var output = new List<ITaskItem> ();
+			var metaData = new Dictionary<string, List<ITaskItem>> (StringComparer.InvariantCultureIgnoreCase);
+			foreach (ITaskItem item in MetaDataItems) {
+				if (!metaData.ContainsKey (item.ItemSpec))
+					metaData.Add (item.ItemSpec, new List<ITaskItem> ());
+				metaData[item.ItemSpec].Add (item);
+			}
 
 			foreach (var item in Inputs) {
 				var fn = Path.GetFileNameWithoutExtension (item.ItemSpec);
 				output.Add (item);
-				foreach (var metaData in MetaDataItems) {
-					if (string.Compare (metaData.ItemSpec, fn, StringComparison.OrdinalIgnoreCase) != 0)
-						continue;
+				if (!metaData.ContainsKey (fn))
+					continue;
+				List<ITaskItem> metaDateList = metaData [fn];
+				if (metaDateList == null)
+					continue;
+				foreach (var metaDateItem in metaDateList) {
 					Log.LogDebugMessage ($"Copying MetaData for {item.ItemSpec}");
-					metaData.CopyMetadataTo (item);
+					metaDateItem.CopyMetadataTo (item);
 				}
 			}
 

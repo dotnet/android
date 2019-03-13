@@ -471,18 +471,26 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 	
 <Target Name="_AddAndroidCustomMetaData">
-	<AppendCustomMetadataToItemGroup
-			Inputs="@(ReferencePath)"
-			MetaDataItems="@(_AndroidAssemblySkipCases)"
-		>
-		<Output TaskParameter="Output" ItemName="_ReferencePath" />
-	</AppendCustomMetadataToItemGroup>
-	<AppendCustomMetadataToItemGroup
-			Inputs="@(ReferenceDependencyPaths)"
-			MetaDataItems="@(_AndroidAssemblySkipCases)"
-		>
-		<Output TaskParameter="Output" ItemName="_ReferenceDependencyPaths" />
-	</AppendCustomMetadataToItemGroup>
+  <AppendCustomMetadataToItemGroup
+      Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
+      Inputs="@(ReferencePath)"
+      MetaDataItems="@(_AndroidAssemblySkipCases)"
+    >
+    <Output TaskParameter="Output" ItemName="_ReferencePath" />
+  </AppendCustomMetadataToItemGroup>
+  <AppendCustomMetadataToItemGroup
+      Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
+      Inputs="@(ReferenceDependencyPaths)"
+      MetaDataItems="@(_AndroidAssemblySkipCases)"
+    >
+    <Output TaskParameter="Output" ItemName="_ReferenceDependencyPaths" />
+  </AppendCustomMetadataToItemGroup>
+  <ItemGroup>
+    <_ReferencePath Include="@(ReferencePath)"
+      Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)" />
+    <_ReferenceDependencyPaths Include="@(ReferenceDependencyPaths)"
+      Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)"/>
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
