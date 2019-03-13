@@ -452,6 +452,18 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\KnownMembers.cs">
       <Link>Linker\Linker\KnownMembers.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodDefinitionExtensions.cs">
+      <Link>Linker\Linker\MethodDefinitionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodBodyScanner.cs">
+      <Link>Linker\Linker\MethodBodyScanner.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeDefinitionExtensions.cs">
+      <Link>Linker\Linker\TypeDefinitionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\BCL.cs">
+      <Link>Linker\Linker\BCL.cs</Link>
+    </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
