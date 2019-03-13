@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks {
 				var fn = Path.GetFileNameWithoutExtension (item.ItemSpec);
 				output.Add (item);
 				foreach (var metaData in MetaDataItems) {
-					if (metaData.ItemSpec != fn)
+					if (string.Compare (metaData.ItemSpec, fn, StringComparison.OrdinalIgnoreCase) != 0)
 						continue;
 					Log.LogDebugMessage ($"Copying MetaData for {item.ItemSpec}");
 					metaData.CopyMetadataTo (item);
