@@ -18,3 +18,5 @@ def publishPackages(filePaths) {
 
     return status
 }
+
+return this
