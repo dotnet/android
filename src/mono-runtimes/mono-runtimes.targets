@@ -175,7 +175,7 @@
       <Output TaskParameter="CommitHash"   PropertyName="_MonoGitCommitHash" />
     </GitCommitHash>
     <PropertyGroup>
-      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(_MonoGitCommitHash)-$(HostOS)</_MonoArchiveName>
+      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(HostOS)-$(_MonoGitCommitHash)</_MonoArchiveName>
     </PropertyGroup>
   </Target>
 
