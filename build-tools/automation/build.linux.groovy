@@ -70,7 +70,9 @@ timestamps {
 
             def buildType = 'CI'
 
-            sh "echo \"HostName: \${HOSTNAME}\""
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                                "echo \"HostName: \${HOSTNAME}\"")
+
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
