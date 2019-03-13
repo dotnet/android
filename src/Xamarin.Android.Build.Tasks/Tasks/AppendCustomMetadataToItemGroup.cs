@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks.Tasks {
+namespace Xamarin.Android.Tasks {
 	public class AppendCustomMetadataToItemGroup : Task {
 		[Required]
 		public ITaskItem[] Inputs { get; set; }
