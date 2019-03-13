@@ -2835,6 +2835,10 @@ because xbuild doesn't support framework reference assemblies.
 	</_BuildApkEmbedInputs>
 </PropertyGroup>
 
+<ItemGroup>
+  <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)\profile-startup.aot" />
+</ItemGroup>
+
 <Target Name="_BuildApkEmbed"
   DependsOnTargets="_PrepareBuildApk"
   Inputs="$(_BuildApkEmbedInputs)"
