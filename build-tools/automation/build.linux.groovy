@@ -4,7 +4,7 @@
 def XADir = "xamarin-android"
 def pBuilderBindMounts = null
 def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
-def utils = load "build-tools/automation/utils.groovy"
+def utils = null
 
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
@@ -62,7 +62,6 @@ timestamps {
         }
 
         stageWithTimeout('init', 60, 'MINUTES', XADir, true) {    // Typically takes less than a second. UNDONE: TEST: execChRootCommand that initializes packages on first execution takes way more than the 30 second timeout originally set here
-            utils.loadTest
             utils = load "build-tools/automation/utils.groovy"
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
