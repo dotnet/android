@@ -114,7 +114,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
@@ -127,7 +127,7 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmonosgen-2.0.so')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />
@@ -178,8 +178,8 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
-    <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll" />
-    <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" />
+    <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
+    <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmonosgen-2.0.dll" />
   </ItemGroup>
