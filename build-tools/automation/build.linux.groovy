@@ -61,7 +61,7 @@ timestamps {
             scmVars = checkout scm
         }
 
-        stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+        stageWithTimeout('init', 10, 'MINUTES', XADir, true) {    // Typically takes less than a second. UNDONE: TEST: execChRootCommand takes more than the 30 second timeout originally set here
             utils = load "build-tools/automation/utils.groovy"
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
