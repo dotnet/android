@@ -70,7 +70,7 @@ timestamps {
 
             def buildType = 'CI'
 
-            echo "HostName: ${env.HOSTNAME}"
+            sh "echo \"HostName: \${HOSTNAME}\""
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
