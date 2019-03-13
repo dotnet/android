@@ -61,7 +61,7 @@ timestamps {
             scmVars = checkout scm
         }
 
-        stageWithTimeout('init', 10, 'MINUTES', XADir, true) {    // Typically takes less than a second. UNDONE: TEST: execChRootCommand takes more than the 30 second timeout originally set here
+        stageWithTimeout('init', 60, 'MINUTES', XADir, true) {    // Typically takes less than a second. UNDONE: TEST: execChRootCommand that initializes packages on first execution takes way more than the 30 second timeout originally set here
             utils.loadTest
             utils = load "build-tools/automation/utils.groovy"
 
