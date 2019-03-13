@@ -464,25 +464,25 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
-		public static Package XamarinForms_3_1_0_697729 = new Package {
+		public static Package XamarinForms_3_6_0_220655 = new Package {
 			Id = "Xamarin.Forms",
-			Version = "3.1.0.697729",
-			TargetFramework = "MonoAndroid10",
+			Version = "3.6.0.220655",
+			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.Android.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
 				},
 				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\FormsViewGroup.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\FormsViewGroup.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Core.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Xaml.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.1.0.697729\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
 				},
 			}
 		};

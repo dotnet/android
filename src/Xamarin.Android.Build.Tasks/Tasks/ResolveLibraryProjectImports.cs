@@ -357,10 +357,25 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (Directory.Exists (importsDir) && assemblyHash != stampHash) {
-					Log.LogDebugMessage ($"Saving hash to {stamp}, changes: {updated}");
-					//NOTE: if the hash is different we always want to write the file, but preserve the timestamp if no changes
-					WriteAllText (stamp, assemblyHash, preserveTimestamp: !updated);
+				if (Directory.Exists (importsDir)) {
+					// Delete unknown files in the top directory of importsDir
+					foreach (var file in Directory.EnumerateFiles (importsDir, "*")) {
+						var fullPath = Path.GetFullPath (file);
+						if (file.StartsWith ("__AndroidEnvironment__", StringComparison.OrdinalIgnoreCase) && !resolvedEnvironments.Contains (fullPath)) {
+							Log.LogDebugMessage ($"Deleting unknown AndroidEnvironment file: {Path.GetFileName (file)}");
+							File.Delete (fullPath);
+							updated = true;
+						} else if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase) && !jars.Contains (fullPath)) {
+							Log.LogDebugMessage ($"Deleting unknown jar: {Path.GetFileName (file)}");
+							File.Delete (fullPath);
+							updated = true;
+						}
+					}
+					if (assemblyHash != stampHash) {
+						Log.LogDebugMessage ($"Saving hash to {stamp}, changes: {updated}");
+						//NOTE: if the hash is different we always want to write the file, but preserve the timestamp if no changes
+						WriteAllText (stamp, assemblyHash, preserveTimestamp: !updated);
+					}
 				}
 			}
 			foreach (var aarFile in AarLibraries ?? new ITaskItem[0]) {

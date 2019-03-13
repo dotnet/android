@@ -40,23 +40,8 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			var forms = KnownPackages.XamarinForms_3_1_0_697729;
-			PackageReferences.Add (forms);
-			PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			PackageReferences.Add (KnownPackages.VectorDrawable_27_0_2_1);
+			//NOTE: we can get all the other dependencies transitively, yay!
+			PackageReferences.Add (KnownPackages.XamarinForms_3_6_0_220655);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,

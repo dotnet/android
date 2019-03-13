@@ -353,7 +353,6 @@ namespace Lib2
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
 				"_CopyPdbFiles",
-				"_CopyMdbFiles",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
@@ -368,6 +367,7 @@ namespace Lib2
 			if (IsWindows) {
 				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
 				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
+				targets.Add ("_CopyMdbFiles");
 				targets.Add ("_ConvertPdbFiles");
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
