@@ -2318,7 +2318,6 @@ because xbuild doesn't support framework reference assemblies.
     Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
     Condition="'$(AndroidLinkMode)' == 'None'">
     <Output TaskParameter="Include" ItemName="_ResolvedAssemblies" />
-	<Output TaskParameter="Include" ItemName="_AssembliesForJavaGeneration" />
   </CreateItem>
 
   <CreateItem
@@ -2355,26 +2354,16 @@ because xbuild doesn't support framework reference assemblies.
     Include="@(_ResolvedUserAssemblies)"
     Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid'">
     <Output TaskParameter="Include" ItemName="_ResolvedUserMonoAndroidAssemblies" />
-	<Output TaskParameter="Include" ItemName="_UserAssembliesForJavaGeneration" />
   </CreateItem>
-</Target>
-	
-<Target Name="_RemoveAssembliesThatSkipJavaGeneration">
-	<ItemGroup>
-		<_AssembliesForJavaGeneration Remove="%(_AssembliesForJavaGeneration.Identity)"
-			Condition="'%(_AssembliesForJavaGeneration.Filename)' = '%(_AndroidAssemblySkipJavaGeneration.Filename)'" />
-		<_UserAssembliesForJavaGeneration Remove="%(_UserAssembliesForJavaGeneration.Identity)"
-			Condition="'%(_UserAssembliesForJavaGeneration.Filename' = '%(_AndroidAssemblySkipJavaGeneration.Filename'" />
-	</ItemGroup>
 </Target>
 
 <Target Name="_GenerateJavaStubs"
-  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_RemoveAssembliesThatSkipJavaGeneration;$(_AfterPrepareAssemblies)"
-  Inputs="$(MSBuildAllProjects);@(_AssembliesForJavaGeneration);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
+  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies)"
+  Inputs="$(MSBuildAllProjects);@(_ResolvedAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
   Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
-    ResolvedAssemblies="@(_AssembliesForJavaGeneration)"
-    ResolvedUserAssemblies="@(_UserAssembliesForJavaGeneration)"
+    ResolvedAssemblies="@(_ResolvedAssemblies)"
+    ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
     ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
 	ManifestTemplate="$(_AndroidManifestAbs)"
 	MergedManifestDocuments="@(ExtractedManifestDocuments)"
