@@ -129,6 +129,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "download-bundle", "build-to
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jit-times", "tools\jit-times\jit-times.csproj", "{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "create-pkg", "build-tools\create-pkg\create-pkg.csproj", "{46529930-A5CC-4205-A50D-0AAAC639F082}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{3f1f2f50-af1a-4a5a-bedb-193372f068d7}*SharedItemsImports = 4
@@ -371,6 +373,10 @@ Global
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{46529930-A5CC-4205-A50D-0AAAC639F082}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{46529930-A5CC-4205-A50D-0AAAC639F082}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{46529930-A5CC-4205-A50D-0AAAC639F082}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{46529930-A5CC-4205-A50D-0AAAC639F082}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -432,6 +438,7 @@ Global
 		{1E5501E8-49C1-4659-838D-CC9720C5208F} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 		{1BAFA0CC-0377-46CE-AB7B-7BB2E7B62F63} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{46529930-A5CC-4205-A50D-0AAAC639F082} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
