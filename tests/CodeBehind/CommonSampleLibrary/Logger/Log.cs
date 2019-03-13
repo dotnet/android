@@ -141,30 +141,6 @@ namespace CommonSampleLibrary
 		{
 			Error (tag, msg, null);
 		}
-
-		/**
-		* Prints a message at ASSERT priority.
-		*/
-		public static void Wtf (string tag, string msg, Throwable tr)
-		{
-			WriteLine (LogPriority.Assert, tag, msg, tr);
-		}
-
-		/**
-		* Prints a message at ASSERT priority.
-		*/
-		public static void Wtf (string tag, string msg)
-		{
-			Wtf (tag, msg, null);
-		}
-
-		/**
-		* Prints a message at ASSERT priority.
-		*/
-		public static void Wtf (string tag, Throwable tr)
-		{
-			Wtf (tag, null, tr);
-		}
 	}
 }
 
