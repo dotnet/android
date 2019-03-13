@@ -1,3 +1,8 @@
+// UNDONE: TEST: Can this be called via an instance variable initialized in the global scope
+def loadTest() {
+    echo "loadTest: we're in"
+}
+
 def publishPackages(filePaths) {
     def status = 0
     try {
