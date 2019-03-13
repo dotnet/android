@@ -69,6 +69,8 @@ namespace Xamarin.Android.Tasks
 
 		public string ExtraAotOptions { get; set; }
 
+		public ITaskItem [] Profiles { get; set; }
+
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
 
@@ -245,6 +247,7 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
 			LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
+			LogDebugTaskItems ("  Profiles:", Profiles);
 
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
@@ -425,6 +428,13 @@ namespace Xamarin.Android.Tasks
 
 					List<string> aotOptions = new List<string> ();
 
+					if (Profiles != null && Profiles.Length > 0) {
+						aotOptions.Add ("profile-only");
+						foreach (var p in Profiles) {
+							var fp = Path.GetFullPath (p.ItemSpec);
+							aotOptions.Add ($"profile={GetShortPath (fp)}");
+						}
+					}
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
 						aotOptions.Add (AotAdditionalArguments);
 					if (sequencePointsMode == SequencePointsMode.Offline)

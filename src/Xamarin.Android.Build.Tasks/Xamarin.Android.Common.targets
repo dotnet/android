@@ -213,6 +213,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
 
 	<!-- Ahead-of-time compilation properties -->
+	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
@@ -2840,6 +2841,9 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(ApkFileIntermediate)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
+  <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
+    <_AotProfiles Include="@(AndroidAotProfiles)" />
+  </ItemGroup>
   <Aot
 	Condition="'$(AotAssemblies)' == 'True'"
 	AndroidAotMode="$(AndroidAotMode)"
@@ -2855,7 +2859,8 @@ because xbuild doesn't support framework reference assemblies.
 	LinkMode="$(AndroidLinkMode)"
 	AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
 	YieldDuringToolExecution="$(YieldDuringToolExecution)"
-	EnableLLVM="$(EnableLLVM)">
+	EnableLLVM="$(EnableLLVM)"
+	Profiles="@(_AotProfiles)">
 	   <Output TaskParameter="NativeLibrariesReferences" ItemName="_AdditionalNativeLibraryReferences" />
   </Aot>
 
