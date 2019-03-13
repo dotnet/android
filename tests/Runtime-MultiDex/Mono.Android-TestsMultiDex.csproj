@@ -18,7 +18,6 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
   </PropertyGroup>
@@ -70,6 +69,8 @@
     <AndroidResource Include="Resources\drawable\android_focused.png" />
     <AndroidResource Include="Resources\drawable\android_normal.png" />
     <AndroidResource Include="Resources\drawable\android_button.xml" />
+    <AndroidResource Include="Resources\layout\uppercase_custom.axml" />
+    <AndroidResource Include="Resources\layout\lowercase_custom.axml" />
     <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
     <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
     <AndroidBoundLayout Include="Resources\layout\Main.axml" />
@@ -80,6 +81,9 @@
     </AndroidAsset>
     <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\asset2.txt">
       <Link>Assets\subfolder\asset2.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\accept_request.png">
+      <Link>Assets\subfolder\accept_request.png</Link>
     </AndroidAsset>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
@@ -104,6 +108,10 @@
       <Project>{4D603AA3-3BFD-43C8-8050-0CD6C2601126}</Project>
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Mono.Android\Test\Mono.Android-Test.Library\Mono.Android-Test.Library.csproj">
+      <Project>{8CB5FF58-FF95-43B9-9064-9ACE9525866F}</Project>
+      <Name>Mono.Android-Test.Library</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
