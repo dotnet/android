@@ -631,6 +631,18 @@ when packaging Release applications.
 
     This property is `False` by default.
 
+-   **AndroidEnableProfiledAot** &ndash; A boolean property that
+    determines whether or not the AOT profiles are used during the
+    Ahead-of-Time compilation.
+
+    The profiles are listed in `AndroidAotProfiles` item group. This
+    ItemGroup contains default profile(s). It can be overriden by
+    removing the existing one(s) and adding own AOT profiles.
+
+    Support for this property was added in Xamarin.Android 9.4.
+
+    This property is `False` by default.
+
 -   **EmbedAssembliesIntoApk** &ndash; A boolean property that
     determines whether or not the app's assemblies should be embedded
     into the Application package.
