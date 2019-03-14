@@ -22,7 +22,8 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
 timestamps {
     node("${env.BotLabel}") {
         def scmVars
-        utils = load "build-tools/automation/utils.groovy"
+        def workspace = "/home/${env.USER}/jenkins/workspace/${env.JOB_BASE_NAME}"
+        utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
         utils.stageWithTimeout('checkout', 60, 'MINUTES', XADir, true, 3) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
             sh "env"
