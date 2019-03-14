@@ -21,8 +21,9 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
 
 timestamps {
     node("${env.BotLabel}") {
+        def scmVars = null
         dir (XADir) {
-            def scmVars = checkout scm
+            scmVars = checkout scm
         }
 
         def workspace = "/mnt/jenkins/workspace/${env.JOB_BASE_NAME}"
