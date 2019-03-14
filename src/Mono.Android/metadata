@@ -374,8 +374,8 @@
 	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
 	<attr api-since="11" path="/api/package[@name='android.graphics.drawable']/class[@name='ColorDrawable']/method[@name='setColor']/parameter[position()=1]" name="type">Android.Graphics.Color</attr>
 	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='Paint']/method[@name='setShadowColor']/parameter[@name='shadowColor']" name="type">Android.Graphics.Color</attr>
-	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='centerColor']" name="type">Android.Graphics.Color</attr>
-	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='edgeColor']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='centerColor' and @type='int']" name="type">Android.Graphics.Color</attr>
+	<attr api-since="21" path="/api/package[@name='android.graphics']/class[@name='RadialGradient']/constructor/parameter[@name='edgeColor' and @type='int']" name="type">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.text.style']/class[@name='QuoteSpan']/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getFocusedMonthDateColor']" name="return" api-since="16">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.widget']/class[@name='CalendarView']/method[@name='getSelectedWeekBackgroundColor']" name="return" api-since="16">Android.Graphics.Color</attr>
@@ -1413,5 +1413,19 @@
   <!-- okay you are NOT documented. Wasn't Google going to kill nonpublic classes? -->
   <remove-node path="/api/package[@name='android.text']/class[@name='PrecomputedText']" />
   <attr path="/api/package[@name='android.provider']/class[@name='Telephony.CarrierId']/field[@name='CARRIER_ID']" name="managedName">CarrierIdField</attr>
+
+  <!-- Android Q -->
+  <!-- this does not bring conflicts now, but I anticipate things happen... -->
+  <attr path="/api/package[@name='android.app.role']" name="managedName">Android.App.Roles</attr>
+  <attr path="/api/package[@name='android.view.inspector']" name="managedName">Android.Views.Inspectors</attr>
+  <attr path="/api/package[@name='android.icu.text']/class[starts-with(@name, 'CaseMap.')]/method[@name='omitUnchangedText']" name="managedReturn">Android.Icu.Text.CaseMap</attr>
+
+  <!-- requires default interface methods.
+       Can be hacked around, but it's not much required class... -->
+  <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentHashMap.KeySetView']" />
+
+  <!-- Animation class has both addAnimationListener and setAnimationListener.
+       They result in event name conflicts. So remove them for set~ method. -->
+  <attr path="/api/package[@name='android.view.animation']/class[@name='Animation']/method[@name='setAnimationListener']" name="eventName"></attr>
 
 </metadata>

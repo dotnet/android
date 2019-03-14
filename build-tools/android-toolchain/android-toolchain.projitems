@@ -143,6 +143,10 @@
       <HostOS></HostOS>
       <DestDir>platforms\android-28</DestDir>
     </AndroidSdkItem>
+    <AndroidSdkItem Include="platform-Q_r01">
+      <HostOS></HostOS>
+      <DestDir>platforms\android-Q</DestDir>
+    </AndroidSdkItem>
     <AndroidSdkItem Include="docs-24_r01">
       <HostOS></HostOS>
       <DestDir>docs</DestDir>
