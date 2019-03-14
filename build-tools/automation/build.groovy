@@ -14,39 +14,6 @@ def buildTarget = 'jenkins'
 
 def utils = null
 
-def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
-    try {
-        stage(stageName) {
-            def retryAttempt = 0
-            def waitSecondsBeforeRetry = 15
-            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
-                timeout(time: timeoutValue, unit: timeoutUnit) {
-                    dir(directory) {
-                        if (retryAttempt > 0) {
-                            echo "WARNING : Stage ${stageName} failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
-                            sleep(waitSecondsBeforeRetry)
-                            echo "Retrying ..."
-                            waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
-                        }
-
-                        retryAttempt++
-                        body()
-                    }
-                }
-            }
-        }
-    } catch (error) {
-        def result = fatal ? 'ERROR' : 'UNSTABLE'
-        echo "ERROR : ${stageName}: Unexpected error: ${error}. Marking build as ${result}."
-        currentBuild.result = result
-        if (fatal) {
-            throw error
-        }
-    } finally {
-        echo "Stage result: ${stageName}: ${currentBuild.currentResult}"
-    }
-}
-
 prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
 
 def hasPrLabel (gitRepo, prId, prLabel) {
@@ -72,16 +39,12 @@ def hasPrLabel (gitRepo, prId, prLabel) {
 
 timestamps {
     node("${env.BotLabel}") {
-        def scmVars
+        def scmVars = checkout scm
 
-        stageWithTimeout('checkout', 60, 'MINUTES', XADir, true, 3) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-            sh "env"
-            scmVars = checkout scm
-        }
+        def workspace = "/Users/builder/jenkins/workspace/xamarin-android"
+        utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
-        stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
-            utils = load "build-tools/automation/utils.groovy"
-
+        utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -120,24 +83,26 @@ timestamps {
             }
 
             echo "${buildType} buildTarget: ${buildTarget}"
+
+            sh "env"
         }
 
-        stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+        utils.stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // We need to make sure there's no test AVD present and that the Android emulator isn't running
             // This is to assure that all tests start from the same state
             sh "killall -9 qemu-system-x86_64 || true"
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
+        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
-        stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+        utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
-        stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             if (isPr) {
                 // Override _MSBUILD_ARGS to ensure we only package the `AndroidSupportedTargetJitAbis` which are built.
                 // Also ensure that we don't require mono bundle components in the installer if this is not a full mono integration build.
@@ -148,15 +113,15 @@ timestamps {
             }
         }
 
-        stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
         }
 
-        stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
+        utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
         }
 
-        stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
+        utils.stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
@@ -165,7 +130,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+        utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
@@ -179,7 +144,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
+        utils.stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
             def skipNunitTests = false
@@ -196,7 +161,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+        utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
 
             publishHTML target: [
@@ -221,7 +186,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
+        utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
             if (isPr) {
                 echo "Skipping plot metrics for PR build"
                 return
@@ -319,7 +284,7 @@ timestamps {
             )
         }
 
-        stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
+        utils.stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
             def initialStageResult = currentBuild.currentResult
 
             xunit thresholds: [
