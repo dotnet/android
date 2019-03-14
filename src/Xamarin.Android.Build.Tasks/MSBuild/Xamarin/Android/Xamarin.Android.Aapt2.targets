@@ -27,7 +27,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CreateAapt2VersionCache"
     Condition=" '$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)' "
     DependsOnTargets="_ReadAapt2VersionCache"
-    AfterTargets="_SetLatestTargetFrameworkVersion"
   >
   <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
   <WriteLinesToFile
@@ -45,16 +44,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
       Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)"
   />
-</Target>
-
-<Target Name="_SetupApplicationJavaClass"
-    AfterTargets="_ResolveMonoAndroidSdks"
-    DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">
-  <PropertyGroup>
-    <AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
-    <AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
-  </PropertyGroup>
-  <Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
 
 <Target Name="_CollectLibraryResourceDirectories"
