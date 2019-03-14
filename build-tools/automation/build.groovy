@@ -12,6 +12,8 @@ def hasPrLabelFullMonoIntegrationBuild = false
 
 def buildTarget = 'jenkins'
 
+def utils = null
+
 def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
     try {
         stage(stageName) {
@@ -43,27 +45,6 @@ def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctA
     } finally {
         echo "Stage result: ${stageName}: ${currentBuild.currentResult}"
     }
-}
-
-def publishPackages(filePaths) {
-    def status = 0
-    try {
-         // Note: The following function is provided by the Azure Blob Jenkins plugin
-         azureUpload(storageCredentialId: env.StorageCredentialId,
-                 storageType: "blobstorage",
-                 containerName: env.ContainerName,
-                 virtualPath: env.StorageVirtualPath,
-                 filesPath: filePaths,
-                 allowAnonymousAccess: true,
-                 pubAccessible: true,
-                 doNotWaitForPreviousBuild: true,
-                 uploadArtifactsOnlyIfSuccessful: true)
-    } catch (error) {
-        echo "ERROR : publishPackages: Unexpected error: ${error}"
-        status = 1
-    }
-
-    return status
 }
 
 prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
@@ -99,6 +80,8 @@ timestamps {
         }
 
         stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+            utils = load "build-tools/automation/utils.groovy"
+
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -190,7 +173,7 @@ timestamps {
             }
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def commandStatus = publishPackages(publishBuildFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
             if (commandStatus != 0) {
                 error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
@@ -232,7 +215,7 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def commandStatus = publishPackages(publishTestFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
             if (commandStatus != 0) {
                 error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }

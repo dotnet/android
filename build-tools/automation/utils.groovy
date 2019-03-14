@@ -1,11 +1,11 @@
-def publishPackages(filePaths) {
+def publishPackages(storageCredentialId, containerName, storageVirtualPath, filePaths) {
     def status = 0
     try {
          // Note: The following function is provided by the Azure Blob Jenkins plugin
-         azureUpload(storageCredentialId: env.StorageCredentialId,
+         azureUpload(storageCredentialId: storageCredentialId,
                  storageType: "blobstorage",
-                 containerName: env.ContainerName,
-                 virtualPath: env.StorageVirtualPath,
+                 containerName: containerName,
+                 virtualPath: storageVirtualPath,
                  filesPath: filePaths,
                  allowAnonymousAccess: true,
                  pubAccessible: true,

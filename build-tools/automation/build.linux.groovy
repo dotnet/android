@@ -79,7 +79,7 @@ timestamps {
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
         }
 
-        stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+        stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes 4 hours
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                 "make jenkins CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'")
         }
@@ -116,7 +116,7 @@ timestamps {
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status*"
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def commandStatus = utils.publishPackages(publishBuildFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
             if (commandStatus != 0) {
                 error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
@@ -143,7 +143,7 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def commandStatus = utils.publishPackages(publishTestFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
             if (commandStatus != 0) {
                 error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
