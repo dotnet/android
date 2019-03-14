@@ -21,7 +21,10 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
 
 timestamps {
     node("${env.BotLabel}") {
-        def scmVars = checkout scm
+        dir (XADir) {
+            def scmVars = checkout scm
+        }
+
         def workspace = "/mnt/jenkins/workspace/${env.JOB_BASE_NAME}"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
