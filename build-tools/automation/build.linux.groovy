@@ -69,7 +69,7 @@ timestamps {
             def commit = scmVars.GIT_COMMIT
 
             def buildType = 'CI'
-
+            echo "HostName: ${env.NODE_NAME}"
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
