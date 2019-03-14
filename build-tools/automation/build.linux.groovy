@@ -112,8 +112,8 @@ timestamps {
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.dsc"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.deb"
-            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status-*"
-            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status-*"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status*"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status*"
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
             def commandStatus = utils.publishPackages(publishBuildFilePaths)
