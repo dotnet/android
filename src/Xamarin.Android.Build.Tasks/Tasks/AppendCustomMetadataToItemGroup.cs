@@ -21,22 +21,23 @@ namespace Xamarin.Android.Tasks {
 			var output = new List<ITaskItem> ();
 			var metaData = new Dictionary<string, List<ITaskItem>> (StringComparer.InvariantCultureIgnoreCase);
 			foreach (ITaskItem item in MetaDataItems) {
-				if (!metaData.ContainsKey (item.ItemSpec))
-					metaData.Add (item.ItemSpec, new List<ITaskItem> ());
-				metaData[item.ItemSpec].Add (item);
+				List<ITaskItem> itemsList;
+				if (!metaData.TryGetValue(item.ItemSpec, out itemsList)) {
+					itemsList = new List<ITaskItem>();
+					metaData.Add(item.ItemSpec, itemsList);
+				}
+				itemsList.Add(item);
 			}
 
 			foreach (var item in Inputs) {
 				var fn = Path.GetFileNameWithoutExtension (item.ItemSpec);
 				output.Add (item);
-				if (!metaData.ContainsKey (fn))
+				List<ITaskItem> metaDataList;
+				if (!metaData.TryGetValue (fn, out metaDataList))
 					continue;
-				List<ITaskItem> metaDateList = metaData [fn];
-				if (metaDateList == null)
-					continue;
-				foreach (var metaDateItem in metaDateList) {
+				foreach (var metaDataItem in metaDataList) {
 					Log.LogDebugMessage ($"Copying MetaData for {item.ItemSpec}");
-					metaDateItem.CopyMetadataTo (item);
+					metaDataItem.CopyMetadataTo (item);
 				}
 			}
 
