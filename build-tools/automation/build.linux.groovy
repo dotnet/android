@@ -61,7 +61,7 @@ timestamps {
             scmVars = checkout scm
         }
 
-        stageWithTimeout('init', 60, 'MINUTES', XADir, true) {    // Typically takes less than a second. UNDONE: TEST: execChRootCommand that initializes packages on first execution takes way more than the 30 second timeout originally set here
+        stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             utils = load "build-tools/automation/utils.groovy"
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
@@ -69,9 +69,6 @@ timestamps {
             def commit = scmVars.GIT_COMMIT
 
             def buildType = 'CI'
-
-            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                "echo \"HostName: \${HOSTNAME}\"")
 
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Branch: ${branch}"
