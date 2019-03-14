@@ -141,6 +141,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.html" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool-all-$(XABundleToolVersion).jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
@@ -178,6 +179,8 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />
@@ -188,6 +191,8 @@
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\lib64\libc++.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-aot.$(LibExtension)" />
