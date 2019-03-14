@@ -122,7 +122,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
+        stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {
             echo "running tests"
 
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
