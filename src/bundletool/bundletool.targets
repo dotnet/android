@@ -22,8 +22,8 @@
         DestinationFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
     />
     <Copy
-      SourceFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
-      DestinationFolder="$(_Destination)"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
+        DestinationFolder="$(_Destination)"
     />
   </Target>
 
