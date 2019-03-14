@@ -52,4 +52,25 @@ def publishPackages(storageCredentialId, containerName, storageVirtualPath, file
     return status
 }
 
+def hasPrLabel (gitRepo, prId, prLabel) {
+    if (!prLabels) {
+        prLabels = []
+
+        def url = "https://api.github.com/repos/${gitRepo}/issues/${prId}"
+        def jsonContent = new URL(url).getText()
+        if (!jsonContent) {
+            throw "ERROR : Unable to obtain json content containing PR labels from '${url}'"
+        }
+
+        def jsonSlurper = new JsonSlurper()             // http://groovy-lang.org/json.html
+        def json = jsonSlurper.parseText(jsonContent)   // Note: We must use parseText instead of parse(url). parse(url) leads to error 'Scripts not permitted to use method groovy.json.JsonSlurper parse java.net.URL'
+
+        for (label in json.labels) {
+            prLabels.add(label.name)
+        }
+    }
+
+    return prLabels.contains(prLabel)
+}
+
 return this

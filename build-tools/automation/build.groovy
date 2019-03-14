@@ -16,27 +16,6 @@ def utils = null
 
 prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
 
-def hasPrLabel (gitRepo, prId, prLabel) {
-    if (!prLabels) {
-        prLabels = []
-
-        def url = "https://api.github.com/repos/${gitRepo}/issues/${prId}"
-        def jsonContent = new URL(url).getText()
-        if (!jsonContent) {
-            throw "ERROR : Unable to obtain json content containing PR labels from '${url}'"
-        }
-
-        def jsonSlurper = new JsonSlurper()             // http://groovy-lang.org/json.html
-        def json = jsonSlurper.parseText(jsonContent)   // Note: We must use parseText instead of parse(url). parse(url) leads to error 'Scripts not permitted to use method groovy.json.JsonSlurper parse java.net.URL'
-
-        for (label in json.labels) {
-            prLabels.add(label.name)
-        }
-    }
-
-    return prLabels.contains(prLabel)
-}
-
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
@@ -70,7 +49,7 @@ timestamps {
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
 
-                if (hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                if (utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
                     hasPrLabelFullMonoIntegrationBuild = true
                     buildTarget = 'jenkins'
                 } else {
@@ -153,7 +132,7 @@ timestamps {
             def skipNunitTests = false
 
             if (isPr) {
-                def hasPrLabelRunTestsRelease = hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
+                def hasPrLabelRunTestsRelease = utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
                 skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
                 echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
             }
