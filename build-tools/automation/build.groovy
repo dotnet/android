@@ -39,7 +39,10 @@ def hasPrLabel (gitRepo, prId, prLabel) {
 
 timestamps {
     node("${env.BotLabel}") {
-        def scmVars = checkout scm
+        def scmVars = null
+        dir (XADir) {
+            scmVars = checkout scm
+        }
 
         def workspace = "/Users/builder/jenkins/workspace/xamarin-android"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
