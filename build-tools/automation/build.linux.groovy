@@ -21,14 +21,9 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
 
 timestamps {
     node("${env.BotLabel}") {
-        def scmVars
+        def scmVars = checkout scm
         def workspace = "/home/${env.USER}/jenkins/workspace/${env.JOB_BASE_NAME}"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
-
-        utils.stageWithTimeout('checkout', 60, 'MINUTES', XADir, true, 3) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-            sh "env"
-            scmVars = checkout scm
-        }
 
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
 
@@ -45,6 +40,8 @@ timestamps {
 
             pBuilderBindMounts = "/home/${env.USER}"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
+
+            sh "env"
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes 4 hours
