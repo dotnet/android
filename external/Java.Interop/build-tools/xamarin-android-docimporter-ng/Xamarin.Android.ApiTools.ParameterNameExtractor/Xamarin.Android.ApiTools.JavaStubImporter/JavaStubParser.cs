@@ -150,6 +150,9 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var enum_members_decl = DefaultNonTerminal ("enum_members_decl");
 			var enum_member_initializers = DefaultNonTerminal ("enum_member_initializers");
 			var enum_member_initializer = DefaultNonTerminal ("enum_member_initializer");
+			var opt_enum_braces = DefaultNonTerminal ("opt_enum_braces");
+			var opt_final_field_assign = DefaultNonTerminal ("opt_final_field_assign");
+			var final_field_assign = DefaultNonTerminal ("final_field_assign");
 			var terminate_decl_or_body = DefaultNonTerminal ("terminate_decl_or_body");
 			var assignments = DefaultNonTerminal ("assignments");
 			var assignment = DefaultNonTerminal ("assignment");
@@ -162,7 +165,6 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var opt_annotation_args = DefaultNonTerminal ("opt_annotation_args");
 			var annotation_value_assignments = DefaultNonTerminal ("annotation_value_assignments");
 			var annot_assign_expr = DefaultNonTerminal ("annot_assign_expr");
-			var inner_annotations = DefaultNonTerminal ("inner_annotations");
 			var modifiers_then_opt_generic_arg = DefaultNonTerminal ("modifiers_then_opt_generic_arg");
 			var modifier_or_generic_arg = DefaultNonTerminal ("modifier_or_generic_arg");
 			var modifiers = DefaultNonTerminal ("modifiers");
@@ -194,8 +196,9 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var call_super = DefaultNonTerminal ("call_super");
 			var super_args = DefaultNonTerminal ("super_args");
 			var default_value_expr = DefaultNonTerminal ("default_value_expr");
-			var default_value_null_casted = DefaultNonTerminal ("default_value_null_casted");
+			var default_value_casted = DefaultNonTerminal ("default_value_casted");
 			var default_value_literal = DefaultNonTerminal ("default_value_literal");
+			var new_array = DefaultNonTerminal ("new_array");
 			var runtime_exception = DefaultNonTerminal ("runtime_exception");
 			var numeric_terminal = TerminalFactory.CreateCSharpNumber ("numeric_value_literal");
 			numeric_terminal.AddPrefix ("-", NumberOptions.AllowSign);
@@ -205,6 +208,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			var numeric_literal = DefaultNonTerminal ("numeric_literal");
 			var string_literal = TerminalFactory.CreateCSharpString ("string_literal");
 			var value_literal = DefaultNonTerminal ("value_literal");
+			var identifier_wild = DefaultNonTerminal ("identifier_wild");
 
 			// <construction_rules>
 
@@ -231,9 +235,8 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			annotations.Rule = MakeStarRule (annotations, annotation);
 			annotation.Rule = T ("@") + dotted_identifier + opt_annotation_args;
 			opt_annotation_args.Rule = Empty | T ("(") + annotation_value_assignments + T (")");
-			annotation_value_assignments.Rule = MakeStarRule (annotation_value_assignments, ToTerm (","), annot_assign_expr);
-			annot_assign_expr.Rule = assign_expr;// | identifier + "=" + "{" + inner_annotations + "}";
-			inner_annotations.Rule = MakeStarRule (inner_annotations, ToTerm (","), annotations);
+			annotation_value_assignments.Rule = rvalue_expression | MakeStarRule (annotation_value_assignments, ToTerm (","), annot_assign_expr);
+			annot_assign_expr.Rule = assign_expr | T ("{") + rvalue_expressions + T ("}");
 
 			// HACK: I believe this is an Irony bug that adding opt_generic_arg_decl here results in shift-reduce conflict, but it's too complicated to investigate the actual issue.
 			// As a workaround I add generic arguments as part of this "modifier" so that it can be safely added to a generic method declaration.
@@ -247,17 +250,19 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			nested_type_decl.Rule = type_decl;
 			enum_members_decl.Rule = enum_member_initializers + ";";
 			enum_member_initializers.Rule = MakeStarRule (enum_member_initializers, ToTerm (","), enum_member_initializer);
-			enum_member_initializer.Rule = annotations + identifier + "(" + ")";
+			enum_member_initializer.Rule = annotations + identifier + opt_enum_braces;
+			opt_enum_braces.Rule = Empty | "(" + ")";
 			static_ctor_decl.Rule = annotations + keyword_static + "{" + assignments + "}";
 			assignments.Rule = MakeStarRule (assignments, assignment);
 			assignment.Rule = assign_expr + ";";
 			assign_expr.Rule = identifier + "=" + rvalue_expression;
 			rvalue_expressions.Rule = MakeStarRule (rvalue_expressions, ToTerm (","), rvalue_expression);
-			rvalue_expression.Rule = value_literal | type_name | identifier | array_literal | annotation;
+			rvalue_expression.Rule = value_literal | new_array | type_name | identifier | array_literal | annotation;
 			array_literal.Rule = "{" + rvalue_expressions + "}";
 
-			field_decl.Rule = annotations + modifiers_then_opt_generic_arg + type_name + identifier + opt_field_assignment + ";";
+			field_decl.Rule = annotations + modifiers_then_opt_generic_arg + type_name + identifier + opt_field_assignment + ";" + opt_final_field_assign;
 			opt_field_assignment.Rule = Empty | "=" + rvalue_expression;
+			opt_final_field_assign.Rule = Empty | "{" + assign_expr + ";" + "}";
 			terminate_decl_or_body.Rule = ";" | ("{" + impl_expressions + "}") | (keyword_default + default_value_literal + ";");
 
 			ctor_decl.Rule = annotations + modifiers_then_opt_generic_arg + identifier + "(" + argument_decls + ")" + opt_throws_decl + terminate_decl_or_body; // these Empties can make the structure common to method_decl.
@@ -265,13 +270,14 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			method_decl.Rule = annotations + modifiers_then_opt_generic_arg + /*opt_generic_arg_decl*/ type_name + identifier + "(" + argument_decls + ")" + opt_throws_decl + terminate_decl_or_body;
 
 			impl_expressions.Rule = MakeStarRule (impl_expressions, impl_expression);
-			impl_expression.Rule = call_super | runtime_exception;
+			impl_expression.Rule = call_super | runtime_exception | assign_expr;
 			call_super.Rule = keyword_super + "(" + super_args + ")" + ";";
 			super_args.Rule = MakeStarRule (super_args, ToTerm (","), default_value_expr);
-			default_value_expr.Rule = keyword_null | default_value_null_casted | default_value_literal;
-			default_value_null_casted.Rule = "(" + type_name + ")" + keyword_null;
+			default_value_expr.Rule = keyword_null | default_value_casted | default_value_literal;
+			default_value_casted.Rule = "(" + type_name + ")" + default_value_expr;
 			default_value_literal.Rule = numeric_terminal | "\"\"" | "{" + "}" | keyword_true | keyword_false;
 			runtime_exception.Rule = keyword_throw + keyword_new + identifier + "(\"Stub!\"" + ")" + ";";
+			new_array.Rule = keyword_new + dotted_identifier + "[" + numeric_literal + "]";
 
 			argument_decls.Rule = annotations | MakeStarRule (argument_decls, ToTerm (","), argument_decl);
 
@@ -300,11 +306,12 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			generic_instance_constraints_super.Rule = keyword_super + generic_instance_constraint_types;
 			generic_instance_constraint_types.Rule = MakePlusRule (generic_instance_constraint_types, ToTerm ("&"), type_name);
 
-			dotted_identifier.Rule = MakePlusRule (dotted_identifier, ToTerm ("."), identifier);
+			dotted_identifier.Rule = MakePlusRule (dotted_identifier, ToTerm ("."), identifier_wild);
 
 			numeric_literal.Rule = numeric_terminal;
 			numeric_literal.Rule |= "(" + numeric_literal + "/" + numeric_literal + ")";
 			value_literal.Rule = string_literal | numeric_literal | keyword_null;
+			identifier_wild.Rule = identifier | "*";
 
 			// Define AST node creators
 
@@ -471,6 +478,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 				};
 			};
 			opt_field_assignment.AstConfig.NodeCreator = (ctx, node) => node.AstNode = node.ChildNodes.Count > 0 ? node.ChildNodes [1].AstNode : null;
+			opt_final_field_assign.AstConfig.NodeCreator = (ctx, node) => node.AstNode = node.ChildNodes.Count > 0 ? node.ChildNodes [1].AstNode : null;
 			static_ctor_decl.AstConfig.NodeCreator = DoNothing; // static constructors are ignorable.
 			enum_body.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
@@ -494,6 +502,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			};
 			enum_member_initializers.AstConfig.NodeCreator = CreateArrayCreator<string> ();
 			enum_member_initializer.AstConfig.NodeCreator = SelectChildValueAt (1);
+			opt_enum_braces.AstConfig.NodeCreator = DoNothing;
 			terminate_decl_or_body.AstConfig.NodeCreator = DoNothing; // method/ctor body doesn't matter.
 			assignments.AstConfig.NodeCreator = CreateArrayCreator<object> ();
 			assignment.AstConfig.NodeCreator = SelectChildValueAt (0);
@@ -577,14 +586,16 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			call_super.AstConfig.NodeCreator = CreateStringFlattener ();
 			super_args.AstConfig.NodeCreator = CreateStringFlattener ();
 			default_value_expr.AstConfig.NodeCreator = CreateStringFlattener ();
-			default_value_null_casted.AstConfig.NodeCreator = CreateStringFlattener ();
+			default_value_casted.AstConfig.NodeCreator = CreateStringFlattener ();
 			default_value_literal.AstConfig.NodeCreator = CreateStringFlattener ();
+			new_array.AstConfig.NodeCreator = DoNothing;
 			runtime_exception.AstConfig.NodeCreator = CreateStringFlattener ();
 			Func<string, string, string> stripTail = (s, t) => s.EndsWith (t, StringComparison.Ordinal) ? s.Substring (0, s.Length - t.Length) : s;
 			numeric_terminal.AstConfig.NodeCreator = (ctx, node) => node.AstNode = stripTail (stripTail (node.Token.Text, "L"), "f");
 			numeric_literal.AstConfig.NodeCreator = CreateStringFlattener ();
 			string_literal.AstConfig.NodeCreator = (ctx, node) => node.AstNode = '"' + node.Token.ValueString + '"';
 			value_literal.AstConfig.NodeCreator = SelectSingleChild;
+			identifier_wild.AstConfig.NodeCreator = SelectSingleChild;
 
 			this.Root = compile_unit;
 		}
