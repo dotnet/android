@@ -22,7 +22,7 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = checkout scm
-        def workspace = "/home/${env.USER}/jenkins/workspace/${env.JOB_BASE_NAME}"
+        def workspace = "/mnt/jenkins/workspace/${env.JOB_BASE_NAME}"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
