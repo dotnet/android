@@ -25,26 +25,31 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CreateAapt2VersionCache"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)' "
     DependsOnTargets="_ReadAapt2VersionCache"
     AfterTargets="_SetLatestTargetFrameworkVersion"
-    Condition="'$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
   >
   <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
   <WriteLinesToFile
-    Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" 
-    File="$(_AndroidAapt2VersionFile)"
-    Lines="$(_Aapt2Version)"
-    Overwrite="true"
+      Condition=" '$(_Aapt2Version)' != '@(_Aapt2VersionCache)' "
+      File="$(_AndroidAapt2VersionFile)"
+      Lines="$(_Aapt2Version)"
+      Overwrite="true"
   />
   <ItemGroup Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'">
     <_CompiledFlataArchive Include="$(_AndroidLibrayProjectIntermediatePath)**\*.flata" />
     <_CompiledFlataArchive Include="$(IntermediateOutputPath)\*.flata" />
     <_CompiledFlataStamp Include="$(_AndroidLibrayProjectIntermediatePath)**\compiled.stamp" />
   </ItemGroup>
-  <Delete Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)" Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'" />
+  <Delete
+      Condition="'$(_Aapt2Version)' != '@(_Aapt2VersionCache)'"
+      Files="@(_CompiledFlataArchive);@(_CompiledFlataStamp)"
+  />
 </Target>
 
-<Target Name="_SetupApplicationJavaClass" AfterTargets="_ResolveMonoAndroidSdks" DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">
+<Target Name="_SetupApplicationJavaClass"
+    AfterTargets="_ResolveMonoAndroidSdks"
+    DependsOnTargets="$(_BeforeSetupApplicationJavaClass)">
   <PropertyGroup>
     <AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
     <AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
@@ -53,7 +58,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CollectLibraryResourceDirectories"
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
   >
   <CollectNonEmptyDirectories Directories="@(LibraryResourceDirectories);@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res')">
     <Output TaskParameter="Output" ItemName="_LibraryResourceDirectories" />
@@ -63,37 +68,39 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ComputeHash>
 </Target>
 
-<Target Name="_ConvertLibraryResourcesCases" DependsOnTargets="_CollectLibraryResourceDirectories"
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
+<Target Name="_ConvertLibraryResourcesCases"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
+    DependsOnTargets="_CollectLibraryResourceDirectories"
     Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
     Outputs="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp">
   <ConvertResourcesCases
-    Condition=" '@(_LibraryResourceDirectories)' != '' "
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="@(_LibraryResourceDirectories)"
-    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-    AcwMapFile="$(_AcwMapFile)"
-    CustomViewMapFile="$(_CustomViewMapFile)"
-    AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp"
+      Condition=" '@(_LibraryResourceDirectories)' != '' "
+      ContinueOnError="$(DesignTimeBuild)"
+      AcwMapFile="$(_AcwMapFile)"
+      AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      ResourceDirectories="@(_LibraryResourceDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <Touch Files="$(_AndroidStampDirectory)_ConvertLibraryResourcesCases.stamp" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_CompileAndroidLibraryResources" DependsOnTargets="_ConvertLibraryResourcesCases"
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
+<Target Name="_CompileAndroidLibraryResources"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
+    DependsOnTargets="_ConvertLibraryResourcesCases"
     Inputs="@(_LibraryResourceHashDirectories->'%(StampFile)')"
     Outputs="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
   >
   <MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
   <Aapt2Compile
-    Condition=" '@(_LibraryResourceHashDirectories)' != '' "
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="@(_LibraryResourceHashDirectories)"
-    ExplicitCrunch="$(AndroidExplicitCrunch)"
-    ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
-    FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-    ToolPath="$(Aapt2ToolPath)"
-    ToolExe="$(Aapt2ToolExe)"
+      Condition=" '@(_LibraryResourceHashDirectories)' != '' "
+      ContinueOnError="$(DesignTimeBuild)"
+      ExplicitCrunch="$(AndroidExplicitCrunch)"
+      ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+      FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+      ResourceDirectories="@(_LibraryResourceHashDirectories)"
+      ToolPath="$(Aapt2ToolPath)"
+      ToolExe="$(Aapt2ToolExe)"
   />
   <ItemGroup>
     <_HashStampFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')" />
@@ -110,30 +117,30 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CompileResources"
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
     Inputs="@(AndroidResource)"
     Outputs="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp"
   >
   <MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-    AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
-    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-    AcwMapFile="$(_AcwMapFile)"
-    CustomViewMapFile="$(_CustomViewMapFile)"
-    AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
+      ContinueOnError="$(DesignTimeBuild)"
+      AcwMapFile="$(_AcwMapFile)"
+      AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
+      AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <Aapt2Compile
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-    ExplicitCrunch="$(AndroidExplicitCrunch)"
-    ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
-    FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-    ToolPath="$(Aapt2ToolPath)"
-    ToolExe="$(Aapt2ToolExe)"
+      ContinueOnError="$(DesignTimeBuild)"
+      ExplicitCrunch="$(AndroidExplicitCrunch)"
+      ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+      FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+      ToolPath="$(Aapt2ToolPath)"
+      ToolExe="$(Aapt2ToolExe)"
   />
   <Touch Files="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp" AlwaysCreate="True" />
   <ItemGroup>
@@ -143,30 +150,30 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_GenerateJavaDesignerForComponentAapt2"
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
     Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps);$(_AndroidResgenFlagFile)"
     Outputs="$(_AndroidComponentResgenFlagFile)">
   <!-- Run aapt to generate R.java for additional Android resources-->
   <Aapt2Link
-    Condition="'$(_AndroidUseAapt2)' == 'True'"
-    ContinueOnError="$(DesignTimeBuild)"
-    UseShortFileNames="$(UseShortFileNames)"
-    ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-    OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
-    AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
-    AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
-    ApplicationName="$(_AndroidPackage)"
-    JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
-    CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
-    ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-    ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-    AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-    ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
-    YieldDuringToolExecution="$(YieldDuringToolExecution)"
-    ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
-    ToolPath="$(Aapt2ToolPath)"
-    ToolExe="$(Aapt2ToolExe)"
+      Condition=" '$(_AndroidUseAapt2)' == 'True' "
+      ContinueOnError="$(DesignTimeBuild)"
+      AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
+      AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
+      ApplicationName="$(_AndroidPackage)"
+      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+      CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
+      ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
+      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+      JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
+      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+      ToolPath="$(Aapt2ToolPath)"
+      ToolExe="$(Aapt2ToolExe)"
+      UseShortFileNames="$(UseShortFileNames)"
+      YieldDuringToolExecution="$(YieldDuringToolExecution)"
   />
   <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
 </Target>
