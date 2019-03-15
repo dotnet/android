@@ -177,7 +177,7 @@ timestamps {
                 def initialStageResult = currentBuild.currentResult
 
                 xunit thresholds: [
-                        failed(),                                                       // UNDONE: For xamarin-jenkins this is actually: failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                        failed(unstableNewThreshold: '0', unstableThreshold: '0'),
                         skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
                     ],
                     tools: [
