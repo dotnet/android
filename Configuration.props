@@ -100,8 +100,9 @@
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.8.0</XABundleToolVersion>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
+    <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
-    <TestsFlavor>$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
+    <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
     <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>
