@@ -140,6 +140,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.html" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\profile-startup.aot" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool-all-$(XABundleToolVersion).jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
