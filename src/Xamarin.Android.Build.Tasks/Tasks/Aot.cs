@@ -247,7 +247,6 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
 			LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
 			LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
-			LogDebugTaskItems ("  Profiles:", Profiles);
 
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
