@@ -143,6 +143,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool-all-$(XABundleToolVersion).jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
