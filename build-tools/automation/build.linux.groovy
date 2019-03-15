@@ -101,20 +101,15 @@ timestamps {
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes 4 hours
-            def buildCmd = ''
-            if (isPr) {
-                buildCmd = "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} NO_SUDO=true V=1"
-            } else {
-                buildCmd = "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'"
-            }
-
-            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts, buildCmd)
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                                "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'"
+            )
         }
 
         if (!isPr) {
             utils.stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
                 execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                        "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
+                                    "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
             }
         }
 
