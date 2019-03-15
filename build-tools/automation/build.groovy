@@ -24,7 +24,7 @@ timestamps {
             }
         }
 
-        def workspace = "/Users/builder/jenkins/workspace/xamarin-android"
+        def workspace = "/Users/${env.USER}/jenkins/workspace"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
