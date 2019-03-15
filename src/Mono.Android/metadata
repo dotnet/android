@@ -1426,6 +1426,6 @@
 
   <!-- Animation class has both addAnimationListener and setAnimationListener.
        They result in event name conflicts. So remove them for set~ method. -->
-  <attr path="/api/package[@name='android.view.animation']/class[@name='Animation']/method[@name='setAnimationListener']" name="eventName"></attr>
+  <attr api-since="29" path="/api/package[@name='android.view.animation']/class[@name='Animation']/method[@name='setAnimationListener']" name="eventName"></attr>
 
 </metadata>
