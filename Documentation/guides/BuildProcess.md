@@ -279,6 +279,18 @@ when packaging Release applications.
 
     Added in Xamarin.Android 9.2.
 
+-   **AndroidEnableProfiledAot** &ndash; A boolean property that
+    determines whether or not the AOT profiles are used during the
+    Ahead-of-Time compilation.
+
+    The profiles are listed in `AndroidAotProfiles` item group. This
+    ItemGroup contains default profile(s). It can be overriden by
+    removing the existing one(s) and adding own AOT profiles.
+
+    Support for this property was added in Xamarin.Android 9.4.
+
+    This property is `False` by default.
+
 -   **AndroidEnableSGenConcurrent** &ndash; A boolean property that
     determines whether or not Mono's
     [concurrent GC collector](http://www.mono-project.com/docs/about-mono/releases/4.8.0/#concurrent-sgen)
@@ -628,18 +640,6 @@ when packaging Release applications.
     native code and included in the `.apk`.
 
     Support for this property was added in Xamarin.Android 5.1.
-
-    This property is `False` by default.
-
--   **AndroidEnableProfiledAot** &ndash; A boolean property that
-    determines whether or not the AOT profiles are used during the
-    Ahead-of-Time compilation.
-
-    The profiles are listed in `AndroidAotProfiles` item group. This
-    ItemGroup contains default profile(s). It can be overriden by
-    removing the existing one(s) and adding own AOT profiles.
-
-    Support for this property was added in Xamarin.Android 9.4.
 
     This property is `False` by default.
 
