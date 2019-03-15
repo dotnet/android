@@ -40,12 +40,14 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Adb.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Android.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Ant.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\BundleTool.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GetNugetPackageBasePath.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\OS.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\ProcessMSBuildTiming.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RenameTestCases.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\StartAndroidEmulator.cs" />

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.BundleTool" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" />
@@ -16,6 +17,11 @@
     <_TestImageName>XamarinAndroidTestRunner</_TestImageName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
   </PropertyGroup>
+
+  <ItemGroup>
+    <_AllArchives Include="@(TestApk)" />
+    <_AllArchives Include="@(TestAab)" />
+  </ItemGroup>
 
   <Target Name="AcquireAndroidTarget">
     <Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget
@@ -160,19 +166,50 @@
     />
   </Target>
 
+  <Target Name="DeployTestAabs"
+      Condition=" '@(TestAab)' != '' ">
+    <PropertyGroup>
+      <_KeyStore>..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\test.keystore</_KeyStore>
+      <_KeyAlias>mykey</_KeyAlias>
+      <_KeyPass>android</_KeyPass>
+      <_StorePass>android</_StorePass>
+    </PropertyGroup>
+    <Xamarin.Android.Tools.BootstrapTasks.BundleTool
+        Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
+        ContinueOnError="ErrorAndContinue"
+        ToolPath="$(JavaSdkDirectory)\bin"
+        JarPath="$(BundleToolJarPath)"
+        AdbToolExe="$(AdbToolExe)"
+        AdbToolPath="$(AdbToolPath)"
+        KeyStore="$([System.IO.Path]::GetFullPath ('$(_KeyStore)'))"
+        KeyAlias="$(_KeyAlias)"
+        KeyPass="$(_KeyPass)"
+        StorePass="$(_StorePass)"
+    />
+    <!-- modules: List of modules to be installed, or "_ALL_" for all modules.-->
+    <Xamarin.Android.Tools.BootstrapTasks.BundleTool
+        Arguments="install-apks --modules _ALL_ --apks &quot;%(TestAab.Identity).apks&quot;"
+        ContinueOnError="ErrorAndContinue"
+        ToolPath="$(JavaSdkDirectory)\bin"
+        JarPath="$(BundleToolJarPath)"
+        AdbToolExe="$(AdbToolExe)"
+        AdbToolPath="$(AdbToolPath)"
+    />
+  </Target>
+
   <Target Name="UndeployTestApks"
-      Condition=" '@(TestApk)' != '' ">
+      Condition=" '@(_AllArchives)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(TestApk.Package)&quot;"
+        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(_AllArchives.Package)&quot;"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
-	IgnoreExitCode="true"
+        IgnoreExitCode="true"
     />
   </Target>
 
   <Target Name="RunTestApks"
-      Condition=" '@(TestApk)' != '' ">
+      Condition=" '@(_AllArchives)' != '' ">
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '@(TestApkPermission)' != '' "
         IgnoreExitCode="True"
@@ -204,26 +241,26 @@
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
     <RunUITests
-        Condition=" '%(TestApk.Activity)' != '' "
+        Condition=" '%(_AllArchives.Activity)' != '' "
         ContinueOnError="ErrorAndContinue"
         AdbTarget="$(_AdbTarget)"
         AdbOptions="$(AdbOptions)"
-        Activity="%(TestApk.Activity)"
-        LogcatFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
+        Activity="%(_AllArchives.Activity)"
+        LogcatFilename="$(_LogcatFilenameBase)-%(_AllArchives.Package).txt"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="300000">
     </RunUITests>
     <ProcessLogcatTiming
-        Condition=" '%(TestApk.TimingDefinitionsFilename)' != ''"
+        Condition=" '%(_AllArchives.TimingDefinitionsFilename)' != ''"
         ContinueOnError="ErrorAndContinue"
-        InputFilename="$(_LogcatFilenameBase)-%(TestApk.Package).txt"
-        ApplicationPackageName="%(TestApk.Package)"
-        ResultsFilename="%(TestApk.TimingResultsFilename)"
-        DefinitionsFilename="%(TestApk.TimingDefinitionsFilename)"
+        InputFilename="$(_LogcatFilenameBase)-%(_AllArchives.Package).txt"
+        ApplicationPackageName="%(_AllArchives.Package)"
+        ResultsFilename="%(_AllArchives.TimingResultsFilename)"
+        DefinitionsFilename="%(_AllArchives.TimingDefinitionsFilename)"
         AddResults="true"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
-        Activity="%(TestApk.Activity)" />
+        Activity="%(_AllArchives.Activity)" />
   </Target>
   <Target Name="RenameTestCases">
     <Error
@@ -273,25 +310,25 @@
   <Target Name="RecordApkSizes"
       Condition=" '$(HostOS)' != 'Windows' ">
     <Exec
-        Condition=" '$(HostOS)' == 'Darwin' And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
-        Command="stat -f &quot;stat: %z %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        Condition=" '$(HostOS)' == 'Darwin' And '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
+        Command="stat -f &quot;stat: %z %N&quot; &quot;%(_AllArchives.Identity)&quot; > &quot;$(OutputPath)%(_AllArchives.ApkSizesInputFilename)&quot;"
         ContinueOnError="ErrorAndContinue"
     />
     <Exec
-        Condition=" '$(HostOS)' == 'Linux'  And '%(TestApk.ApkSizesDefinitionFilename)' != '' "
-        Command="stat -c &quot;stat: %s %N&quot; &quot;%(TestApk.Identity)&quot; > &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        Condition=" '$(HostOS)' == 'Linux'  And '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
+        Command="stat -c &quot;stat: %s %N&quot; &quot;%(_AllArchives.Identity)&quot; > &quot;$(OutputPath)%(_AllArchives.ApkSizesInputFilename)&quot;"
         ContinueOnError="ErrorAndContinue"
     />
     <Exec
-        Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
-        Command="unzip -l &quot;%(TestApk.Identity)&quot; >> &quot;$(OutputPath)%(TestApk.ApkSizesInputFilename)&quot;"
+        Condition=" '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
+        Command="unzip -l &quot;%(_AllArchives.Identity)&quot; >> &quot;$(OutputPath)%(_AllArchives.ApkSizesInputFilename)&quot;"
         ContinueOnError="ErrorAndContinue" />
     <ProcessPlotInput
-        Condition=" '%(TestApk.ApkSizesDefinitionFilename)' != '' "
-        InputFilename="$(OutputPath)%(TestApk.ApkSizesInputFilename)"
-        ApplicationPackageName="%(TestApk.Package)"
-        ResultsFilename="%(TestApk.ApkSizesResultsFilename)"
-        DefinitionsFilename="%(TestApk.ApkSizesDefinitionFilename)"
+        Condition=" '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
+        InputFilename="$(OutputPath)%(_AllArchives.ApkSizesInputFilename)"
+        ApplicationPackageName="%(_AllArchives.Package)"
+        ResultsFilename="%(_AllArchives.ApkSizesResultsFilename)"
+        DefinitionsFilename="%(_AllArchives.ApkSizesDefinitionFilename)"
         AddResults="True"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         ContinueOnError="ErrorAndContinue"

@@ -34,10 +34,14 @@ namespace Xamarin.Android.Tasks
 
 		public string SigningAlgorithm { get; set; }
 
+		public string FileSuffix { get; set; }
+
 		protected override string DefaultErrorCode => "ANDJS0000";
 
 		protected override string GenerateCommandLineCommands ()
 		{
+			var fileName = Path.GetFileNameWithoutExtension (UnsignedApk);
+			var extension = Path.GetExtension (UnsignedApk);
 			var cmd = new CommandLineBuilder ();
 
 			cmd.AppendSwitchIfNotNull ("-tsa ", TimestampAuthorityUrl);
@@ -47,7 +51,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-keypass ", KeyPass);
 			cmd.AppendSwitchIfNotNull ("-digestalg ", "SHA1");
 			cmd.AppendSwitchIfNotNull ("-sigalg ", string.IsNullOrWhiteSpace (SigningAlgorithm) ? "md5withRSA" : SigningAlgorithm);
-			cmd.AppendSwitchIfNotNull ("-signedjar ", String.Format ("{0}{1}{2}-Signed-Unaligned.apk", SignedApkDirectory, Path.DirectorySeparatorChar, Path.GetFileNameWithoutExtension (UnsignedApk)));
+			cmd.AppendSwitchIfNotNull ("-signedjar ", Path.Combine (SignedApkDirectory, $"{fileName}{FileSuffix}{extension}" ));
 
 			cmd.AppendFileNameIfNotNull (UnsignedApk);
 			cmd.AppendSwitch (KeyAlias);
