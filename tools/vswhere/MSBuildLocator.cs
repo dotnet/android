@@ -7,7 +7,7 @@ namespace Xamarin.Android.Tools.VSWhere
 	/// <summary>
 	/// https://github.com/Microsoft/vswhere/wiki/Find-MSBuild
 	/// </summary>
-	public class MSBuildLocator
+	public static class MSBuildLocator
 	{
 		static readonly string [] msbuildLocations = new [] {
 			// VS 2019 & Higher
@@ -16,43 +16,33 @@ namespace Xamarin.Android.Tools.VSWhere
 			Path.Combine ("MSBuild", "15.0", "Bin", "MSBuild.exe"),
 		};
 
-		/// <summary>
-		/// Adds the -prerelease flag, defaults to false
-		/// </summary>
-		public bool IncludePrerelease { get; set; } = false;
-
-		public string VisualStudioDirectory { get; private set; }
-
-		public string MSBuildPath { get; private set; }
-
-		public void Locate ()
+		public static VisualStudioInstance QueryLatest ()
 		{
+			var instance = new VisualStudioInstance ();
 			var vsInstallDir = Environment.GetEnvironmentVariable ("VSINSTALLDIR");
 			if (string.IsNullOrEmpty (vsInstallDir)) {
 				var programFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 				var vswhere = Path.Combine (programFiles, "Microsoft Visual Studio", "Installer", "vswhere.exe");
 				if (!File.Exists (vswhere))
 					throw new FileNotFoundException ("Cannot find vswhere.exe!", vswhere);
-
-				string prerelease = IncludePrerelease ? "-prerelease" : "";
-				VisualStudioDirectory = Exec (vswhere, $"-latest {prerelease} -products * -requires Microsoft.Component.MSBuild -property installationPath");
-				if (!Directory.Exists (VisualStudioDirectory)) {
-					throw new Exception ($"vswhere.exe result returned a directory that did not exist: {VisualStudioDirectory}");
+				instance.VisualStudioRootPath = Exec (vswhere, "-latest -products * -requires Microsoft.Component.MSBuild -property installationPath");
+				if (!Directory.Exists (instance.VisualStudioRootPath)) {
+					throw new DirectoryNotFoundException ($"vswhere.exe result returned a directory that did not exist: {instance.VisualStudioRootPath}");
 				}
 			} else {
-				VisualStudioDirectory = vsInstallDir;
+				instance.VisualStudioRootPath = vsInstallDir;
 			}
 
 			foreach (var path in msbuildLocations) {
-				MSBuildPath = Path.Combine (VisualStudioDirectory, path);
-				if (File.Exists (MSBuildPath))
-					return;
+				instance.MSBuildPath = Path.Combine (instance.VisualStudioRootPath, path);
+				if (File.Exists (instance.MSBuildPath))
+					return instance;
 			}
 
 			throw new FileNotFoundException ("Cannot find MSBuild.exe!");
 		}
 
-		string Exec (string fileName, string args)
+		static string Exec (string fileName, string args)
 		{
 			var info = new ProcessStartInfo {
 				FileName = fileName,

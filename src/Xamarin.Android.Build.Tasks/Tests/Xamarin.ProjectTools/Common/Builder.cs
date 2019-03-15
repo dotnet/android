@@ -57,9 +57,8 @@ namespace Xamarin.ProjectTools
 			if (!string.IsNullOrEmpty (visualStudioDirectory))
 				return visualStudioDirectory;
 
-			var locator = new MSBuildLocator ();
-			locator.Locate ();
-			return visualStudioDirectory = locator.VisualStudioDirectory;
+			var instance = MSBuildLocator.QueryLatest ();
+			return visualStudioDirectory = instance.VisualStudioRootPath;
 		}
 
 		public string XABuildExe {

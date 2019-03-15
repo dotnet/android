@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Xamarin.Android.Tools.VSWhere;
 
@@ -122,12 +121,11 @@ namespace Xamarin.Android.Build
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
 			if (IsWindows) {
-				var locator = new MSBuildLocator ();
-				locator.Locate ();
-				VsInstallRoot = locator.VisualStudioDirectory;
+				var instance = MSBuildLocator.QueryLatest ();
+				VsInstallRoot = instance.VisualStudioRootPath;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
-				MSBuildBin               = Path.GetDirectoryName (locator.MSBuildPath);
+				MSBuildBin               = Path.GetDirectoryName (instance.MSBuildPath);
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
