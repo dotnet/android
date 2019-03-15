@@ -136,6 +136,21 @@
         Properties="AotAssemblies=True"
     />
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
+      <_ApkTestProjectProfiledAot>
+        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-profiled-AOT.binlog"</_BinLog>
+      </_ApkTestProjectProfiledAot>
+    </ItemGroup>
+    <Exec
+        Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AndroidEnableProfiledAot=True"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+    />
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+        Properties="AndroidEnableProfiledAot=True;AotAssemblies=True"
+    />
+    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
       <_ApkTestProjectBundle>
         <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-Bundle.binlog"</_BinLog>
       </_ApkTestProjectBundle>
