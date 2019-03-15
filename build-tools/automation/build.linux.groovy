@@ -5,6 +5,7 @@ def XADir = "xamarin-android"
 def buildTarget = 'jenkins'
 def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
 def isPr = false                // Default to CI
+def isStable = false            // Stable build workflow
 def pBuilderBindMounts = null
 def utils = null
 def hasPrLabelFullMonoIntegrationBuild = false
@@ -35,9 +36,10 @@ timestamps {
         def workspace = "/mnt/jenkins/workspace/${env.JOB_BASE_NAME}"
         utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
 
-        utils.stageWithTimeout('init', 30, 'MINUTES', XADir, true) {    // Typically takes less than a second for CI; UNDONE: how long for PRs for jdk.sh execution?
+        utils.stageWithTimeout('init', 30, 'MINUTES', XADir, true) {    // Typically takes less than a second for CI builds; execChRootCommand execution can take several minutes for PR builds
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
+            isStable = env.IsStable == '1'
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
             def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
 
@@ -49,6 +51,7 @@ timestamps {
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
+            echo "Stable build workflow: ${isStable}"
 
             pBuilderBindMounts = "/home/${env.USER}"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
@@ -102,7 +105,7 @@ timestamps {
             }
         }
 
-        if (!isPr) {
+        if (!isPr && !isStable) {
             utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
                 // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
                 // We'll install mono/2018-02 on the build machines and try using that, which requires
@@ -138,7 +141,7 @@ timestamps {
             }
         }
  
-        if (!isPr) {
+        if (!isPr && !isStable) {
             utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {
                 echo "running tests"
 
@@ -150,7 +153,7 @@ timestamps {
             }
         }
 
-        if (!isPr) {
+        if (!isPr && !isStable) {
             utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
                 echo "packaging test error logs"
 
@@ -169,7 +172,7 @@ timestamps {
             }
         }
 
-        if (!isPr) {
+        if (!isPr && !isStable) {
             utils.stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
                 def initialStageResult = currentBuild.currentResult
 
