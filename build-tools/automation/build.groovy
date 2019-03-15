@@ -17,8 +17,11 @@ prLabels = null  // Globally defined "static" list accessible within the hasPrLa
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
-        dir (XADir) {
-            scmVars = checkout scm
+
+        stage("checkout") {
+            dir (XADir) {
+                scmVars = checkout scm
+            }
         }
 
         def workspace = "/Users/builder/jenkins/workspace/xamarin-android"
