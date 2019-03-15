@@ -106,20 +106,25 @@ timestamps {
             )
         }
 
-        if (!isPr) {
-            utils.stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                    "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
+        utils.stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            if (isPr) {
+                echo "Skipping debian packaging for PR builds"
+                return
             }
+
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                                "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
-        if (!isPr && !isStable) {
-            utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
-                // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
-                // We'll install mono/2018-02 on the build machines and try using that, which requires
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                    "xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1")
+        utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
+            if (isPr || isStable) {
+                echo "Skipping build tests for PR and stable builds"
+                return
             }
+            // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
+            // We'll install mono/2018-02 on the build machines and try using that, which requires
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                                "xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1")
         }
 
         utils.stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
@@ -132,71 +137,83 @@ timestamps {
             }
         }
 
-        if (!isPr) {
-            utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-                def publishBuildFilePaths = "${XADir}/xamarin-android/*xamarin.android*.tar*";
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip"
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.dsc"
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.deb"
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status*"
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status*"
-
-                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
-                if (commandStatus != 0) {
-                    error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
-                }
+        utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+            if (isPr) {
+                echo "Skipping package publishing for PR builds"
+                return
             }
-        }
- 
-        if (!isPr && !isStable) {
-            utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {
-                echo "running tests"
 
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                        """
-                            xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
-                            killall adb || true
-                        """)
+            def publishBuildFilePaths = "${XADir}/xamarin-android/*xamarin.android*.tar*";
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.dsc"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.deb"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status*"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status*"
+
+            echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
+            if (commandStatus != 0) {
+                error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        if (!isPr && !isStable) {
-            utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-                echo "packaging test error logs"
+        utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {
+            if (isPr || isStable) {
+                echo "Skipping test run for PR and stable builds"
+                return
+            }
 
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                    "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
+            echo "running tests"
 
-                def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                    """
+                        xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
+                        killall adb || true
+                    """)
+        }
 
-                echo "publishTestFilePaths: ${publishTestFilePaths}"
-                def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
-                if (commandStatus != 0) {
-                    error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
-                }
+        utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+            if (isPr || isStable) {
+                echo "Skipping publishing of test error logs for PR and stable builds"
+                return
+            }
+
+            echo "packaging test error logs"
+
+            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
+                                "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
+
+            def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
+
+            echo "publishTestFilePaths: ${publishTestFilePaths}"
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
+            if (commandStatus != 0) {
+                error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        if (!isPr && !isStable) {
-            utils.stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
-                def initialStageResult = currentBuild.currentResult
+        utils.stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
+            if (isPr || isStable) {
+                echo "Skipping publishing of test results for PR and stable builds"
+                return
+            }
 
-                xunit thresholds: [
-                        failed(unstableNewThreshold: '0', unstableThreshold: '0'),
-                        skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
-                    ],
-                    tools: [
-                        NUnit2(deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: 'TestResult-*.xml',
-                                skipNoTestFiles: true,
-                                stopProcessingIfError: false)
-                    ]
+            def initialStageResult = currentBuild.currentResult
 
-                if (initialStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
-                    error "One or more tests failed"                // Force an error condition if there was a test failure to indicate that this stage was the source of the build failure
-                }
+            xunit thresholds: [
+                    failed(unstableNewThreshold: '0', unstableThreshold: '0'),
+                    skipped()                                                       // Note: Empty threshold settings per settings in the xamarin-android freestyle build are not permitted here
+                ],
+                tools: [
+                    NUnit2(deleteOutputFiles: true,
+                            failIfNotNew: true,
+                            pattern: 'TestResult-*.xml',
+                            skipNoTestFiles: true,
+                            stopProcessingIfError: false)
+                ]
+
+            if (initialStageResult == 'SUCCESS' && currentBuild.currentResult == 'UNSTABLE') {
+                error "One or more tests failed"                // Force an error condition if there was a test failure to indicate that this stage was the source of the build failure
             }
         }
     }
