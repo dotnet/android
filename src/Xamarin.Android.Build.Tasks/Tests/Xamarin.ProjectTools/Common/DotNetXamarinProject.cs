@@ -131,6 +131,9 @@ namespace Xamarin.ProjectTools
 			var pn = XName.Get ("Project", "http://schemas.microsoft.com/developer/msbuild/2003");
 			var p = document.Element (pn);
 			if (p != null) {
+				//NOTE: when running tests inside VS 2019 "Current" was set here
+				p.SetAttributeValue ("ToolsVersion", "15.0");
+
 				var referenceGroup = p.Elements ().FirstOrDefault (x => x.Name.LocalName == "ItemGroup" &&  x.HasElements && x.Elements ().Any (e => e.Name.LocalName == "Reference"));
 				if (referenceGroup != null) {
 					foreach (var pr in PackageReferences) {
