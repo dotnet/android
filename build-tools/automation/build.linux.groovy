@@ -157,11 +157,9 @@ timestamps {
             utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
                 echo "packaging test error logs"
 
-                // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
                 execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                                     "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
 
-                // UNDONE: TEST: Copied from build.groovy. Does this work for Linux build?
                 def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
                 echo "publishTestFilePaths: ${publishTestFilePaths}"
