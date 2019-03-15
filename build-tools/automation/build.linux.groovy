@@ -28,8 +28,21 @@ timestamps {
         def scmVars = null
 
         stage ("checkout") {
-            dir (XADir) {
-                scmVars = checkout scm
+            def ctAttempts = 3
+            def retryAttempt = 0
+            def waitSecondsBeforeRetry = 15
+            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
+                dir (XADir) {
+                    if (retryAttempt > 0) {
+                        echo "WARNING : Stage checkout failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
+                        sleep(waitSecondsBeforeRetry)
+                        echo "Retrying ..."
+                        waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
+                    }
+
+                    retryAttempt++
+                    scmVars = checkout scm
+                }
             }
         }
 
