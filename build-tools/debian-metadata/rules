@@ -28,6 +28,7 @@ override_dh_clideps:
 		--exclude-moduleref=dbghelp.dll \
 		--exclude-moduleref=fusion \
 		--exclude-moduleref=fusion.dll \
+		--exclude-moduleref=libwinpthread-1.dll \
 		--exclude-moduleref=lzo.dll \
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=mscorwks.dll \
