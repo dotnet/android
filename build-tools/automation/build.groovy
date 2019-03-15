@@ -1,7 +1,5 @@
 // This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
-import groovy.json.JsonSlurper
-
 def XADir = "xamarin-android"
 
 def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
