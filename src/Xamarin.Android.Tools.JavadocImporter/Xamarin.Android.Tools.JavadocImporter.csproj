@@ -7,7 +7,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools.JavadocImporter</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.JavadocImporter</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

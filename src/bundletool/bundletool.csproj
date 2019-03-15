@@ -5,7 +5,6 @@
     <ProjectGuid>a0aef446-3368-4591-9de6-bc3b2b33337d</ProjectGuid>
     <OutputType>Exe</OutputType>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
   <PropertyGroup Condition="'$(Configuration)'=='Release'" />

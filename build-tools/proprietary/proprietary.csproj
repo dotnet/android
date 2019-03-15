@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ProjectGuid>{D93CAC27-3893-42A3-99F1-2BCA72E186F4}</ProjectGuid>
     <CopyBuildOutputToOutputDirectory>False</CopyBuildOutputToOutputDirectory>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\bin\Debug</OutputPath>
   </PropertyGroup>
@@ -20,6 +20,5 @@
       PrepareForRun;
     </BuildDependsOn>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
   <Import Project="proprietary.targets" />
 </Project>

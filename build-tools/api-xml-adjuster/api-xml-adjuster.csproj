@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AssemblyName>api-xml-adjuster</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

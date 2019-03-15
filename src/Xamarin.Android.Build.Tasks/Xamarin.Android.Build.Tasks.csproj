@@ -9,7 +9,6 @@
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tasks</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />

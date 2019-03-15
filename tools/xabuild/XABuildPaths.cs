@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.Android.Build
 {
@@ -102,6 +102,13 @@ namespace Xamarin.Android.Build
 
 		public string NuGetRestoreTargets { get; private set; }
 
+		/// <summary>
+		/// The directory containing Microsoft.CSharp.Core.Targets
+		/// 
+		/// In VS 2017 and 2019, this would be: %VsInstallDir%\MSBuild\15.0\Bin\Roslyn
+		/// </summary>
+		public string RoslynTargetsPath { get; private set; }
+
 		public XABuildPaths ()
 		{
 			IsWindows                 = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -110,34 +117,31 @@ namespace Xamarin.Android.Build
 			XABuildDirectory          = Path.GetDirectoryName (GetType ().Assembly.Location);
 			XamarinAndroidBuildOutput = Path.GetFullPath (Path.Combine (XABuildDirectory, ".."));
 
-			const string vsVersion    = "15.0";
 			string programFiles       = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
 			if (IsWindows) {
-				foreach (var edition in new [] { "Enterprise", "Professional", "Community", "BuildTools" }) {
-					var vsInstall = Path.Combine (programFiles, "Microsoft Visual Studio", "2017", edition);
-					if (Directory.Exists (vsInstall)) {
-						VsInstallRoot = vsInstall;
-						break;
-					}
-				}
-				if (VsInstallRoot == null)
-					VsInstallRoot = programFiles;
+				var instance = MSBuildLocator.QueryLatest ();
+				VsInstallRoot = instance.VisualStudioRootPath;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "Bin");
+				MSBuildBin               = Path.GetDirectoryName (instance.MSBuildPath);
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
 				SystemFrameworks         = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
-				SystemTargetsDirectories = new [] { Path.Combine (MSBuildPath, vsVersion), Path.Combine (MSBuildPath, "Microsoft") };
+				string msbuildDir        = Path.GetDirectoryName (MSBuildBin);
+				SystemTargetsDirectories = new [] { msbuildDir, Path.Combine (MSBuildPath, "Microsoft") };
 				SearchPathsOS            = "windows";
-				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", vsVersion);
+				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "16.0");
+				if (!Directory.Exists (nuget)) {
+					nuget = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "15.0");
+				}
 				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
 				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
 				NuGetRestoreTargets      = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet", "NuGet.targets");
 			} else {
+				const string vsVersion   = "15.0";
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
 				string monoExternal      = IsMacOS ? "/Library/Frameworks/Mono.framework/External/" : "/usr/lib/mono";
 				MSBuildPath              = Path.Combine (mono, "msbuild");
@@ -165,6 +169,16 @@ namespace Xamarin.Android.Build
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
 			MSBuildExeTempPath        = Path.GetTempFileName ();
 			XABuildConfig             = MSBuildExeTempPath + ".config";
+
+			var roslyn = Path.Combine (MSBuildBin, "Roslyn");
+			if (Directory.Exists (roslyn)) {
+				RoslynTargetsPath = roslyn;
+			} else {
+				//NOTE: this codepath happens with VS 2019, Roslyn is located in a 15.0 directory...
+				roslyn = Path.Combine (MSBuildPath, "15.0", "Bin", "Roslyn");
+				if (Directory.Exists (roslyn))
+					RoslynTargetsPath = roslyn;
+			}
 
 			//Android SDK and NDK
 			var pathsTargets = Path.Combine (XABuildDirectory, "..", "..", "..", "build-tools", "scripts", "Paths.targets");

@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools.JavadocToMDoc</RootNamespace>
     <AssemblyName>javadoc-to-mdoc</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
