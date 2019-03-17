@@ -13,3 +13,20 @@ indent_size = 2
 [*.{csproj}]
 indent_style = space
 indent_size = 2
+
+# .NET formatting settings:
+[*.{cs}]
+csharp_new_line_before_open_brace = methods
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_space_after_cast = true
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_declaration_parameter_list_parentheses = true
+csharp_space_between_method_call_parameter_list_parentheses = true
+csharp_space_around_binary_operators = before_and_after
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_name_and_opening_parenthesis = true
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
