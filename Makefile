@@ -202,6 +202,17 @@ THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,False,False))
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
+EXTERNAL_GIT_PATH=$(topdir)/external
+XA_PATH=$(topdir)
+prepare-external-git-dependencies:
+	$(call MSBUILD_BINLOG,prep-tasks) build-tools/xa-prep-tasks/xa-prep-tasks.csproj
+	$(call MSBUILD_BINLOG,external-checkout) build-tools/xa-prep-tasks/xa-prep-tasks.csproj \
+		/t:CheckoutExternalGitSources /p:ExternalSourceDependencyDirectory='$(EXTERNAL_GIT_PATH)'
+	cd $(MONODROID_PATH) && ./configure --with-xamarin-android='$(XA_PATH)'
+
+commercial:
+	make -C $(MONODROID_PATH) commercial-minimal XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
+
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version

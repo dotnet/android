@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Git" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ParseExternalGitDependencies" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.CheckoutExternalGitDependency" />
+  <PropertyGroup>
+    <ExternalSourceDependencyDirectory>$(XamarinAndroidSourcePath)\external</ExternalSourceDependencyDirectory>
+  </PropertyGroup>
+  <Target Name="ParseExternalFile">
+    <ParseExternalGitDependencies 
+        ExternalFilePath="$(XamarinAndroidSourcePath)\.external" >
+      <Output TaskParameter="ExternalGitDependencies" ItemName="Externals" />
+    </ParseExternalGitDependencies>
+  </Target>
+  <Target Name="CheckoutExternalGitSources"
+      DependsOnTargets="ParseExternalFile">
+    <CheckoutExternalGitDependency
+        Condition="'%(Externals.Name)'=='monodroid'"
+        WorkingDirectory="$(ExternalSourceDependencyDirectory)"
+        ExternalGitDependency="@(Externals)"
+    />
+  </Target>
+</Project>
