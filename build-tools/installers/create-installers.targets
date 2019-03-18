@@ -230,6 +230,9 @@
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Novell.MonoDroid.CSharp.targets" />
   </ItemGroup>
   <ItemGroup>
+    <ThirdPartyNotice Include="$(RootBuildDir)\lib\xamarin.android\ThirdPartyNotices.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <VersionFiles Include="$(RootBuildDir)\Version" />
     <VersionFiles Include="$(RootBuildDir)\Version.commit" />
     <VersionFiles Include="$(RootBuildDir)\Version.rev" />
