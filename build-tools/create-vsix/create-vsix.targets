@@ -22,7 +22,7 @@
     </ReferenceAssemblies>
     <ThirdPartyNotice>
       <IncludeInVSIX>True</IncludeInVSIX>
-      <VSIXSubPath/>
+      <VSIXSubPath>/</VSIXSubPath>
       <InstallRoot/>
     </ThirdPartyNotice>
   </ItemDefinitionGroup>
@@ -45,9 +45,6 @@
       <MSBuild Include="@(VersionFiles)" >
         <VSIXSubPath>Xamarin/Android/</VSIXSubPath>
       </MSBuild>
-      <ThirdPartyNotice Include="$(RootBuildDir)\lib\xamarin.android\ThirdPartyNotices.txt">
-        <VSIXSubPath>/</VSIXSubPath>
-      </ThirdPartyNotice>
     </ItemGroup>
     <ItemGroup>
       <Content Include="@(MSBuild)" />

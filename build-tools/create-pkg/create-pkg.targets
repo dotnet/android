@@ -46,7 +46,7 @@
         DestinationFolder="$(XAFrameworkDir)\lib\monodoc"
     />
     <Copy
-        SourceFiles="@(VersionFiles);$(PkgLicenseSrcEn)"
+        SourceFiles="$(PkgLicenseSrcEn);@(ThirdPartyNotice);@(VersionFiles)"
         DestinationFolder="$(XAFrameworkDir)"
     />
   </Target>
