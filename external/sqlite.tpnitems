@@ -6,7 +6,7 @@
       <SourceUrl>https://github.com/xamarin/sqlite/tree/master/dist/</SourceUrl>
     </ThirdPartyNotice>
     <ThirdPartyNotice Include="xamarin/sqlite">
-      <LicenseFile>$(MSBuildThisFileDirectory)\..\build-tools\license-data\Apache-2.0.txt</LicenseFile>
+      <LicenseFile>$(MSBuildThisFileDirectory)..\build-tools\license-data\Apache-2.0.txt</LicenseFile>
       <SourceUrl>https://github.com/xamarin/sqlite/</SourceUrl>
     </ThirdPartyNotice>
   </ItemGroup>
