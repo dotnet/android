@@ -56,6 +56,7 @@
 + [XA1006](xa1006.md): Your application is running on a version of Android ({compileSdk}) that is more recent than your targetSdkVersion specifies ({targetSdk}). Set your targetSdkVersion to the highest version of Android available to match your TargetFrameworkVersion ({compileSdk}).
 + [XA1007](xa1007.md): The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).
 + [XA1008](xa1008.md): The TargetFrameworkVersion ({compileSdk}) should not be lower than targetSdkVersion ({targetSdk})
++ [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 
 ### XA2xxx Linker
 

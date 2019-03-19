@@ -1940,6 +1940,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="PackageForAndroid"
 	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_CopyPackage" />
 	
+<Target Name="_CheckForObsoleteAssemblies">
+	<PropertyGroup>
+		<_ObsoleteAssemblies>@(ResolvedFrameworkAssemblies)</_ObsoleteAssemblies>
+	</PropertyGroup>
+	<Warning Code="XA1009" Text="OpenTK 0.9.3 is Obsolete. Please upgrade to OpenTK 1.0"
+			Condition="$(_ObsoleteAssemblies.Contains('OpenTK.dll'))" />
+</Target>
+
 <Target Name="_ResolveAssemblies">
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
 	<ItemGroup>
@@ -2241,6 +2249,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_PrepareAssembliesDependsOnTargets>
 		_ResolveAssemblies
+		;_CheckForObsoleteAssemblies
 		;_ResolveSatellitePaths
 		;_CreatePackageWorkspace
 		;_CopyIntermediateAssemblies
