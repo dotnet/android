@@ -46,8 +46,7 @@ timestamps {
             }
         }
 
-        def workspace = "/mnt/jenkins/workspace/${env.JOB_BASE_NAME}"
-        utils = load "${workspace}/${XADir}/build-tools/automation/utils.groovy"
+        utils = load "${XADir}/build-tools/automation/utils.groovy"
 
         utils.stageWithTimeout('init', 30, 'MINUTES', XADir, true) {    // Typically takes less than a second for CI builds; execChRootCommand execution can take several minutes for PR builds
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
