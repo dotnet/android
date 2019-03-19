@@ -61,6 +61,7 @@ timestamps {
             echo "HostName: ${env.NODE_NAME}"
             echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
+            echo "Workspace: ${env.WORKSPACE}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
