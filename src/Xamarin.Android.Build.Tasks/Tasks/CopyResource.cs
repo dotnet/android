@@ -19,11 +19,10 @@ namespace Xamarin.Android.Tasks
 		public string OutputPath { get; set; }
 
 		static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly ();
-		static readonly Assembly JcwGenAssembly = typeof (JavaCallableWrapperGenerator).Assembly;
 
 		public override bool Execute ()
 		{
-			using (var from = GetManifestResourceStream (ResourceName)) {
+			using (var from = ExecutingAssembly.GetManifestResourceStream (ResourceName)) {
 				if (from == null) {
 					Log.LogCodedError ("XA0116", $"Unable to find `EmbeddedResource` of name `{ResourceName}`.");
 					return false;
@@ -36,11 +35,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return true;
-		}
-
-		Stream GetManifestResourceStream (string name)
-		{
-			return ExecutingAssembly.GetManifestResourceStream (name) ?? JcwGenAssembly.GetManifestResourceStream (name);
 		}
 	}
 }
