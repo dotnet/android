@@ -94,26 +94,29 @@ timestamps {
                             """
                                 if [ -z "\$JAVA_HOME" ]; then
                                     if [ -f /etc/profile.d/jdk.sh ]; then
+                                        echo 'STAGE: jdk'
                                         source /etc/profile.d/jdk.sh
                                     fi
                                 fi
 
+                                echo 'STAGE: build'
                                 make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'
 
                                 if [[ "${isPr}" != "true" ]]; then
-                                    echo 'package deb'
+                                    echo 'STAGE: package deb'
                                     make package-deb CONFIGURATION=${env.BuildFlavor} V=1
                                 else
                                     echo 'Skipping debian packaging for PR builds'
                                 fi
 
                                 if [[ "${isPr}" != "true" && "${isStable}" != "true" ]]; then
-                                    echo 'build tests'
+                                    echo 'STAGE: build tests'
                                     xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1
                                 else
                                     echo 'Skipping build tests for PR and stable builds'
                                 fi
 
+                                echo 'STAGE: package build status'
                                 make package-build-status CONFIGURATION=${env.BuildFlavor}
                             """)
         }
@@ -148,10 +151,11 @@ timestamps {
 
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                     """
+                        echo "STAGE: run all tests"
                         xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
                         killall adb || true
 
-                        echo "packaging test error logs"
+                        echo "STAGE: package test error logs"
                         make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}
                     """)
 
