@@ -65,8 +65,6 @@ timestamps {
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
             echo "Stable build workflow: ${isStable}"
-            echo "isPr: ${isPr}"
-            echo "isStable: ${isStable}"
 
             pBuilderBindMounts = "/home/${env.USER}"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
