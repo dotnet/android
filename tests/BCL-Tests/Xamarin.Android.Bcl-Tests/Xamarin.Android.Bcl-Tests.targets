@@ -18,7 +18,7 @@
       Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" Condition="!$(MonoTestAssembly.Contains('xunit-test')" />
+      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" Condition="!$(MonoTestAssembly.Contains('xunit-test'))" />
     </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
