@@ -3,6 +3,8 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
@@ -286,7 +288,7 @@
           Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
-          Include="$(MonoSourceFullPath)\mcs\build\common\Consts.cs"
+          Include="$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid\Consts.cs"
       />
       <_MonoConstsOutput
           Include="$(_OutputIncludeDir)Consts.cs"
@@ -305,11 +307,17 @@
         DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         ContinueOnError="True"
     />
-    <Exec
-        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
-        Command="unzip $(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
-        IgnoreStandardErrorWarningFormat="True"
-        WorkingDirectory="$(MonoSourceFullPath)\sdks\out"
+    <PropertyGroup>
+      <_UnzipTempPath>$(MonoSourceFullPath)\sdks\.out.$([System.IO.Path]::GetRandomFileName())</_UnzipTempPath>
+    </PropertyGroup>
+    <SystemUnzip
+        HostOS="$(HostOS)"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
+        DestinationFolder="$(MonoSourceFullPath)\sdks\out"
+        TempUnzipDir="$(_UnzipTempPath)"
+    />
+    <RemoveDir
+        Directories="$(_UnzipTempPath)"
     />
     <Touch
         Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
