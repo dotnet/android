@@ -3,7 +3,7 @@
 
 def XADir = "xamarin-android"
 def buildTarget = 'jenkins'
-def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git/stretch-backports nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
+def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git/stretch-backports nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev curl'
 def isPr = false                // Default to CI
 def isStable = false            // Stable build workflow
 def pBuilderBindMounts = null
@@ -77,8 +77,6 @@ timestamps {
                 echo "Clearing the PR title and description environment variables to avoid any special characters contained within from tripping up the build"
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
-
-                chRootPackages = 'mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git/stretch-backports nuget ca-certificates-mono g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev mono-llvm-support curl'
 
                 if (utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
                     hasPrLabelFullMonoIntegrationBuild = true
