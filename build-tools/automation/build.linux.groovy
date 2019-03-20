@@ -48,7 +48,7 @@ timestamps {
 
         utils = load "${XADir}/build-tools/automation/utils.groovy"
 
-        utils.stageWithTimeout('init', 30, 'MINUTES', XADir, true) {    // Typically takes less than a second for CI builds; execChRootCommand execution can take several minutes for PR builds
+        utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second for CI builds
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             isStable = env.IsStable == '1'
@@ -65,6 +65,8 @@ timestamps {
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
             echo "Stable build workflow: ${isStable}"
+            echo "isPr: ${isPr}"
+            echo "isStable: ${isStable}"
 
             pBuilderBindMounts = "/home/${env.USER}"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
@@ -84,55 +86,38 @@ timestamps {
                 } else {
                     buildTarget = 'all'
                 }
-
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                        """
-                        if [ -z "\$JAVA_HOME" ]; then
-                            if [ -f /etc/profile.d/jdk.sh ]; then
-                                source /etc/profile.d/jdk.sh
-                            fi
-                        fi
-                        """)
             }
 
             sh "env"
         }
 
-        utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes 4 hours
+        utils.stageWithTimeout('build and package', 7, 'HOURS', XADir, true) {    // Typically takes 4-5 hours
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'"
-            )
-        }
+                            """
+                                if [ -z "\$JAVA_HOME" ]; then
+                                    if [ -f /etc/profile.d/jdk.sh ]; then
+                                        source /etc/profile.d/jdk.sh
+                                    fi
+                                fi
 
-        utils.stageWithTimeout('package deb', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            if (isPr) {
-                echo "Skipping debian packaging for PR builds"
-                return
-            }
+                                make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 NO_SUDO=true MSBUILD_ARGS='/p:MonoRequiredMinimumVersion=5.12'
 
-            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                "make package-deb CONFIGURATION=${env.BuildFlavor} V=1")
-        }
+                                if [[ "${isPr}" != "true" ]]; then
+                                    echo 'package deb'
+                                    make package-deb CONFIGURATION=${env.BuildFlavor} V=1
+                                else
+                                    echo 'Skipping debian packaging for PR builds'
+                                fi
 
-        utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
-            if (isPr || isStable) {
-                echo "Skipping build tests for PR and stable builds"
-                return
-            }
-            // Occasionally `make run-all-tests` "hangs"; we believe this might be a mono/2018-06 bug.
-            // We'll install mono/2018-02 on the build machines and try using that, which requires
-            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                "xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1")
-        }
+                                if [[ "${isPr}" != "true" && "${isStable}" != "true" ]]; then
+                                    echo 'build tests'
+                                    xvfb-run -a -- make all-tests CONFIGURATION=${env.BuildFlavor} V=1
+                                else
+                                    echo 'Skipping build tests for PR and stable builds'
+                                fi
 
-        utils.stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
-            try {
-                echo "processing build status"
-                execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                    "make package-build-status CONFIGURATION=${env.BuildFlavor}")
-            } catch (error) {
-                echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
-            }
+                                make package-build-status CONFIGURATION=${env.BuildFlavor}
+                            """)
         }
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
@@ -155,7 +140,7 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {
+        utils.stageWithTimeout('run all tests and package results', 360, 'MINUTES', XADir, false) {
             if (isPr || isStable) {
                 echo "Skipping test run for PR and stable builds"
                 return
@@ -167,19 +152,10 @@ timestamps {
                     """
                         xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
                         killall adb || true
+
+                        echo "packaging test error logs"
+                        make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}
                     """)
-        }
-
-        utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            if (isPr || isStable) {
-                echo "Skipping publishing of test error logs for PR and stable builds"
-                return
-            }
-
-            echo "packaging test error logs"
-
-            execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
-                                "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}")
 
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
