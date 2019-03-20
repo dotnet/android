@@ -56,14 +56,6 @@
       <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
-      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
-      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
   <Import Project="..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

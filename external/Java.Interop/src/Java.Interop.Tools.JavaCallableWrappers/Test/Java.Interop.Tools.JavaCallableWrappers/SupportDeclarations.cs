@@ -23,6 +23,24 @@ namespace Android.App {
 		{
 		}
 	}
+
+	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
+	class Activity : Java.Lang.Object
+	{
+		[Register ("onCreate", "(Ljava/lang/Object;)V", "Activity.OnCreate")]
+		public virtual void OnCreate (Java.Lang.Object savedInstanceState)
+		{
+		}
+	}
+
+	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
+	class Instrumentation : Java.Lang.Object
+	{
+		[Register ("onCreate", "(Ljava/lang/Object;)V", "Instrumentation.OnCreate")]
+		public virtual void OnCreate (Java.Lang.Object arguments)
+		{
+		}
+	}
 }
 
 namespace Android.Runtime {
@@ -58,6 +76,8 @@ namespace Xamarin.Android.ToolsTests {
 			typeof (DefaultName.A),
 			typeof (DefaultName.A.B),
 			typeof (DefaultName.C.D),
+			typeof (ExampleActivity),
+			typeof (ExampleInstrumentation),
 			typeof (ExampleOuterClass),
 			typeof (ExampleOuterClass.ExampleInnerClass),
 			typeof (InstrumentationName),
@@ -177,6 +197,16 @@ namespace Xamarin.Android.ToolsTests {
 			{
 			}
 		}
+	}
+
+	[Activity (Name = "my.ExampleActivity")]
+	class ExampleActivity : Activity
+	{
+	}
+
+	[Instrumentation (Name = "my.ExampleInstrumentation")]
+	class ExampleInstrumentation : Instrumentation
+	{
 	}
 
 	[BroadcastReceiver (Name = "receiver.Name")]

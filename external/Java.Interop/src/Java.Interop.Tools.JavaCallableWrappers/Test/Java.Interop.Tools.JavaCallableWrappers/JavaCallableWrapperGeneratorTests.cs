@@ -56,6 +56,12 @@ public class Name
 		mono.MonoPackageManager.setContext (this);
 	}}
 
+	public void onCreate ()
+	{{
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ApplicationName, Java.Interop.Tools.JavaCallableWrappers-Tests"", Name.class, __md_methods);
+		super.onCreate ();
+	}}
+
 	private java.util.ArrayList refList;
 	public void monodroidAddReference (java.lang.Object obj)
 	{{
@@ -74,11 +80,13 @@ public class Name
 			Assert.AreEqual (expected, actual);
 		}
 
-		static string Generate (Type type, string applicationJavaClass = null)
+		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null)
 		{
 			var td  = SupportDeclarations.GetTypeDefinition (type);
 			var g   = new JavaCallableWrapperGenerator (td, null) {
 				ApplicationJavaClass        = applicationJavaClass,
+				GenerateOnCreateOverrides   = true,
+				MonoRuntimeInitialization   = monoRuntimeInit,
 			};
 			var o   = new StringWriter ();
 			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
@@ -488,6 +496,92 @@ public class ExportsThrowsConstructors
 			refList.clear ();
 	}
 }
+";
+			Assert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public void GenerateActivity ()
+		{
+			var actual = Generate (typeof (ExampleActivity));
+			var expected = @"package my;
+
+
+public class ExampleActivity
+	extends android.app.Activity
+	implements
+		mono.android.IGCUserPeer
+{
+/** @hide */
+	public static final String __md_methods;
+	static {
+		__md_methods = 
+			"""";
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExampleActivity, Java.Interop.Tools.JavaCallableWrappers-Tests"", ExampleActivity.class, __md_methods);
+	}
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void monodroidClearReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+}
+";
+			Assert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public void GenerateInstrumentation ()
+		{
+			var init = "mono.MonoPackageManager.LoadApplication (context, context.getApplicationInfo (), new String[]{context.getApplicationInfo ().sourceDir});";
+			var actual = Generate (typeof (ExampleInstrumentation), monoRuntimeInit: init);
+			var expected = $@"package my;
+
+
+public class ExampleInstrumentation
+	extends android.app.Instrumentation
+	implements
+		mono.android.IGCUserPeer
+{{
+/** @hide */
+	public static final String __md_methods;
+	static {{
+		__md_methods = 
+			"""";
+	}}
+
+	public void onCreate (android.os.Bundle arguments)
+	{{
+		android.content.Context context = getContext ();
+
+{init}
+
+		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExampleInstrumentation, Java.Interop.Tools.JavaCallableWrappers-Tests"", ExampleInstrumentation.class, __md_methods);
+		super.onCreate (arguments);
+	}}
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}}
+
+	public void monodroidClearReferences ()
+	{{
+		if (refList != null)
+			refList.clear ();
+	}}
+}}
 ";
 			Assert.AreEqual (expected, actual);
 		}

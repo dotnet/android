@@ -65,11 +65,18 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		public  string          ApplicationJavaClass            { get; set; }
 
-		public bool UseSharedRuntime;
-
 		public bool GenerateOnCreateOverrides { get; set; }
 
 		public bool HasExport { get; private set; }
+
+		/// <summary>
+		/// The Java source code to be included in Instrumentation.onCreate
+		/// 
+		/// Originally came from MonoRuntimeProvider.java delimited by:
+		/// // Mono Runtime Initialization {{{
+		/// // }}}
+		/// </summary>
+		public string MonoRuntimeInitialization { get; set; }
 
 		public string Name {
 			get { return name; }
@@ -837,21 +844,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t\tandroid.content.Context context = getContext ();");
 			sw.WriteLine ();
 
-			using (var app = new StreamReader (
-						Assembly.GetExecutingAssembly ().GetManifestResourceStream (
-							UseSharedRuntime
-							? "MonoRuntimeProvider.Shared.java"
-							: "MonoRuntimeProvider.Bundled.java"))) {
-				bool copy = false;
-				string line;
-				while ((line = app.ReadLine ()) != null) {
-					if (string.CompareOrdinal ("\t\t// Mono Runtime Initialization {{{", line) == 0)
-						copy = true;
-					if (copy)
-						sw.WriteLine (line);
-					if (string.CompareOrdinal ("\t\t// }}}", line) == 0)
-						copy = false;
-				}
+			if (!string.IsNullOrEmpty (MonoRuntimeInitialization)) {
+				sw.WriteLine (MonoRuntimeInitialization);
+				sw.WriteLine ();
 			}
 
 			extra (sw);

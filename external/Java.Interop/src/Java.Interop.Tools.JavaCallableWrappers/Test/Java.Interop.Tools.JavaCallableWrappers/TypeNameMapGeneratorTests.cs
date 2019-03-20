@@ -44,7 +44,8 @@ namespace Xamarin.Android.ToolsTests
 		[Test]
 		public void WriteJavaToManaged ()
 		{
-			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logger: Diagnostic.CreateConsoleLogger ());
+			var types = SupportDeclarations.GetTestTypeDefinitions ();
+			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger ());
 			var o = new MemoryStream ();
 			v.WriteJavaToManaged (o);
 			var a = ToArray (o);
@@ -53,7 +54,7 @@ namespace Xamarin.Android.ToolsTests
 			var offset = 90;
 			var e =
 				"version=1\u0000" +
-				"entry-count=18\u0000" +
+				$"entry-count={types.Count - 1}\u0000" +
 				"entry-len=" + length + "\u0000" +
 				"value-offset=" + offset + "\u0000" +
 				GetJ2MEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
@@ -66,6 +67,8 @@ namespace Xamarin.Android.ToolsTests
 				GetJ2MEntryLine (typeof (ExampleOuterClass),                        "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass",                                        offset, length) +
 				GetJ2MEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
 				GetJ2MEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
+				GetJ2MEntryLine (typeof (ExampleActivity),                          "my/ExampleActivity",                                                                           offset, length) +
+				GetJ2MEntryLine (typeof (ExampleInstrumentation),                   "my/ExampleInstrumentation",                                                                    offset, length) +
 				GetJ2MEntryLine (typeof (ProviderName),                             "provider/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ReceiverName),                             "receiver/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (RegisterName),                             "register/Name",                                                                                offset, length) +
@@ -119,7 +122,8 @@ namespace Xamarin.Android.ToolsTests
 		[Test]
 		public void WriteManagedToJava ()
 		{
-			var v = new TypeNameMapGenerator (SupportDeclarations.GetTestTypeDefinitions (), logger: Diagnostic.CreateConsoleLogger ());
+			var types = SupportDeclarations.GetTestTypeDefinitions ();
+			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger ());
 			var o = new MemoryStream ();
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);
@@ -128,7 +132,7 @@ namespace Xamarin.Android.ToolsTests
 			var offset = 114;
 			var e =
 				"version=1\u0000" +
-				"entry-count=19\u0000" +
+				$"entry-count={types.Count}\u0000" +
 				"entry-len=" + length + "\u0000" +
 				"value-offset=" + offset + "\u0000" +
 				GetM2JEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
@@ -139,6 +143,8 @@ namespace Xamarin.Android.ToolsTests
 				GetM2JEntryLine (typeof (DefaultName.A),                            "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_A",                                            offset, length) +
 				GetM2JEntryLine (typeof (DefaultName.C.D),                          "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName_C_D",                                          offset, length) +
 				GetM2JEntryLine (typeof (DefaultName),                              "md5f43cdfade412ae71b21bb70a5c2841ab/DefaultName",                                              offset, length) +
+				GetM2JEntryLine (typeof (ExampleActivity),                          "my/ExampleActivity",                                                                           offset, length) +
+				GetM2JEntryLine (typeof (ExampleInstrumentation),                   "my/ExampleInstrumentation",                                                                    offset, length) +
 				GetM2JEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",    offset, length) +
 				GetM2JEntryLine (typeof (ExampleOuterClass),                        "md5f43cdfade412ae71b21bb70a5c2841ab/ExampleOuterClass",                                        offset, length) +
 				GetM2JEntryLine (typeof (InstrumentationName),                      "instrumentation/Name",                                                                         offset, length) +
