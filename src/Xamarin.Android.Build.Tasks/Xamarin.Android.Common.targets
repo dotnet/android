@@ -213,6 +213,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
 
 	<!-- Ahead-of-time compilation properties -->
+	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
@@ -564,6 +565,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
     _CompileDex;
+    $(_AfterCompileDex);
     $(_PostBuildTargets)
   </BuildDependsOn>
 </PropertyGroup>
@@ -589,6 +591,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_BeforeIncrementalClean Condition=" '$(AndroidApplication)' == 'True' ">
     _PrepareAssemblies;
     _CompileDex;
+    $(_AfterCompileDex);
     _AddFilesToFileWrites;
   </_BeforeIncrementalClean>
   <_BeforeIncrementalClean Condition=" '$(AndroidApplication)' != 'True' ">
@@ -1830,6 +1833,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="PackageForAndroid"
 	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_CopyPackage" />
 	
+<Target Name="_CheckForObsoleteAssemblies">
+	<PropertyGroup>
+		<_ObsoleteAssemblies>@(ResolvedFrameworkAssemblies)</_ObsoleteAssemblies>
+	</PropertyGroup>
+	<Warning Code="XA1009" Text="OpenTK 0.9.3 is Obsolete. Please upgrade to OpenTK 1.0"
+			Condition="$(_ObsoleteAssemblies.Contains('OpenTK.dll'))" />
+</Target>
+
 <Target Name="_ResolveAssemblies">
 	<!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
 	<ItemGroup>
@@ -2131,6 +2142,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_PrepareAssembliesDependsOnTargets>
 		_ResolveAssemblies
+		;_CheckForObsoleteAssemblies
 		;_ResolveSatellitePaths
 		;_CreatePackageWorkspace
 		;_CopyIntermediateAssemblies
@@ -2834,12 +2846,19 @@ because xbuild doesn't support framework reference assemblies.
 	</_BuildApkEmbedInputs>
 </PropertyGroup>
 
+<ItemGroup>
+  <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)\profile-startup.aot" />
+</ItemGroup>
+
 <Target Name="_BuildApkEmbed"
   DependsOnTargets="_PrepareBuildApk"
   Inputs="$(_BuildApkEmbedInputs)"
   Outputs="$(ApkFileIntermediate)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
+  <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
+    <_AotProfiles Include="@(AndroidAotProfiles)" />
+  </ItemGroup>
   <Aot
 	Condition="'$(AotAssemblies)' == 'True'"
 	AndroidAotMode="$(AndroidAotMode)"
@@ -2855,7 +2874,8 @@ because xbuild doesn't support framework reference assemblies.
 	LinkMode="$(AndroidLinkMode)"
 	AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
 	YieldDuringToolExecution="$(YieldDuringToolExecution)"
-	EnableLLVM="$(EnableLLVM)">
+	EnableLLVM="$(EnableLLVM)"
+	Profiles="@(_AotProfiles)">
 	   <Output TaskParameter="NativeLibrariesReferences" ItemName="_AdditionalNativeLibraryReferences" />
   </Aot>
 

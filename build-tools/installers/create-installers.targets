@@ -116,6 +116,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')" />
@@ -141,6 +142,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.html" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\profile-startup.aot" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool-all-$(XABundleToolVersion).jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
@@ -177,7 +179,6 @@
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.DefaultOutputPaths.targets" />
   </ItemGroup>
   <ItemGroup>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\jit-times.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />

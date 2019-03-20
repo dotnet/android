@@ -627,6 +627,9 @@
     <None Include="updateinfo.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="profile-startup.aot">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -649,6 +652,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\MonoPackageManager.java">
       <LogicalName>MonoPackageManager.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
+      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
+      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Seppuku.java">
       <LogicalName>Seppuku.java</LogicalName>
