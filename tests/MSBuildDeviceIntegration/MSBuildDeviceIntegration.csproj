@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{16DB2680-399B-4111-AA26-6CDBBFA334D8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
+    <AssemblyName>MSBuildDeviceIntegration</AssemblyName>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\TestDebug\MSBuildDeviceIntegration</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\TestRelease\MSBuildDeviceIntegration</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime">
+      <HintPath>..\..\packages\NodaTime.2.4.5\lib\net45\NodaTime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+    <ItemGroup>
+    <Compile Include="..\..\bin\Test$(CONFIGURATION)\XABuildPaths.cs">
+      <Link>XABuildPaths.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
+        <Link>Utilities\DeviceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BuildHelper.cs">
+        <Link>Utilities\BuildHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BaseTest.cs">
+        <Link>Utilities\BaseTest.cs</Link>
+    </Compile>
+    <Compile Include="Tests/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
+      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
+      <Name>Xamarin.ProjectTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">
+      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
+      <Name>libZipSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj">
+      <Project>{DE40756E-57F6-4AF2-B155-55E3A88CCED8}</Project>
+      <Name>Mono.Debugging.Soft</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj">
+      <Project>{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}</Project>
+      <Name>Mono.Debugger.Soft</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj">
+      <Project>{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}</Project>
+      <Name>Mono.Debugging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
+      <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
+      <Name>ICSharpCode.NRefactory</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="MSBuildDeviceIntegration.targets" />
+</Project>

@@ -13,5 +13,10 @@ namespace ${ROOT_NAMESPACE}
 		{
 			InitializeComponent ();
 		}
+
+		public void Button_Clicked (object sender, EventArgs e)
+		{
+			Console.WriteLine ("Button was Clicked!");
+		}
 	}
 }

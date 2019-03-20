@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputPath>$(MSBuildThisFileDirectory)..\bin\Test$(Configuration)\</OutputPath>
+    <_TopDir>$(MSBuildThisFileDirectory)..</_TopDir>
   </PropertyGroup>
   <Import Project="..\Configuration.props" />
   <!--
@@ -31,10 +32,45 @@
     </_ApkTests>
   </ItemGroup>
 
+  <ItemGroup>
+    <_DeviceTestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\MSBuildDeviceIntegration\MSBuildDeviceIntegration.dll" />
+  </ItemGroup>
+
+  <Target Name="RunNUnitDeviceTests">
+    <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
+    <ItemGroup>
+      <NUnitTarget Include="@(_DeviceTestAssembly)">
+         <TestFilename>%(_DeviceTestAssembly.Filename)</TestFilename>
+         <NUnitOutput Condition=" '$(HostOS)' != 'Windows' " >| tee &quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
+         <NUnitOutput Condition=" '$(HostOS)' == 'Windows'  ">--output=&quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
+      </NUnitTarget>
+    </ItemGroup>
+    <Exec
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml;format=nunit2&quot; %(NUnitTarget.NUnitOutput)"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="true"
+        ContinueOnError="ErrorAndContinue"
+    />
+    <ItemGroup>
+      <_RenameNUnitTestCasesGlob Include="@(NUnitTarget->'$(_TopDir)\TestResult-%(TestFilename).xml')" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_RenamedTestCases>@(_RenameNUnitTestCasesGlob)</_RenamedTestCases>
+    </PropertyGroup>
+    <MSBuild
+        Condition=" '$(_RenamedTestCases)' != '' "
+        ContinueOnError="ErrorAndContinue"
+        Projects="..\build-tools\scripts\TestApks.targets"
+        Targets="RenameTestCases"
+        Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
+    />
+  </Target>
+
   <PropertyGroup>
     <RunApkTestsDependsOn>
       FilterApkTests;
       AcquireAndroidTarget;
+      RunNUnitDeviceTests;
       UndeployTestApks;
       DeployTestApks;
       DeployTestAabs;
