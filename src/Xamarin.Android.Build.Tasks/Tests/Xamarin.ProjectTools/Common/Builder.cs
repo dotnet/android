@@ -352,8 +352,12 @@ namespace Xamarin.ProjectTools
 
 		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true)
 		{
+			var projectDir = Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution)));
+			var nugetDir = Path.Combine (projectDir, ".nuget");
+			var xamarinBuildDownloadDir = Path.Combine (projectDir, "xbd") + Path.DirectorySeparatorChar;
+
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
-				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
+				? Path.Combine (projectDir, BuildLogFile)
 				: null;
 			string processLog = !string.IsNullOrEmpty (BuildLogFile)
 				? Path.Combine (Path.GetDirectoryName (buildLogFullPath), "process.log")
@@ -382,11 +386,12 @@ namespace Xamarin.ProjectTools
 					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
 				if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
-					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
+					sw.WriteLine ($" /p:AndroidSdkDirectory=\"{EscapeForResponseFile (AndroidSdkDirectory)}\" ");
 				}
 				if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
-					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
+					sw.WriteLine ($" /p:AndroidNdkDirectory=\"{EscapeForResponseFile (AndroidNdkDirectory)}\" ");
 				}
+				sw.WriteLine ($" /p:XamarinBuildDownloadDir=\"{EscapeForResponseFile (xamarinBuildDownloadDir)}\" ");
 				if (parameters != null) {
 					foreach (var param in parameters) {
 						sw.WriteLine (" /p:{0}", param);
@@ -398,8 +403,9 @@ namespace Xamarin.ProjectTools
 				}
 				if (RunningMSBuild) {
 					psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-					sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+					sw.WriteLine ($" /bl:\"{EscapeForResponseFile (Path.Combine (projectDir, "msbuild.binlog"))}\"");
 				}
+				psi.EnvironmentVariables ["NUGET_PACKAGES"] = nugetDir;
 				if (environmentVariables != null) {
 					foreach (var kvp in environmentVariables) {
 						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
@@ -517,6 +523,8 @@ namespace Xamarin.ProjectTools
 
 			return result;
 		}
+
+		string EscapeForResponseFile (string path) => IsUnix ? path : path.Replace (@"\", @"\\");
 
 		bool IsRunningInIDE {
 			get {

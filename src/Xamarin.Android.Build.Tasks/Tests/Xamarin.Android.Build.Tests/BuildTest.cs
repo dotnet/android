@@ -120,7 +120,6 @@ class MemTest {
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
 			var target = "ConvertResourcesCases";
@@ -405,7 +404,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
 			var start = DateTime.UtcNow.AddSeconds (-1);
@@ -1861,7 +1859,6 @@ namespace App1
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
 			var dll = new XamarinAndroidLibraryProject () {
@@ -2569,7 +2566,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		//This test validates the _CleanIntermediateIfNuGetsChange target
 		[Test]
-		[NonParallelizable]
 		public void BuildAfterUpgradingNuget ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2621,7 +2617,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void CompileBeforeUpgradingNuGet ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3125,7 +3120,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void BuildAMassiveApp()
 		{
 			var testPath = Path.Combine("temp", "BuildAMassiveApp");
