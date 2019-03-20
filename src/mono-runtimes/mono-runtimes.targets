@@ -65,6 +65,7 @@
   <Import Project="ProfileAssemblies.projitems" />
   <ItemGroup>
     <_BclAssembly Include="@(MonoProfileAssembly)" />
+    <_BclExcludeDebugSymbols  Include="System.Runtime.CompilerServices.Unsafe.dll" />
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
     <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
@@ -81,11 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <_BclProfileItems Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity)')" />
-    <_BclProfileItems
-        Condition=" '$(_DebugFileExt)' == '.mdb' "
-        Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Identity).mdb')"
-        Exclude="@(_BclExcludeDebugSymbols->'$(_MonoProfileDir)\%(Identity).mdb')"
-    />
     <_BclProfileItems
         Condition=" '$(_DebugFileExt)' == '.pdb' "
         Include="@(_BclAssembly->'$(_MonoProfileDir)\%(Filename).pdb')"
@@ -288,7 +284,7 @@
           Include="@(_MonoRuntime->'$(_OutputIncludeDir)%(Identity)\eglib\eglib-config.h')"
       />
       <_MonoConstsSource
-          Include="$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid\Consts.cs"
+          Include="$(_MonoProfileDir)\Consts.cs"
       />
       <_MonoConstsOutput
           Include="$(_OutputIncludeDir)Consts.cs"
@@ -356,34 +352,26 @@
       <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
+      <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
+      <_BclTestSatelliteAssemblyDest    Include="@(MonoTestSatelliteAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
         DestinationFolder="$(XAInstallPrefix)\..\..\bcl-tests"
     />
+    <Copy
+        SourceFiles="@(_BclTestSatelliteAssemblySource)"
+        DestinationFiles="@(_BclTestSatelliteAssemblyDest)"
+    />
     <Touch
         Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)')"
     />
-    <ItemGroup>
-      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" />
-      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.cs" />
-      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\.gitattributes" />
-      <_BclTestContentDest  Include="@(_BclTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\Test\%(RecursiveDir)%(Filename)%(Extension)')" />
-    </ItemGroup>
     <ItemGroup>
       <_ZipTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression.FileSystem\foo\**\*.*" />
       <_ZipTestContentDest  Include="@(_ZipTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\foo\%(RecursiveDir)%(Filename)%(Extension)')" />
       <_BclTestContent      Include="@(_ZipTestContent)" />
       <_BclTestContentDest  Include="@(_ZipTestContentDest)" />
     </ItemGroup>
-    <Copy
-        SourceFiles="@(_BclTestContent)"
-        DestinationFiles="@(_BclTestContentDest)"
-    />
-    <Exec
-        Condition="!Exists('$(XAInstallPrefix)\..\..\bcl-tests\Test\test.db')"
-        Command="sqlite3 &quot;$(XAInstallPrefix)\..\..\bcl-tests\Test\test.db&quot; &lt; &quot;$(MonoSourceFullPath)\mcs\class\Mono.Data.Sqlite\Test\test.sql&quot;"
-    />
     <Exec
         Command="zip -r bcl-tests.zip ."
         WorkingDirectory="$(XAInstallPrefix)\..\..\bcl-tests"
