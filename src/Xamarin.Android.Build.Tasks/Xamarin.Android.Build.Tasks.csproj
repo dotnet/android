@@ -653,6 +653,12 @@
     <EmbeddedResource Include="Resources\MonoPackageManager.java">
       <LogicalName>MonoPackageManager.java</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
+      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
+      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Seppuku.java">
       <LogicalName>Seppuku.java</LogicalName>
     </EmbeddedResource>
