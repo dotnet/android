@@ -15,6 +15,7 @@ create-pkg:
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
 		$(if $(PKG_LICENSE_EN),/p:PkgLicenseSrcEn="$(PKG_LICENSE_EN)") \
 		$(if $(PKG_OUTPUT_PATH),/p:PkgProductOutputPath="$(PKG_OUTPUT_PATH)") \
+		$(if $(USE_COMMERCIAL_NAME),/p:UseCommercialInstallerName="$(USE_COMMERCIAL_NAME)") \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 create-vsix:
@@ -28,6 +29,7 @@ create-vsix:
 		$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
 		$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") \
+		$(if $(USE_COMMERCIAL_NAME),/p:UseCommercialInstallerName="$(USE_COMMERCIAL_NAME)") \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 package-oss-name:

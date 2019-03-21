@@ -86,6 +86,7 @@
   <Target Name="_GetVsixPath"
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
+      <VsixPath Condition=" '$(UseCommercialInstallerName)' == 'True' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-$(XAVersion).vsix</VsixPath>
       <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-$(XAOSSInstallerSuffix).vsix</VsixPath>
       <_VsixDir>$([System.IO.Path]::GetDirectoryName ($(VsixPath)))</_VsixDir>
     </PropertyGroup>

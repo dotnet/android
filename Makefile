@@ -213,7 +213,10 @@ prepare-commercial: prepare-external-git-dependencies
 	cd $(EXTERNAL_GIT_PATH)/monodroid && ./configure --with-xamarin-android='$(XA_PATH)'
 
 commercial:
-	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-minimal XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
+	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-xa XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
+
+commercial-installers:
+	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-xa-installers XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
 
 run-all-tests:
 	@echo "PRINTING MONO VERSION"

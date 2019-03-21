@@ -16,6 +16,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <IncludeMonoBundleComponents Condition="'$(IncludeMonoBuildComponents)' == ''">True</IncludeMonoBundleComponents>
+    <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
   </PropertyGroup>
   <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\AndroidApiInfo.xml" />
