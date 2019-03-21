@@ -268,10 +268,6 @@ namespace Xamarin.Android.Tasks
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
-			
-			// Create NotifyTimeZoneChanges java sources.
-			string notifyTimeZoneChangesFile = "NotifyTimeZoneChanges.java";
-			SaveResource (notifyTimeZoneChangesFile, notifyTimeZoneChangesFile, real_app_dir, template => template);
 		}
 
 		string GetResource (string resource)

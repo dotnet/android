@@ -33,13 +33,6 @@ namespace Xamarin.Android.Build.Tests
 		static object [] EmbeddedResources = new object [] {
 			new object[] { "machine.config" },
 			new object[] { "MonoRuntimeProvider.Bundled.java" },
-			new object[] { "NotifyTimeZoneChanges.java" },
-			new object[] { "Seppuku.java" },
-			new object[] { "IncrementalClassLoader.java" },
-			new object[] { "MultiDexLoader.java" },
-			new object[] { "Placeholder.java" },
-	    		new object[] { "ResourcePatcher.java" },
-			new object[] { "MonkeyPatcher.java" },
 		};
 
 		[Test]
