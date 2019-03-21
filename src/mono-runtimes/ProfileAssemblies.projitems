@@ -163,7 +163,6 @@
     <MonoProfileAssembly Include="Mono.Posix.dll" />
     <MonoProfileAssembly Include="Mono.Security.dll" />
     <MonoProfileAssembly Include="mscorlib.dll" />
-    <MonoProfileAssembly Include="nunitlite.dll" />
     <MonoProfileAssembly Include="System.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.Composition.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.DataAnnotations.dll" />
@@ -211,29 +210,37 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.West_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_Microsoft.CSharp_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_Mono.CSharp_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.Data.Sqlite_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.Data.Tds_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_Mono.Posix_test.dll">
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_Mono.Security_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.ComponentModel.Composition_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.ComponentModel.DataAnnotations_test.dll">
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Core_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Core_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Data_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Data_xunit-test.dll">
@@ -245,9 +252,11 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Json_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Json_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Net.Http_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Numerics_test.dll">
@@ -255,11 +264,14 @@
     <MonoTestAssembly Include="monodroid_System.Numerics_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Runtime.CompilerServices.Unsafe_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
@@ -268,29 +280,40 @@
     <MonoTestAssembly Include="monodroid_System.Security_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.ServiceModel.Web_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.ServiceModel_test.dll">
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Transactions_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Web.Services_test.dll">
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System.Xml_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System.Xml_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
     <MonoTestAssembly Include="monodroid_System_test.dll">
     </MonoTestAssembly>
+    <!--
     <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+      -->
   </ItemGroup>
   <!-- Manual fixups -->
   <ItemGroup>
