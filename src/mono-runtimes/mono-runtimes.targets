@@ -299,7 +299,7 @@
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
     <DownloadUri
-        SourceUris="https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/$(_MonoArchiveName).zip"
+        SourceUris="https://xamjenkinsartifact.azureedge.net/mono-sdks/$(_MonoArchiveName).zip"
         DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         ContinueOnError="True"
     />
