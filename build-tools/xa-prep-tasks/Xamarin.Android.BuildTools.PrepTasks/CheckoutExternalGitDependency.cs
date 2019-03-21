@@ -9,8 +9,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Required]
 		public ITaskItem ExternalGitDependency { get; set; }
 
-		public bool ShouldCleanDependency { get; set; } = true;
-
 		protected override bool LogTaskMessages {
 			get { return false; }
 		}
@@ -31,9 +29,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 			WorkingDirectory.ItemSpec = destination;
-			if (ShouldCleanDependency) {
-				Clean ();
-			}
 			Fetch ();
 			CheckoutCommit ();
 
@@ -56,12 +51,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		void Fetch ()
 		{
 			Arguments = $"fetch --all --no-recurse-submodules --progress";
-			base.Execute ();
-		}
-
-		void Clean ()
-		{
-			Arguments = $"clean -xfd";
 			base.Execute ();
 		}
 

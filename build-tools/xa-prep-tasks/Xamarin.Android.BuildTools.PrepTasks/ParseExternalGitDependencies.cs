@@ -20,9 +20,23 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Output]
 		public ITaskItem[] ExternalGitDependencies { get; set; }
 
-		static readonly Regex externalRegex = new Regex (
-			@"^(?<comment>\#\s*)?(?<owner>.*)\/(?<repo>.*):(?<branch>.*)@(?<commit>.*)$",
-			RegexOptions.Compiled);
+		static readonly Regex externalRegex = new Regex (@"
+^
+\s*
+(?<comment>\#.*)
+|
+(
+  \s*
+  (?<owner>[^/]+)
+  /
+  (?<repo>[^:]+)
+  :
+  (?<branch>[^@]+)
+  @
+  (?<commit>.*)
+)
+$
+", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 
 		public override bool Execute ()
 		{

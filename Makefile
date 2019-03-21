@@ -208,10 +208,12 @@ prepare-external-git-dependencies:
 	$(call MSBUILD_BINLOG,prep-tasks) build-tools/xa-prep-tasks/xa-prep-tasks.csproj
 	$(call MSBUILD_BINLOG,external-checkout) build-tools/xa-prep-tasks/xa-prep-tasks.csproj \
 		/t:CheckoutExternalGitSources /p:ExternalSourceDependencyDirectory='$(EXTERNAL_GIT_PATH)'
-	cd $(MONODROID_PATH) && ./configure --with-xamarin-android='$(XA_PATH)'
+
+prepare-commercial: prepare-external-git-dependencies
+	cd $(EXTERNAL_GIT_PATH)/monodroid && ./configure --with-xamarin-android='$(XA_PATH)'
 
 commercial:
-	make -C $(MONODROID_PATH) commercial-minimal XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
+	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-minimal XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
 
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
