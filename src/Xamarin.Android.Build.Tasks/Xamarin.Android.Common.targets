@@ -487,9 +487,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </AppendCustomMetadataToItemGroup>
   <ItemGroup>
     <_ReferencePath Include="@(ReferencePath)"
-      Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)" />
+        Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)" />
     <_ReferenceDependencyPaths Include="@(ReferenceDependencyPaths)"
-      Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)"/>
+        Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)"/>
   </ItemGroup>
 </Target>
 
