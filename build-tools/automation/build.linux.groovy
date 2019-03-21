@@ -122,7 +122,7 @@ timestamps {
         }
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            if (isPr && env.BuildFlavor == 'Debug') {
+            if (isPr) {
                 echo "Skipping package publishing for PR builds"
                 return
             }
