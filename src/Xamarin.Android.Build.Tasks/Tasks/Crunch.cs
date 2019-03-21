@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run ( () => {
 					DoExecute ();
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
+				CancellationToken = CancellationToken,
 				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
@@ -177,7 +177,7 @@ namespace Xamarin.Android.Tasks
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
-			Token.Register (() => {
+			CancellationToken.Register (() => {
 				try {
 					proc.Kill ();
 				}

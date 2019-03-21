@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks {
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => {
+				CancellationToken.Register (() => {
 					try {
 						proc.Kill ();
 					} catch (Exception) {

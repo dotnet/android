@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 					using (var resolver = new MetadataResolver ()) {
 						Execute (resolver);
 					}
-				}, Token).ContinueWith (Complete);
+				}, CancellationToken).ContinueWith (Complete);
 				return base.Execute ();
 			} finally {
 				Reacquire ();

@@ -438,7 +438,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-			}, Token).ContinueWith (Complete);
+			}, CancellationToken).ContinueWith (Complete);
 
 			var result = base.Execute ();
 

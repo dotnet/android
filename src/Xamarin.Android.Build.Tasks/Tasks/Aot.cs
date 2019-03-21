@@ -263,7 +263,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run ( () => {
 					return RunParallelAotCompiler (nativeLibs);
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -287,7 +287,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = Token,
+					CancellationToken = CancellationToken,
 					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 				};
 
@@ -518,7 +518,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
+				CancellationToken.Register (() => { try { proc.Kill (); } catch (Exception) { } });
 				proc.WaitForExit ();
 				if (psi.RedirectStandardError)
 					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));

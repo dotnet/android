@@ -198,12 +198,12 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ($"Generating binding code in parallel (threshold of {CalculateLayoutCodeBehind.ParallelGenerationThreshold} layouts met)");
 				var fileSet = new ConcurrentBag <string> ();
                                 TPL.ParallelOptions options = new TPL.ParallelOptions {
-                                        CancellationToken = Token,
+                                        CancellationToken = CancellationToken,
                                         TaskScheduler = TPL.TaskScheduler.Default,
                                 };
 				TPL.Task.Factory.StartNew (
 					() => TPL.Parallel.ForEach (layoutGroups, options, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath))),
-					Token,
+					CancellationToken,
 					TPL.TaskCreationOptions.None,
 					TPL.TaskScheduler.Default
 				).ContinueWith (t => Complete ());
