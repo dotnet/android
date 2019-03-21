@@ -7,9 +7,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.BuildTools.PrepTasks
+namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class JdkInfo : Task
 	{
@@ -40,7 +39,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				} else {
 					maxVersion = new Version (MaxJdkVersion);
 				}
-				
+
 				var defaultJdk = new [] { new Tools.JdkInfo (androidSdk.JavaSdkPath) };
 				var jdk = defaultJdk.Concat (Tools.JdkInfo.GetKnownSystemJdkInfos (logger))
 					.Where (j => maxVersion != null ? j.Version <= maxVersion : true)

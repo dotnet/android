@@ -6,7 +6,7 @@
     <_NuGet>.nuget\NuGet.exe</_NuGet>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.JdkInfo" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Target Name="Prepare">
     <Error
@@ -20,6 +20,7 @@
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\LibZipSharp\libZipSharp.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\xamarin-android-tools\Xamarin.Android.Tools.sln" WorkingDirectory="$(_TopDir)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj" />
     <MSBuild Projects="tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj" Targets="Restore" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
     <!--NOTE: need to restore test sln *after* android-toolchain has the Android SDK in place-->
