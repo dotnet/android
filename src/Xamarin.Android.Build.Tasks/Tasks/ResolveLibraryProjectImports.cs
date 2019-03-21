@@ -45,8 +45,6 @@ namespace Xamarin.Android.Tasks
 
 		public string CacheFile { get; set; }
 
-		public string [] AssembliesToSkipCases { get; set; }
-
 		[Required]
 		public bool DesignTimeBuild { get; set; }
 
@@ -89,7 +87,11 @@ namespace Xamarin.Android.Tasks
 			var resolvedEnvironmentFiles      = new List<string> ();
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
-			assembliesToSkip = new HashSet<string> (AssembliesToSkipCases ?? new string [0], StringComparer.OrdinalIgnoreCase);
+			assembliesToSkip = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			foreach (var asm in Assemblies) {
+				if (string.Compare (asm.GetMetadata (SkipAndroidResourceProcessing), bool.TrueString, StringComparison.OrdinalIgnoreCase) == 0)
+					assembliesToSkip.Add (asm.ItemSpec);
+			}
 
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				try {
