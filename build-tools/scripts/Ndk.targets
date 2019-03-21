@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AndroidNdkVersion Condition=" '$(AndroidNdkVersion)' == '' ">19b</AndroidNdkVersion>
+    <AndroidNdkVersion Condition=" '$(AndroidNdkVersion)' == '' ">19c</AndroidNdkVersion>
     <AndroidNdkApiLevel_ArmV7a Condition=" '$(AndroidNdkApiLevel_ArmV7a)' == '' ">16</AndroidNdkApiLevel_ArmV7a>
     <AndroidNdkApiLevel_ArmV8a Condition=" '$(AndroidNdkApiLevel_ArmV8a)' == '' ">21</AndroidNdkApiLevel_ArmV8a>
     <AndroidNdkApiLevel_X86 Condition=" '$(AndroidNdkApiLevel_X86)' == '' ">16</AndroidNdkApiLevel_X86>
