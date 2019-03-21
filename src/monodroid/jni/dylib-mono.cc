@@ -148,6 +148,7 @@ bool DylibMono::init (void *libmono_handle)
 	LOAD_SYMBOL(mono_profiler_set_jit_failed_callback)
 	LOAD_SYMBOL(mono_profiler_set_thread_started_callback)
 	LOAD_SYMBOL(mono_profiler_set_thread_stopped_callback)
+	LOAD_SYMBOL(mono_add_internal_call_with_flags)
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
