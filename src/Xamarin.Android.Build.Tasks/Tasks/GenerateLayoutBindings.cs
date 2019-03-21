@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 using TPL = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {

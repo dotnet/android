@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {

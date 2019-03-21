@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using Xamarin.Android.Tools;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {

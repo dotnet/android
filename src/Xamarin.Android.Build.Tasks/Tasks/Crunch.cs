@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
 using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {

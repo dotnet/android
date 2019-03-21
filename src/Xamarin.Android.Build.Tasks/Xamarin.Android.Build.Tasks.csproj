@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -100,6 +101,18 @@
     </Reference>
     <Reference Include="NuGet.ProjectModel">
       <HintPath>..\..\packages\NuGet.ProjectModel.4.6.0\lib\net46\NuGet.ProjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework">
+      <HintPath>..\..\packages\Microsoft.Build.Framework.14.3.0\lib\net45\Microsoft.Build.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.Core">
+      <HintPath>..\..\packages\Microsoft.Build.Utilities.Core.14.3.0\lib\net45\Microsoft.Build.Utilities.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Tasks.Core">
+      <HintPath>..\..\packages\Microsoft.Build.Tasks.Core.14.3.0\lib\net45\Microsoft.Build.Tasks.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Build.AsyncTask">
+      <HintPath>..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -451,7 +464,6 @@
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
-    <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
     <Compile Include="Utilities\AndroidResource.cs">
@@ -585,7 +597,6 @@
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
-    <Compile Include="Tasks\CancelableTask.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
     <Compile Include="Tasks\CheckGoogleSdkRequirements.cs" />
     <None Include="Resources\desugar_deploy.jar">
