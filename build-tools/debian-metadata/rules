@@ -18,6 +18,8 @@ override_dh_install:
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/cross-*.exe*
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/llc.exe
 	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/opt.exe
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/aapt2.exe
+	rm -f bin/*/lib/xamarin.android/xbuild/Xamarin/Android/libwinpthread-1.dll
 
 	dh_install
 
@@ -28,7 +30,7 @@ override_dh_clideps:
 		--exclude-moduleref=dbghelp.dll \
 		--exclude-moduleref=fusion \
 		--exclude-moduleref=fusion.dll \
-		--exclude-moduleref=libwinpthread-1.dll \
+		--exclude-moduleref=java-interop \
 		--exclude-moduleref=lzo.dll \
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=mscorwks.dll \
