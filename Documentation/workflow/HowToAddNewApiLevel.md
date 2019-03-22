@@ -93,3 +93,16 @@ Enumification work can be delayed and only the final API has to be enumified.
 Note that there are documented and undocumented XML nodes, and we don't have to deal with undocumented ones.
 
 Android P introduced no documented XML artifact.
+
+7) Update Android Tooling Versions
+
+These sre located in [Xamarin.Android.Common.props.in](../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props.in). The following MSBuild properties need to be updated to ensure 
+the latest tool versions are being used.
+
+`AndroidSdkBuildToolsVersion`
+`AndroidSdkPlatformToolsVersion`
+`AndroidSdkToolsVersion`
+
+The major version should match the new API level. For Android P this will be 28.x.x . If a version which exactly matches the API Level is not available then the latest version should be used.
+
+
