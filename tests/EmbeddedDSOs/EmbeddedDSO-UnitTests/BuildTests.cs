@@ -66,7 +66,7 @@ namespace EmbeddedDSOUnitTests
 			};
 		}
 
-		[TestFixtureSetUp]
+		[SetUp]
 		public void BuildProject ()
 		{
 			testProjectPath = PrepareProject (ProjectName);
