@@ -83,7 +83,7 @@ _MSBUILD_ARGS	= \
 .PHONY: leeroy jenkins leeroy-all opentk-jcw framework-assemblies
 .PHONY: create-vsix
 
-jenkins: prepare leeroy $(ZIP_OUTPUT)
+jenkins:: prepare leeroy $(ZIP_OUTPUT)
 
 leeroy: leeroy-all framework-assemblies opentk-jcw
 

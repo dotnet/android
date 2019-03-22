@@ -202,21 +202,16 @@ THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,False,False))
 $(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
 
+# Used by External XA Build
+EXTERNAL_XA_PATH=$(topdir)
 EXTERNAL_GIT_PATH=$(topdir)/external
-XA_PATH=$(topdir)
+
 prepare-external-git-dependencies:
-	$(call MSBUILD_BINLOG,prep-tasks) build-tools/xa-prep-tasks/xa-prep-tasks.csproj
-	$(call MSBUILD_BINLOG,external-checkout) build-tools/xa-prep-tasks/xa-prep-tasks.csproj \
+	$(call MSBUILD_BINLOG,prep-external-tasks) build-tools/xa-prep-tasks/xa-prep-tasks.csproj
+	$(call MSBUILD_BINLOG,prep-external-checkout) build-tools/xa-prep-tasks/xa-prep-tasks.csproj \
 		/t:CheckoutExternalGitSources /p:ExternalSourceDependencyDirectory='$(EXTERNAL_GIT_PATH)'
 
-prepare-commercial: prepare-external-git-dependencies
-	cd $(EXTERNAL_GIT_PATH)/monodroid && ./configure --with-xamarin-android='$(XA_PATH)'
-
-commercial:
-	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-xa XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
-
-commercial-installers:
-	make -C $(EXTERNAL_GIT_PATH)/monodroid commercial-xa-installers XA_TOP_SOURCE_DIRECTORY='$(XA_PATH)' CONFIGURATION=$(CONFIGURATION)
+-include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
 
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
