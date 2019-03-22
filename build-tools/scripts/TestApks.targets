@@ -184,7 +184,7 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
-      <_LogcatFilenameBase>logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
+      <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"

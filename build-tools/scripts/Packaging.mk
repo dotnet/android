@@ -73,8 +73,9 @@ package-deb: $(ZIP_OUTPUT)
 _TEST_RESULTS_BUNDLE_INCLUDE = \
 	$(wildcard TestResult-*.xml) \
 	$(wildcard bin/Test$(CONFIGURATION)/compatibility) \
-	$(wildcard bin/Test$(CONFIGURATION)/temp) \
+	$(wildcard bin/Test$(CONFIGURATION)/logcat*) \
 	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
+	$(wildcard bin/Test$(CONFIGURATION)/temp) \
 	$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt) \
 	$(wildcard bin/Test$(CONFIGURATION)/Timing_*) \
 	$(wildcard *.csv)
@@ -95,8 +96,7 @@ _BUILD_STATUS_BUNDLE_INCLUDE = \
 	$(shell find . -name 'CMakeCache.txt') \
 	$(shell find . -name 'config.h') \
 	$(shell find . -name '.ninja_log') \
-	$(shell find . -name 'android-*.config.cache') \
-	$(wildcard tests/logcat-$(CONFIGURATION)-*.txt)
+	$(shell find . -name 'android-*.config.cache')
 
 _BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 _BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)

@@ -145,6 +145,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\profile-startup.aot" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool-all-$(XABundleToolVersion).jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.dex" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.dex" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />

@@ -201,7 +201,7 @@ namespace UnnamedProject
 				appb.Target = "SetupDependenciesForDesigner";
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "first build should have succeeded");
 
-				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
+				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
 				Assert.AreEqual ("", before, $"After first `{appb.Target}`, assemblies list would be empty.");
 

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime.jar">
+    <OutputJar>$(OutputPath)java_runtime.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>java\mono\android\debug\MultiDexLoader.java</RemoveItems>
+    <RemoveItems>java\mono\android\MonkeyPatcher.java</RemoveItems>
+    <RemoveItems>java\mono\android\ResourcePatcher.java</RemoveItems>
+    <RemoveItems>java\mono\android\Seppuku.java</RemoveItems>
+  </_RuntimeOutput>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
+    <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_fastdev.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>java\mono\android\release\MultiDexLoader.java</RemoveItems>
+  </_RuntimeOutput>
+</ItemGroup>
+<Target Name="Build" 
+      Inputs="@(AllRuntimeSource)"
+      Outputs="@(_RuntimeOutput)"
+>
+  <MakeDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
+  <MakeDir Directories="$(OutputPath)" />
+  <ItemGroup>
+    <_RuntimeSource Include="@(AllRuntimeSource)" />
+    <_RuntimeSource Remove="%(_RuntimeOutput.RemoveItems)" />
+  </ItemGroup>
+  <WriteLinesToFile
+      File="%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
+      Lines="@(_RuntimeSource)"
+      Overwrite="True"
+  />
+  <PropertyGroup>
+    <_Target Condition="'$(JavacSourceVersion)' != ''">-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
+    <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidFirstPlatformId)\android.jar"</_AndroidJar>
+  </PropertyGroup>
+  <Exec
+      Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
+  />
+  <!-- These files are auto generated at app build time so should be removed from the runtime.jar -->
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\MonoPackageManager_Resources.class" />
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\android\app\ApplicationRegistration.class" />
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\android\app\XamarinAndroidEnvironmentVariables.class" />
+  <Exec
+      Condition="Exists('%(_RuntimeOutput.OutputJar)')"
+      Command="&quot;$(JarPath)&quot; uf &quot;%(_RuntimeOutput.OutputJar)&quot; -C &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; ."
+  />
+  <Exec
+      Condition="!Exists('%(_RuntimeOutput.OutputJar)')"
+      Command="&quot;$(JarPath)&quot; cf &quot;%(_RuntimeOutput.OutputJar)&quot; -C &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; ."
+  />
+</Target>
+<Target Name="_GenerateRuntimeDex16"
+      AfterTargets="Build"
+      Inputs="@(_RuntimeOutput->'%(Identity)')"
+      Outputs="@(_RuntimeOutput->'%(OutputDex)')">
+  <Exec
+      Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;%(_RuntimeOutput.OutputDex)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
+  />
+</Target>
+</Project>
