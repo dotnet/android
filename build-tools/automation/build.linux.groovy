@@ -127,8 +127,9 @@ timestamps {
                 return
             }
 
-            def publishBuildFilePaths = "${XADir}/xamarin-android/*xamarin.android*.tar*";
-            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xamarin-android/bin/${env.BuildFlavor}/bundle-*.zip"
+            def publishBuildFilePaths = "${XADir}/*xamarin.android*.tar*";
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.changes"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.dsc"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.deb"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status*"
