@@ -6,26 +6,6 @@
 # See also the `_DownloadArchive` target in `src/mono-runtimes/mono-runtimes.targets`
 
 
-# Unit test assemblies which fail or crash the runtime, and should not be run.
-# (Ideally an empty list, but ¯\_(ツ)_/¯)
-EXCLUDE_TEST_ASSEMBLIES="
-	monodroid_System.Core_xunit-test.dll
-	monodroid_System.Web.Services_test.dll
-	"
-
-# Rationale: monodroid_System.Core_xunit-test.dll
-# [$xUnit] Test FAILED [monodroid_System.Core_xunit-test, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null] (TaskId:58)
-#    Test name: System.IO.Pipes.Tests.AnonymousPipeTest_Write_ServerOut_ClientIn.WriteWithOutOfBoundsArray_Throws_ArgumentException (TaskId:58)
-#    Exception messages: System.PlatformNotSupportedException : Operation is not supported on this platform. (TaskId:58)
-
-# Rationale: monodroid_System.Web.Services_test.dll
-# System.TypeInitializationException : The type initializer for 'System.Web.Services.Description.ExtensionManager' threw an exception.
-#   ----> System.InvalidOperationException : There was an error reflecting type 'System.Web.Services.Description.HttpAddressBinding'.
-#   ----> System.InvalidOperationException : System.Web.Services.Description.HttpAddressBinding cannot be serialized because it does not have a default public constructor
-#
-# Causes 14 unit test failures, e.g.
-#   * MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ExtensibleAttributes
-
 function PrintItemGroup()
 {
 	local item="$1"
@@ -41,16 +21,13 @@ function PrintItemGroup()
 	echo "  </ItemGroup>"
 }
 
-EXCLUDE_TESTS=`echo "$EXCLUDE_TEST_ASSEMBLIES" | tr -d '\n' | sed -E 's/[[:space:]]+/|/g'`
-EXCLUDE_TESTS=`echo "$EXCLUDE_TESTS" | sed -E 's/^\|(.*)\|$/\1/g'`
-
 function PrintTestItemGroup()
 {
 	local dir="$1"
 
 	echo "  <ItemGroup>"
 
-	for f in `find "$dir" -depth 1 -name \*.dll | grep -E -v "$EXCLUDE_TESTS" | sed 's,.dll$,,g' | sort -f` ; do
+	for f in `find "$dir" -depth 1 -name \*.dll | sed 's,.dll$,,g' | sort -f` ; do
 		local n=`basename "$f"` ;
 		echo "    <MonoTestAssembly Include=\"$n.dll\">" ;
 		if [[ "$n" == *xunit-test ]]; then

@@ -230,6 +230,9 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Core_test.dll">
     </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Core_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Data_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Data_xunit-test.dll">
@@ -269,6 +272,8 @@
     <MonoTestAssembly Include="monodroid_System.ServiceModel_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Transactions_test.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Web.Services_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
     </MonoTestAssembly>
