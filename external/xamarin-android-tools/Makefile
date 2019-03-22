@@ -1,5 +1,5 @@
 CONFIGURATION   := Debug
-NUNIT_CONSOLE   := packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe
+NUNIT_CONSOLE   := packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
 OS              := $(shell uname)
 RUNTIME         := mono --debug=casts
 V               ?= 0

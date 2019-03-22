@@ -16,7 +16,7 @@ jobs:
     displayName: 'VsTest - NUnit3'
     inputs:
       testAssemblyVer2: 'bin\TestDebug\*-Tests.dll'
-      pathtoCustomTestAdapters: 'packages\NUnit3TestAdapter.3.12.0\build\net35'
+      pathtoCustomTestAdapters: 'packages\NUnit3TestAdapter.3.13.0\build\net35'
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
       $commitsSinceVersionChange = & "git" "rev-list" "--count" "$hashOfLastVersionChange..HEAD"
@@ -44,7 +44,7 @@ jobs:
     displayName: 'Build solution Xamarin.Android.Tools.sln'
     inputs:
       solution: Xamarin.Android.Tools.sln
-  - script: mono packages/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
+  - script: mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
     displayName: Run NUnit Tests
   - task: PublishTestResults@2
     condition: always()
