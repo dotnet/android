@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
-		public static Dictionary<string, string> TestOutputDirectories = new Dictionary<string, string> ();
+		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
 		public class SetUp
