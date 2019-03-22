@@ -30,6 +30,7 @@ namespace Android.App {
 		public string                 Banner                  {get; set;}
 #endif
 		public bool                   Debuggable              {get; set;}
+		[Category("@string")]
 		public string                 Description             {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
@@ -46,13 +47,16 @@ namespace Android.App {
 		public bool                   HardwareAccelerated     {get; set;}
 #endif
 		public bool                   HasCode                 {get; set;}
+		[Category("@drawable;@mipmap")]
 		public string                 Icon                    {get; set;}
 		public bool                   KillAfterRestore        {get; set;}
 #if ANDROID_11
 		public bool                   LargeHeap               {get; set;}
 #endif
+		[Category("@string")]
 		public string                 Label                   {get; set;}
 #if ANDROID_11
+		[Category("@drawable;@mipmap")]
 		public string                 Logo                    {get; set;}
 #endif
 		public Type                   ManageSpaceActivity     {get; set;}
@@ -70,12 +74,14 @@ namespace Android.App {
 		public string                 RestrictedAccountType   {get; set;}
 #endif
 #if ANDROID_25
+		[Category("@drawable;@mipmap")]
 		public string                 RoundIcon               {get; set;}
 #endif
 #if ANDROID_17
 		public bool                   SupportsRtl             {get; set;}
 #endif
 		public string                 TaskAffinity            {get; set;}
+		[Category("@style")]
 		public string                 Theme                   {get; set;}
 #if ANDROID_14
 		public UiOptions              UiOptions               {get; set;}

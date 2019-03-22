@@ -24,8 +24,10 @@ namespace Android.Content {
 		public bool                   Enabled                 {get; set;}
 		public bool                   Exported                {get; set;}
 		public bool                   GrantUriPermissions     {get; set;}
+		[Category("@drawable;@mipmap")]
 		public string                 Icon                    {get; set;}
 		public int                    InitOrder               {get; set;}
+		[Category("@string")]
 		public string                 Label                   {get; set;}
 		public bool                   MultiProcess            {get; set;}
 		public string                 Name                    {get; set;}
@@ -33,6 +35,7 @@ namespace Android.Content {
 		public string                 Process                 {get; set;}
 		public string                 ReadPermission          {get; set;}
 #if ANDROID_25
+		[Category("@drawable;@mipmap")]
 		public string                 RoundIcon               {get; set;}
 #endif
 		public bool                   Syncable                {get; set;}
