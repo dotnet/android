@@ -5,7 +5,6 @@ DEBIAN_COMMON_DEPS="autoconf
 	g++-mingw-w64
 	gcc-mingw-w64
 	git
-	libncurses5
 	libtool
 	libz-mingw-w64-dev
 	libzip4
