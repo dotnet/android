@@ -312,6 +312,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable] //This uses a connected device
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
