@@ -270,8 +270,6 @@
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Transactions_test.dll">
     </MonoTestAssembly>
-    <MonoTestAssembly Include="monodroid_System.Web.Services_test.dll">
-    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_xunit-test.dll">

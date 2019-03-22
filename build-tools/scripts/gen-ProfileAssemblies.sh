@@ -10,6 +10,7 @@
 # (Ideally an empty list, but ¯\_(ツ)_/¯)
 EXCLUDE_TEST_ASSEMBLIES="
 	monodroid_System.Core_xunit-test.dll
+	monodroid_System.Web.Services_test.dll
 	"
 
 # Rationale: monodroid_System.Core_xunit-test.dll
@@ -17,6 +18,13 @@ EXCLUDE_TEST_ASSEMBLIES="
 #    Test name: System.IO.Pipes.Tests.AnonymousPipeTest_Write_ServerOut_ClientIn.WriteWithOutOfBoundsArray_Throws_ArgumentException (TaskId:58)
 #    Exception messages: System.PlatformNotSupportedException : Operation is not supported on this platform. (TaskId:58)
 
+# Rationale: monodroid_System.Web.Services_test.dll
+# System.TypeInitializationException : The type initializer for 'System.Web.Services.Description.ExtensionManager' threw an exception.
+#   ----> System.InvalidOperationException : There was an error reflecting type 'System.Web.Services.Description.HttpAddressBinding'.
+#   ----> System.InvalidOperationException : System.Web.Services.Description.HttpAddressBinding cannot be serialized because it does not have a default public constructor
+#
+# Causes 14 unit test failures, e.g.
+#   * MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ExtensibleAttributes
 
 function PrintItemGroup()
 {
