@@ -59,7 +59,7 @@ namespace xamarin { namespace android { namespace internal
 #elif LINUX
 		static constexpr char SYSTEM_LIB_PATH[] = "/usr/lib";
 #elif APPLE_OS_X
-		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Libraries/";
+		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/lib/host-Darwin";
 #elif WINDOWS
 		static const char *SYSTEM_LIB_PATH;
 #else
