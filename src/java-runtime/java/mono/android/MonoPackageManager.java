@@ -106,7 +106,7 @@ public class MonoPackageManager {
 		return MonoPackageManager_Resources.ApiPackageName;
 	}
 }
-class MonoPackageManager_Resources {
+public class MonoPackageManager_Resources {
 	public static final String[] Assemblies = new String[]{
 	};
 	public static final String[] Dependencies = new String[]{
