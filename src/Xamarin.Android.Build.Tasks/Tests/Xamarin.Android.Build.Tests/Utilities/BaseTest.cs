@@ -380,8 +380,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
 			TestContext.Out.Flush ();
-			var outputDir = TestOutputDirectories [TestContext.CurrentContext.Test.ID];
-			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
+			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir))
+				return;
+			if (Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 				return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories
