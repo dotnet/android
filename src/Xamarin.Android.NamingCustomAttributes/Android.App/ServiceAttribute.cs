@@ -23,17 +23,17 @@ namespace Android.App {
 #endif
 		public bool                   Enabled                 {get; set;}
 		public bool                   Exported                {get; set;}
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 Icon                    {get; set;}
 #if ANDROID_16
 		public bool                   IsolatedProcess         {get; set;}
 #endif
-		[Category("@string")]
+		[Category ("@string")]
 		public string                 Label                   {get; set;}
 		public string                 Permission              {get; set;}
 		public string                 Process                 {get; set;}
 #if ANDROID_25
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 RoundIcon               {get; set;}
 #endif
 	}
