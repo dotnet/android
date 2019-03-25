@@ -102,15 +102,6 @@
     <Reference Include="NuGet.ProjectModel">
       <HintPath>..\..\packages\NuGet.ProjectModel.4.6.0\lib\net46\NuGet.ProjectModel.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Build.Framework">
-      <HintPath>..\..\packages\Microsoft.Build.Framework.14.3.0\lib\net45\Microsoft.Build.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Build.Utilities.Core">
-      <HintPath>..\..\packages\Microsoft.Build.Utilities.Core.14.3.0\lib\net45\Microsoft.Build.Utilities.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Build.Tasks.Core">
-      <HintPath>..\..\packages\Microsoft.Build.Tasks.Core.14.3.0\lib\net45\Microsoft.Build.Tasks.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Xamarin.Build.AsyncTask">
       <HintPath>..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
     </Reference>
