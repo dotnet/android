@@ -834,15 +834,15 @@ namespace Xamarin.Android.UnitTests.XUnit
 
 		bool IsIncluded (ITestCase testCase)
 		{
-			if (testCase.Traits == null || testCase.Traits.Count == 0)
-				return true;
-			
 			foreach (XUnitFilter filter in filters) {
 				List<string> values;
 				if (filter == null)
 					continue;
 
 				if (filter.FilterType == XUnitFilterType.Trait) {
+					if (testCase.Traits == null || testCase.Traits.Count == 0)
+						continue;
+
 					if (!testCase.Traits.TryGetValue (filter.TraitName, out values))
 						continue;
 
@@ -861,8 +861,12 @@ namespace Xamarin.Android.UnitTests.XUnit
 
 				if (filter.FilterType == XUnitFilterType.TypeName) {
 					Log.Info (LogTag, $"IsIncluded: filter: '{filter.TestCaseName}', test case name: {testCase.DisplayName}"); 
-					if (String.Compare (testCase.DisplayName, filter.TestCaseName, StringComparison.OrdinalIgnoreCase) == 0)
+					if (string.Compare (testCase.DisplayName, filter.TestCaseName, StringComparison.OrdinalIgnoreCase) == 0 ||
+							(testCase.DisplayName.Length > filter.TestCaseName.Length &&
+							 testCase.DisplayName.StartsWith (filter.TestCaseName) &&
+							 testCase.DisplayName [filter.TestCaseName.Length] == '(')) {
 						return !filter.Exclude;
+					}
 					continue;
 				}
 
