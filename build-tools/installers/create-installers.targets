@@ -3,6 +3,7 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
+  <Import Project="..\..\src\Mono.Android\Mono.Android.projitems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <RootBuildDir>$(XamarinAndroidSourcePath)\bin\$(Configuration)\</RootBuildDir>
@@ -37,63 +38,6 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
-  </ItemGroup>
-  <!-- Support for PR builds -->
-  <ItemGroup Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v4.4.87\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.0\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v5.1\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v6.0\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.0\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v7.1\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.0\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\v8.1\RedistList\FrameworkList.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\RedistList\FrameworkList.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
@@ -288,6 +232,14 @@
   <Target Name="ConstructInstallerItems"
       Returns="@(FrameworkItemsWin);@(FrameworkItemsUnix);@(MSBuildItemsWin);@(MSBuildItemsUnix)">
     <ItemGroup>
+      <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)\%(Identity)')" />
+      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\AndroidApiInfo.xml')" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\mono.android.dex')" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.dll')" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\mono.android.jar')" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.pdb')" />
+      <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\RedistList\FrameworkList.xml')" />
       <FrameworkItemsWin Include="@(_FrameworkFiles);@(_FrameworkFilesWin)">
         <RelativePath>$([MSBuild]::MakeRelative($(FrameworkSrcDir), %(FullPath)))</RelativePath>
       </FrameworkItemsWin>
