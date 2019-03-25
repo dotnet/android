@@ -6,10 +6,7 @@
     <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>java\mono\android\debug\MultiDexLoader.java</RemoveItems>
-    <RemoveItems>java\mono\android\MonkeyPatcher.java</RemoveItems>
-    <RemoveItems>java\mono\android\ResourcePatcher.java</RemoveItems>
-    <RemoveItems>java\mono\android\Seppuku.java</RemoveItems>
+    <RemoveItems>java\mono\android\debug\MultiDexLoader.java;java\mono\android\MonkeyPatcher.java;java\mono\android\ResourcePatcher.java;java\mono\android\Seppuku.java</RemoveItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>
@@ -21,7 +18,7 @@
 </ItemGroup>
 <Target Name="Build" 
       Inputs="@(AllRuntimeSource)"
-      Outputs="@(_RuntimeOutput)"
+      Outputs="%(_RuntimeOutput.OutputJar)"
 >
   <MakeDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
   <MakeDir Directories="$(OutputPath)" />
