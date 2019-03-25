@@ -53,9 +53,9 @@ namespace Android.App
 #if ANDROID_11
 		public bool                   HardwareAccelerated     {get; set;}
 #endif
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 Icon                    {get; set;}
-		[Category("@string")]
+		[Category ("@string")]
 		public string                 Label                   {get; set;}
 		public LaunchMode             LaunchMode              {get; set;}
 #if ANDROID_23
@@ -102,7 +102,7 @@ namespace Android.App
 		public WindowRotationAnimation      RotationAnimation    {get; set;}
 #endif
 #if ANDROID_25
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 RoundIcon               {get; set;}
 #endif
 #if ANDROID_23
@@ -124,7 +124,7 @@ namespace Android.App
 #endif
 		public bool                   StateNotNeeded          {get; set;}
 		public string                 TaskAffinity            {get; set;}
-		[Category("@style")]
+		[Category ("@style")]
 		public string                 Theme                   {get; set;}
 #if ANDROID_27
 		public bool                   TurnScreenOn            {get; set;}
