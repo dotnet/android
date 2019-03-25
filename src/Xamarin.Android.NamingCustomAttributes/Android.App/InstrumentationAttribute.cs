@@ -15,13 +15,13 @@ namespace Android.App {
 
 		public bool                   FunctionalTest  {get; set;}
 		public bool                   HandleProfiling {get; set;}
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 Icon            {get; set;}
-		[Category("@string")]
+		[Category ("@string")]
 		public string                 Label           {get; set;}
 		public string                 Name            {get; set;}
 #if ANDROID_25
-		[Category("@drawable;@mipmap")]
+		[Category ("@drawable;@mipmap")]
 		public string                 RoundIcon               {get; set;}
 #endif
 		public string                 TargetPackage   {get; set;}
