@@ -6,6 +6,7 @@ DEBIAN_COMMON_DEPS="autoconf
 	gcc-mingw-w64
 	git
 	libtool
+	libncurses-dev
 	libz-mingw-w64-dev
 	libzip4
 	linux-libc-dev
