@@ -241,7 +241,7 @@ namespace UnnamedProject
 							builder.AppendLine (line.Trim ());
 						}
 					} else {
-						found = line.Contains ("public static final String[] Assemblies = new String[]{");
+						found = line.Contains ("public static String[] Assemblies = new String[]{");
 					}
 				}
 			}
