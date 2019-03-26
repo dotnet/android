@@ -2853,7 +2853,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <ItemGroup>
-  <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)\profile-startup.aot" />
+  <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)\startup.aotprofile" />
 </ItemGroup>
 
 <Target Name="_BuildApkEmbed"
