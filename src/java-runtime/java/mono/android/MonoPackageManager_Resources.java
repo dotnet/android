@@ -5,10 +5,10 @@ import java.util.Arrays;
 
 
 public class MonoPackageManager_Resources {
-	public static final String[] Assemblies = new String[]{
+	public static String[] Assemblies = new String[]{
 	};
-	public static final String[] Dependencies = new String[]{
+	public static String[] Dependencies = new String[]{
 	};
-	public static final String ApiPackageName = null;
+	public static String ApiPackageName = null;
 }
 

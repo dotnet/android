@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks
 
 				// Write all the user assemblies
 				pkgmgr.WriteLine ("public class MonoPackageManager_Resources {");
-				pkgmgr.WriteLine ("\tpublic static final String[] Assemblies = new String[]{");
+				pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
 				foreach (var assembly in assemblies) {
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 
 				// Write the assembly dependencies
 				pkgmgr.WriteLine ("\t};");
-				pkgmgr.WriteLine ("\tpublic static final String[] Dependencies = new String[]{");
+				pkgmgr.WriteLine ("\tpublic static String[] Dependencies = new String[]{");
 
 				//foreach (var assembly in assemblies.Except (args.Assemblies)) {
 				//        if (args.SharedRuntime && !Toolbox.IsInSharedRuntime (assembly))
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.WriteLine ("\t};");
 
 				// Write the platform api apk we need
-				pkgmgr.WriteLine ("\tpublic static final String ApiPackageName = {0};", shared_runtime
+				pkgmgr.WriteLine ("\tpublic static String ApiPackageName = {0};", shared_runtime
 						? string.Format ("\"Mono.Android.Platform.ApiLevel_{0}\"",
 							MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion))
 						: "null");
