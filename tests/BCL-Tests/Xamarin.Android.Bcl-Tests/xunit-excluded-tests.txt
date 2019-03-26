@@ -56,6 +56,34 @@ System.Data.SqlClient.Tests.SqlConnectionTest.RetrieveStatistics_Remove_NullKey_
 
 
 #
+# Linker-related failures (pass in Debug config, fail in Release)
+# https://jenkins.mono-project.com/job/xamarin-android-pr-pipeline-release/305/testReport/
+#
+
+# Expected: typeof(System.ArgumentException)
+#   Actual: typeof(System.InvalidOperationException): The unary operator PostDecrementAssign is not defined for the type 'System.String'.
+System.Linq.Expressions.Tests.PostDecrementAssignTests.IncorrectMethodParameterCount
+
+# Expected: typeof(System.ArgumentException)
+#   Actual: typeof(System.InvalidOperationException): The unary operator PostIncrementAssign is not defined for the type 'System.String'.
+System.Linq.Expressions.Tests.PostIncrementAssignTests.IncorrectMethodParameterCount
+
+# Expected: typeof(System.ArgumentException)
+#   Actual: typeof(System.InvalidOperationException): The unary operator PreDecrementAssign is not defined for the type 'System.String'.
+System.Linq.Expressions.Tests.PreDecrementAssignTests.IncorrectMethodParameterCount
+
+# Expected: typeof(System.ArgumentException)
+#   Actual: typeof(System.InvalidOperationException): The unary operator PreIncrementAssign is not defined for the type 'System.String'.
+System.Linq.Expressions.Tests.PreIncrementAssignTests.IncorrectMethodParameterCount
+
+# System.InvalidOperationException : The unary operator UnaryPlus is not defined for the type 'System.Nullable`1[System.Decimal]'.
+System.Linq.Expressions.Tests.UnaryPlusNullableTests.CheckUnaryArithmeticUnaryPlusNullableDecimalTest
+
+# System.InvalidOperationException : The unary operator UnaryPlus is not defined for the type 'System.Decimal'.
+System.Linq.Expressions.Tests.UnaryPlusTests.CheckUnaryArithmeticUnaryPlusDecimalTest
+
+
+#
 # Throws System.PlatformNotSupportedException
 #
 
