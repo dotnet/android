@@ -6,6 +6,7 @@ def buildTarget = 'jenkins'
 def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev openjdk-8-jdk unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev curl libncurses5'
 def isPr = false                // Default to CI
 def isStable = false            // Stable build workflow
+def publishPackages = false
 def pBuilderBindMounts = null
 def utils = null
 def hasPrLabelFullMonoIntegrationBuild = false
@@ -52,6 +53,7 @@ timestamps {
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             isStable = env.IsStable == '1'
+            publishPackages = env.PublishPackages == '1'
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
             def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
 
@@ -122,8 +124,8 @@ timestamps {
         }
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            if (isPr || !isStable) {        // Only publish from the stable build workflow as it is less likely to fail given it only executes the core build
-                echo "Skipping package publishing for PR builds"
+            if (!publishPackages) {
+                echo "Skipping package publishing. Set PublishPackages to 1 as a property setting in the build configuration "
                 return
             }
 
