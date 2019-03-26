@@ -56,7 +56,7 @@ namespace Xamarin.ProjectTools
 				TextContent = () => Toolbar_axml,
 			});
 			OtherBuildItems.Add (new BuildItem ("EmbeddedResource", "MainPage.xaml") {
-				TextContent = () => ProcessSourceTemplate (MainPage_xaml),
+				TextContent = MainPageXaml,
 			});
 			Sources.Add (new BuildItem.Source ("MainPage.xaml.cs") {
 				TextContent = () => ProcessSourceTemplate (MainPage_xaml_cs),
@@ -70,5 +70,7 @@ namespace Xamarin.ProjectTools
 
 			MainActivity = default_main_activity_cs;
 		}
+
+		protected virtual string MainPageXaml () => ProcessSourceTemplate (MainPage_xaml);
 	}
 }
