@@ -328,9 +328,14 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull ("-F ", currentResourceOutputFile + ".bk");
 			// The order of -S arguments is *important*, always make sure this one comes FIRST
 			cmd.AppendSwitchIfNotNull ("-S ", resourceDirectory.TrimEnd ('\\'));
-			if (AdditionalResourceDirectories != null)
-				foreach (var resdir in AdditionalResourceDirectories)
-					cmd.AppendSwitchIfNotNull ("-S ", resdir.ItemSpec.TrimEnd ('\\'));
+			if (AdditionalResourceDirectories != null) {
+				foreach (var dir in AdditionalResourceDirectories) {
+					var resdir = dir.ItemSpec.TrimEnd ('\\');
+					if (Directory.Exists (resdir)) {
+						cmd.AppendSwitchIfNotNull ("-S ", resdir);
+					}
+				}
+			}
 			if (AdditionalAndroidResourcePaths != null) {
 				foreach (var dir in AdditionalAndroidResourcePaths) {
 					var resdir = Path.Combine (dir.ItemSpec, "res");
