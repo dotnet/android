@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 using TPL = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -146,14 +147,13 @@ namespace Xamarin.Android.Tasks
 				// is changed!
 				Log.LogDebugMessage ($"Parsing layouts in parallel (threshold of {ParallelGenerationThreshold} layouts met)");
 
-				var cts = new CancellationTokenSource ();
                                 TPL.ParallelOptions options = new TPL.ParallelOptions {
-                                        CancellationToken = cts.Token,
+                                        CancellationToken = CancellationToken,
                                         TaskScheduler = TPL.TaskScheduler.Default,
                                 };
 				TPL.Task.Factory.StartNew (
 					() => TPL.Parallel.ForEach (layoutsByName, options, kvp => ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems)),
-					cts.Token,
+					CancellationToken,
 					TPL.TaskCreationOptions.None,
 					TPL.TaskScheduler.Default
 				).ContinueWith (t => Complete ());
