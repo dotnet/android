@@ -281,6 +281,13 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
+		public static bool ZipContains (string filename, Func<ZipArchive, bool> filter)
+		{
+			using (var zip = ReadZipFile (filename)) {
+				return filter (zip);
+			}
+		}
+
 		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
 			Func<string, bool> deleteCallback = null)
 		{

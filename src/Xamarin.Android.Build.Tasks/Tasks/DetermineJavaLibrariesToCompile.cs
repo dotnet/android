@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Linq;
 using System.IO;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -62,16 +63,33 @@ namespace Xamarin.Android.Tasks
 					jars.Add (jar);
 
 			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
-			jars          = jars.Where (j => distinct.Contains (j)).ToList ();
 
-			JavaLibrariesToCompile = jars.Where (j => !IsExcluded (j.ItemSpec)).ToArray ();
-			ReferenceJavaLibraries = (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ())
-				.Concat (jars.Except (JavaLibrariesToCompile)).ToArray ();
+			var javaLibrariesToCompile = new List<ITaskItem> ();
+			var referenceJavaLibraries = new List<ITaskItem> (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ());
+
+			foreach (var item in distinct) {
+				if (!HasClassFiles (item.ItemSpec))
+					continue;
+				if (IsExcluded (item.ItemSpec)) {
+					referenceJavaLibraries.Add (item);
+				} else {
+					javaLibrariesToCompile.Add (item);
+				}
+			}
+			JavaLibrariesToCompile = javaLibrariesToCompile.ToArray ();
+			ReferenceJavaLibraries = referenceJavaLibraries.ToArray ();
 
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
 			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
 
 			return true;
+		}
+
+		bool HasClassFiles (string jar)
+		{
+			return Files.ZipContains (jar, (zip)=> {
+				return zip.Any (x => x.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
+			});
 		}
 
 		bool IsExcluded (string jar)
