@@ -2130,14 +2130,16 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		public void ResourceExtraction ()
+		public void ResourceExtraction ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
 					KnownPackages.AndroidSupportV4_23_1_1_0,
+					KnownPackages.AndroidSupportCustomTabs_23_1_1_0,
 					KnownPackages.SupportV7AppCompat_23_1_1_0,
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");

@@ -331,9 +331,14 @@ namespace Xamarin.Android.Tasks
 			if (AdditionalResourceDirectories != null)
 				foreach (var resdir in AdditionalResourceDirectories)
 					cmd.AppendSwitchIfNotNull ("-S ", resdir.ItemSpec.TrimEnd ('\\'));
-			if (AdditionalAndroidResourcePaths != null)
-				foreach (var dir in AdditionalAndroidResourcePaths)
-					cmd.AppendSwitchIfNotNull ("-S ", Path.Combine (dir.ItemSpec.TrimEnd (System.IO.Path.DirectorySeparatorChar), "res"));
+			if (AdditionalAndroidResourcePaths != null) {
+				foreach (var dir in AdditionalAndroidResourcePaths) {
+					var resdir = Path.Combine (dir.ItemSpec, "res");
+					if (Directory.Exists (resdir)) {
+						cmd.AppendSwitchIfNotNull ("-S ", resdir);
+					}
+				}
+			}
 
 			if (LibraryProjectJars != null)
 				foreach (var jar in LibraryProjectJars)
