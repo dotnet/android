@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => {
+				CancellationToken.Register (() => {
 					try {
 						proc.Kill ();
 					} catch (Exception) {
@@ -237,7 +238,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run (() => {
 					DoExecute ();
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -256,7 +257,7 @@ namespace Xamarin.Android.Tasks
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
+				CancellationToken = CancellationToken,
 				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 

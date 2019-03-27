@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
   <Import Project="..\..\..\..\packages\NUnit3TestAdapter.3.12.0\build\net35\NUnit3TestAdapter.props" Condition="Exists('..\..\..\..\packages\NUnit3TestAdapter.3.12.0\build\net35\NUnit3TestAdapter.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -44,6 +45,18 @@
       <HintPath>$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
     </Reference>
     -->
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime">
+      <HintPath>..\..\..\..\packages\System.Runtime.4.1.0\lib\net462\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Runtime.InteropServices">
+      <HintPath>..\..\..\..\packages\System.Runtime.InteropServices.4.1.0\lib\net462\System.Runtime.InteropServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Build.AsyncTask">
+      <HintPath>..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
