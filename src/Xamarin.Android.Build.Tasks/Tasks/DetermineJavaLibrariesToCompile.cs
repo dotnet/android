@@ -65,7 +65,9 @@ namespace Xamarin.Android.Tasks
 			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
 
 			var javaLibrariesToCompile = new List<ITaskItem> ();
-			var referenceJavaLibraries = new List<ITaskItem> (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ());
+			var referenceJavaLibraries = new List<ITaskItem> ();
+			if (ExternalJavaLibraries != null)
+				referenceJavaLibraries.AddRange (ExternalJavaLibraries);
 
 			foreach (var item in distinct) {
 				if (!HasClassFiles (item.ItemSpec))
