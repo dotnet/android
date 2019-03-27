@@ -59,6 +59,10 @@ timestamps {
 
             def buildType = isPr ? 'PR' : 'CI'
 
+            if (env.AdditionalPackages) {
+                chRootPackages = "${chRootPackages} ${env.AdditionalPackages}"
+            }
+
             echo "HostName: ${env.NODE_NAME}"
             echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
@@ -70,6 +74,8 @@ timestamps {
 
             pBuilderBindMounts = "/home/${env.USER}"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
+
+            echo "chRootPackages: ${chRootPackages}"
 
             if (isPr) {
                 echo "PR id: ${env.ghprbPullId}"
@@ -87,7 +93,7 @@ timestamps {
                     buildTarget = 'all'
                 }
             }
-
+            
             sh "env"
         }
 
