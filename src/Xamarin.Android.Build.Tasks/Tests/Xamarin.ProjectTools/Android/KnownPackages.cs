@@ -486,6 +486,19 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+		public static Package XamarinFormsMaps_3_6_0_220655 = new Package {
+			Id = "Xamarin.Forms.Maps",
+			Version = "3.6.0.220655",
+			TargetFramework = "MonoAndroid90",
+			References =  {
+				new BuildItem.Reference ("Xamarin.Forms.Maps.Android") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.Android.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Maps") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.dll"
+				},
+			}
+		};
 		public static Package CocosSharp_PCL_Shared_1_5_0_0 = new Package {
 			Id = "CocosSharp.PCL.Shared", 
 			Version = "1.5.0.0",

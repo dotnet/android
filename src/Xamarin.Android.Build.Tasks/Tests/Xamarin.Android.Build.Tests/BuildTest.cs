@@ -120,6 +120,15 @@ class MemTest {
 		}
 
 		[Test]
+		public void BuildXamarinFormsMapsApplication ()
+		{
+			var proj = new XamarinFormsMapsApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
