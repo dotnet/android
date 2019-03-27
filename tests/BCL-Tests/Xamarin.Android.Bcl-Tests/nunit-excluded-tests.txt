@@ -4,3 +4,18 @@
 #
 
 # Fails in Release build
+
+#
+# All of these throw:
+# System.TypeInitializationException : The type initializer for 'System.Web.Services.Description.ExtensionManager' threw an exception.
+#   ----> System.InvalidOperationException : There was an error reflecting type 'System.Web.Services.Description.HttpAddressBinding'.
+#   ----> System.InvalidOperationException : System.Web.Services.Description.HttpAddressBinding cannot be serialized because it does not have a default public constructor
+#
+
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ExtensibleAttributes
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.Extensions
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.Namespaces
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ReadAndRetrievalUrl
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ReadInvalid
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.SimpleWrite
+MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ValidatingRead

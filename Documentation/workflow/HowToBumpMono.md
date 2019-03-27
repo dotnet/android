@@ -137,13 +137,9 @@ must be shipped in the SDK.  Facade assemblies are installed into the
 `bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Facades`
 directory.
 
-The `@(MonoFacadeAssembly)` list can be updated with this shell code on macOS:
-
-	$ cd external/mono/mcs/class/Facades
-	$ for d in `find . -depth 1 -type d | grep -v 'netstandard\|System.Drawing.Primitives\|System.Net.Http.Rtc' | sort -f` ; do
-	  n=`basename "$d"`;
-	  echo "    <MonoFacadeAssembly Include=\"$n.dll\" />";
-	done | pbcopy
+This script uses the contents of `external/mono/sdks/out/android-bcl`, and thus
+requires either a local monodroid sdks build, or the extraction of a
+[Mono Archive](#mono-archive).
 
 The `@(MonoProfileAssembly)` item group is for non-Facade assemblies, which are
 installed into the
@@ -152,12 +148,15 @@ directory.  This item group must be updated whenever a new BCL assembly is added
 
 The `@(MonoTestAssembly)` item group contains unit test assemblies, executed by
 [`tests/BCL-Tests`](../../tests/BCL-Tests).
-The `%(MonoTestAssembly.SourcePath)` item metadata is the directory name within
-`external/mono/mcs/class` which contains files needed for execution by the unit
-tests.
 The `%(MonoTestAssembly.TestType)` item metadata is the *type* of unit test
 assembly; valid values are `xunit` (for xUnit unit test assemblies),
 `reference` (for ???), and the empty string/not set (for NUnit assemblies).
+
+
+It should be possible to update `ProfileAssemblies.projitems` by running the
+script `build-tools/scripts/gen-ProfileAssemblies.sh`:
+
+	build-tools/scripts/gen-ProfileAssemblies.sh > src/mono-runtimes/ProfileAssemblies.projitems
 
 
 <a name="build" />
