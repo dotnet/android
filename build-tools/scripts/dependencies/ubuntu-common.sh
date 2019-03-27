@@ -1,5 +1,3 @@
-DISTRO_DEPS="$DISTRO_DEPS libncurses5"
-
 if [ "$OS_ARCH" = "x86_64" ]; then
     DISTRO_DEPS="$DISTRO_DEPS
 	libx32tinfo-dev
