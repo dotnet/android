@@ -12,13 +12,11 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2Compile : Aapt2 {
 
-		readonly object lockObject = new object ();
 		List<ITaskItem> archives = new List<ITaskItem> ();
 
 		public bool ExplicitCrunch { get; set; }
@@ -39,9 +37,7 @@ namespace Xamarin.Android.Tasks {
 
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run (() => {
-					DoExecute ();
-				}, CancellationToken);
+				var task = this.RunTask (DoExecute);
 
 				task.ContinueWith (Complete);
 
@@ -57,15 +53,10 @@ namespace Xamarin.Android.Tasks {
 		{
 			LoadResourceCaseMap ();
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = CancellationToken,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
-			ThreadingTasks.Parallel.ForEach (ResourceDirectories, options, ProcessDirectory);
+			this.ParallelForEachWithLock (ResourceDirectories, ProcessDirectory);
 		}
 
-		void ProcessDirectory (ITaskItem resourceDirectory)
+		void ProcessDirectory (ITaskItem resourceDirectory, object lockObject)
 		{
 			if (!Directory.EnumerateDirectories (resourceDirectory.ItemSpec).Any ())
 				return;

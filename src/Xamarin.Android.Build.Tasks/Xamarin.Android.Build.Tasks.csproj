@@ -187,6 +187,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaTypeRegistrations.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
+    <Compile Include="Utilities\AsyncTaskExtensions.cs" />
     <Compile Include="Utilities\MSBuildExtensions.cs" />
     <Compile Include="Utilities\ZipArchiveEx.cs" />
     <Compile Include="Mono.Android\ServiceAttribute.Partial.cs" />

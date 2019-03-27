@@ -12,7 +12,6 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	
@@ -81,9 +80,7 @@ namespace Xamarin.Android.Tasks {
 			
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run (() => {
-					DoExecute ();
-				}, CancellationToken);
+				var task = this.RunTask (DoExecute);
 
 				task.ContinueWith (Complete);
 
@@ -102,12 +99,7 @@ namespace Xamarin.Android.Tasks {
 
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
-				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = CancellationToken,
-					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-				};
-
-				ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
+				this.ParallelForEach (ManifestFiles, ProcessManifest);
 			} finally {
 				foreach (var temp in tempFiles) {
 					File.Delete (temp);
