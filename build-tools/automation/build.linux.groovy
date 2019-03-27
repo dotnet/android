@@ -61,6 +61,7 @@ timestamps {
 
             if (env.AdditionalPackages) {
                 chRootPackages = "${chRootPackages} ${env.AdditionalPackages}"
+                echo "AdditionalPackages: ${env.AdditionalPackages}"
             }
 
             echo "HostName: ${env.NODE_NAME}"
