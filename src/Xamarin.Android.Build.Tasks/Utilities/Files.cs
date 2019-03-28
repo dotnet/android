@@ -285,7 +285,7 @@ namespace Xamarin.Android.Tools {
 		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
 		{
 			using (var zip = ReadZipFile (filename)) {
-				return zip.Any (zip);
+				return zip.Any (filter);
 			}
 		}
 
