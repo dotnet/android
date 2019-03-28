@@ -639,36 +639,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TargetGenerateJavaDesignerForComponentIsSkipped ([Values(false, true)] bool isRelease)
-		{ 
-			// build with packages... then tweak a package..
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should have been skipped");
-				var files = Directory.EnumerateFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcecache")
-					, "abc_fade_in.xml", SearchOption.AllDirectories);
-				Assert.AreEqual (1, files.Count (), "There should only be one abc_fade_in.xml in the resourcecache");
-				var resFile = files.First ();
-				Assert.IsTrue (File.Exists (resFile), "{0} should exist", resFile);
-				File.SetLastWriteTime (resFile, DateTime.UtcNow);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
-			}
-		}
-
-		[Test]
 		public void CheckAaptErrorRaisedForMissingResource ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1421,7 +1391,7 @@ namespace UnnamedProject
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded");
 
-				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "android", "support", "compat", "R.java");
+				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "unnamedproject", "unnamedproject", "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
