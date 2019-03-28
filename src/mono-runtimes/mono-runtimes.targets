@@ -69,6 +69,7 @@
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
     <_BclTestAssemblyDestination  Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
+    <_BclTestAssemblyDestination  Include="@(MonoTestSatelliteAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     <_BclTestAssemblyDestination
         Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')"
         Exclude="$(XAInstallPrefix)\..\..\bcl-tests\System.Runtime.CompilerServices.Unsafe.pdb"
@@ -290,6 +291,18 @@
           Include="$(_OutputIncludeDir)Consts.cs"
       />
     </ItemGroup>
+    <ItemGroup>
+      <_BclTestAssemblyReference Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'reference'" />
+      <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
+      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
+      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
+      <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
+      <_BclTestSatelliteAssemblyDest    Include="@(MonoTestSatelliteAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_DownloadArchive"
@@ -341,20 +354,8 @@
 
   <Target Name="_InstallRuntimes"
       DependsOnTargets="_GetRuntimesOutputItems"
-      Inputs="@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource)"
-      Outputs="@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
-    <ItemGroup>
-      <_BclTestAssemblyReference Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'reference'" />
-      <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
-      <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestSatelliteAssemblyDest    Include="@(MonoTestSatelliteAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
-    </ItemGroup>
+      Inputs="@(_BclTestAssemblySource);@(_BclTestSatelliteAssemblySource);@(_RuntimeSource);@(_RuntimeBinarySource);@(_CrossRuntimeBinarySource);@(_ProfilerSource);@(_MonoPosixHelperSource);@(_RuntimeEglibHeaderSource);@(_MonoBtlsSource)"
+      Outputs="@(_BclTestSatelliteAssemblyDest);@(_InstallRuntimeOutput);@(_InstallRuntimeBinaryOutput);@(_InstallCrossRuntimeBinaryOutput);@(_InstallProfilerOutput);@(_InstallMonoPosixHelperOutput);@(_RuntimeEglibHeaderOutput)">
     <Copy
         SourceFiles="@(_BclTestAssemblySource)"
         DestinationFolder="$(XAInstallPrefix)\..\..\bcl-tests"

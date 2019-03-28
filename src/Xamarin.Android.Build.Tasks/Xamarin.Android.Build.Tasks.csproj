@@ -631,7 +631,7 @@
     <None Include="updateinfo.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="profile-startup.aot">
+    <None Include="startup.aotprofile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
