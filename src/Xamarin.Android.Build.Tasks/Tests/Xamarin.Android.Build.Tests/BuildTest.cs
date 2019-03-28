@@ -667,7 +667,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplication (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -738,7 +738,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplicationAndBundle (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -864,7 +864,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("JackFlagAndFxVersion")]
+		[TestCaseSource (nameof (JackFlagAndFxVersion))]
 		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -1606,7 +1606,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("AndroidStoreKeyTests")]
+		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string expected)
 		{
 			byte [] data;
@@ -1647,7 +1647,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("BuildApplicationWithJavaSourceChecks")]
+		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
 			var path = String.Format ("temp/BuildApplicationWithJavaSource_{0}_{1}",
@@ -1678,7 +1678,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("RuntimeChecks")]
+		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
@@ -1718,7 +1718,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("SequencePointChecks")]
+		[TestCaseSource (nameof (SequencePointChecks))]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
 			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
 		{
@@ -2248,7 +2248,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateEventNameArgs))]
 		public void GeneratorValidateEventName (bool failureExpected, bool warningExpected, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2318,7 +2318,7 @@ public class Test
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateMultiMethodEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateMultiMethodEventNameArgs))]
 		public void GeneratorValidateMultiMethodEventName (bool failureExpected, string expectedWarning, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2523,7 +2523,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 
 		[Test]
-		[TestCaseSource ("TlsProviderTestCases")]
+		[TestCaseSource (nameof (TlsProviderTestCases))]
 		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -3008,7 +3008,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("validateJavaVersionTestCases")]
+		[TestCaseSource (nameof (validateJavaVersionTestCases))]
 		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult) 
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");

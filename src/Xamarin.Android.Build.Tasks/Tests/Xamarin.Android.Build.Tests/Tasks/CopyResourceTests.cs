@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[TestCaseSource ("EmbeddedResources")]
+		[TestCaseSource (nameof (EmbeddedResources))]
 		public void FilesThatAreExpected (string resourceName)
 		{
 			var task = new CopyResource {
