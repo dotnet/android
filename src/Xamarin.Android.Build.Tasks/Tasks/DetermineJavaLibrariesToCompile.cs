@@ -89,9 +89,7 @@ namespace Xamarin.Android.Tasks
 
 		bool HasClassFiles (string jar)
 		{
-			return Files.ZipContains (jar, (zip)=> {
-				return zip.Any (x => x.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
-			});
+			return Files.ZipAny (jar, entry => entry.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
 		}
 
 		bool IsExcluded (string jar)

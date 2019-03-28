@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 
 using Xamarin.Tools.Zip;
@@ -281,10 +282,10 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static bool ZipContains (string filename, Func<ZipArchive, bool> filter)
+		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
 		{
 			using (var zip = ReadZipFile (filename)) {
-				return filter (zip);
+				return zip.Any (zip);
 			}
 		}
 
