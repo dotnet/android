@@ -23,6 +23,11 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static string DeviceAbi {
+				get;
+				private set;
+			}
+
 			[OneTimeSetUp]
 			public void BeforeAllTests ()
 			{
@@ -38,6 +43,13 @@ namespace Xamarin.Android.Build.Tests
 						result = result.Split ('*').First ().Trim ();
 					}
 					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
+					if (HasDevices) {
+						if (sdkVersion >= 21)
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+
+						if (string.IsNullOrEmpty (DeviceAbi))
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
@@ -66,6 +78,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		protected bool HasDevices => SetUp.HasDevices;
+
+		protected string DeviceAbi => SetUp.DeviceAbi;
 
 		protected bool IsWindows {
 			get { return Environment.OSVersion.Platform == PlatformID.Win32NT; }
