@@ -395,7 +395,7 @@ namespace Bug12935
 		};
 
 		[Test]
-		[TestCaseSource("VersionCodeTestSource")]
+		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -475,7 +475,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		[TestCaseSource ("DebuggerAttributeCases")]
+		[TestCaseSource (nameof (DebuggerAttributeCases))]
 		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {

@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 #pragma warning disable 414
-		static object [] AotChecks = new object [] {
+		static object [] AotChecks () => new object [] {
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a",
 				/* enableLLVM */      false,
@@ -53,16 +53,9 @@ namespace Xamarin.Android.Build.Tests
 				/* enableLLVM */      true,
 				/* expectedResult */  true,
 			},
-		};
-
-		static object [] TakeSimpleFlag = new object [] {
-			new Object [] { false },
-			// Disabled because Jack DOESN'T work
-			// re-enable once it does.
-			//new Object [] { true },
 		};
 		// useJackAndJill, useLatestSdk
-		static object [] JackFlagAndFxVersion = new object [] {
+		static object [] JackFlagAndFxVersion () => new object [] {
 			new Object [] { false, "v7.1" },
 			// Disabled because Jack DOESN'T work
 			// re-enable once it does.
@@ -70,7 +63,7 @@ namespace Xamarin.Android.Build.Tests
 			//new Object [] { true, true },
 		};
 
-		static object [] RuntimeChecks = new object [] {
+		static object [] RuntimeChecks () => new object [] {
 			new object[] {
 				/* supportedAbi */     new string[] { "armeabi-v7a"},
 				/* debugSymbols */     true ,
@@ -137,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
-		static object [] SequencePointChecks = new object [] {
+		static object [] SequencePointChecks () => new object [] {
 			new object[] {
 				/* isRelease */          false,
 				/* monoSymbolArchive */  false ,

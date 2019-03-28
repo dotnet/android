@@ -508,7 +508,7 @@ namespace UnnamedProject
 		};
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -535,7 +535,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -577,7 +577,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -608,7 +608,7 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
