@@ -15,7 +15,6 @@
   <Target Name="CheckoutExternalGitSources"
       DependsOnTargets="ParseExternalFile">
     <CheckoutExternalGitDependency
-        Condition="'%(Externals.Name)'=='monodroid'"
         WorkingDirectory="$(ExternalSourceDependencyDirectory)"
         ExternalGitDependency="@(Externals)"
     />

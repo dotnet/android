@@ -25,7 +25,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			string destination = Path.Combine (GetWorkingDirectory (), name);
 
 			if (!Directory.Exists (destination)) {
-				Clone ();
+				Clone (destination);
 			}
 
 			WorkingDirectory.ItemSpec = destination;
@@ -35,14 +35,14 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void Clone ()
+		void Clone (string destination)
 		{
 			string ghToken = Environment.GetEnvironmentVariable("GH_AUTH_SECRET");
 			if (!string.IsNullOrEmpty (ghToken)) {
-				Arguments = $"clone https://{ghToken}@github.com/{owner}/{name} --progress";
+				Arguments = $"clone https://{ghToken}@github.com/{owner}/{name} --progress \"{destination}\"";
 			} else {
 				// Fallback to SSH URI
-				Arguments = $"clone git@github.com:{owner}/{name} --progress";
+				Arguments = $"clone git@github.com:{owner}/{name} --progress \"{destination}\"";
 			}
 
 			base.Execute ();

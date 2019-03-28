@@ -16,7 +16,15 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. Prepare the project:
+ 5. (Optional) Prepare external/proprietary git dependencies
+
+        make prepare-external-git-dependencies
+
+    This will clone or update a monodroid checkout in `external` and
+    ensure that subsequent `prepare` and `make` invocations will build
+    proprietary components.
+
+ 6. Prepare the project:
 
         make prepare
         # -or-
@@ -26,7 +34,7 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
     `git submodule update`, download NuGet dependencies, and other
     "preparatory" and pre-build tasks that need to be performed.
 
- 6. Build the project:
+ 7. Build the project:
 
         make
         # -or-
@@ -44,6 +52,17 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
         make jenkins
         # -or-
         make jenkins MSBUILD=msbuild
+
+
+# Creating installers
+
+Once `make all` or `make jenkins` have completed, macOS (.pkg)
+and Windows (.vsix) installer files can be built with:
+
+    make create-installers
+
+Commercial installers will be created by this command if the
+`make prepare-external-git-dependencies` command was ran before building.
 
 
 # Building Unit Tests
