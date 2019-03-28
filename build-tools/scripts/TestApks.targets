@@ -263,10 +263,11 @@
       Condition=" '@(TestApk)' != '' ">
     <RenameTestCases
         Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
-        Configuration="$(Configuration)$(TestsFlavor)"
+        Configuration="$(Configuration)"
         DeleteSourceFiles="True"
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApkInstrumentation.ResultsPath)"
+        TestsFlavor="$(TestsFlavor)"
     />
   </Target>
   <Target Name="RecordApkSizes"
