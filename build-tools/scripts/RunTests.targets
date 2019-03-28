@@ -117,7 +117,7 @@
       <_ExeExtension></_ExeExtension>
       <_HostOS Condition=" '$(_HostOS)' == 'Windows' "></_HostOS>
       <_ExeExtension Condition=" '$(_HostOS)' == 'Windows' ">.exe</_ExeExtension>
-      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin-android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
+      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
       <_CrossCompilerAvailable Condition=" '$(_CrossCompilerAvailable)' == '' ">False</_CrossCompilerAvailable>
     </PropertyGroup>
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
