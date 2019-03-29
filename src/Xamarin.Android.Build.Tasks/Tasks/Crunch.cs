@@ -9,7 +9,6 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
-using ThreadingTasks = System.Threading.Tasks;
 using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
@@ -73,9 +72,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run ( () => {
-					DoExecute ();
-				}, CancellationToken);
+				var task = this.RunTask (DoExecute);
 
 				task.ContinueWith (Complete);
 
@@ -97,14 +94,9 @@ namespace Xamarin.Android.Tasks
 			if (!imageFiles.Any ())
 				return;
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = CancellationToken,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
 
-			ThreadingTasks.Parallel.ForEach (imageGroups, options, DoExecute);
+			this.ParallelForEach (imageGroups, DoExecute);
 
 			return;
 		}
