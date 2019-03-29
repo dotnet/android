@@ -52,6 +52,12 @@ namespace Xamarin.ProjectTools
 				if (Directory.Exists (PackagesDirectory))
 					Directory.Delete (PackagesDirectory, true);
 				project.Populate (ProjectDirectory, files);
+
+				// Copy our solution's NuGet.config
+				var nuget_config = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+				if (File.Exists (nuget_config)) {
+					File.Copy (nuget_config, Path.Combine (Root, ProjectDirectory, "NuGet.config"), overwrite: true);
+				}
 			}
 			else
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
