@@ -28,6 +28,11 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static bool CommercialBuildAvailable {
+				get;
+				private set;
+			}
+
 			[OneTimeSetUp]
 			public void BeforeAllTests ()
 			{
@@ -52,6 +57,9 @@ namespace Xamarin.Android.Build.Tests
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
+				}
+				using (var builder = new Builder ()) {
+					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 				}
 			}
 
@@ -108,6 +116,8 @@ namespace Xamarin.Android.Build.Tests
 				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 			}
 		}
+
+		public bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
@@ -390,6 +400,7 @@ namespace Xamarin.Android.Build.Tests
 		protected virtual void CleanupTest ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
 			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;

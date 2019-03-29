@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildBasicBindingLibrary (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void CleanBasicBindingLibrary (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindigLibraryStandalone (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -87,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -112,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -462,7 +462,7 @@ AAAA==";
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void DesignTimeBuild (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject {

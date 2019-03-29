@@ -1555,8 +1555,10 @@ set_profile_options (JNIEnv *env)
 
 		if ((col && !strncmp (value, "log:", 4)) || !strcmp (value, "log"))
 			extension = utils.strdup_new ("mlpd");
+		else if ((col && !strncmp (value, "aot:", 4)) || !strcmp (value, "aot"))
+			extension = utils.strdup_new ("aotprofile");
 		else {
-			int len = col ? col - value - 1 : strlen (value);
+			int len = col ? col - value : strlen (value);
 			extension = new char [len + 1];
 			strncpy (extension, value, len);
 			extension [len] = '\0';
