@@ -376,6 +376,7 @@ namespace Xamarin.Android.Build.Tests
 		protected virtual void CleanupTest ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
 			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;
