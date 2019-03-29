@@ -487,19 +487,23 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
 	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') " />
 </Target>
+
+<ItemGroup>
+	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
+</ItemGroup>
 	
 <Target Name="_AddAndroidCustomMetaData">
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferencePath)"
-      MetaDataItems="@(_AndroidAssemblySkipCases)"
+      MetaDataItems="@(AndroidCustomMetaDataForReferences)"
     >
     <Output TaskParameter="Output" ItemName="_ReferencePath" />
   </AppendCustomMetadataToItemGroup>
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferenceDependencyPaths)"
-      MetaDataItems="@(_AndroidAssemblySkipCases)"
+      MetaDataItems="@(AndroidCustomMetaDataForReferences)"
     >
     <Output TaskParameter="Output" ItemName="_ReferenceDependencyPaths" />
   </AppendCustomMetadataToItemGroup>

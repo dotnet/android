@@ -53,6 +53,8 @@ namespace Xamarin.Android.Tasks
 		string CachePath;
 		MD5 md5 = MD5.Create ();
 
+		internal const string AndroidSkipResourceExtraction = "AndroidSkipResourceExtraction";
+
 		public GetAdditionalResourcesFromAssemblies ()
 		{
 		}
@@ -403,6 +405,10 @@ namespace Xamarin.Android.Tasks
 				: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), CacheBaseDir);
 
 				foreach (var assemblyItem in Assemblies) {
+					if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceExtraction), out bool value) && value) {
+						LogDebugMessage ($"Skipping {assemblyItem.ItemSpec} due to 'AndroidSkipResourceExtraction' == 'true' ");
+						continue;
+					}
 					string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
 					if (DesignTimeBuild && !File.Exists (fullPath)) {
 						LogWarning ("Failed to load '{0}'. Check the file exists or the project has been built.", fullPath);
