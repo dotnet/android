@@ -3320,7 +3320,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ExitCode" PropertyName="_DeployEditCode" />
     <Output TaskParameter="ConsoleOutput" PropertyName="_DeployConsoleOutput" />
   </Exec>
-  <Error Text="$(_DeployCommand) exitied with code $(_DeployEditCode): $(_DeployConsoleOutput)" Condition="'$(_DeployEditCode)' != '0'" />
+  <Error Text="The command &quot;$(_DeployCommand)&quot; exitied with code $(_DeployEditCode): $(_DeployConsoleOutput)" Condition="'$(_DeployEditCode)' != '0'" />
 </Target>
 
 <Target Name="Install"
