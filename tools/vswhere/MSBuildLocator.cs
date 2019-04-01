@@ -46,6 +46,7 @@ namespace Xamarin.Android.Tools.VSWhere
 		{
 			var info = new ProcessStartInfo {
 				FileName = fileName,
+				WorkingDirectory = Path.GetDirectoryName (fileName),
 				Arguments = args,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
