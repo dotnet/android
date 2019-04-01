@@ -16,6 +16,7 @@
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>portable</DebugType>
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
@@ -124,6 +125,7 @@
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
     <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
+    <Compile Include="Tasks\GenerateLibraryResources.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
