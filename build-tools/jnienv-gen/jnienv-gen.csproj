@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.JniEnv</RootNamespace>
     <AssemblyName>jnienv-gen</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

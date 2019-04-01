@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\scripts\XAVersionInfo.targets" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <Import Project="..\installers\create-installers.targets" />
   <PropertyGroup>
     <!-- Don't ever deploy, since that won't work on Mac -->
     <DeployExtension>False</DeployExtension>
@@ -9,7 +8,6 @@
       $(PrepareForBuildDependsOn);
       AddContent
     </PrepareForBuildDependsOn>
-    <LibDir>..\..\bin\$(Configuration)\lib\xamarin.android\</LibDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <MSBuild>
@@ -24,110 +22,35 @@
     </ReferenceAssemblies>
     <ThirdPartyNotice>
       <IncludeInVSIX>True</IncludeInVSIX>
-      <VSIXSubPath/>
+      <VSIXSubPath>/</VSIXSubPath>
       <InstallRoot/>
     </ThirdPartyNotice>
   </ItemDefinitionGroup>
-  <Target Name="AddContent"
+   <Target Name="AddContent"
+      DependsOnTargets="ConstructInstallerItems"
       Returns="@(MSBuild);@(ReferenceAssemblies)">
-    <ReadLinesFromFile File="$(LibDir)\xbuild-frameworks\.__sys_links.txt">
-      <Output TaskParameter="Lines" ItemName="_SymLinks"/>
-    </ReadLinesFromFile>
     <ItemGroup>
-      <_FirstFrameworkFile  Include="Mono.Android.Export.dll" />
-      <_FirstFrameworkFile  Include="Mono.Android.Export.pdb" />
-      <_FirstFrameworkFile  Include="OpenTK-1.0.dll" />
-      <_FirstFrameworkFile  Include="OpenTK-1.0.pdb" />
-      <_FirstFrameworkFile  Include="OpenTK-1.0.xml" />
-      <_FirstFrameworkFile  Include="OpenTK.dll" />
-      <_FirstFrameworkFile  Include="OpenTK.pdb" />
-      <_FirstFrameworkFile  Include="OpenTK.xml" />
-    </ItemGroup>
-    <ItemGroup>
-      <MSBuild Include="$(LibDir)xbuild\Novell\**\*.*" />
-      <MSBuild>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Novell/%(RecursiveDir)</VSIXSubPath>
-      </MSBuild>
-      <MSBuild Include="$(LibDir)xbuild\Xamarin\**\*.*" />
-      <MSBuild>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/%(RecursiveDir)</VSIXSubPath>
-      </MSBuild>
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-Darwin\**\*.*" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\lib\host-Linux\**\*.*" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Darwin\**\*.*" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\Linux\**\*.*" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\**\*.dylib" />
-      <MSBuild Remove="$(LibDir)xbuild\Xamarin\Android\**\*.pdb" />
-      <MSBuild
-          Condition=" '$(Configuration)' != 'Debug' "
-          Remove="$(LibDir)xbuild\Xamarin\Android\**\*.d.so"
-      />
-      <MSBuild Include="..\..\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\**\*.*" />
-      <MSBuild>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/%(RecursiveDir)</VSIXSubPath>
-      </MSBuild>
-      <MSBuild>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Xamarin/Android/%(RecursiveDir)</VSIXSubPath>
-      </MSBuild>
-      <MSBuild>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == 'Xamarin/Android/lib/host-mxe-Win64/' ">Xamarin/Android/</VSIXSubPath>
-      </MSBuild>
-      <MSBuild Remove="$(LibDir)xbuild\**\*.d.dll" />
-      <MSBuild Remove="$(LibDir)xbuild\**\*.d.exe" />
-      <ReferenceAssemblies Include="$(LibDir)xbuild-frameworks\**\*.*" />
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\.__sys_links.txt" />
-      <ReferenceAssemblies
-          Condition=" '@(_SymLinks)' != '' "
-          Remove="$(LibDir)xbuild-frameworks\%(_SymLinks.Identity)\**\*.*"
-      />
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\*.dylib" />
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\libZipSharp*.*" />
-    </ItemGroup>
-    <ItemGroup Condition="Exists('$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)')">
-      <ReferenceAssemblies Remove="$(LibDir)xbuild-frameworks\**\%(_FirstFrameworkFile.Identity)" />
-      <ReferenceAssemblies
-          Condition=" Exists ('$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)') "
-          Include="$(LibDir)xbuild-frameworks\MonoAndroid\$(AndroidFirstFrameworkVersion)\%(_FirstFrameworkFile.Identity)">
-        <VSIXSubPath>Microsoft/Framework/MonoAndroid/$(AndroidFirstFrameworkVersion)/</VSIXSubPath>
+      <ReferenceAssemblies Include="@(FrameworkItemsWin)" >
+        <VSIXSubPath>Microsoft/Framework/MonoAndroid/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
       </ReferenceAssemblies>
-    </ItemGroup>
-    <ItemGroup>
-      <ReferenceAssemblies>
-        <VSIXSubPath Condition=" '%(VSIXSubPath)' == '' ">Microsoft/Framework/%(RecursiveDir)</VSIXSubPath>
-      </ReferenceAssemblies>
-      <ThirdPartyNotice Include="$(LibDir)\ThirdPartyNotices.txt">
-        <VSIXSubPath>/</VSIXSubPath>
-      </ThirdPartyNotice>
-    </ItemGroup>
-    <!-- https://bugzilla.xamarin.com/show_bug.cgi?id=54804
-      Mono's `ZipPackage` mis-handles files w/o an extension,
-      causing VS to state that the .vsix is invalid.
-      Remove these files for now.
-      -->
-    <ItemGroup>
-      <_MSBuildFilesWithoutExtension
-          Condition=" '%(Extension)' == '' "
-          Include="@(MSBuild)"
-      />
-      <MSBuild Remove="@(_MSBuildFilesWithoutExtension)" />
-      <_ReferenceFilesWithoutExtension
-          Condition=" '%(Extension)' == '' "
-          Include="@(ReferenceAssemblies)"
-      />
-      <ReferenceAssemblies Remove="@(_ReferenceFilesWithoutExtension)" />
+      <MSBuild Include="@(MSBuildItemsWin)" >
+        <VSIXSubPath>Xamarin/Android/$([System.IO.Path]::GetDirectoryName(%(RelativePath)))</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="@(XATargetsSrcFiles)" >
+        <VSIXSubPath>Xamarin/</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="@(LegacyTargetsFiles)" >
+        <VSIXSubPath>Novell/</VSIXSubPath>
+      </MSBuild>
+      <MSBuild Include="@(VersionFiles)" >
+        <VSIXSubPath>Xamarin/Android/</VSIXSubPath>
+      </MSBuild>
     </ItemGroup>
     <ItemGroup>
       <Content Include="@(MSBuild)" />
       <Content Include="@(ReferenceAssemblies)" />
       <Content Include="@(ThirdPartyNotice)" />
     </ItemGroup>
-  </Target>
-  <Target Name="GetVsixVersion"
-      DependsOnTargets="GetXAVersionInfo"
-      Returns="$(VsixVersion)">
-    <PropertyGroup>
-      <VsixVersion>$(ProductVersion).$(XAVersionCommitCount)</VsixVersion>
-    </PropertyGroup>
   </Target>
   <Target Name="FixupTargetVsixContainer"
       BeforeTargets="VSIXContainerProjectOutputGroup;CreateVsixContainer"
@@ -160,11 +83,7 @@
   <Target Name="_GetVsixPath"
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
-      <_Branch>$(XAVersionBranch.Replace ('/', '-'))</_Branch>
-      <_Branch>$(_Branch.Replace ('\', '-'))</_Branch>
-    </PropertyGroup>
-    <PropertyGroup>
-      <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-OSS-$(ProductVersion).$(XAVersionCommitCount)_$(_Branch)_$(XAVersionHash).vsix</VsixPath>
+      <VsixPath Condition=" '$(VsixPath)' == '' ">..\..\bin\Build$(Configuration)\$(AssemblyName)-$(XAOSSInstallerSuffix).vsix</VsixPath>
       <_VsixDir>$([System.IO.Path]::GetDirectoryName ($(VsixPath)))</_VsixDir>
     </PropertyGroup>
   </Target>

@@ -13,18 +13,24 @@
   />
   <PropertyGroup>
     <ProductVersion>9.2.99</ProductVersion>
+    <!-- TFV for all projects, try v4.7.2 but fallback if needed -->
+    <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.7.1</TargetFrameworkVersion>
     <!-- Used by the `build-tools/create-vsix` build so that `Mono.Android.Export.dll`/etc. are only included *once* -->
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/scripts/BuildEverything.mk` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v4.4</AndroidFirstFrameworkVersion>
+    <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
+    <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
     <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">28</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v9.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* (possibly unstable) API level binding that we support; for informational purposes -->
-    <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">28</AndroidLatestApiLevel>
-    <AndroidLatestPlatformId Condition=" '$(AndroidLatestPlatformId)' == '' ">28</AndroidLatestPlatformId>
-    <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v9.0</AndroidLatestFrameworkVersion>
+    <AndroidLatestApiLevel Condition="'$(AndroidLatestApiLevel)' == ''">29</AndroidLatestApiLevel>
+    <AndroidLatestPlatformId Condition=" '$(AndroidLatestPlatformId)' == '' ">Q</AndroidLatestPlatformId>
+    <AndroidLatestFrameworkVersion Condition="'$(AndroidLatestFrameworkVersion)' == ''">v9.0.99</AndroidLatestFrameworkVersion>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -58,8 +64,8 @@
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
-    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.6.4111459</AndroidCmakeVersion>
-    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion)</AndroidCmakeVersionPath>
+    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
+    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
     <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\$(AndroidCmakeVersionPath)</AndroidSdkCmakeDirectory>
     <CmakePath Condition=" '$(CmakePath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\cmake</CmakePath>
     <NinjaPath Condition=" '$(NinjaPath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\ninja</NinjaPath>
@@ -69,7 +75,7 @@
     <AntDirectory>$(AndroidToolchainDirectory)\ant</AntDirectory>
     <AntToolPath>$(AntDirectory)\bin</AntToolPath>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
-    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:x86</AndroidSupportedTargetJitAbis>
+    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
@@ -97,10 +103,12 @@
     <XAPlatformToolsVersion>28.0.0</XAPlatformToolsVersion>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
+    <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.8.0</XABundleToolVersion>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
+    <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
-    <TestsFlavor>$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
+    <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
     <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>

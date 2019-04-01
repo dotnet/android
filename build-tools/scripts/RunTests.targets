@@ -117,7 +117,7 @@
       <_ExeExtension></_ExeExtension>
       <_HostOS Condition=" '$(_HostOS)' == 'Windows' "></_HostOS>
       <_ExeExtension Condition=" '$(_HostOS)' == 'Windows' ">.exe</_ExeExtension>
-      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin-android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
+      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
       <_CrossCompilerAvailable Condition=" '$(_CrossCompilerAvailable)' == '' ">False</_CrossCompilerAvailable>
     </PropertyGroup>
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
@@ -134,6 +134,21 @@
         Projects="$(_TopDir)\tests\RunApkTests.targets"
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AotAssemblies=True"
+    />
+    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
+      <_ApkTestProjectProfiledAot>
+        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-profiled-AOT.binlog"</_BinLog>
+      </_ApkTestProjectProfiledAot>
+    </ItemGroup>
+    <Exec
+        Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AndroidEnableProfiledAot=True"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+    />
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+        Properties="AndroidEnableProfiledAot=True;AotAssemblies=True"
     />
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
       <_ApkTestProjectBundle>

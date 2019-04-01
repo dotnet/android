@@ -6,6 +6,17 @@ _BUNDLE_ZIPS_INCLUDE  = \
 _BUNDLE_ZIPS_EXCLUDE  = \
 	$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip
 
+create-installers: create-pkg create-vsix
+
+create-pkg:
+	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \
+		build-tools/create-pkg/create-pkg.csproj \
+		$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
+		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
+		$(if $(PKG_LICENSE_EN),/p:PkgLicenseSrcEn="$(PKG_LICENSE_EN)") \
+		$(if $(PKG_OUTPUT_PATH),/p:PkgProductOutputPath="$(PKG_OUTPUT_PATH)") \
+		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
+
 create-vsix:
 	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-vsix) /p:Configuration=$(CONFIGURATION) /p:CreateVsixContainer=True \
 		build-tools/create-vsix/create-vsix.csproj \
@@ -16,7 +27,8 @@ create-vsix:
 		$(if $(REPO_NAME),/p:XARepositoryName="$(REPO_NAME)") \
 		$(if $(PACKAGE_HEAD_BRANCH),/p:XAVersionBranch="$(PACKAGE_HEAD_BRANCH)") \
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
-		$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)")
+		$(if $(COMMIT),/p:XAVersionHash="$(COMMIT)") \
+		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 package-oss-name:
 	@echo ZIP_OUTPUT=$(ZIP_OUTPUT)
@@ -61,8 +73,9 @@ package-deb: $(ZIP_OUTPUT)
 _TEST_RESULTS_BUNDLE_INCLUDE = \
 	$(wildcard TestResult-*.xml) \
 	$(wildcard bin/Test$(CONFIGURATION)/compatibility) \
-	$(wildcard bin/Test$(CONFIGURATION)/temp) \
+	$(wildcard bin/Test$(CONFIGURATION)/logcat*) \
 	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
+	$(wildcard bin/Test$(CONFIGURATION)/temp) \
 	$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt) \
 	$(wildcard bin/Test$(CONFIGURATION)/Timing_*) \
 	$(wildcard *.csv)
@@ -83,8 +96,7 @@ _BUILD_STATUS_BUNDLE_INCLUDE = \
 	$(shell find . -name 'CMakeCache.txt') \
 	$(shell find . -name 'config.h') \
 	$(shell find . -name '.ninja_log') \
-	$(shell find . -name 'android-*.config.cache') \
-	$(wildcard tests/logcat-$(CONFIGURATION)-*.txt)
+	$(shell find . -name 'android-*.config.cache')
 
 _BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 _BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)

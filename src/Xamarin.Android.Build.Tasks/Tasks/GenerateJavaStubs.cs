@@ -244,7 +244,7 @@ namespace Xamarin.Android.Tasks
 
 			// Create additional runtime provider java sources.
 			string providerTemplateFile = UseSharedRuntime ? "MonoRuntimeProvider.Shared.java" : "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = GetResource<JavaCallableWrapperGenerator> (providerTemplateFile);
+			string providerTemplate = GetResource (providerTemplateFile);
 			
 			foreach (var provider in additionalProviders) {
 				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
@@ -268,22 +268,18 @@ namespace Xamarin.Android.Tasks
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
-			
-			// Create NotifyTimeZoneChanges java sources.
-			string notifyTimeZoneChangesFile = "NotifyTimeZoneChanges.java";
-			SaveResource (notifyTimeZoneChangesFile, notifyTimeZoneChangesFile, real_app_dir, template => template);
 		}
 
-		string GetResource <T> (string resource)
+		string GetResource (string resource)
 		{
-			using (var stream = typeof (T).Assembly.GetManifestResourceStream (resource))
+			using (var stream = GetType ().Assembly.GetManifestResourceStream (resource))
 			using (var reader = new StreamReader (stream))
 				return reader.ReadToEnd ();
 		}
 
 		void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)
 		{
-			string template = GetResource<GenerateJavaStubs> (resource);
+			string template = GetResource (resource);
 			template = applyTemplate (template);
 			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}

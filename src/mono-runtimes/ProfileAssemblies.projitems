@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This is a GENERATED FILE -->
+<!-- See build-tools/scripts/gen-ProfileAssemblies.sh -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <MonoFacadeAssembly Include="Microsoft.Win32.Primitives.dll" />
     <MonoFacadeAssembly Include="Microsoft.Win32.Registry.dll" />
     <MonoFacadeAssembly Include="Microsoft.Win32.Registry.AccessControl.dll" />
+    <MonoFacadeAssembly Include="netstandard.dll" />
     <MonoFacadeAssembly Include="System.AppContext.dll" />
     <MonoFacadeAssembly Include="System.Buffers.dll" />
     <MonoFacadeAssembly Include="System.Collections.dll" />
@@ -29,6 +32,7 @@
     <MonoFacadeAssembly Include="System.Diagnostics.TraceSource.dll" />
     <MonoFacadeAssembly Include="System.Diagnostics.Tracing.dll" />
     <MonoFacadeAssembly Include="System.Drawing.Common.dll" />
+    <MonoFacadeAssembly Include="System.Drawing.Primitives.dll" />
     <MonoFacadeAssembly Include="System.Dynamic.Runtime.dll" />
     <MonoFacadeAssembly Include="System.Globalization.dll" />
     <MonoFacadeAssembly Include="System.Globalization.Calendars.dll" />
@@ -142,20 +146,10 @@
     <MonoFacadeAssembly Include="System.Xml.XPath.XDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.XPath.XmlDocument.dll" />
     <MonoFacadeAssembly Include="System.Xml.Xsl.Primitives.dll" />
-
-    <!--
-      System.Drawing.Primitives and netstandard need a reference to Mono.Android.dll so their
-      build is driven from the XA repo by invoking make in the Mono submodule and passing the path
-      to Mono.Android.dll. This doesn't work however if we just have a bundle because the Mono
-      submodule won't be built. We need to add the facades to the bundle and not rebuild them in
-      this case (which is fine since all they depend on is the Mono.Android.dll assembly identity).
-    -->
-    <MonoFacadeAssembly Include="System.Drawing.Primitives.dll" />
-    <MonoFacadeAssembly Include="netstandard.dll" />
   </ItemGroup>
   <ItemGroup>
-    <MonoProfileAssembly Include="I18N.CJK.dll" />
     <MonoProfileAssembly Include="I18N.dll" />
+    <MonoProfileAssembly Include="I18N.CJK.dll" />
     <MonoProfileAssembly Include="I18N.MidEast.dll" />
     <MonoProfileAssembly Include="I18N.Other.dll" />
     <MonoProfileAssembly Include="I18N.Rare.dll" />
@@ -166,14 +160,15 @@
     <MonoProfileAssembly Include="Mono.CSharp.dll" />
     <MonoProfileAssembly Include="Mono.Data.Sqlite.dll" />
     <MonoProfileAssembly Include="Mono.Data.Tds.dll" />
+    <MonoProfileAssembly Include="Mono.Posix.dll" />
     <MonoProfileAssembly Include="Mono.Security.dll" />
     <MonoProfileAssembly Include="mscorlib.dll" />
+    <MonoProfileAssembly Include="System.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.Composition.dll" />
     <MonoProfileAssembly Include="System.ComponentModel.DataAnnotations.dll" />
     <MonoProfileAssembly Include="System.Core.dll" />
     <MonoProfileAssembly Include="System.Data.dll" />
     <MonoProfileAssembly Include="System.Data.Services.Client.dll" />
-    <MonoProfileAssembly Include="System.dll" />
     <MonoProfileAssembly Include="System.IdentityModel.dll" />
     <MonoProfileAssembly Include="System.IO.Compression.dll" />
     <MonoProfileAssembly Include="System.IO.Compression.FileSystem.dll" />
@@ -184,6 +179,7 @@
     <MonoProfileAssembly Include="System.Numerics.dll" />
     <MonoProfileAssembly Include="System.Numerics.Vectors.dll" />
     <MonoProfileAssembly Include="System.Reflection.Context.dll" />
+    <MonoProfileAssembly Include="System.Runtime.CompilerServices.Unsafe.dll" />
     <MonoProfileAssembly Include="System.Runtime.Serialization.dll" />
     <MonoProfileAssembly Include="System.Security.dll" />
     <MonoProfileAssembly Include="System.ServiceModel.dll" />
@@ -198,83 +194,107 @@
   </ItemGroup>
   <ItemGroup>
     <MonoTestAssembly Include="monodroid_corlib_test.dll">
-      <SourcePath>corlib</SourcePath>
     </MonoTestAssembly>
+    <MonoTestSatelliteAssembly Include="es-ES/monodroid_corlib_test.resources.dll" />
+    <MonoTestSatelliteAssembly Include="nn-NO/monodroid_corlib_test.resources.dll" />
     <MonoTestAssembly Include="monodroid_corlib_xunit-test.dll">
-      <SourcePath>corlib</SourcePath>
-      <TestType>xunit</TestType>
-    </MonoTestAssembly>
-    <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
-      <SourcePath>System</SourcePath>
       <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.CJK_test.dll">
-      <SourcePath>I18N/CJK</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.MidEast_test.dll">
-      <SourcePath>I18N/MidEast</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_I18N.Other_test.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_I18N.Rare_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_I18N.West_test.dll">
-      <SourcePath>I18N/West</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Microsoft.CSharp_xunit-test.dll">
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.CSharp_test.dll">
-      <SourcePath>Mono.CSharp</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.Data.Sqlite_test.dll">
-      <SourcePath>Mono.Data.Sqlite</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.Data.Tds_test.dll">
-      <SourcePath>Mono.Data.Tds</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_Mono.Posix_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_Mono.Security_test.dll">
-      <SourcePath>Mono.Security</SourcePath>
     </MonoTestAssembly>
-    <MonoTestAssembly Include="monodroid_System_test.dll">
-      <SourcePath>System</SourcePath>
+    <MonoTestAssembly Include="monodroid_System.ComponentModel.Composition_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.ComponentModel.DataAnnotations_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Core_test.dll">
-      <SourcePath>System.Core</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Core_xunit-test.dll">
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Data_test.dll">
-      <SourcePath>System.Data</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Data_xunit-test.dll">
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.IO.Compression.FileSystem_test.dll">
-      <SourcePath>System.IO.Compression.FileSystem</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.IO.Compression_test.dll">
-      <SourcePath>System.IO.Compression</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Json_test.dll">
-      <SourcePath>System.Json</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Json_xunit-test.dll">
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Net.Http_test.dll">
-      <SourcePath>System.Net.Http</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Numerics_test.dll">
-      <SourcePath>System.Numerics</SourcePath>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Numerics_xunit-test.dll">
-      <SourcePath>System.Numerics</SourcePath>
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Runtime.CompilerServices.Unsafe_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_test.dll">
-      <SourcePath>System.Runtime.Serialization</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Runtime.Serialization_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Security_test.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Security_xunit-test.dll">
+      <TestType>xunit</TestType>
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.ServiceModel.Web_test.dll">
-      <SourcePath>System.ServiceModel.Web</SourcePath>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.ServiceModel_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Transactions_test.dll">
-      <SourcePath>System.Transactions</SourcePath>
     </MonoTestAssembly>
-    <MonoTestAssembly Include="monodroid_System.Xml_test.dll">
-      <SourcePath>System.XML</SourcePath>
+    <MonoTestAssembly Include="monodroid_System.Web.Services_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Xml.Linq_test.dll">
-      <SourcePath>System.Xml.Linq</SourcePath>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Xml.Linq_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Xml_test.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Xml_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System_test.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+  </ItemGroup>
+  <!-- Manual fixups -->
+  <ItemGroup>
+    <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
     <MonoTestAssembly Include="System.Runtime.CompilerServices.Unsafe.dll">
-      <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
-      <SourcePath>System.Runtime.CompilerServices.Unsafe</SourcePath>
       <TestType>reference</TestType>
     </MonoTestAssembly>
     <MonoTestRunner Include="nunitlite.dll" />

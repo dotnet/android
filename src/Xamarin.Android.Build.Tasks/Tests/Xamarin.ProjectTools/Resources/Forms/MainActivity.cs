@@ -19,6 +19,7 @@ namespace ${ROOT_NAMESPACE}
 
 			base.OnCreate (savedInstanceState);
 			global::Xamarin.Forms.Forms.Init (this, savedInstanceState);
+			//${AFTER_FORMS_INIT}
 			LoadApplication (new App ());
 		}
 	}

@@ -98,6 +98,37 @@ class MemTest {
 		}
 
 		[Test]
+		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool usePackageReference)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var packages = usePackageReference ? proj.PackageReferences : proj.Packages;
+			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			// packages.config needs every dependency listed
+			if (!usePackageReference) {
+				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
+				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
+				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
+				packages.Add (KnownPackages.SupportFragment_27_0_2_1);
+				packages.Add (KnownPackages.SupportCompat_27_0_2_1);
+				packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+				packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void BuildXamarinFormsMapsApplication ()
+		{
+			var proj = new XamarinFormsMapsApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
@@ -319,7 +350,7 @@ namespace UnamedProject
 					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
 					//"_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponent",
+					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};
@@ -424,7 +455,7 @@ namespace UnamedProject
 				var targetsToBeSkipped = new [] {
 					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponent",
+					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};
@@ -636,7 +667,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplication (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -707,7 +738,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplicationAndBundle (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -833,7 +864,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("JackFlagAndFxVersion")]
+		[TestCaseSource (nameof (JackFlagAndFxVersion))]
 		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -1575,7 +1606,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("AndroidStoreKeyTests")]
+		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string expected)
 		{
 			byte [] data;
@@ -1616,7 +1647,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("BuildApplicationWithJavaSourceChecks")]
+		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
 			var path = String.Format ("temp/BuildApplicationWithJavaSource_{0}_{1}",
@@ -1647,7 +1678,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("RuntimeChecks")]
+		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
@@ -1687,7 +1718,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("SequencePointChecks")]
+		[TestCaseSource (nameof (SequencePointChecks))]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
 			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
 		{
@@ -2108,16 +2139,19 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		public void ResourceExtraction ()
+		[NonParallelizable] //This test deletes files in CachePath, a shared directory
+		public void ResourceExtraction ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
 					KnownPackages.AndroidSupportV4_23_1_1_0,
+					KnownPackages.AndroidSupportCustomTabs_23_1_1_0,
 					KnownPackages.SupportV7AppCompat_23_1_1_0,
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var targetAar = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0",
 					"content", "m2repository", "com", "android", "support", "appcompat-v7", "23.1.1", "appcompat-v7-23.1.1.aar");
@@ -2214,7 +2248,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateEventNameArgs))]
 		public void GeneratorValidateEventName (bool failureExpected, bool warningExpected, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2284,7 +2318,7 @@ public class Test
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateMultiMethodEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateMultiMethodEventNameArgs))]
 		public void GeneratorValidateMultiMethodEventName (bool failureExpected, string expectedWarning, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2489,7 +2523,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 
 		[Test]
-		[TestCaseSource ("TlsProviderTestCases")]
+		[TestCaseSource (nameof (TlsProviderTestCases))]
 		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2548,29 +2582,24 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		//This test validates the _CleanIntermediateIfNuGetsChange target
 		[Test]
 		[NonParallelizable]
-		public void BuildAfterUpgradingNuget ([Values (false, true)] bool usePackageReference)
+		public void BuildAfterUpgradingNuget ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 
-			var packages = usePackageReference ? proj.PackageReferences : proj.Packages;
-			packages.Add (KnownPackages.XamarinForms_2_3_4_231);
-			packages.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
-			packages.Add (KnownPackages.SupportCompat_25_4_0_1);
-			packages.Add (KnownPackages.SupportCoreUI_25_4_0_1);
-			packages.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
-			packages.Add (KnownPackages.SupportDesign_25_4_0_1);
-			packages.Add (KnownPackages.SupportFragment_25_4_0_1);
-			packages.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
-			packages.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
-			packages.Add (KnownPackages.SupportV7CardView_25_4_0_1);
-			packages.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				if (usePackageReference) {
-					b.RequiresMSBuild = true;
-					b.Target = "Restore,Build";
-				}
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
 				b.CleanupAfterSuccessfulBuild =
 					b.CleanupOnDispose = false;
@@ -2585,29 +2614,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 
-				if (!usePackageReference) {
-					foreach (var p in proj.Packages) {
-						foreach (var r in p.References) {
-							proj.References.Remove (r);
-						}
-					}
-				}
-				packages.Clear ();
-				packages.Add (KnownPackages.XamarinForms_3_1_0_697729);
-				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-				packages.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-				packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-				packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-				packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-				packages.Add (KnownPackages.SupportDesign_27_0_2_1);
-				packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-				packages.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-				packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-				packages.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-				packages.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-				packages.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+				proj.PackageReferences.Clear ();
+				//NOTE: we can get all the other dependencies transitively, yay!
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_6_0_220655);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
@@ -2649,24 +2658,11 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");
 
 				proj.PackageReferences.Clear ();
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_1_0_697729);
-				proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-				proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-				proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-				b.Save (proj, doNotCleanupOnUpdate: true);
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				//NOTE: we can get all the other dependencies transitively, yay!
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_6_0_220655);
+				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");
 			}
 		}
 
@@ -3012,7 +3008,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("validateJavaVersionTestCases")]
+		[TestCaseSource (nameof (validateJavaVersionTestCases))]
 		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult) 
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");

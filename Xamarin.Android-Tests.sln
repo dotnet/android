@@ -84,9 +84,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\Embedd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO-UnitTests", "tests\EmbeddedDSOs\EmbeddedDSO-UnitTests\EmbeddedDSO-UnitTests.csproj", "{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Mono.Android-Test.Shared", "src\Mono.Android\Test\Mono.Android-Test.Shared.shproj", "{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Test.Library", "src\Mono.Android\Test\Mono.Android-Test.Library\Mono.Android-Test.Library.csproj", "{8CB5FF58-FF95-43B9-9064-9ACE9525866F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-TestsMultiDex", "tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj", "{9ECBEA14-B79F-4F92-9266-495C03A32571}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
 		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{40ead437-216b-4df4-8258-3f47e1672c3a}*SharedItemsImports = 4
+		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{9ecbea14-b79f-4f92-9266-495c03a32571}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,8 +103,10 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40EAD437-216B-4DF4-8258-3F47E1672C3A}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2305B00D-DE81-4744-B0DA-357835CAFE5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -229,6 +239,16 @@ Global
 		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9ECBEA14-B79F-4F92-9266-495C03A32571}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -261,6 +281,9 @@ Global
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{37CAA28C-40BE-4253-BA68-CC5D7316A617} = {68B8E272-5B12-47AA-8923-550B9CE535C7}
 		{6BE66B30-9346-4DA6-B09A-0CDC1DFE33C2} = {43A4FB09-279A-4138-8027-EC1E1CED2E8A}
+		{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
+		{8CB5FF58-FF95-43B9-9064-9ACE9525866F} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
+		{9ECBEA14-B79F-4F92-9266-495C03A32571} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8643CD20-B195-4919-8135-27549488237E}

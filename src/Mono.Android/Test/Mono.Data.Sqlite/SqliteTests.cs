@@ -147,5 +147,45 @@ namespace Mono.Data.Sqlite.Tests
 				Assert.AreEqual (kvp.Value, value, $"Database has a different value for key '{kvp.Key}': '{value}' instead of '{kvp.Value}'");
 			}
 		}
+
+		// https://bugzilla.xamarin.com/show_bug.cgi?id=46929
+		[Test]
+		public void MonoDataSqlite_DateTimeCalculations_ShouldBeCorrect ()
+		{
+			string dbPath = Path.Combine (Application.Context.FilesDir.AbsolutePath, "DateTimeTest.db");
+
+			if (File.Exists (dbPath))
+				File.Delete (dbPath);
+
+			SqliteConnection.CreateFile (dbPath);
+			DateTime storedTime = DateTime.Today;
+			object retreivedTime;
+			using (var connection = new SqliteConnection ($"Data Source={dbPath}"))
+			{
+				connection.Open ();
+				using (var command = connection.CreateCommand ())
+				{
+					command.CommandText = "create table TestTable(TimeColumn datetime)";
+					command.ExecuteNonQuery ();
+				}
+				using (var command = connection.CreateCommand ())
+				{
+					command.CommandText = "insert into TestTable(TimeColumn) values(@TimeColumn)";
+					command.Parameters.Add (new SqliteParameter { ParameterName = "TimeColumn", Value = storedTime });
+					command.ExecuteNonQuery ();
+				}
+				using (var command = connection.CreateCommand ())
+				{
+					command.CommandText = $"select TimeColumn from TestTable where TimeColumn = '{storedTime:yyyy-MM-dd HH:mm:ss}'";
+					command.Parameters.Add (new SqliteParameter { ParameterName = "TimeColumn", Value = storedTime });
+					retreivedTime = command.ExecuteScalar ();
+				}
+			}
+
+			if (File.Exists (dbPath))
+				File.Delete (dbPath);
+
+			Assert.AreEqual(storedTime, retreivedTime, $"Expected '{storedTime}', but was '{retreivedTime}'.");
+		}
 	}
 }

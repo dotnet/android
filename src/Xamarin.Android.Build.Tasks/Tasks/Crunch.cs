@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
 using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run ( () => {
 					DoExecute ();
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -97,7 +98,7 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
+				CancellationToken = CancellationToken,
 				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
@@ -176,7 +177,7 @@ namespace Xamarin.Android.Tasks
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
-			Token.Register (() => {
+			CancellationToken.Register (() => {
 				try {
 					proc.Kill ();
 				}

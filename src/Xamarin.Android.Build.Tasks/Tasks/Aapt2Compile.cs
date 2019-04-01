@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2Compile : Aapt2 {
 
+		readonly object lockObject = new object ();
 		List<ITaskItem> archives = new List<ITaskItem> ();
 
 		public bool ExplicitCrunch { get; set; }
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Tasks {
 			try {
 				var task = ThreadingTasks.Task.Run (() => {
 					DoExecute ();
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Tasks {
 			LoadResourceCaseMap ();
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
+				CancellationToken = CancellationToken,
 				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
@@ -75,7 +76,8 @@ namespace Xamarin.Android.Tasks {
 			var outputArchive = Path.Combine (FlatArchivesDirectory, $"{filename}.flata");
 			var success = RunAapt (GenerateCommandLineCommands (resourceDirectory, outputArchive), output);
 			if (success && File.Exists (Path.Combine (WorkingDirectory, outputArchive))) {
-				archives.Add (new TaskItem (outputArchive));
+				lock (lockObject)
+					archives.Add (new TaskItem (outputArchive));
 			}
 			foreach (var line in output) {
 				if (line.StdError) {

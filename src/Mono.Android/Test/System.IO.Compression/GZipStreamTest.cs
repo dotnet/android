@@ -27,6 +27,21 @@ namespace System.IO.CompressionTests
 
 			Assert.AreEqual (expected, result);
 		}
+
+		// https://bugzilla.xamarin.com/show_bug.cgi?id=34139
+		[Test]
+		public void GZipStreamFlush_WithNoData_ShouldNotThrow ()
+		{
+			Assert.DoesNotThrow (() => {
+				var data = new byte[1];
+				var backing = new MemoryStream ();
+				var compressing = new GZipStream (backing, CompressionMode.Compress);
+				compressing.Write (data, 0, 0);
+				compressing.Flush (); // throws here
+				compressing.Close ();
+				backing.Close ();
+			}, "Regression test for #34139 failed." );
+		}
 	}
 }
 

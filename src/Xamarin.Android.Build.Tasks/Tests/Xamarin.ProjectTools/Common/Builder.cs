@@ -7,9 +7,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Linq;
+using Xamarin.Android.Tools.VSWhere;
 
 using XABuildPaths = Xamarin.Android.Build.Paths;
 
@@ -49,23 +49,16 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
-		string GetVisualStudio2017Directory ()
+		static string visualStudioDirectory;
+
+		string GetVisualStudioDirectory ()
 		{
-			var editions = new [] {
-				"Enterprise",
-				"Professional",
-				"Community",
-				"BuildTools"
-			};
+			//We should cache and reuse this value, so we don't run vswhere.exe so much
+			if (!string.IsNullOrEmpty (visualStudioDirectory))
+				return visualStudioDirectory;
 
-			var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-			foreach (var edition in editions) {
-				var dir = Path.Combine (x86, "Microsoft Visual Studio", "2017", edition);
-				if (Directory.Exists (dir))
-					return dir;
-			}
-
-			return null;
+			var instance = MSBuildLocator.QueryLatest ();
+			return visualStudioDirectory = instance.VisualStudioRootPath;
 		}
 
 		public string XABuildExe {
@@ -128,7 +121,7 @@ namespace Xamarin.ProjectTools
 					if (Directory.Exists (Path.Combine (outdir, "lib")) && File.Exists (Path.Combine (outdir, libmonodroidPath)))
 						return Path.Combine (outdir, "lib", "xamarin.android");
 
-					var visualStudioDirectory = GetVisualStudio2017Directory ();
+					var visualStudioDirectory = GetVisualStudioDirectory ();
 					if (!string.IsNullOrEmpty (visualStudioDirectory))
 						return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
 
@@ -148,7 +141,7 @@ namespace Xamarin.ProjectTools
 	
 					return string.Empty;
 				}
-				var visualStudioDirectory = GetVisualStudio2017Directory ();
+				var visualStudioDirectory = GetVisualStudioDirectory ();
 				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
 					path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
 					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))

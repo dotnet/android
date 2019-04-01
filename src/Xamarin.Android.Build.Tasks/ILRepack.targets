@@ -26,6 +26,7 @@
 				Internalize="true"
 				Verbose="true"
 				DebugInfo="true"
+				TargetPlatformDirectory="$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', $(TargetFrameworkVersion), ''))"
 				InternalizeExclude="@(DoNotInternalizeAssemblies)"
 				InputAssemblies="$(OutputPath)\$(AssemblyName).dll;@(_InputAssembliesThatExist)"
 				LibraryPath="$(OutputPath)"

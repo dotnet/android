@@ -13,6 +13,7 @@ using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -68,6 +69,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
 
 		public string ExtraAotOptions { get; set; }
+
+		public ITaskItem [] Profiles { get; set; }
 
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
@@ -260,7 +263,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run ( () => {
 					return RunParallelAotCompiler (nativeLibs);
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -284,7 +287,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = Token,
+					CancellationToken = CancellationToken,
 					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 				};
 
@@ -425,6 +428,13 @@ namespace Xamarin.Android.Tasks
 
 					List<string> aotOptions = new List<string> ();
 
+					if (Profiles != null && Profiles.Length > 0) {
+						aotOptions.Add ("profile-only");
+						foreach (var p in Profiles) {
+							var fp = Path.GetFullPath (p.ItemSpec);
+							aotOptions.Add ($"profile={GetShortPath (fp)}");
+						}
+					}
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
 						aotOptions.Add (AotAdditionalArguments);
 					if (sequencePointsMode == SequencePointsMode.Offline)
@@ -508,7 +518,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
+				CancellationToken.Register (() => { try { proc.Kill (); } catch (Exception) { } });
 				proc.WaitForExit ();
 				if (psi.RedirectStandardError)
 					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));

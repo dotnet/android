@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+  <mono.android_test.library.CustomTextView
+      android:id="@+id/libText1"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="namespace_lower" />
+  <Mono.Android_Test.Library.CustomTextView
+      android:id="@+id/libText2"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="namespace_proper" />
+</LinearLayout>

@@ -4,8 +4,7 @@ namespace Xamarin.Android.UnitTests
 {
 	public enum MinimumLogLevel
 	{
-		Wtf,
-		Error,
+		Error       = 1,
 		Warning,
 		Info,
 		Debug,

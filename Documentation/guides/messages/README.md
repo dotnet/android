@@ -19,6 +19,7 @@
 
 + [XA0000](xa0000.md): Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion).
 + [XA0001](xa0001.md): Invalid or unsupported `$(TargetFrameworkVersion)` value.
++ [XA0118](xa0002.md): Could not find mono.android.jar
 
 + [XA0030](xa0030.md): Building with JDK Version `{versionNumber}` is not supported.
 + [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.
@@ -56,6 +57,7 @@
 + [XA1006](xa1006.md): Your application is running on a version of Android ({compileSdk}) that is more recent than your targetSdkVersion specifies ({targetSdk}). Set your targetSdkVersion to the highest version of Android available to match your TargetFrameworkVersion ({compileSdk}).
 + [XA1007](xa1007.md): The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).
 + [XA1008](xa1008.md): The TargetFrameworkVersion ({compileSdk}) should not be lower than targetSdkVersion ({targetSdk})
++ [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 
 ### XA2xxx Linker
 

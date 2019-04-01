@@ -3,13 +3,12 @@ title: "Build Process"
 ms.prod: xamarin
 ms.assetid: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
 ms.technology: xamarin-android
-author: mgmclemore
-ms.author: mamcle
-ms.date: 03/14/2018
+author: conceptdev
+ms.author: crdun
+ms.date: 03/22/2019
 ---
 
 # Build Process
-
 
 ## Overview
 
@@ -20,7 +19,6 @@ supporting the `AndroidAsset`, `AndroidResource`, and other
 [build actions](#Build_Actions), generating
 [Android-callable wrappers](~/android/platform/java-integration/android-callable-wrappers.md),
 and generating a `.apk` for execution on Android devices.
-
 
 ## Application Packages
 
@@ -111,7 +109,7 @@ The following build targets are defined for Xamarin.Android projects:
 
 MSBuild properties control the behavior of the targets. They are
 specified within the project file, e.g. **MyApp.csproj**, within
-an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w159bs.aspx).
+an [MSBuild PropertyGroup element](https://docs.microsoft.com/visualstudio/msbuild/propertygroup-element-msbuild).
 
 -   **Configuration** &ndash; Specifies the build configuration to use,
     such as "Debug" or "Release". The
@@ -139,7 +137,7 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     string or `Full`.
 
 -   **DebugType** &ndash; Specifies the
-    [type of debug symbols](http://msdn.microsoft.com/en-us/library/s5c8athz.aspx)
+    [type of debug symbols](https://docs.microsoft.com/visualstudio/msbuild/csc-task)
     to generate as part of the build, which also impacts whether the
     Application is debuggable. Possible values include:
 
@@ -154,7 +152,7 @@ an [MSBuild PropertyGroup element](http://msdn.microsoft.com/en-us/library/t4w15
     `DebugSymbols` property controls whether or not the Application is
     debuggable.
 
-    -   **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](LayoutCodeBehind.md)
+    -   **AndroidGenerateLayoutBindings** &ndash; Enables generation of [layout code-behind](https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/LayoutCodeBehind.md)
         if set to `true` or disables it completely if set to `false`. The
         default value is `false`.
 
@@ -166,7 +164,7 @@ Install properties control the behavior of the `Install` and
 -   **AdbTarget** &ndash; Specifies the Android target device the
     Android package may be installed to or removed from. The value of
     this property is the same as the
-    [`adb` Target Device option](http://developer.android.com/tools/help/adb.html#issuingcommands):
+    [`adb` Target Device option](https://developer.android.com/tools/help/adb.html#issuingcommands):
 
     ```bash
     # Install package onto emulator via -e
@@ -229,7 +227,7 @@ when packaging Release applications.
     documentation on [D8 and R8][d8-r8].
 
     [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-    [d8-r8]: D8andR8.md
+    [d8-r8]: https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/D8andR8.md
 
 -   **AndroidEnableDesugar** &ndash; A boolean property that
     determines if `desugar` is enabled. Android does not currently
@@ -279,9 +277,21 @@ when packaging Release applications.
 
     Added in Xamarin.Android 9.2.
 
+-   **AndroidEnableProfiledAot** &ndash; A boolean property that
+    determines whether or not the AOT profiles are used during the
+    Ahead-of-Time compilation.
+
+    The profiles are listed in `AndroidAotProfiles` item group. This
+    ItemGroup contains default profile(s). It can be overriden by
+    removing the existing one(s) and adding own AOT profiles.
+
+    Support for this property was added in Xamarin.Android 9.4.
+
+    This property is `False` by default.
+
 -   **AndroidEnableSGenConcurrent** &ndash; A boolean property that
     determines whether or not Mono's
-    [concurrent GC collector](http://www.mono-project.com/docs/about-mono/releases/4.8.0/#concurrent-sgen)
+    [concurrent GC collector](https://www.mono-project.com/docs/about-mono/releases/4.8.0/#concurrent-sgen)
     will be used.
 
     Support for this property was added in Xamarin.Android 7.2.
@@ -339,12 +349,16 @@ when packaging Release applications.
     By default this will be set to False. If the developers wish to use
     the new JNI marshal methods feature, they can set
 
-        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
+    ```xml
+    <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
+    ```
 
     in their .csproj. Alternatively provide the property on the command
     line via
 
-        /p:AndroidGenerateJniMarshalMethods=True
+    ```
+    /p:AndroidGenerateJniMarshalMethods=True
+    ```
 
     **Experimental**. Added in Xamarin.Android 9.2.
     The default value is False.
@@ -358,11 +372,16 @@ when packaging Release applications.
     Default value is empty string. It can be set in the .csproj file or
     on the command line. For example:
 
-        <AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
+    ```xml
+    <AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
+    ```
 
     or:
 
-        /p:AndroidGenerateJniMarshalMethodsAdditionalArguments="-v -d --keeptemp"
+    ```
+    /p:AndroidGenerateJniMarshalMethodsAdditionalArguments="-v -d --keeptemp"
+    ```
+
     Added in Xamarin.Android 9.2.
 
 -   **AndroidHttpClientHandlerType** &ndash; Controls the default
@@ -426,7 +445,7 @@ when packaging Release applications.
     `proguard` if `$(AndroidEnableProguard)` is `True`. For further
     information see our documentation on [D8 and R8][d8-r8].
 
-    [d8-r8]: D8andR8.md
+    [d8-r8]: https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/D8andR8.md
 
 -   **AndroidLintEnabled** &ndash; A bool property which allows the developer to
     run the android `lint` tool as part of the packaging process.
@@ -471,8 +490,10 @@ when packaging Release applications.
     If you are getting this error you can add the following to the
     .csproj.
 
-        <DxExtraArguments>--force-jumbo </DxExtraArguments>
-        <AndroidMultiDexClassListExtraArgs>--disable-annotation-resolution-workaround</AndroidMultiDexClassListExtraArgs>
+    ```xml
+    <DxExtraArguments>--force-jumbo </DxExtraArguments>
+    <AndroidMultiDexClassListExtraArgs>--disable-annotation-resolution-workaround</AndroidMultiDexClassListExtraArgs>
+    ```
 
     this should allow the `dx` step to succeed.
 
@@ -517,7 +538,7 @@ when packaging Release applications.
     -   `btls`: Use
         [Boring SSL](https://boringssl.googlesource.com/boringssl) for
         TLS communication with
-        [HttpWebRequest](https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx).
+        [HttpWebRequest](https://docs.microsoft.com/dotnet/api/system.net.httpwebrequest).
         This allows use of TLS 1.2 on all Android versions.
 
     -   `legacy`: Use the historical managed SSL implementation for
@@ -656,7 +677,7 @@ when packaging Release applications.
     property is `True`.
 
 -   **EnableProguard** &ndash; A boolean property that determines
-    whether or not [proguard](http://developer.android.com/tools/help/proguard.html)
+    whether or not [proguard](https://developer.android.com/tools/help/proguard.html)
     is run as part of the packaging process to link Java code.
 
     Support for this property was added in Xamarin.Android 5.1.
@@ -687,7 +708,7 @@ when packaging Release applications.
 -   **LinkerDumpDependencies** &ndash; A bool property which enables
     generating of linker dependencies file. This file can be used as
     input for
-    [illinkanalyzer](https://github.com/mono/linker/tree/master/analyzer)
+    [illinkanalyzer](https://github.com/mono/linker/blob/master/src/analyzer/README.md)
     tool.
 
     The default value is False.
@@ -887,12 +908,16 @@ resources.
     If the developer wishes to use the new `aapt2` functionality
     they can set
 
-        <AndroidUseAapt2>True</AndroidUseAapt2>
+    ```xml
+    <AndroidUseAapt2>True</AndroidUseAapt2>
+    ```
 
     in their .csproj. Alternatively provide the property on the command line
     via
 
-        /p:AndroidUseAapt2=True
+    ```
+    /p:AndroidUseAapt2=True
+    ```
 
     Added in Xamarin.Android 8.3.
 
@@ -986,7 +1011,7 @@ To use the keystore generated above, use the property group:
 ## Build Actions
 
 *Build actions* are
-[applied to files](http://msdn.microsoft.com/en-us/library/bb629388.aspx)
+[applied to files](https://docs.microsoft.com/visualstudio/msbuild/common-msbuild-project-items)
 within the project and control how the file is processed.
 
 

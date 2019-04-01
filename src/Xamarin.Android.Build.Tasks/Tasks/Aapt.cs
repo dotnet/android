@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => {
+				CancellationToken.Register (() => {
 					try {
 						proc.Kill ();
 					} catch (Exception) {
@@ -237,7 +238,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				var task = ThreadingTasks.Task.Run (() => {
 					DoExecute ();
-				}, Token);
+				}, CancellationToken);
 
 				task.ContinueWith (Complete);
 
@@ -256,7 +257,7 @@ namespace Xamarin.Android.Tasks
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
+				CancellationToken = CancellationToken,
 				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
 			};
 
@@ -328,12 +329,22 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitchIfNotNull ("-F ", currentResourceOutputFile + ".bk");
 			// The order of -S arguments is *important*, always make sure this one comes FIRST
 			cmd.AppendSwitchIfNotNull ("-S ", resourceDirectory.TrimEnd ('\\'));
-			if (AdditionalResourceDirectories != null)
-				foreach (var resdir in AdditionalResourceDirectories)
-					cmd.AppendSwitchIfNotNull ("-S ", resdir.ItemSpec.TrimEnd ('\\'));
-			if (AdditionalAndroidResourcePaths != null)
-				foreach (var dir in AdditionalAndroidResourcePaths)
-					cmd.AppendSwitchIfNotNull ("-S ", Path.Combine (dir.ItemSpec.TrimEnd (System.IO.Path.DirectorySeparatorChar), "res"));
+			if (AdditionalResourceDirectories != null) {
+				foreach (var dir in AdditionalResourceDirectories) {
+					var resdir = dir.ItemSpec.TrimEnd ('\\');
+					if (Directory.Exists (resdir)) {
+						cmd.AppendSwitchIfNotNull ("-S ", resdir);
+					}
+				}
+			}
+			if (AdditionalAndroidResourcePaths != null) {
+				foreach (var dir in AdditionalAndroidResourcePaths) {
+					var resdir = Path.Combine (dir.ItemSpec, "res");
+					if (Directory.Exists (resdir)) {
+						cmd.AppendSwitchIfNotNull ("-S ", resdir);
+					}
+				}
+			}
 
 			if (LibraryProjectJars != null)
 				foreach (var jar in LibraryProjectJars)

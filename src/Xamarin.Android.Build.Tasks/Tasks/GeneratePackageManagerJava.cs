@@ -77,17 +77,11 @@ namespace Xamarin.Android.Tasks
 
 			using (var stream = new MemoryStream ())
 			using (var pkgmgr = new StreamWriter (stream)) {
-				// Write the boilerplate from the MonoPackageManager.java resource
-				using (var template = new StreamReader (Assembly.GetExecutingAssembly ().GetManifestResourceStream ("MonoPackageManager.java"))) {
-					string line;
-					while ((line = template.ReadLine ()) != null) {
-						pkgmgr.WriteLine (line);
-					}
-				}
+				pkgmgr.WriteLine ("package mono;");
 
 				// Write all the user assemblies
-				pkgmgr.WriteLine ("class MonoPackageManager_Resources {");
-				pkgmgr.WriteLine ("\tpublic static final String[] Assemblies = new String[]{");
+				pkgmgr.WriteLine ("public class MonoPackageManager_Resources {");
+				pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
 				foreach (var assembly in assemblies) {
@@ -96,7 +90,7 @@ namespace Xamarin.Android.Tasks
 
 				// Write the assembly dependencies
 				pkgmgr.WriteLine ("\t};");
-				pkgmgr.WriteLine ("\tpublic static final String[] Dependencies = new String[]{");
+				pkgmgr.WriteLine ("\tpublic static String[] Dependencies = new String[]{");
 
 				//foreach (var assembly in assemblies.Except (args.Assemblies)) {
 				//        if (args.SharedRuntime && !Toolbox.IsInSharedRuntime (assembly))
@@ -106,7 +100,7 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.WriteLine ("\t};");
 
 				// Write the platform api apk we need
-				pkgmgr.WriteLine ("\tpublic static final String ApiPackageName = {0};", shared_runtime
+				pkgmgr.WriteLine ("\tpublic static String ApiPackageName = {0};", shared_runtime
 						? string.Format ("\"Mono.Android.Platform.ApiLevel_{0}\"",
 							MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion))
 						: "null");
@@ -114,7 +108,7 @@ namespace Xamarin.Android.Tasks
 				pkgmgr.Flush ();
 
 				// Only copy to the real location if the contents actually changed
-				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager.java"));
+				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
 
 				MonoAndroidHelper.CopyIfStreamChanged (stream, dest);
 			}
