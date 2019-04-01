@@ -4,6 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_NuGet>.nuget\NuGet.exe</_NuGet>
+    <_NuGetVerbosity>-Verbosity Detailed</_NuGetVerbosity>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
@@ -16,14 +17,34 @@
     <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\download-bundle\download-bundle.csproj" />
-    <Exec Command="$(_NuGet) restore Xamarin.Android.sln" WorkingDirectory="$(_TopDir)" />
-    <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
-    <Exec Command="$(_NuGet) restore external\LibZipSharp\libZipSharp.sln" WorkingDirectory="$(_TopDir)" />
-    <Exec Command="$(_NuGet) restore external\xamarin-android-tools\Xamarin.Android.Tools.sln" WorkingDirectory="$(_TopDir)" />
+    <Exec
+        Command="$(_NuGet) restore $(_NuGetVerbosity) Xamarin.Android.sln"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <Exec
+        Command="$(_NuGet) restore $(_NuGetVerbosity) external\Java.Interop\Java.Interop.sln"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <Exec
+        Command="$(_NuGet) restore $(_NuGetVerbosity) external\LibZipSharp\libZipSharp.sln"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <Exec
+        Command="$(_NuGet) restore $(_NuGetVerbosity) external\xamarin-android-tools\Xamarin.Android.Tools.sln"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
     <MSBuild Projects="tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj" Targets="Restore" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
     <!--NOTE: need to restore test sln *after* android-toolchain has the Android SDK in place-->
-    <Exec Command="$(_NuGet) restore Xamarin.Android-Tests.sln" WorkingDirectory="$(_TopDir)" />
+    <Exec
+        Command="$(_NuGet) restore $(_NuGetVerbosity) Xamarin.Android-Tests.sln"
+        WorkingDirectory="$(_TopDir)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
     <JdkInfo
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"

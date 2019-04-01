@@ -462,7 +462,7 @@ namespace UnnamedProject
 				Assert.AreEqual ("@color/deep_purple_A200", item.Value, "item value should be @color/deep_purple_A200");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "AndroidResgen: Warning while updating Resource XML"),
 					"Warning while processing resources should not have been raised.");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubs"), "Target _GenerateJavaStubs should have been skipped");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
