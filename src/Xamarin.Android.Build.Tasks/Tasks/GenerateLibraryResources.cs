@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 
 		string main_r_txt;
 		string output_directory;
-		Dictionary<Tuple<string, string>, string> r_txt_mapping;
+		Dictionary<string, string> r_txt_mapping;
 
 		void DoExecute ()
 		{
@@ -61,10 +61,10 @@ namespace Xamarin.Android.Tasks
 
 			// Load the "main" R.txt file into a dictionary
 			main_r_txt = Path.GetFullPath (ResourceSymbolsTextFile);
-			r_txt_mapping = new Dictionary<Tuple<string, string>, string> ();
+			r_txt_mapping = new Dictionary<string, string> ();
 			using (var reader = File.OpenText (main_r_txt)) {
 				foreach (var line in ParseFile (reader)) {
-					var key = new Tuple<string, string> (line [Index.Class], line [Index.Name]);
+					var key = line [Index.Class] + " " + line [Index.Name];
 					r_txt_mapping [key] = line [Index.Value];
 				}
 			}
@@ -201,7 +201,7 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 
-			var key = new Tuple<string, string> (clazz, name);
+			var key = clazz + " " + name;
 			return r_txt_mapping.TryGetValue (key, out value);
 		}
 
