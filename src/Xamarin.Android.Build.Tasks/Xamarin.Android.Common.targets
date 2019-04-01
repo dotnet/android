@@ -242,6 +242,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidLintDisabledIssues Condition=" '$(AndroidLintDisabledIssues)' == ''"></AndroidLintDisabledIssues>
 	<AndroidLintChecks Condition=" '$(AndroidLintChecks)' == ''"></AndroidLintChecks>
 	<AndroidLintEnabled Condition=" '$(AndroidLintEnabled)' == ''">False</AndroidLintEnabled>
+	<AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' and '$(AndroidResgenFile )' == '' ">True</AndroidUseIntermediateDesignerFile>
 	<AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">False</AndroidUseIntermediateDesignerFile>
 
 	<!-- Google Play Store Checks -->
