@@ -1,7 +1,5 @@
 // This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
-import groovy.json.JsonSlurper
-
 def XADir = "xamarin-android"
 
 def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
@@ -12,93 +10,36 @@ def hasPrLabelFullMonoIntegrationBuild = false
 
 def buildTarget = 'jenkins'
 
-def stageWithTimeout(stageName, timeoutValue, timeoutUnit, directory, fatal, ctAttempts = 0, Closure body) {
-    try {
-        stage(stageName) {
-            def retryAttempt = 0
-            def waitSecondsBeforeRetry = 15
-            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
-                timeout(time: timeoutValue, unit: timeoutUnit) {
-                    dir(directory) {
-                        if (retryAttempt > 0) {
-                            echo "WARNING : Stage ${stageName} failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
-                            sleep(waitSecondsBeforeRetry)
-                            echo "Retrying ..."
-                            waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
-                        }
-
-                        retryAttempt++
-                        body()
-                    }
-                }
-            }
-        }
-    } catch (error) {
-        def result = fatal ? 'ERROR' : 'UNSTABLE'
-        echo "ERROR : ${stageName}: Unexpected error: ${error}. Marking build as ${result}."
-        currentBuild.result = result
-        if (fatal) {
-            throw error
-        }
-    } finally {
-        echo "Stage result: ${stageName}: ${currentBuild.currentResult}"
-    }
-}
-
-def publishPackages(filePaths) {
-    def status = 0
-    try {
-         // Note: The following function is provided by the Azure Blob Jenkins plugin
-         azureUpload(storageCredentialId: env.StorageCredentialId,
-                 storageType: "blobstorage",
-                 containerName: env.ContainerName,
-                 virtualPath: env.StorageVirtualPath,
-                 filesPath: filePaths,
-                 allowAnonymousAccess: true,
-                 pubAccessible: true,
-                 doNotWaitForPreviousBuild: true,
-                 uploadArtifactsOnlyIfSuccessful: true)
-    } catch (error) {
-        echo "ERROR : publishPackages: Unexpected error: ${error}"
-        status = 1
-    }
-
-    return status
-}
+def utils = null
 
 prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
 
-def hasPrLabel (gitRepo, prId, prLabel) {
-    if (!prLabels) {
-        prLabels = []
-
-        def url = "https://api.github.com/repos/${gitRepo}/issues/${prId}"
-        def jsonContent = new URL(url).getText()
-        if (!jsonContent) {
-            throw "ERROR : Unable to obtain json content containing PR labels from '${url}'"
-        }
-
-        def jsonSlurper = new JsonSlurper()             // http://groovy-lang.org/json.html
-        def json = jsonSlurper.parseText(jsonContent)   // Note: We must use parseText instead of parse(url). parse(url) leads to error 'Scripts not permitted to use method groovy.json.JsonSlurper parse java.net.URL'
-
-        for (label in json.labels) {
-            prLabels.add(label.name)
-        }
-    }
-
-    return prLabels.contains(prLabel)
-}
-
 timestamps {
     node("${env.BotLabel}") {
-        def scmVars
+        def scmVars = null
 
-        stageWithTimeout('checkout', 60, 'MINUTES', XADir, true, 3) {    // Time ranges from seconds to minutes depending on how many changes need to be brought down
-            sh "env"
-            scmVars = checkout scm
+        stage ("checkout") {
+            def ctAttempts = 3
+            def retryAttempt = 0
+            def waitSecondsBeforeRetry = 15
+            retry(ctAttempts) {     // Retry will always invoke the body at least once for an attempt count of 0 or 1
+                dir (XADir) {
+                    if (retryAttempt > 0) {
+                        echo "WARNING : Stage checkout failed on try #${retryAttempt}. Waiting ${waitSecondsBeforeRetry} seconds"
+                        sleep(waitSecondsBeforeRetry)
+                        echo "Retrying ..."
+                        waitSecondsBeforeRetry = waitSecondsBeforeRetry * 2
+                    }
+
+                    retryAttempt++
+                    scmVars = checkout scm
+                }
+            }
         }
 
-        stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+        utils = load "${XADir}/build-tools/automation/utils.groovy"
+
+        utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -121,7 +62,7 @@ timestamps {
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
 
-                if (hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                if (utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
                     hasPrLabelFullMonoIntegrationBuild = true
                     buildTarget = 'jenkins'
                 } else {
@@ -137,24 +78,26 @@ timestamps {
             }
 
             echo "${buildType} buildTarget: ${buildTarget}"
+
+            sh "env"
         }
 
-        stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+        utils.stageWithTimeout('clean', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             // We need to make sure there's no test AVD present and that the Android emulator isn't running
             // This is to assure that all tests start from the same state
             sh "killall -9 qemu-system-x86_64 || true"
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
+        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
-        stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+        utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
-        stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             if (isPr) {
                 // Override _MSBUILD_ARGS to ensure we only package the `AndroidSupportedTargetJitAbis` which are built.
                 // Also ensure that we don't require mono bundle components in the installer if this is not a full mono integration build.
@@ -165,15 +108,15 @@ timestamps {
             }
         }
 
-        stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
         }
 
-        stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
+        utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
         }
 
-        stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
+        utils.stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
@@ -182,7 +125,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+        utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*";
 
             if (!isPr) {
@@ -190,19 +133,19 @@ timestamps {
             }
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def commandStatus = publishPackages(publishBuildFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
             if (commandStatus != 0) {
                 error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
+        utils.stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
             def skipNunitTests = false
 
             if (isPr) {
-                def hasPrLabelRunTestsRelease = hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
+                def hasPrLabelRunTestsRelease = utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
                 skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
                 echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
             }
@@ -213,7 +156,7 @@ timestamps {
             }
         }
 
-        stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+        utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
 
             publishHTML target: [
@@ -232,13 +175,13 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def commandStatus = publishPackages(publishTestFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
             if (commandStatus != 0) {
                 error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
-        stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
+        utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
             if (isPr) {
                 echo "Skipping plot metrics for PR build"
                 return
@@ -336,7 +279,7 @@ timestamps {
             )
         }
 
-        stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
+        utils.stageWithTimeout('Publish test results', 5, 'MINUTES', XADir, false, 3) {    // Typically takes under 1 minute to publish test results
             def initialStageResult = currentBuild.currentResult
 
             xunit thresholds: [
