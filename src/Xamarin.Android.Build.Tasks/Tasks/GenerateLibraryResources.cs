@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
+using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -40,7 +40,11 @@ namespace Xamarin.Android.Tasks
 		{
 			Yield ();
 			try {
-				this.RunTask (DoExecute).ContinueWith (Complete);
+				var task = ThreadingTasks.Task.Run (() => {
+					DoExecute ();
+				}, Token);
+				
+				task.ContinueWith (Complete);
 
 				base.Execute ();
 			} finally {
@@ -73,7 +77,12 @@ namespace Xamarin.Android.Tasks
 			output_directory = Path.GetFullPath (OutputDirectory);
 
 			var libraries = LibraryTextFiles.Zip (ManifestFiles, (textFile, manifestFile) => new Library (textFile, manifestFile));
-			this.ParallelForEach (libraries, GenerateJava);
+			var options = new ThreadingTasks.ParallelOptions {
+				CancellationToken = Token,
+				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
+			};
+
+			ThreadingTasks.Parallel.ForEach (libraries, options, GenerateJava);
 		}
 
 		/// <summary>
