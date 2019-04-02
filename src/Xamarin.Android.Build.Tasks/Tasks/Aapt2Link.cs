@@ -101,10 +101,12 @@ namespace Xamarin.Android.Tasks {
 
 				this.ParallelForEach (ManifestFiles, ProcessManifest);
 			} finally {
-				foreach (var temp in tempFiles) {
-					File.Delete (temp);
+				lock (tempFiles) {
+					foreach (var temp in tempFiles) {
+						File.Delete (temp);
+					}
+					tempFiles.Clear ();
 				}
-				tempFiles.Clear ();
 			}
 		}
 
@@ -272,7 +274,8 @@ namespace Xamarin.Android.Tasks {
 		string GetTempFile ()
 		{
 			var temp = Path.GetTempFileName ();
-			tempFiles.Add (temp);
+			lock (tempFiles)
+				tempFiles.Add (temp);
 			return temp;
 		}
 	}
