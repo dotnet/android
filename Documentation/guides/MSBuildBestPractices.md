@@ -340,14 +340,17 @@ Or if you want to cache across multiple-builds, use
 To *test* and validate your MSBuild task's use of
 `RegisteredTaskObjectLifetime.AppDomain` you have two choices:
 
-* Test builds in the IDE. You can verify with diagnostic logging
-  turned on or using the [Project System Tools][project_system] to
-  view `.binlog` files from builds in the IDE.
-* Set the `%MSBUILDNOINPROCNODE%` environment variable to `1` and
-  build command-line. This undocumented env var forces MSBuild to
-  create an out-of-process reusable node unless `/nr:false` or
-  `%MSBUILDDISABLENODEREUSE%=1`. You should see a leftover
-  `MSBuild.exe` worker node when running builds command-line.
+1. Test builds in the IDE. You can verify with diagnostic logging
+   turned on or using the [Project System Tools][project_system] to
+   view `.binlog` files from builds in the IDE.
+2. Set the `%MSBUILDNOINPROCNODE%` environment variable to `1` and
+   build command-line. This undocumented env var forces MSBuild to
+   create an out-of-process reusable node unless `/nr:false` or
+   `%MSBUILDDISABLENODEREUSE%=1`. You should see a leftover
+   `MSBuild.exe` worker node when running builds command-line.
+  
+_NOTE: Option 2 only works on Windows. Mono / macOS does not have
+an implementation of MSBuild out-of-process nodes yet._
 
 ### Other Notes on `RegisterTaskObject`
 
