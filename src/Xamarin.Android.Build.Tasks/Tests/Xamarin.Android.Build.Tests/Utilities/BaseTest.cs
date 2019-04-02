@@ -405,7 +405,9 @@ namespace Xamarin.Android.Build.Tests
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
-			var outputDir = TestOutputDirectories [TestContext.CurrentContext.Test.ID];
+			string outputDir = null;
+			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
+				return;
 			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 					return;
 			// find the "root" directory just below "temp" and clean from there because
