@@ -290,7 +290,7 @@ namespace Xamarin.ProjectTools
 			var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
 			var nuget = Path.Combine (Root, "NuGet.exe");
 			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
-				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
+				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -Verbosity Detailed -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
 				CreateNoWindow = true,
 				UseShellExecute = false,
 				WindowStyle = ProcessWindowStyle.Hidden,

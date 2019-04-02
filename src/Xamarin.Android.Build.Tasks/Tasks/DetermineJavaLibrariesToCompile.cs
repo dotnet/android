@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Linq;
 using System.IO;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
 	public class DetermineJavaLibrariesToCompile : Task
 	{
 		[Required]
-		public string MonoPlatformJarPath { get; set; }
+		public ITaskItem[] MonoPlatformJarPaths { get; set; }
 
 		public bool EnableInstantRun { get; set; }
 
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ("DetermineJavaLibrariesToCompile");
 			Log.LogDebugMessage ("  EnableInstantRun: {0}", EnableInstantRun);
-			Log.LogDebugMessage ("  MonoPlatformJarPath: {0}", MonoPlatformJarPath);
+			Log.LogDebugMessage ("  MonoPlatformJarPaths: {0}", MonoPlatformJarPaths);
 			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
 			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
 			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
@@ -46,7 +47,7 @@ namespace Xamarin.Android.Tasks
 
 			var jars = new List<ITaskItem> ();
 			if (!EnableInstantRun)
-				jars.Add (new TaskItem (MonoPlatformJarPath));
+				jars.AddRange (MonoPlatformJarPaths);
 			if (JavaSourceFiles != null)
 				foreach (var jar in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".jar"))
 					jars.Add (jar);
@@ -62,16 +63,33 @@ namespace Xamarin.Android.Tasks
 					jars.Add (jar);
 
 			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
-			jars          = jars.Where (j => distinct.Contains (j)).ToList ();
 
-			JavaLibrariesToCompile = jars.Where (j => !IsExcluded (j.ItemSpec)).ToArray ();
-			ReferenceJavaLibraries = (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ())
-				.Concat (jars.Except (JavaLibrariesToCompile)).ToArray ();
+			var javaLibrariesToCompile = new List<ITaskItem> ();
+			var referenceJavaLibraries = new List<ITaskItem> ();
+			if (ExternalJavaLibraries != null)
+				referenceJavaLibraries.AddRange (ExternalJavaLibraries);
+
+			foreach (var item in distinct) {
+				if (!HasClassFiles (item.ItemSpec))
+					continue;
+				if (IsExcluded (item.ItemSpec)) {
+					referenceJavaLibraries.Add (item);
+				} else {
+					javaLibrariesToCompile.Add (item);
+				}
+			}
+			JavaLibrariesToCompile = javaLibrariesToCompile.ToArray ();
+			ReferenceJavaLibraries = referenceJavaLibraries.ToArray ();
 
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
 			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
 
 			return true;
+		}
+
+		bool HasClassFiles (string jar)
+		{
+			return Files.ZipAny (jar, entry => entry.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
 		}
 
 		bool IsExcluded (string jar)

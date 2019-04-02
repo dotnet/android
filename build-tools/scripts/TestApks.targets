@@ -184,7 +184,7 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
-      <_LogcatFilenameBase>logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
+      <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
@@ -200,7 +200,7 @@
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
-        Timeout="1800000">
+        Timeout="3600000">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
     <RunUITests
@@ -263,10 +263,11 @@
       Condition=" '@(TestApk)' != '' ">
     <RenameTestCases
         Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
-        Configuration="$(Configuration)$(TestsFlavor)"
+        Configuration="$(Configuration)"
         DeleteSourceFiles="True"
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApkInstrumentation.ResultsPath)"
+        TestsFlavor="$(TestsFlavor)"
     />
   </Target>
   <Target Name="RecordApkSizes"

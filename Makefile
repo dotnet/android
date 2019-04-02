@@ -17,7 +17,8 @@ HOMEBREW_PREFIX := $prefix
 endif
 
 ifneq ($(V),0)
-MONO_OPTIONS += --debug
+MONO_OPTIONS   += --debug
+NUGET_VERBOSITY = -Verbosity Detailed
 endif
 
 ifneq ($(MONO_OPTIONS),)
@@ -122,8 +123,8 @@ $(eval $(call create_cmake_toolchain,mingw-32.cmake))
 $(eval $(call create_cmake_toolchain,mingw-64.cmake))
 
 prepare-external: prepare-deps
-	nuget restore $(SOLUTION)
-	nuget restore Xamarin.Android-Tests.sln
+	nuget restore $(NUGET_VERBOSITY) $(SOLUTION)
+	nuget restore $(NUGET_VERBOSITY) Xamarin.Android-Tests.sln
 	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
 	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
 	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)

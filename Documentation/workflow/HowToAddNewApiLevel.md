@@ -1,6 +1,23 @@
 
 # How to deal with new API Level
 
+
+## Quick Android Q API support workflow logs.
+
+- Make changes to Configuration.props
+- Add android-toolchain projitems
+- Run `make prepare` and `make` to first download platform-Q under `~/android-toolchain`
+- Generate android-Q.params.txt
+  - go to `external/Java.Interop/build-tools/xamarin-android-docimporter-ng`.
+  - add new API level to `generate.sh`
+  - run `nuget restore`, `make`, and `./generate.sh`. Take some rest (it takes a while).
+  - copy `android-*.params.txt` to `{xamarin-android topdir}/src/Mono.Android/Profiles/`.
+  - In `src/Mono.Android/Profiles/`, renamed `android-Q.params.txt` to `android-29.params.txt` as the later builds expect that.
+  - Make changes to `Configuration.props`, create `Configuration.Override.props` to set AndroidApiLevel etc.
+  - Make other changes to e.g. `build-tools/scripts/BuildEverything.mk`, `src/Mono.Android/Mono.Android.projitems`.
+  - run `make` on xamarin-android topdir. It results in various errors.
+  - Fix builds by making changes to `src/Mono.Android/metadata` and sources under `src/Mono.Android`.
+
 ## This documentation is incomplete
 
 In Xamarin ages, we used to have (more complete) API upgrade guide internally. But since then we switched to new xamarin-android repository which entirely changed the build system from Makefile to MSBuild solution, as well as the managed API for manipulating Android SDK, the old documentation almost does not make sense anymore. Even though I am writing this documentation, I don't know everything required (nor those who changed the build system didn't care about API upgrades).
@@ -76,3 +93,16 @@ Enumification work can be delayed and only the final API has to be enumified.
 Note that there are documented and undocumented XML nodes, and we don't have to deal with undocumented ones.
 
 Android P introduced no documented XML artifact.
+
+7) Update Android Tooling Versions
+
+These sre located in [Xamarin.Android.Common.props.in](../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props.in). The following MSBuild properties need to be updated to ensure 
+the latest tool versions are being used.
+
+`AndroidSdkBuildToolsVersion`
+`AndroidSdkPlatformToolsVersion`
+`AndroidSdkToolsVersion`
+
+The major version should match the new API level. For Android P this will be 28.x.x . If a version which exactly matches the API Level is not available then the latest version should be used.
+
+

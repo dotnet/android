@@ -23,6 +23,16 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static string DeviceAbi {
+				get;
+				private set;
+			}
+
+			public static bool CommercialBuildAvailable {
+				get;
+				private set;
+			}
+
 			[OneTimeSetUp]
 			public void BeforeAllTests ()
 			{
@@ -38,8 +48,18 @@ namespace Xamarin.Android.Build.Tests
 						result = result.Split ('*').First ().Trim ();
 					}
 					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
+					if (HasDevices) {
+						if (sdkVersion >= 21)
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+
+						if (string.IsNullOrEmpty (DeviceAbi))
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
+				}
+				using (var builder = new Builder ()) {
+					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 				}
 			}
 
@@ -66,6 +86,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		protected bool HasDevices => SetUp.HasDevices;
+
+		protected string DeviceAbi => SetUp.DeviceAbi;
 
 		protected bool IsWindows {
 			get { return Environment.OSVersion.Platform == PlatformID.Win32NT; }
@@ -94,6 +116,8 @@ namespace Xamarin.Android.Build.Tests
 				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 			}
 		}
+
+		public bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
@@ -376,6 +400,7 @@ namespace Xamarin.Android.Build.Tests
 		protected virtual void CleanupTest ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
 			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
 					return;

@@ -94,6 +94,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v13.21.0.3.0\\lib\\MonoAndroid10\\Xamarin.Android.Support.v4.dll" }
 			}
 		};
+		public static Package AndroidSupportCustomTabs_23_1_1_0 = new Package () {
+			Id = "Xamarin.Android.Support.CustomTabs",
+			Version = "23.1.1.0",
+			TargetFramework = "MonoAndroid10",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.CustomTabs") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.CustomTabs.23.1.1.0\\lib\\MonoAndroid403\\Xamarin.Android.Support.CustomTabs.dll" }
+			}
+		};
 		public static Package AndroidWear = new Package () {
 			Id = "Xamarin.Android.Wear",
 			Version = "1.0.0-preview7",
@@ -483,6 +492,19 @@ namespace Xamarin.ProjectTools
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Platform") {
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
+				},
+			}
+		};
+		public static Package XamarinFormsMaps_3_6_0_220655 = new Package {
+			Id = "Xamarin.Forms.Maps",
+			Version = "3.6.0.220655",
+			TargetFramework = "MonoAndroid90",
+			References =  {
+				new BuildItem.Reference ("Xamarin.Forms.Maps.Android") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.Android.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Maps") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.dll"
 				},
 			}
 		};

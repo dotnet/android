@@ -12,7 +12,6 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	
@@ -38,9 +37,7 @@ namespace Xamarin.Android.Tasks {
 
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run (() => {
-					DoExecute ();
-				}, Token);
+				var task = this.RunTask (DoExecute);
 
 				task.ContinueWith (Complete);
 
@@ -56,15 +53,10 @@ namespace Xamarin.Android.Tasks {
 		{
 			LoadResourceCaseMap ();
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
-			ThreadingTasks.Parallel.ForEach (ResourceDirectories, options, ProcessDirectory);
+			this.ParallelForEachWithLock (ResourceDirectories, ProcessDirectory);
 		}
 
-		void ProcessDirectory (ITaskItem resourceDirectory)
+		void ProcessDirectory (ITaskItem resourceDirectory, object lockObject)
 		{
 			if (!Directory.EnumerateDirectories (resourceDirectory.ItemSpec).Any ())
 				return;
@@ -75,7 +67,8 @@ namespace Xamarin.Android.Tasks {
 			var outputArchive = Path.Combine (FlatArchivesDirectory, $"{filename}.flata");
 			var success = RunAapt (GenerateCommandLineCommands (resourceDirectory, outputArchive), output);
 			if (success && File.Exists (Path.Combine (WorkingDirectory, outputArchive))) {
-				archives.Add (new TaskItem (outputArchive));
+				lock (lockObject)
+					archives.Add (new TaskItem (outputArchive));
 			}
 			foreach (var line in output) {
 				if (line.StdError) {

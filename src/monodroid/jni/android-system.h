@@ -41,10 +41,11 @@ namespace xamarin { namespace android { namespace internal
 		static char *libmonoandroid_directory_path;
 #endif
 
-#if __SIZEOF_POINTER__ == 4 || defined (_WIN32)
-#define __BITNESS__ "32bit"
-#elif __SIZEOF_POINTER__ == 8 || defined (_WIN64)
+// _WIN32 is defined with _WIN64 so _WIN64 must be checked first.
+#if __SIZEOF_POINTER__ == 8 || defined (_WIN64)
 #define __BITNESS__ "64bit"
+#elif __SIZEOF_POINTER__ == 4 || defined (_WIN32)
+#define __BITNESS__ "32bit"
 #else
 #error Unknown pointer size for this platform
 #endif
@@ -59,7 +60,7 @@ namespace xamarin { namespace android { namespace internal
 #elif LINUX
 		static constexpr char SYSTEM_LIB_PATH[] = "/usr/lib";
 #elif APPLE_OS_X
-		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Libraries/";
+		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/lib/host-Darwin";
 #elif WINDOWS
 		static const char *SYSTEM_LIB_PATH;
 #else

@@ -145,6 +145,12 @@
       <Id>28</Id>
       <Stable>True</Stable>
     </AndroidApiInfo>
+    <AndroidApiInfo Include="v9.0.99">
+      <Name>Q</Name>
+      <Level>29</Level>
+      <Id>Q</Id>
+      <Stable>False</Stable>
+    </AndroidApiInfo>
   </ItemGroup>
 
 </Project>

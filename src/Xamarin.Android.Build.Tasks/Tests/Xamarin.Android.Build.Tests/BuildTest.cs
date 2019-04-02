@@ -120,6 +120,15 @@ class MemTest {
 		}
 
 		[Test]
+		public void BuildXamarinFormsMapsApplication ()
+		{
+			var proj = new XamarinFormsMapsApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
@@ -341,7 +350,6 @@ namespace UnamedProject
 					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
 					//"_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};
@@ -446,7 +454,6 @@ namespace UnamedProject
 				var targetsToBeSkipped = new [] {
 					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
 					"_UpdateAndroidResgen",
-					"_GenerateJavaDesignerForComponentAapt2",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
 				};
@@ -658,7 +665,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplication (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -729,7 +736,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("AotChecks")]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
 		public void BuildAotApplicationAndBundle (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -855,7 +862,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource ("JackFlagAndFxVersion")]
+		[TestCaseSource (nameof (JackFlagAndFxVersion))]
 		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -1597,7 +1604,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("AndroidStoreKeyTests")]
+		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string expected)
 		{
 			byte [] data;
@@ -1638,7 +1645,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("BuildApplicationWithJavaSourceChecks")]
+		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
 			var path = String.Format ("temp/BuildApplicationWithJavaSource_{0}_{1}",
@@ -1669,7 +1676,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("RuntimeChecks")]
+		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
@@ -1709,7 +1716,7 @@ namespace App1
 		}
 
 		[Test]
-		[TestCaseSource ("SequencePointChecks")]
+		[TestCaseSource (nameof (SequencePointChecks))]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
 			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
 		{
@@ -2130,16 +2137,19 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		public void ResourceExtraction ()
+		[NonParallelizable] //This test deletes files in CachePath, a shared directory
+		public void ResourceExtraction ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
 					KnownPackages.AndroidSupportV4_23_1_1_0,
+					KnownPackages.AndroidSupportCustomTabs_23_1_1_0,
 					KnownPackages.SupportV7AppCompat_23_1_1_0,
 				},
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var targetAar = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0",
 					"content", "m2repository", "com", "android", "support", "appcompat-v7", "23.1.1", "appcompat-v7-23.1.1.aar");
@@ -2236,7 +2246,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateEventNameArgs))]
 		public void GeneratorValidateEventName (bool failureExpected, bool warningExpected, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2306,7 +2316,7 @@ public class Test
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("GeneratorValidateMultiMethodEventNameArgs")]
+		[TestCaseSource (nameof (GeneratorValidateMultiMethodEventNameArgs))]
 		public void GeneratorValidateMultiMethodEventName (bool failureExpected, string expectedWarning, string metadataFixup, string methodArgs)
 		{
 			string java = @"
@@ -2431,6 +2441,37 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
 				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,
 					"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
+
+				//Since this is using an old support library, its main R.java should "match" the library one
+				var src = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
+				var main_r_java = Path.Combine (src, "unnamedproject", "unnamedproject", "R.java");
+				FileAssert.Exists (main_r_java);
+				var lib_r_java = Path.Combine (src, "android", "support", "v4", "R.java");
+				FileAssert.Exists (lib_r_java);
+
+				void TrimHeader (List<string> lines)
+				{
+					for (int i = 0; i < lines.Count; i++) {
+						if (lines [i].StartsWith ("package ", StringComparison.Ordinal)) {
+							lines.RemoveRange (0, i + 1);
+							break;
+						}
+					}
+				}
+
+				//Beyond the `package com.foo;` line, each line should match: ignoring whitespace
+				var main_r_contents = File.ReadAllLines (main_r_java).ToList ();
+				TrimHeader (main_r_contents);
+				var lib_r_contents = File.ReadAllLines (lib_r_java).ToList ();
+				TrimHeader (lib_r_contents);
+				var regex = new Regex (@"\s", RegexOptions.Compiled);
+				for (int i = 0; i < main_r_contents.Count && i < lib_r_contents.Count; i++) {
+					var main = main_r_contents [i];
+					var lib = lib_r_contents [i];
+					var expected = regex.Replace (main, "");
+					var actual = regex.Replace (lib, "");
+					Assert.AreEqual (expected, actual, $"Main R.java `{main}` does not match library R.java `{lib}");
+				}
 			}
 		}
 
@@ -2511,7 +2552,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 
 		[Test]
-		[TestCaseSource ("TlsProviderTestCases")]
+		[TestCaseSource (nameof (TlsProviderTestCases))]
 		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2996,7 +3037,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 #pragma warning restore 414
 
 		[Test]
-		[TestCaseSource ("validateJavaVersionTestCases")]
+		[TestCaseSource (nameof (validateJavaVersionTestCases))]
 		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult) 
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");

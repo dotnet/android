@@ -6,13 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-// using System.Threading.Tasks conflicts with Microsoft.Build.Utilities because of the Task type
-using ThreadingTasks = System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -68,6 +67,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
 
 		public string ExtraAotOptions { get; set; }
+
+		public ITaskItem [] Profiles { get; set; }
 
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
@@ -258,9 +259,7 @@ namespace Xamarin.Android.Tasks
 
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run ( () => {
-					return RunParallelAotCompiler (nativeLibs);
-				}, Token);
+				var task = this.RunTask (() => RunParallelAotCompiler (nativeLibs));
 
 				task.ContinueWith (Complete);
 
@@ -283,12 +282,7 @@ namespace Xamarin.Android.Tasks
 		bool RunParallelAotCompiler (List<string> nativeLibs)
 		{
 			try {
-				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = Token,
-					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-				};
-
-				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
+				this.ParallelForEach (GetAotConfigs (),
 					config => {
 						if (!config.Valid) {
 							Cancel ();
@@ -425,6 +419,13 @@ namespace Xamarin.Android.Tasks
 
 					List<string> aotOptions = new List<string> ();
 
+					if (Profiles != null && Profiles.Length > 0) {
+						aotOptions.Add ("profile-only");
+						foreach (var p in Profiles) {
+							var fp = Path.GetFullPath (p.ItemSpec);
+							aotOptions.Add ($"profile={GetShortPath (fp)}");
+						}
+					}
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
 						aotOptions.Add (AotAdditionalArguments);
 					if (sequencePointsMode == SequencePointsMode.Offline)
@@ -508,7 +509,7 @@ namespace Xamarin.Android.Tasks
 				proc.Start ();
 				proc.BeginOutputReadLine ();
 				proc.BeginErrorReadLine ();
-				Token.Register (() => { try { proc.Kill (); } catch (Exception) { } });
+				CancellationToken.Register (() => { try { proc.Kill (); } catch (Exception) { } });
 				proc.WaitForExit ();
 				if (psi.RedirectStandardError)
 					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));

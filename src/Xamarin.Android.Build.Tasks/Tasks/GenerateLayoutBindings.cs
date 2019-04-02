@@ -11,7 +11,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-using TPL = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -196,15 +196,8 @@ namespace Xamarin.Android.Tasks
 				// is changed!
 				Log.LogDebugMessage ($"Generating binding code in parallel (threshold of {CalculateLayoutCodeBehind.ParallelGenerationThreshold} layouts met)");
 				var fileSet = new ConcurrentBag <string> ();
-                                TPL.ParallelOptions options = new TPL.ParallelOptions {
-                                        CancellationToken = Token,
-                                        TaskScheduler = TPL.TaskScheduler.Default,
-                                };
-				TPL.Task.Factory.StartNew (
-					() => TPL.Parallel.ForEach (layoutGroups, options, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath))),
-					Token,
-					TPL.TaskCreationOptions.None,
-					TPL.TaskScheduler.Default
+				this.RunTask (
+					() => this.ParallelForEach (layoutGroups, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath)))
 				).ContinueWith (t => Complete ());
 				generatedFilePaths = fileSet;
 			} else {
