@@ -1884,7 +1884,31 @@ because xbuild doesn't support framework reference assemblies.
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
-  
+
+<Target Name="_CleanupOldStaticResources"
+    Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\app\ApplicationRegistration.java')">
+  <ItemGroup>
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\ResourcePatcher.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\MonoPackageManager.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\Placeholder.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\app\ApplicationRegistration.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\app\NotifyTimeZoneChanges.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MonkeyPatcher.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\MultiDexLoader.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\ResourcePatcher.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager_Resources.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\Placeholder.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\app\ApplicationRegistration.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\app\NotifyTimeZoneChanges.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\MonkeyPatcher.class" />
+  </ItemGroup>
+  <Delete Files="@(_OldStaticResources)" />
+</Target>
+
 <Target Name="_GetMonoPlatformJarPath">
   <GetMonoPlatformJar TargetFrameworkDirectory="$(TargetFrameworkDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
@@ -1895,7 +1919,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResources"
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
-		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
+		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_CleanupOldStaticResources;_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
   <CopyResource
     ResourceName="MonoRuntimeProvider.Bundled.java"
