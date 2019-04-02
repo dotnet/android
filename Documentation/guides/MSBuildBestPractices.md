@@ -308,6 +308,64 @@ Unfortunately, not all targets will have a `$(XDependsOn)` property.
 In some cases, `BeforeTargets` or `AfterTargets` is the only option.
 Consider what happens if the target fails in that case.
 
+## Caching in MSBuild Tasks
+
+There are two scenarios where you may want to do some kind of
+in-memory caching:
+
+1. You have some data you need to share between two MSBuild tasks--or
+   perhaps an instance of the same MSBuild task in another project
+   within the current build.
+2. You have some data you want to persist in-memory between *builds*,
+   while the same instance of the IDE is open.
+
+Scenario 1 can be achieved with `static` variables, although as
+mentioned on [Don't use Static in C#][static_csharp], shared `static`
+state can have its own pitfalls. Avoiding `static` for caching is
+probably a good idea.
+
+Instead we can use an API provided by MSBuild:
+
+```csharp
+// To cache a value
+string key = "foo";
+BuildEngine4.RegisterTaskObject (key, "bar", RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+// To retrieve a value
+string value = (string)BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build);
+```
+
+Or if you want to cache across multiple-builds, use
+`RegisteredTaskObjectLifetime.AppDomain` instead.
+
+To *test* and validate your MSBuild task's use of
+`RegisteredTaskObjectLifetime.AppDomain` you have two choices:
+
+1. Test builds in the IDE. You can verify with diagnostic logging
+   turned on or using the [Project System Tools][project_system] to
+   view `.binlog` files from builds in the IDE.
+2. Set the `%MSBUILDNOINPROCNODE%` environment variable to `1` and
+   build command-line. This undocumented env var forces MSBuild to
+   create an out-of-process reusable node unless `/nr:false` or
+   `%MSBUILDDISABLENODEREUSE%=1`. You should see a leftover
+   `MSBuild.exe` worker node when running builds command-line.
+  
+_NOTE: Option 2 only works on Windows. Mono / macOS does not have
+an implementation of MSBuild out-of-process nodes yet._
+
+### Other Notes on `RegisterTaskObject`
+
+* Make sure your cache invalidates properly. Use a key that will be
+  different if the proper environment change occurs: the attached
+  `$(AdbTarget)`, a file path, version number, etc.
+* Cache primitive values that will not use up a lot of memory.
+  `string` or `Tuple<string,string>` are fine data types to use as
+  keys and/or values.
+* Consider if the cached data should just be cached on-disk instead.
+  Is the data ephemeral? Will it be valid when restarting the IDE?
+
+[static_csharp]: https://softwareengineering.stackexchange.com/questions/161222/dont-use-static-in-c
+[project_system]: https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.ProjectSystemTools
+
 # Best Practices for Xamarin.Android MSBuild targets
 
 ## Naming in Xamarin.Android targets
