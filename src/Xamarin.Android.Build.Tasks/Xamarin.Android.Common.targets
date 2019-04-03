@@ -3316,11 +3316,22 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_DeployCommand>&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
   </PropertyGroup>
-  <Exec Command="$(_DeployCommand)" ContinueOnError="true" ConsoleToMSBuild="true">
-    <Output TaskParameter="ExitCode" PropertyName="_DeployEditCode" />
-    <Output TaskParameter="ConsoleOutput" PropertyName="_DeployConsoleOutput" />
+  <Exec
+      ContinueOnError="True"
+      Command="$(_DeployCommand)"
+      ConsoleToMSBuild="True">
+    <Output TaskParameter="ExitCode"      PropertyName="_DeployExitCode" />
+    <Output TaskParameter="ConsoleOutput" ItemName="_DeployConsoleOutput" />
   </Exec>
-  <Error Text="The command &quot;$(_DeployCommand)&quot; exitied with code $(_DeployEditCode): $(_DeployConsoleOutput)" Condition="'$(_DeployEditCode)' != '0'" />
+  <ItemGroup>
+    <_AdbError Include="The command `$(_DeployCommand)` exited with code $(_DeployExitCode):" />
+    <_AdbError Include="@(_DeployConsoleOutput->'  %(Identity)')" />
+  </ItemGroup>
+  <Error
+      Condition=" '$(_DeployExitCode)' != '0' "
+      Code="ADB0000"
+      Text="@(_AdbError, '%0a')"
+  />
 </Target>
 
 <Target Name="Install"
