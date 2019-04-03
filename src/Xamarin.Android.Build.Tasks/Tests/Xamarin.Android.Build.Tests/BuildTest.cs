@@ -3624,6 +3624,33 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void RemoveOldMonoPackageManager ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string target = "_CleanupOldStaticResources";
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				var oldMonoPackageManager = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
+				var appRegistration = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "app", "ApplicationRegistration.java");
+				Directory.CreateDirectory (Path.GetDirectoryName (appRegistration));
+				File.WriteAllText (oldMonoPackageManager, @"package mono;
+public class MonoPackageManager { }
+class MonoPackageManager_Resources { }");
+				File.WriteAllText (appRegistration, @"package mono.android.app;
+public class ApplicationRegistration { }");
+				var oldMonoPackageManagerClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
+				File.WriteAllText (oldMonoPackageManagerClass, "");
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
+				Assert.IsFalse (File.Exists (oldMonoPackageManagerClass), $"{oldMonoPackageManagerClass} should have been deleted.");
+				Assert.IsFalse (File.Exists (oldMonoPackageManager), $"{oldMonoPackageManager} should have been deleted.");
+				Assert.IsFalse (File.Exists (appRegistration), $"{appRegistration} should have been deleted.");
+			}
+		}
+
+		[Test]
 		public void CompilerErrorShouldNotRunLinkAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
