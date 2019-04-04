@@ -66,10 +66,10 @@ namespace EmbeddedDSOUnitTests
 			};
 		}
 
-		[SetUp]
+		[OneTimeSetUp]
 		public void BuildProject ()
 		{
-			testProjectPath = PrepareProject (TestContext.CurrentContext.Test.Name);
+			testProjectPath = PrepareProject (ProjectName);
 			string projectPath = Path.Combine (testProjectPath, $"{ProjectName}.csproj");
 			LocalBuilder builder = GetBuilder ("EmbeddedDSO");
 			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true" });
