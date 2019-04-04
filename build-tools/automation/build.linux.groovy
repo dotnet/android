@@ -9,8 +9,9 @@ def isStable = false            // Stable build workflow
 def publishPackages = false
 def pBuilderBindMounts = null
 def utils = null
-def prLabels = null             // Globally defined "static" list accessible within the hasPrLabel function
 def hasPrLabelFullMonoIntegrationBuild = false
+
+prLabels = null             // Globally defined "static" list accessible within the hasPrLabel function
 
 def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeCommand) {
     chroot chrootName: chRootName,
