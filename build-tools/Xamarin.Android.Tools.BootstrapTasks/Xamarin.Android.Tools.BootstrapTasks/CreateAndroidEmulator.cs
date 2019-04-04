@@ -172,14 +172,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 		}
 
+		bool inWarning = false;
+
 		void DefaultErrorHandler (object sender, DataReceivedEventArgs e)
 		{
-			if (string.IsNullOrEmpty (e.Data))
+			if (string.IsNullOrEmpty (e.Data)) {
+				inWarning = false;
 				return;
-			if (e.Data.StartsWith ("Warning:", StringComparison.Ordinal))
+			}
+			if (e.Data.StartsWith ("Warning:", StringComparison.Ordinal) || inWarning) {
 				Log.LogMessage ($"{e.Data}");
-			else
+				inWarning = true;
+			} else {
 				Log.LogError ($"{e.Data}");
+			}
 		}
 	}
 }
