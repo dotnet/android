@@ -3170,7 +3170,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void BuildAMassiveApp()
 		{
 			var testPath = Path.Combine("temp", "BuildAMassiveApp");
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, testPath) };
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
 			var sb = new SolutionBuilder("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine(Root, testPath),
 				Verbosity = LoggerVerbosity.Diagnostic,

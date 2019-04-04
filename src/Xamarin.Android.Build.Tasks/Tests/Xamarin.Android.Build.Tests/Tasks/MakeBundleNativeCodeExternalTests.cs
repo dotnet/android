@@ -23,7 +23,7 @@ namespace Xamarin.Android.Build.Tests {
 				messages: messages = new List<BuildMessageEventArgs> ());
 
 			path = Path.Combine (Root, "temp", TestName);
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { path };
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
 		}
 
 		[TestCase (null)]

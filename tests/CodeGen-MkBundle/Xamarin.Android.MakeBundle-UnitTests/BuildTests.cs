@@ -69,7 +69,7 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeGen-MkBundle");
 		}
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void BuildProject ()
 		{
 			if (File.Exists (Config.LlvmReadobj)) {

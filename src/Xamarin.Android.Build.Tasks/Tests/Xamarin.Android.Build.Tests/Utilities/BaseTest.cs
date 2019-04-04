@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,6 +16,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
+		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+
 		[SetUpFixture]
 		public class SetUp
 		{
@@ -321,13 +324,13 @@ namespace Xamarin.Android.Build.Tests
 
 		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, directory) };
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
 		protected ProjectBuilder CreateDllBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, directory) };
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
@@ -402,14 +405,14 @@ namespace Xamarin.Android.Build.Tests
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
-			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
+			string outputDir = null;
+			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
+				return;
+			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 					return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories
-			var items = (IList)TestContext.CurrentContext.Test.Properties ["Output"];
-			if (items.Count == 0)
-				return;
-			var output = Path.GetFullPath (items[0].ToString ());
+			var output = Path.GetFullPath (outputDir);
 			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
 					output = Directory.GetParent (output).FullName;
 			}
