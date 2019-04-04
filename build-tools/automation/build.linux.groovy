@@ -11,6 +11,8 @@ def pBuilderBindMounts = null
 def utils = null
 def hasPrLabelFullMonoIntegrationBuild = false
 
+prLabels = null             // Globally defined "static" list accessible within the hasPrLabel function
+
 def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeCommand) {
     chroot chrootName: chRootName,
         additionalPackages: chRootPackages,
