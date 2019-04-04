@@ -177,7 +177,7 @@
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"
-        ToolPath="$(JavaSdkDirectory)\bin"
+        JavaPath="$(JavaPath)"
         JarPath="$(BundleToolJarPath)"
         AdbToolExe="$(AdbToolExe)"
         AdbToolPath="$(AdbToolPath)"
@@ -190,7 +190,7 @@
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="install-apks --modules _ALL_ --apks &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"
-        ToolPath="$(JavaSdkDirectory)\bin"
+        JavaPath="$(JavaPath)"
         JarPath="$(BundleToolJarPath)"
         AdbToolExe="$(AdbToolExe)"
         AdbToolPath="$(AdbToolPath)"

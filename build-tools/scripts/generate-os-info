@@ -194,6 +194,7 @@ cat <<EOF > "$1"
         <HostCxx64 Condition=" '\$(HostCxx64)' == '' ">$HOST_CXX64</HostCxx64>
         <JavaCPath Condition=" '\$(JavaCPath)' == '' ">javac</JavaCPath>
         <JarPath Condition=" '\$(JarPath)' == '' ">jar</JarPath>
+        <JavaPath Condition=" '\$(JavaPath)' == '' ">java</JavaPath>
         <HostHomebrewPrefix Condition=" '\$(HostHomebrewPrefix)' == '' ">$HOST_HOMEBREW_PREFIX</HostHomebrewPrefix>
     </PropertyGroup>
 </Project>

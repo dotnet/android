@@ -8,6 +8,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class BundleTool : ToolTask
 	{
 		[Required]
+		public string JavaPath { get; set; }
+
+		[Required]
 		public string JarPath { get; set; }
 
 		[Required]
@@ -25,14 +28,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public string StorePass { get; set; }
 
-		protected override string ToolName {
-			get { return OS.IsWindows ? "java.exe" : "java"; }
-		}
+		protected override string ToolName => Path.GetFileName (JavaPath);
 
-		protected override string GenerateFullPathToTool ()
-		{
-			return Path.Combine (ToolPath, ToolExe);
-		}
+		protected override string GenerateFullPathToTool () => JavaPath;
 
 		protected override string GenerateCommandLineCommands ()
 		{
