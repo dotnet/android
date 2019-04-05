@@ -43,6 +43,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Ant.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CheckAdbTarget.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateAndroidEmulator.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\CreateFrameworkList.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Emulator.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateMonoDroidIncludes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\GenerateProfile.cs" />
