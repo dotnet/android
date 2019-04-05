@@ -1993,14 +1993,12 @@ because xbuild doesn't support framework reference assemblies.
 		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
 		DependsOnTargets="_ConvertPdbFiles">
 	<ItemGroup>
-		<_CopyPdbFilesOutputFiles Include="@(_ResolvedPortablePdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
 		<_CopyPdbFilesLinkerFiles Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
 	</ItemGroup>
-	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesOutputFiles)" />
 	<CopyIfChanged SourceFiles="@(_ResolvedPortablePdbFiles)" DestinationFiles="@(_CopyPdbFilesLinkerFiles)" />
 	<Touch Files="$(_AndroidStampDirectory)_CopyPdbFiles.stamp" AlwaysCreate="True" />
 	<ItemGroup>
-		<FileWrites Include="@(_CopyPdbFilesOutputFiles);@(_CopyPdbFilesLinkerFiles)" />
+		<FileWrites Include="@(_CopyPdbFilesLinkerFiles)" />
 	</ItemGroup>
 </Target>
 
@@ -2009,14 +2007,12 @@ because xbuild doesn't support framework reference assemblies.
 		Outputs="$(_AndroidStampDirectory)_CopyMdbFiles.stamp"
 		DependsOnTargets="_CollectMdbFiles">
 	<ItemGroup>
-		<_CopyMdbFilesOutputFiles Include="@(_ResolvedMdbFiles->'$(OutputPath)%(Filename)%(Extension)')" />
 		<_CopyMdbFilesLinkerFiles Include="@(_ResolvedMdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
 	</ItemGroup>
-	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesOutputFiles)" />
 	<CopyIfChanged SourceFiles="@(_ResolvedMdbFiles)" DestinationFiles="@(_CopyMdbFilesLinkerFiles)" />
 	<Touch Files="$(_AndroidStampDirectory)_CopyMdbFiles.stamp" AlwaysCreate="True" />
 	<ItemGroup>
-		<FileWrites Include="@(_CopyMdbFilesOutputFiles);@(_CopyMdbFilesLinkerFiles)" />
+		<FileWrites Include="@(_CopyMdbFilesLinkerFiles)" />
 	</ItemGroup>
 </Target>
 	
