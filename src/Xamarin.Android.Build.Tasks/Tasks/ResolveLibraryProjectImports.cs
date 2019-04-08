@@ -200,7 +200,7 @@ namespace Xamarin.Android.Tasks
 					.Where (a => a != null)
 					.Distinct ()) {
 				if (DesignTimeBuild && !File.Exists (assemblyPath)) {
-					Log.LogDebugMessage ("Skipping non existant dependancy '{0}' due to design time build.", assemblyPath);
+					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
 					continue;
 				}
 				string assemblyFileName = Path.GetFileNameWithoutExtension (assemblyPath);
