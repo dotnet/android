@@ -312,6 +312,32 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckAppBundle ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Make sure the AAB is signed
+				var aab = Path.Combine (bin, "UnnamedProject.UnnamedProject-Signed.aab");
+				using (var zip = ZipHelper.OpenZip (aab)) {
+					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+				}
+
+				// Build with no changes
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+			}
+		}
+
+		[Test]
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {

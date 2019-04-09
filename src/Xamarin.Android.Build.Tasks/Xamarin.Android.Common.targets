@@ -735,6 +735,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_ApkSetIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apks</_ApkSetIntermediate>
 		<ApkFile>$(OutDir)$(_AndroidPackage).apk</ApkFile>
 		<ApkFileSigned>$(OutDir)$(_AndroidPackage)-Signed.apk</ApkFileSigned>
+		<_AabFileSigned>$(OutDir)$(_AndroidPackage)-Signed.aab</_AabFileSigned>
 	</PropertyGroup>
 </Target>
 
@@ -2833,7 +2834,16 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_PrepareBuildApk"
-  DependsOnTargets="$(_PrepareBuildApkDependsOnTargets)" />
+    DependsOnTargets="$(_PrepareBuildApkDependsOnTargets)">
+  <PropertyGroup>
+    <_BuildApkEmbedOutputs Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+      $(_AppBundleIntermediate)
+    </_BuildApkEmbedOutputs>
+    <_BuildApkEmbedOutputs Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+      $(ApkFileIntermediate)
+    </_BuildApkEmbedOutputs>
+  </PropertyGroup>
+</Target>
 
 <PropertyGroup>
 	<_BuildApkEmbedInputs>
@@ -2856,7 +2866,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_BuildApkEmbed"
   DependsOnTargets="_PrepareBuildApk"
   Inputs="$(_BuildApkEmbedInputs)"
-  Outputs="$(ApkFileIntermediate)"
+  Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
   <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
@@ -3102,10 +3112,33 @@ because xbuild doesn't support framework reference assemblies.
 	<Touch Files="$(_AndroidDebugKeyStoreFlag)" AlwaysCreate="True" Condition="'$(AndroidKeyStore)'!='True'" />
 </Target>
 
+<Target Name="_PrepareForSign">
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+    <_SignInputs>
+      $(MSBuildAllProjects);
+      $(_AndroidBuildPropertiesCache);
+      $(_AppBundleIntermediate);
+    </_SignInputs>
+    <_SignOutputs>
+      $(_AabFileSigned)
+    </_SignOutputs>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+    <_SignInputs>
+      $(MSBuildAllProjects);
+      $(_AndroidBuildPropertiesCache);
+      $(ApkFileIntermediate);
+    </_SignInputs>
+    <_SignOutputs>
+      $(ApkFileSigned)
+    </_SignOutputs>
+  </PropertyGroup>
+</Target>
+
 <Target Name="_Sign"
-	Inputs="$(MSBuildAllProjects);$(ApkFileIntermediate);$(_AndroidBuildPropertiesCache)"
-	Outputs="$(ApkFileSigned)"
-	DependsOnTargets="_ResolveAndroidSigningKey">
+	Inputs="$(_SignInputs)"
+	Outputs="$(_SignOutputs)"
+	DependsOnTargets="_PrepareForSign;_ResolveAndroidSigningKey">
 	<ItemGroup>
 		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' " Include="$(ApkFileIntermediate)" />
 		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' == 'aab' " Include="$(_AppBundleIntermediate)" />
