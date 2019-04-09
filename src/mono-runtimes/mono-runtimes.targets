@@ -5,6 +5,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll"  TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateFrameworkList" />
   <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
   <PropertyGroup>
     <_SourceTopDir>..\..</_SourceTopDir>
@@ -569,15 +570,20 @@
         Files="@(_BclInstalledItem)"
     />
     <ItemGroup>
-      <FrameworkList Include="&lt;FileList Redist=&quot;MonoAndroid&quot; Name=&quot;Xamarin.Android Base Class Libraries&quot;&gt;" />
-      <FrameworkList Include="  &lt;File AssemblyName=&quot;System.Buffers&quot;    Version=&quot;4.0.99.0&quot; /&gt;" />
-      <FrameworkList Include="  &lt;File AssemblyName=&quot;System.Memory&quot;     Version=&quot;4.0.99.0&quot; /&gt;" />
-      <FrameworkList Include="&lt;/FileList&gt;" />
+      <_VersionOverride Include="System.Buffers.dll">
+        <Version>4.0.99.0</Version>
+      </_VersionOverride>
+      <_VersionOverride Include="System.Memory.dll">
+        <Version>4.0.99.0</Version>
+      </_VersionOverride>
     </ItemGroup>
-    <WriteLinesToFile
-        File="$(_BclFrameworkDir)RedistList\FrameworkList.xml"
-        Lines="@(FrameworkList)"
-        Overwrite="True"
+    <CreateFrameworkList
+        Redist="MonoAndroid"
+        Name="Xamarin.Android Base Class Libraries"
+        FrameworkListFile="$(_BclFrameworkDir)RedistList\FrameworkList.xml"
+        FrameworkDirectory="$(_BclFrameworkDir)"
+        FrameworkFiles="@(MonoFacadeAssembly);@(MonoProfileAssembly)"
+        FrameworkFileOverrides="@(_VersionOverride)"
     />
   </Target>
 

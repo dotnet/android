@@ -128,6 +128,7 @@
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
     <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
+    <Compile Include="Tasks\FilterAssemblies.cs" />
     <Compile Include="Tasks\GenerateLibraryResources.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />
