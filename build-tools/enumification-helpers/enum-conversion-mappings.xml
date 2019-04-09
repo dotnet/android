@@ -1126,6 +1126,8 @@
   <!-- TelephonyManager.CDMA_ROAMING_MODE_* aren't enumified because there is no documented use of them. -->
   <!-- android.text.style.QuoteSpan.STANDARD_* aren't enumified because there is no documented use of them. -->
 
+  <map package='android.security.keystore' class='KeyProperties' fields='PURPOSE_' enum-name="TracingMode" api-level="23" />
+
   <map package='android.view.accessibility' class='AccessibilityEvent' prefix='WINDOWS_CHANGE_' enum-name="WindowsChange" api-level="28" />
   <map package='android.view' class='WindowManager.LayoutParams' prefix='LAYOUT_IN_DISPLAY_CUTOUT_MODE_' enum-name="LayoutInDisplayCutoutMode" api-level="28" />
   <map package='android.view.textclassifier' class='SelectionEvent' prefix='ACTION_' enum-name="SelectionAction" api-level="28" />
