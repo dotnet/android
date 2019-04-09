@@ -2054,7 +2054,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_LinkAssembliesNoShrink"
   Condition="'$(AndroidLinkMode)' == 'None'"
-  Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
+  Inputs="@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidLinkFlag)">
 
     <LinkAssemblies
