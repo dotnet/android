@@ -21,7 +21,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			Log.LogDebugTaskItems ("Source : ", Source);
 			using (var sha1 = SHA1.Create ()) {
 
 				foreach (var item in Source) {

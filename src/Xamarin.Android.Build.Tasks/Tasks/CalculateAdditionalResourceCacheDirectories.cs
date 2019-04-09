@@ -23,10 +23,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CalculateAdditionalResourceCacheDirectories Task");
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths:", AdditionalAndroidResourcePaths);
-			Log.LogDebugMessage ("  CacheDirectory: {0}", CacheDirectory);
-
 			if (!AdditionalAndroidResourcePaths.Any ())
 				return true;
 

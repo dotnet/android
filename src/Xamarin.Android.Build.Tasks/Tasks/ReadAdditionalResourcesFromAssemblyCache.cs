@@ -34,8 +34,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Task ReadAdditionalResourcesFromAssemblyCache");
-			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
 			if (!File.Exists (CacheFile)) {
 				Log.LogDebugMessage ("{0} does not exist. No Additional Resources found", CacheFile);
 				return !Log.HasLoggedErrors;

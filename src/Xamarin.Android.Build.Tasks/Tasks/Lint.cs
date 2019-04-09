@@ -185,8 +185,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Lint Task");
-
 			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
 				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
 				return false;
@@ -200,18 +198,6 @@ namespace Xamarin.Android.Tasks
 						DisabledIssues = issue.Key + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
 				}
 			}
-
-			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
-			Log.LogDebugMessage ("  JavaSdkPath: {0}", JavaSdkPath);
-			Log.LogDebugMessage ("  EnabledChecks: {0}", EnabledIssues);
-			Log.LogDebugMessage ("  DisabledChecks: {0}", DisabledIssues);
-			Log.LogDebugMessage ("  CheckIssues: {0}", CheckIssues);
-			Log.LogDebugTaskItems ("  ConfigFiles:", ConfigFiles);
-			Log.LogDebugTaskItems ("  ResourceDirectories:", ResourceDirectories);
-			Log.LogDebugTaskItems ("  SourceDirectories:", SourceDirectories);
-			Log.LogDebugTaskItems ("  ClassDirectories:", ClassDirectories);
-			Log.LogDebugTaskItems ("  LibraryDirectories:", LibraryDirectories);
-			Log.LogDebugTaskItems ("  LibraryJars:", LibraryJars);
 
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (lintToolVersion < issue.Value) {

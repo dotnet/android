@@ -100,10 +100,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GenerateCodeBehindForLayout Task");
-			Log.LogDebugMessage ("  MonoAndroidCodeBehindDir: {0}", MonoAndroidCodeBehindDir);
-			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles);
-
 			var generatedFiles = new List<ITaskItem> ();
 
 			var generatorOptions = new CodeGeneratorOptions {

@@ -29,12 +29,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ($"{nameof (DefaultJdkVersion)}: {DefaultJdkVersion}");
-			Log.LogDebugMessage ("EnableProguard: {0}", EnableProguard);
-			Log.LogDebugMessage ("EnableMultiDex: {0}", EnableMultiDex);
-			Log.LogDebugMessage ($"{nameof (JdkVersion)}: {JdkVersion}");
-			Log.LogDebugMessage ("SkipJavacVersionCheck: {0}", SkipJavacVersionCheck);
-
 			if (JdkVersion.StartsWith ("9", StringComparison.OrdinalIgnoreCase)) {
 				TargetVersion = SourceVersion = DefaultJdkVersion;
 			}

@@ -29,10 +29,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CopyIfChanged Task");
-			Log.LogDebugTaskItems ("  SourceFiles: {0}", SourceFiles);
-			Log.LogDebugTaskItems ("  DestinationFiles: {0}", DestinationFiles);
-
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 

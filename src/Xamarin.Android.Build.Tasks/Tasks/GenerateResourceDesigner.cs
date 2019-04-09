@@ -55,17 +55,6 @@ namespace Xamarin.Android.Tasks
 			// Use "Application" as the default namespace name to work with XS.
 			Namespace = Namespace ?? "Application";
 
-			Log.LogDebugMessage ("GenerateResourceDesigner Task");
-			Log.LogDebugMessage ("  NetResgenOutputFile: {0}", NetResgenOutputFile);
-			Log.LogDebugMessage ("  JavaResgenInputFile: {0}", JavaResgenInputFile);
-			Log.LogDebugMessage ("  Namespace: {0}", Namespace);
-			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
-			Log.LogDebugTaskItemsAndLogical ("  AdditionalResourceDirectories:", AdditionalResourceDirectories);
-			Log.LogDebugMessage ("  IsApplication: {0}", IsApplication);
-			Log.LogDebugMessage ("  UseManagedResourceGenerator: {0}", UseManagedResourceGenerator);
-			Log.LogDebugTaskItemsAndLogical ("  Resources:", Resources);
-			Log.LogDebugTaskItemsAndLogical ("  References:", References);
-
 			if (!File.Exists (JavaResgenInputFile) && !UseManagedResourceGenerator)
 				return true;
 

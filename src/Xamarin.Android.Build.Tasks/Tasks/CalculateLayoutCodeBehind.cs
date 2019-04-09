@@ -113,13 +113,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CalculateLayoutCodeBehind Task");
-			Log.LogDebugMessage ($"  OutputLanguage: {OutputLanguage}");
-			Log.LogDebugMessage ($"  OutputFileExtension: {OutputFileExtension}");
-			Log.LogDebugMessage ($"  BaseNamespace: {BaseNamespace}");
-			Log.LogDebugMessage ($"  BindingDependenciesCacheFile: {BindingDependenciesCacheFile}");
-			Log.LogDebugTaskItems ("  BoundLayouts:", BoundLayouts);
-
 			widgetWithId = XPathExpression.Compile ("//*[@android:id and string-length(@android:id) != 0] | //include[not(@android:id)]");
 
 			GenerateLayoutBindings.BindingGeneratorLanguage gen;

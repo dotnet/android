@@ -37,19 +37,8 @@ namespace Xamarin.Android.Tasks
 
 		internal string TemporarySourceListFile;
 
-		public virtual void OnLogStarted ()
-		{ 
-		}
-
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("{0} Task", GetType ().Name);
-			Log.LogDebugMessage ("  StubSourceDirectory: {0}", StubSourceDirectory);
-			Log.LogDebugMessage ("  TargetFrameworkDirectory: {0}", TargetFrameworkDirectory);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  Jars:", Jars);
-			OnLogStarted ();
-
 			GenerateResponseFile ();
 
 			var retval = base.Execute ();

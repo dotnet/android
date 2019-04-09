@@ -86,8 +86,6 @@ namespace Xamarin.Android.Tasks
 
 		void DoExecute ()
 		{
-			LogDebugMessage ("Crunch Task");
-			LogDebugTaskItems ("  SourceFiles:", SourceFiles);
 			// copy the changed files over to a temp location for processing
 			var imageFiles = SourceFiles.Where (x => string.Equals (Path.GetExtension (x.ItemSpec),".png", StringComparison.OrdinalIgnoreCase));
 

@@ -55,20 +55,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("BindingsGenerator Task");
-			Log.LogDebugMessage ("  OnlyRunXmlAdjuster: {0}", OnlyRunXmlAdjuster);
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  EnumDirectory: {0}", EnumDirectory);
-			Log.LogDebugMessage ("  EnumMetadataDirectory: {0}", EnumMetadataDirectory);
-			Log.LogDebugMessage ("  ApiXmlInput: {0}", ApiXmlInput);
-			Log.LogDebugMessage ("  AssemblyName: {0}", AssemblyName);
-			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
-			Log.LogDebugMessage ("  UseShortFileNames: {0}", UseShortFileNames);
-			Log.LogDebugTaskItems ("  TransformFiles:", TransformFiles);
-			Log.LogDebugTaskItems ("  ReferencedManagedLibraries:", ReferencedManagedLibraries);
-			Log.LogDebugTaskItems ("  AnnotationsZipFiles:", AnnotationsZipFiles);
-			Log.LogDebugTaskItems ("  TypeMappingReportFile:", TypeMappingReportFile);
-
 			Directory.CreateDirectory (OutputDirectory);
 
 			// We need to do this validation in Execute rather than GenerateCommandLineCommands

@@ -17,10 +17,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CheckProjectItems Task");
-			Log.LogDebugTaskItems ("  NativeLibraries:", NativeLibraries);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
 			if (IsApplication && EmbeddedNativeLibraries != null && EmbeddedNativeLibraries.Length > 0) {
 				foreach (ITaskItem lib in EmbeddedNativeLibraries) {
 					Log.LogError (

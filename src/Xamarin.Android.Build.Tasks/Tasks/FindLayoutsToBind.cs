@@ -28,12 +28,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("FindLayoutsToBind Task");
-			Log.LogDebugMessage ($"  GenerateLayoutBindings: {GenerateLayoutBindings}");
-			Log.LogDebugMessage ($"  BindingDependenciesCacheFile: {BindingDependenciesCacheFile}");
-			Log.LogDebugTaskItems ("  BoundLayouts:", BoundLayouts);
-			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles);
-
 			var layouts = new Dictionary <string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			if (GenerateLayoutBindings) {
 				Log.LogDebugMessage ("Collecting all layouts");
