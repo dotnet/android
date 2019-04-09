@@ -35,6 +35,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.BuildBaseAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.InstallApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -295,6 +299,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
+	<AndroidPackageFormat       Condition=" '$(AndroidPackageFormat)' == '' ">apk</AndroidPackageFormat>
+	<AndroidUseAapt2            Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</AndroidUseAapt2>
+	<AndroidUseApkSigner        Condition=" '$(AndroidPackageFormat)' == 'aab' ">False</AndroidUseApkSigner>
+	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -720,15 +728,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			<Output TaskParameter="TargetSdkVersion"    PropertyName="_AndroidTargetSdkVersion" />
 	</GetJavaPlatformJar>
 
-	<CreateProperty Value="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apk">
-		<Output TaskParameter="Value" PropertyName="ApkFileIntermediate"/>
-	</CreateProperty>
-	<CreateProperty Value="$(OutDir)$(_AndroidPackage).apk">
-		<Output TaskParameter="Value" PropertyName="ApkFile"/>
-	</CreateProperty>
-	<CreateProperty Value="$(OutDir)$(_AndroidPackage)-Signed.apk">
-		<Output TaskParameter="Value" PropertyName="ApkFileSigned"/>
-	</CreateProperty>
+	<PropertyGroup>
+		<ApkFileIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apk</ApkFileIntermediate>
+		<_BaseZipIntermediate>$(MonoAndroidIntermediate)android\bin\base.zip</_BaseZipIntermediate>
+		<_AppBundleIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).aab</_AppBundleIntermediate>
+		<_ApkSetIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apks</_ApkSetIntermediate>
+		<ApkFile>$(OutDir)$(_AndroidPackage).apk</ApkFile>
+		<ApkFileSigned>$(OutDir)$(_AndroidPackage)-Signed.apk</ApkFileSigned>
+	</PropertyGroup>
 </Target>
 
 <Target Name="_BeforeCleanIntermediateIfNuGetsChange">
@@ -1255,6 +1262,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
+		<_PropertyCacheItems Include="AndroidPackageFormat=$(AndroidPackageFormat)" />
 		<_PropertyCacheItems Include="UseSharedRuntime=$(AndroidUseSharedRuntime)" />
 		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
 		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
@@ -1906,9 +1914,25 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
   <CopyResource
-    ResourceName="MonoRuntimeProvider.Bundled.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-    Condition="'$(AndroidUseSharedRuntime)' != 'true'" />
+      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
+      ResourceName="MonoRuntimeProvider.Bundled.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
+  <CopyResource
+      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &lt; '21' "
+      ResourceName="MonoRuntimeProvider.Bundled.20.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
+  <CopyResource
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
+      ResourceName="MonoRuntimeProvider.Shared.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
+  <CopyResource
+      ResourceName="MonoRuntimeProvider.Shared.20.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &lt; '21' "
+  />
   
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
@@ -1919,8 +1943,7 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
 
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-        Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java')" />
+    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java" />
     <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
     <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
@@ -2262,6 +2285,10 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="EmbeddedDSOsEnabled" PropertyName="_EmbeddedDSOsEnabled" />
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
   </ReadAndroidManifest>
+  <PropertyGroup>
+    <!--NOTE: bundletool requires this, regardless of AndroidManifest.xml-->
+    <_EmbeddedDSOsEnabled Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_EmbeddedDSOsEnabled>
+  </PropertyGroup>
 </Target>
 
 <Target Name="_SetupEmbeddedDSOs"
@@ -2420,6 +2447,10 @@ because xbuild doesn't support framework reference assemblies.
     VersionCodeProperties="$(AndroidVersionCodeProperties)"
     AndroidSdkPlatform="$(_AndroidApiLevel)"
   />
+  <PropertyGroup>
+    <_ProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_ProtobufFormat>
+    <_ProtobufFormat Condition=" '$(_ProtobufFormat)' == '' ">False</_ProtobufFormat>
+  </PropertyGroup>
   <Aapt2Link
     Condition="'$(_AndroidUseAapt2)' == 'True'"
     CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
@@ -2444,6 +2475,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSdkPlatform="$(_AndroidApiLevel)"
     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    ProtobufFormat="$(_ProtobufFormat)"
     ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
     ToolPath="$(Aapt2ToolPath)"
     ToolExe="$(Aapt2ToolExe)"
@@ -2873,6 +2905,7 @@ because xbuild doesn't support framework reference assemblies.
   </MakeBundleNativeCodeExternal>
   <!-- Put the assemblies and native libraries in the apk -->
   <BuildApk
+    Condition=" '$(AndroidPackageFormat)' != 'aab' "
     AndroidNdkDirectory="$(_AndroidNdkDirectory)"
     ApkInputPath="$(_PackagedResources)"
     ApkOutputPath="$(ApkFileIntermediate)"
@@ -2900,6 +2933,45 @@ because xbuild doesn't support framework reference assemblies.
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
+  <BuildBaseAppBundle
+      Condition=" '$(AndroidPackageFormat)' == 'aab' "
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      ApkInputPath="$(_PackagedResources)"
+      ApkOutputPath="$(_BaseZipIntermediate)"
+      BundleAssemblies="$(BundleAssemblies)"
+      BundleNativeLibraries="$(_BundleResultNativeLibraries)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      NativeLibraries="@(AndroidNativeLibrary)"
+      AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+      EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+      DalvikClasses="@(_DexFile)"
+      SupportedAbis="$(_BuildTargetAbis)"
+      CreatePackagePerAbi="False"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
+      TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      AndroidSequencePointsMode="$(_SequencePointsMode)"
+      LibraryProjectJars="@(ExtractedJarImports)"
+      AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
+      TlsProvider="$(AndroidTlsProvider)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
+    <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
+  </BuildBaseAppBundle>
+  <BuildAppBundle
+      Condition=" '$(AndroidPackageFormat)' == 'aab' "
+      ToolPath="$(JavaToolPath)"
+      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+      JavaOptions="$(JavaOptions)"
+      JarPath="$(AndroidBundleToolJarPath)"
+      BaseZip="$(_BaseZipIntermediate)"
+      Output="$(_AppBundleIntermediate)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+  />
 </Target>
 
 <Target Name="_ResolveCopyPackageInputs">
@@ -3035,9 +3107,14 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(ApkFileSigned)"
 	DependsOnTargets="_ResolveAndroidSigningKey">
 	<ItemGroup>
-		<ApkAbiFilesIntermediate Include="$(ApkFileIntermediate)" />
-		<ApkAbiFilesIntermediate Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
+		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' " Include="$(ApkFileIntermediate)" />
+		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' == 'aab' " Include="$(_AppBundleIntermediate)" />
+		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'True' " Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
 	</ItemGroup>
+	<PropertyGroup>
+		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' != 'aab' ">-Signed-Unaligned</_JarSignerSuffix>
+		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' == 'aab' ">-Signed</_JarSignerSuffix>
+	</PropertyGroup>
 	<KeyTool
 		KeyStore="$(_ApkKeyStore)"
 		KeyAlias="$(_ApkKeyAlias)"
@@ -3050,6 +3127,7 @@ because xbuild doesn't support framework reference assemblies.
 	<AndroidSignPackage Condition=" '$(AndroidUseApkSigner)' != 'true' "
 		UnsignedApk="%(ApkAbiFilesIntermediate.FullPath)"
 		SignedApkDirectory="$(OutDir)"
+		FileSuffix="$(_JarSignerSuffix)"
 		KeyStore="$(_ApkKeyStore)"
 		KeyAlias="$(_ApkKeyAlias)"
 		KeyPass="$(_ApkKeyPass)"
@@ -3097,8 +3175,8 @@ because xbuild doesn't support framework reference assemblies.
 		<ApkAbiFilesUnaligned Include="$(OutDir)$(_AndroidPackage)-Signed-Unaligned.apk" />
 		<ApkAbiFilesUnaligned Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" Include="$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk" />
 	</ItemGroup>
-	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'true' "/>
-	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'true' "
+	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
+	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
 		Source="%(ApkAbiFilesUnaligned.FullPath)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
@@ -3271,11 +3349,13 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
   <InstallDependsOnTargets>
     SignAndroidPackage;
-    _Deploy
+    _DeployApk;
+    _DeployAppBundle;
   </InstallDependsOnTargets>
 </PropertyGroup>
 
-<Target Name="_Deploy">
+<Target Name="_DeployApk"
+    Condition=" '$(AndroidPackageFormat)' != 'aab' ">
   <PropertyGroup>
     <_DeployCommand>&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
   </PropertyGroup>
@@ -3294,6 +3374,32 @@ because xbuild doesn't support framework reference assemblies.
       Condition=" '$(_DeployExitCode)' != '0' "
       Code="ADB0000"
       Text="@(_AdbError, '%0a')"
+  />
+</Target>
+
+<Target Name="_DeployAppBundle"
+    Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+  <BuildApkSet
+      ToolPath="$(JavaToolPath)"
+      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+      JavaOptions="$(JavaOptions)"
+      JarPath="$(AndroidBundleToolJarPath)"
+      AdbToolPath="$(AdbToolPath)"
+      Aapt2ToolPath="$(Aapt2ToolPath)"
+      AppBundle="$(_AppBundleIntermediate)"
+      Output="$(_ApkSetIntermediate)"
+      KeyStore="$(_ApkKeyStore)"
+      KeyAlias="$(_ApkKeyAlias)"
+      KeyPass="$(_ApkKeyPass)"
+      StorePass="$(_ApkStorePass)"
+  />
+  <InstallApkSet
+      ToolPath="$(JavaToolPath)"
+      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+      JavaOptions="$(JavaOptions)"
+      JarPath="$(AndroidBundleToolJarPath)"
+      AdbToolPath="$(AdbToolPath)"
+      ApkSet="$(_ApkSetIntermediate)"
   />
 </Target>
 

@@ -138,6 +138,7 @@ namespace Xamarin.Android.Tasks
 				java_types,
 				Path.Combine (OutputDirectory, "src"),
 				ApplicationJavaClass,
+				AndroidSdkPlatform,
 				UseSharedRuntime,
 				int.Parse (AndroidSdkPlatform) <= 10,
 				ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll"));

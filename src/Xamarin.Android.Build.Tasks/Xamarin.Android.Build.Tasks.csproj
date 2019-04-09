@@ -123,6 +123,11 @@
     <Compile Include="Tasks\Aapt2Link.cs" />
     <Compile Include="Tasks\AndroidZipAlign.cs" />
     <Compile Include="Tasks\BuildApk.cs" />
+    <Compile Include="Tasks\BuildBaseAppBundle.cs" />
+    <Compile Include="Tasks\BuildAppBundle.cs" />
+    <Compile Include="Tasks\BundleTool.cs" />
+    <Compile Include="Tasks\BuildApkSet.cs" />
+    <Compile Include="Tasks\InstallApkSet.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
@@ -661,8 +666,14 @@
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
       <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.20.java">
+      <LogicalName>MonoRuntimeProvider.Bundled.20.java</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
       <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.20.java">
+      <LogicalName>MonoRuntimeProvider.Shared.20.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>
