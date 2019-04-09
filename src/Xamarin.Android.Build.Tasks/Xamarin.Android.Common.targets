@@ -1906,21 +1906,25 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
   <CopyResource
-    ResourceName="MonoRuntimeProvider.Bundled.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-    Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' " />
+      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
+      ResourceName="MonoRuntimeProvider.Bundled.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
   <CopyResource
-    ResourceName="MonoRuntimeProvider.Bundled.20.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-    Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &lt; '21' " />
+      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &lt; '21' "
+      ResourceName="MonoRuntimeProvider.Bundled.20.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
   <CopyResource
-    ResourceName="MonoRuntimeProvider.Shared.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-    Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &gt;= '21' " />
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
+      ResourceName="MonoRuntimeProvider.Shared.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+  />
   <CopyResource
-    ResourceName="MonoRuntimeProvider.Shared.20.java"
-    OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
-    Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &lt; '21' " />
+      ResourceName="MonoRuntimeProvider.Shared.20.java"
+      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &lt; '21' "
+  />
   
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
@@ -2926,43 +2930,43 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
-    Condition=" '$(AndroidPackageFormat)' == 'aab' "
-    AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-    ApkInputPath="$(_PackagedResources)"
-    ApkOutputPath="$(_BaseZipIntermediate)"
-    BundleAssemblies="$(BundleAssemblies)"
-    BundleNativeLibraries="$(_BundleResultNativeLibraries)"
-    EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-    ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-    NativeLibraries="@(AndroidNativeLibrary)"
-    AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-    EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-    DalvikClasses="@(_DexFile)"
-    SupportedAbis="$(_BuildTargetAbis)"
-    CreatePackagePerAbi="False"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
-    TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
-    JavaSourceFiles="@(AndroidJavaSource)"
-    JavaLibraries="@(AndroidJavaLibrary)"
-    AndroidSequencePointsMode="$(_SequencePointsMode)"
-    LibraryProjectJars="@(ExtractedJarImports)"
-    AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
-    TlsProvider="$(AndroidTlsProvider)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
+      Condition=" '$(AndroidPackageFormat)' == 'aab' "
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      ApkInputPath="$(_PackagedResources)"
+      ApkOutputPath="$(_BaseZipIntermediate)"
+      BundleAssemblies="$(BundleAssemblies)"
+      BundleNativeLibraries="$(_BundleResultNativeLibraries)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      NativeLibraries="@(AndroidNativeLibrary)"
+      AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+      EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+      DalvikClasses="@(_DexFile)"
+      SupportedAbis="$(_BuildTargetAbis)"
+      CreatePackagePerAbi="False"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
+      TypeMappings="$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      AndroidSequencePointsMode="$(_SequencePointsMode)"
+      LibraryProjectJars="@(ExtractedJarImports)"
+      AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
+      TlsProvider="$(AndroidTlsProvider)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
-    Condition=" '$(AndroidPackageFormat)' == 'aab' "
-    ToolPath="$(JavaToolPath)"
-    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-    JavaOptions="$(JavaOptions)"
-    JarPath="$(AndroidBundleToolJarPath)"
-    BaseZip="$(_BaseZipIntermediate)"
-    Output="$(_AppBundleIntermediate)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      Condition=" '$(AndroidPackageFormat)' == 'aab' "
+      ToolPath="$(JavaToolPath)"
+      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+      JavaOptions="$(JavaOptions)"
+      JarPath="$(AndroidBundleToolJarPath)"
+      BaseZip="$(_BaseZipIntermediate)"
+      Output="$(_AppBundleIntermediate)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
   />
 </Target>
 
