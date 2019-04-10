@@ -45,10 +45,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GetAndroidPackageName Task");
-			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
-			Log.LogDebugMessage ("  AssemblyName: {0}", AssemblyName);
-
 			// If we don't have a manifest, default to using the assembly name
 			// If the assembly doesn't have a period in it, duplicate it so it does
 			PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);

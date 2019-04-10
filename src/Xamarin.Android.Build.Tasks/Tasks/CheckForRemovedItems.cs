@@ -20,10 +20,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("RemoveUnknownFiles Task");
-			Log.LogDebugTaskItems ("Files", Files);
-			Log.LogDebugMessage ("  Directory:", Directory);
-
 			var absDir = Path.GetFullPath (Directory);
 
 			HashSet<string> knownFiles;

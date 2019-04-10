@@ -19,9 +19,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("RemoveRegisterAttribute Task");
-			Log.LogDebugTaskItems ("  ShrunkFrameworkAssemblies:", ShrunkFrameworkAssemblies);
-
 			// Find Mono.Android.dll
 			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
 			using (var assembly = AssemblyDefinition.ReadAssembly (mono_android, new ReaderParameters { ReadWrite = true })) {

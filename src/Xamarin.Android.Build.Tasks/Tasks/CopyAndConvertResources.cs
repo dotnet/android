@@ -39,11 +39,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CopyAndConvertResources Task");
-			Log.LogDebugTaskItems ("  SourceFiles:", SourceFiles);
-			Log.LogDebugTaskItems ("  DestinationFiles:", DestinationFiles);
-			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 

@@ -30,11 +30,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Aapt2Compile Task");
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-			Log.LogDebugMessage ("  ResourceSymbolsTextFile: {0}", ResourceSymbolsTextFile);
-			Log.LogDebugTaskItems ("  ResourceDirectories: ", ResourceDirectories);
-
 			Yield ();
 			try {
 				var task = this.RunTask (DoExecute);

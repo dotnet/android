@@ -14,10 +14,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-
 			var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
 			if (jarFiles != null && JavaLibraries != null)
 				jarFiles = jarFiles.Concat (JavaLibraries);

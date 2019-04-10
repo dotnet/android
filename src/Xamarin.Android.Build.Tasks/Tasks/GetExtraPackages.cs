@@ -35,8 +35,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			ExtraPackages = String.Join (":", extraPackages.Distinct ().ToArray ());
-
-			Log.LogDebugMessage ("CreateTemporaryDirectory Task");
 			Log.LogDebugMessage ("  OUTPUT: ExtraPackages: {0}", ExtraPackages);
 
 			return true;

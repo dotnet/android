@@ -20,11 +20,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GetConvertedJavaLibraries Task");
-			Log.LogDebugMessage ("  Extension: {0}", Extension);
-			Log.LogDebugMessage ("  OutputJackDirectory: {0}", OutputJackDirectory);
-			Log.LogDebugTaskItems ("  JarsToConvert:", JarsToConvert);
-
 			var md5 = MD5.Create ();
 			ConvertedFilesToBeGenerated =
 				(JarsToConvert ?? new string [0]).Select (

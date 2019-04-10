@@ -16,8 +16,6 @@ namespace Xamarin.Android.Tasks
 		{
 			TemporaryDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (TemporaryDirectory);
-
-			Log.LogDebugMessage ("CreateTemporaryDirectory Task");
 			Log.LogDebugMessage ("  OUTPUT: TemporaryDirectory: {0}", TemporaryDirectory);
 
 			return true;

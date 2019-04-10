@@ -79,13 +79,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GenerateLayoutBindings Task");
-			Log.LogDebugMessage ($"  OutputLanguage: {OutputLanguage}");
-			Log.LogDebugMessage ($"  MonoAndroidCodeBehindDir: {MonoAndroidCodeBehindDir}");
-			Log.LogDebugMessage ($"  AppNamespace: {AppNamespace}");
-			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles, true);
-			Log.LogDebugTaskItems ("  PartialClassFiles:", PartialClassFiles, true);
-
 			if (String.IsNullOrWhiteSpace (OutputLanguage))
 				OutputLanguage = DefaultOutputGenerator.Name;
 

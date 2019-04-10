@@ -59,12 +59,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("  IntermediateDir: {0}", IntermediateDir);
-			Log.LogDebugMessage ("  Prefixes: {0}", Prefixes);
-			Log.LogDebugMessage ("  ProjectDir: {0}", ProjectDir);
-			Log.LogDebugMessage ("  LowercaseFilenames: {0}", LowercaseFilenames);
-			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles);
-
 			var intermediateFiles = new List<ITaskItem> ();
 			var resolvedFiles = new List<ITaskItem> ();
 			
@@ -155,11 +149,6 @@ namespace Xamarin.Android.Tasks
 		
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("RemoveUnknownFiles Task");
-			Log.LogDebugTaskItems ("Files", Files);
-			Log.LogDebugMessage ($"Directory {Directory}");
-			Log.LogDebugMessage ($"RemoveDirectories {RemoveDirectories}");
-
 			var absDir = Path.GetFullPath (Directory);
 			
 			HashSet<string> knownFiles;

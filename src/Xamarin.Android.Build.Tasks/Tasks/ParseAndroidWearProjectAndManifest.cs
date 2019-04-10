@@ -22,8 +22,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ParseAndroidWearProjectAndManifest task");
-			Log.LogDebugTaskItems ("  ProjectFiles:", ProjectFiles);
 			if (ProjectFiles.Length != 1)
 				Log.LogError ("More than one Android Wear project is specified as the paired project. It can be at most one.");
 			

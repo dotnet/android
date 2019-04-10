@@ -22,10 +22,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GetFilesThatExist Task");
-			Log.LogDebugTaskItems ("  Files", Files);
-			Log.LogDebugTaskItems ("  IgnoreFiles", IgnoreFiles);
-
 			FilesThatExist = Files.Where (p => File.Exists (p.ItemSpec) &&
 					(!IgnoreFiles?.Contains (p, TaskItemComparer.DefaultComparer) ?? true)).ToArray ();
 

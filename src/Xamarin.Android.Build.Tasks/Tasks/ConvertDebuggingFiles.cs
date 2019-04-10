@@ -18,9 +18,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ConvertDebuggingFiles Task");
-			Log.LogDebugMessage ("  InputFiles: {0}", Files);
-
 			var convertedFiles = new List<ITaskItem> ();
 			foreach (var file in Files) {
 				var pdb = file.ItemSpec;
