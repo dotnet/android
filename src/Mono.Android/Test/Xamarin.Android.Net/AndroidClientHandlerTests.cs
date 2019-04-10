@@ -151,7 +151,7 @@ namespace Xamarin.Android.NetTests {
 			try {
 				return connector ();
 			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
+				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
 					return null;
 				throw;
 			}
@@ -163,10 +163,23 @@ namespace Xamarin.Android.NetTests {
 			try {
 				runner ();
 			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
+				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
 					return;
 				throw;
 			}
+		}
+
+		bool IgnoreIfConnectionFailed (AggregateException aex, out bool connectionFailed)
+		{
+			if (IgnoreIfConnectionFailed (aex.InnerException as HttpRequestException, out connectionFailed))
+				return true;
+
+			return IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed);
+		}
+
+		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
+		{
+			return IgnoreIfConnectionFailed (hrex?.InnerException as WebException, out connectionFailed);
 		}
 
 		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
@@ -175,12 +188,16 @@ namespace Xamarin.Android.NetTests {
 			if (wex == null)
 				return false;
 
-			if (wex.Status != WebExceptionStatus.ConnectFailure)
-				return false;
+			switch (wex.Status) {
+				case WebExceptionStatus.ConnectFailure:
+				case WebExceptionStatus.NameResolutionFailure:
+				case WebExceptionStatus.Timeout:
+					connectionFailed = true;
+					Assert.Ignore ($"Ignoring network failure: {wex}");
+					return true;
+			}
 
-			connectionFailed = true;
-			Assert.Ignore ($"Failed to connect to server. {wex}");
-			return true;
+			return false;
 		}
 	}
 
