@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
 using Mono.Cecil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
 using Xamarin.Tools.Zip;
 
 using Java.Interop.Tools.Cecil;
@@ -211,12 +207,6 @@ namespace Xamarin.Android.Tasks
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
-#if SEPARATE_CRUNCH
-				// FIXME: review these binResDir thing and enable this. Eclipse does this.
-				// Enabling these blindly causes build failure on ActionBarSherlock.
-				//string binResDir = Path.Combine (importsDir, "bin", "res");
-				//string binAssemblyDir = Path.Combine (importsDir, "bin", "assets");
-#endif
 				string resDir = Path.Combine (importsDir, "res");
 				string assetsDir = Path.Combine (importsDir, "assets");
 
@@ -227,14 +217,6 @@ namespace Xamarin.Android.Tasks
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				if (assemblyHash == stampHash) {
 					Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assemblyPath);
-#if SEPARATE_CRUNCH
-					// FIXME: review these binResDir/binAssemblyDir thing and enable this. Eclipse does this.
-					// Enabling these blindly causes build failure on ActionBarSherlock.
-					if (Directory.Exists (binResDir))
-						resolvedResourceDirectories.Add (binResDir);
-					if (Directory.Exists (binAssemblyDir))
-						resolvedAssetDirectories.Add (binAssemblyDir);
-#endif
 					if (Directory.Exists (importsDir)) {
 						foreach (var file in Directory.EnumerateFiles (importsDir, "*.jar", SearchOption.AllDirectories)) {
 							AddJar (jars, Path.GetFullPath (file));
@@ -338,14 +320,6 @@ namespace Xamarin.Android.Tasks
 						// We used to *copy* the resources to overwrite other resources,
 						// which resulted in missing resource issue.
 						// Here we replaced copy with use of '-S' option and made it to work.
-#if SEPARATE_CRUNCH
-						// FIXME: review these binResDir/binAssemblyDir thing and enable this. Eclipse does this.
-						// Enabling these blindly causes build failure on ActionBarSherlock.
-						if (Directory.Exists (binResDir))
-							resolvedResourceDirectories.Add (binResDir);
-						if (Directory.Exists (binAssemblyDir))
-							resolvedAssetDirectories.Add (binAssemblyDir);
-#endif
 						if (Directory.Exists (resDir)) {
 							var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
