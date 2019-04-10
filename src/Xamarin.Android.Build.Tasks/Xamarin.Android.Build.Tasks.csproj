@@ -359,6 +359,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Inflater.cs">
+      <Link>Linker\Linker\Inflater.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IXApiVisitor.cs">
       <Link>Linker\Linker\IXApiVisitor.cs</Link>
     </Compile>
@@ -370,6 +373,9 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodReferenceExtensions.cs">
       <Link>Linker\Linker\MethodReferenceExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OverrideInformation.cs">
+      <Link>Linker\Linker\OverrideInformation.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
       <Link>Linker\Linker\Pipeline.cs</Link>
@@ -498,9 +504,6 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FixModuleFlags.cs">
       <Link>Linker\Mono.Tuner\FixModuleFlags.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PrintTypeMap.cs">
-      <Link>Linker\Mono.Tuner\PrintTypeMap.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveCrypto.cs">
       <Link>Linker\Mono.Tuner\PreserveCrypto.cs</Link>
