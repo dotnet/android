@@ -312,10 +312,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckAppBundle ()
+		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 
