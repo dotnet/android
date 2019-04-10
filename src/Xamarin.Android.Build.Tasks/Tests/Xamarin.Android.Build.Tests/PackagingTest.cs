@@ -341,7 +341,6 @@ namespace Xamarin.Android.Build.Tests
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
-				Language = XamarinAndroidProjectLanguage.CSharp,
 				ProjectName = "XamFormsSample",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				Sdk = "Microsoft.NET.Sdk",

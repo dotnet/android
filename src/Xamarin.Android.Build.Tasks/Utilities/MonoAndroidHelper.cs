@@ -495,7 +495,6 @@ namespace Xamarin.Android.Tasks
 		}
 #endif
 
-		internal static readonly string [] FrameworkAttributeLookupTargets = {"Mono.Android.GoogleMaps.dll"};
 		internal static readonly string [] FrameworkEmbeddedJarLookupTargets = {
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
@@ -507,7 +506,6 @@ namespace Xamarin.Android.Tasks
 		};
 		// MUST BE SORTED CASE-INSENSITIVE
 		internal static readonly string[] FrameworkAssembliesToTreatAsUserAssemblies = {
-			"Mono.Android.GoogleMaps.dll",
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll",
