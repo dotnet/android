@@ -17,6 +17,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <IncludeMonoBundleComponents Condition="'$(IncludeMonoBuildComponents)' == ''">True</IncludeMonoBundleComponents>
+    <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
   </PropertyGroup>
   <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\AndroidApiInfo.xml" />
@@ -189,9 +190,6 @@
   </ItemGroup>
   <!-- monodroid -->
   <ItemGroup Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK.pdb" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v4.4.87\Mono.Android.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v5.0\Mono.Android.xml" />
