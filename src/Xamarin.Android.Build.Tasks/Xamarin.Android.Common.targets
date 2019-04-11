@@ -506,6 +506,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <FilterAssemblies
       DesignTimeBuild="$(DesignTimeBuild)"
       TargetFrameworkIdentifier="MonoAndroid"
+      FallbackReference="Mono.Android"
       InputAssemblies="@(_ReferencePath);@(_ReferenceDependencyPaths)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferencePath" />
   </FilterAssemblies>
@@ -2213,7 +2214,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <CreateItem
     Include="@(_ResolvedUserAssemblies)"
-    Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid'">
+    Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'">
     <Output TaskParameter="Include" ItemName="_ResolvedUserMonoAndroidAssemblies" />
   </CreateItem>
 </Target>

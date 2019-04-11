@@ -3636,6 +3636,36 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "The \"LinkAssemblies\" task failed unexpectedly"), "The LinkAssemblies MSBuild task should not run!");
 			}
 		}
+
+		/// <summary>
+		/// This assembly weirdly has no [assembly: System.Runtime.Versioning.TargetFrameworkAttribute()], at all...
+		/// </summary>
+		[Test]
+		public void AssemblyWithMissingTargetFramework ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				AndroidResources = {
+					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+						TextContent = () => 
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ScrollView
+    xmlns:android=""http://schemas.android.com/apk/res/android""
+    xmlns:local=""http://schemas.android.com/apk/res-auto"">
+    <refractored.controls.CircleImageView local:civ_border_width=""0dp"" />
+</ScrollView>"
+					}
+				}
+			};
+			proj.PackageReferences.Add (KnownPackages.CircleImageView);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+
+				// We should have a java stub
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var javaStub = Path.Combine (intermediate, "android", "src", "md54908d67eb9afef4acc92753cc61471e9", "CircleImageView.java");
+				FileAssert.Exists (javaStub);
+			}
+		}
 	}
 }
 

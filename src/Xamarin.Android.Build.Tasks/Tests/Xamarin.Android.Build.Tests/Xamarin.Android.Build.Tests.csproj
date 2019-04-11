@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
@@ -97,6 +98,7 @@
     <Compile Include="ManagedResourceParserTests.cs" />
     <Compile Include="Tasks\BundleToolTests.cs" />
     <Compile Include="Tasks\CopyResourceTests.cs" />
+    <Compile Include="Tasks\FilterAssembliesTests.cs" />
     <Compile Include="Tasks\GenerateLibraryResourcesTests.cs" />
     <Compile Include="Tasks\KeyToolTests.cs" />
     <Compile Include="Aapt2Tests.cs" />

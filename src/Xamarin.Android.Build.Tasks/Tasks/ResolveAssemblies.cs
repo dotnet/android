@@ -223,14 +223,16 @@ namespace Xamarin.Android.Tasks
 			indent += 2;
 
 			// Add this assembly
+			ITaskItem assemblyItem = null;
 			if (topLevel) {
-				if (!string.IsNullOrEmpty (targetFrameworkIdentifier) && assemblies.TryGetValue (assemblyName, out ITaskItem taskItem)) {
-					if (string.IsNullOrEmpty (taskItem.GetMetadata ("TargetFrameworkIdentifier"))) {
-						taskItem.SetMetadata ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
+				if (assemblies.TryGetValue (assemblyName, out assemblyItem)) {
+					if (!string.IsNullOrEmpty (targetFrameworkIdentifier) && string.IsNullOrEmpty (assemblyItem.GetMetadata ("TargetFrameworkIdentifier"))) {
+						assemblyItem.SetMetadata ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
 					}
 				}
 			} else {
-				assemblies [assemblyName] = CreateAssemblyTaskItem (assemblyPath, targetFrameworkIdentifier);
+				assemblies [assemblyName] = 
+					assemblyItem = CreateAssemblyTaskItem (assemblyPath, targetFrameworkIdentifier);
 			}
 
 			// Recurse into each referenced assembly
@@ -238,7 +240,11 @@ namespace Xamarin.Android.Tasks
 				var reference = reader.GetAssemblyReference (handle);
 				string reference_assembly;
 				try {
-					reference_assembly = resolver.Resolve (reader.GetString (reference.Name));
+					var referenceName = reader.GetString (reference.Name);
+					if (assemblyItem != null && referenceName == "Mono.Android") {
+						assemblyItem.SetMetadata ("HasMonoAndroidReference", "True");
+					}
+					reference_assembly = resolver.Resolve (referenceName);
 				} catch (FileNotFoundException ex) {
 					var references = new StringBuilder ();
 					for (int i = 0; i < resolutionPath.Count; i++) {
