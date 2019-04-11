@@ -2813,16 +2813,19 @@ because xbuild doesn't support framework reference assemblies.
 	</_BuildApkEmbedInputs>
 </PropertyGroup>
 
-<ItemGroup>
-  <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)\startup.aotprofile" />
-</ItemGroup>
-
 <Target Name="_BuildApkEmbed"
   DependsOnTargets="_PrepareBuildApk"
   Inputs="$(_BuildApkEmbedInputs)"
   Outputs="$(ApkFileIntermediate)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
+  <PropertyGroup>
+    <_StartupAotProfile Condition="'%(ResolvedAssemblies.Filename)' == 'Xamarin.Forms.Platform.Android'">startup-xf.aotprofile</_StartupAotProfile>
+    <_StartupAotProfile Condition="'$(_StartupAotProfile)' == ''">startup.aotprofile</_StartupAotProfile>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)$(_StartupAotProfile)" />
+  </ItemGroup>
   <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
     <_AotProfiles Include="@(AndroidAotProfiles)" />
   </ItemGroup>
