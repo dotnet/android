@@ -1124,7 +1124,7 @@ because xbuild doesn't support framework reference assemblies.
 	</PropertyGroup>
 	<Error Code="XA0115"
 			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
-			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties."
+			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
 	/>
 </Target>
 
