@@ -11,7 +11,19 @@ using NUnit.Framework;
 namespace System.NetTests {
 
 	[TestFixture, Category ("InetAccess")]
-	public class SslTest {
+	public class SslTest
+	{
+		bool ShouldIgnoreException (WebException wex)
+		{
+			switch (wex.Status) {
+				case WebExceptionStatus.ConnectFailure:
+				case WebExceptionStatus.NameResolutionFailure:
+				case WebExceptionStatus.Timeout:
+					return true;
+			}
+
+			return false;
+		}
 
 		// https://xamarin.desk.com/agent/case/35534
 		[Test]
@@ -41,16 +53,33 @@ namespace System.NetTests {
 			thread.Join ();
 
 			ServicePointManager.ServerCertificateValidationCallback = cb;
+			var wex = (exception as AggregateException)?.InnerException as WebException;
+			if (wex != null) {
+				if (ShouldIgnoreException (wex)) {
+					Assert.Ignore ($"Ignoring network failure: {wex}");
+					return;
+				}
+				throw wex;
+			}
+
+			if (exception != null)
+				throw exception;
+
 			Assert.AreEqual (TaskStatus.RanToCompletion, status);
 		}
 
 		[Test]
 		public void HttpsShouldWork ()
 		{
+			RunIgnoringWebException (DoHttpsShouldWork);
+		}
+
+		void DoHttpsShouldWork ()
+		{
 			// string url = "https://bugzilla.novell.com/show_bug.cgi?id=634817";
 			string url = "https://encrypted.google.com/";
 			// string url = "http://slashdot.org";
-			var request = (HttpWebRequest) WebRequest.Create(url);
+			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 			request.Method = "GET";
 			var response = (HttpWebResponse) request.GetResponse ();
 			int len = 0;
@@ -62,18 +91,48 @@ namespace System.NetTests {
 					len += n;
 				}
 			}
+
 			Assert.IsTrue (len > 0);
 		}
 
 		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
 		public void VerifyTrustedCertificates ()
 		{
-			Assert.DoesNotThrow (() => {
-				var tcpClient = new TcpClient ("google.com", 443);
-				using (var ssl = new SslStream (tcpClient.GetStream (), false)) {
-					ssl.AuthenticateAsClient ("google.com");
+			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
+		}
+
+		void DoVerifyTrustedCertificates ()
+		{
+			var tcpClient = new TcpClient ("google.com", 443);
+			using (var ssl = new SslStream (tcpClient.GetStream (), false)) {
+				ssl.AuthenticateAsClient ("google.com");
+			}
+		}
+
+		void RunIgnoringWebException (Action test)
+		{
+			Exception ex = null;
+			WebException wex = null;
+
+			try {
+				test ();
+			} catch (AggregateException e) {
+				ex = e;
+				wex = e.InnerException as WebException;
+			} catch (WebException e) {
+				wex = e;
+			}
+
+			if (wex != null) {
+				if (ShouldIgnoreException (wex)) {
+					Assert.Ignore ($"Ignoring network failure: {wex.Status}");
+					return;
 				}
-			}, "Certificate validation");
+				throw wex;
+			}
+
+			if (ex != null)
+				throw ex;
 		}
 	}
 }
