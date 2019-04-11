@@ -40,17 +40,21 @@ macro(xa_common_prepare)
     finline-limit=300
     fvisibility=${DSO_SYMBOL_VISIBILITY}
     fstack-protector
-    flto
     Wa,--noexecstack
     Wformat
     Werror=format-security
     Wall
     )
 
+  if(NOT MINGW AND NOT WIN32)
+    # -flto leaves a lot of temporary files with mingw builds, turn the optimization off as we don't really need it there
+    set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} flto)
+  endif()
+
   if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(XA_COMPILER_ARGS ${XA_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer O0)
+    set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} ggdb3 fno-omit-frame-pointer O0)
   else()
-    set(XA_COMPILER_ARGS ${XA_COMPILER_ARGS} g fomit-frame-pointer O2)
+    set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} g fomit-frame-pointer O2)
     add_definitions("-DRELEASE")
   endif()
 
