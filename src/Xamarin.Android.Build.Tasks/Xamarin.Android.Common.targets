@@ -2870,10 +2870,10 @@ because xbuild doesn't support framework reference assemblies.
     <_StartupAotProfile Condition="'$(_StartupAotProfile)' == ''">startup.aotprofile</_StartupAotProfile>
   </PropertyGroup>
   <ItemGroup>
-    <AndroidAotProfiles Include="$(MSBuildThisFileDirectory)$(_StartupAotProfile)" />
+    <AndroidAotProfile Include="$(MSBuildThisFileDirectory)$(_StartupAotProfile)" />
   </ItemGroup>
   <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
-    <_AotProfiles Include="@(AndroidAotProfiles)" />
+    <_AotProfiles Include="@(AndroidAotProfile)" />
   </ItemGroup>
   <Aot
 	Condition="'$(AotAssemblies)' == 'True'"
