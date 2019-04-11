@@ -37,7 +37,7 @@
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(AndroidToolsBinPath)"
         RamSizeMB="2048"
-        DataPartitionSizeMB="2048"
+        DataPartitionSizeMB="4096"
     />
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "

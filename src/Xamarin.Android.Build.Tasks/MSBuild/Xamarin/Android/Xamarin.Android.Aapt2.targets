@@ -138,32 +138,4 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
-<Target Name="_GenerateJavaDesignerForComponentAapt2"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-    Inputs="@(_AdditonalAndroidResourceCacheFiles);@(_LibraryResourceDirectoryStamps);$(_AndroidResgenFlagFile)"
-    Outputs="$(_AndroidComponentResgenFlagFile)">
-  <!-- Run aapt to generate R.java for additional Android resources-->
-  <Aapt2Link
-      Condition=" '$(_AndroidUseAapt2)' == 'True' "
-      ContinueOnError="$(DesignTimeBuild)"
-      AdditionalAndroidResourcePaths="@(_LibraryResourceHashDirectories)"
-      AdditionalResourceArchives="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')"
-      ApplicationName="$(_AndroidPackage)"
-      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-      CompiledResourceFlatArchive="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
-      ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
-      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-      JavaDesignerOutputDirectory="$(IntermediateOutputPath)android\src"
-      JavaPlatformJarPath="$(JavaPlatformJarPath)"
-      ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
-      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-      ToolPath="$(Aapt2ToolPath)"
-      ToolExe="$(Aapt2ToolExe)"
-      UseShortFileNames="$(UseShortFileNames)"
-      YieldDuringToolExecution="$(YieldDuringToolExecution)"
-  />
-  <Touch Files="$(_AndroidComponentResgenFlagFile)" AlwaysCreate="True" />
-</Target>
 </Project>

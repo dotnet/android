@@ -6,8 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-// using System.Threading.Tasks conflicts with Microsoft.Build.Utilities because of the Task type
-using ThreadingTasks = System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -261,9 +259,7 @@ namespace Xamarin.Android.Tasks
 
 			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run ( () => {
-					return RunParallelAotCompiler (nativeLibs);
-				}, CancellationToken);
+				var task = this.RunTask (() => RunParallelAotCompiler (nativeLibs));
 
 				task.ContinueWith (Complete);
 
@@ -286,12 +282,7 @@ namespace Xamarin.Android.Tasks
 		bool RunParallelAotCompiler (List<string> nativeLibs)
 		{
 			try {
-				ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-					CancellationToken = CancellationToken,
-					TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-				};
-
-				ThreadingTasks.Parallel.ForEach (GetAotConfigs (), options,
+				this.ParallelForEach (GetAotConfigs (),
 					config => {
 						if (!config.Valid) {
 							Cancel ();

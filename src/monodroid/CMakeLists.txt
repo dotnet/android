@@ -124,7 +124,7 @@ else()
   if(WIN32 OR MINGW)
     message(STATUS "Win32 or MinGW")
     set(EXTRA_COMPILER_FLAGS "${EXTRA_COMPILER_FLAGS} -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer")
-    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -pthread -lwsock32 -lshlwapi -lpsapi")
+    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -static -pthread -dynamic -lwsock32 -lshlwapi -lpsapi")
 
     if (MINGW_TARGET_32)
       set(ANDROID_ABI "host-mxe-Win32")

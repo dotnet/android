@@ -4,9 +4,16 @@
     <_MonoBcl Include="bcl" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_NDKToolchainArch Condition=" '$(HostOS)' == 'Linux' ">linux-x86_64</_NDKToolchainArch>
+    <_NDKToolchainArch Condition=" '$(HostOS)' == 'Darwin' ">darwin-x86_64</_NDKToolchainArch>
+    <_NDKToolchainArch Condition=" '$(HostOS)' == 'Windows' ">windows</_NDKToolchainArch>
+    <_NDKToolchainPrefix>$(AndroidNdkFullPath)\toolchains\llvm\prebuilt\$(_NDKToolchainArch)</_NDKToolchainPrefix>
+  </PropertyGroup>
+
   <ItemGroup>
     <_MonoRuntime Include="armeabi-v7a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
-      <Strip>$(AndroidToolchainDirectory)\toolchains\armeabi-v7a-clang\bin\arm-linux-androideabi-strip</Strip>
+      <Strip>$(_NDKToolchainPrefix)\bin\arm-linux-androideabi-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <CanStripNativeLibrary>True</CanStripNativeLibrary>
@@ -16,7 +23,7 @@
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="arm64-v8a" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) ">
-      <Strip>$(AndroidToolchainDirectory)\toolchains\arm64-v8a-clang\bin\aarch64-linux-android-strip</Strip>
+      <Strip>$(_NDKToolchainPrefix)\bin\aarch64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <CanStripNativeLibrary>True</CanStripNativeLibrary>
@@ -26,7 +33,7 @@
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="x86" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) ">
-      <Strip>$(AndroidToolchainDirectory)\toolchains\x86-clang\bin\i686-linux-android-strip</Strip>
+      <Strip>$(_NDKToolchainPrefix)\bin\i686-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <CanStripNativeLibrary>True</CanStripNativeLibrary>
@@ -36,7 +43,7 @@
       <OutputMonoPosixHelperFilename>libMonoPosixHelper</OutputMonoPosixHelperFilename>
     </_MonoRuntime>
     <_MonoRuntime Include="x86_64" Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) ">
-      <Strip>$(AndroidToolchainDirectory)\toolchains\x86_64-clang\bin\x86_64-linux-android-strip</Strip>
+      <Strip>$(_NDKToolchainPrefix)\bin\x86_64-linux-android-strip</Strip>
       <OutputRuntimeFilename>libmonosgen-2.0</OutputRuntimeFilename>
       <NativeLibraryExtension>so</NativeLibraryExtension>
       <CanStripNativeLibrary>True</CanStripNativeLibrary>
