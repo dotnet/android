@@ -298,8 +298,6 @@
     <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
-    <MonoTestAssembly Include="System.Reflection.TestModule.dll">
-    </MonoTestAssembly>
     <MonoTestAssembly Include="TestLoadAssembly.dll">
     </MonoTestAssembly>
   </ItemGroup>
