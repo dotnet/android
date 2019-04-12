@@ -726,6 +726,16 @@ namespace Xamarin.ProjectTools
 				}
 			},
 		};
+		public static Package CircleImageView = new Package {
+			Id = "Refractored.Controls.CircleImageView",
+			Version = "1.0.1",
+			TargetFramework = "MonoAndroid10",
+			References = {
+				new BuildItem.Reference ("Refractored.Controls.CircleImageView") {
+					MetadataValues = "HintPath=..\\packages\\Refractored.Controls.CircleImageView.1.0.1\\lib\\MonoAndroid10\\Refractored.Controls.CircleImageView.dll"
+				}
+			},
+		};
 	}
 }
 
