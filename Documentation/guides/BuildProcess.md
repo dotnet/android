@@ -281,7 +281,7 @@ when packaging Release applications.
     determines whether or not the AOT profiles are used during the
     Ahead-of-Time compilation.
 
-    The profiles are listed in `AndroidAotProfiles` item group. This
+    The profiles are listed in `AndroidAotProfile` item group. This
     ItemGroup contains default profile(s). It can be overriden by
     removing the existing one(s) and adding own AOT profiles.
 
