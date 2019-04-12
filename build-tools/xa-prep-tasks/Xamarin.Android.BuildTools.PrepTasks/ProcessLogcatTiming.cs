@@ -14,6 +14,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public int PID { get; set; } = -1;
 
+		static readonly string activityManagerPrefix = @"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: ";
+
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
@@ -25,9 +27,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				string line;
 				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
 				var startIdentification = PID > 0 ? $".*: pid={PID}" : $@"{procIdentification}: pid=(?<pid>\d+)";
-				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {startIdentification}");
+				var procStartRegex = new Regex ($"{activityManagerPrefix}Start proc.*for {startIdentification}");
 				var startIdentification2 = PID > 0 ? $"{PID}:" : $@"(?<pid>\d+):.*{procIdentification}";
-				var procStartRegex2 = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc {startIdentification2}");
+				var procStartRegex2 = new Regex ($"{activityManagerPrefix}Start proc {startIdentification2}");
+				var activityDisplayed = new Regex ($"{activityManagerPrefix}Displayed {Activity}:");
 				Regex timingRegex = null;
 				DateTime start = DateTime.Now;
 				DateTime last = start;
@@ -49,8 +52,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 						started = true;
 					} else {
 						var match = timingRegex.Match (line);
-						if (!match.Success)
+						if (!match.Success) {
+							if (!string.IsNullOrEmpty (Activity)) {
+								var matchActivity = activityDisplayed.Match (line);
+								if (matchActivity.Success) {
+									var timeString = (ParseTime (matchActivity.Groups ["timestamp"].Value) - start).TotalMilliseconds.ToString ();
+									results ["ActivityDisplayed"] = timeString;
+									Log.LogMessage (MessageImportance.Low, $"Time: {timeString.PadLeft (6)}ms Activity displayed");
+								}
+							}
+
 							continue;
+						}
 
 						var time = ParseTime (match.Groups ["timestamp"].Value);
 						var span = time - start;
