@@ -48,7 +48,7 @@
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
       Outputs="Android.Runtime\JNIEnv.g.cs">
     <Exec
-        Command="$(ManagedRuntime) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
@@ -69,7 +69,7 @@
       <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
     />
   </Target>
   <Target Name="_GenerateBinding"
@@ -95,7 +95,7 @@
       <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
     <ItemGroup>
       <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
