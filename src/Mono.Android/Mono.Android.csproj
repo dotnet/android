@@ -233,6 +233,7 @@
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
+    <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
     <Compile Include="Android.Test\MoreAsserts.cs" />
     <Compile Include="Android.Text\ClipboardManager.cs" />
     <Compile Include="Android.Text\ITextWatcher.cs" />
