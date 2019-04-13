@@ -173,7 +173,7 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefTool>$(ManagedRuntime) &quot;$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe&quot;</RemapAssemblyRefTool>
+    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
