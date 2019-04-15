@@ -143,6 +143,7 @@
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\lib64\libc++.$(LibExtension)" />
