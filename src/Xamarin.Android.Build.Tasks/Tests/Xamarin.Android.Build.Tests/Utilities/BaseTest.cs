@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 

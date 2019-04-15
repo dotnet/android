@@ -3666,6 +3666,20 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				FileAssert.Exists (javaStub);
 			}
 		}
+		
+		[Test]
+		[Category ("Commercial")]
+		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ()
+		{
+			if (!CommercialBuildAvailable)
+				Assert.Ignore ("Not required on Open Source Builds");
+			const string target = "_GetPrimaryCpuAbi";
+			var proj = new XamarinAndroidLibraryProject ();
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+			}
+		}
 	}
 }
 
