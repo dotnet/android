@@ -115,6 +115,7 @@
       DependsOnTargets="_FinalizePayload">
     <MakeDir Directories="$(PkgOutputPath)"/>
     <PropertyGroup>
+        <PkgProductOutputPath Condition="'$(UseCommercialInstallerName)' == 'True'">$(OutputPath)xamarin.android-$(XAVersion).pkg</PkgProductOutputPath>
         <PkgProductOutputPath Condition="'$(PkgProductOutputPath)' == ''">$(OutputPath)Xamarin.Android.Sdk-$(XAOSSInstallerSuffix).pkg</PkgProductOutputPath>
     </PropertyGroup>
     <ItemGroup>
@@ -133,5 +134,6 @@
       <ProductBuildArgs Include="&quot;$(PkgProductOutputPath)&quot;" />
     </ItemGroup>
     <Exec Command="productbuild @(ProductBuildArgs, ' ')" />
+    <RemoveDir Directories="$(OutputPath)\pkg"/>
   </Target>
 </Project>

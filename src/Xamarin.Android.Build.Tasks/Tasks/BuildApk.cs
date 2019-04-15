@@ -94,6 +94,16 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] LibraryProjectJars { get; set; }
 		string [] uncompressedFileExtensions;
 
+		protected virtual string RootPath => "";
+
+		protected virtual string AssembliesPath => RootPath + "assemblies/";
+
+		protected virtual string DalvikPath => "";
+
+		protected virtual CompressionMethod UncompressedMethod => CompressionMethod.Store;
+
+		protected virtual void FixupArchive (ZipArchiveEx zip) { }
+
 		void ExecuteWithAbi (string supportedAbis, string apkInputPath, string apkOutputPath)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
@@ -101,13 +111,14 @@ namespace Xamarin.Android.Tasks
 				File.Copy (apkInputPath, apkOutputPath + "new", overwrite: true);
 			using (var apk = new ZipArchiveEx (apkOutputPath + "new", apkInputPath != null ? FileMode.Open : FileMode.Create )) {
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
-				apk.Archive.AddEntry ("NOTICE",
+				apk.Archive.AddEntry (RootPath + "NOTICE",
 						Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"));
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {
 					string apkName = dex.GetMetadata ("ApkName");
-					apk.Archive.AddFile (dex.ItemSpec, string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName);
+					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
+					apk.Archive.AddFile (dex.ItemSpec, DalvikPath + dexPath);
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
@@ -122,7 +133,7 @@ namespace Xamarin.Android.Tasks
 
 				if (TypeMappings != null) {
 					foreach (ITaskItem typemap in TypeMappings) {
-						apk.Archive.AddFile (typemap.ItemSpec, Path.GetFileName(typemap.ItemSpec), compressionMethod: CompressionMethod.Store);
+						apk.Archive.AddFile (typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
 				}
 
@@ -175,7 +186,7 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
-
+				FixupArchive (apk);
 			}
 			MonoAndroidHelper.CopyIfZipChanged (apkOutputPath + "new", apkOutputPath);
 			File.Delete (apkOutputPath + "new");
@@ -183,29 +194,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("BuildApk Task");
-			Log.LogDebugMessage ("  ApkInputPath: {0}", ApkInputPath);
-			Log.LogDebugMessage ("  ApkOutputPath: {0}", ApkOutputPath);
-			Log.LogDebugMessage ("  BundleAssemblies: {0}", BundleAssemblies);
-			Log.LogDebugTaskItems ("  DalvikClasses:", DalvikClasses);
-			Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			Log.LogDebugMessage ("  UseSharedRuntime: {0}", UseSharedRuntime);
-			Log.LogDebugMessage ("  Debug: {0}", Debug ?? "no");
-			Log.LogDebugMessage ("  PreferNativeLibrariesWithDebugSymbols: {0}", PreferNativeLibrariesWithDebugSymbols);
-			Log.LogDebugMessage ("  EmbedAssemblies: {0}", EmbedAssemblies);
-			Log.LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
-			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
-			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
-			Log.LogDebugTaskItems ("  ResolvedUserAssemblies:", ResolvedUserAssemblies);
-			Log.LogDebugTaskItems ("  ResolvedFrameworkAssemblies:", ResolvedFrameworkAssemblies);
-			Log.LogDebugTaskItems ("  NativeLibraries:", NativeLibraries);
-			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
-			Log.LogDebugTaskItems ("  BundleNativeLibraries:", BundleNativeLibraries);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-			Log.LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
-
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			if (string.IsNullOrEmpty (AndroidEmbedProfilers) && _Debug) {
@@ -248,7 +236,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
 				// Add assembly
-				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
+				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
@@ -259,12 +247,12 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -282,7 +270,7 @@ namespace Xamarin.Android.Tasks
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
-				apk.Archive.AddFile (assembly.ItemSpec, "assemblies/" + Path.GetFileName (assembly.ItemSpec), compressionMethod: CompressionMethod.Store);
+				apk.Archive.AddFile (assembly.ItemSpec, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
 				// Try to add symbols if Debug
@@ -290,12 +278,12 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, "assemblies/" + Path.GetFileName (symbols), compressionMethod: CompressionMethod.Store);
+						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -315,17 +303,17 @@ namespace Xamarin.Android.Tasks
 				source.CopyTo (dest);
 				dest.WriteByte (0);
 				dest.Position = 0;
-				apk.Archive.AddEntry ("assemblies/" + Path.GetFileName (configFile), dest, compressionMethod: CompressionMethod.Store);
+				apk.Archive.AddEntry (AssembliesPath + Path.GetFileName (configFile), dest, compressionMethod: UncompressedMethod);
 			}
 		}
 
-		static string GetTargetDirectory (string path)
+		string GetTargetDirectory (string path)
 		{
 			string culture, file;
 			if (SatelliteAssembly.TryGetSatelliteCultureAndFileName (path, out culture, out file)) {
-				return "assemblies/" + culture;
+				return AssembliesPath + culture;
 			}
-			return "assemblies";
+			return AssembliesPath.TrimEnd ('/');
 		}
 
 		class LibInfo
@@ -363,7 +351,7 @@ namespace Xamarin.Android.Tasks
 		CompressionMethod GetCompressionMethod (string fileName)
 		{
 			if (uncompressedFileExtensions.Any (x => string.Compare (x, Path.GetExtension (fileName), StringComparison.OrdinalIgnoreCase) == 0))
-				return CompressionMethod.Store;
+				return UncompressedMethod;
 			return CompressionMethod.Default;
 		}
 

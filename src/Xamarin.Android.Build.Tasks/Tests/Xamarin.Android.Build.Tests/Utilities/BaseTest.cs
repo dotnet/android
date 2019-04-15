@@ -164,23 +164,27 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
-			}
-			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-			return result;
+			return RunProcess (adb, command);
 		}
 
-		protected string RunProcess (string exe, string args) {
-			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (exe, args) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds(30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
+		protected static string RunProcess (string exe, string args)
+		{
+			var info = new ProcessStartInfo (exe, args) {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			using (var proc = Process.Start (info)) {
+				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
+					proc.Kill ();
+					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
+					return null; //Don't try to read stdout/stderr
+				}
+				var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
+				return result;
 			}
-			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-			return result;
 		}
 
 		protected string CreateFauxAndroidNdkDirectory (string path)

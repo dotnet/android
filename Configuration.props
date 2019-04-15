@@ -140,6 +140,7 @@
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>
+    <BundleToolJarPath Condition=" '$(BundleToolJarPath)' == '' ">$(XAInstallPrefix)xbuild\Xamarin\Android\bundletool-all-$(XABundleToolVersion).jar</BundleToolJarPath>
   </PropertyGroup>
   <!--
     "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere

@@ -12,5 +12,6 @@
     <JavaSdkDirectory>@JAVA_HOME@</JavaSdkDirectory>
     <JavaCPath>$(JavaSdkDirectory)\bin\javac.exe</JavaCPath>
     <JarPath>$(JavaSdkDirectory)\bin\jar.exe</JarPath>
+    <JavaPath>$(JavaSdkDirectory)\bin\java.exe</JavaPath>
   </PropertyGroup>
 </Project>

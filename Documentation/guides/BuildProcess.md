@@ -499,6 +499,23 @@ when packaging Release applications.
 
     Added in Xamarin.Android 8.3.
 
+-   **AndroidPackageFormat** &ndash; An enum-style property with valid
+    values of `apk` or `aab`. This indicates if you want to package
+    the Android application as an [APK file][apk], or [Android App
+    Bundle][bundle]. App Bundles are a new format for `Release` builds
+    that are intended for submission on Google Play. This value
+    currently defaults to `apk`.
+
+    When `$(AndroidPackageFormat)` is set to `aab`, other MSBuild
+    properties are set, which are required for Android App Bundles:
+
+    * `$(AndroidUseAapt2)` is `True`.
+    * `$(AndroidUseApkSigner)` is `False`.
+    * `$(AndroidCreatePackagePerAbi)` is `False`.
+
+[apk]: https://en.wikipedia.org/wiki/Android_application_package]
+[bundle]: https://developer.android.com/platform/technology/app-bundle
+
 -   **AndroidR8JarPath** &ndash; The path to `r8.jar` for use with the
     r8 dex-compiler and shrinker. Defaults to a path in the
     Xamarin.Android installation. For further information see our

@@ -7,8 +7,12 @@
     <_NuGetVerbosity>-Verbosity Detailed</_NuGetVerbosity>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.JdkInfo" />
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.JdkInfo" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <Target Name="PrepareExternal">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" Targets="CheckoutExternalGitSources"/>
+  </Target>
   <Target Name="Prepare">
     <Error
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
@@ -37,6 +41,7 @@
         WorkingDirectory="$(_TopDir)"
         IgnoreStandardErrorWarningFormat="True"
     />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj" />
     <MSBuild Projects="tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj" Targets="Restore" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
     <!--NOTE: need to restore test sln *after* android-toolchain has the Android SDK in place-->

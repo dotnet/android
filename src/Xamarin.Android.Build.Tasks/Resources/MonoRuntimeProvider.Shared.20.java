@@ -23,12 +23,6 @@ public class MonoRuntimeProvider
 		android.content.pm.PackageManager packageManager = context.getPackageManager ();
 		java.util.List<String> apks = new java.util.ArrayList<String> ();
 		apks.add (applicationInfo.sourceDir);
-		if (android.os.Build.VERSION.SDK_INT >= 21) {
-			String[] splitApks = applicationInfo.splitPublicSourceDirs;
-			if (splitApks != null && splitApks.length > 0) {
-				java.util.Collections.addAll (apks, splitApks);
-			}
-		}
 		String platformPackage	= mono.MonoPackageManager.getApiPackageName ();
 		if (platformPackage != null) {
 			try {
