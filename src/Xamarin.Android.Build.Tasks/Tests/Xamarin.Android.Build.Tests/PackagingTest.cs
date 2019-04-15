@@ -545,9 +545,6 @@ namespace App1
 							string.Format ("Unexpected Files found! {0}",
 							string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
 					}
-					if (!HasDevices)
-						Assert.Ignore ("Skipping Installation. No devices available.");
-					Assert.IsTrue (ab.RunTarget (app, "Install"), "App should have installed.");
 				}
 			}
 		}
