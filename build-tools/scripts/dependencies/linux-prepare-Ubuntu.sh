@@ -1,6 +1,6 @@
 . "`dirname $0`"/debian-common.sh
 
-DISTRO_DEPS="$DEBIAN_COMMON_DEPS"
+DISTRO_DEPS="$DEBIAN_COMMON_DEPS openjdk-8-jdk"
 
 MAJOR=$(echo $1 | cut -d '.' -f 1)
 MINOR=$(echo $1 | cut -d '.' -f 2)

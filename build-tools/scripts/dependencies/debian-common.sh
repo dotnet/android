@@ -11,7 +11,6 @@ DEBIAN_COMMON_DEPS="autoconf
 	libzip4
 	linux-libc-dev
 	make
-	openjdk-8-jdk
 	unzip
 	vim-common
 	sqlite3
