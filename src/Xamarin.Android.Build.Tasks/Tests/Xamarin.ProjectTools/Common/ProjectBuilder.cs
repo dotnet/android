@@ -82,6 +82,16 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
+		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		{
+			return RunTarget (project, "Install", doNotCleanupOnUpdate);
+		}
+
+		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		{
+			return RunTarget (project, "Uninstall", doNotCleanupOnUpdate);
+		}
+
 		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
 		{
 			return RunTarget (project, "Restore", doNotCleanupOnUpdate);

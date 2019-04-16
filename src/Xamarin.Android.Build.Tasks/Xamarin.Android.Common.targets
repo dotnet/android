@@ -3389,6 +3389,10 @@ because xbuild doesn't support framework reference assemblies.
     _DeployApk;
     _DeployAppBundle;
   </InstallDependsOnTargets>
+  <UninstallDependsOnTargets>
+    AndroidPrepareForBuild;
+    _Uninstall
+  </UninstallDependsOnTargets>
 </PropertyGroup>
 
 <Target Name="_DeployApk"
@@ -3443,6 +3447,15 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="Install"
     Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)"
     DependsOnTargets="$(InstallDependsOnTargets)">
+</Target>
+
+<Target Name="_Uninstall">
+  <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) uninstall $(_AndroidPackage)" />
+</Target>
+
+<Target Name="Uninstall"
+    Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)"
+    DependsOnTargets="$(UninstallDependsOnTargets)">
 </Target>
 
 

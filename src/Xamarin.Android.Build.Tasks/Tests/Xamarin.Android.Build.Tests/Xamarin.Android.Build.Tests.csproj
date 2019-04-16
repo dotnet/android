@@ -58,6 +58,8 @@
     <Reference Include="Xamarin.Build.AsyncTask">
       <HintPath>..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
