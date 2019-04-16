@@ -40,16 +40,16 @@
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <ItemGroup>
       <NUnitTarget Include="@(_DeviceTestAssembly)">
-         <TestFilename>%(_DeviceTestAssembly.Filename)</TestFilename>
-         <NUnitOutput Condition=" '$(HostOS)' != 'Windows' " >| tee &quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
-         <NUnitOutput Condition=" '$(HostOS)' == 'Windows'  ">--output=&quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
+        <TestFilename>%(_DeviceTestAssembly.Filename)</TestFilename>
+        <NUnitOutput Condition=" '$(HostOS)' != 'Windows' " >| tee &quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
+        <NUnitOutput Condition=" '$(HostOS)' == 'Windows'  ">--output=&quot;bin\Test$(Configuration)\TestOutput-%(_DeviceTestAssembly.Filename).txt&quot;</NUnitOutput>
       </NUnitTarget>
     </ItemGroup>
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml;format=nunit2&quot; %(NUnitTarget.NUnitOutput)"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="true"
         ContinueOnError="ErrorAndContinue"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml;format=nunit2&quot; %(NUnitTarget.NUnitOutput)"
+        IgnoreStandardErrorWarningFormat="true"
+        WorkingDirectory="$(_TopDir)"
     />
     <ItemGroup>
       <_RenameNUnitTestCasesGlob Include="@(NUnitTarget->'$(_TopDir)\TestResult-%(TestFilename).xml')" />
