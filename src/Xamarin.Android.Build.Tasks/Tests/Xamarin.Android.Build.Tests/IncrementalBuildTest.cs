@@ -481,8 +481,10 @@ namespace Lib2
 			app.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 
 			int count = 0;
-			var lib = new XamarinAndroidLibraryProject {
+			var lib = new DotNetStandard {
 				ProjectName = "MyLibrary",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"
@@ -503,8 +505,10 @@ namespace Lib2
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				var targetsShouldSkip = new [] {
-					//TODO: perhaps more targets will skip here eventually?
 					"CoreCompile",
+					"_BuildLibraryImportsCache",
+					"_ResolveLibraryProjectImports",
+					"_GenerateJavaStubs",
 				};
 				foreach (var target in targetsShouldSkip) {
 					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");

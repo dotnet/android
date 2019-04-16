@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		
-		public IList<string> Merge (List<TypeDefinition> subclasses, List<string> selectedWhitelistAssemblies, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			string applicationName  = ApplicationName;
 
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Tasks {
 			if (manifest.Attribute (androidNs + "versionName") == null)
 				manifest.SetAttributeValue (androidNs + "versionName", "1.0");
 			
-			app = CreateApplicationElement (manifest, applicationClass, subclasses, selectedWhitelistAssemblies);
+			app = CreateApplicationElement (manifest, applicationClass, subclasses);
 			
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
@@ -399,12 +399,12 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			AddInstrumentations (manifest, subclasses, targetSdkVersionValue);
-			AddPermissions (app, selectedWhitelistAssemblies);
-			AddPermissionGroups (app, selectedWhitelistAssemblies);
-			AddPermissionTrees (app, selectedWhitelistAssemblies);
-			AddUsesPermissions (app, selectedWhitelistAssemblies);
-			AddUsesFeatures (app, selectedWhitelistAssemblies);
-			AddSupportsGLTextures (app, selectedWhitelistAssemblies);
+			AddPermissions (app);
+			AddPermissionGroups (app);
+			AddPermissionTrees (app);
+			AddUsesPermissions (app);
+			AddUsesFeatures (app);
+			AddSupportsGLTextures (app);
 
 			ReorderActivityAliases (app);
 			ReorderElements (app);
@@ -508,7 +508,7 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, List<string> selectedWhitelistAssemblies)
+		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -521,10 +521,10 @@ namespace Xamarin.Android.Tasks {
 					.Where (attr => attr != null)
 					.ToList ();
 			var usesLibraryAttr = 
-				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
 			var usesConfigurationAttr =
-				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
 			if (assemblyAttr.Count > 1)
 				throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
@@ -772,26 +772,20 @@ namespace Xamarin.Android.Tasks {
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permReadExternalStorage)));
 		}
 
-		void AddPermissions (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissions (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
 			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 			// Add unique permissions to the manifest
 			foreach (var pa in assemblyAttrs.Distinct (new PermissionAttribute.PermissionAttributeComparer ()))
 				if (!application.Parent.Descendants ("permission").Any (x => (string)x.Attribute (attName) == pa.Name))
 					application.AddBeforeSelf (pa.ToElement (PackageName));
 		}
 
-		void AddPermissionGroups (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissionGroups (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
 			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pga in assemblyAttrs.Distinct (new PermissionGroupAttribute.PermissionGroupAttributeComparer ()))
@@ -799,13 +793,10 @@ namespace Xamarin.Android.Tasks {
 					application.AddBeforeSelf (pga.ToElement (PackageName));
 		}
 
-		void AddPermissionTrees (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissionTrees (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pta in assemblyAttrs.Distinct (new PermissionTreeAttribute.PermissionTreeAttributeComparer ()))
@@ -813,13 +804,10 @@ namespace Xamarin.Android.Tasks {
 					application.AddBeforeSelf (pta.ToElement (PackageName));
 		}
 
-		void AddUsesPermissions (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddUsesPermissions (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissions to the manifest
 			foreach (var upa in assemblyAttrs.Distinct (new UsesPermissionAttribute.UsesPermissionComparer ()))
@@ -841,13 +829,10 @@ namespace Xamarin.Android.Tasks {
 					application.Add (ula.ToElement (PackageName));
 		}
 
-		void AddUsesFeatures (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddUsesFeatures (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique features by Name or glESVersion to the manifest
 			foreach (var feature in assemblyAttrs) {
@@ -865,13 +850,10 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void AddSupportsGLTextures (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddSupportsGLTextures (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique items by Name to the manifest
 			foreach (var feature in assemblyAttrs) {

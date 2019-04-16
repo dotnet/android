@@ -7,7 +7,6 @@ namespace Xamarin.ProjectTools
 {
 	public class DotNetStandard : XamarinProject
 	{
-
 		public override string ProjectTypeGuid {
 			get {
 				return string.Empty;
@@ -20,7 +19,12 @@ namespace Xamarin.ProjectTools
 			OtherBuildItems = new List<BuildItem> ();
 			SetProperty (CommonProperties, "DebugType", "full");
 			ItemGroupList.Add (Sources);
+			Language = XamarinAndroidProjectLanguage.CSharp;
 		}
+
+		// NetStandard projects always need to restore
+		public override bool ShouldRestorePackageReferences => true;
+
 		public string PackageTargetFallback {
 			get { return GetProperty ("PackageTargetFallback"); }
 			set { SetProperty ("PackageTargetFallback", value); }

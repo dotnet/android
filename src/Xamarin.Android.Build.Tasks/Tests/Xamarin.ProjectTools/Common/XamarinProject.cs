@@ -31,6 +31,7 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
+		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 
@@ -118,6 +119,17 @@ namespace Xamarin.ProjectTools
 				prop.Condition = condition;
 				prop.Value = value;
 			}
+		}
+
+		public BuildItem GetItem (string include)
+		{
+			return ItemGroupList.SelectMany (g => g).First (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public void Touch (params string [] itemPaths)
+		{
+			foreach (var item in itemPaths)
+				GetItem (item).Timestamp = DateTimeOffset.UtcNow;
 		}
 
 		string project_file_path;

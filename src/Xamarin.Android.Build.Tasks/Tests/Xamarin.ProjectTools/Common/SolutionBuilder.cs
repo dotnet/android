@@ -67,7 +67,7 @@ namespace Xamarin.ProjectTools
 
 		public bool BuildProject(XamarinProject project, string target = "Build")
 		{
-			BuildSucceeded = BuildInternal(Path.Combine (SolutionPath, project.ProjectName, project.ProjectFilePath), target, restore: project.PackageReferences?.Count > 0);
+			BuildSucceeded = BuildInternal(Path.Combine (SolutionPath, project.ProjectName, project.ProjectFilePath), target, restore: project.ShouldRestorePackageReferences);
 			return BuildSucceeded;
 		}
 

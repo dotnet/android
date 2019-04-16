@@ -2,12 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using MonoDroid.Utils;
 using Mono.Cecil;
 
 
@@ -104,14 +103,9 @@ namespace Xamarin.Android.Tasks
 					res.SearchDirectories.Add (dir.ItemSpec);
 			}
 
-			var selectedWhitelistAssemblies = new List<string> ();
-			
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
-				var assemblyFullPath = Path.GetFullPath (assembly.ItemSpec);
-				res.Load (assemblyFullPath);
-				if (MonoAndroidHelper.FrameworkAttributeLookupTargets.Any (a => Path.GetFileName (assembly.ItemSpec) == a))
-					selectedWhitelistAssemblies.Add (assemblyFullPath);
+				res.Load (assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code
@@ -234,7 +228,7 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (all_java_types, selectedWhitelistAssemblies, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
 			using (var stream = new MemoryStream ()) {
 				manifest.Save (stream);
@@ -287,19 +281,17 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
-			using (var gen = UseSharedRuntime
-				? new TypeNameMapGenerator (types, Log.LogDebugMessage)
-			        : new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), Log.LogDebugMessage)) {
-				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), gen.WriteJavaToManaged);
-				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), gen.WriteManagedToJava);
-			}
-		}
-
-		void UpdateWhenChanged (string path, Action<Stream> generator)
-		{
+			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
+			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
+				new TypeNameMapGenerator (types, logger) :
+				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
+			using (var gen = createTypeMapGenerator ())
 			using (var stream = new MemoryStream ()) {
-				generator (stream);
-				MonoAndroidHelper.CopyIfStreamChanged (stream, path);
+				gen.WriteJavaToManaged (stream);
+				MonoAndroidHelper.CopyIfStreamChanged (stream, Path.Combine (OutputDirectory, "typemap.jm"));
+				stream.SetLength (0); //Reuse the stream
+				gen.WriteManagedToJava (stream);
+				MonoAndroidHelper.CopyIfStreamChanged (stream, Path.Combine (OutputDirectory, "typemap.mj"));
 			}
 		}
 	}
