@@ -174,10 +174,11 @@ namespace Xamarin.Android.Tasks
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							if (apk.Archive.Any (e => e.FullName == jarItem.FullName))
+							var path = RootPath + jarItem.FullName;
+							if (apk.Archive.Any (e => e.FullName == path))
 								Log.LogMessage ("Warning: failed to add jar entry {0} from {1}: the same file already exists in the apk", jarItem.FullName, Path.GetFileName (jarFile));
 							else
-								apk.Archive.AddEntry (data, jarItem.FullName);
+								apk.Archive.AddEntry (data, path);
 						}
 					}
 					count++;
