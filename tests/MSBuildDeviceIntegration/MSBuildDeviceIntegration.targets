@@ -15,7 +15,7 @@
         <To>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\Xamarin.Android.Cecil.dll</To>
       </_Source>
     </ItemGroup>
-    <Copy SourceFiles="..\..\bin\Test$(Configuration)\Xamarin.Android.Cecil.dll;..\..\bin\Test$(Configuration)\Xamarin.Android.Cecil.Mdb.dll"
+    <Copy SourceFiles="..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll;..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.Mdb.dll"
         DestinationFolder="..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration" />
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; %(_Source.From) &quot;%(_Source.To)&quot;"
