@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.XPath;
@@ -27,6 +28,19 @@ namespace Xamarin.Android.Tasks
 				taskItem.SetMetadata (attribute.Name.LocalName, attribute.Value);
 			}
 			return taskItem;
+		}
+
+		public static IEnumerable<XElement> ToXElements (ICollection<ITaskItem> items, string itemName, string[] knownMetadata)
+		{
+			foreach (var item in items) {
+				var e = new XElement (itemName, item.ItemSpec);
+				foreach (var name in knownMetadata) {
+					var value = item.GetMetadata (name);
+					if (!string.IsNullOrEmpty (value))
+						e.SetAttributeValue (name, value);
+				}
+				yield return e;
+			}
 		}
 
 		public static string[] GetPaths (this XDocument doc, params string[] paths)
