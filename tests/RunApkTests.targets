@@ -36,7 +36,19 @@
     <_DeviceTestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\MSBuildDeviceIntegration\MSBuildDeviceIntegration.dll" />
   </ItemGroup>
 
-  <Target Name="RunNUnitDeviceTests">
+  <PropertyGroup>
+    <RunNUnitDeviceTestsDependsOn>
+      AcquireAndroidTarget;
+      RunMSBuildDeviceIntegration;
+      ReleaseAndroidTarget;
+      RenameApkTestCases;
+      ReportComponentFailures;
+    </RunNUnitDeviceTestsDependsOn>
+  </PropertyGroup>
+
+  <Target Name="RunNUnitDeviceTests" DependsOnTargets="$(RunNUnitDeviceTestsDependsOn)"/>
+
+  <Target Name="RunMSBuildDeviceIntegration">
     <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <ItemGroup>
       <NUnitTarget Include="@(_DeviceTestAssembly)">
@@ -70,7 +82,6 @@
     <RunApkTestsDependsOn>
       FilterApkTests;
       AcquireAndroidTarget;
-      RunNUnitDeviceTests;
       UndeployTestApks;
       DeployTestApks;
       DeployTestAabs;

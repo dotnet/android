@@ -168,6 +168,13 @@
   <Target Name="RunPerformanceTests">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />
   </Target>
+  <Target Name="RunNUnitDeviceTests">
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="RunNUnitDeviceTests"
+    />
+  </Target>
   <ItemGroup>
     <_RunParallelTestTarget Include="RunNUnitTests" />
     <_RunParallelTestTarget Include="RunApkTests" />
@@ -175,6 +182,7 @@
   <ItemGroup>
     <_RunTestTarget Include="RunJavaInteropTests" />
     <_RunTestTarget Include="RunPerformanceTests" />
+    <_RunTestTarget Include="RunNUnitDeviceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">
     <RunParallelTargets
