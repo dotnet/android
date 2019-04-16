@@ -32,6 +32,11 @@
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
+    <!-- Nothing to remap for the xunit tests, but we still need them in the intermediate output path in order to resolve their references. -->
+    <ItemGroup>
+      <_XunitTestAssembly Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"  Condition="%(MonoTestAssembly.TestType) == 'xunit'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_XunitTestAssembly)" DestinationFolder="$(IntermediateOutputPath)" />
     <ItemGroup>
       <_DebugSymbol
           Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
