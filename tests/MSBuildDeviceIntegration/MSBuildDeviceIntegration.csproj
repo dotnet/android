@@ -40,13 +40,13 @@
       <Link>XABuildPaths.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
-        <Link>Utilities\DeviceTest.cs</Link>
+      <Link>Utilities\DeviceTest.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BuildHelper.cs">
-        <Link>Utilities\BuildHelper.cs</Link>
+      <Link>Utilities\BuildHelper.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BaseTest.cs">
-        <Link>Utilities\BaseTest.cs</Link>
+      <Link>Utilities\BaseTest.cs</Link>
     </Compile>
     <Compile Include="Tests/*.cs" />
   </ItemGroup>
