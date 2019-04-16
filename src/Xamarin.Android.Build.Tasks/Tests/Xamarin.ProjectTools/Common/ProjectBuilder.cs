@@ -82,12 +82,12 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
-		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
 		{
-			return RunTarget (project, "Install", doNotCleanupOnUpdate);
+			return RunTarget (project, "Install", doNotCleanupOnUpdate, saveProject: saveProject);
 		}
 
-		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
 		{
 			return RunTarget (project, "Uninstall", doNotCleanupOnUpdate);
 		}
@@ -112,12 +112,12 @@ namespace Xamarin.ProjectTools
 			return RunTarget (project, "Compile", doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
 		}
 
-		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool saveProject = true)
 		{
 			var oldTarget = Target;
 			Target = target;
 			try {
-				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables);
+				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, saveProject: saveProject, environmentVariables: environmentVariables);
 			} finally {
 				Target = oldTarget;
 			}

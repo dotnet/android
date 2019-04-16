@@ -76,6 +76,14 @@ namespace Xamarin.Android.Build.Tests
 				/* supportedAbi */     new string[] { "armeabi-v7a"},
 				/* debugSymbols */     true ,
 				/* debugType */        "Full",
+				/* optimize */         true ,
+				/* embedassebmlies */  false ,
+				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
+			},
+			new object[] {
+				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* debugSymbols */     true ,
+				/* debugType */        "Full",
 				/* optimize */         false ,
 				/* embedassebmlies */  true ,
 				/* expectedResult */   "debug",
@@ -102,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */        "",
 				/* optimize */         true ,
 				/* embedassebmlies */  false ,
-				/* expectedResult */   "release",
+				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
 			},
 			new object[] {
 				/* supportedAbi */     new string[] { "armeabi-v7a"},
@@ -126,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugType */        "",
 				/* optimize */         null ,
 				/* embedassebmlies */  null ,
-				/* expectedResult */   "release",
+				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
 			},
 		};
 
@@ -137,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 				/* aotAssemblies */      false,
 				/* debugSymbols */       true,
 				/* debugType */          "Full",
-				/* embedMdb */           true, // because we don't use FastDev in the OSS repo
+				/* embedMdb */           !CommercialBuildAvailable, // because we don't use FastDev in the OSS repo
 				/* expectedRuntime */    "debug",
 			},
 			new object[] {
