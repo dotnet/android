@@ -112,6 +112,7 @@
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
     />
     <PropertyGroup>
       <_HostOS>$(HostOS)</_HostOS>
@@ -133,6 +134,7 @@
     <MSBuild 
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AotAssemblies=True"
     />
@@ -148,6 +150,7 @@
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AndroidEnableProfiledAot=True;AotAssemblies=True"
     />
@@ -163,6 +166,7 @@
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
         Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="BundleAssemblies=True"
     />
@@ -182,9 +186,18 @@
     <_RunParallelTestTarget Include="RunApkTests" />
   </ItemGroup>
   <ItemGroup>
-    <_RunTestTarget Include="RunJavaInteropTests" />
-    <_RunTestTarget Include="RunPerformanceTests" />
-    <_RunTestTarget Include="RunNUnitDeviceTests" />
+    <_RunTestTarget Include="RunJavaInteropTests">
+      <Properties></Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunPerformanceTests">
+      <Properties></Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunApkTests">
+      <Properties>RunApkTestsTarget=RunPerformanceApkTests</Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunNUnitDeviceTests">
+      <Properties></Properties>
+    </_RunTestTarget>
   </ItemGroup>
   <Target Name="RunAllTests">
     <RunParallelTargets
@@ -200,6 +213,7 @@
          Projects="$(MSBuildThisFileDirectory)RunTests.targets"
          RunEachTargetSeparately="True"
          Targets="@(_RunTestTarget)"
+         Properties="%(Properties)"
      />
    </Target>
 </Project>
