@@ -41,6 +41,7 @@ public class MonoRuntimeProvider
 		try {
 			android.content.pm.ApplicationInfo runtimeInfo = packageManager.getApplicationInfo ("Mono.Android.DebugRuntime", 0);
 			apks.add (0, runtimeInfo.sourceDir);
+			applicationInfo = runtimeInfo;
 		} catch (android.content.pm.PackageManager.NameNotFoundException e) {
 			throw new RuntimeException ("Unable to find application Mono.Android.DebugRuntime!", e);
 		}
