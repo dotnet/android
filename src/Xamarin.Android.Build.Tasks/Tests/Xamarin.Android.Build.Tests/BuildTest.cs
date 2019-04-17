@@ -977,28 +977,24 @@ namespace UnamedProject
 
 		[Test]
 		[Category ("Minor")]
-		public void BuildApplicationOver65536Methods ([Values (true, false)] bool useD8)
+		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			proj.DexTool = dexTool;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
 			}
 		}
 
 		[Test]
-		public void CreateMultiDexWithSpacesInConfig ([Values (true, false)] bool useD8)
+		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
+			proj.DexTool = dexTool;
 			proj.IsRelease = true;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -1032,15 +1028,13 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildAfterMultiDexIsNotRequired ([Values (true, false)] bool useD8)
+		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				string androidBinDir = Path.Combine (intermediateDir, "android", "bin");
 				string apkPath = Path.Combine (androidBinDir, "UnnamedProject.UnnamedProject.apk");
@@ -1060,26 +1054,17 @@ namespace UnamedProject
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
 				while (proj.OtherBuildItems.Count > 1)
 					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+				proj.SetProperty ("AndroidEnableMultiDex", "False");
 
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
-				//NOTE: d8 always creates classes2.dex, even if not needed
-				if (useD8) {
-					FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				} else {
-					FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
-				}
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
 				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
 					var entries = zip.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
-					//NOTE: d8 always creates classes2.dex, even if not needed
-					if (useD8) {
-						Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
-					} else {
-						Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
-					}
+					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
 					Assert.IsFalse (entries.Contains ("classes3.dex"), "APK must *not* contain `classes3.dex`.");
 				}
 			}
