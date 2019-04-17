@@ -139,6 +139,12 @@ timestamps {
         }
 
         utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
+            // UNDONE:
+            if (isCommercial) {
+                echo "Skipping 'build tests' stage"
+                return
+            }
+
             sh "make all-tests CONFIGURATION=${env.BuildFlavor} V=1"
         }
 
@@ -168,6 +174,12 @@ timestamps {
         utils.stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
             echo "running tests"
 
+            // UNDONE:
+            if (isCommercial) {
+                echo "Skipping 'run all tests' stage"
+                return
+            }
+
             def skipNunitTests = false
 
             if (isPr) {
@@ -184,6 +196,12 @@ timestamps {
 
         utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             echo "packaging test error logs"
+
+            // UNDONE:
+            if (isCommercial) {
+                echo "Skipping 'publish test error logs' stage"
+                return
+            }
 
             publishHTML target: [
                 allowMissing:           true,
@@ -208,7 +226,9 @@ timestamps {
         }
 
         utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
-            if (isPr) {
+            // UNDONE: Skip plots
+            // if (isPr) {
+            if (isCommercial || isPr) {
                 echo "Skipping plot metrics for PR build"
                 return
             }
