@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 	public class InstantRunTest : BaseTest
 	{
 		[Test]
-		public void InstantRunSimpleBuild ()
+		public void InstantRunSimpleBuild ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -22,8 +22,12 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
-			var b = CreateApkBuilder ("temp/InstantRunSimpleBuild");
+			var proj = new XamarinFormsAndroidApplicationProject {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
+			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -31,9 +35,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (File.Exists (b.Output.GetIntermediaryPath ("android/bin/dex/mono.android.dex")), "there should be mono.android.dex in the intermediaries.");
 
 			using (var apk = ((AndroidApplicationBuildOutput) b.Output).OpenApk ()) {
-				// 30000 is just to ensure that classes.dex contains minimum set of types, like, doesn't contain mono.android.jar classes.				
-				var dex = apk.GetRaw (ApkContents.ClassesDex);
-				Assert.IsTrue (dex.Length < 30000, "classes.dex is unexpectedly big ({0} bytes). It likely contains extraneous code.", dex.Length);
+				var dexFile = Path.GetTempFileName ();
+				File.WriteAllBytes (dexFile, apk.GetRaw (ApkContents.ClassesDex));
+				try {
+					string className = "Lcom/xamarin/forms/platform/android/FormsViewGroup;";
+					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should *not* include `{className}`!");
+					className = "Lmono/MonoRuntimeProvider;";
+					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				} finally {
+					File.Delete (dexFile);
+				}
 			}
 			
 			b.Dispose ();
@@ -118,24 +129,28 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SimpleInstallAndUninstall ()
+		public void SimpleInstallAndUninstall ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
 
 			if (!HasDevices)
 				return;
-			
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
+
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
 			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder ("temp/InstantRunSimpleInstallAndUninstall");
+			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
 			b.Dispose ();
 		}
 
 		[Test]
-		public void SkipFastDevAlreadyInstalledFile ()
+		public void SkipFastDevAlreadyInstalledFile ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -143,12 +158,16 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices)
 				return;
 
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
 			proj.SetDefaultTargetDevice ();
 			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
 			proj.Packages.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": Android.Support.V7.App.AppCompatActivity");
-			var b = CreateApkBuilder ("temp/SkipFastDevAlreadyInstalledFile");
+			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
 
@@ -208,7 +227,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunResourceChange ()
+		public void InstantRunResourceChange ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -220,9 +239,10 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine (Root, "temp/InstantRunResourceChange"), false, false)) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
@@ -244,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunFastDevTypemaps ()
+		public void InstantRunFastDevTypemaps ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -256,9 +276,10 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine (Root, "temp/InstantRunFastDevTypemaps"), false, false)) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
@@ -275,7 +296,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunNativeLibrary ()
+		public void InstantRunNativeLibrary ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -291,12 +312,13 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
 				OtherBuildItems = {
 					nativeLib,
 				},
 			};
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine (Root, "temp/InstantRunNativeLibrary"), false, false)) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
@@ -318,7 +340,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DisableInstantRunWhenAndroidManifestHasChanged ()
+		public void DisableInstantRunWhenAndroidManifestHasChanged ([Values ("dx", "d8")] string dexTool)
 		{
 			if (!CommercialBuildAvailable)
 				Assert.Ignore ("Not required on Open Source Builds");
@@ -328,9 +350,13 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+				DexTool = dexTool,
+			};
 			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder ("temp/DisableInstantRunWhenAndroidManifestHasChanged");
+			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Build (proj), "packaging should have succeeded. 0");
 
 			// modify AndroidManifest.xml.
