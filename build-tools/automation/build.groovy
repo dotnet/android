@@ -110,8 +110,9 @@ timestamps {
                     sh('./provisionator.sh profile.csx -v')
                 }
 
-                utils.stageWithTimeout('configure', 30, 'MINUTES', commercialRoot, true) {
+                utils.stageWithTimeout('configure', 30, 'MINUTES', commercialRoot, false) {     // UNDONE: Set fatal to false
                     shSDKPath('if [ -x configure ]; then ./configure; fi')
+                    sh('make -w reset-versions V=1')        // UNDONE: Is this needed?
                 }
             }
 
