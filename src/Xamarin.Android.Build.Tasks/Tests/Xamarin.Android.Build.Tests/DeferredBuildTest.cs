@@ -19,8 +19,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				appBuilder.Target = "Compile";
-				Assert.IsTrue (appBuilder.Build (app, parameters: new string[]{
+				Assert.IsTrue (appBuilder.RunTarget (app, "Compile", parameters: new string[]{
 					// Normal DTB properties
 					"DesignTimeBuild=true",
 					"BuildingInsideVisualStudio=true",
@@ -33,8 +32,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should be skipped for DTB when deferred build is supported!");
 
 				// The background build would run our UpdateAndroidResources in its BackgroundBuildDependsOn
-				appBuilder.Target = "UpdateAndroidResources";
-				Assert.IsTrue (appBuilder.Build (app, parameters: new string[]{
+				Assert.IsTrue (appBuilder.RunTarget (app, "UpdateAndroidResources", parameters: new string[]{
 					// Normal DTB properties
 					"DesignTimeBuild=true",
 					"BuildingInsideVisualStudio=true",
@@ -49,8 +47,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
 
 				// Run the real build now
-				appBuilder.Target = "Build";
-				Assert.IsTrue (appBuilder.Build (app, parameters: new string[]{
+				Assert.IsTrue (appBuilder.RunTarget (app, "Build", parameters: new string[]{
 					"DesignTimeBuild=false",
 					"BuildingInsideVisualStudio=true",
 					"DeferredBuildSupported=true",
@@ -70,8 +67,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				appBuilder.Target = "Compile";
-				Assert.IsTrue (appBuilder.Build (app, parameters: new string[]{
+				Assert.IsTrue (appBuilder.RunTarget (app, "Compile", parameters: new string[]{
 					// Normal DTB properties
 					"DesignTimeBuild=true",
 					"BuildingInsideVisualStudio=true",
