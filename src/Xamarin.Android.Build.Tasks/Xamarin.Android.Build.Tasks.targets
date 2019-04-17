@@ -163,12 +163,14 @@
 
     <PropertyGroup>
       <_NDKToolFileName>$([System.IO.Path]::GetFileName ('$(_NDKToolLocation)'))</_NDKToolFileName>
+      <_NDKToolDestinationBase>$(XAInstallPrefix)xbuild\Xamarin\Android</_NDKToolDestinationBase>
       <_WinAsmDestDir>$(XAInstallPrefix)xbuild\Xamarin\Android</_WinAsmDestDir>
     </PropertyGroup>
 
     <ItemGroup>
       <_NDKToolSource Include="$(_NDKToolLocation%(_ToolchainPrefix.Identity))" />
-      <_NDKToolDestination Include="$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
     </ItemGroup>
   </Target>
 
