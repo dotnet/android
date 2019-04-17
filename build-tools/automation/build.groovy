@@ -4,6 +4,10 @@ def XADir = "xamarin-android"
 
 def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
+def isCommercial = false
+def externalRoot = ''
+def commercialRoot = ''
+
 def isPr = false                // Default to CI
 
 def hasPrLabelFullMonoIntegrationBuild = false
@@ -40,6 +44,10 @@ timestamps {
         utils = load "${XADir}/build-tools/automation/utils.groovy"
 
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
+            isCommercial = env.IsCommercial == '1'
+            externalRoot = "${XADir}/external"
+            commercialRoot = "${externalRoot}/${env.CommercialDirectory}"
+
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -52,6 +60,7 @@ timestamps {
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
+            echo "HOME: ${HOME}"                // UNDONE: Make sure HOME resolves from groovy
 
             if (isPr) {
                 echo "PR id: ${env.ghprbPullId}"
@@ -77,6 +86,10 @@ timestamps {
                 }
             }
 
+            if (isCommercial) {
+                echo "Commercial root: ${commercialRoot}"
+            }
+
             echo "${buildType} buildTarget: ${buildTarget}"
 
             sh "env"
@@ -89,7 +102,19 @@ timestamps {
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes
+        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer to perform the checkout involved for commercial builds
+            if (isCommercial) {
+                sh "make prepare-external-git-dependencies"
+
+                utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialRoot}/build-tools/provisionator", true) {
+                    sh('./provisionator.sh profile.csx -v')
+                }
+
+                utils.stageWithTimeout('configure', 30, 'MINUTES', commercialRoot, true) {
+                    shSDKPath('if [ -x configure ]; then ./configure; fi')
+                }
+            }
+
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
