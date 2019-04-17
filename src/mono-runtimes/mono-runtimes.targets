@@ -189,7 +189,7 @@
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)libmono-native-compat.%(NativeLibraryExtension)')"
       />
       <_RuntimeSource
-          Condition=" 'host-Darwin' != '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)'"
+          Condition=" 'host-Darwin' != '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)libmono-native.%(NativeLibraryExtension)')"
       />
       <_InstallRuntimeOutput
@@ -218,21 +218,10 @@
           Condition=" 'host-$(HostOS)' == '%(Identity)' "
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\bin\mono')"
       />
-      <_RuntimeBinarySource
-          Condition=" 'host-$(HostOS)' == '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)'"
-          Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)libmono-native-compat.%(NativeLibraryExtension)')"
-      />
-
       <_InstallRuntimeBinaryOutput
           Condition=" 'host-$(HostOS)' == '%(Identity)' "
           Include="@(_MonoRuntime->'$(_MSBuildDir)\$(HostOS)\mono')"
       />
-
-      <_InstallRuntimeBinaryOutput
-          Condition=" 'host-$(HostOS)' == '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)'"
-          Include="@(_MonoRuntime->'$(_MSBuildDir)\$(HostOS)\libmono-native.%(NativeLibraryExtension)')"
-      />
-
       <_CrossRuntimeBinarySource
           Include="@(_MonoCrossRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\bin\%(ExePrefix)mono-sgen%(ExeSuffix)')"
       />
