@@ -104,6 +104,7 @@ else()
   add_definitions("-D_GNU_SOURCE")
   if(APPLE)
     add_definitions("-DAPPLE_OS_X")
+    set(CMAKE_MACOSX_RPATH 1)
     set(HOST_BUILD_NAME "host-Darwin")
   elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     if(NOT MINGW AND NOT WIN32)
@@ -111,7 +112,7 @@ else()
       set(HOST_BUILD_NAME "host-Linux")
 
       if(EXISTS "/.flatpak-info")
-	add_definitions("-DLINUX_FLATPAK")
+		add_definitions("-DLINUX_FLATPAK")
       endif()
     endif()
   endif()
@@ -221,6 +222,9 @@ if(UNIX)
     )
 endif()
 
+set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
+add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
+
 set(SOURCES_FRAGMENT_FILE "sources.projitems")
 file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
 <Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
@@ -236,6 +240,13 @@ file(APPEND ${SOURCES_FRAGMENT_FILE} "  </ItemGroup>\n\
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
 set(MONO_ANDROID_LIB "mono-android.${MONO_ANDROID_SUFFIX}")
 add_library(${MONO_ANDROID_LIB} SHARED ${MONODROID_SOURCES})
+if(APPLE)
+  add_custom_command(
+    TARGET ${MONO_ANDROID_LIB}
+    POST_BUILD
+    COMMAND xcrun install_name_tool -change "@rpath/libxamarin-app.dylib" "@loader_path/libxamarin-app.dylib" $<TARGET_FILE:${MONO_ANDROID_LIB}>
+  )
+endif()
 
 if(MINGW_ZLIB_LIBRARY_PATH)
   set(LINK_LIBS "${MINGW_ZLIB_LIBRARY_PATH} ${EXTRA_LINKER_FLAGS}")
@@ -249,4 +260,5 @@ elseif(NOT ANDROID)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 
-target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS})
+target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
+

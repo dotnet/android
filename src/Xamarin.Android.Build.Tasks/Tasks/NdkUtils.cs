@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -16,9 +17,16 @@ namespace Xamarin.Android.Tasks
 {
 	public static class NdkUtil
 	{
+		// We need it to work fine during our tests which are executed at the same time in various threads.
+		[ThreadStatic]
 		static bool usingClangNDK;
 
 		public static bool UsingClangNDK => usingClangNDK;
+
+		public static bool Init (string ndkPath)
+		{
+			return Init (null, ndkPath); // For tests which don't have access to a TaskLoggingHelper
+		}
 
 		public static bool Init (TaskLoggingHelper log, string ndkPath)
 		{
@@ -26,7 +34,7 @@ namespace Xamarin.Android.Tasks
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
 
 			if (!hasNdkVersion) {
-				log.LogCodedError ("XA5101",
+				log?.LogCodedError ("XA5101",
 						"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
 						"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
 				return false;

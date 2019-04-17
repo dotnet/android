@@ -74,7 +74,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-      AcwMapFile="$(_AcwMapFile)">
+      AcwMapFile="$(_AcwMapFile)"
+      SupportedAbis="$(_BuildTargetAbis)">
   </GenerateJavaStubs>
   <ConvertCustomView
       Condition="Exists('$(_CustomViewMapFile)')"
@@ -100,7 +101,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       TlsProvider="$(AndroidTlsProvider)"
       Debug="$(AndroidIncludeDebugSymbols)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"
-      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)">
+      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+      IsBundledApplication="$(BundleAssemblies)"
+      SupportedAbis="$(_BuildTargetAbis)"
+      AndroidPackageName="$(_AndroidPackage)"
+      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
 </Target>
