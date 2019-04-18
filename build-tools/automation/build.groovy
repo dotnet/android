@@ -250,13 +250,13 @@ timestamps {
         }
 
         utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
-            if (skipTest) {
-                echo "Skipping 'plot metrics' stage. Clear the SkipTest variable setting to build and run tests"
+            if (isPr) {
+                echo "Skipping 'plot metrics' stage for PR build"
                 return
             }
 
-            if (isPr) {
-                echo "Skipping plot metrics for PR build"
+            if (skipTest) {
+                echo "Skipping 'plot metrics' stage. Clear the SkipTest variable setting to plot test results"
                 return
             }
 
