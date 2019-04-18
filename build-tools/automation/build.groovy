@@ -148,7 +148,7 @@ timestamps {
 
         utils.stageWithTimeout('sign packages', 30, 'MINUTES', "${XADir}/bin/Build${env.BuildFlavor}", true) {    // Typically takes less than 5 minutes
             if (isPr || !isCommercial || skipSigning) {
-                echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. SkipSigning: ${skipSigning}"
+                echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. IsPr: ${isPr} / IsCommercial: ${isCommercial} / SkipSigning: ${skipSigning}"
                 return
             }
 
@@ -256,13 +256,8 @@ timestamps {
         }
 
         utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
-            if (isPr) {
-                echo "Skipping 'plot metrics' stage for PR build"
-                return
-            }
-
-            if (skipTest) {
-                echo "Skipping 'plot metrics' stage. Clear the SkipTest variable setting to plot test results"
+            if (isPr || skipTest) {
+                echo "Skipping 'plot metrics' stage for PR build. IsPr: ${isPr} / SkipTest: ${skipTest}"
                 return
             }
 
