@@ -98,7 +98,8 @@ _BUILD_STATUS_BUNDLE_INCLUDE = \
 	$(shell find . -name 'CMakeCache.txt') \
 	$(shell find . -name 'config.h') \
 	$(shell find . -name '.ninja_log') \
-	$(shell find . -name 'android-*.config.cache')
+	$(shell find . -name 'android-*.config.cache') \
+	bin/Build$(CONFIGURATION)/XABuildConfig.cs
 
 _BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 _BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)

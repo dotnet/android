@@ -3,12 +3,15 @@
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
+
   <Import Project="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
     <BuildDependsOn>
+      _CopyNDKTools;
       _GenerateXACommonProps;
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
@@ -128,6 +131,74 @@
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK.dll" />
     <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK-1.0.dll" />
   </ItemGroup>
+  <Target Name="_PrepareNDKToolsItems">
+    <PropertyGroup>
+      <_PrebuiltToolchainDir Condition=" '$(HostOS)' == 'Linux' ">linux-x86_64</_PrebuiltToolchainDir>
+      <_PrebuiltToolchainDir Condition=" '$(HostOS)' == 'Darwin' ">darwin-x86_64</_PrebuiltToolchainDir>
+      <_PrebuiltToolchainDir Condition=" '$(HostOS)' == 'Windows' And '$(HostBits)' == '64' ">windows-x86_64</_PrebuiltToolchainDir>
+      <_PrebuiltToolchainDir Condition=" '$(HostOS)' == 'Windows' And '$(HostBits)' == '32' ">windows</_PrebuiltToolchainDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ToolchainPrefix Include="aarch64-linux-android">
+        <ToolPrefix>aarch64-linux-android</ToolPrefix>
+      </_ToolchainPrefix>
+      <_ToolchainPrefix Include="arm-linux-androideabi">
+        <ToolPrefix>arm-linux-androideabi</ToolPrefix>
+      </_ToolchainPrefix>
+      <_ToolchainPrefix Include="x86">
+        <ToolPrefix>i686-linux-android</ToolPrefix>
+      </_ToolchainPrefix>
+      <_ToolchainPrefix Include="x86_64">
+        <ToolPrefix>x86_64-linux-android</ToolPrefix>
+      </_ToolchainPrefix>
+    </ItemGroup>
+
+    <Which
+        HostOS="$(HostOS)"
+        HostOSName="$(HostOsName)"
+        Program="$(AndroidNdkFullPath)/toolchains/%(_ToolchainPrefix.Identity)-4.9/prebuilt/$(_PrebuiltToolchainDir)/bin/%(_ToolchainPrefix.ToolPrefix)-as"
+        Required="True">
+      <Output TaskParameter="Location" PropertyName="_NDKToolLocation%(_ToolchainPrefix.Identity)" />
+    </Which>
+
+    <PropertyGroup>
+      <_NDKToolFileName>$([System.IO.Path]::GetFileName ('$(_NDKToolLocation)'))</_NDKToolFileName>
+      <_NDKToolDestinationBase>$(XAInstallPrefix)xbuild\Xamarin\Android</_NDKToolDestinationBase>
+      <_WinAsmDestDir>$(XAInstallPrefix)xbuild\Xamarin\Android</_WinAsmDestDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_NDKToolSource Include="$(_NDKToolLocation%(_ToolchainPrefix.Identity))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_FetchWindowsAssemblers"
+      Condition=" '$(HostOS)' != 'Windows' "
+      DependsOnTargets="_PrepareNDKToolsItems"
+      AfterTargets="Build"
+      Inputs="..\..\build-tools\scripts\Ndk.targets"
+      Outputs="$(_WinAsmDestDir)\%(_ToolchainPrefix.Identity)-as.exe">
+    <MakeDir
+        Directories="$(_WinAsmDestDir)"
+    />
+    <Exec
+        Command="$(ManagedRuntime) $(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\fetch-windows-assemblers.exe $(AndroidNdkVersion) &quot;$(_WinAsmDestDir)&quot; https://dl.google.com/android/repository/android-ndk-r$(AndroidNdkVersion)-windows-x86_64.zip"
+        WorkingDirectory="$(_WinAsmDestDir)"
+    />
+  </Target>
+
+  <Target Name="_CopyNDKTools"
+      DependsOnTargets="_PrepareNDKToolsItems"
+      Inputs="@(_NDKToolSource)"
+      Outputs="@(_NDKToolDestination)">
+    <Copy
+        SourceFiles="@(_NDKToolSource)"
+        DestinationFiles="@(_NDKToolDestination)"
+        />
+  </Target>
+
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
       Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"

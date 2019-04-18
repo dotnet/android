@@ -193,7 +193,7 @@ define CREATE_THIRD_PARTY_NOTICES_RULE
 prepare-tpn:: $(1)
 
 $(1) $(topdir)/$(1): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
-		$(wildcard external/*.tpnitems src/*.tpnitems) \
+		$(wildcard external/*.tpnitems src/*.tpnitems build-tools/*.tpnitems) \
 		$(TPN_LICENSE_FILES)
 	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4))
 endef # CREATE_THIRD_PARTY_NOTICES_RULE

@@ -1,9 +1,11 @@
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
 #include <ctype.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 
 #ifdef ANDROID
 #include <sys/system_properties.h>
@@ -24,20 +26,27 @@
 #include "monodroid.h"
 #include "monodroid-glue-internal.h"
 #include "jni-wrappers.h"
+#include "xamarin-app.h"
 
+#if defined (DEBUG) || !defined (ANDROID)
 namespace xamarin { namespace android { namespace internal {
 	struct BundledProperty {
-		char *name;
-		char *value;
-		int   value_len;
+		char     *name;
+		char     *value;
+		uint32_t  value_len;
 		struct BundledProperty *next;
 	};
 }}}
+#endif // DEBUG || !ANDROID
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
+#if defined (DEBUG) || !defined (ANDROID)
 BundledProperty *AndroidSystem::bundled_properties = nullptr;
+constexpr char AndroidSystem::OVERRIDE_ENVIRONMENT_FILE_NAME[];
+#endif // DEBUG || !ANDROID
+
 char* AndroidSystem::override_dirs [MAX_OVERRIDES];
 const char **AndroidSystem::app_lib_directories;
 size_t AndroidSystem::app_lib_directories_size = 0;
@@ -70,6 +79,7 @@ static constexpr uint32_t PROP_NAME_MAX = 32;
 static constexpr uint32_t PROP_VALUE_MAX = 92;
 #endif
 
+#if defined (DEBUG) || !defined (ANDROID)
 BundledProperty*
 AndroidSystem::lookup_system_property (const char *name)
 {
@@ -79,7 +89,51 @@ AndroidSystem::lookup_system_property (const char *name)
 			return p;
 	return nullptr;
 }
+#endif // DEBUG || !ANDROID
 
+const char*
+AndroidSystem::lookup_system_property (const char *name, uint32_t &value_len)
+{
+	value_len = 0;
+#if defined (DEBUG) || !defined (ANDROID)
+	BundledProperty *p = lookup_system_property (name);
+	if (p != nullptr) {
+		value_len = p->value_len;
+		return p->name;
+	}
+#endif // DEBUG || !ANDROID
+
+	if (application_config.system_property_count == 0)
+		return nullptr;
+
+	if (application_config.system_property_count % 2 != 0) {
+		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries (%u)", application_config.environment_variable_count);
+		return nullptr;
+	}
+
+	const char *prop_name;
+	const char *prop_value;
+	for (size_t i = 0; i < application_config.system_property_count; i += 2) {
+		prop_name = app_system_properties[i];
+		if (prop_name == nullptr || *prop_name == '\0')
+			continue;
+
+		if (strcmp (prop_name, name) == 0) {
+			prop_value = app_system_properties [i + 1];
+			if (prop_value == nullptr || *prop_value == '\0') {
+				value_len = 0;
+				return "";
+			}
+
+			value_len = strlen (prop_value);
+			return prop_value;
+		}
+	}
+
+	return nullptr;
+}
+
+#if defined (DEBUG) || !defined (ANDROID)
 void
 AndroidSystem::add_system_property (const char *name, const char *value)
 {
@@ -114,6 +168,7 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 	p->next             = bundled_properties;
 	bundled_properties  = p;
 }
+#endif // DEBUG || !ANDROID
 
 #ifndef ANDROID
 void
@@ -187,10 +242,13 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 	char *pvalue = sp_value;
 	int len = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
 
-	BundledProperty *p;
-	if (len <= 0 && (p = lookup_system_property (name)) != nullptr) {
-		pvalue  = p->value;
-		len     = p->value_len;
+	if (len <= 0) {
+		uint32_t plen;
+		const char *v = lookup_system_property (name, plen);
+		if (v != nullptr) {
+			pvalue  = const_cast<char*> (v);
+			len     = static_cast<int> (plen);
+		}
 	}
 
 	if (len >= 0 && value) {
@@ -225,6 +283,7 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 	return r;
 }
 
+#if defined (DEBUG) || !defined (ANDROID)
 int
 AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
 {
@@ -262,10 +321,12 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 	}
 	return len;
 }
+#endif
 
 int
 AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, char ** value)
 {
+#if defined (DEBUG) || !defined (ANDROID)
 	int result = -1;
 
 	for (size_t oi = 0; oi < MAX_OVERRIDES; ++oi) {
@@ -281,6 +342,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, c
 			return result;
 		}
 	}
+#endif
 	return 0;
 }
 
@@ -718,95 +780,184 @@ AndroidSystem::get_gref_gc_threshold ()
 	return static_cast<int> ((max_gref_count * 90LL) / 100LL);
 }
 
+#if defined (DEBUG) || !defined (ANDROID)
 void
-AndroidSystem::setup_environment (jstring_wrapper& name, jstring_wrapper& value)
+AndroidSystem::setup_environment (const char *name, const char *value)
 {
-	const char *k = name.get_cstr ();
-
-	if (k == nullptr || *k == '\0')
+	if (name == nullptr || *name == '\0')
 		return;
 
-	const char *v = value.get_cstr ();
-	if (v == nullptr || *v == '\0')
+	const char *v = value;
+	if (v == nullptr)
 		v = "";
 
-	if (isupper (k [0]) || k [0] == '_') {
-		if (k [0] == '_') {
-			if (strcmp (k, "__XA_DSO_IN_APK") == 0) {
-				knownEnvVars.DSOInApk = true;
-				return;
-			}
-		}
-
-		setenv (k, v, 1);
+	if (isupper (name [0]) || name [0] == '_') {
+		if (setenv (name, v, 1) < 0)
+			log_warn (LOG_DEFAULT, "(Debug) Failed to set environment variable: %s", strerror (errno));
 		return;
 	}
 
-	if (k [0] == 'm') {
-		if (strcmp (k, "mono.aot") == 0) {
-			if (*v == '\0') {
-				knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_NONE;
-				return;
-			}
-
-			switch (v [0]) {
-				case 'n':
-					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_NORMAL;
-					break;
-
-				case 'h':
-					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_HYBRID;
-					break;
-
-				case 'f':
-					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_FULL;
-					break;
-
-				default:
-					knownEnvVars.MonoAOT = MonoAotMode::MONO_AOT_MODE_UNKNOWN;
-					break;
-			}
-
-			if (knownEnvVars.MonoAOT != MonoAotMode::MONO_AOT_MODE_UNKNOWN)
-				log_info (LOG_DEFAULT, "Mono AOT mode: %s", v);
-			else
-				log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", v);
-
-			return;
-		}
-
-		if (strcmp (k, "mono.llvm") == 0) {
-			knownEnvVars.MonoLLVM = true;
-			return;
-		}
-
-		if (strcmp (k, "mono.enable_assembly_preload") == 0) {
-			if (*v == '\0')
-				knownEnvVars.EnableAssemblyPreload = KnownEnvironmentVariables::AssemblyPreloadDefault;
-			else if (v[0] == '1')
-				knownEnvVars.EnableAssemblyPreload = true;
-			else
-				knownEnvVars.EnableAssemblyPreload = false;
-			return;
-		}
-	}
-
-	add_system_property (k, v);
+	add_system_property (name, v);
 }
 
 void
-AndroidSystem::setup_environment (JNIEnv *env, jobjectArray environmentVariables)
+AndroidSystem::setup_environment_from_override_file (const char *path)
 {
-	jsize envvarsLength = env->GetArrayLength (environmentVariables);
-	if (envvarsLength == 0)
+	monodroid_stat_t sbuf;
+	if (utils.monodroid_stat (path, &sbuf) < 0) {
+		log_warn (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, strerror (errno));
+		return;
+	}
+
+	int fd = open (path, O_RDONLY);
+	if (fd < 0) {
+		log_warn (LOG_DEFAULT, "Failed to open the environment override file %s: %s", path, strerror (errno));
+		return;
+	}
+
+	char    *buf = new char [sbuf.st_size];
+	ssize_t  nread = 0;
+	ssize_t  r;
+	do {
+		int i = nread;
+		r = read (fd, buf + i, sbuf.st_size - i);
+		if (r > 0)
+			nread += r;
+	} while (r < 0 && errno == EINTR);
+
+	if (nread < 0) {
+		log_warn (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (errno));
+		delete[] buf;
+		return;
+	}
+
+	// The file format is as follows (no newlines are used, this is just for illustration
+	// purposes, comments aren't part of the file either):
+	//
+	// # 10 ASCII characters formattted as a C++ hexadecimal number terminated with NUL: name
+	// # width (including the terminating NUL)
+	// 0x00000000\0
+	//
+	// # 10 ASCII characters formattted as a C++ hexadecimal number terminated with NUL: value
+	// # width (including the terminating NUL)
+	// 0x00000000\0
+	//
+	// # Variable name, terminated with NUL and padded to [name width] with NUL characters
+	// name\0
+	//
+	// # Variable value, terminated with NUL and padded to [value width] with NUL characters
+	// value\0
+	if (nread < OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) {
+		log_warn (LOG_DEFAULT, "Invalid format of the environment override file %s: malformatted header", path);
+		delete[] buf;
+		return;
+	}
+
+	char *endptr;
+	unsigned long name_width = strtoul (buf, &endptr, 16);
+	if ((name_width == ULONG_MAX && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
+		delete[] buf;
+		return;
+	}
+
+	unsigned long value_width = strtoul (buf + 11, &endptr, 16);
+	if ((value_width == ULONG_MAX && errno == ERANGE) || (*buf != '\0' && *endptr != '\0')) {
+		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
+		delete[] buf;
+		return;
+	}
+
+	uint64_t data_width = name_width + value_width;
+	if (data_width > sbuf.st_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (sbuf.st_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
+		log_warn (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
+		delete[] buf;
+		return;
+	}
+
+	uint64_t data_size = sbuf.st_size;
+	char *name = buf + OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
+	while (data_size > 0 && data_size >= data_width) {
+		if (*name == '\0') {
+			log_warn (LOG_DEFAULT, "Malformed environment override file %s: name at offset %lu is empty", path, name - buf);
+			delete[] buf;
+			return;
+		}
+
+		log_debug (LOG_DEFAULT, "Setting environment variable from the override file %s: '%s' = '%s'", path, name, name + name_width);
+		setup_environment (name, name + name_width);
+		name += data_width;
+		data_size -= data_width;
+	}
+
+	delete[] buf;
+
+}
+#endif // DEBUG || !ANDROID
+
+void
+AndroidSystem::setup_environment ()
+{
+	if (is_mono_aot_enabled () && *mono_aot_mode_name != '\0') {
+		switch (mono_aot_mode_name [0]) {
+			case 'n':
+				aotMode = MonoAotMode::MONO_AOT_MODE_NORMAL;
+				break;
+
+			case 'h':
+				aotMode = MonoAotMode::MONO_AOT_MODE_HYBRID;
+				break;
+
+			case 'f':
+				aotMode = MonoAotMode::MONO_AOT_MODE_FULL;
+				break;
+
+			default:
+				aotMode = MonoAotMode::MONO_AOT_MODE_UNKNOWN;
+				break;
+		}
+
+		if (aotMode != MonoAotMode::MONO_AOT_MODE_UNKNOWN)
+			log_info (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
+		else
+			log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);
+	}
+
+	if (application_config.environment_variable_count == 0)
 		return;
 
-	jstring_wrapper name (env), value (env);
-	for (jsize i = 0; (i + 1) < envvarsLength; i += 2) {
-		name = reinterpret_cast<jstring> (env->GetObjectArrayElement (environmentVariables, i));
-		value = reinterpret_cast<jstring> (env->GetObjectArrayElement (environmentVariables, i + 1));
-		setup_environment (name, value);
+	if (application_config.environment_variable_count % 2 != 0) {
+		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries (%u)", application_config.environment_variable_count);
+		return;
 	}
+
+	const char *var_name;
+	const char *var_value;
+	for (size_t i = 0; i < application_config.environment_variable_count; i += 2) {
+		var_name = app_environment_variables [i];
+		if (var_name == nullptr || *var_name == '\0')
+			continue;
+
+		var_value = app_environment_variables [i + 1];
+		if (var_value == nullptr)
+			var_value = "";
+
+#if defined (DEBUG)
+		log_info (LOG_DEFAULT, "Setting environment variable '%s' to '%s'", var_name, var_value);
+#endif
+		if (setenv (var_name, var_value, 1) < 0)
+			log_warn (LOG_DEFAULT, "Failed to set environment variable: %s", strerror (errno));
+	}
+#if defined (DEBUG) || !defined (ANDROID)
+	// TODO: for debug read from file in the override directory named `environment`
+	for (size_t oi = 0; oi < MAX_OVERRIDES; oi++) {
+		char *env_override_file = utils.path_combine (override_dirs [oi], OVERRIDE_ENVIRONMENT_FILE_NAME);
+		if (utils.file_exists (env_override_file)) {
+			setup_environment_from_override_file (env_override_file);
+		}
+		delete[] env_override_file;
+	}
+#endif
 }
 
 void

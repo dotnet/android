@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -34,6 +36,9 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem [] FrameworkDirectories { get; set; }
+
+		[Required]
+		public string SupportedAbis { get; set; }
 
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
@@ -285,13 +290,63 @@ namespace Xamarin.Android.Tasks
 			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
 				new TypeNameMapGenerator (types, logger) :
 				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
-			using (var gen = createTypeMapGenerator ())
-			using (var stream = new MemoryStream ()) {
-				gen.WriteJavaToManaged (stream);
-				MonoAndroidHelper.CopyIfStreamChanged (stream, Path.Combine (OutputDirectory, "typemap.jm"));
-				stream.SetLength (0); //Reuse the stream
-				gen.WriteManagedToJava (stream);
-				MonoAndroidHelper.CopyIfStreamChanged (stream, Path.Combine (OutputDirectory, "typemap.mj"));
+			using (var gen = createTypeMapGenerator ()) {
+				using (var ms = new MemoryStream ()) {
+					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
+					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
+				}
+			}
+		}
+
+		void UpdateWhenChanged (string path, string type, MemoryStream ms, Action<Stream> generator)
+		{
+			if (InstantRunEnabled) {
+				ms.SetLength (0);
+				generator (ms);
+				MonoAndroidHelper.CopyIfStreamChanged (ms, path);
+			}
+
+			string dataFilePath = $"{path}.inc";
+			using (var stream = new NativeAssemblyDataStream ()) {
+				generator (stream);
+				stream.Flush ();
+				MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
+
+				var generatedFiles = new List <ITaskItem> ();
+				string mappingFieldName = $"{type}_typemap";
+				string dataFileName = Path.GetFileName (dataFilePath);
+				NativeAssemblerTargetProvider asmTargetProvider;
+				var utf8Encoding = new UTF8Encoding (false);
+				foreach (string abi in SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+					ms.SetLength (0);
+					switch (abi.Trim ()) {
+						case "armeabi-v7a":
+							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: false);
+							break;
+
+						case "arm64-v8a":
+							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: true);
+							break;
+
+						case "x86":
+							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: false);
+							break;
+
+						case "x86_64":
+							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: true);
+							break;
+
+						default:
+							throw new InvalidOperationException ($"Unknown ABI {abi}");
+					}
+
+					var asmgen = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, stream, dataFileName, stream.MapByteCount, mappingFieldName);
+					string asmFileName = $"{path}.{abi.Trim ()}.s";
+					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
+						asmgen.Write (sw, dataFileName);
+						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFileName);
+					}
+				}
 			}
 		}
 	}

@@ -19,8 +19,10 @@ extern "C" {
 #include "embedded-assemblies.h"
 #include "globals.h"
 #include "monodroid-glue.h"
+#include "xamarin-app.h"
 
 namespace xamarin { namespace android { namespace internal {
+#if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo {
 		char                     *source_apk;
 		char                     *source_entry;
@@ -30,6 +32,7 @@ namespace xamarin { namespace android { namespace internal {
 		const   char             *mapping;
 		TypeMappingInfo          *next;
 	};
+#endif // DEBUG || !ANDROID
 
 	struct md_mmap_info {
 		void   *area;
@@ -47,8 +50,9 @@ const char *EmbeddedAssemblies::suffixes[] = {
 };
 
 constexpr char EmbeddedAssemblies::assemblies_prefix[];
+#if defined (DEBUG) || !defined (ANDROID)
 constexpr char EmbeddedAssemblies::override_typemap_entry_name[];
-
+#endif
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
@@ -132,8 +136,18 @@ EmbeddedAssemblies::TypeMappingInfo_compare_key (const void *a, const void *b)
 }
 
 inline const char*
+EmbeddedAssemblies::find_entry_in_type_map (const char *name, uint8_t map[], TypeMapHeader& header)
+{
+	const char *e = reinterpret_cast<const char*> (bsearch (name, map, header.entry_count, header.entry_length, TypeMappingInfo_compare_key ));
+	if (e == nullptr)
+		return nullptr;
+	return e + header.value_offset;
+}
+
+inline const char*
 EmbeddedAssemblies::typemap_java_to_managed (const char *java)
 {
+#if defined (DEBUG) || !defined (ANDROID)
 	for (TypeMappingInfo *info = java_to_managed_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, java); */
 		const char *e = reinterpret_cast<const char*> (bsearch (java, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
@@ -141,12 +155,14 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java)
 			continue;
 		return e + info->value_offset;
 	}
-	return nullptr;
+#endif
+	return find_entry_in_type_map (java, jm_typemap, jm_typemap_header);
 }
 
 inline const char*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed)
 {
+#if defined (DEBUG) || !defined (ANDROID)
 	for (TypeMappingInfo *info = managed_to_java_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, managed); */
 		const char *e = reinterpret_cast <const char*> (bsearch (managed, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
@@ -154,7 +170,8 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed)
 			continue;
 		return e + info->value_offset;
 	}
-	return nullptr;
+#endif
+	return find_entry_in_type_map (managed, mj_typemap, mj_typemap_header);
 }
 
 MONO_API const char *
@@ -169,6 +186,7 @@ monodroid_typemap_managed_to_java (const char *managed)
 	return embeddedAssemblies.typemap_managed_to_java (managed);
 }
 
+#if defined (DEBUG) || !defined (ANDROID)
 void
 EmbeddedAssemblies::extract_int (const char **header, const char *source_apk, const char *source_entry, const char *key_name, int *value)
 {
@@ -235,6 +253,7 @@ EmbeddedAssemblies::add_type_mapping (TypeMappingInfo **info, const char *source
 	}
 	return true;
 }
+#endif // DEBUG || !ANDROID
 
 md_mmap_info
 EmbeddedAssemblies::md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const char* apk)
@@ -381,17 +400,6 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 				continue;
 			}
 
-			if (utils.ends_with (cur_entry_name, ".jm")) {
-				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, (const char*)map_info.area);
-				continue;
-			}
-			if (utils.ends_with (cur_entry_name, ".mj")) {
-				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, (const char*)map_info.area);
-				continue;
-			}
-
 			const char *prefix = get_assemblies_prefix();
 			if (strncmp (prefix, cur_entry_name, strlen (prefix)) != 0)
 				continue;
@@ -469,6 +477,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	return true;
 }
 
+#if defined (DEBUG) || !defined (ANDROID)
 void
 EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 {
@@ -514,6 +523,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	free (dir_path);
 	return;
 }
+#endif
 
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)

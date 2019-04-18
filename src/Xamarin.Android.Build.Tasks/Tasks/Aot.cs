@@ -15,11 +15,12 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public enum AotMode
+	public enum AotMode : uint
 	{
-		Normal,
-		Hybrid,
-		Full
+		None      = 0x0000,
+		Normal    = 0x0001,
+		Hybrid    = 0x0002,
+		Full      = 0x0003,
 	}
 
 	public enum SequencePointsMode {
@@ -99,6 +100,9 @@ namespace Xamarin.Android.Tasks
 
 			switch ((androidAotMode ?? string.Empty).ToLowerInvariant().Trim())
 			{
+			case "none":
+				aotMode = AotMode.None;
+				return true;
 			case "normal":
 				aotMode = AotMode.Normal;
 				return true;

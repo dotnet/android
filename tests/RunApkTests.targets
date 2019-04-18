@@ -41,8 +41,6 @@
       AcquireAndroidTarget;
       RunMSBuildDeviceIntegration;
       ReleaseAndroidTarget;
-      RenameApkTestCases;
-      ReportComponentFailures;
     </RunNUnitDeviceTestsDependsOn>
   </PropertyGroup>
 
