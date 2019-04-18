@@ -109,7 +109,7 @@ timestamps {
                 }
 
                 utils.stageWithTimeout('configure', 30, 'MINUTES', commercialPath, false) {     // UNDONE: Set fatal to false
-                    shSDKPath('if [ -x configure ]; then ./configure; fi')
+                    utils.shSDKPath('if [ -x configure ]; then ./configure; fi')
                     sh('make -w reset-versions V=1')        // UNDONE: Is this needed?
                 }
             }
