@@ -297,6 +297,7 @@ namespace Xamarin.ProjectTools
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
 			};
+			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			using (var process = new Process {
 				StartInfo = psi,
 			}) {
