@@ -842,12 +842,10 @@ namespace UnamedProject
 
 		[Test]
 		[Category ("Minor")]
-		public void BuildApplicationOver65536Methods ([Values (true, false)] bool useD8)
+		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
+			proj.DexTool = dexTool;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
@@ -855,12 +853,10 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CreateMultiDexWithSpacesInConfig ([Values (true, false)] bool useD8)
+		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
+			proj.DexTool = dexTool;
 			proj.IsRelease = true;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -897,13 +893,11 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildAfterMultiDexIsNotRequired ([Values (true, false)] bool useD8)
+		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -925,33 +919,24 @@ namespace UnamedProject
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
 				while (proj.OtherBuildItems.Count > 1)
 					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+				proj.SetProperty ("AndroidEnableMultiDex", "False");
 
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
-				//NOTE: d8 always creates classes2.dex, even if not needed
-				if (useD8) {
-					FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				} else {
-					FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
-				}
+				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes2.dex"));
 				FileAssert.DoesNotExist (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
 					var entries = zip.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
-					//NOTE: d8 always creates classes2.dex, even if not needed
-					if (useD8) {
-						Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
-					} else {
-						Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
-					}
+					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
 					Assert.IsFalse (entries.Contains ("classes3.dex"), "APK must *not* contain `classes3.dex`.");
 				}
 			}
 		}
 
 		[Test]
-		public void MultiDexCustomMainDexFileList ([Values (true, false)] bool useD8)
+		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool)
 		{
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
@@ -966,13 +951,11 @@ namespace UnamedProject
 				"MyTest.class",
 			};
 			var proj = CreateMultiDexRequiredApplication ();
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
+			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (MultiDexCustomMainDexFileList)}{useD8}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "build should succeed. Run will fail.");
 
 				//NOTE: d8 has the list in a different order, so we should do an unordered comparison
