@@ -138,6 +138,7 @@ timestamps {
         }
 
         utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            // UNDONE: Execute this step for commercial builds?
             sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
         }
 
