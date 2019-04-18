@@ -142,11 +142,11 @@ timestamps {
         }
 
         utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            // UNDONE: Execute this step for commercial builds?
-            sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
+            // UNDONE: Does it make sense to execute this step for commercial builds?
+            sh "make package-oss CONFIGURATION=${env.BuildFlavor} V=1"
         }
 
-        utils.stageWithTimeout('sign packages', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('sign packages', 30, 'MINUTES', "${XADir}/bin/Build${env.BuildFlavor}", true) {    // Typically takes less than 5 minutes
             if (isPr || !isCommercial || skipSigning) {
                 echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. SkipSigning: ${skipSigning}"
                 return
@@ -184,7 +184,13 @@ timestamps {
         }
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*";
+            def publishBuildFilePaths = '${XADir}/build-status*,${XADir}/xa-build-status*'
+
+            if (isCommercial) {
+                publishBuildFilePaths = "${XADir}/bin/Build*/xamarin.android*.pkg,${XADir}/bin/Build*/Xamarin.Android*.vsix,${publishBuildFilePaths}";
+            } else {
+                publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${publishBuildFilePaths}";
+            }
 
             if (!isPr) {
                 publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
