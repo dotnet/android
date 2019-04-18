@@ -62,7 +62,13 @@ timestamps {
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
-            echo "HOME: ${HOME}"                // UNDONE: Make sure HOME resolves from groovy
+            echo "IsCommercial: ${isCommercial}"
+
+            if (isCommercial) {
+                echo "Commercial root: ${commercialPath}"
+            }
+
+            echo "SkipTest: ${skipTest}"
 
             if (isPr) {
                 echo "PR id: ${env.ghprbPullId}"
@@ -86,10 +92,6 @@ timestamps {
                         }
                     }
                 }
-            }
-
-            if (isCommercial) {
-                echo "Commercial root: ${commercialPath}"
             }
 
             echo "${buildType} buildTarget: ${buildTarget}"
