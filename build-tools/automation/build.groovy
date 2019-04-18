@@ -100,13 +100,17 @@ timestamps {
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer to perform the checkout involved for commercial builds
+        utils.stageWithTimeout('prepare deps', 60, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer to perform the checkout involved for commercial builds
             if (isCommercial) {
                 sh "make prepare-external-git-dependencies"
 
                 utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialPath}/build-tools/provisionator", true) {
                     sh('./provisionator.sh profile.csx -v')
                 }
+
+                // UNDONE: Test build without the configuration step
+                echo "Skipping commercial configuration step"
+                return
 
                 utils.stageWithTimeout('configure', 30, 'MINUTES', commercialPath, false) {     // UNDONE: Set fatal to false
                     utils.shSDKPath('if [ -x configure ]; then ./configure; fi')
