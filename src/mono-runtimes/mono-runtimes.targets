@@ -330,7 +330,7 @@
         Directories="$(_UnzipTempPath)"
     />
     <ItemGroup>
-        <_ExtractedSdkFiles Include="$(MonoSourceFullPath)\sdks\out\**\*" />
+      <_ExtractedSdkFiles Include="$(MonoSourceFullPath)\sdks\out\**\*" />
     </ItemGroup>
     <Touch
         Condition=" Exists ('%(_ExtractedSdkFiles.Identity)')"
