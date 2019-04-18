@@ -9,6 +9,8 @@ def commercialPath = ''
 
 def isPr = false                // Default to CI
 
+def skipSigning = false
+
 def skipTest = false
 
 def hasPrLabelFullMonoIntegrationBuild = false
@@ -48,6 +50,7 @@ timestamps {
             isCommercial = env.IsCommercial == '1'
             commercialPath = "external/${env.CommercialDirectory}"
 
+            skipSigning = env.SkipSigning == '1'
             skipTest = env.SkipTest == '1'
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
@@ -68,6 +71,7 @@ timestamps {
                 echo "Commercial root: ${commercialPath}"
             }
 
+            echo "SkipSigning: ${skipSigning}"
             echo "SkipTest: ${skipTest}"
 
             if (isPr) {
@@ -143,8 +147,8 @@ timestamps {
         }
 
         utils.stageWithTimeout('sign packages', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            if (isPr || !isCommercial) {
-                echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds"
+            if (isPr || !isCommercial || skipSigning) {
+                echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. SkipSigning: ${skipSigning}"
                 return
             }
 
