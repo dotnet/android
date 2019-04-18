@@ -5,8 +5,7 @@ def XADir = "xamarin-android"
 def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def isCommercial = false
-def externalRoot = ''
-def commercialRoot = ''
+def commercialPath = ''
 
 def isPr = false                // Default to CI
 
@@ -45,8 +44,7 @@ timestamps {
 
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             isCommercial = env.IsCommercial == '1'
-            externalRoot = "${XADir}/external"
-            commercialRoot = "${externalRoot}/${env.CommercialDirectory}"
+            commercialPath = "external/${env.CommercialDirectory}"
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
@@ -87,7 +85,7 @@ timestamps {
             }
 
             if (isCommercial) {
-                echo "Commercial root: ${commercialRoot}"
+                echo "Commercial root: ${commercialPath}"
             }
 
             echo "${buildType} buildTarget: ${buildTarget}"
@@ -106,11 +104,11 @@ timestamps {
             if (isCommercial) {
                 sh "make prepare-external-git-dependencies"
 
-                utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialRoot}/build-tools/provisionator", true) {
+                utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialPath}/build-tools/provisionator", true) {
                     sh('./provisionator.sh profile.csx -v')
                 }
 
-                utils.stageWithTimeout('configure', 30, 'MINUTES', commercialRoot, false) {     // UNDONE: Set fatal to false
+                utils.stageWithTimeout('configure', 30, 'MINUTES', commercialPath, false) {     // UNDONE: Set fatal to false
                     shSDKPath('if [ -x configure ]; then ./configure; fi')
                     sh('make -w reset-versions V=1')        // UNDONE: Is this needed?
                 }
