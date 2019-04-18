@@ -106,7 +106,7 @@ timestamps {
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
         }
 
-        utils.stageWithTimeout('prepare deps', 60, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer to perform the checkout involved for commercial builds
+        utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer to perform the checkout involved for commercial builds
             if (isCommercial) {
                 sh "make prepare-external-git-dependencies"
 
@@ -139,6 +139,25 @@ timestamps {
 
         utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             sh "make package-oss CONFIGURATION=${env.BuildFlavor}"
+        }
+
+        utils.stageWithTimeout('sign packages', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
+            if (isPr || !isCommercial) {
+                echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds"
+                return
+            }
+
+            def packages = findFiles(glob: '*.pkg')
+            def tmpPrefix = "/tmp/${env.JOB_NAME}"
+            def tmpdir = sh (script: "mkdir -p ${tmpPrefix} && mktemp -d ${tmpPrefix}/XXXXXXXXX", returnStdout: true).trim()
+            withCredentials([string(credentialsId: 'codesign_keychain_pw', variable: 'KEYCHAIN_PASSWORD')]) {
+                for (pkg in packages) {
+                    def tmp = "${tmpdir}/${pkg.name}"
+                    sh("mv ${pkg} ${tmpdir}")
+                    sh("security unlock-keychain -p ${env.KEYCHAIN_PASSWORD} login.keychain")
+                    sh("/usr/bin/productsign -s \"Developer ID Installer: Xamarin Inc\" \"${tmp}\" \"${pkg}\"")
+                }
+            }
         }
 
         utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
