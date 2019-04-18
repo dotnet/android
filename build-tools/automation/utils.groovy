@@ -75,4 +75,8 @@ def hasPrLabel (gitRepo, prId, prLabel) {
     return prLabels.contains(prLabel)
 }
 
+def shSDKPath(cmd) {
+	sh("export ANDROID_SDK_PATH=$HOME/android-toolchain/sdk; export ANDROID_NDK_PATH=$HOME/android-toolchain/ndk; ${cmd}")
+}
+
 return this
