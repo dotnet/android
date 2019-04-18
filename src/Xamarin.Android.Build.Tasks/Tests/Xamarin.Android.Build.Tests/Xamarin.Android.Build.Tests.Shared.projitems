@@ -20,8 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.TestCaseSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PackagingTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)InstallTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)InstantRunTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SupportV7RecyclerViewTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\BaseTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\DeviceTest.cs" />
