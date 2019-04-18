@@ -9,6 +9,8 @@ def commercialPath = ''
 
 def isPr = false                // Default to CI
 
+def skipTest = false
+
 def hasPrLabelFullMonoIntegrationBuild = false
 
 def buildTarget = 'jenkins'
@@ -45,6 +47,8 @@ timestamps {
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             isCommercial = env.IsCommercial == '1'
             commercialPath = "external/${env.CommercialDirectory}"
+
+            skipTest = env.SkipTest == '1'
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
@@ -136,9 +140,8 @@ timestamps {
         }
 
         utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
-            // UNDONE:
-            if (isCommercial) {
-                echo "Skipping 'build tests' stage"
+            if (skipTest) {
+                echo "Skipping 'build tests' stage. Clear the SkipTest variable setting to build and run tests"
                 return
             }
 
@@ -169,13 +172,12 @@ timestamps {
         }
 
         utils.stageWithTimeout('run all tests', 160, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
-            echo "running tests"
-
-            // UNDONE:
-            if (isCommercial) {
-                echo "Skipping 'run all tests' stage"
+            if (skipTest) {
+                echo "Skipping 'run all tests' stage. Clear the SkipTest variable setting to build and run tests"
                 return
             }
+
+            echo "running tests"
 
             def skipNunitTests = false
 
@@ -192,13 +194,12 @@ timestamps {
         }
 
         utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
-            echo "packaging test error logs"
-
-            // UNDONE:
-            if (isCommercial) {
-                echo "Skipping 'publish test error logs' stage"
+            if (skipTest) {
+                echo "Skipping 'publish test error logs' stage. Clear the SkipTest variable setting to build and run tests"
                 return
             }
+
+            echo "packaging test error logs"
 
             publishHTML target: [
                 allowMissing:           true,
@@ -223,9 +224,12 @@ timestamps {
         }
 
         utils.stageWithTimeout('Plot build & test metrics', 30, 'SECONDS', XADir, false, 3) {    // Typically takes less than a second
-            // UNDONE: Skip plots
-            // if (isPr) {
-            if (isCommercial || isPr) {
+            if (skipTest) {
+                echo "Skipping 'plot metrics' stage. Clear the SkipTest variable setting to build and run tests"
+                return
+            }
+
+            if (isPr) {
                 echo "Skipping plot metrics for PR build"
                 return
             }
