@@ -309,7 +309,7 @@ namespace Xamarin.Android.Tasks
 			string dataFilePath = $"{path}.inc";
 			using (var stream = new NativeAssemblyDataStream ()) {
 				generator (stream);
-				stream.Flush ();
+				stream.EndOfFile ();
 				MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
 
 				var generatedFiles = new List <ITaskItem> ();

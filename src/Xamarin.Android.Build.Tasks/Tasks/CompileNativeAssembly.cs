@@ -196,12 +196,12 @@ namespace Xamarin.Android.Tasks
 
 		void OnOutputData (string assemblerName, object sender, DataReceivedEventArgs e)
 		{
-			LogMessage ($"[{assemblerName} stdout] {e.Data}");
+			LogDebugMessage ($"[{assemblerName} stdout] {e.Data}");
 		}
 
 		void OnErrorData (string assemblerName, object sender, DataReceivedEventArgs e)
 		{
-			LogMessage ($"[{assemblerName} stderr] {e.Data}");
+			LogMessage ($"[{assemblerName} stderr] {e.Data}", MessageImportance.High);
 		}
 
 		static string QuoteFileName (string fileName)
