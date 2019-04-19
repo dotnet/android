@@ -67,7 +67,7 @@ timestamps {
             echo "IsCommercial: ${isCommercial}"
 
             if (isCommercial) {
-                echo "Commercial root: ${commercialPath}"
+                echo "Commercial path: ${commercialPath}"
             }
 
             echo "SkipSigning: ${skipSigning}"
