@@ -19,9 +19,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.RunTarget (app, "Compile", parameters: new string[]{
-					// Normal DTB properties
-					"DesignTimeBuild=true",
+				Assert.IsTrue (appBuilder.DesignTimeBuild (app, parameters: new string[]{
 					"BuildingInsideVisualStudio=true",
 					"DeferredBuildSupported=true",
 					// The DTB passes down these two properties
@@ -31,12 +29,10 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should be skipped for DTB when deferred build is supported!");
 
-				// The background build would run our UpdateAndroidResources in its BackgroundBuildDependsOn
+				// The background build would run our UpdateAndroidResources in its DeferredBuildDependsOn
 				Assert.IsTrue (appBuilder.RunTarget (app, "UpdateAndroidResources", parameters: new string[]{
-					// Normal DTB properties
-					"DesignTimeBuild=true",
 					"BuildingInsideVisualStudio=true",
-					// BackgroundBuild targets set these two
+					// DeferredBuild targets set these two
 					"DeferredBuild=true",
 					"DeferredBuildSupported=true",
 					// The DTB passes down these two properties
@@ -47,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
 
 				// Run the real build now
-				Assert.IsTrue (appBuilder.RunTarget (app, "Build", parameters: new string[]{
+				Assert.IsTrue (appBuilder.Build(app, parameters: new string[]{
 					"DesignTimeBuild=false",
 					"BuildingInsideVisualStudio=true",
 					"DeferredBuildSupported=true",
@@ -67,9 +63,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.RunTarget (app, "Compile", parameters: new string[]{
-					// Normal DTB properties
-					"DesignTimeBuild=true",
+				Assert.IsTrue (appBuilder.DesignTimeBuild (app, parameters: new string[]{
 					"BuildingInsideVisualStudio=true",
 					// The DTB passes down these two properties
 					"SkipCompilerExecution=true",

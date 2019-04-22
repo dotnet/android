@@ -107,10 +107,21 @@ namespace Xamarin.ProjectTools
 			return RunTarget (project, "UpdateAndroidResources", doNotCleanupOnUpdate, parameters, environmentVariables);
 		}
 
-		public bool DesignTimeBuild (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		public bool DesignTimeBuild (XamarinProject project, bool doNotCleanupOnUpdate = false, string[] parameters = null)
 		{
-			return RunTarget (project, "Compile", doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
-		}
+            if (parameters == null)
+            {
+                return RunTarget(project, "Compile", doNotCleanupOnUpdate, parameters: new string[] { "DesignTimeBuild=True" });
+            }
+            else
+            {
+                var designTimeParameters = new string[parameters.Length + 1];
+                parameters.CopyTo(designTimeParameters, 0);
+                designTimeParameters[parameters.Length] = "DesignTimeBuild=True";
+
+                return RunTarget(project, "Compile", doNotCleanupOnUpdate, parameters: designTimeParameters);
+            }
+        }
 
 		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool saveProject = true)
 		{
