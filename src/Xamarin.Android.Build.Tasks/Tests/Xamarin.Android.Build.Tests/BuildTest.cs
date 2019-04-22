@@ -1031,6 +1031,24 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		{
+			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.EnableProguard =
+				proj.IsRelease = true;
+			proj.LinkTool = linkTool;
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var className = "Landroid/support/multidex/MultiDexApplication;";
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+			}
+		}
+
+		[Test]
 		public void BasicApplicationRepetitiveBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
