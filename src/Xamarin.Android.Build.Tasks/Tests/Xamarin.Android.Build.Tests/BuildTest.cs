@@ -38,6 +38,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "0 Warning(s)"), "Should have zero MSBuild warnings.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
+					"Should not get a warning from the <CompileNativeAssembly/> task.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationWithNuGetPackageConflicts ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {

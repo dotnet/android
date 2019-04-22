@@ -74,6 +74,12 @@ namespace Xamarin.Android.Tasks
 			outputStream = null;
 		}
 
+		public void EndOfFile ()
+		{
+			outputWriter.WriteLine ();
+			Flush ();
+		}
+
 		public override void Flush ()
 		{
 			outputWriter.Flush ();
