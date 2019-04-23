@@ -1360,9 +1360,10 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="UpdateAndroidResources" 
-	Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
-	DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
-		
+    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
+    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources"
+/>
+
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
 	<Delete Files="$(_AndroidResgenFlagFile)"
