@@ -643,6 +643,9 @@
     <None Include="startup.aotprofile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="startup-xf.aotprofile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
