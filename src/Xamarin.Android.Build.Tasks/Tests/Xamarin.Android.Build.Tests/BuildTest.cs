@@ -38,6 +38,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "0 Warning(s)"), "Should have zero MSBuild warnings.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
+					"Should not get a warning from the <CompileNativeAssembly/> task.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationWithNuGetPackageConflicts ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -444,8 +458,15 @@ namespace UnamedProject
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
+				// These files won't exist in OSS Xamarin.Android, thus the existence check and
+				// Assert.Ignore below. They will also not exist in the commercial version of
+				// Xamarin.Android unless fastdev is enabled.
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
+					if (!info.Exists) {
+						Assert.Ignore ($"{info.Name} does not exist, timestamp check skipped");
+						continue;
+					}
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
 
@@ -1006,6 +1027,24 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
+			}
+		}
+
+		[Test]
+		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		{
+			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.EnableProguard =
+				proj.IsRelease = true;
+			proj.LinkTool = linkTool;
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var className = "Landroid/support/multidex/MultiDexApplication;";
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
 			}
 		}
 
@@ -1784,6 +1823,8 @@ namespace App1
 		[Test]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
 				IsRelease = true,
@@ -1803,25 +1844,27 @@ namespace App1
 			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
-				string javaEnv = Path.Combine (Root, appb.ProjectDirectory,
-							       app.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-				string[] lines = File.ReadAllLines (javaEnv);
-				Assert.IsTrue (lines.Any (x => x.Contains ("MONO_DEBUG") &&
-						x.Contains ("soft-breakpoints") &&
-						string.IsNullOrEmpty (sequencePointsMode) ? true : x.Contains ("gen-compact-seq-points")),
-						"The values from Mono.env should have been merged into environment");
+				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
-				string dexFile = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes.dex");
-				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
-				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, appb.AndroidSdkDirectory),
-					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
+				string monoDebugVar;
+				Assert.IsTrue (envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar), "Environment should contain MONO_DEBUG");
+				Assert.IsFalse (String.IsNullOrEmpty (monoDebugVar), "Environment must contain MONO_DEBUG with a value");
+				Assert.IsTrue (monoDebugVar.IndexOf ("soft-breakpoints") >= 0, "Environment must contain MONO_DEBUG with 'soft-breakpoints' in its value");
+
+				if (!String.IsNullOrEmpty (sequencePointsMode))
+					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points") >= 0, "The values from Mono.env should have been merged into environment");
+
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 
 				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
 				var rp = new ReaderParameters { ReadSymbols = false };
@@ -1841,29 +1884,32 @@ namespace App1
 		[Test]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
-							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-				string[] lines = File.ReadAllLines (javaEnv);
-				Assert.IsTrue (lines.Any (x =>
-							  string.IsNullOrEmpty (sequencePointsMode)
-							  ? !x.Contains ("MONO_DEBUG")
-							  : x.Contains ("MONO_DEBUG") && x.Contains ("gen-compact-seq-points")),
-					       "environment {0} contain MONO_DEBUG=gen-compact-seq-points",
-					       string.IsNullOrEmpty (sequencePointsMode) ? "should not" : "should");
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
-				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
-				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
-				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
-					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
+				string monoDebugVar;
+				bool monoDebugVarFound = envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar);
+				if (String.IsNullOrEmpty (sequencePointsMode))
+					Assert.IsFalse (monoDebugVarFound, $"environment should not contain MONO_DEBUG={monoDebugVar}");
+				else {
+					Assert.IsTrue (monoDebugVarFound, "environment should contain MONO_DEBUG");
+					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
+				}
+
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 			}
 		}
 
@@ -2150,7 +2196,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				Assert.IsTrue (builder.DesignTimeBuild (proj), "design-time build should have succeeded");
+				Assert.IsTrue (builder.Build (proj), "build should have succeeded");
 				var targetAar = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0",
 					"content", "m2repository", "com", "android", "support", "appcompat-v7", "23.1.1", "appcompat-v7-23.1.1.aar");
 				if (File.Exists (targetAar)) {
@@ -3624,6 +3671,33 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void RemoveOldMonoPackageManager ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string target = "_CleanupOldStaticResources";
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				var oldMonoPackageManager = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
+				var appRegistration = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "app", "ApplicationRegistration.java");
+				Directory.CreateDirectory (Path.GetDirectoryName (appRegistration));
+				File.WriteAllText (oldMonoPackageManager, @"package mono;
+public class MonoPackageManager { }
+class MonoPackageManager_Resources { }");
+				File.WriteAllText (appRegistration, @"package mono.android.app;
+public class ApplicationRegistration { }");
+				var oldMonoPackageManagerClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
+				File.WriteAllText (oldMonoPackageManagerClass, "");
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
+				Assert.IsFalse (File.Exists (oldMonoPackageManagerClass), $"{oldMonoPackageManagerClass} should have been deleted.");
+				Assert.IsFalse (File.Exists (oldMonoPackageManager), $"{oldMonoPackageManager} should have been deleted.");
+				Assert.IsFalse (File.Exists (appRegistration), $"{appRegistration} should have been deleted.");
+			}
+		}
+
+		[Test]
 		public void CompilerErrorShouldNotRunLinkAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3634,6 +3708,50 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "The \"LinkAssemblies\" task failed unexpectedly"), "The LinkAssemblies MSBuild task should not run!");
+			}
+		}
+
+		/// <summary>
+		/// This assembly weirdly has no [assembly: System.Runtime.Versioning.TargetFrameworkAttribute()], at all...
+		/// </summary>
+		[Test]
+		public void AssemblyWithMissingTargetFramework ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				AndroidResources = {
+					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+						TextContent = () => 
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ScrollView
+    xmlns:android=""http://schemas.android.com/apk/res/android""
+    xmlns:local=""http://schemas.android.com/apk/res-auto"">
+    <refractored.controls.CircleImageView local:civ_border_width=""0dp"" />
+</ScrollView>"
+					}
+				}
+			};
+			proj.PackageReferences.Add (KnownPackages.CircleImageView);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+
+				// We should have a java stub
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var javaStub = Path.Combine (intermediate, "android", "src", "md54908d67eb9afef4acc92753cc61471e9", "CircleImageView.java");
+				FileAssert.Exists (javaStub);
+			}
+		}
+		
+		[Test]
+		[Category ("Commercial")]
+		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ()
+		{
+			if (!CommercialBuildAvailable)
+				Assert.Ignore ("Not required on Open Source Builds");
+			const string target = "_GetPrimaryCpuAbi";
+			var proj = new XamarinAndroidLibraryProject ();
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 			}
 		}
 	}

@@ -73,13 +73,23 @@ namespace Xamarin.ProjectTools
 				project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
 			}
 
-			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.PackageReferences?.Count > 0);
+			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences);
 			built_before = true;
 
 			if (CleanupAfterSuccessfulBuild)
 				Cleanup ();
 			last_build_result = result;
 			return result;
+		}
+
+		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
+		{
+			return RunTarget (project, "Install", doNotCleanupOnUpdate, saveProject: saveProject);
+		}
+
+		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
+		{
+			return RunTarget (project, "Uninstall", doNotCleanupOnUpdate);
 		}
 
 		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
@@ -102,12 +112,12 @@ namespace Xamarin.ProjectTools
 			return RunTarget (project, "Compile", doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
 		}
 
-		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool saveProject = true)
 		{
 			var oldTarget = Target;
 			Target = target;
 			try {
-				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables);
+				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, saveProject: saveProject, environmentVariables: environmentVariables);
 			} finally {
 				Target = oldTarget;
 			}

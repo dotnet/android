@@ -75,10 +75,12 @@ namespace Xamarin.Android.Tasks
 						rTxt = Path.Combine (dir, "..", "R.txt");
 						if (File.Exists (rTxt)) {
 							ProcessRtxtFile (rTxt);
-						} else {
+						} else if (Directory.Exists (dir)) {
 							foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
 								ProcessResourceFile (file);
 							}
+						} else {
+							Log.LogDebugMessage ($"Skipping non-existent directory: {dir}");
 						}
 					}
 				}

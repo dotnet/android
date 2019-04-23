@@ -33,12 +33,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("AndroidApkSigner:");
-			Log.LogDebugMessage ("  ApkSignerJar: {0}", ApkSignerJar);
-			Log.LogDebugMessage ("  ApkToSign: {0}", ApkToSign);
-			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
-			Log.LogDebugMessage ("  AdditionalArguments: {0}", AdditionalArguments);
-
 			if (!File.Exists (GenerateFullPathToTool ())) {
 				Log.LogError ($"'{GenerateFullPathToTool ()}' does not exist. You need to install android-sdk build-tools 26.0.1 or above.");
 				return false;

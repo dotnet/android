@@ -211,25 +211,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute () 
 		{
-			Log.LogDebugMessage ("Aapt Task");
-			Log.LogDebugMessage ("  AssetDirectory: {0}", AssetDirectory);
-			Log.LogDebugTaskItems ("  ManifestFiles: ", ManifestFiles);
-			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
-			Log.LogDebugMessage ("  JavaDesignerOutputDirectory: {0}", JavaDesignerOutputDirectory);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-			Log.LogDebugMessage ("  UncompressedFileExtensions: {0}", UncompressedFileExtensions);
-			Log.LogDebugMessage ("  ExtraPackages: {0}", ExtraPackages);
-			Log.LogDebugTaskItems ("  AdditionalResourceDirectories: ", AdditionalResourceDirectories);
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths: ", AdditionalAndroidResourcePaths);
-			Log.LogDebugTaskItems ("  LibraryProjectJars: ", LibraryProjectJars);
-			Log.LogDebugMessage ("  ExtraArgs: {0}", ExtraArgs);
-			Log.LogDebugMessage ("  CreatePackagePerAbi: {0}", CreatePackagePerAbi);
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-			Log.LogDebugMessage ("  VersionCodePattern: {0}", VersionCodePattern);
-			Log.LogDebugMessage ("  VersionCodeProperties: {0}", VersionCodeProperties);
-			if (CreatePackagePerAbi)
-				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-
 			resourceDirectory = ResourceDirectory.TrimEnd ('\\');
 			if (!Path.IsPathRooted (resourceDirectory))
 				resourceDirectory = Path.Combine (WorkingDirectory, resourceDirectory);

@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="nunit.framework">
@@ -57,6 +58,8 @@
     <Reference Include="Xamarin.Build.AsyncTask">
       <HintPath>..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -88,22 +91,21 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildTest.OSS.cs" />
-    <Compile Include="ManifestTest.OSS.cs" />
-    <Compile Include="AndroidRegExTests.cs" />
-    <Compile Include="GetDependenciesTests.cs" />
-    <Compile Include="ResolveSdksTaskTests.cs" />
-    <Compile Include="AndroidResourceTests.cs" />
-    <Compile Include="ManagedResourceParserTests.cs" />
-    <Compile Include="Tasks\BundleToolTests.cs" />
+    <Compile Include="Tasks\AndroidRegExTests.cs" />
+    <Compile Include="Tasks\GetDependenciesTests.cs" />
+    <Compile Include="Tasks\ResolveSdksTaskTests.cs" />
+    <Compile Include="Tasks\AndroidResourceTests.cs" />
+    <Compile Include="Tasks\ManagedResourceParserTests.cs" />
     <Compile Include="Tasks\CopyResourceTests.cs" />
+    <Compile Include="Tasks\FilterAssembliesTests.cs" />
     <Compile Include="Tasks\GenerateLibraryResourcesTests.cs" />
     <Compile Include="Tasks\KeyToolTests.cs" />
-    <Compile Include="Aapt2Tests.cs" />
+    <Compile Include="Tasks\Aapt2Tests.cs" />
     <Compile Include="Tasks\MakeBundleNativeCodeExternalTests.cs" />
     <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
+    <Compile Include="Tasks\BundleToolTests.cs" />
     <Compile Include="ZipArchiveExTests.cs" />
-    <Compile Include="ConvertResourcesCasesTests.cs" />
+    <Compile Include="Tasks\ConvertResourcesCasesTests.cs" />
     <Compile Include="Tasks\NdkUtilTests.cs" />
     <Compile Include="Tasks\CheckGoogleSdkRequirementsTests.cs" />
   </ItemGroup>

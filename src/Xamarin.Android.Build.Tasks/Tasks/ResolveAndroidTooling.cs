@@ -235,6 +235,16 @@ namespace Xamarin.Android.Tasks
 		{
 			var sb = new StringBuilder ();
 			var aapt2Tool = Path.Combine (Aapt2ToolPath, Aapt2);
+
+			// Try to use a cached value for Aapt2Version
+			var key = ($"{nameof (ResolveAndroidTooling)}.{nameof (Aapt2Version)}", aapt2Tool);
+			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
+			if (!string.IsNullOrEmpty (cached)) {
+				Log.LogDebugMessage ($"Using cached value for {nameof (Aapt2Version)}: {cached}");
+				Aapt2Version = cached;
+				return true;
+			}
+
 			try {
 				MonoAndroidHelper.RunProcess (aapt2Tool, "version", (s, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
@@ -253,6 +263,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"`{aapt2Tool} version` returned: ```{versionInfo}```");
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out Version versionNumber)) {
 				Aapt2Version = versionNumber.ToString ();
+				BuildEngine4.RegisterTaskObject (key, Aapt2Version, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
 				return true;
 			}
 			return false;

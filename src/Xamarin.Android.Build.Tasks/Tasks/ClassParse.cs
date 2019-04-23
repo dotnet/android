@@ -25,11 +25,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("ClassParse Task");
-			Log.LogDebugMessage ("  OutputFile: {0}", OutputFile);
-			Log.LogTaskItems ("  SourceJars: ", SourceJars);
-			Log.LogTaskItems ("  DocumentationPaths: ", DocumentationPaths);
-
 			using (var output = new StreamWriter (OutputFile, append: false, 
 						encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
 				Bytecode.Log.OnLog = LogEventHandler;

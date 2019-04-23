@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
 		{
-			project = new XamarinAndroidApplicationProject {
+			project = new XamarinFormsMapsApplicationProject {
 				IsRelease = true,
 			};
 			//NOTE: this is here to enable adb shell run-as
@@ -57,16 +57,18 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip);
-			CollectionAssert.AreEqual (contents, new [] {
+			var expectedFiles = new [] {
 				"dex/classes.dex",
 				"lib/arm64-v8a/libmono-btls-shared.so",
 				"lib/arm64-v8a/libmonodroid.so",
 				"lib/arm64-v8a/libmono-native.so",
 				"lib/arm64-v8a/libmonosgen-2.0.so",
+				"lib/arm64-v8a/libxamarin-app.so",
 				"lib/armeabi-v7a/libmono-btls-shared.so",
 				"lib/armeabi-v7a/libmonodroid.so",
 				"lib/armeabi-v7a/libmono-native.so",
 				"lib/armeabi-v7a/libmonosgen-2.0.so",
+				"lib/armeabi-v7a/libxamarin-app.so",
 				"manifest/AndroidManifest.xml",
 				"res/drawable-hdpi-v4/icon.png",
 				"res/drawable-mdpi-v4/icon.png",
@@ -83,9 +85,15 @@ namespace Xamarin.Android.Build.Tests
 				"root/assemblies/System.Runtime.Serialization.dll",
 				"root/assemblies/UnnamedProject.dll",
 				"root/NOTICE",
-				"root/typemap.jm",
-				"root/typemap.mj"
-			});
+				//These are random files from Google Play Services .jar/.aar files
+				"root/build-data.properties",
+				"root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt",
+				"root/error_prone/Annotations.gwt.xml",
+				"root/protobuf.meta",
+			};
+			foreach (var expected in expectedFiles) {
+				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
+			}
 		}
 
 		[Test]
@@ -94,16 +102,18 @@ namespace Xamarin.Android.Build.Tests
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab);
-			CollectionAssert.AreEqual (contents, new [] {
+			var expectedFiles = new [] {
 				"base/dex/classes.dex",
 				"base/lib/arm64-v8a/libmono-btls-shared.so",
 				"base/lib/arm64-v8a/libmonodroid.so",
 				"base/lib/arm64-v8a/libmono-native.so",
 				"base/lib/arm64-v8a/libmonosgen-2.0.so",
+				"base/lib/arm64-v8a/libxamarin-app.so",
 				"base/lib/armeabi-v7a/libmono-btls-shared.so",
 				"base/lib/armeabi-v7a/libmonodroid.so",
 				"base/lib/armeabi-v7a/libmono-native.so",
 				"base/lib/armeabi-v7a/libmonosgen-2.0.so",
+				"base/lib/armeabi-v7a/libxamarin-app.so",
 				"base/manifest/AndroidManifest.xml",
 				"base/native.pb",
 				"base/res/drawable-hdpi-v4/icon.png",
@@ -121,10 +131,16 @@ namespace Xamarin.Android.Build.Tests
 				"base/root/assemblies/System.Runtime.Serialization.dll",
 				"base/root/assemblies/UnnamedProject.dll",
 				"base/root/NOTICE",
-				"base/root/typemap.jm",
-				"base/root/typemap.mj",
-				"BundleConfig.pb"
-			});
+				"BundleConfig.pb",
+				//These are random files from Google Play Services .jar/.aar files
+				"base/root/build-data.properties",
+				"base/root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt",
+				"base/root/error_prone/Annotations.gwt.xml",
+				"base/root/protobuf.meta",
+			};
+			foreach (var expected in expectedFiles) {
+				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");
+			}
 		}
 
 		[Test]
@@ -146,9 +162,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");
 			FileAssert.Exists (aab);
-			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
+			// Expecting: splits/base-arm64_v8a.apk, splits/base-en.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
+			// This are split up based on: abi, language, base, and dpi
 			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
-			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
+			Assert.AreEqual (4, contents.Length, "Expecting four APKs!");
 		}
 	}
 }

@@ -14,10 +14,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Unzip Task");
-			Log.LogDebugTaskItems ("  Sources: ", Sources);
-			Log.LogDebugTaskItems ("  DestinationDirectories: ", DestinationDirectories);
-
 			foreach (var pair in Sources.Zip (DestinationDirectories, (s, d) => new { Source = s, Destination = d })) {
 				if (!Directory.Exists (pair.Destination.ItemSpec))
 					Directory.CreateDirectory (pair.Destination.ItemSpec);

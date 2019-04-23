@@ -20,9 +20,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("GetMonoPlatformJar Task");
-			Log.LogDebugMessage ("  TargetFrameworkDirectory: {0}", TargetFrameworkDirectory);
-			
 			var directories = TargetFrameworkDirectory.Split (new char[] { ';', ','} ,StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in directories)

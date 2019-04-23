@@ -8,8 +8,6 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
-    <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime)</_Runtime>
-    <_NUnit>$(_Runtime) packages\NUnit.ConsoleRunner.3.9.0\tools\nunit3-console.exe</_NUnit>
     <_Test Condition=" '$(TEST)' != '' ">--test=&quot;$(TEST)&quot;</_Test>
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>
     <_XABinLogPrefix>/v:normal /binaryLogger:"$(MSBuildThisFileDirectory)\..\..\bin\Test$(Configuration)\msbuild</_XABinLogPrefix>
@@ -170,6 +168,13 @@
   <Target Name="RunPerformanceTests">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />
   </Target>
+  <Target Name="RunNUnitDeviceTests">
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="RunNUnitDeviceTests"
+    />
+  </Target>
   <ItemGroup>
     <_RunParallelTestTarget Include="RunNUnitTests" />
     <_RunParallelTestTarget Include="RunApkTests" />
@@ -177,6 +182,7 @@
   <ItemGroup>
     <_RunTestTarget Include="RunJavaInteropTests" />
     <_RunTestTarget Include="RunPerformanceTests" />
+    <_RunTestTarget Include="RunNUnitDeviceTests" />
   </ItemGroup>
   <Target Name="RunAllTests">
     <RunParallelTargets

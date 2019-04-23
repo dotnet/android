@@ -30,10 +30,6 @@ namespace Xamarin.Android.Tasks
 			// ok copy all the files from Cache into dest path
 			// then copy over the App Resources
 			// emit warnings if we find duplicates.
-			Log.LogDebugMessage ("MergeResources Task");
-			Log.LogDebugTaskItems ("  SourceFiles: ", SourceFiles);
-			Log.LogDebugTaskItems ("  DestinationFiles: ", DestinationFiles);
-
 			List<int> changedFiles = new List<int> ();
 
 			merger = new ResourceMerger () {

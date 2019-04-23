@@ -1,5 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Metadata;
@@ -8,12 +9,20 @@ using System.Reflection.PortableExecutable;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Filters a set of assemblies based on a given TargetFrameworkIdentifier
+	/// Filters a set of assemblies based on a given TargetFrameworkIdentifier or FallbackReference
 	/// </summary>
 	public class FilterAssemblies : Task
 	{
+		/// <summary>
+		/// The MonoAndroid portion of [assembly: System.Runtime.Versioning.TargetFramework("MonoAndroid,v9.0")]
+		/// </summary>
 		[Required]
 		public string TargetFrameworkIdentifier { get; set; }
+
+		/// <summary>
+		/// If TargetFrameworkIdentifier is missing, we can look for Mono.Android.dll references instead
+		/// </summary>
+		public string FallbackReference { get; set; }
 
 		[Required]
 		public bool DesignTimeBuild { get; set; }
@@ -38,8 +47,21 @@ namespace Xamarin.Android.Tasks
 					var reader = pe.GetMetadataReader ();
 					var assemblyDefinition = reader.GetAssemblyDefinition ();
 					var targetFrameworkIdentifier = assemblyDefinition.GetTargetFrameworkIdentifier (reader);
-					if (targetFrameworkIdentifier == TargetFrameworkIdentifier) {
+					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
 						output.Add (assemblyItem);
+						continue;
+					}
+					// Fallback to looking at references
+					if (string.IsNullOrEmpty (targetFrameworkIdentifier) && !string.IsNullOrEmpty (FallbackReference)) {
+						Log.LogDebugMessage ($"Checking references for: {assemblyItem.ItemSpec}");
+						foreach (var handle in reader.AssemblyReferences) {
+							var reference = reader.GetAssemblyReference (handle);
+							var name = reader.GetString (reference.Name);
+							if (FallbackReference == name) {
+								output.Add (assemblyItem);
+								break;
+							}
+						}
 					}
 				}
 			}

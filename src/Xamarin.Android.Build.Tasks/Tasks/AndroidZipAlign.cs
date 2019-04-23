@@ -40,16 +40,6 @@ namespace Xamarin.Android.Tasks
 				Alignment, Source.ItemSpec, DestinationDirectory.ItemSpec, Path.DirectorySeparatorChar, sourceFilename);
 		}
 
-		public override bool Execute ()
-		{
-			Log.LogDebugMessage ("AndroidZipAlign Task");
-			Log.LogDebugMessage ("  Alignment: {0}", Alignment);
-			Log.LogDebugMessage ("  Source: {0}", Source.ItemSpec);
-			Log.LogDebugMessage ("  DestinationDirectory: {0}", DestinationDirectory.ItemSpec);
-
-			return base.Execute ();
-		}
-
 		protected override string GenerateFullPathToTool ()
 		{
 			return Path.Combine (ToolPath, ToolExe);

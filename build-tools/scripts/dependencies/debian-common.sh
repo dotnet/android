@@ -8,10 +8,9 @@ DEBIAN_COMMON_DEPS="autoconf
 	libtool
 	libncurses-dev
 	libz-mingw-w64-dev
-	libzip4
+	libzip-dev
 	linux-libc-dev
 	make
-	openjdk-8-jdk
 	unzip
 	vim-common
 	sqlite3

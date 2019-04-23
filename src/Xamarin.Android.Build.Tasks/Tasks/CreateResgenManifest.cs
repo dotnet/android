@@ -21,10 +21,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CreateResgenManifest Task");
-			Log.LogDebugMessage ("  ManifestOutputFile: {0}", ManifestOutputFile);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-
 			// <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 			//		   package="MonoAndroidApplication4.MonoAndroidApplication4" />
 

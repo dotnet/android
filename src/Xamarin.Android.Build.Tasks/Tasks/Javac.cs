@@ -21,13 +21,6 @@ namespace Xamarin.Android.Tasks
 		public string JavacTargetVersion { get; set; }
 		public string JavacSourceVersion { get; set; }
 
-		public override void OnLogStarted ()
-		{
-			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
-			Log.LogDebugMessage ("  JavacTargetVersion: {0}", JavacTargetVersion);
-			Log.LogDebugMessage ("  JavacSourceVersion: {0}", JavacSourceVersion);
-		}
-
 		public override bool Execute ()
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))

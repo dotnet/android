@@ -34,6 +34,14 @@
     <Reference Include="nunit.framework">
       <HintPath>..\..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Xamarin.Android.Build.Tasks">
+      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xamarin.Android.Tools.AndroidSdk">
+      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTests.cs" />
@@ -41,6 +49,10 @@
     <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
        <Link>XABuildPaths.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\bin\Build$(CONFIGURATION)/XABuildConfig.cs">
+       <Link>XABuildConfig.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

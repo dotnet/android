@@ -100,7 +100,7 @@
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>28.0.3</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">28.0.3</XABuildToolsFolder>
-    <XAPlatformToolsVersion>28.0.0</XAPlatformToolsVersion>
+    <XAPlatformToolsVersion>28.0.2</XAPlatformToolsVersion>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.8.0</XABundleToolVersion>
@@ -135,7 +135,7 @@
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">5264690</EmulatorVersion>
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">5395263</EmulatorVersion>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
@@ -173,7 +173,13 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefTool>$(ManagedRuntime) &quot;$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe&quot;</RemapAssemblyRefTool>
+    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe&quot;</RemapAssemblyRefTool>
+  </PropertyGroup>
+
+  <!-- Unit Test Properties -->
+  <PropertyGroup>
+    <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
+    <_NUnit>$(_Runtime) packages\NUnit.ConsoleRunner.3.9.0\tools\nunit3-console.exe</_NUnit>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />

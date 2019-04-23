@@ -8,7 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Xamarin.ProjectTools;
 using XABuildPaths = Xamarin.Android.Build.Paths;
 
@@ -120,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
@@ -154,13 +158,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected void WaitFor(int milliseconds)
+		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
 			pause.WaitOne(milliseconds);
 		}
 
-		protected static string RunAdbCommand (string command, bool ignoreErrors = true)
+		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);

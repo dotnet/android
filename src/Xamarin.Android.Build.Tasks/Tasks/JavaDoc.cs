@@ -29,13 +29,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("JavaDoc Task");
-			Log.LogDebugTaskItems ("  SourceDirectories: ", SourceDirectories);
-			Log.LogDebugTaskItems ("  DestinationDirectories: ", DestinationDirectories);
-			Log.LogDebugMessage ("  JavaPlatformJar: {0}", JavaPlatformJar);
-			Log.LogDebugTaskItems ("  ReferenceJars: ", ReferenceJars);
-			Log.LogDebugTaskItems ("  ExtraArgs: ", ExtraArgs);
-
 			foreach (var dir in DestinationDirectories)
 				if (!Directory.Exists (dir))
 					Directory.CreateDirectory (dir);

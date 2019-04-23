@@ -77,9 +77,6 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool Execute ()
 		{
-			if (CreatePackagePerAbi)
-				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			
 			Yield ();
 			try {
 				var task = this.RunTask (DoExecute);

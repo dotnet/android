@@ -35,16 +35,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("DetermineJavaLibrariesToCompile");
-			Log.LogDebugMessage ("  EnableInstantRun: {0}", EnableInstantRun);
-			Log.LogDebugMessage ("  MonoPlatformJarPaths: {0}", MonoPlatformJarPaths);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-			Log.LogDebugTaskItems ("  AdditionalJavaLibraryReferences:", AdditionalJavaLibraryReferences);
-			Log.LogDebugTaskItems ("  DoNotPackageJavaLibraries:", DoNotPackageJavaLibraries);
-
 			var jars = new List<ITaskItem> ();
 			if (!EnableInstantRun)
 				jars.AddRange (MonoPlatformJarPaths);

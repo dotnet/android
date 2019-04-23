@@ -24,11 +24,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("PrepareWearApplicationFiles task");
-			Log.LogDebugTaskItems ("  WearAndroidManifestFile:", WearAndroidManifestFile);
-			Log.LogDebugTaskItems ("  IntermediateOutputPath:", IntermediateOutputPath);
-			Log.LogDebugTaskItems ("  WearApplicationApkPath:", WearApplicationApkPath);
-
 			string rawapk = "wearable_app.apk";
 			string intermediateApkPath = Path.Combine (IntermediateOutputPath, "res", "raw", rawapk);
 			string intermediateXmlFile = Path.Combine (IntermediateOutputPath, "res", "xml", "wearable_app_desc.xml");

@@ -43,6 +43,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] NativeLibraries { get; set; }
 
+		[Required]
+		public ITaskItem[] ApplicationSharedLibraries { get; set; }
+
 		public ITaskItem[] BundleNativeLibraries { get; set; }
 
 		public ITaskItem[] TypeMappings { get; set; }
@@ -174,10 +177,11 @@ namespace Xamarin.Android.Tasks
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							if (apk.Archive.Any (e => e.FullName == jarItem.FullName))
+							var path = RootPath + jarItem.FullName;
+							if (apk.Archive.Any (e => e.FullName == path))
 								Log.LogMessage ("Warning: failed to add jar entry {0} from {1}: the same file already exists in the apk", jarItem.FullName, Path.GetFileName (jarFile));
 							else
-								apk.Archive.AddEntry (data, jarItem.FullName);
+								apk.Archive.AddEntry (data, path);
 						}
 					}
 					count++;
@@ -355,6 +359,13 @@ namespace Xamarin.Android.Tasks
 			return CompressionMethod.Default;
 		}
 
+		void AddNativeLibraryToArchive (ZipArchiveEx apk, string abi, string filesystemPath, string inArchiveFileName)
+		{
+			string archivePath = $"lib/{abi}/{inArchiveFileName}";
+			Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
+			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod: GetCompressionMethod (archivePath));
+		}
+
 		void AddNativeLibrary (ZipArchiveEx apk, string abi, string filename, string inArchiveFileName = null)
 		{
 			string libPath = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi);
@@ -365,9 +376,7 @@ namespace Xamarin.Android.Tasks
 					path = debugPath;
 			}
 
-			string archivePath = string.Format ("lib/{0}/{1}", abi, inArchiveFileName ?? filename);
-			Log.LogDebugMessage ($"Adding native library: {path} (APK path: {archivePath})");
-			apk.Archive.AddEntry (archivePath, File.OpenRead (path), compressionMethod: GetCompressionMethod (archivePath));
+			AddNativeLibraryToArchive (apk, abi, path, inArchiveFileName ?? filename);
 		}
 
 		void AddProfilers (ZipArchiveEx apk, string abi)
@@ -398,6 +407,13 @@ namespace Xamarin.Android.Tasks
 			foreach (var abi in abis) {
 				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
 				AddNativeLibrary (apk, abi, library, "libmonodroid.so");
+
+				foreach (ITaskItem item in ApplicationSharedLibraries) {
+					if (String.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
+						continue;
+					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec));
+				}
+
 				if (!use_shared_runtime) {
 					// include the sgen
 					AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");

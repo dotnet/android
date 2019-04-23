@@ -25,9 +25,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("CreateAdditionalLibraryResourceCache Task");
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths:", AdditionalAndroidResourcePaths);
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourceCachePaths: ", AdditionalAndroidResourceCachePaths);
 			var copiedResources = new List<ITaskItem> ();
 
 			for (int i = 0; i < AdditionalAndroidResourcePaths.Length; i++) {

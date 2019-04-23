@@ -46,6 +46,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckBuildIdIsUnique ()
 		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
 			Dictionary<string, string> buildIds = new Dictionary<string, string> ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -54,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "PdbOnly");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
@@ -67,26 +69,15 @@ namespace Xamarin.Android.Build.Tests
 				//NOTE: Windows is still generating mdb files here
 				extension = IsWindows ? "dll.mdb" : "pdb";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				string javaEnv = Path.Combine (Root, b.ProjectDirectory,
-							       proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "XamarinAndroidEnvironmentVariables.java");
-				Assert.IsTrue (File.Exists (javaEnv), $"Java environment source does not exist at {javaEnv}");
 
-				string[] lines = File.ReadAllLines (javaEnv);
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
-				Assert.IsTrue (lines.Any (x => x.Contains ("\"XAMARIN_BUILD_ID\",")),
-					       "The environment should contain a XAMARIN_BUILD_ID");
-
-				string buildID = lines.First (x => x.Contains ("\"XAMARIN_BUILD_ID\","))
-					.Trim ()
-					.Replace ("\", \"", "=")
-					.Replace ("\",", String.Empty)
-					.Replace ("\"", String.Empty);
+				string buildID;
+				Assert.IsTrue (envvars.TryGetValue ("XAMARIN_BUILD_ID", out buildID), "The environment should contain a XAMARIN_BUILD_ID");
 				buildIds.Add ("all", buildID);
-
-				string dexFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.dex");
-				Assert.IsTrue (File.Exists (dexFile), $"dex file does not exist at {dexFile}");
-				Assert.IsTrue (DexUtils.ContainsClass ("Lmono/android/app/XamarinAndroidEnvironmentVariables;", dexFile, b.AndroidSdkDirectory),
-					       $"dex file {dexFile} does not contain the XamarinAndroidEnvironmentVariables class");
 
 				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);
@@ -98,7 +89,9 @@ namespace Xamarin.Android.Build.Tests
 				var buildId = buildIds.First ().Value;
 				Assert.IsTrue (doc.Element ("mono-debug")
 					.Elements ()
-					.Any (x => x.Name == "build-id" && x.Value == buildId.Replace ("XAMARIN_BUILD_ID=", "")), "build-id is has an incorrect value.");
+					.Any (x => x.Name == "build-id" && x.Value == buildId), "build-id is has an incorrect value.");
+
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
 			}
 		}
 
@@ -312,10 +305,35 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckAppBundle ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Make sure the AAB is signed
+				var aab = Path.Combine (bin, "UnnamedProject.UnnamedProject-Signed.aab");
+				using (var zip = ZipHelper.OpenZip (aab)) {
+					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+				}
+
+				// Build with no changes
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+			}
+		}
+
+		[Test]
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
-				Language = XamarinAndroidProjectLanguage.CSharp,
 				ProjectName = "XamFormsSample",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				Sdk = "Microsoft.NET.Sdk",
@@ -519,9 +537,6 @@ namespace App1
 							string.Format ("Unexpected Files found! {0}",
 							string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
 					}
-					if (!HasDevices)
-						Assert.Ignore ("Skipping Installation. No devices available.");
-					Assert.IsTrue (ab.RunTarget (app, "Install"), "App should have installed.");
 				}
 			}
 		}

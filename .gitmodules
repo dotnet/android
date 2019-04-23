@@ -1,3 +1,7 @@
+[submodule "external/debugger-libs"]
+    path = external/debugger-libs
+    url = git://github.com/mono/debugger-libs
+    branch = master
 [submodule "external/dlfcn-win32"]
     path = external/dlfcn-win32
     url = https://github.com/dlfcn-win32/dlfcn-win32.git
@@ -30,6 +34,10 @@
     path = external/mxe
     url = https://github.com/xamarin/mxe.git
     branch = xamarin
+[submodule "external/nrefactory"]
+    path = external/nrefactory
+    url = git://github.com/icsharpcode/NRefactory.git
+    branch = master
 [submodule "external/opentk"]
     path = external/opentk
     url = https://github.com/mono/opentk.git

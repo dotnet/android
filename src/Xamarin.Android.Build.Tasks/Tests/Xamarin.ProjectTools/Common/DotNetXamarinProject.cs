@@ -72,11 +72,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (ActiveConfigurationProperties, KnownProperties.IntermediateOutputPath, value); }
 		}
 
-		public BuildItem GetItem (string include)
-		{
-			return ItemGroupList.SelectMany (g => g).First (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
-		}
-
 		public void AddReferences (params string [] references)
 		{
 			foreach (var s in references)
@@ -87,12 +82,6 @@ namespace Xamarin.ProjectTools
 		{
 			foreach (var s in sources)
 				Sources.Add (new BuildItem.Source (s));
-		}
-
-		public void Touch (params string [] itemPaths)
-		{
-			foreach (var item in itemPaths)
-				GetItem (item).Timestamp = DateTimeOffset.UtcNow;
 		}
 
 		public virtual ProjectRootElement Construct ()

@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using MonoDroid.Utils;
 using Mono.Cecil;
 
 
@@ -35,6 +36,9 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem [] FrameworkDirectories { get; set; }
+
+		[Required]
+		public string SupportedAbis { get; set; }
 
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
@@ -104,14 +108,9 @@ namespace Xamarin.Android.Tasks
 					res.SearchDirectories.Add (dir.ItemSpec);
 			}
 
-			var selectedWhitelistAssemblies = new List<string> ();
-			
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
-				var assemblyFullPath = Path.GetFullPath (assembly.ItemSpec);
-				res.Load (assemblyFullPath);
-				if (MonoAndroidHelper.FrameworkAttributeLookupTargets.Any (a => Path.GetFileName (assembly.ItemSpec) == a))
-					selectedWhitelistAssemblies.Add (assemblyFullPath);
+				res.Load (assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code
@@ -234,7 +233,7 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (all_java_types, selectedWhitelistAssemblies, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
 			using (var stream = new MemoryStream ()) {
 				manifest.Save (stream);
@@ -287,19 +286,67 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
-			using (var gen = UseSharedRuntime
-				? new TypeNameMapGenerator (types, Log.LogDebugMessage)
-			        : new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), Log.LogDebugMessage)) {
-				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), gen.WriteJavaToManaged);
-				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), gen.WriteManagedToJava);
+			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
+			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
+				new TypeNameMapGenerator (types, logger) :
+				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
+			using (var gen = createTypeMapGenerator ()) {
+				using (var ms = new MemoryStream ()) {
+					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
+					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
+				}
 			}
 		}
 
-		void UpdateWhenChanged (string path, Action<Stream> generator)
+		void UpdateWhenChanged (string path, string type, MemoryStream ms, Action<Stream> generator)
 		{
-			using (var stream = new MemoryStream ()) {
+			if (InstantRunEnabled) {
+				ms.SetLength (0);
+				generator (ms);
+				MonoAndroidHelper.CopyIfStreamChanged (ms, path);
+			}
+
+			string dataFilePath = $"{path}.inc";
+			using (var stream = new NativeAssemblyDataStream ()) {
 				generator (stream);
-				MonoAndroidHelper.CopyIfStreamChanged (stream, path);
+				stream.EndOfFile ();
+				MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
+
+				var generatedFiles = new List <ITaskItem> ();
+				string mappingFieldName = $"{type}_typemap";
+				string dataFileName = Path.GetFileName (dataFilePath);
+				NativeAssemblerTargetProvider asmTargetProvider;
+				var utf8Encoding = new UTF8Encoding (false);
+				foreach (string abi in SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+					ms.SetLength (0);
+					switch (abi.Trim ()) {
+						case "armeabi-v7a":
+							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: false);
+							break;
+
+						case "arm64-v8a":
+							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: true);
+							break;
+
+						case "x86":
+							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: false);
+							break;
+
+						case "x86_64":
+							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: true);
+							break;
+
+						default:
+							throw new InvalidOperationException ($"Unknown ABI {abi}");
+					}
+
+					var asmgen = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, stream, dataFileName, stream.MapByteCount, mappingFieldName);
+					string asmFileName = $"{path}.{abi.Trim ()}.s";
+					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
+						asmgen.Write (sw, dataFileName);
+						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFileName);
+					}
+				}
 			}
 		}
 	}
