@@ -213,7 +213,7 @@
          Projects="$(MSBuildThisFileDirectory)RunTests.targets"
          RunEachTargetSeparately="True"
          Targets="@(_RunTestTarget)"
-         Properties="%(Properties)"
+         Properties="%(_RunTestTarget.Properties)"
      />
    </Target>
 </Project>
