@@ -84,6 +84,7 @@ namespace Xamarin.ProjectTools
 
 		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
 		{
+			//NOTE: since $(BuildingInsideVisualStudio) is set, Build will not happen by default
 			return RunTarget (project, "Build,Install", doNotCleanupOnUpdate, saveProject: saveProject);
 		}
 
