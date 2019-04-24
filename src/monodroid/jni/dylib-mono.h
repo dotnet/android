@@ -377,6 +377,7 @@ class DylibMono
 
 	typedef void                   (*monodroid_mono_config_parse_memory_fptr) (const char *buffer);
 	typedef void                   (*monodroid_mono_add_internal_call_fptr) (const char *name, const void *method);
+	typedef void                   (*monodroid_mono_add_internal_call_with_flags_fptr) (const char *name, const void *method, mono_bool cooperative);
 	typedef MonoImage*             (*monodroid_mono_assembly_get_image_fptr) (void *arg0);
 	typedef MonoAssembly*          (*monodroid_mono_assembly_load_from_full_fptr) (MonoImage *image, const char *fname, MonoImageOpenStatus *status, mono_bool refonly);
 	typedef MonoAssembly*          (*monodroid_mono_assembly_load_full_fptr) (MonoAssemblyName *aname, const char *basedir, MonoImageOpenStatus* status, mono_bool refonly);
@@ -537,6 +538,7 @@ struct DylibMono {
 	monodroid_mono_check_corlib_version_fptr                        mono_check_corlib_version;
 
 	monodroid_mono_add_internal_call_fptr                           mono_add_internal_call;
+	monodroid_mono_add_internal_call_with_flags_fptr                mono_add_internal_call_with_flags;
 	monodroid_mono_config_for_assembly_fptr                         mono_config_for_assembly;
 
 	monodroid_mono_assembly_loaded_fptr                             mono_assembly_loaded;
