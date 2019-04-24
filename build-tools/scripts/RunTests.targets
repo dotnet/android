@@ -29,6 +29,7 @@
     <_ApkTestProject Include="$(_TopDir)\tests\Runtime-AppBundle\Mono.Android-TestsAppBundle.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
+    <_ApkTestProjectAot Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
     <_ApkTestProjectBundle Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
   </ItemGroup>
   <Target Name="ListNUnitTests">
