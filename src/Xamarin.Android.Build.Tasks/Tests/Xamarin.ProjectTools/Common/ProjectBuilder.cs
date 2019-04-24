@@ -84,7 +84,7 @@ namespace Xamarin.ProjectTools
 
 		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
 		{
-			return RunTarget (project, "Install", doNotCleanupOnUpdate, saveProject: saveProject);
+			return RunTarget (project, "Build,Install", doNotCleanupOnUpdate, saveProject: saveProject);
 		}
 
 		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
