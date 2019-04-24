@@ -16,6 +16,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		string commit;
 		string owner;
 		string name;
+		string singleLine;
 
 		public override bool Execute ()
 		{
@@ -41,8 +42,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			if (!string.IsNullOrEmpty (ghToken)) {
 				Arguments = $"clone https://{ghToken}@github.com/{owner}/{name} --progress \"{destination}\"";
 			} else {
-				// Fallback to SSH URI
-				Arguments = $"clone git@github.com:{owner}/{name} --progress \"{destination}\"";
+				if (IsHttps ()) {
+					// Just use a plain git clone for https
+					Arguments = $"clone https://github.com/{owner}/{name} --progress \"{destination}\"";
+				} else {
+					// Fallback to SSH URI
+					Arguments = $"clone git@github.com:{owner}/{name} --progress \"{destination}\"";
+				}
 			}
 
 			base.Execute ();
@@ -60,9 +66,24 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			base.Execute ();
 		}
 
+		bool IsHttps ()
+		{
+			Arguments = "config --get remote.origin.url";
+			base.Execute ();
+			return singleLine != null && singleLine.Contains ("https://");
+		}
+
 		protected override void LogToolCommand(string message)
 		{
 			// Do nothing
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			if (!string.IsNullOrEmpty (singleLine))
+				this.singleLine = singleLine;
+			
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }
