@@ -40,6 +40,13 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			static SetUp ()
+			{
+				using (var builder = new Builder ()) {
+					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
+				}
+			}
+
 			[OneTimeSetUp]
 			public void BeforeAllTests ()
 			{
@@ -64,9 +71,6 @@ namespace Xamarin.Android.Build.Tests
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
-				}
-				using (var builder = new Builder ()) {
-					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 				}
 			}
 
