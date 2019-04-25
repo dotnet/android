@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
@@ -17,7 +19,12 @@ namespace Xamarin.Android.Tasks
 		bool app;
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
+		Dictionary<CodeArrayCreateExpression, CodeMemberField []> arrayMapping = new Dictionary<CodeArrayCreateExpression, CodeMemberField []> ();
 		const string itemPackageId = "0x7f";
+
+		XDocument publicXml;
+
+		public string JavaPlatformDirectory { get; set; }
 
 		void SortMembers (CodeTypeDeclaration decl)
 		{
@@ -85,6 +92,11 @@ namespace Xamarin.Android.Tasks
 				xml,
 			});
 
+			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values", "public.xml");
+			if (File.Exists (publicXmlPath)) {
+				publicXml = XDocument.Load (publicXmlPath);
+			}
+
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
 			var rTxt = Path.Combine(resourceDirectory, "..", "R.txt");
@@ -98,10 +110,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (additionalResourceDirectories != null) {
 					foreach (var dir in additionalResourceDirectories) {
-						rTxt = Path.Combine (dir, "..", "R.txt");
-						if (File.Exists (rTxt)) {
-							ProcessRtxtFile (rTxt);
-						} else if (Directory.Exists (dir)) {
+						if (Directory.Exists (dir)) {
 							foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
 								ProcessResourceFile (file);
 							}
@@ -148,7 +157,7 @@ namespace Xamarin.Android.Tasks
 						typeid = typeIds.Count;
 					}
 					if (field.InitExpression == null) {
-						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), 16);
+						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
 						field.InitExpression = new CodePrimitiveExpression (id);
 						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
 						itemid++;
@@ -156,6 +165,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			foreach (var kvp in arrayMapping) {
+				CodeArrayCreateExpression expression = kvp.Key;
+				CodeMemberField [] fields = kvp.Value;
+				for (int i = 0; i < expression.Initializers.Count; i++) {
+					CodePrimitiveExpression code = expression.Initializers [i] as CodePrimitiveExpression;
+					string name = fields [i].Name;
+					if (name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase)) {
+						name = name.Replace ("android:", string.Empty);
+						var element = publicXml?.XPathSelectElement ($"/resources/public[@name='{name}']") ?? null;
+						code.Value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
+					} else {
+						CodePrimitiveExpression value = fields [i].InitExpression as CodePrimitiveExpression;
+						code.Value = value.Value;
+					}
+				}
+			}
 
 			if (animation.Members.Count > 1)
 				resources.Members.Add (animation);
@@ -210,7 +235,7 @@ namespace Xamarin.Android.Tasks
 			var lines = System.IO.File.ReadLines (file);
 			foreach (var line in lines) {
 				var items = line.Split (new char [] { ' ' }, 4);
-				int value = items [0] != "int[]" ? Convert.ToInt32 (items [3], 16) : 0;
+				int value = items [0] != "int[]" ? Convert.ToInt32 (items [3], 16) : -1;
 				string itemName = items [2];
 				switch (items [1]) {
 				case "anim":
@@ -280,7 +305,7 @@ namespace Xamarin.Android.Tasks
 							.Replace (" ", "")
 							.Split (new char [] { ',' });
 						CreateIntArrayField (styleable, itemName, arrayValues.Length,
-							arrayValues.Select (x => string.IsNullOrEmpty (x) ? 0 : Convert.ToInt32 (x, 16)).ToArray ());
+							arrayValues.Select (x => string.IsNullOrEmpty (x) ? -1 : Convert.ToInt32 (x, 16)).ToArray ());
 						break;
 					}
 					break;
@@ -358,29 +383,32 @@ namespace Xamarin.Android.Tasks
 			parentType.Members.Add (f);
 		}
 
-		void CreateIntField (CodeTypeDeclaration parentType, string name, int value = 0)
+		CodeMemberField CreateIntField (CodeTypeDeclaration parentType, string name, int value = -1)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
-			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0))
-				return;
-			var f = new CodeMemberField (typeof (int), mappedName) {
+			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
+			if (f != null)
+				return f;
+			f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
 				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 				InitExpression = null,
 			};
-			if (value != 0) {
+			if (value != -1) {
 				f.InitExpression = new CodePrimitiveExpression (value);
 				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{value.ToString ("X")}"));
 			}
 			parentType.Members.Add (f);
+			return f;
 		}
 
-		void CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count, params int[] values)
+		CodeMemberField CreateIntArrayField (CodeTypeDeclaration parentType, string name, int count, params int[] values)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
-			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0))
-				return;
-			var f = new CodeMemberField (typeof (int []), name) {
+			CodeMemberField f = (CodeMemberField)parentType.Members.OfType<CodeTypeMember> ().FirstOrDefault (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0);
+			if (f != null)
+				return f;
+			f = new CodeMemberField (typeof (int []), name) {
 				// pity I can't make the member readonly...
 				Attributes = MemberAttributes.Static | MemberAttributes.Public,
 			};
@@ -389,13 +417,14 @@ namespace Xamarin.Android.Tasks
 				f.InitExpression = c = new CodeArrayCreateExpression (typeof (int []));
 			}
 			for (int i = 0; i < count; i++) {
-				int value = 0;
+				int value = -1;
 				if (i < values.Length)
 					value = values[i];
 				c.Initializers.Add (new CodePrimitiveExpression (value));
 			}
 
 			parentType.Members.Add (f);
+			return f;
 		}
 
 		HashSet<string> resourceNamesToUseDirectly = new HashSet<string> () {
@@ -477,7 +506,7 @@ namespace Xamarin.Android.Tasks
 				ProcessStyleable (element);
 				break;
 			case "style":
-				CreateIntField (style, fieldName.Replace (".", "_"));
+				CreateIntField (style, fieldName);
 				break;
 			case "transition":
 				CreateIntField (transition, fieldName);
@@ -494,6 +523,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string topName = null;
 			int fieldCount = 0;
+			List<CodeMemberField> fields = new List<CodeMemberField> ();
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
@@ -516,16 +546,27 @@ namespace Xamarin.Android.Tasks
 				}
 				reader.MoveToElement ();
 				if (reader.LocalName == "attr") {
-					CreateIntField (styleable, $"{topName}_{name.Replace (":", "_")}");
+					CreateIntField (styleable, $"{topName}_{name}", fieldCount);
 					if (!name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase))
-						CreateIntField (attrib, name);
+						fields.Add (CreateIntField (attrib, name));
+					else {
+						// this is an android:xxx resource, we should not calcuate the id
+						// we should get it from "somewhere" maybe the pubic.xml
+						var f = new CodeMemberField (typeof(int), name);
+						f.InitExpression = new CodePrimitiveExpression (0);
+						fields.Add (f);
+					}
 					fieldCount++;
 				} else {
 					if (name != null)
-						CreateIntField (ids, $"{name.Replace (":", "_")}");
+						CreateIntField (ids, $"{name}");
 				}
 			}
-			CreateIntArrayField (styleable, topName, fieldCount);
+			CodeMemberField field = CreateIntArrayField (styleable, topName, fieldCount);
+			CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
+			if (c == null)
+				return;
+			arrayMapping.Add (c, fields.ToArray ());
 		}
 
 		void ProcessXmlFile (string file)
@@ -546,7 +587,7 @@ namespace Xamarin.Android.Tasks
 								if (reader.LocalName == "type")
 									type = reader.Value;
 								if (reader.LocalName == "id")
-									id = reader.Value.Replace ("@+id/", "").Replace ("@id/", ""); ;
+									id = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
 							}
 							if (name?.Contains ("android:") ?? false)
 								continue;

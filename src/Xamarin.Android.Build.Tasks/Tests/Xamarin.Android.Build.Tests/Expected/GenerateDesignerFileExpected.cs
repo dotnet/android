@@ -59,6 +59,9 @@ namespace Foo.Foo
 		public partial class Attribute
 		{
 			
+			// aapt resource value: 0x7F030000
+			public const int customFont = 2130903040;
+			
 			static Attribute()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -72,8 +75,8 @@ namespace Foo.Foo
 		public partial class Dimension
 		{
 			
-			// aapt resource value: 0x7F030000
-			public const int main_text_item_size = 2130903040;
+			// aapt resource value: 0x7F040000
+			public const int main_text_item_size = 2130968576;
 			
 			static Dimension()
 			{
@@ -88,8 +91,8 @@ namespace Foo.Foo
 		public partial class Drawable
 		{
 			
-			// aapt resource value: 0x7F040000
-			public const int ic_menu_preferences = 2130968576;
+			// aapt resource value: 0x7F050000
+			public const int ic_menu_preferences = 2131034112;
 			
 			static Drawable()
 			{
@@ -104,8 +107,8 @@ namespace Foo.Foo
 		public partial class Font
 		{
 			
-			// aapt resource value: 0x7F050000
-			public const int arial = 2131034112;
+			// aapt resource value: 0x7F060000
+			public const int arial = 2131099648;
 			
 			static Font()
 			{
@@ -120,20 +123,20 @@ namespace Foo.Foo
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7F060000
-			public const int Føø_Bar = 2131099648;
+			// aapt resource value: 0x7F070000
+			public const int Føø_Bar = 2131165184;
 			
-			// aapt resource value: 0x7F060001
-			public const int menu_settings = 2131099649;
+			// aapt resource value: 0x7F070001
+			public const int menu_settings = 2131165185;
 			
-			// aapt resource value: 0x7F060002
-			public const int seekBar = 2131099650;
+			// aapt resource value: 0x7F070002
+			public const int seekBar = 2131165186;
 			
-			// aapt resource value: 0x7F060003
-			public const int seekbar = 2131099651;
+			// aapt resource value: 0x7F070003
+			public const int seekbar = 2131165187;
 			
-			// aapt resource value: 0x7F060004
-			public const int textview_withperiod = 2131099652;
+			// aapt resource value: 0x7F070004
+			public const int textview_withperiod = 2131165188;
 			
 			static Id()
 			{
@@ -148,8 +151,8 @@ namespace Foo.Foo
 		public partial class Layout
 		{
 			
-			// aapt resource value: 0x7F070000
-			public const int main = 2131165184;
+			// aapt resource value: 0x7F080000
+			public const int main = 2131230720;
 			
 			static Layout()
 			{
@@ -164,8 +167,8 @@ namespace Foo.Foo
 		public partial class Menu
 		{
 			
-			// aapt resource value: 0x7F080000
-			public const int Options = 2131230720;
+			// aapt resource value: 0x7F090000
+			public const int Options = 2131296256;
 			
 			static Menu()
 			{
@@ -180,8 +183,8 @@ namespace Foo.Foo
 		public partial class Mipmap
 		{
 			
-			// aapt resource value: 0x7F090000
-			public const int icon = 2131296256;
+			// aapt resource value: 0x7F0A0000
+			public const int icon = 2131361792;
 			
 			static Mipmap()
 			{
@@ -196,8 +199,8 @@ namespace Foo.Foo
 		public partial class Raw
 		{
 			
-			// aapt resource value: 0x7F0B0000
-			public const int foo = 2131427328;
+			// aapt resource value: 0x7F0C0000
+			public const int foo = 2131492864;
 			
 			static Raw()
 			{
@@ -212,8 +215,8 @@ namespace Foo.Foo
 		public partial class Plurals
 		{
 			
-			// aapt resource value: 0x7F0A0000
-			public const int num_locations_reported = 2131361792;
+			// aapt resource value: 0x7F0B0000
+			public const int num_locations_reported = 2131427328;
 			
 			static Plurals()
 			{
@@ -228,17 +231,17 @@ namespace Foo.Foo
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7F0C0000
-			public const int app_name = 2131492864;
+			// aapt resource value: 0x7F0D0000
+			public const int app_name = 2131558400;
 			
-			// aapt resource value: 0x7F0C0001
-			public const int foo = 2131492865;
+			// aapt resource value: 0x7F0D0001
+			public const int foo = 2131558401;
 			
-			// aapt resource value: 0x7F0C0002
-			public const int hello = 2131492866;
+			// aapt resource value: 0x7F0D0002
+			public const int hello = 2131558402;
 			
-			// aapt resource value: 0x7F0C0003
-			public const int menu_settings = 2131492867;
+			// aapt resource value: 0x7F0D0003
+			public const int menu_settings = 2131558403;
 			
 			static String()
 			{
@@ -250,11 +253,34 @@ namespace Foo.Foo
 			}
 		}
 		
+		public partial class Styleable
+		{
+			
+			public static int[] CustomFonts = new int[] {
+					16842962,
+					2130903040};
+			
+			// aapt resource value: 0x0
+			public const int CustomFonts_android_scrollX = 0;
+			
+			// aapt resource value: 0x1
+			public const int CustomFonts_customFont = 1;
+			
+			static Styleable()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Styleable()
+			{
+			}
+		}
+		
 		public partial class Transition
 		{
 			
-			// aapt resource value: 0x7F0D0000
-			public const int transition = 2131558400;
+			// aapt resource value: 0x7F0F0000
+			public const int transition = 2131689472;
 			
 			static Transition()
 			{

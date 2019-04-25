@@ -16,18 +16,18 @@ namespace Xamarin.Android.Tasks
 		private const string FormattingCharacter = @"\p{Cf}";
 		private const string ConnectingCharacter = @"\p{Pc}";
 		private const string DecimalDigitCharacter = @"\p{Nd}";
-		private const string CombiningCharacter = @"\p{Mn}\p{Mc}";
-		private const string LetterCharacter = @"\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}";
+		private const string CombiningCharacter = @"\p{Mn},\p{Mc}";
+		private const string LetterCharacter = @"\p{Lu},\p{Ll},\p{Lt},\p{Lm},\p{Lo},\p{Nl}";
 
-		private const string IdentifierPartCharacter = LetterCharacter +
-			DecimalDigitCharacter +
-			ConnectingCharacter +
-			CombiningCharacter +
+		private const string IdentifierPartCharacter = LetterCharacter + "," +
+			DecimalDigitCharacter + "," +
+			ConnectingCharacter + "," +
+			CombiningCharacter + "," +
 			FormattingCharacter;
 
-		private const string IdentifierStartCharacter = "(" + LetterCharacter + "_)";
+		private const string IdentifierStartCharacter = "(" + LetterCharacter + ",_)";
 
-		private const string Identifier = IdentifierStartCharacter + "(" + IdentifierPartCharacter + ")";
+		private const string Identifier = IdentifierStartCharacter + "((" + IdentifierPartCharacter + ")+)*";
 
 		//https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/lexical-structure#keywords
 		private static readonly HashSet<string> _keywords = new HashSet<string> () {
