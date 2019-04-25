@@ -262,7 +262,7 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		static string GetNdkToolchainPrefix (AndroidTargetArch arch, bool forCompiler)
+		public static string GetNdkToolchainPrefix (AndroidTargetArch arch, bool forCompiler)
 		{
 			if (!UsingClangNDK)
 				return NdkUtilOld.GetNdkToolchainPrefix (arch);
