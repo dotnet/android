@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		public bool DebugBuild { get; set; }
 
 		[Required]
-		public string AndroidNdkDirectory { get; set; }
+		public string AndroidSdkBuildToolsPath { get; set; }
 
 		public override bool Execute ()
 		{
@@ -210,8 +210,9 @@ namespace Xamarin.Android.Tasks
 					linkerArgs.Add (QuoteFileName (file));
 				}
 
+				string ld = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsPath, $"{NdkUtil.GetNdkToolchainPrefix (arch, false)}ld");
 				yield return new Config {
-					LinkerPath = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", XABuildConfig.ArchAPILevels [abi]),
+					LinkerPath = Path.Combine (AndroidSdkBuildToolsPath, ld),
 					LinkerOptions = String.Join (" ", linkerArgs),
 					OutputSharedLibrary = inputs.OutputSharedLibrary,
 				};

@@ -2912,7 +2912,7 @@ because xbuild doesn't support framework reference assemblies.
       ObjectFiles="@(_NativeAssemblyTarget)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
