@@ -2262,6 +2262,10 @@ because xbuild doesn't support framework reference assemblies.
     ItemNamePattern="$(_NativeAssemblySourceDir)typemap.mj.@abi@.s" >
       <Output TaskParameter="OutputItems" ItemName="_TypeMapAssemblySource" />
   </PrepareAbiItems>
+
+  <ItemGroup>
+    <FileWrites Include="@(_TypeMapAssemblySource)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_GenerateJavaStubs"
