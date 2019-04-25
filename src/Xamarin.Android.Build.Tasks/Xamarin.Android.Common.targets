@@ -2402,7 +2402,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp;@(_EnvironmentAssemblySource)">
+  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2437,6 +2437,7 @@ because xbuild doesn't support framework reference assemblies.
   />
   <ItemGroup>
     <FileWrites Include="$(_AndroidBuildIdFile)" />
+    <FileWrites Include="$(_EnvironmentAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -2895,6 +2896,9 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
   />
+  <ItemGroup>
+    <FileWrites Include="@(_NativeAssemblyTarget)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
