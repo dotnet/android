@@ -200,6 +200,13 @@
     </_RunTestTarget>
   </ItemGroup>
   <Target Name="RunAllTests">
+    <MSBuild
+         ContinueOnError="ErrorAndContinue"
+         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
+         RunEachTargetSeparately="True"
+         Targets="@(_RunTestTarget)"
+         Properties="%(_RunTestTarget.Properties)"
+     />
     <RunParallelTargets
         ContinueOnError="ErrorAndContinue"
         Configuration="$(Configuration)"
@@ -208,12 +215,5 @@
         ProjectFile="$(MSBuildThisFileDirectory)RunTests.targets"
         Targets="@(_RunParallelTestTarget)"
     />
-    <MSBuild
-         ContinueOnError="ErrorAndContinue"
-         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
-         RunEachTargetSeparately="True"
-         Targets="@(_RunTestTarget)"
-         Properties="%(_RunTestTarget.Properties)"
-     />
    </Target>
 </Project>

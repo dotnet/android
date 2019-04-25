@@ -243,8 +243,8 @@ APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
 endif
 
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP)
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP)
 
 run-performance-tests:
 	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests
