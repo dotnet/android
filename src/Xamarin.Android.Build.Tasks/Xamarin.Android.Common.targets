@@ -1267,6 +1267,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
+		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
