@@ -638,6 +638,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_BeforeIncrementalClean Condition=" '$(AndroidApplication)' == 'True' ">
     _PrepareAssemblies;
     _CompileDex;
+    _CreateApplicationSharedLibraries;
     $(_AfterCompileDex);
     _AddFilesToFileWrites;
   </_BeforeIncrementalClean>
@@ -2322,6 +2323,9 @@ because xbuild doesn't support framework reference assemblies.
     AlwaysCreate="True"
   />
   <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="@(_TypeMapAssemblySource)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ReadAndroidManifest"
@@ -2397,7 +2401,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="$(MSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp;@(_EnvironmentAssemblySource)">
+  Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2432,6 +2436,7 @@ because xbuild doesn't support framework reference assemblies.
   />
   <ItemGroup>
     <FileWrites Include="$(_AndroidBuildIdFile)" />
+    <FileWrites Include="@(_EnvironmentAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -2890,6 +2895,9 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
   />
+  <ItemGroup>
+    <FileWrites Include="@(_NativeAssemblyTarget)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
@@ -2937,7 +2945,6 @@ because xbuild doesn't support framework reference assemblies.
 		_PrepareAssemblies;
 		_ResolveSatellitePaths;
 		_CheckApkPerAbiFlag;
-		_CreateApplicationSharedLibraries;
 		;_LintChecks
 		;_IncludeNativeSystemLibraries
 		;_CheckGoogleSdkRequirements
