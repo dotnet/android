@@ -193,6 +193,8 @@
     <MonoProfileAssembly Include="System.Xml.Serialization.dll" />
   </ItemGroup>
   <ItemGroup>
+    <MonoTestAssembly Include="BinarySerializationOverVersionsTest.dll">
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_corlib_test.dll">
     </MonoTestAssembly>
     <MonoTestSatelliteAssembly Include="es-ES/monodroid_corlib_test.resources.dll" />
@@ -247,6 +249,12 @@
     <MonoTestAssembly Include="monodroid_System.Json_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Net.Http.FunctionalTests_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="monodroid_System.Net.Http.UnitTests_xunit-test.dll">
+      <TestType>xunit</TestType>
+    </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Net.Http_test.dll">
     </MonoTestAssembly>
     <MonoTestAssembly Include="monodroid_System.Numerics_test.dll">
@@ -290,9 +298,17 @@
     <MonoTestAssembly Include="monodroid_System_xunit-test.dll">
       <TestType>xunit</TestType>
     </MonoTestAssembly>
+    <MonoTestAssembly Include="System.Reflection.TestModule.dll">
+    </MonoTestAssembly>
+    <MonoTestAssembly Include="TestLoadAssembly.dll">
+    </MonoTestAssembly>
   </ItemGroup>
   <!-- Manual fixups -->
   <ItemGroup>
+    <!-- Mono.CSharp testsuite dynamically loads Microsoft.CSharp -->
+    <MonoTestAssembly Include="Microsoft.CSharp.dll">
+      <TestType>reference</TestType>
+    </MonoTestAssembly>
     <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
     <MonoTestAssembly Include="System.Runtime.CompilerServices.Unsafe.dll">
       <TestType>reference</TestType>

@@ -298,7 +298,7 @@
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
       <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" Condition="Exists('@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
       <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
