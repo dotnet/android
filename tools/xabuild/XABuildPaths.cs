@@ -167,9 +167,8 @@ namespace Xamarin.Android.Build
 					if (!Directory.Exists (xbuildDir))
 						continue;
 					systemTargetDirs.Add (xbuildDir);
-					foundSomeXbuldDirs = true;
 				}
-				if (!systemTargetDirs.Count == 0)
+				if (systemTargetDirs.Count == 0)
 					throw new InvalidOperationException ("Unable to locate xbuild directory");
 				systemTargetDirs.Add (Path.Combine (mono, "xbuild", "Microsoft"));
 				SystemTargetsDirectories = systemTargetDirs.ToArray ();
