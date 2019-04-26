@@ -48,8 +48,9 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (OutputNamespace))
 				opts.OutputNS = OutputNamespace;
 
-			foreach (var file in References)
+			foreach (var file in References) {
 				opts.AddReference (file.ItemSpec);
+			}
 			foreach (var file in SourceAidlFiles)
 				opts.AddFile (file.ItemSpec);
 

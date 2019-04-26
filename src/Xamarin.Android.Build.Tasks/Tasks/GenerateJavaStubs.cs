@@ -72,6 +72,8 @@ namespace Xamarin.Android.Tasks
 		
 		public string ApplicationJavaClass { get; set; }
 
+		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
+
 		public override bool Execute ()
 		{
 			try {
@@ -110,14 +112,33 @@ namespace Xamarin.Android.Tasks
 
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
+				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
+					continue;
+				}
 				res.Load (assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code
-			var assemblies = ResolvedUserAssemblies.Select (p => p.ItemSpec).ToList ();
-			var fxAdditions = MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)
-				.Where (a => assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (a)));
-			assemblies = assemblies.Concat (fxAdditions).ToList ();
+			List<string> assemblies = new List<string> ();
+			foreach (var asm in ResolvedUserAssemblies) {
+				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
+					continue;
+				}
+				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
+				assemblies.Add (asm.ItemSpec);
+			}
+			foreach (var asm in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
+				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
+					continue;
+				}
+				if (!assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (asm.ItemSpec)))
+					continue;
+				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
+				assemblies.Add (asm.ItemSpec);
+			}
 
 			// Step 1 - Find all the JLO types
 			var scanner = new JavaTypeScanner (this.CreateTaskLogger ()) {

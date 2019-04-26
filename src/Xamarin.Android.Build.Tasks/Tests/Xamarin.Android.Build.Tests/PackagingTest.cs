@@ -256,6 +256,72 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
+		{
+			var packages = new List<Package> () {
+				KnownPackages.Android_Arch_Core_Common_26_1_0,
+				KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
+				KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
+				KnownPackages.AndroidSupportV4_27_0_2_1,
+				KnownPackages.SupportCompat_27_0_2_1,
+				KnownPackages.SupportCoreUI_27_0_2_1,
+				KnownPackages.SupportCoreUtils_27_0_2_1,
+				KnownPackages.SupportDesign_27_0_2_1,
+				KnownPackages.SupportFragment_27_0_2_1,
+				KnownPackages.SupportMediaCompat_27_0_2_1,
+				KnownPackages.SupportV7AppCompat_27_0_2_1,
+				KnownPackages.SupportV7CardView_27_0_2_1,
+				KnownPackages.SupportV7MediaRouter_27_0_2_1,
+				KnownPackages.SupportV7RecyclerView_27_0_2_1,
+				KnownPackages.VectorDrawable_27_0_2_1,
+				new Package () { Id = "Xamarin.Android.Support.Annotations", Version = "27.0.2.1" },
+				new Package () { Id = "Xamarin.Android.Support.Transition", Version = "27.0.2.1" },
+				new Package () { Id = "Xamarin.Android.Support.v7.Palette", Version = "27.0.2.1" },
+				new Package () { Id = "Xamarin.Android.Support.Animated.Vector.Drawable", Version = "27.0.2.1" },
+			};
+
+			string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
+	<AndroidSkipAddToPackage>True</AndroidSkipAddToPackage>
+	<AndroidSkipJavaStubGeneration>True</AndroidSkipJavaStubGeneration>
+	<AndroidSkipResourceExtraction>True</AndroidSkipResourceExtraction>
+</AndroidCustomMetaDataForReferences>";
+			var proj = new XamarinAndroidApplicationProject () {
+				Imports = {
+					new Import (() => "CustomMetaData.target") {
+						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<ItemGroup>" +
+string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) +
+@"</ItemGroup>
+</Project>"
+					},
+				}
+			};
+			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
+			foreach (var package in packages)
+				proj.PackageReferences.Add (package);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				Assert.IsTrue (b.Build (proj), "build failed");
+				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+				var obj = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var lp = Path.Combine (obj, "lp");
+				Assert.IsTrue (Directory.Exists (lp), $"{lp} should exists.");
+				Assert.AreEqual (0, Directory.GetDirectories (lp).Length, $"{lp} should NOT contain any directories.");
+				var support = Path.Combine (obj, "android", "src", "android", "support");
+				Assert.IsFalse (Directory.Exists (support), $"{support} should NOT exists.");
+				Assert.IsFalse (File.Exists (lp), $" should NOT have been generated.");
+				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+					using (var zip = ZipHelper.OpenZip (apk)) {
+						foreach (var package in packages) {
+							Assert.IsFalse (zip.Any (e => e.FullName == $"assemblies/{package.Id}.dll"), $"APK file `{apk}` should not contain {package.Id}");
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";

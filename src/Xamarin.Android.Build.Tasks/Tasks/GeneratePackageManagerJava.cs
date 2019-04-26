@@ -80,12 +80,12 @@ namespace Xamarin.Android.Tasks
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
-			var assemblies = ResolvedUserAssemblies.Select (p => p.ItemSpec)
+			var assemblies = ResolvedUserAssemblies
 				.Concat (MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies))						
 				.ToList ();
 			var mainFileName = Path.GetFileName (MainAssembly);
 			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
-			assemblies = assemblies.Where (a => fileNameEq (a, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a, mainFileName))).ToList ();
+			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
 
 			using (var stream = new MemoryStream ())
 			using (var pkgmgr = new StreamWriter (stream)) {
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tasks
 
 				pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
 				foreach (var assembly in assemblies) {
-					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly) + "\",");
+					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
 				}
 
 				// Write the assembly dependencies

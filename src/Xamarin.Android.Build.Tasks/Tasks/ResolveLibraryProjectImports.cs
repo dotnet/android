@@ -60,14 +60,14 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] ResolvedResourceDirectoryStamps { get; set; }
 
 		internal const string OriginalFile = "OriginalFile";
-		internal const string SkipAndroidResourceProcessing = "SkipAndroidResourceProcessing";
+		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
 		static readonly string [] knownMetadata = new [] {
 			OriginalFile,
-			SkipAndroidResourceProcessing
+			AndroidSkipResourceProcessing
 		};
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap();
-		HashSet<string> assembliesToSkip;
+		HashSet<string> assembliesToSkipCaseFixup, assembliestoSkipExtraction;
 
 		public ResolveLibraryProjectImports ()
 		{
@@ -83,10 +83,14 @@ namespace Xamarin.Android.Tasks
 			var resolvedEnvironmentFiles      = new List<ITaskItem> ();
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
-			assembliesToSkip = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			assembliesToSkipCaseFixup = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			assembliestoSkipExtraction = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			bool metaDataValue;
 			foreach (var asm in Assemblies) {
-				if (string.Compare (asm.GetMetadata (SkipAndroidResourceProcessing), bool.TrueString, StringComparison.OrdinalIgnoreCase) == 0)
-					assembliesToSkip.Add (asm.ItemSpec);
+				if (bool.TryParse (asm.GetMetadata (AndroidSkipResourceProcessing), out metaDataValue) && metaDataValue)
+					assembliesToSkipCaseFixup.Add (asm.ItemSpec);
+				if (bool.TryParse (asm.GetMetadata (GetAdditionalResourcesFromAssemblies.AndroidSkipResourceExtraction), out metaDataValue) && metaDataValue)
+					assembliestoSkipExtraction.Add (asm.ItemSpec);
 			}
 
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
@@ -192,6 +196,10 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
 					continue;
 				}
+				if (assembliestoSkipExtraction.Contains (assemblyPath)) {
+					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
+					continue;
+				}
 				string assemblyFileName = Path.GetFileNameWithoutExtension (assemblyPath);
 				string assemblyIdentName = assemblyFileName;
 				if (UseShortFileNames) {
@@ -219,8 +227,8 @@ namespace Xamarin.Android.Tasks
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
 						});
-						if (assembliesToSkip.Contains (assemblyFileName))
-							taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
+						if (assembliesToSkipCaseFixup.Contains (assemblyFileName))
+							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 						resolvedResourceDirectories.Add (taskItem);
 					}
 					if (Directory.Exists (assetsDir))
@@ -323,8 +331,8 @@ namespace Xamarin.Android.Tasks
 							var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
 							});
-							if (assembliesToSkip.Contains (assemblyFileName))
-								taskItem.SetMetadata (SkipAndroidResourceProcessing, "True");
+							if (assembliesToSkipCaseFixup.Contains (assemblyFileName))
+								taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 							resolvedResourceDirectories.Add (taskItem);
 						}
 						if (Directory.Exists (assetsDir))
@@ -382,7 +390,7 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir))
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
-							{ SkipAndroidResourceProcessing, "True" },
+							{ AndroidSkipResourceProcessing, "True" },
 						}));
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem  (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
@@ -427,7 +435,7 @@ namespace Xamarin.Android.Tasks
 				if (Directory.Exists (resDir))
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },
-						{ SkipAndroidResourceProcessing, "True" },
+						{ AndroidSkipResourceProcessing, "True" },
 					}));
 				if (Directory.Exists (assetsDir))
 					resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
