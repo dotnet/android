@@ -1987,6 +1987,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyIntermediateAssemblies"
+	Condition=" '$(AndroidLinkMode)' != 'None' "
 	Inputs="@(ResolvedAssemblies);@(_AndroidResolvedSatellitePaths)"
 	Outputs="$(_AndroidStampDirectory)_CopyIntermediateAssemblies.stamp"
 	DependsOnTargets="_ResolveAssemblies;_ResolveSatellitePaths;_CreatePackageWorkspace;_CopyConfigFiles">
@@ -2056,6 +2057,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyPdbFiles"
+		Condition=" '$(AndroidLinkMode)' != 'None' "
 		Inputs="@(_ResolvedPortablePdbFiles)"
 		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
 		DependsOnTargets="_ConvertPdbFiles">
@@ -2070,6 +2072,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CopyMdbFiles"
+		Condition=" '$(AndroidLinkMode)' != 'None' "
 		Inputs="@(_ResolvedMdbFiles)"
 		Outputs="$(_AndroidStampDirectory)_CopyMdbFiles.stamp"
 		DependsOnTargets="_CollectMdbFiles">
