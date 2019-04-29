@@ -487,19 +487,23 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
 	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" Condition=" !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') " />
 </Target>
+
+<ItemGroup>
+	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
+</ItemGroup>
 	
 <Target Name="_AddAndroidCustomMetaData">
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferencePath)"
-      MetaDataItems="@(_AndroidAssemblySkipCases)"
+      MetaDataItems="@(AndroidCustomMetaDataForReferences)"
     >
     <Output TaskParameter="Output" ItemName="_ReferencePath" />
   </AppendCustomMetadataToItemGroup>
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferenceDependencyPaths)"
-      MetaDataItems="@(_AndroidAssemblySkipCases)"
+      MetaDataItems="@(AndroidCustomMetaDataForReferences)"
     >
     <Output TaskParameter="Output" ItemName="_ReferenceDependencyPaths" />
   </AppendCustomMetadataToItemGroup>
@@ -2098,7 +2102,7 @@ because xbuild doesn't support framework reference assemblies.
     <_AssembliesToProcess Include="@(ResolvedAssemblies)" Condition=" '%(Filename)' != '' And '@(_JniFrameworkAssembly)' != '' " />
   </ItemGroup>
   <Exec
-       Command="MONO_PATH=&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot; &quot;$(MonoAndroidBinDirectory)\mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
+       Command="MONO_CONFIG=&quot;$(MonoAndroidBinDirectory)mono.config&quot; MONO_PATH=&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot; &quot;$(MonoAndroidBinDirectory)mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
   />
   <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
 </Target>
@@ -2912,7 +2916,7 @@ because xbuild doesn't support framework reference assemblies.
       ObjectFiles="@(_NativeAssemblyTarget)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />

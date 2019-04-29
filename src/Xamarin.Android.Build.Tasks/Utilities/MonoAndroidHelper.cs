@@ -487,11 +487,11 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		internal static IEnumerable<string> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
+		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
 		{		
 			return resolvedAssemblies
 				.Where (f => Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (f.ItemSpec), StringComparer.OrdinalIgnoreCase) >= 0)
-				.Select(p => p.ItemSpec);
+				.Select(p => p);
 		}
 #endif
 

@@ -52,10 +52,10 @@ namespace Xamarin.Android.Tasks
 		void FixupResources (Dictionary<string, string> acwMap)
 		{
 			foreach (var dir in ResourceDirectories) {
-				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.SkipAndroidResourceProcessing);
+				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing);
 				if (skipResourceProcessing != null && skipResourceProcessing.Equals ("true", StringComparison.OrdinalIgnoreCase)) {
 					var originalFile = dir.GetMetadata (ResolveLibraryProjectImports.OriginalFile);
-					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.SkipAndroidResourceProcessing}`, original file: `{originalFile}`...");
+					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.AndroidSkipResourceProcessing}`, original file: `{originalFile}`...");
 					continue;
 				}
 

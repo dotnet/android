@@ -38,6 +38,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "0 Warning(s)"), "Should have zero MSBuild warnings.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
+					"Should not get a warning from the <CompileNativeAssembly/> task.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationWithNuGetPackageConflicts ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -155,7 +169,7 @@ class MemTest {
 							//Processing: obj\Debug\res\layout\main.xml   10/29/2018 8:19:36 PM > 1/1/0001 12:00:00 AM
 							processed.Add (line);
 						} else if (line.IndexOf ("Skipping:", StringComparison.OrdinalIgnoreCase) >= 0) {
-							//Skipping: `obj\Debug\lp\5\jl\res` via `SkipAndroidResourceProcessing`, original file: `bin\TestDebug\temp\packages\Xamarin.Android.Support.Compat.27.0.2.1\lib\MonoAndroid81\Xamarin.Android.Support.Compat.dll`...
+							//Skipping: `obj\Debug\lp\5\jl\res` via `AndroidSkipResourceProcessing`, original file: `bin\TestDebug\temp\packages\Xamarin.Android.Support.Compat.27.0.2.1\lib\MonoAndroid81\Xamarin.Android.Support.Compat.dll`...
 							skipped.Add (line);
 						}
 					}
@@ -1013,6 +1027,24 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
+			}
+		}
+
+		[Test]
+		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		{
+			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.EnableProguard =
+				proj.IsRelease = true;
+			proj.LinkTool = linkTool;
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var className = "Landroid/support/multidex/MultiDexApplication;";
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
 			}
 		}
 

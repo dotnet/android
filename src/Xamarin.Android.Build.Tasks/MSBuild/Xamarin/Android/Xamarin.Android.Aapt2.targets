@@ -105,10 +105,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
-<Target Name="_CompileResources"
+<Target Name="_ConvertResourcesCases"
     Condition=" '$(_AndroidUseAapt2)' == 'True' "
     Inputs="@(AndroidResource)"
-    Outputs="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp"
+    Outputs="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
+    DependsOnTargets="$(_BeforeConvertResourcesCases)"
   >
   <MakeDir Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatArchivesDirectory)')" />
   <!-- Change cases so we support mixed case resource names -->
@@ -116,11 +117,20 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ContinueOnError="$(DesignTimeBuild)"
       AcwMapFile="$(_AcwMapFile)"
       AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
-      AndroidConversionFlagFile="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata"
+      AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
       CustomViewMapFile="$(_CustomViewMapFile)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate)"
       ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
+  <Touch Files="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp" AlwaysCreate="True" />
+</Target>
+
+<Target Name="_CompileResources"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' "
+    Inputs="@(AndroidResource)"
+    Outputs="$(_AndroidLibraryFlatArchivesDirectory)\_CompileResources.stamp"
+    DependsOnTargets="$(_BeforeCompileResources);_ConvertResourcesCases"
+  >
   <Aapt2Compile
       ContinueOnError="$(DesignTimeBuild)"
       ExplicitCrunch="$(AndroidExplicitCrunch)"
@@ -131,10 +141,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
   />
-  <Touch Files="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidLibraryFlatArchivesDirectory)\_CompileResources.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata" />
-    <FileWrites Include="$(_AndroidLibraryFlatArchivesDirectory)\compiled.stamp" />
   </ItemGroup>
 </Target>
 

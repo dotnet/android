@@ -66,6 +66,7 @@
   <Import Project="ProfileAssemblies.projitems" />
   <ItemGroup>
     <_BclAssembly Include="@(MonoProfileAssembly)" />
+    <_BclExcludeDebugSymbols  Include="System.Reflection.TestModule.dll" />
     <_BclExcludeDebugSymbols  Include="System.Runtime.CompilerServices.Unsafe.dll" />
     <_BclExcludeDebugSymbols  Include="System.Windows.dll" />
     <_BclExcludeDebugSymbols  Include="System.Xml.Serialization.dll" />
@@ -73,7 +74,7 @@
     <_BclTestAssemblyDestination  Include="@(MonoTestSatelliteAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     <_BclTestAssemblyDestination
         Include="@(MonoTestAssembly->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')"
-        Exclude="$(XAInstallPrefix)\..\..\bcl-tests\System.Runtime.CompilerServices.Unsafe.pdb"
+        Exclude="@(_BclExcludeDebugSymbols->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')"
     />
     <_BclTestAssemblyDestination  Include="@(MonoTestRunner->'$(XAInstallPrefix)\..\..\bcl-tests\%(Identity)')" />
     <_BclTestAssemblyDestination  Include="@(MonoTestRunner->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename).pdb')" />
@@ -296,9 +297,10 @@
       <_BclTestAssemblyReference Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == 'reference'" />
       <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" Condition="Exists('@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')')" />
       <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
+      <_BclTestAssemblySymbols Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" />
+      <_BclTestAssemblySymbols Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblySymbols)" Condition="Exists('%(Identity)')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
       <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />

@@ -25,8 +25,10 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: this is here to enable adb shell run-as
 			project.AndroidManifest = project.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			project.SetProperty (project.ReleaseProperties, "AndroidPackageFormat", "aab");
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86" };
+			project.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 
-			builder = CreateApkBuilder (Path.Combine ("temp", TestName));
+			builder = CreateApkBuilder (Path.Combine ("temp", TestName), cleanupOnDispose: true);
 			Assert.IsTrue (builder.Build (project), "Build should have succeeded.");
 
 			var projectDir = Path.Combine (Root, builder.ProjectDirectory);
@@ -34,10 +36,19 @@ namespace Xamarin.Android.Build.Tests
 			bin = Path.Combine (projectDir, project.OutputPath);
 		}
 
+		[TearDown]
+		public void TearDown ()
+		{
+			var status = TestContext.CurrentContext.Result.Outcome.Status;
+			if (status == NUnit.Framework.Interfaces.TestStatus.Failed && builder != null) {
+				builder.CleanupOnDispose = false;
+			}
+		}
+
 		[OneTimeTearDown]
 		public void OneTimeTearDown ()
 		{
-			builder.Dispose ();
+			builder?.Dispose ();
 		}
 
 		string [] ListArchiveContents (string archive)
@@ -69,6 +80,11 @@ namespace Xamarin.Android.Build.Tests
 				"lib/armeabi-v7a/libmono-native.so",
 				"lib/armeabi-v7a/libmonosgen-2.0.so",
 				"lib/armeabi-v7a/libxamarin-app.so",
+				"lib/x86/libmono-btls-shared.so",
+				"lib/x86/libmonodroid.so",
+				"lib/x86/libmono-native.so",
+				"lib/x86/libmonosgen-2.0.so",
+				"lib/x86/libxamarin-app.so",
 				"manifest/AndroidManifest.xml",
 				"res/drawable-hdpi-v4/icon.png",
 				"res/drawable-mdpi-v4/icon.png",
@@ -114,6 +130,11 @@ namespace Xamarin.Android.Build.Tests
 				"base/lib/armeabi-v7a/libmono-native.so",
 				"base/lib/armeabi-v7a/libmonosgen-2.0.so",
 				"base/lib/armeabi-v7a/libxamarin-app.so",
+				"base/lib/x86/libmono-btls-shared.so",
+				"base/lib/x86/libmonodroid.so",
+				"base/lib/x86/libmono-native.so",
+				"base/lib/x86/libmonosgen-2.0.so",
+				"base/lib/x86/libxamarin-app.so",
 				"base/manifest/AndroidManifest.xml",
 				"base/native.pb",
 				"base/res/drawable-hdpi-v4/icon.png",
