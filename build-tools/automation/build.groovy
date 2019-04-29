@@ -141,8 +141,9 @@ timestamps {
         }
 
         utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
-            // UNDONE: Does it make sense to execute this step for commercial builds?
-            sh "make package-oss CONFIGURATION=${env.BuildFlavor} V=1"
+            if (!isCommercial) {
+                sh "make package-oss CONFIGURATION=${env.BuildFlavor} V=1"
+            }
         }
 
         utils.stageWithTimeout('sign packages', 30, 'MINUTES', "${XADir}/bin/Build${env.BuildFlavor}", true) {    // Typically takes less than 5 minutes
