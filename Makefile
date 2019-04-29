@@ -217,8 +217,10 @@ prepare-external-git-dependencies:
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version
-	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests
-	$(MAKE) run-api-compatibility-tests
+	_r=0 ; \
+	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests || _r=$$? ; \
+	$(MAKE) run-api-compatibility-tests || _r=$$?; \
+	exit $$_r
 
 clean:
 	$(call MSBUILD_BINLOG,clean) /t:Clean Xamarin.Android.sln
