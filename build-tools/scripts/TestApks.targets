@@ -63,6 +63,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
+        WriteOutputAsMessage="True"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         EnvironmentVariables="ADB_TRACE=all"
@@ -72,6 +73,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="120000"
+        WriteOutputAsMessage="True"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) shell setprop debug.mono.log timing"
