@@ -1,11 +1,13 @@
 // This file is based on the Jenkins scripted pipeline (as opposed to the declarative pipeline) syntax
 // https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline
-def XADir = "xamarin-android"
+def XADir = 'xamarin-android'
+def packageDir = 'package'
 
 def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False"
 
 def isCommercial = false
 def commercialPath = ''
+def packagePath = ''
 
 def isPr = false                // Default to CI
 
@@ -48,6 +50,7 @@ timestamps {
         utils.stageWithTimeout('init', 30, 'SECONDS', XADir, true) {    // Typically takes less than a second
             isCommercial = env.IsCommercial == '1'
             commercialPath = "external/${env.CommercialDirectory}"
+            packagePath =  "${env.WORKSPACE}/${packageDir}"
 
             skipSigning = env.SkipSigning == '1'
             skipTest = env.SkipTest == '1'
@@ -61,6 +64,7 @@ timestamps {
 
             echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
+            echo "Workspace: ${env.WORKSPACE}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
@@ -69,6 +73,8 @@ timestamps {
             if (isCommercial) {
                 echo "Commercial path: ${commercialPath}"
             }
+
+            echo "Package path: ${packagePath}"
 
             echo "SkipSigning: ${skipSigning}"
             echo "SkipTest: ${skipTest}"
@@ -107,6 +113,11 @@ timestamps {
             // This is to assure that all tests start from the same state
             sh "killall -9 qemu-system-x86_64 || true"
             sh "rm -rf \$HOME/.android/avd/XamarinAndroidTestRunner.*"
+            if (fileExists(packagePath)) {
+                sh "rm -rf ${packagePath}"
+            }
+
+            sh "mkdir -p ${packagePath}"
         }
 
         utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer if any prereqs need to be provisioned
@@ -127,6 +138,10 @@ timestamps {
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+
+            if (isCommercial) {
+                sh "cp bin/${env.BuildFlavor}/bundle-*.zip ${packagePath}"
+            }
         }
 
         utils.stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
@@ -138,6 +153,11 @@ timestamps {
             } else {
                 sh "make create-installers CONFIGURATION=${env.BuildFlavor} V=1"
             }
+
+            if (isCommercial) {
+                sh "cp bin/Build*/xamarin.android*.pkg ${packagePath}"
+                sh "cp bin/Build*/Xamarin.Android*.vsix ${packagePath}"
+            }
         }
 
         utils.stageWithTimeout('package oss', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
@@ -146,7 +166,7 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('sign packages', 30, 'MINUTES', "${XADir}/bin/Build${env.BuildFlavor}", true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('sign packages', 30, 'MINUTES', packageDir, true) {    // Typically takes less than 5 minutes
             if (isPr || !isCommercial || skipSigning) {
                 echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. IsPr: ${isPr} / IsCommercial: ${isCommercial} / SkipSigning: ${skipSigning}"
                 return
@@ -177,29 +197,44 @@ timestamps {
         utils.stageWithTimeout('process build results', 10, 'MINUTES', XADir, true) {    // Typically takes less than a minute
             try {
                 echo "processing build status"
-                sh "make package-build-status CONFIGURATION=${env.BuildFlavor}"
+                sh "make package-build-status CONFIGURATION=${env.BuildFlavor} V=1"
+
+                if (isCommercial) {
+                    sh "cp xa-build-status-*.zip ${packagePath}"
+                }
             } catch (error) {
                 echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
             }
         }
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
+            def publishRootDir = ''
             def publishBuildFilePaths = "${XADir}/build-status*,${XADir}/xa-build-status*"
+            if (isCommercial) {
+                publishRootdir = packageDir
+                publishBuildFilePaths = "build-status*,xa-build-status*"
+            }
 
             if (isCommercial) {
-                publishBuildFilePaths = "${XADir}/bin/Build*/xamarin.android*.pkg,${XADir}/bin/Build*/Xamarin.Android*.vsix,${publishBuildFilePaths}";
+                publishBuildFilePaths = "xamarin.android*.pkg,Xamarin.Android*.vsix,${publishBuildFilePaths}";
             } else {
                 publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${publishBuildFilePaths}";
             }
 
             if (!isPr) {
-                publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
+                if (isCommercial) {
+                    publishBuildFilePaths = "${publishBuildFilePaths},bundle-*.zip"
+                } else {
+                    publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
+                }
             }
 
-            echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
-            if (commandStatus != 0) {
-                error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+            dir(publishRootDir) {
+                echo "publishBuildFilePaths: ${publishBuildFilePaths}"
+                def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
+                if (commandStatus != 0) {
+                    error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                }
             }
         }
 
