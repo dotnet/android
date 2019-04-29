@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -141,16 +142,36 @@ namespace Xamarin.Android.Build
 				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
 				NuGetRestoreTargets      = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet", "NuGet.targets");
 			} else {
-				const string vsVersion   = "15.0";
+				string[] vsVersions       = new [] {"Current", "15.0"};
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
 				string monoExternal      = IsMacOS ? "/Library/Frameworks/Mono.framework/External/" : "/usr/lib/mono";
 				MSBuildPath              = Path.Combine (mono, "msbuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "bin");
+
+				MSBuildBin = null;
+				foreach (string vsVersion in vsVersions) {
+					MSBuildBin = Path.Combine (MSBuildPath, vsVersion, "bin");
+					if (Directory.Exists (MSBuildBin))
+						break;
+				}
+				if (string.IsNullOrEmpty (MSBuildBin))
+					throw new InvalidOperationException ("Unable to locate MSBuild binaries directory");
+
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
 				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
 				SystemFrameworks         = Path.Combine (mono, "xbuild-frameworks");
-				SystemTargetsDirectories = new [] { Path.Combine (mono, "xbuild", vsVersion), Path.Combine (mono, "xbuild", "Microsoft") };
+
+				var systemTargetDirs = new List <string> ();
+				foreach (string vsVersion in vsVersions) {
+					string xbuildDir = Path.Combine (mono, "xbuild", vsVersion);
+					if (!Directory.Exists (xbuildDir))
+						continue;
+					systemTargetDirs.Add (xbuildDir);
+				}
+				if (systemTargetDirs.Count == 0)
+					throw new InvalidOperationException ("Unable to locate xbuild directory");
+				systemTargetDirs.Add (Path.Combine (mono, "xbuild", "Microsoft"));
+				SystemTargetsDirectories = systemTargetDirs.ToArray ();
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
 
 				string nuget = Path.Combine (mono, "xbuild", "Microsoft", "NuGet");
