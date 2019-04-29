@@ -123,6 +123,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavaDocImporter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
   </ItemGroup>
   <ItemGroup>

@@ -106,6 +106,9 @@
     <Reference Include="Xamarin.Build.AsyncTask">
       <HintPath>..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
     </Reference>
+    <Reference Include="pdb2mdb.exe">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\pdb2mdb.exe</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
@@ -271,84 +274,6 @@
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="Tasks\ConvertCustomView.cs" />
     <Compile Include="Tasks\ComputeHash.cs" />
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
-      <Link>pdb2mdb\BitAccess.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitSet.cs">
-      <Link>pdb2mdb\BitSet.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\CvInfo.cs">
-      <Link>pdb2mdb\CvInfo.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DataStream.cs">
-      <Link>pdb2mdb\DataStream.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiDbgHdr.cs">
-      <Link>pdb2mdb\DbiDbgHdr.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiHeader.cs">
-      <Link>pdb2mdb\DbiHeader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiModuleInfo.cs">
-      <Link>pdb2mdb\DbiModuleInfo.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiSecCon.cs">
-      <Link>pdb2mdb\DbiSecCon.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\Driver.cs">
-      <Link>pdb2mdb\Driver.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\IntHashTable.cs">
-      <Link>pdb2mdb\IntHashTable.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\Interfaces.cs">
-      <Link>pdb2mdb\Interfaces.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\MsfDirectory.cs">
-      <Link>pdb2mdb\MsfDirectory.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbConstant.cs">
-      <Link>pdb2mdb\PdbConstant.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbDebugException.cs">
-      <Link>pdb2mdb\PdbDebugException.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbException.cs">
-      <Link>pdb2mdb\PdbException.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFile.cs">
-      <Link>pdb2mdb\PdbFile.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFileHeader.cs">
-      <Link>pdb2mdb\PdbFileHeader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFunction.cs">
-      <Link>pdb2mdb\PdbFunction.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbLine.cs">
-      <Link>pdb2mdb\PdbLine.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbLines.cs">
-      <Link>pdb2mdb\PdbLines.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbReader.cs">
-      <Link>pdb2mdb\PdbReader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbScope.cs">
-      <Link>pdb2mdb\PdbScope.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbSlot.cs">
-      <Link>pdb2mdb\PdbSlot.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbSource.cs">
-      <Link>pdb2mdb\PdbSource.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbWriter.cs">
-      <Link>pdb2mdb\PdbWriter.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\SourceLocationProvider.cs">
-      <Link>pdb2mdb\SourceLocationProvider.cs</Link>
-    </Compile>
     <Compile Include="Tasks\Lint.cs" />
     <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
     <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
