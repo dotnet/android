@@ -12,6 +12,9 @@ using Mono.Tuner;
 
 namespace MonoDroid.Tuner
 {
+	/// <summary>
+	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
+	/// </summary>
 	public class FixAbstractMethodsStep : BaseStep
 	{
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
@@ -19,14 +22,7 @@ namespace MonoDroid.Tuner
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
-			if (Profile.IsSdkAssembly (assembly) || Profile.IsProductAssembly (assembly))
-				return;
-
-			bool changed = false;
-			foreach (var type in assembly.MainModule.Types) {
-				if (MightNeedFix (type))
-					changed |= FixAbstractMethods (type);
-			}
+			bool changed = FixAbstractMethods (assembly);
 
 			if (changed) {
 				Context.SafeReadSymbols (assembly);
@@ -38,6 +34,18 @@ namespace MonoDroid.Tuner
 				Annotations.SetPreserve (td, TypePreserve.Nothing);
 				Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
 			}
+		}
+
+		internal bool FixAbstractMethods (AssemblyDefinition assembly)
+		{
+			if (Profile.IsSdkAssembly (assembly) || Profile.IsProductAssembly (assembly))
+				return false;
+			bool changed = false;
+			foreach (var type in assembly.MainModule.Types) {
+				if (MightNeedFix (type))
+					changed |= FixAbstractMethods (type);
+			}
+			return changed;
 		}
 
 		bool MightNeedFix (TypeDefinition type)
@@ -158,7 +166,7 @@ namespace MonoDroid.Tuner
 				var iface    = ifaceInfo.InterfaceType;
 				var ifaceDef = iface.Resolve ();
 				if (ifaceDef == null) {
-					Context.LogMessage ("Unable to unresolve interface: {0}", iface.FullName);
+					LogMessage ("Unable to unresolve interface: {0}", iface.FullName);
 					continue;
 				}
 				if (ifaceDef.HasGenericParameters)
@@ -206,7 +214,7 @@ namespace MonoDroid.Tuner
 
 			type.Methods.Add (newMethod);
 
-			Context.LogMessage ("Added method: {0} to type: {1} scope: {2}", method, type.FullName, type.Scope);
+			LogMessage ("Added method: {0} to type: {1} scope: {2}", method, type.FullName, type.Scope);
 		}
 
 		MethodReference abstractMethodErrorConstructor;
@@ -216,19 +224,17 @@ namespace MonoDroid.Tuner
 				if (abstractMethodErrorConstructor != null)
 					return abstractMethodErrorConstructor;
 
-				foreach (var assembly in Context.GetAssemblies ()) {
-					if (assembly.Name.Name != "Mono.Android")
-						continue;
-
+				var assembly = GetMonoAndroidAssembly ();
+				if (assembly != null) { 
 					var errorException = assembly.MainModule.GetType ("Java.Lang.AbstractMethodError");
-					if (errorException == null)
-						break;
-
-					foreach (var method in errorException.Methods)
-						if (method.Name == ".ctor" && !method.HasParameters) {
-							abstractMethodErrorConstructor = method;
-							break;
+					if (errorException != null) {
+						foreach (var method in errorException.Methods) {
+							if (method.Name == ".ctor" && !method.HasParameters) {
+								abstractMethodErrorConstructor = method;
+								break;
+							}
 						}
+					}
 				}
 
 				if (abstractMethodErrorConstructor == null)
@@ -236,6 +242,20 @@ namespace MonoDroid.Tuner
 
 				return abstractMethodErrorConstructor;
 			}
+		}
+
+		public virtual void LogMessage (string message, params object [] values)
+		{
+			Context.LogMessage (message, values);
+		}
+
+		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
+		{
+			foreach (var assembly in Context.GetAssemblies ()) {
+				if (assembly.Name.Name == "Mono.Android")
+					return assembly;
+			}
+			return null;
 		}
 	}
 }

@@ -12,13 +12,15 @@ using System.IO;
 using MonoDroid.Tuner;
 using Mono.Linker;
 using ML = Mono.Linker;
-using Xamarin.Android.Tools;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 
 namespace Xamarin.Android.Tasks
 {
+	/// <summary>
+	/// This task is for Release builds, LinkMode=None now uses LinkAssembliesNoShrink
+	/// </summary>
 	public class LinkAssemblies : Task, ML.ILogger
 	{
 		[Required]
@@ -43,9 +45,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnableProguard { get; set; }
 		public string ProguardConfiguration { get; set; }
 		public bool DumpDependencies { get; set; }
-
-		public string OptionalDestinationDirectory { get; set; }
-		public string LinkOnlyNewerThan { get; set; }
 
 		public string HttpClientHandlerType { get; set; }
 
@@ -91,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			options.MainAssembly = res.GetAssembly (MainAssembly);
 			options.OutputDirectory = Path.GetFullPath (OutputDirectory);
 			options.LinkSdkOnly = string.Compare (LinkMode, "SdkOnly", true) == 0;
-			options.LinkNone = string.Compare (LinkMode, "None", true) == 0;
+			options.LinkNone = false;
 			options.Resolver = resolver;
 			options.LinkDescriptions = LinkDescriptions.Select (item => Path.GetFullPath (item.ItemSpec)).ToArray ();
 			options.I18nAssemblies = Linker.ParseI18nAssemblies (I18nAssemblies);
@@ -106,18 +105,10 @@ namespace Xamarin.Android.Tasks
 
 			if (string.Compare (UseSharedRuntime, "true", true) == 0)
 				skiplist.AddRange (Profile.SharedRuntimeAssemblies.Where (a => a.EndsWith (".dll")).Select (a => Path.GetFileNameWithoutExtension (a)));
-			if (!string.IsNullOrWhiteSpace (LinkOnlyNewerThan) && File.Exists (LinkOnlyNewerThan)) {
-				var newerThan = File.GetLastWriteTime (LinkOnlyNewerThan);
-				var skipOldOnes = ResolvedAssemblies.Where (a => File.GetLastWriteTime (a.ItemSpec) < newerThan);
-				foreach (var old in skipOldOnes)
-					Log.LogMessage (MBF.MessageImportance.Low, "  Skip linking unchanged file: " + old.ItemSpec);
-				skiplist = skipOldOnes.Select (a => Path.GetFileNameWithoutExtension (a.ItemSpec)).Concat (skiplist).ToList ();
-			}
 
 			// Add LinkSkip options
 			if (!string.IsNullOrWhiteSpace (LinkSkip))
-				foreach (var assembly in LinkSkip.Split (',', ';'))
-					skiplist.Add (assembly);
+				skiplist.AddRange (LinkSkip.Split (',', ';'));
 
 			options.SkippedAssemblies = skiplist;
 
@@ -129,41 +120,15 @@ namespace Xamarin.Android.Tasks
 				LinkContext link_context;
 				Linker.Process (options, this, out link_context);
 
-				var copydst = OptionalDestinationDirectory ?? OutputDirectory;
-
 				foreach (var assembly in ResolvedAssemblies) {
 					var copysrc = assembly.ItemSpec;
 					var filename = Path.GetFileName (assembly.ItemSpec);
-					var assemblyDestination = Path.Combine (copydst, filename);
+					var assemblyDestination = Path.Combine (OutputDirectory, filename);
 
-					if (options.LinkNone) {
-						if (skiplist.Any (s => Path.GetFileNameWithoutExtension (filename) == s)) {
-							// For skipped assemblies, skip if there is existing file in the destination.
-							// We cannot just copy the linker output from *current* run output, because
-							// it always renew the assemblies, in *different* binary values, whereas
-							// the dll in the OptionalDestinationDirectory must retain old and unchanged.
-							if (File.Exists (assemblyDestination))
-								continue;
-						} else {
-							// Prefer fixup assemblies if exists, otherwise just copy the original.
-							copysrc = Path.Combine (OutputDirectory, filename);
-							copysrc = File.Exists (copysrc) ? copysrc : assembly.ItemSpec;
-						}
-					}
-					else if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
+					if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
 						continue;
 
-					MonoAndroidHelper.CopyIfChanged (copysrc, assemblyDestination);
-					var mdb = assembly.ItemSpec + ".mdb";
-					if (File.Exists (mdb)) {
-						var mdbDestination = assemblyDestination + ".mdb";
-						MonoAndroidHelper.CopyIfChanged (mdb, mdbDestination);
-					}
-					var pdb = Path.ChangeExtension (copysrc, "pdb");
-					if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
-						var pdbDestination = Path.ChangeExtension (assemblyDestination, "pdb");
-						MonoAndroidHelper.CopyIfChanged (pdb, pdbDestination);
-					}
+					MonoAndroidHelper.CopyAssemblyAndSymbols (copysrc, assemblyDestination);
 				}
 			} catch (ResolutionException ex) {
 				Diagnostic.Error (2006, ex, "Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.", ex.Member, ex.Member.Module.Assembly, ex.Scope);
