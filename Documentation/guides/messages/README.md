@@ -41,7 +41,7 @@
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above.
 + [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
-+ [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties.
++ [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` of name `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
