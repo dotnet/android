@@ -146,7 +146,7 @@ timestamps {
                     sh('./provisionator.sh profile.csx -v')
                 }
 
-                utils.stageWithTimeout('build tasks', 30, 'MINUTES', '', true) {
+                utils.stageWithTimeout('build tasks', 30, 'MINUTES', env.WORKSPACE, true) {
                     withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN')]) {
                         def redirect = getBuildTasksRedirect()
                         sh "curl -o Xamarin.Build.Tasks.nupkg \"${redirect}\""
