@@ -11,6 +11,9 @@ def packagePath = ''
 
 def isPr = false                // Default to CI
 
+def branch = ''
+def commit = ''
+
 def skipSigning = false
 def skipTest = false
 
@@ -21,6 +24,21 @@ def buildTarget = 'jenkins'
 def utils = null
 
 prLabels = null  // Globally defined "static" list accessible within the hasPrLabel function
+
+@NonCPS
+def getBuildTasksRedirect() {
+    def connection = "https://dl.internalx.com/build-tools/latest/Xamarin.Build.Tasks.nupkg".toURL().openConnection()
+    connection.instanceFollowRedirects = false
+    // should be in scope at the time of this call (called within a withCredentials block)
+    connection.setRequestProperty("Authorization", "token ${env.GITHUB_AUTH_TOKEN}")
+    def response = connection.responseCode
+    connection.disconnect()
+    if (response == 302) {
+        return connection.getHeaderField("Location")
+    } else {
+        throw new Exception("DL link failed ${response}: ${content}")
+    }
+}
 
 timestamps {
     node("${env.BotLabel}") {
@@ -57,8 +75,8 @@ timestamps {
 
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
-            def branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
-            def commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
+            branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
+            commit = isPr ? env.ghprbActualCommit : scmVars.GIT_COMMIT
 
             def buildType = isPr ? 'PR' : 'CI'
 
@@ -126,6 +144,17 @@ timestamps {
 
                 utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialPath}/build-tools/provisionator", true) {
                     sh('./provisionator.sh profile.csx -v')
+                }
+
+                utils.stageWithTimeout('build tasks', 30, 'MINUTES', '', true) {
+                    withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN')]) {
+                        def redirect = getBuildTasksRedirect()
+                        sh "curl -o Xamarin.Build.Tasks.nupkg \"${redirect}\""
+                        dir("BuildTasks") {
+                            deleteDir()
+                            sh "unzip ../Xamarin.Build.Tasks.nupkg"
+                        }
+                    }
                 }
             }
 
@@ -234,6 +263,31 @@ timestamps {
                 def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
                 if (commandStatus != 0) {
                     error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                }
+            }
+
+            if (isCommercial) {
+                utils.stageWithTimeout('report artifacts', 30, 'MINUTES', 'BuildTasks', true) {
+                    def path = "${env.JOB_NAME}-${env.BUILD_NUMBER}/${branch}/${commit}"
+                    withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN'), usernamePassword(credentialsId: "${env.UserNamePasswordCredentialId}", passwordVariable: 'STORAGE_PASSWORD', usernameVariable: 'STORAGE_ACCOUNT')]) {
+                        // Default search directory for Jenkins build artifacts is '${env.WORKSPACE}/package'
+                        sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/monodroid -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${path} -t ${env.GITHUB_AUTH_TOKEN}"
+                    }
+                }
+
+                utils.stageWithTimeout('sign artifacts', 30, 'MINUTES', '', true) {
+                    if (isPr) {
+                        echo "Skipping 'sign artifacts' stage. Artifact signing is only performed for commercial CI builds"
+                        return
+                    }
+
+                    def repoAndOwner = scmVars.GIT_URL.replace("git@github.com:", "").split("/").takeRight(2).join("/").replace(".git", "")
+
+                    // UNDONE: Log for test purposes
+                    echo "repoAndOwner: ${repoAndOwner}"
+
+                    // UNDONE: Verify that artifacts are found at the Azure storage location specified by GITHUB_CONTEXT
+                    httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${repoAndOwner}&COMMIT=${commit}&GITHUB_CONTEXT=${env.ContainerName}%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
                 }
             }
         }
