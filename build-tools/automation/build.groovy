@@ -240,7 +240,7 @@ timestamps {
             def publishRootDir = ''
             def publishBuildFilePaths = "${XADir}/build-status*,${XADir}/xa-build-status*"
             if (isCommercial) {
-                publishRootdir = packageDir
+                publishRootDir = packageDir
                 publishBuildFilePaths = "build-status*,xa-build-status*"
             }
 
