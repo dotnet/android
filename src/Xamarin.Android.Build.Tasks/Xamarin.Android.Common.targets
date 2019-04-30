@@ -2059,8 +2059,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CopyPdbFiles"
 		Condition=" '$(AndroidLinkMode)' != 'None' "
 		Inputs="@(_ResolvedPortablePdbFiles)"
-		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp"
-		DependsOnTargets="_ConvertPdbFiles">
+		Outputs="$(_AndroidStampDirectory)_CopyPdbFiles.stamp">
 	<ItemGroup>
 		<_CopyPdbFilesLinkerFiles Include="@(_ResolvedPortablePdbFiles->'$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)')" />
 	</ItemGroup>
@@ -2179,6 +2178,7 @@ because xbuild doesn't support framework reference assemblies.
 		;_ResolveSatellitePaths
 		;_CreatePackageWorkspace
 		;_CopyIntermediateAssemblies
+		;_ConvertPdbFiles
 		;_CopyPdbFiles
 		;_CopyMdbFiles
 		;_LinkAssemblies
@@ -2409,7 +2409,7 @@ because xbuild doesn't support framework reference assemblies.
   <GeneratePackageManagerJava
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
-    MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
+    MainAssembly="$(OutDir)$(TargetFileName)"
     OutputDirectory="$(IntermediateOutputPath)android\src\mono"
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
