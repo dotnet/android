@@ -165,10 +165,6 @@ timestamps {
             }
 
             sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-
-            if (isCommercial) {
-                sh "make prepare-image-dependencies CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD=msbuild MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-            }
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
