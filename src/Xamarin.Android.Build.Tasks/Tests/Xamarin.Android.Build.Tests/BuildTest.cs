@@ -3494,6 +3494,35 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			}
 		}
 
+		//NOTE: Referencing only Microsoft.Extensions.Http, surfaced a bug in <ResolveAssemblies/>
+		[Test]
+		public void MicrosoftExtensionsHttp ()
+		{
+			// The goal is to create a project with only this <PackageReference/>
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.Microsoft_Extensions_Http,
+				}
+			};
+			proj.References.Clear ();
+			proj.Sources.Clear ();
+			// We have to add a custom Target to remove Java.Interop and System.Runtime
+			proj.Imports.Add (new Import ("foo.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+	<Target Name=""_Foo"" BeforeTargets=""_ResolveAssemblies"">
+		<ItemGroup>
+			<_Remove Include=""@(_ReferencePath)"" Condition=""'%(FileName)' == 'Java.Interop' Or '%(FileName)' == 'System.Runtime'"" />
+			<_ReferencePath Remove=""@(_Remove)"" />
+		</ItemGroup>
+	</Target>
+</Project>"
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		[Test]
 		[TestCase ("armeabi;armeabi-v7a", TestName = "XA0115")]
 		[TestCase ("armeabi,armeabi-v7a", TestName = "XA0115Commas")]
