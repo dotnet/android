@@ -58,10 +58,6 @@ PrintTestItemGroup                    "external/mono/sdks/out/android-bcl/monodr
 cat <<EOF
   <!-- Manual fixups -->
   <ItemGroup>
-    <!-- Mono.CSharp testsuite dynamically loads Microsoft.CSharp -->
-    <MonoTestAssembly Include="Microsoft.CSharp.dll">
-      <TestType>reference</TestType>
-    </MonoTestAssembly>
     <!-- This is referenced by monodroid_corlib_xunit-test.dll -->
     <MonoTestAssembly Include="System.Runtime.CompilerServices.Unsafe.dll">
       <TestType>reference</TestType>
