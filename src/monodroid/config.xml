@@ -9,10 +9,6 @@
 	<dllmap wordsize="32" dll="libintl" target="/system/lib/libc.so" />
 	<dllmap wordsize="64" dll="libintl" target="/system/lib64/libc.so" />
 	<dllmap dll="MonoPosixHelper" target="libMonoPosixHelper.so" />
-	<dllmap dll="System.Native">
-		<dllentry os="osx" dll="__Internal" />
-		<dllentry os="linux" dll="libmono-native.so" />
-	</dllmap>
 	<dllmap wordsize="32" dll="i:msvcrt" target="/system/lib/libc.so" />
 	<dllmap wordsize="64" dll="i:msvcrt" target="/system/lib64/libc.so" />
 	<dllmap wordsize="32" dll="i:msvcrt.dll" target="/system/lib/libc.so" />

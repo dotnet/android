@@ -185,35 +185,11 @@
       <_RuntimeSource
           Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
       />
-      <_RuntimeSource
-          Condition=" 'host-Darwin' == '%(Identity)' "
-          Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)libmono-native-compat.%(NativeLibraryExtension)')"
-      />
-      <_RuntimeSource
-          Condition=" 'host-Darwin' != '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)' "
-          Include="@(_MonoRuntime->'$(MonoSourceFullPath)\sdks\out\android-%(Identity)-$(_MonoSdksConfiguration)\lib\%(NativeLibraryPrefix)libmono-native.%(NativeLibraryExtension)')"
-      />
       <_InstallRuntimeOutput
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).%(NativeLibraryExtension)')"
       />
-      <_InstallRuntimeOutput
-          Condition=" 'host-Darwin' == '%(Identity)' "
-          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\libmono-native.%(NativeLibraryExtension)')"
-      />
-       <_InstallRuntimeOutput
-          Condition=" 'host-Darwin' != '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)'"
-          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\libmono-native.%(NativeLibraryExtension)')"
-      />
       <_InstallUnstrippedRuntimeOutput
           Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\%(OutputRuntimeFilename).d.%(NativeLibraryExtension)')"
-      />
-      <_InstallUnstrippedRuntimeOutput
-          Condition=" 'host-Darwin' == '%(Identity)' "
-          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\libmono-native.d.%(NativeLibraryExtension)')"
-      />
-      <_InstallUnstrippedRuntimeOutput
-          Condition=" 'host-Darwin' != '%(Identity)' And 'host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)'"
-          Include="@(_MonoRuntime->'$(_MSBuildDir)\lib\%(Identity)\libmono-native.d.%(NativeLibraryExtension)')"
       />
       <_RuntimeBinarySource
           Condition=" 'host-$(HostOS)' == '%(Identity)' "
@@ -380,6 +356,18 @@
         Files="@(_BclTestAssemblySource->'$(XAInstallPrefix)\..\..\bcl-tests\%(Filename)%(Extension)')"
     />
     <ItemGroup>
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.*" />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\*.cs" />
+      <_BclTestContent      Remove="$(MonoSourceFullPath)\mcs\class\%(MonoTestAssembly.SourcePath)\Test\**\.gitattributes" />
+      <_BclTestContentDest  Include="@(_BclTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\Test\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <ItemGroup>
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\test.nupkg" />
+      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\test.nupkg" />
+      <_BclTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression\archive.zip" />
+      <_BclTestContentDest  Include="$(XAInstallPrefix)\..\..\bcl-tests\archive.zip" />
+    </ItemGroup>
+    <ItemGroup>
       <_ZipTestContent      Include="$(MonoSourceFullPath)\mcs\class\System.IO.Compression.FileSystem\foo\**\*.*" />
       <_ZipTestContentDest  Include="@(_ZipTestContent->'$(XAInstallPrefix)\..\..\bcl-tests\foo\%(RecursiveDir)%(Filename)%(Extension)')" />
       <_BclTestContent      Include="@(_ZipTestContent)" />
@@ -426,10 +414,6 @@
     <Exec
         Condition=" '$(Configuration)' != 'Debug' And '%(_MonoRuntime.CanStripNativeLibrary)' == 'True' "
         Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\%(_MonoRuntime.OutputRuntimeFilename).%(_MonoRuntime.NativeLibraryExtension)&quot;"
-    />
-    <Exec
-        Condition=" ('$(Configuration)' != 'Debug' Or '%(_MonoRuntime.NativeLibraryExtension)' == 'dll') And ('host-mxe-Win32' != '%(Identity)' And 'host-mxe-Win64' != '%(Identity)') "
-        Command="&quot;%(_MonoRuntime.Strip)&quot; %(_MonoRuntime.StripFlags) &quot;$(_MSBuildDir)\lib\%(_MonoRuntime.Identity)\libmono-native.%(_MonoRuntime.NativeLibraryExtension)&quot;"
     />
     <Touch Files="@(_InstallRuntimeOutput);@(_InstallUnstrippedRuntimeOutput)" />
 
