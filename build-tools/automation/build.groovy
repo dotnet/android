@@ -267,7 +267,7 @@ timestamps {
             }
 
             if (isCommercial) {
-                utils.stageWithTimeout('report artifacts', 30, 'MINUTES', 'BuildTasks', true) {
+                utils.stageWithTimeout('report artifacts', 30, 'MINUTES', 'BuildTasks', false) {
                     withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN'), usernamePassword(credentialsId: "${env.UserNamePasswordCredentialId}", passwordVariable: 'STORAGE_PASSWORD', usernameVariable: 'STORAGE_ACCOUNT')]) {
                         // Default search directory for Jenkins build artifacts is '${env.WORKSPACE}/package'
                         sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/${XADir} -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${env.StorageVirtualPath} -t ${env.GITHUB_AUTH_TOKEN}"
