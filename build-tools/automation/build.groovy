@@ -271,7 +271,7 @@ timestamps {
                     def path = "${env.JOB_NAME}-${env.BUILD_NUMBER}/${branch}/${commit}"
                     withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN'), usernamePassword(credentialsId: "${env.UserNamePasswordCredentialId}", passwordVariable: 'STORAGE_PASSWORD', usernameVariable: 'STORAGE_ACCOUNT')]) {
                         // Default search directory for Jenkins build artifacts is '${env.WORKSPACE}/package'
-                        sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/monodroid -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${path} -t ${env.GITHUB_AUTH_TOKEN}"
+                        sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/${XADir} -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${path} -t ${env.GITHUB_AUTH_TOKEN}"
                     }
                 }
 
