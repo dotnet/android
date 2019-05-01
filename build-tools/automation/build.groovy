@@ -195,7 +195,7 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('sign packages', 30, 'MINUTES', packageDir, true) {    // Typically takes less than 5 minutes
+        utils.stageWithTimeout('sign packages', 3, 'MINUTES', packageDir, false) {    // Typically takes less than 10 seconds
             if (isPr || !isCommercial || skipSigning) {
                 echo "Skipping 'sign packages' stage. Packages are only signed for commercial CI builds. IsPr: ${isPr} / IsCommercial: ${isCommercial} / SkipSigning: ${skipSigning}"
                 return
@@ -275,9 +275,9 @@ timestamps {
                     }
                 }
 
-                utils.stageWithTimeout('sign artifacts', 30, 'MINUTES', '', true) {
-                    if (isPr) {
-                        echo "Skipping 'sign artifacts' stage. Artifact signing is only performed for commercial CI builds"
+                utils.stageWithTimeout('sign artifacts', 30, 'MINUTES', '', false) {
+                    if (isPr || skipSigning) {
+                        echo "Skipping 'sign artifacts' stage. Artifact signing is only performed for commercial CI builds. SkipSigning: ${skipSigning}"
                         return
                     }
 
