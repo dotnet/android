@@ -77,7 +77,6 @@
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
-    <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.0.0</MonoRequiredMinimumVersion>
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">6.1.0</MonoRequiredMaximumVersion>
@@ -119,7 +118,6 @@
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
     <AndroidSdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidSdkDirectory)'))</AndroidSdkFullPath>
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
-    <LlvmSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LlvmSourceDirectory)'))</LlvmSourceFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>

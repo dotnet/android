@@ -18,10 +18,6 @@
     path = external/LibZipSharp
     url = https://github.com/grendello/LibZipSharp.git
     branch = master
-[submodule "external/llvm"]
-    path = external/llvm
-    url = https://github.com/mono/llvm.git
-    branch = release_60
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
