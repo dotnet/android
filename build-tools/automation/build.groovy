@@ -89,7 +89,7 @@ timestamps {
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
-            ehoc "Build number: ${env.BUILD_NUMBER}"
+            echo "Build number: ${env.BUILD_NUMBER}"
             echo "IsCommercial: ${isCommercial}"
 
             if (isCommercial) {
