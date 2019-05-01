@@ -10,12 +10,6 @@
       <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LibZipHash" />
     </GitCommitHash>
     <GitCommitHash
-        WorkingDirectory="$(LlvmSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="_LlvmHash" />
-    </GitCommitHash>
-    <GitCommitHash
         WorkingDirectory="$(MonoSourceFullPath)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)">
@@ -37,8 +31,8 @@
       DependsOnTargets="_GetHashes">
     <PropertyGroup>
       <XABundleVersion>v21</XABundleVersion>
-      <XABundleFileName Condition=" '$(HostOS)' != 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
-      <XABundleFileName Condition=" '$(HostOS)' == 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-Darwin-libzip=$(_LibZipHash),llvm=$(_LlvmHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName Condition=" '$(HostOS)' != 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-$(HostOS)-libzip=$(_LibZipHash),mono=$(_MonoHash).zip</XABundleFileName>
+      <XABundleFileName Condition=" '$(HostOS)' == 'Windows' AND '$(XABundleFileName)' == '' ">bundle-$(XABundleVersion)-h$(_VersionHash)-$(Configuration)-Darwin-libzip=$(_LibZipHash),mono=$(_MonoHash).zip</XABundleFileName>
     </PropertyGroup>
   </Target>
 </Project>

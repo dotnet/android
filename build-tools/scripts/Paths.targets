@@ -25,12 +25,6 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetLlvmSourceFullPath">
-    <Message
-        Text="$(LlvmSourceFullPath)"
-        Importance="High"
-    />
-  </Target>
   <Target Name="GetMonoSourceFullPath">
     <Message
         Text="$(MonoSourceFullPath)"

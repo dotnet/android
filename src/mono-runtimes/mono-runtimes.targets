@@ -45,10 +45,9 @@
     <_MonoSdksAndroidToolchainDir>$(AndroidToolchainDirectory)</_MonoSdksAndroidToolchainDir>
     <_MonoSdksAndroidToolchainCacheDir>$(AndroidToolchainCacheDirectory)</_MonoSdksAndroidToolchainCacheDir>
     <_MonoSdksAndroidToolchainPrefix>$(AndroidToolchainDirectory)\toolchains</_MonoSdksAndroidToolchainPrefix>
-    <_MonoSdksLlvmSrc>$(MSBuildThisFileDirectory)..\..\external\llvm</_MonoSdksLlvmSrc>
     <_MonoSdksMxePrefixDir>$(AndroidToolchainDirectory)</_MonoSdksMxePrefixDir>
     <_MonoSdksMxeSrc>$(MSBuildThisFileDirectory)..\..\external\mxe</_MonoSdksMxeSrc>
-    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=false IGNORE_PROVISION_ANDROID=true ANDROID_CMAKE_VERSION=$(AndroidCmakeVersionPath) ANDROID_NDK_VERSION=r$(AndroidNdkVersion) ANDROID_SDK_VERSION_armeabi-v7a=$(AndroidNdkApiLevel_ArmV7a) ANDROID_SDK_VERSION_arm64-v8a=$(AndroidNdkApiLevel_ArmV8a) ANDROID_SDK_VERSION_x86=$(AndroidNdkApiLevel_X86) ANDROID_SDK_VERSION_x86_64=$(AndroidNdkApiLevel_X86_64) ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; LLVM_SRC=&quot;$(_MonoSdksLlvmSrc)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
+    <_MonoSdksParameters>CONFIGURATION=$(_MonoSdksConfiguration) IGNORE_PROVISION_MXE=false IGNORE_PROVISION_ANDROID=true ANDROID_CMAKE_VERSION=$(AndroidCmakeVersionPath) ANDROID_NDK_VERSION=r$(AndroidNdkVersion) ANDROID_SDK_VERSION_armeabi-v7a=$(AndroidNdkApiLevel_ArmV7a) ANDROID_SDK_VERSION_arm64-v8a=$(AndroidNdkApiLevel_ArmV8a) ANDROID_SDK_VERSION_x86=$(AndroidNdkApiLevel_X86) ANDROID_SDK_VERSION_x86_64=$(AndroidNdkApiLevel_X86_64) ANDROID_TOOLCHAIN_DIR=&quot;$(_MonoSdksAndroidToolchainDir)&quot; ANDROID_TOOLCHAIN_CACHE_DIR=&quot;$(_MonoSdksAndroidToolchainCacheDir)&quot; ANDROID_TOOLCHAIN_PREFIX=&quot;$(_MonoSdksAndroidToolchainPrefix)&quot; MXE_PREFIX_DIR=&quot;$(_MonoSdksMxePrefixDir)&quot; MXE_SRC=&quot;$(_MonoSdksMxeSrc)&quot;</_MonoSdksParameters>
   </PropertyGroup>
   <PropertyGroup>
     <ForceBuildDependsOn>
@@ -137,13 +136,6 @@
       <Output TaskParameter="Time" PropertyName="_MonoCommitTime" />
     </GitCommitTime>
     <Touch Files="$(MonoSourceFullPath)\autogen.sh" Time="$(_MonoCommitTime)" />
-    <GitCommitTime
-        WorkingDirectory="$(LlvmSourceFullPath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Time" PropertyName="_LlvmCommitTime" />
-    </GitCommitTime>
-    <Touch Files="$(LlvmSourceFullPath)\CMakeLists.txt" Time="$(_LlvmCommitTime)" />
   </Target>
 
   <Target Name="_GetLlvmOutputItems">
@@ -629,13 +621,13 @@
 
   <Target Name="ForceBuild"
       DependsOnTargets="GetMonoBundleItems;$(ForceBuildDependsOn)"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
+      Inputs="$(MonoSourceFullPath)\autogen.sh"
       Outputs="@(BundleItem)">
   </Target>
 
   <Target Name="_BuildUnlessCached"
       DependsOnTargets="_SetAutogenShTimeToLastCommitTimestamp;GetMonoBundleItems"
-      Inputs="$(MonoSourceFullPath)\autogen.sh;$(LlvmSourceFullPath)\CMakeLists.txt"
+      Inputs="$(MonoSourceFullPath)\autogen.sh"
       Outputs="@(BundleItem)">
     <PropertyGroup>
       <_Now>$([System.DateTime]::Now.Ticks)</_Now>
