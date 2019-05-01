@@ -736,6 +736,16 @@ namespace Xamarin.ProjectTools
 				}
 			},
 		};
+		public static Package Microsoft_Extensions_Http = new Package {
+			Id = "Microsoft.Extensions.Http",
+			Version = "2.2.0",
+			TargetFramework = "netstandard2.0",
+			References = {
+				new BuildItem.Reference ("Microsoft.Extensions.Http") {
+					MetadataValues = "HintPath=..\\packages\\Microsoft.Extensions.Http.2.2.0\\lib\\netstandard2.0\\Microsoft.Extensions.Http.dll"
+				}
+			},
+		};
 	}
 }
 
