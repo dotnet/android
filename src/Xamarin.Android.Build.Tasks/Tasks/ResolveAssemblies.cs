@@ -88,8 +88,6 @@ namespace Xamarin.Android.Tasks
 
 			try {
 				foreach (var assembly in Assemblies) {
-					var assembly_path = Path.GetDirectoryName (assembly.ItemSpec);
-					resolver.AddSearchDirectory (assembly_path);
 					// Add each user assembly and all referenced assemblies (recursive)
 					string resolved_assembly = resolver.Resolve (assembly.ItemSpec);
 					if (MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
@@ -103,6 +101,7 @@ namespace Xamarin.Android.Tasks
 					}
 					LogDebugMessage ($"Adding {resolved_assembly} to topAssemblyReferences");
 					topAssemblyReferences.Add (resolved_assembly);
+					resolver.AddSearchDirectory (Path.GetDirectoryName (resolved_assembly));
 					var taskItem = new TaskItem (assembly) {
 						ItemSpec = Path.GetFullPath (resolved_assembly),
 					};
