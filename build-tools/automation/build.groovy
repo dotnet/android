@@ -8,6 +8,7 @@ def EXTRA_MSBUILD_ARGS="/p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:I
 def isCommercial = false
 def commercialPath = ''
 def packagePath = ''
+def storageVirtualPath = ''
 
 def isPr = false                // Default to CI
 
@@ -69,6 +70,7 @@ timestamps {
             isCommercial = env.IsCommercial == '1'
             commercialPath = "external/${env.CommercialDirectory}"
             packagePath =  "${env.WORKSPACE}/${packageDir}"
+            storageVirtualPath = env.StorageVirtualPath
 
             skipSigning = env.SkipSigning == '1'
             skipTest = env.SkipTest == '1'
@@ -82,17 +84,21 @@ timestamps {
 
             echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
             echo "Job: ${env.JOB_BASE_NAME}"
+            echo "Job name: ${env.JOB_NAME}"
             echo "Workspace: ${env.WORKSPACE}"
             echo "Branch: ${branch}"
             echo "Commit: ${commit}"
             echo "Build type: ${buildType}"
+            ehoc "Build number: ${env.BUILD_NUMBER}"
             echo "IsCommercial: ${isCommercial}"
 
             if (isCommercial) {
                 echo "Commercial path: ${commercialPath}"
+                storageVirtualPath = "${env.JOB_NAME}-${env.BUILD_NUMBER}/${branch}/${commit}"      // This needs to be unique for commercial builds since the path determines where artifacts.json used for GitHub statuses will be published
             }
 
             echo "Package path: ${packagePath}"
+            echo "Storage path: ${storageVirtualPath}"
 
             echo "SkipSigning: ${skipSigning}"
             echo "SkipTest: ${skipTest}"
@@ -260,7 +266,7 @@ timestamps {
 
             dir(publishRootDir) {
                 echo "publishBuildFilePaths: ${publishBuildFilePaths}"
-                def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
+                def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, storageVirtualPath, publishBuildFilePaths)
                 if (commandStatus != 0) {
                     error "publish packages to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
                 }
@@ -270,7 +276,7 @@ timestamps {
                 utils.stageWithTimeout('report artifacts', 30, 'MINUTES', 'BuildTasks', false) {
                     withCredentials([string(credentialsId: "${env.GitHubAuthTokenCredentialId}", variable: 'GITHUB_AUTH_TOKEN'), usernamePassword(credentialsId: "${env.UserNamePasswordCredentialId}", passwordVariable: 'STORAGE_PASSWORD', usernameVariable: 'STORAGE_ACCOUNT')]) {
                         // Default search directory for Jenkins build artifacts is '${env.WORKSPACE}/package'
-                        sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/${XADir} -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${env.StorageVirtualPath} -t ${env.GITHUB_AUTH_TOKEN}"
+                        sh "mono tools/BuildTasks/build-tasks.exe artifacts -s ${env.WORKSPACE}/${XADir} -a ${env.STORAGE_ACCOUNT} -c ${env.STORAGE_PASSWORD} -u ${env.ContainerName}/${storageVirtualPath} -t ${env.GITHUB_AUTH_TOKEN}"
                     }
                 }
 
@@ -337,7 +343,7 @@ timestamps {
             def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
-            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
+            def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, storageVirtualPath, publishTestFilePaths)
             if (commandStatus != 0) {
                 error "publish test error logs to Azure FAILED, status: ${commandStatus}"    // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
