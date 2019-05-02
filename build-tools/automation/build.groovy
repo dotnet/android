@@ -219,7 +219,7 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('build tests', 2, 'HOURS', XADir, true) {    // Typically takes less than 10 minutes
+        utils.stageWithTimeout('build tests', 30, 'MINUTES', XADir, true) {    // Typically takes less than 10 minutes
             if (skipTest) {
                 echo "Skipping 'build tests' stage. Clear the SkipTest variable setting to build and run tests"
                 return
