@@ -260,8 +260,13 @@ namespace Xamarin.Android.Net
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection;
 				if (UseProxy)
-					java_connection = java_url.OpenConnection (await GetJavaProxy (redirectState.NewUrl, cancellationToken));
+				{
+					var javaProxy = await GetJavaProxy (redirectState.NewUrl, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+					// When you use the parameter Java.Net.Proxy.NoProxy the system proxy is overriden. Leave the parameter out to respect the default settings.
+					java_connection = javaProxy == Java.Net.Proxy.NoProxy ? java_url.OpenConnection() : java_url.OpenConnection (javaProxy);
+				}
 				else
+					// In this case the consumer of this class has explicitly chosen to not use a proxy, so bypass the default proxy. The default value of UseProxy is true.
 					java_connection = java_url.OpenConnection (Java.Net.Proxy.NoProxy);
 
 				var httpsConnection = java_connection as HttpsURLConnection;
