@@ -12,6 +12,7 @@ def storageVirtualPath = ''
 
 def isPr = false                // Default to CI
 
+def gitRepo = ''
 def branch = ''
 def commit = ''
 
@@ -75,6 +76,8 @@ timestamps {
             skipSigning = env.SkipSigning == '1'
             skipTest = env.SkipTest == '1'
 
+            gitRepo = scmVars.GIT_URL.replace("git@github.com:", "").split("/").takeRight(2).join("/").replace(".git", "")     // Example result: xamarin/xamarin-android
+
             // Note: PR plugin environment variable settings available here: https://wiki.jenkins.io/display/JENKINS/GitHub+pull+request+builder+plugin
             isPr = env.ghprbActualCommit != null
             branch = isPr ? env.GIT_BRANCH : scmVars.GIT_BRANCH
@@ -82,7 +85,7 @@ timestamps {
 
             def buildType = isPr ? 'PR' : 'CI'
 
-            echo "Git repo: ${env.GitRepo}"     // Defined as an environment variable in the jenkins build definition
+            echo "Git repo: ${gitRepo}"         // Example: xamarin/xamarin-android
             echo "Job: ${env.JOB_BASE_NAME}"
             echo "Job name: ${env.JOB_NAME}"
             echo "Workspace: ${env.WORKSPACE}"
@@ -112,7 +115,7 @@ timestamps {
                 env.ghprbPullTitle = ''
                 env.ghprbPullLongDescription = ''
 
-                if (utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
+                if (utils.hasPrLabel(gitRepo, env.ghprbPullId, 'full-mono-integration-build')) {
                     hasPrLabelFullMonoIntegrationBuild = true
                     buildTarget = 'jenkins'
                 } else {
@@ -282,8 +285,6 @@ timestamps {
                         return
                     }
 
-                    def repoAndOwner = scmVars.GIT_URL.replace("git@github.com:", "").split("/").takeRight(2).join("/").replace(".git", "")     // Example result: xamarin/xamarin-android
-
                     // 'jenkins-internal artifacts' is the GitHub status context (name) used by build-tasks.exe
                     httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${repoAndOwner}&COMMIT=${commit}&GITHUB_CONTEXT=jenkins-internal%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
                 }
@@ -301,7 +302,7 @@ timestamps {
             def skipNunitTests = false
 
             if (isPr) {
-                def hasPrLabelRunTestsRelease = utils.hasPrLabel(env.GitRepo, env.ghprbPullId, 'run-tests-release')
+                def hasPrLabelRunTestsRelease = utils.hasPrLabel(gitRepo, env.ghprbPullId, 'run-tests-release')
                 skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
                 echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
             }
