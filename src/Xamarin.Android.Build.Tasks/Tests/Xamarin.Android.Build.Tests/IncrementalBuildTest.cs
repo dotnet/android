@@ -364,6 +364,7 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidLinkMode", "SdkOnly");
 			if (IsWindows) {
 				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
 				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");

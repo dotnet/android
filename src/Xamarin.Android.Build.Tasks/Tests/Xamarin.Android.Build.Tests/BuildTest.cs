@@ -1154,7 +1154,7 @@ namespace UnnamedProject {
 		[Test]
 		public void BuildAppCheckDebugSymbols ()
 		{
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,
 				ProjectName = "Library1",
@@ -1205,37 +1205,30 @@ namespace App1
 					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
 					var assetsPdb = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Library1.pdb");
 					var linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "Library1.pdb");
-					var linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "Library1.pdb");
 					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
 					Assert.IsFalse (
 						File.Exists (linkDst),
 						"Library1.pdb should not be copied to linkdst directory because it has no Abstrsact methods to fix up.");
-					Assert.IsTrue (
-						File.Exists (linkSrc),
-						"Library1.pdb must be copied to linksrc directory");
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+					var original = Path.Combine (outputPath, "Library1.pdb");
 					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
 						if (data == null)
 							data = File.ReadAllBytes (assetsPdb);
-						var filedata = File.ReadAllBytes (linkSrc);
-						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", linkSrc);
+						var filedata = File.ReadAllBytes (original);
+						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", original);
 					}
 					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.pdb");
-					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.pdb");
+					original = Path.Combine (outputPath, "App1.pdb");
 					Assert.IsTrue (
 						File.Exists (linkDst),
 						"App1.pdb should be copied to linkdst directory because it has Abstrsact methods to fix up.");
-					Assert.IsTrue (
-						File.Exists (linkSrc),
-						"App1.pdb must be copied to linksrc directory");
-					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should not differ.", linkSrc, linkDst);
+					FileAssert.AreEqual (original, linkDst, "{0} and {1} should not differ.", original, linkDst);
 					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.dll");
-					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.dll");
-					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should match.", linkSrc, linkDst);
-
+					original = Path.Combine (outputPath, "App1.dll");
+					FileAssert.AreEqual (original, linkDst, "{0} and {1} should match.", original, linkDst);
 				}
 			}
 		}
@@ -1244,6 +1237,7 @@ namespace App1
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidLinkMode", "SdkOnly");
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbAndPortablePdb")) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
@@ -1318,10 +1312,6 @@ namespace App1
 				Assert.IsTrue (
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.config")),
 					"UnnamedProject.dll.config was must be copied to Intermediate directory");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyConfigFiles"),
-					"the _CopyConfigFiles target should be skipped");
 			}
 		}
 
@@ -2766,6 +2756,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidLinkMode", "SdkOnly");
 			proj.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
 			proj.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
