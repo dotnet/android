@@ -282,13 +282,10 @@ timestamps {
                         return
                     }
 
-                    def repoAndOwner = scmVars.GIT_URL.replace("git@github.com:", "").split("/").takeRight(2).join("/").replace(".git", "")
+                    def repoAndOwner = scmVars.GIT_URL.replace("git@github.com:", "").split("/").takeRight(2).join("/").replace(".git", "")     // Example result: xamarin/xamarin-android
 
-                    // UNDONE: Log for test purposes
-                    echo "repoAndOwner: ${repoAndOwner}"
-
-                    // UNDONE: Verify that artifacts are found at the Azure storage location specified by GITHUB_CONTEXT
-                    httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${repoAndOwner}&COMMIT=${commit}&GITHUB_CONTEXT=${env.ContainerName}%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
+                    // 'jenkins-internal artifacts' is the GitHub status context (name) used by build-tasks.exe
+                    httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${repoAndOwner}&COMMIT=${commit}&GITHUB_CONTEXT=jenkins-internal%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
                 }
             }
         }
