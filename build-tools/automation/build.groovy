@@ -286,7 +286,7 @@ timestamps {
                     }
 
                     // 'jenkins-internal artifacts' is the GitHub status context (name) used by build-tasks.exe
-                    httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${repoAndOwner}&COMMIT=${commit}&GITHUB_CONTEXT=jenkins-internal%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
+                    httpRequest httpMode: 'POST', ignoreSslErrors: true, responseHandle: 'NONE', url: "http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real&REPO=${gitRepo}&COMMIT=${commit}&GITHUB_CONTEXT=jenkins-internal%20artifacts&FILES_TO_SIGN=%2E*%2Evsix"
                 }
             }
         }
