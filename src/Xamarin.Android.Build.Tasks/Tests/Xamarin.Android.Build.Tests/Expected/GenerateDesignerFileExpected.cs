@@ -27,8 +27,8 @@ namespace Foo.Foo
 		public partial class Animator
 		{
 			
-			// aapt resource value: 0x7F070002
-			public const int slide_in_bottom = 2131165186;
+			// aapt resource value: 0x7F010000
+			public const int slide_in_bottom = 2130771968;
 			
 			static Animator()
 			{
@@ -43,8 +43,8 @@ namespace Foo.Foo
 		public partial class Array
 		{
 			
-			// aapt resource value: 0x7F130002
-			public const int widths_array = 2131951618;
+			// aapt resource value: 0x7F020000
+			public const int widths_array = 2130837504;
 			
 			static Array()
 			{
@@ -72,8 +72,8 @@ namespace Foo.Foo
 		public partial class Dimension
 		{
 			
-			// aapt resource value: 0x7F120002
-			public const int main_text_item_size = 2131886082;
+			// aapt resource value: 0x7F030000
+			public const int main_text_item_size = 2130903040;
 			
 			static Dimension()
 			{
@@ -88,8 +88,8 @@ namespace Foo.Foo
 		public partial class Drawable
 		{
 			
-			// aapt resource value: 0x7F080002
-			public const int ic_menu_preferences = 2131230722;
+			// aapt resource value: 0x7F040000
+			public const int ic_menu_preferences = 2130968576;
 			
 			static Drawable()
 			{
@@ -104,8 +104,8 @@ namespace Foo.Foo
 		public partial class Font
 		{
 			
-			// aapt resource value: 0x7F090002
-			public const int arial = 2131296258;
+			// aapt resource value: 0x7F050000
+			public const int arial = 2131034112;
 			
 			static Font()
 			{
@@ -120,14 +120,20 @@ namespace Foo.Foo
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7F010004
-			public const int menu_settings = 2130771972;
+			// aapt resource value: 0x7F060000
+			public const int Føø_Bar = 2131099648;
 			
-			// aapt resource value: 0x7F010002
-			public const int seekBar = 2130771970;
+			// aapt resource value: 0x7F060001
+			public const int menu_settings = 2131099649;
 			
-			// aapt resource value: 0x7F010003
-			public const int seekbar = 2130771971;
+			// aapt resource value: 0x7F060002
+			public const int seekBar = 2131099650;
+			
+			// aapt resource value: 0x7F060003
+			public const int seekbar = 2131099651;
+			
+			// aapt resource value: 0x7F060004
+			public const int textview_withperiod = 2131099652;
 			
 			static Id()
 			{
@@ -142,8 +148,8 @@ namespace Foo.Foo
 		public partial class Layout
 		{
 			
-			// aapt resource value: 0x7F020002
-			public const int main = 2130837506;
+			// aapt resource value: 0x7F070000
+			public const int main = 2131165184;
 			
 			static Layout()
 			{
@@ -158,8 +164,8 @@ namespace Foo.Foo
 		public partial class Menu
 		{
 			
-			// aapt resource value: 0x7F100002
-			public const int Options = 2131755010;
+			// aapt resource value: 0x7F080000
+			public const int Options = 2131230720;
 			
 			static Menu()
 			{
@@ -174,8 +180,8 @@ namespace Foo.Foo
 		public partial class Mipmap
 		{
 			
-			// aapt resource value: 0x7F110002
-			public const int icon = 2131820546;
+			// aapt resource value: 0x7F090000
+			public const int icon = 2131296256;
 			
 			static Mipmap()
 			{
@@ -190,8 +196,8 @@ namespace Foo.Foo
 		public partial class Raw
 		{
 			
-			// aapt resource value: 0x7F030002
-			public const int foo = 2130903042;
+			// aapt resource value: 0x7F0B0000
+			public const int foo = 2131427328;
 			
 			static Raw()
 			{
@@ -206,8 +212,8 @@ namespace Foo.Foo
 		public partial class Plurals
 		{
 			
-			// aapt resource value: 0x7F060002
-			public const int num_locations_reported = 2131099650;
+			// aapt resource value: 0x7F0A0000
+			public const int num_locations_reported = 2131361792;
 			
 			static Plurals()
 			{
@@ -222,17 +228,17 @@ namespace Foo.Foo
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7F050003
-			public const int app_name = 2131034115;
+			// aapt resource value: 0x7F0C0000
+			public const int app_name = 2131492864;
 			
-			// aapt resource value: 0x7F050005
-			public const int foo = 2131034117;
+			// aapt resource value: 0x7F0C0001
+			public const int foo = 2131492865;
 			
-			// aapt resource value: 0x7F050002
-			public const int hello = 2131034114;
+			// aapt resource value: 0x7F0C0002
+			public const int hello = 2131492866;
 			
-			// aapt resource value: 0x7F050004
-			public const int menu_settings = 2131034116;
+			// aapt resource value: 0x7F0C0003
+			public const int menu_settings = 2131492867;
 			
 			static String()
 			{
@@ -247,8 +253,8 @@ namespace Foo.Foo
 		public partial class Transition
 		{
 			
-			// aapt resource value: 0x7F040002
-			public const int transition = 2130968578;
+			// aapt resource value: 0x7F0D0000
+			public const int transition = 2131558400;
 			
 			static Transition()
 			{

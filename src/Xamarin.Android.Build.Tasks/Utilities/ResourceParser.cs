@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,12 +44,12 @@ namespace Xamarin.Android.Tasks
 
 			if (map.TryGetValue (key, out mappedValue)) {
 				Log.LogDebugMessage ("  - Remapping resource: {0}.{1} -> {2}", type, name, mappedValue);
-				return mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1);
+				return ResourceIdentifier.CreateValidIdentifier (mappedValue.Substring (mappedValue.LastIndexOf (Path.DirectorySeparatorChar) + 1));
 			}
 
 			Log.LogDebugMessage ("  - Not remapping resource: {0}.{1}", type, name);
 
-			return name;
+			return ResourceIdentifier.CreateValidIdentifier (name);
 		}
 
 	}
