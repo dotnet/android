@@ -680,6 +680,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		UpdateAndroidResources;
 		$(ApplicationResolveReferencesDependsOn);
 	</ResolveReferencesDependsOn>
+	<DeferredBuildDependsOn>$(DeferredBuildDependsOn);UpdateAndroidResources</DeferredBuildDependsOn>
 </PropertyGroup>
 
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
@@ -1362,8 +1363,11 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_CreateManagedLibraryResourceArchive"> 
 </Target>
 
-<Target Name="UpdateAndroidResources" DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
-		
+<Target Name="UpdateAndroidResources" 
+    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
+    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources"
+/>
+
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
 	<Delete Files="$(_AndroidResgenFlagFile)"
