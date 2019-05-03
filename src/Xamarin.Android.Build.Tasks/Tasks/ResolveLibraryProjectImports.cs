@@ -246,7 +246,14 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ($"Refreshing {assemblyFileName}.dll");
 				Log.LogWarning ($"# jonp: loading path: {assemblyPath}");
 
-				var assembly = res.GetAssembly (assemblyPath);
+				AssemblyDefinition assembly;
+				try {
+					assembly = res.GetAssembly (assemblyPath);
+				}
+				catch (Exception e) {
+					Log.LogDebugMessage ($"# jonp: Unable to load assembly `{assemblyPath}`: {e.Message}");
+					continue;
+				}
 				foreach (var mod in assembly.Modules) {
 					// android environment files
 					foreach (var envtxt in mod.Resources
