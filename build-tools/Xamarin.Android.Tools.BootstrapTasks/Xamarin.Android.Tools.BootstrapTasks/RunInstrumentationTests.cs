@@ -14,10 +14,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		const                   string              TestResultsPathResult       = "INSTRUMENTATION_RESULT: nunit2-results-path=";
 		internal const          string              AdbRestartText              = "daemon not running; starting now at tcp:";
 		internal const          string              AdbCrashErrorText           = "The adb might have crashed and was restarted. ";
-		const                   int                 StateRunInstrumentation     = 0;
-		const                   int                 StateGetLogcat              = 1;
-		const                   int                 StateClearLogcat            = 2;
-		const                   int                 StatePullFiles              = 3;
+		const                   int                 StateKillAdbServer          = 0;
+		const                   int                 StateRunInstrumentation     = 1;
+		const                   int                 StateGetLogcat              = 2;
+		const                   int                 StateClearLogcat            = 3;
+		const                   int                 StatePullFiles              = 4;
 		const                   int                 MaxState                    = StatePullFiles;
 
 		public                  string              TestFixture                 { get; set; }
@@ -75,6 +76,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		protected override List <CommandInfo> GenerateCommandArguments ()
 		{
 			return new List <CommandInfo> {
+				new CommandInfo {
+					ArgumentsString = $"{AdbTarget} {AdbOptions} kill-server",
+				},
+
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} {AdbOptions} shell am instrument {GetRunInstrumentationArguments ()} -w \"{Component}\"",
 				},
