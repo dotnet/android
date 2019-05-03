@@ -256,6 +256,7 @@ namespace Foo.Foo
 		public partial class Styleable
 		{
 			
+			// aapt resource value: { 0x10100D2,0x7F030000 }
 			public static int[] CustomFonts = new int[] {
 					16842962,
 					2130903040};

@@ -8,6 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Xamarin.Android.Tasks
 {
@@ -19,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		bool app;
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
-		Dictionary<CodeArrayCreateExpression, CodeMemberField []> arrayMapping = new Dictionary<CodeArrayCreateExpression, CodeMemberField []> ();
+		Dictionary<CodeMemberField, CodeMemberField []> arrayMapping = new Dictionary<CodeMemberField, CodeMemberField []> ();
 		const string itemPackageId = "0x7f";
 
 		XDocument publicXml;
@@ -165,21 +166,33 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			var sb = new StringBuilder ();
+			int value;
 			foreach (var kvp in arrayMapping) {
-				CodeArrayCreateExpression expression = kvp.Key;
+				CodeMemberField field = kvp.Key;
+				CodeArrayCreateExpression expression = field.InitExpression as CodeArrayCreateExpression;
 				CodeMemberField [] fields = kvp.Value;
-				for (int i = 0; i < expression.Initializers.Count; i++) {
+				
+				int count = expression.Initializers.Count;
+				sb.Clear ();
+				for (int i = 0; i < count ; i++) {
 					CodePrimitiveExpression code = expression.Initializers [i] as CodePrimitiveExpression;
 					string name = fields [i].Name;
 					if (name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase)) {
 						name = name.Replace ("android:", string.Empty);
 						var element = publicXml?.XPathSelectElement ($"/resources/public[@name='{name}']") ?? null;
-						code.Value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
+						value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
+						
 					} else {
-						CodePrimitiveExpression value = fields [i].InitExpression as CodePrimitiveExpression;
-						code.Value = value.Value;
+						CodePrimitiveExpression initExpression = fields [i].InitExpression as CodePrimitiveExpression;
+						value = Convert.ToInt32 (initExpression.Value);
 					}
+					sb.Append ($"0x{value.ToString ("X")}");
+					code.Value = value;
+					if (i < count - 1)
+						sb.Append (",");
 				}
+				field.Comments.Add (new CodeCommentStatement ($"aapt resource value: {{ {sb} }}"));
 			}
 
 			if (animation.Members.Count > 1)
@@ -416,13 +429,18 @@ namespace Xamarin.Android.Tasks
 			if (c == null) {
 				f.InitExpression = c = new CodeArrayCreateExpression (typeof (int []));
 			}
+			var sb = new StringBuilder ();
 			for (int i = 0; i < count; i++) {
 				int value = -1;
 				if (i < values.Length)
 					value = values[i];
 				c.Initializers.Add (new CodePrimitiveExpression (value));
+				sb.Append ($"0x{value.ToString ("X")}");
+				if (i < count -1)
+					sb.Append (",");
 			}
-
+			if (values.Length > 0)
+				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: {{ {sb} }}"));
 			parentType.Members.Add (f);
 			return f;
 		}
@@ -566,7 +584,7 @@ namespace Xamarin.Android.Tasks
 			CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
 			if (c == null)
 				return;
-			arrayMapping.Add (c, fields.ToArray ());
+			arrayMapping.Add (field, fields.ToArray ());
 		}
 
 		void ProcessXmlFile (string file)
