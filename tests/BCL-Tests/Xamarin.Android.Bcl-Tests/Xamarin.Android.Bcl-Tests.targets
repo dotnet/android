@@ -7,9 +7,7 @@
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
-        <Private>False</Private>
-      </Reference>
+      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')" />
       <Reference Remove="$(IntermediateOutputPath)nunitlite.dll" />
       <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
       <_BclTestSatelliteAssemblyDest    Include="@(MonoTestSatelliteAssembly->'$(IntermediateOutputPath)%(Identity)')" />
@@ -24,7 +22,7 @@
       Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" Condition="%(MonoTestAssembly.TestType) != 'xunit'" />
+      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
     </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
@@ -34,11 +32,6 @@
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
-    <!-- Nothing to remap for the xunit tests, but we still need them in the intermediate output path in order to resolve their references. -->
-    <ItemGroup>
-      <_XunitTestAssembly Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"  Condition="%(MonoTestAssembly.TestType) == 'xunit'" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_XunitTestAssembly)" DestinationFolder="$(IntermediateOutputPath)" />
     <ItemGroup>
       <_DebugSymbol
           Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
