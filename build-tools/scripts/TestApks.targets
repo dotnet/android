@@ -42,7 +42,7 @@
         ImageName="$(_TestImageName)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(AndroidToolsBinPath)"
-        RamSizeMB="2048"
+        RamSizeMB="3072"
         DataPartitionSizeMB="4096"
     />
     <StartAndroidEmulator
