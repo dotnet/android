@@ -16,6 +16,7 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string, string> map;
 		bool app;
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
+		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
 		const string itemPackageId = "0x7f";
 
 		void SortMembers (CodeTypeDeclaration decl)
@@ -58,6 +59,31 @@ namespace Xamarin.Android.Tasks
 			style = CreateClass ("Style");
 			transition = CreateClass ("Transition");
 			xml = CreateClass ("Xml");
+
+			declarationIds.AddRange (new CodeTypeDeclaration [] {
+				animation,
+				animator,
+				arrays,
+				attrib,
+				boolean,
+				colors,
+				dimension,
+				drawable,
+				font,
+				ids,
+				interpolators,
+				ints,
+				layout,
+				menu,
+				mipmaps,
+				plurals,
+				raw,
+				strings,
+				style,
+				styleable,
+				transition,
+				xml,
+			});
 
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
@@ -108,6 +134,27 @@ namespace Xamarin.Android.Tasks
 			SortMembers (styleable);
 			SortMembers (transition);
 			SortMembers (xml);
+
+			foreach (var codeDeclaration in declarationIds) {
+				int itemid = 0;
+				foreach (var fieldDeclaration in codeDeclaration.Members) {
+					CodeMemberField field = fieldDeclaration as CodeMemberField;
+					if (field == null) {
+						continue;
+					}
+					int typeid = typeIds.IndexOf (codeDeclaration) + 1;
+					if (typeid == 0) {
+						typeIds.Add (codeDeclaration);
+						typeid = typeIds.Count;
+					}
+					if (field.InitExpression == null) {
+						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), 16);
+						field.InitExpression = new CodePrimitiveExpression (id);
+						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
+						itemid++;
+					}
+				}
+			}
 
 
 			if (animation.Members.Count > 1)
@@ -311,32 +358,20 @@ namespace Xamarin.Android.Tasks
 			parentType.Members.Add (f);
 		}
 
-		int CreateResourceId (CodeTypeDeclaration parentType)
-		{
-			
-			int typeid = declarationIds.IndexOf (parentType) + 1;
-			if (typeid == 0) {
-				declarationIds.Add (parentType);
-				typeid = declarationIds.Count;
-			}
-			int itemid = parentType.Members.Count + 1;
-			return Convert.ToInt32(itemPackageId + typeid.ToString ().PadLeft (2, '0') + itemid.ToString ().PadLeft (4, '0'), 16); 
-		}
-
 		void CreateIntField (CodeTypeDeclaration parentType, string name, int value = 0)
 		{
 			string mappedName = GetResourceName (parentType.Name, name, map);
 			if (parentType.Members.OfType<CodeTypeMember> ().Any (x => string.Compare (x.Name, mappedName, StringComparison.Ordinal) == 0))
 				return;
-			int id = value == 0 ? CreateResourceId (parentType): value;
 			var f = new CodeMemberField (typeof (int), mappedName) {
 				// pity I can't make the member readonly...
 				Attributes = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
-				InitExpression = new CodePrimitiveExpression (id),
-				Comments = {
-						new CodeCommentStatement ($"aapt resource value: 0x{id.ToString("X")}"),
-					},
+				InitExpression = null,
 			};
+			if (value != 0) {
+				f.InitExpression = new CodePrimitiveExpression (value);
+				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{value.ToString ("X")}"));
+			}
 			parentType.Members.Add (f);
 		}
 
