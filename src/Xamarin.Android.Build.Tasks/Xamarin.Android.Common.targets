@@ -680,6 +680,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		UpdateAndroidResources;
 		$(ApplicationResolveReferencesDependsOn);
 	</ResolveReferencesDependsOn>
+	<DeferredBuildDependsOn>$(DeferredBuildDependsOn);UpdateAndroidResources</DeferredBuildDependsOn>
 </PropertyGroup>
 
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
@@ -1271,6 +1272,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
+		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
@@ -1362,8 +1364,11 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_CreateManagedLibraryResourceArchive"> 
 </Target>
 
-<Target Name="UpdateAndroidResources" DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources" />
-		
+<Target Name="UpdateAndroidResources" 
+    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
+    DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources"
+/>
+
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
 	<Delete Files="$(_AndroidResgenFlagFile)"
@@ -2270,7 +2275,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies);_PrepareNativeAssemblySources"
   Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
-  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp;@(_TypeMapAssemblySource)">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
@@ -2297,6 +2302,10 @@ because xbuild doesn't support framework reference assemblies.
 	AcwMapFile="$(_AcwMapFile)"
 	SupportedAbis="$(_BuildTargetAbis)">
   </GenerateJavaStubs>
+
+  <ItemGroup>
+    <FileWrites Include="@(_TypeMapAssemblySource)" />
+  </ItemGroup>
 
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"

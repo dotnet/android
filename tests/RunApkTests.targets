@@ -105,7 +105,36 @@
     <Message Text="@(TestApk) " />
   </Target>
 
+  <ItemGroup>
+    <_ApkPerfTests Include="Xamarin.Android.Locale_Tests;Xamarin.Forms_Performance_Integration">
+      <Package>%(Identity)</Package>
+    </_ApkPerfTests>
+  </ItemGroup>
+
+  <Target Name="PrefilterPerformance">
+    <ItemGroup>
+      <_AllArchives Remove="@(_AllArchives)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' == '' " />
+      <TestApk Remove="@(TestApk)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' == '' " />
+      <TestApkInstrumentation Remove="@(TestApkInstrumentation)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' == '' " />
+      <TestApkPermission Remove="@(TestApkPermission)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' == '' " />
+    </ItemGroup>
+    <Message Text="Performance apk test: @(TestApk)" />
+  </Target>
+
+  <Target Name="PrefilterNonPerformance">
+    <ItemGroup>
+      <_AllArchives Remove="@(_AllArchives)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' != '' " />
+      <TestApk Remove="@(TestApk)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' != '' " />
+      <TestApkInstrumentation Remove="@(TestApkInstrumentation)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' != '' " />
+      <TestApkPermission Remove="@(TestApkPermission)" Condition=" '%(Package)' != '' And '@(_ApkPerfTests)' != '' " />
+    </ItemGroup>
+    <Message Text="Non performance apk test: @(TestApk)" />
+  </Target>
+
   <Target Name="RunApkTests"
-      DependsOnTargets="$(RunApkTestsDependsOn)">
+      DependsOnTargets="PrefilterNonPerformance;$(RunApkTestsDependsOn)">
+  </Target>
+  <Target Name="RunPerformanceApkTests"
+      DependsOnTargets="PrefilterPerformance;$(RunApkTestsDependsOn)">
   </Target>
 </Project>

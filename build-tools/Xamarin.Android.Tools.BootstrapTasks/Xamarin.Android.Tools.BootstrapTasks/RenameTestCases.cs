@@ -113,6 +113,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (File.Exists (sourceFile)) {
 				contents.Append (File.ReadAllText (sourceFile));
 			}
+
+			bool adbCrashed = false;
 			if (logcatPath != null) {
 				if (contents.Length > 0) {
 					contents.AppendLine ();
@@ -140,9 +142,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				if (inBinRun) {
 					contents.Append ("]");
 				}
+
+				adbCrashed |= logcat.IndexOf (RunInstrumentationTests.AdbRestartText, StringComparison.Ordinal) >= 0;
 			}
 
-			var message = $"Error processing `{sourceFile}`.  " +
+			var adbText = adbCrashed ? RunInstrumentationTests.AdbCrashErrorText : "";
+			var message = $"{adbText}Error processing `{sourceFile}`.  " +
 				$"Check the build log for execution errors.{Environment.NewLine}" +
 				$"File contents:{Environment.NewLine}";
 

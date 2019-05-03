@@ -12,6 +12,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class RunInstrumentationTests : Adb
 	{
 		const                   string              TestResultsPathResult       = "INSTRUMENTATION_RESULT: nunit2-results-path=";
+		internal const          string              AdbRestartText              = "daemon not running; starting now at tcp:";
+		internal const          string              AdbCrashErrorText           = "The adb might have crashed and was restarted. ";
 		const                   int                 StateRunInstrumentation     = 0;
 		const                   int                 StateGetLogcat              = 1;
 		const                   int                 StateClearLogcat            = 2;
@@ -42,6 +44,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		string                  targetTestResultsPath;
 		TextWriter              logcatWriter;
 
+		bool                    adbRestarted;
+
 		public override bool Execute ()
 		{
 			InstrumentationArguments    = InstrumentationArguments ?? new string [0];
@@ -58,10 +62,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			if (String.IsNullOrEmpty (targetTestResultsPath)) {
 				FailedToRun = Component;
+				var adbText = adbRestarted ? AdbCrashErrorText : "";
 				Log.LogError (
-						"Could not find NUnit2 results file after running component `{0}`: " +
-						"no `nunit2-results-path` bundle value found in command output!",
-						Component);
+						$"{adbText}Could not find NUnit2 results file after running component `{Component}`: " +
+						"no `nunit2-results-path` bundle value found in command output!");
 				return false;
 			}
 
@@ -77,7 +81,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -v threadtime -d",
-					MergeStdoutAndStderr = false,
 					StdoutFilePath = LogcatFilename,
 					StdoutAppend = true,
 				},
@@ -124,6 +127,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected override void ProcessStdout (string line)
 		{
+			if (currentState == StateGetLogcat && !String.IsNullOrEmpty (line)) {
+				adbRestarted |= line.IndexOf (AdbRestartText, StringComparison.Ordinal) >= 0;
+				return;
+			}
+
 			if (currentState != StateRunInstrumentation || String.IsNullOrEmpty (line))
 				return;
 
