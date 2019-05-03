@@ -126,6 +126,8 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
+				if (!assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (asm.ItemSpec)))
+					continue;
 				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
 				assemblies.Add (asm.ItemSpec);
 			}

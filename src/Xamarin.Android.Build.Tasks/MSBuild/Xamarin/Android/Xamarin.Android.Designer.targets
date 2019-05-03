@@ -47,17 +47,43 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
-<Target Name="_GeneratePackageManagerJavaForDesigner"
-    DependsOnTargets="_AddStaticResources;_ResolveAssemblies"
-    Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
-    Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
+<Target Name="_CopyAssembliesForDesigner"
+    Inputs="@(ResolvedAssemblies)"
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
   <Copy
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
   />
+</Target>
+
+<Target Name="_PrepareAssembliesForDesigner">
+  <ItemGroup>
+    <_ResolvedAssemblies
+        Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+        KeepDuplicates="false"
+        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
+    />
+    <_ResolvedUserAssemblies
+        Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+        KeepDuplicates="false"
+        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
+    />
+    <_ResolvedUserMonoAndroidAssembliesForDesigner
+        Include="@(ResolvedUserAssemblies)"
+        Condition="'%(ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
+        KeepDuplicates="false"
+        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
+    />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GeneratePackageManagerJavaForDesigner"
+    DependsOnTargets="_AddStaticResources;_ResolveAssemblies;_CopyAssembliesForDesigner;_PrepareAssembliesForDesigner;$(BeforeGenerateAndroidManifest)"
+    Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
+    Outputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)">
   <GenerateJavaStubs
-      ResolvedAssemblies="@(ResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssembliesForDesigner)"
       ManifestTemplate="$(_AndroidManifestAbs)"
       MergedManifestDocuments="@(ExtractedManifestDocuments)"
       Debug="$(AndroidIncludeDebugSymbols)"
@@ -86,8 +112,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   />
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
-      ResolvedAssemblies="@(ResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
       MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
       OutputDirectory="$(IntermediateOutputPath)android\src\mono"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android\src\mono\android\app"
