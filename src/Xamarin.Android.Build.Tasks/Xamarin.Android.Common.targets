@@ -1271,6 +1271,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
+		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
@@ -2270,7 +2271,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies);_PrepareNativeAssemblySources"
   Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
-  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp;@(_TypeMapAssemblySource)">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
@@ -2297,6 +2298,10 @@ because xbuild doesn't support framework reference assemblies.
 	AcwMapFile="$(_AcwMapFile)"
 	SupportedAbis="$(_BuildTargetAbis)">
   </GenerateJavaStubs>
+
+  <ItemGroup>
+    <FileWrites Include="@(_TypeMapAssemblySource)" />
+  </ItemGroup>
 
   <ConvertCustomView
 	Condition="Exists('$(_CustomViewMapFile)')"
