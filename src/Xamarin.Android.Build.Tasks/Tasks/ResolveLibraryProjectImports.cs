@@ -244,7 +244,6 @@ namespace Xamarin.Android.Tasks
 				}
 
 				Log.LogDebugMessage ($"Refreshing {assemblyFileName}.dll");
-				Log.LogWarning ($"# jonp: loading path: {assemblyPath}");
 
 				var assembly = res.GetAssembly (assemblyPath);
 				foreach (var mod in assembly.Modules) {
