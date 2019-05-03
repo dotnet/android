@@ -643,6 +643,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkContext.cs" />
     <Compile Include="Tasks\AppendCustomMetadataToItemGroup.cs" />
     <Compile Include="Utilities\OutputLine.cs" />
+    <Compile Include="Utilities\ResourceIdentifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
