@@ -60,6 +60,14 @@ namespace Xamarin.Android.Build.Tests {
 	<dimen name=""main_text_item_size"">17dp</dimen>
 </resources>";
 
+		const string Styleable = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+  <declare-styleable name=""CustomFonts"">
+    <attr name=""android:scrollX"" />
+    <attr name=""customFont"" />
+  </declare-styleable>
+</resources>";
+
 		const string Transition = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <changeBounds
   xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -95,25 +103,39 @@ namespace Xamarin.Android.Build.Tests {
 		/// </summary>
 		const string Rtxt = @"int animator slide_in_bottom 0x7f010000
 int array widths_array 0x7f020000
-int dimen main_text_item_size 0x7f030000
-int drawable ic_menu_preferences 0x7f040000
-int font arial 0x7f050000
-int id Føø_Bar 0x7f060000
-int id menu_settings 0x7f060001
-int id seekBar 0x7f060002
-int id seekbar 0x7f060003
-int id textview_withperiod 0x7f060004
-int layout main 0x7f070000
-int menu Options 0x7f080000
-int mipmap icon 0x7f090000
-int plurals num_locations_reported 0x7f0a0000
-int raw foo 0x7f0b0000
-int string app_name 0x7f0c0000
-int string foo 0x7f0c0001
-int string hello 0x7f0c0002
-int string menu_settings 0x7f0c0003
-int transition transition 0x7f0d0000
+int attr customFont 0x7f030000
+int dimen main_text_item_size 0x7f040000
+int drawable ic_menu_preferences 0x7f050000
+int font arial 0x7f060000
+int id Føø_Bar 0x7f070000
+int id menu_settings 0x7f070001
+int id seekBar 0x7f070002
+int id seekbar 0x7f070003
+int id textview_withperiod 0x7f070004
+int layout main 0x7f080000
+int menu options 0x7f090000
+int mipmap icon 0x7f0a0000
+int plurals num_locations_reported 0x7f0b0000
+int raw foo 0x7f0c0000
+int string app_name 0x7f0d0000
+int string foo 0x7f0d0001
+int string hello 0x7f0d0002
+int string menu_settings 0x7f0d0003
+int[] styleable CustomFonts { 0x010100d2,0x7f030000 }
+int styleable CustomFonts_android_scrollX 0
+int styleable CustomFonts_customFont 1
+int transition transition 0x7f0f0000
 ";
+		[OneTimeSetUp]
+		public void Setup ()
+		{
+			using (var builder = new Builder ()) {
+				builder.ResolveSdks ();
+				AndroidSdkDirectory = builder.AndroidSdkDirectory;
+			}
+		}
+
+		public string AndroidSdkDirectory { get; set; }
 
 		public void CreateResourceDirectory (string path)
 		{
@@ -126,6 +148,7 @@ int transition transition 0x7f0d0000
 			File.WriteAllText (Path.Combine (Root, path, "AndroidManifest.xml"), AndroidManifest);
 
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "strings.xml"), StringsXml);
+			File.WriteAllText (Path.Combine (Root, path, "res", "values", "attrs.xml"), Styleable);
 			File.WriteAllText (Path.Combine (Root, path, "res", "transition", "transition.xml"), Transition);
 			File.WriteAllText (Path.Combine (Root, path, "res", "raw", "foo.txt"), "Foo");
 			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main);
@@ -146,9 +169,9 @@ int transition transition 0x7f0d0000
 				File.WriteAllBytes (Path.Combine (Root, path, "lp", "res", "drawable", "ic_menu_preferences.png"), icon_binary_mdpi);
 				File.WriteAllBytes (Path.Combine (Root, path, "lp", "res", "mipmap-hdpi", "icon.png"), icon_binary_mdpi);
 			}
-			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "menu", "Options.xml"), Menu);
+			File.WriteAllText (Path.Combine (Root, path, "lp", "res", "menu", "options.xml"), Menu);
+			File.WriteAllText (Path.Combine (Root, path, "lp", "__res_name_case_map.txt"), "menu/Options.xml;menu/options.xml");
 		}
-
 
 		[Test]
 		public void GenerateDesignerFileWithÜmläüts ()
@@ -174,6 +197,7 @@ int transition transition 0x7f0d0000
 				new TaskItem (Path.Combine (Root, path, "lp", "res")),
 			};
 			task.IsApplication = true;
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
@@ -207,6 +231,7 @@ int transition transition 0x7f0d0000
 				new TaskItem (Path.Combine (Root, path, "lp", "res")),
 			};
 			task.IsApplication = true;
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
