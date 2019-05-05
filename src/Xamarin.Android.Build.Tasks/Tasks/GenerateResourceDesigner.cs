@@ -44,6 +44,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool DesignTimeBuild { get; set; }
 
+		[Required]
+		public string JavaPlatformJarPath { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool Execute ()
@@ -61,6 +64,8 @@ namespace Xamarin.Android.Tasks
 			// ResourceDirectory may be a relative path, and
 			// we need to compare it to absolute paths
 			ResourceDirectory = Path.GetFullPath (ResourceDirectory);
+
+			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
 
 			// Create our capitalization maps so we can support mixed case resources
 			foreach (var item in Resources) {
@@ -87,7 +92,7 @@ namespace Xamarin.Android.Tasks
 			// Parse out the resources from the R.java file
 			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
-				var parser = new ManagedResourceParser () { Log = Log };
+				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, };
 				resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
