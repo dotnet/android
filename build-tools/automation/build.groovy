@@ -180,7 +180,7 @@ timestamps {
             if (isCommercial) {
                 sh "cp bin/${env.BuildFlavor}/bundle-*.zip ${packagePath}"
 
-                utils.stageWithTimeout('package symbols', 30, 'MINUTES', "${env.WORKSPACE}/${XADir}/${CommercialPath}", false) {
+                utils.stageWithTimeout('package symbols', 30, 'MINUTES', "${env.WORKSPACE}/${XADir}/${commercialPath}", false) {
                     shSDKPath('make symbols')
                 }
             }
