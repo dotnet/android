@@ -52,8 +52,13 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
+#if DEBUG
 			bool haveName   = !string.IsNullOrEmpty (Name);
 			bool haveSig    = !string.IsNullOrEmpty (Signature);
+#else   // DEBUG
+			bool haveName   = false;
+			bool haveSig    = false;
+#endif  // DEBUG
 			return string.Format ("JniMethodInfo({0}{1}{2}{3}ID=0x{4})",
 					haveName ? "Name=" + Name : string.Empty,
 					haveName ? ", " : string.Empty,
