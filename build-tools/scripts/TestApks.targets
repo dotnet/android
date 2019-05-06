@@ -232,7 +232,7 @@
         PackageName="%(TestApkInstrumentation.Package)"
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
-        LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package).txt"
+        LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package)%(TestApkInstrumentation.LogcatFilenameDistincion).txt"
         InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
@@ -305,6 +305,7 @@
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApkInstrumentation.ResultsPath)"
         TestsFlavor="$(TestsFlavor)"
+        LogcatFilenameDistincion="%(TestApkInstrumentation.LogcatFilenameDistincion)"
     />
   </Target>
   <Target Name="RecordApkSizes"
