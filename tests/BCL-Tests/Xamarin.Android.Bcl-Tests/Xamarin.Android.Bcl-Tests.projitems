@@ -8,8 +8,6 @@
     <TestApk Include="$(OutputPath)Xamarin.Android.Bcl_Tests-Signed.apk">
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <InstrumentationType>xamarin.android.bcltests.TestInstrumentation</InstrumentationType>
-      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.Bcl_Tests-times.csv</TimingResultsFilename>
     </TestApk>
   </ItemGroup>
 
@@ -17,11 +15,13 @@
     <TestApkInstrumentation Include="xamarin.android.bcltests.XUnitInstrumentation">
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Bcl_Tests.xunit.xml</ResultsPath>
+      <LogcatFilenameDistincion>.xunit</LogcatFilenameDistincion>
     </TestApkInstrumentation>
 
     <TestApkInstrumentation Include="xamarin.android.bcltests.NUnitInstrumentation">
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Bcl_Tests.nunit.xml</ResultsPath>
+      <LogcatFilenameDistincion>.nunit</LogcatFilenameDistincion>
     </TestApkInstrumentation>
 
     <TestApkPermission Include="READ_PHONE_STATE">
