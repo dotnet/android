@@ -42,10 +42,6 @@ def getBuildTasksRedirect() {
     }
 }
 
-def shSDKPath(cmd) {
-    sh("export ANDROID_SDK_PATH=$HOME/android-toolchain/sdk; export ANDROID_NDK_PATH=$HOME/android-toolchain/ndk; ${cmd}")
-}
-
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
