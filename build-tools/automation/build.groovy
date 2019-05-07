@@ -248,16 +248,10 @@ timestamps {
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishRootDir = ''
-            def publishBuildFilePaths = "${XADir}/build-status*,${XADir}/xa-build-status*"
+            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*"
             if (isCommercial) {
                 publishRootDir = packageDir
-                publishBuildFilePaths = "build-status*,xa-build-status*,*updateinfo"
-            }
-
-            if (isCommercial) {
-                publishBuildFilePaths = "xamarin.android*.pkg,Xamarin.Android*.vsix,${publishBuildFilePaths}";
-            } else {
-                publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${publishBuildFilePaths}";
+                publishBuildFilePaths = "xamarin.android*.pkg,Xamarin.Android*.vsix,build-status*,xa-build-status*,*updateinfo"
             }
 
             if (!isPr) {
