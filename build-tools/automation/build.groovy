@@ -175,6 +175,11 @@ timestamps {
 
             if (isCommercial) {
                 sh "cp bin/${env.BuildFlavor}/bundle-*.zip ${packagePath}"
+
+                sh '''
+                    VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
+                    echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > ../package/updateinfo
+                '''
             }
         }
 
@@ -246,7 +251,7 @@ timestamps {
             def publishBuildFilePaths = "${XADir}/build-status*,${XADir}/xa-build-status*"
             if (isCommercial) {
                 publishRootDir = packageDir
-                publishBuildFilePaths = "build-status*,xa-build-status*"
+                publishBuildFilePaths = "build-status*,xa-build-status*,*updateinfo"
             }
 
             if (isCommercial) {
