@@ -454,7 +454,6 @@ namespace Xamarin.Android.Tasks
 
 		void CreateResourceField (string root, string fieldName, XmlReader element = null)
 		{
-			Log.LogMessage (Microsoft.Build.Framework.MessageImportance.High, $"DEBUG!!! {root} {fieldName}");
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);
 			item = resourceNamesToUseDirectly.Contains (root) ? root : item;
