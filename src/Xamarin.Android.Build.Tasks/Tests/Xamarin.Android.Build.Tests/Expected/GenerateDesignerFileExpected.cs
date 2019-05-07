@@ -62,6 +62,12 @@ namespace Foo.Foo
 			// aapt resource value: 0x7F030000
 			public const int customFont = 2130903040;
 			
+			// aapt resource value: 0x7F030001
+			public const int entries = 2130903041;
+			
+			// aapt resource value: 0x7F030002
+			public const int entryValues = 2130903042;
+			
 			static Attribute()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -266,6 +272,25 @@ namespace Foo.Foo
 			
 			// aapt resource value: 0x1
 			public const int CustomFonts_customFont = 1;
+			
+			// aapt resource value: { 0x10100B2,0x10101F8,0x7F030001,0x7F030002 }
+			public static int[] MultiSelectListPreference = new int[] {
+					16842930,
+					16843256,
+					2130903041,
+					2130903042};
+			
+			// aapt resource value: 0x0
+			public const int MultiSelectListPreference_android_entries = 0;
+			
+			// aapt resource value: 0x1
+			public const int MultiSelectListPreference_android_entryValues = 1;
+			
+			// aapt resource value: 0x2
+			public const int MultiSelectListPreference_entries = 2;
+			
+			// aapt resource value: 0x3
+			public const int MultiSelectListPreference_entryValues = 3;
 			
 			static Styleable()
 			{
