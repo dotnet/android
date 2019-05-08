@@ -176,8 +176,8 @@ namespace Xamarin.Android.Tasks
 					.Distinct ()) {
 				var fileName = Path.GetFileName (assemblyPath);
 				if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-					!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
-					!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName)) {
+						!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
+						!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName)) {
 					Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 					continue;
 				}
