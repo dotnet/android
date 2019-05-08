@@ -149,23 +149,6 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static string GetTargetAssembly (ITaskItem assemblyName)
-		{
-			var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
-			string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-			string fileName = assemblyName.ItemSpec + suffix;
-			if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath))
-				hintPath = null;
-			string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
-			string fileNameOnly = Path.GetFileName (fileName);
-			if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-					!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileNameOnly) &&
-					!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileNameOnly)) {
-				return null;
-			}
-			return Path.GetFullPath (assemblyPath);
-		}
-
 		// Extracts library project contents under e.g. obj/Debug/[__library_projects__/*.jar | res/*/*]
 		// Extracts library project contents under e.g. obj/Debug/[lp/*.jar | res/*/*]
 		void Extract (
@@ -189,9 +172,15 @@ namespace Xamarin.Android.Tasks
 
 			// FIXME: reorder references by import priority (not sure how to do that yet)
 			foreach (var assemblyPath in Assemblies
-					.Select (a => GetTargetAssembly (a))
-					.Where (a => a != null)
+					.Select (a => a.ItemSpec)
 					.Distinct ()) {
+				var fileName = Path.GetFileName (assemblyPath);
+				if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
+						!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
+						!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName)) {
+					Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
+					continue;
+				}
 				if (DesignTimeBuild && !File.Exists (assemblyPath)) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
 					continue;
