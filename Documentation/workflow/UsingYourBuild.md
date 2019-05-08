@@ -58,7 +58,7 @@ of the Xamarin.Android SDK. Only one install can be active at a time.)
 The [HelloWorld](samples/HelloWorld) sample may be built with the
 [xabuild](tools/scripts/xabuild) script:
 
-    bin/Debug/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+    bin/Debug/bin/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
 
 `xabuild /t:SignAndroidPackage` will generate an `.apk` file, which may be
 installed onto an Android device with the [`adb install`][adb-commands]
