@@ -9,6 +9,8 @@ stages:
   jobs:
   - job: Mac
     pool: Hosted Mac Internal
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
     variables:
       configuration: Release
       msbuildArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
