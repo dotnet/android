@@ -12,6 +12,8 @@ stages:
     variables:
       configuration: Release
       msbuildArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+      JavaSdkDirectory: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
+      JAVA_HOME: $(JavaSdkDirectory)
     steps:
     - script: make prepare-external-git-dependencies CONFIGURATION=$(configuration)
       displayName: make prepare-commercial
