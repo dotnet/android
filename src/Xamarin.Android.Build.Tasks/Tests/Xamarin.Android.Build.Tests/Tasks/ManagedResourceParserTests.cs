@@ -66,6 +66,22 @@ namespace Xamarin.Android.Build.Tests {
     <attr name=""android:scrollX"" />
     <attr name=""customFont"" />
   </declare-styleable>
+  <declare-styleable name=""MultiSelectListPreference"">
+    <attr name=""entries""/>
+    <attr name=""android:entries""/>
+    <attr name=""entryValues""/>
+    <attr name=""android:entryValues""/>
+  </declare-styleable>
+</resources>";
+
+		const string Styleablev21 = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+  <declare-styleable name=""MultiSelectListPreference"">
+    <attr name=""entries""/>
+    <attr name=""android:entries""/>
+    <attr name=""entryValues""/>
+    <attr name=""android:entryValues""/>
+  </declare-styleable>
 </resources>";
 
 		const string Transition = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -104,6 +120,8 @@ namespace Xamarin.Android.Build.Tests {
 		const string Rtxt = @"int animator slide_in_bottom 0x7f010000
 int array widths_array 0x7f020000
 int attr customFont 0x7f030000
+int attr entries 0x7f030001
+int attr entryValues 0x7f030002
 int dimen main_text_item_size 0x7f040000
 int drawable ic_menu_preferences 0x7f050000
 int font arial 0x7f060000
@@ -121,9 +139,14 @@ int string app_name 0x7f0d0000
 int string foo 0x7f0d0001
 int string hello 0x7f0d0002
 int string menu_settings 0x7f0d0003
-int[] styleable CustomFonts { 0x010100d2,0x7f030000 }
+int[] styleable CustomFonts { 0x010100d2, 0x7f030000 }
 int styleable CustomFonts_android_scrollX 0
 int styleable CustomFonts_customFont 1
+int[] styleable MultiSelectListPreference { 0x010100b2, 0x010101f8, 0x7f030001, 0x7f030002 }
+int styleable MultiSelectListPreference_android_entries 0
+int styleable MultiSelectListPreference_android_entryValues 1
+int styleable MultiSelectListPreference_entries 2
+int styleable MultiSelectListPreference_entryValues 3
 int transition transition 0x7f0f0000
 ";
 		[OneTimeSetUp]
@@ -140,6 +163,7 @@ int transition transition 0x7f0f0000
 		public void CreateResourceDirectory (string path)
 		{
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
+			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values-v21"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "transition"));
 
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "raw"));
@@ -149,6 +173,7 @@ int transition transition 0x7f0f0000
 
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "strings.xml"), StringsXml);
 			File.WriteAllText (Path.Combine (Root, path, "res", "values", "attrs.xml"), Styleable);
+			File.WriteAllText (Path.Combine (Root, path, "res", "values-v21", "attrs.xml"), Styleablev21);
 			File.WriteAllText (Path.Combine (Root, path, "res", "transition", "transition.xml"), Transition);
 			File.WriteAllText (Path.Combine (Root, path, "res", "raw", "foo.txt"), "Foo");
 			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main);

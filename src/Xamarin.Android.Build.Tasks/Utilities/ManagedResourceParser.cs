@@ -542,6 +542,7 @@ namespace Xamarin.Android.Tasks
 			string topName = null;
 			int fieldCount = 0;
 			List<CodeMemberField> fields = new List<CodeMemberField> ();
+			List<string> attribs = new List<string> ();
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
@@ -564,27 +565,34 @@ namespace Xamarin.Android.Tasks
 				}
 				reader.MoveToElement ();
 				if (reader.LocalName == "attr") {
-					CreateIntField (styleable, $"{topName}_{name}", fieldCount);
-					if (!name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase))
-						fields.Add (CreateIntField (attrib, name));
-					else {
-						// this is an android:xxx resource, we should not calcuate the id
-						// we should get it from "somewhere" maybe the pubic.xml
-						var f = new CodeMemberField (typeof(int), name);
-						f.InitExpression = new CodePrimitiveExpression (0);
-						fields.Add (f);
-					}
-					fieldCount++;
+					attribs.Add (name);
 				} else {
 					if (name != null)
 						CreateIntField (ids, $"{name}");
 				}
 			}
-			CodeMemberField field = CreateIntArrayField (styleable, topName, fieldCount);
-			CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
-			if (c == null)
-				return;
-			arrayMapping.Add (field, fields.ToArray ());
+			CodeMemberField field = CreateIntArrayField (styleable, topName, attribs.Count);
+			if (!arrayMapping.ContainsKey (field)) {
+				attribs.Sort (StringComparer.OrdinalIgnoreCase);
+				for (int i = 0; i < attribs.Count; i++) {
+					string name = attribs [i];
+					if (!name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase))
+						fields.Add (CreateIntField (attrib, name));
+					else {
+						// this is an android:xxx resource, we should not calcuate the id
+						// we should get it from "somewhere" maybe the pubic.xml
+						var f = new CodeMemberField (typeof (int), name);
+						f.InitExpression = new CodePrimitiveExpression (0);
+						fields.Add (f);
+					}
+					CreateIntField (styleable, $"{topName}_{name}", i);
+				}
+				CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
+				if (c == null)
+					return;
+				
+				arrayMapping.Add (field, fields.ToArray ());
+			}
 		}
 
 		void ProcessXmlFile (string file)

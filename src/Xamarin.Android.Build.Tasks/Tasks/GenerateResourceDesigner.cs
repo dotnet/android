@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Monodroid;
+using Mono.Cecil;
 
 using Java.Interop.Tools.Cecil;
 
@@ -110,30 +110,25 @@ namespace Xamarin.Android.Tasks
 				Namespace = string.Empty;
 
 			// Create static resource overwrite methods for each Resource class in libraries.
-			var assemblyNames = new List<string> ();
-			if (IsApplication && References != null && References.Any ()) {
+			if (IsApplication && References != null && References.Length > 0) {
 				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
+				var assemblies = new List<AssemblyDefinition> (References.Length);
 				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-					foreach (var assemblyName in References) {
-						var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
-						string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-						string fileName = assemblyName.ItemSpec + suffix;
-						string fullPath = Path.GetFullPath (assemblyName.ItemSpec);
-						// Skip non existing files in DesignTimeBuild
-						if (!File.Exists (fullPath) && DesignTimeBuild) {
-							Log.LogDebugMessage ("Skipping non existant dependancy '{0}' due to design time build.", fullPath);
+					foreach (var assembly in References) {
+						var assemblyPath = assembly.ItemSpec;
+						var fileName = Path.GetFileName (assemblyPath);
+						if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
+								!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName)) {
+							Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 							continue;
 						}
-						resolver.Load (fullPath);
-						if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath)) // ignore invalid HintPath
-							hintPath = null;
-						string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
-						if (MonoAndroidHelper.IsFrameworkAssembly (fileName) && !MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (Path.GetFileName (fileName)))
+						if (DesignTimeBuild && !File.Exists (assemblyPath)) {
+							Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
 							continue;
+						}
+						assemblies.Add (resolver.Load (assemblyPath));
 						Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
-						assemblyNames.Add (assemblyPath);
 					}
-					var assemblies = assemblyNames.Select (assembly => resolver.GetAssembly (assembly));
 					new ResourceDesignerImportGenerator (Namespace, resources, Log)
 						.CreateImportMethods (assemblies);
 				}
