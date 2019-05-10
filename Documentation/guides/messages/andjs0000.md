@@ -1,4 +1,9 @@
-# Compiler Error/Warning ANDJS0000
+---
+title: Compiler error/warning ANDJS0000
+description: ANDJS0000 error/warning code
+ms.date: 05/04/2018
+---
+# Compiler error/warning ANDJS0000
 
 This message indicates that the Java `jarsigner` command line tool used by
 Xamarin.Android reported an error or warning.

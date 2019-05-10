@@ -1,4 +1,9 @@
-# Compiler Error/Warning ANDAS0000
+---
+title: Compiler error/warning ANDAS0000
+description: ANDAS0000 error/warning code
+ms.date: 05/04/2018
+---
+# Compiler error/warning ANDAS0000
 
 This message indicates that the Android `apksigner` command line tool used by
 Xamarin.Android reported an error or warning.

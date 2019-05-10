@@ -1,4 +1,9 @@
-# Compiler Error/Warning ANDZA0000
+---
+title: Compiler error/warning ANDZA0000
+description: ANDZA0000 error/warning code
+ms.date: 05/04/2018
+---
+# Compiler error/warning ANDZA0000
 
 This message indicates that the Android `zipalign` command line tool used by
 Xamarin.Android reported an error or warning.
