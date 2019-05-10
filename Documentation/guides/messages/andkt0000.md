@@ -10,7 +10,7 @@ Xamarin.Android reported an error or warning.
 
 Errors reported by `keytool` and other Android command line tooling are very
 much outside of Xamarin.Android's control, so a general error code of
-`ANDKT0000` is used reporting the exact message.
+ANDKT0000 is used reporting the exact message.
 
 Learn more about `keytool` and its usage see the Java documentation
 [here][keytool].
