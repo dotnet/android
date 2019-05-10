@@ -1,3 +1,4 @@
+stages:
 - stage: win_build_test
   displayName: Windows
   dependsOn: [] # Run in parallel with full mac build stage 
