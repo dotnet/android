@@ -4,24 +4,30 @@ trigger:
   - master
   - d16*
 
+# Global variables
+variables:
+  AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+
 stages:
-- stage: Build
+- stage: mac_build
+  displayName: Mac
   jobs:
-  - job: Mac
+  - job: mac_build
+    displayName: Build
     pool: Hosted Mac Internal
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     variables:
-      configuration: Release
-      msbuildArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+      Configuration: Release
       JavaSdkDirectory: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
       JAVA_HOME: $(JavaSdkDirectory)
     steps:
-    - script: make prepare-external-git-dependencies CONFIGURATION=$(configuration)
+    - script: make prepare-external-git-dependencies CONFIGURATION=$(Configuration)
       displayName: make prepare-commercial
       condition: eq(variables['XA.Commercial.Build'], 'true')
       env:
         GH_AUTH_SECRET: $(Github.Token)
+
     - task: provisionator@2
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
       inputs:
@@ -29,29 +35,37 @@ stages:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
         provisioning_extra_args: -vv
-    - script: make prepare-deps V=1 CONFIGURATION=$(configuration) MSBUILD_ARGS="$(msbuildArgs)"
+
+    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
       displayName: make prepare-deps
-    - script: make prepare jenkins V=1 CONFIGURATION=$(configuration) MSBUILD_ARGS="$(msbuildArgs)"
+
+    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
       displayName: make prepare jenkins
-    - script: make create-installers V=1 CONFIGURATION=$(configuration)
+
+    - script: make create-installers V=1 CONFIGURATION=$(Configuration)
       displayName: make create-installers
+
     - script: |
-       mkdir -p $(System.DefaultWorkingDirectory)/unsigned-installers
-       cp bin/Build$(configuration)/*.vsix $(System.DefaultWorkingDirectory)/unsigned-installers
-       cp bin/Build$(configuration)/*.pkg $(System.DefaultWorkingDirectory)/unsigned-installers
-       cp *.zip $(Build.ArtifactStagingDirectory)
+        mkdir -p $(System.DefaultWorkingDirectory)/unsigned-installers
+        cp bin/Build$(Configuration)/*.vsix $(System.DefaultWorkingDirectory)/unsigned-installers
+        cp bin/Build$(Configuration)/*.pkg $(System.DefaultWorkingDirectory)/unsigned-installers
       displayName: copy build artifacts
+
     - task: PublishPipelineArtifact@0
       displayName: upload unsigned installers
       inputs:
         artifactName: unsigned
         targetPath: $(System.DefaultWorkingDirectory)/unsigned-installers
+
     - script: cp bin/*/*.binlog $(Build.ArtifactStagingDirectory)
       displayName: copy binlogs
       condition: always()
+
     - task: PublishPipelineArtifact@0
       displayName: upload artifacts
       inputs:
         artifactName: artifacts
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
+
+- template: yml-templates/windows-build-test.yml
