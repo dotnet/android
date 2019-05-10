@@ -12,7 +12,7 @@ Errors reported by `apksigner` and other Android command line tooling are very
 much outside of Xamarin.Android's control, so a general error code of
 ANDAS0000 is used reporting the exact message.
 
-Learn more about `apksigner` and its usage see the Android documentation
+To learn more about `apksigner` and its usage, see the Android documentation
 [here][apksigner].
 
 [apksigner]: https://developer.android.com/studio/command-line/apksigner
