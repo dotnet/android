@@ -25,7 +25,8 @@ stages:
     - task: CopyFiles@2
       displayName: copy bundle
       inputs:
-        contents: bin/$(Configuration)/bundle-*.zip
+        sourceFolder: bin/$(Configuration)
+        contents: bundle-*.zip
         targetFolder: $(Build.ArtifactStagingDirectory)
 
     - task: PublishPipelineArtifact@0
