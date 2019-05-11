@@ -1,9 +1,9 @@
 ---
-title: Compiler error/warning ANDZA0000
+title: Xamarin.Android error/warning ANDZA0000
 description: ANDZA0000 error/warning code
 ms.date: 05/04/2018
 ---
-# Compiler error/warning ANDZA0000
+# Xamarin.Android error/warning ANDZA0000
 
 ## Issue
 
