@@ -7,10 +7,49 @@ trigger:
 # Global variables
 variables:
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  BundleArtifactName=: bundle
 
 stages:
+- stage: prepare
+  displayName: Prepare
+  variables:
+    Configuration: Release
+  jobs:
+  - job: create_bundle
+    displayName: Create Bundle
+    pool: Hosted Mac Internal
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 5
+    steps:
+    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
+      displayName: make prepare-deps
+
+    - task: MSBuild@1
+      displayName: create bundle
+      inputs:
+        solution: build-tools/create-bundle/create-bundle.csproj
+        configuration: $(Configuration)
+        msbuildArguments: >
+          /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+          /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
+          /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
+
+    - task: CopyFiles@2
+      displayName: copy bundle
+      inputs:
+        sourceFolder: bin/$(Configuration)
+        contents: bundle-*.zip
+        targetFolder: $(Build.ArtifactStagingDirectory)
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload bundle
+      inputs:
+        artifactName: $(BundleArtifactName)
+        targetPath: $(Build.ArtifactStagingDirectory)
+
 - stage: mac_build
   displayName: Mac
+  dependsOn: prepare
   jobs:
   - job: mac_build
     displayName: Build
@@ -22,6 +61,11 @@ stages:
       JavaSdkDirectory: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
       JAVA_HOME: $(JavaSdkDirectory)
     steps:
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(BundleArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)
+
     - script: make prepare-external-git-dependencies CONFIGURATION=$(Configuration)
       displayName: make prepare-commercial
       condition: eq(variables['XA.Commercial.Build'], 'true')
@@ -39,7 +83,7 @@ stages:
     - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
       displayName: make prepare-deps
 
-    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
+    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)/$(BundleArtifactName)"
       displayName: make prepare jenkins
 
     - script: make create-installers V=1 CONFIGURATION=$(Configuration)
@@ -69,44 +113,13 @@ stages:
       condition: always()
 
 - stage: win_build_test
-  displayName: Windows
-  dependsOn: [] # Run in parallel with full mac build stage
+  displayName: Win
+  dependsOn: prepare
   variables:
     Configuration: Release
-    BundleArtifactName: bundle
-    BundleRootPath: $(System.DefaultWorkingDirectory)\$(BundleArtifactName)
   jobs:
-  - job: prepare
-    displayName: Create Bundle On Mac
-    pool: Hosted Mac Internal
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    steps:
-    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
-      displayName: make prepare-deps
-
-    - task: MSBuild@1
-      displayName: create bundle
-      inputs:
-        solution: build-tools/create-bundle/create-bundle.csproj
-        configuration: $(Configuration)
-
-    - task: CopyFiles@2
-      displayName: copy bundle
-      inputs:
-        sourceFolder: bin/$(Configuration)
-        contents: bundle-*.zip
-        targetFolder: $(Build.ArtifactStagingDirectory)
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload bundle
-      inputs:
-        artifactName: $(BundleArtifactName)
-        targetPath: $(Build.ArtifactStagingDirectory)
-
   - job: build_test
     displayName: Build and Test
-    dependsOn: prepare
     pool: Hosted VS2017
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -127,7 +140,7 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         msbuildVersion: 15.0
-        msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog
+        msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)\$(BundleArtifactName)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
