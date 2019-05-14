@@ -84,7 +84,7 @@ stages:
     - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
       displayName: make prepare-deps
 
-    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)/$(BundleArtifactName)"
+    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
       displayName: make prepare jenkins
 
     - script: make create-installers V=1 CONFIGURATION=$(Configuration)
@@ -141,7 +141,7 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         msbuildVersion: 15.0
-        msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)\$(BundleArtifactName)
+        msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
