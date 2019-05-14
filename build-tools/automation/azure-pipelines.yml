@@ -6,8 +6,12 @@ trigger:
 
 # Global variables
 variables:
+  BundleArtifactName: bundle
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
-  BundleArtifactName=: bundle
+  MSBuildAbiArgs: >
+    /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+    /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
+    /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
 
 stages:
 - stage: prepare
@@ -21,7 +25,7 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
-    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
+    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: make prepare-deps
 
     - task: MSBuild@1
@@ -29,10 +33,7 @@ stages:
       inputs:
         solution: build-tools/create-bundle/create-bundle.csproj
         configuration: $(Configuration)
-        msbuildArguments: >
-          /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-          /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
-          /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
+        msbuildArguments: $(MSBuildAbiArgs)
 
     - task: CopyFiles@2
       displayName: copy bundle
