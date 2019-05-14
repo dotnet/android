@@ -8,16 +8,16 @@ trigger:
 variables:
   BundleArtifactName: bundle
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
-  MSBuildAbiArgs: >
-    /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-    /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
-    /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
 
 stages:
 - stage: prepare
   displayName: Prepare
   variables:
     Configuration: Release
+    MSBuildAbiArgs: >-
+      /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+      /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
+      /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
   jobs:
   - job: create_bundle
     displayName: Create Bundle
