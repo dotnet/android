@@ -148,7 +148,7 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         msbuildVersion: 15.0
-        msbuildArguments: /t:Build /bl:$(Build.ArtifactStagingDirectory)\build.binlog
+        msbuildArguments: /t:Build /bl:$(Build.ArtifactStagingDirectory)\build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -167,7 +167,6 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         msbuildArguments: /t:RunNUnitTests /bl:$(Build.ArtifactStagingDirectory)\run-nunit-tests.binlog
-      condition: succeededOrFailed()
       timeoutInMinutes: 120
 
     - task: MSBuild@1
