@@ -168,7 +168,9 @@
       <Output TaskParameter="CommitHash"   PropertyName="_MonoGitCommitHash" />
     </GitCommitHash>
     <PropertyGroup>
-      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(HostOS)-$(_MonoGitCommitHash)</_MonoArchiveName>
+      <_MonoArchiveHostOS Condition="!$([MSBuild]::IsOsPlatform(Windows))">$(HostOS)</_MonoArchiveHostOS>
+      <_MonoArchiveHostOS Condition="$([MSBuild]::IsOsPlatform(Windows))">Darwin</_MonoArchiveHostOS>
+      <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(_MonoArchiveHostOS)-$(_MonoGitCommitHash)</_MonoArchiveName>
     </PropertyGroup>
   </Target>
 
