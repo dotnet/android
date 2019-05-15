@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
+  <ItemGroup>
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\msbuild*.binlog" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.log" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.status" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.h" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\CMakeCache.txt" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\.ninja_log" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\android-*.config.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)TestResult-*.xml" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.log" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\msbuild*.binlog*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.binlog" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.log" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestOutput-*.txt" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\Timing_*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)*.csv" />
+    <_TestResultFiles Include="$(TEMP)\llc.exe-*" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ResultPackageOutputPath Condition=" '$(ResultPackageOutputPath)' == '' ">$(XamarinAndroidSourcePath)</ResultPackageOutputPath>
+    <BuildStatusZipName Condition=" '$(BuildStatusZipName)' == '' ">xa-build-status.zip</BuildStatusZipName>
+    <TestResultZipName Condition=" '$(TestResultZipName)' == '' ">xa-test-results.zip</TestResultZipName>
+  </PropertyGroup>
+  <Target Name="ZipBuildStatus"
+      Inputs="@(_BuildStatusFiles)"
+      Outputs="$(ResultPackageOutputPath)\$(BuildStatusZipName)">
+    <Zip
+        Entries="@(_BuildStatusFiles)"
+        File="$(ResultPackageOutputPath)\$(BuildStatusZipName)"
+    />
+  </Target>
+  <Target Name="ZipTestResults"
+      Inputs="@(_TestResultFiles)"
+      Outputs="$(ResultPackageOutputPath)\$(TestResultZipName)">
+    <Zip
+        Entries="@(_TestResultFiles)"
+        File="$(ResultPackageOutputPath)\$(TestResultZipName)"
+    />
+  </Target>
+</Project>

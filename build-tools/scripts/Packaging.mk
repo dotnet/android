@@ -72,47 +72,13 @@ package-deb: $(ZIP_OUTPUT)
 	cd $(ZIP_OUTPUT_BASENAME) && DEBEMAIL="Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>" dch --create -v $(PRODUCT_VERSION).$(-num-commits-since-version-change) --package xamarin.android-oss --force-distribution --distribution alpha "New release - please see git log for $(GIT_COMMIT)"
 	cd $(ZIP_OUTPUT_BASENAME) && dpkg-buildpackage -us -uc -rfakeroot
 
-_TEST_RESULTS_BUNDLE_INCLUDE = \
-	$(wildcard TestResult-*.xml) \
-	$(wildcard bin/Test$(CONFIGURATION)/compatibility) \
-	$(wildcard bin/Test$(CONFIGURATION)/logcat*) \
-	$(wildcard bin/Test$(CONFIGURATION)/msbuild*.binlog*) \
-	$(wildcard bin/Test$(CONFIGURATION)/temp) \
-	$(wildcard bin/Test$(CONFIGURATION)/TestOutput-*.txt) \
-	$(wildcard bin/Test$(CONFIGURATION)/Timing_*) \
-	$(wildcard *.csv)
 
-_TEST_RESULTS_BASENAME   = xa-test-results-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
+_RESULT_PACKAGE_SUFFIX   = -v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
 
-"$(_TEST_RESULTS_BASENAME).zip" package-test-results:
-	build-tools/scripts/ln-to.sh -r . -o "$(_TEST_RESULTS_BASENAME)" $(_TEST_RESULTS_BUNDLE_INCLUDE) \
-		$(XA_TEST_ERRORS_EXTRA)
-	zip -r "$(_TEST_RESULTS_BASENAME).zip" "$(_TEST_RESULTS_BASENAME)"
+"xa-test-results$(_RESULT_PACKAGE_SUFFIX).zip" package-test-results:
+	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipTestResults \
+		/p:Configuration=$(CONFIGURATION) /p:TestResultZipName="xa-test-results$(_RESULT_PACKAGE_SUFFIX).zip"
 
-_BUILD_STATUS_BUNDLE_INCLUDE = \
-	Configuration.OperatingSystem.props \
-	$(wildcard bin/Build$(CONFIGURATION)/msbuild*.binlog) \
-	$(shell find . -name 'config.log') \
-	$(shell find . -name 'config.status') \
-	$(shell find . -name 'config.h') \
-	$(shell find . -name 'CMakeCache.txt') \
-	$(shell find . -name 'config.h') \
-	$(shell find . -name '.ninja_log') \
-	$(shell find . -name 'android-*.config.cache') \
-	bin/Build$(CONFIGURATION)/XABuildConfig.cs
-
-_BUILD_STATUS_BASENAME   = xa-build-status-v$(PRODUCT_VERSION).$(-num-commits-since-version-change)_$(OS_NAME)-$(OS_ARCH)_$(GIT_BRANCH)_$(GIT_COMMIT)-$(CONFIGURATION)
-_BUILD_STATUS_ZIP_OUTPUT = $(_BUILD_STATUS_BASENAME).$(ZIP_EXTENSION)
-
-ifneq ($(wildcard Configuration.Override.props),)
-_BUILD_STATUS_BUNDLE_INCLUDE += \
-	Configuration.Override.props
-endif
-
-"$(_BUILD_STATUS_ZIP_OUTPUT)" package-build-status:
-	build-tools/scripts/ln-to.sh -r . -o "$(_BUILD_STATUS_BASENAME)" $(_BUILD_STATUS_BUNDLE_INCLUDE)
-ifeq ($(ZIP_EXTENSION),zip)
-	zip -r "$(_BUILD_STATUS_ZIP_OUTPUT)" "$(_BUILD_STATUS_BASENAME)"
-else ifeq ($(ZIP_EXTENSION),tar.bz2)
-	tar -cjhvf "$(_BUILD_STATUS_ZIP_OUTPUT)" "$(_BUILD_STATUS_BASENAME)"
-endif
+"xa-build-status$(_RESULT_PACKAGE_SUFFIX).zip" package-build-status:
+	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipBuildStatus \
+		/p:Configuration=$(CONFIGURATION) /p:BuildStatusZipName="xa-build-status$(_RESULT_PACKAGE_SUFFIX).zip"

@@ -102,8 +102,11 @@ stages:
         artifactName: unsigned
         targetPath: $(System.DefaultWorkingDirectory)/unsigned-installers
 
-    - script: cp bin/*/*.binlog $(Build.ArtifactStagingDirectory)
-      displayName: copy binlogs
+    - task: MSBuild@1
+      displayName: package build results
+      inputs:
+        solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
     - task: PublishPipelineArtifact@0
@@ -188,28 +191,16 @@ stages:
         failTaskOnFailedTests: true
       condition: succeededOrFailed()
 
-    - task: CopyFiles@2
-      displayName: copy test artifacts
+    - task: MSBuild@1
+      displayName: package test results
       inputs:
-        contents: |
-          TestResult-*
-          *.log
-          bin\Test$(Configuration)\TestOutput*.txt
-          bin\Test$(Configuration)\temp\**\*.binlog
-          bin\Test$(Configuration)\temp\**\*.log
-        targetFolder: $(Build.ArtifactStagingDirectory)\Test$(Configuration)
-        condition: always()
-
-    - task: CopyFiles@2
-      displayName: copy temp files
-      inputs:
-        sourceFolder: $(temp)
-        contents: llc.exe-*
-        targetFolder: $(Build.ArtifactStagingDirectory)
+        solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        msbuildArguments: /t:ZipTestResults /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
-    - task: PublishBuildArtifacts@1
-      displayName: publish build and test artifacts
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
       inputs:
         artifactName: win-build-results
+        targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
