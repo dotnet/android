@@ -140,6 +140,7 @@ Suggested `brew install` commands:
     brew install gnu-indent
     brew install gnu-getopt
     brew install intltool
+    brew install ninja
     brew install scons
     brew install wget
     brew install xz
