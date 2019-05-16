@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "msbuild-fuzzer", "msbuild-fuzzer.csproj", "{A3671983-ABC2-4693-8872-463427B57117}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3671983-ABC2-4693-8872-463427B57117}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3671983-ABC2-4693-8872-463427B57117}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3671983-ABC2-4693-8872-463427B57117}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3671983-ABC2-4693-8872-463427B57117}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E88EED5D-9DFA-405D-9495-4EC9A146B249}
+	EndGlobalSection
+EndGlobal
