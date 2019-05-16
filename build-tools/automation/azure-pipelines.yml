@@ -33,7 +33,7 @@ stages:
       inputs:
         solution: build-tools/create-bundle/create-bundle.csproj
         configuration: $(Configuration)
-        msbuildArguments: $(MSBuildAbiArgs)
+        msbuildArguments: /bl:bin/Build$(Configuration)/msbuild-createbundle.binlog $(MSBuildAbiArgs)
 
     - task: CopyFiles@2
       displayName: copy bundle
@@ -47,6 +47,21 @@ stages:
       inputs:
         artifactName: $(BundleArtifactName)
         targetPath: $(Build.ArtifactStagingDirectory)
+
+    - task: MSBuild@1
+      displayName: package build results
+      inputs:
+        solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(Configuration)
+        msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)/results
+      condition: always()
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
+      inputs:
+        artifactName: prepare-build-results
+        targetPath: $(Build.ArtifactStagingDirectory)/results
+      condition: always()
 
 - stage: mac_build
   displayName: Mac
@@ -106,6 +121,7 @@ stages:
       displayName: package build results
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(Configuration)
         msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
@@ -195,6 +211,7 @@ stages:
       displayName: package test results
       inputs:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(Configuration)
         msbuildArguments: /t:ZipTestResults /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
