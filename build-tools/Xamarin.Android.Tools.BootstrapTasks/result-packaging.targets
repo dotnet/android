@@ -2,10 +2,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <ItemGroup>
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" />
+ <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props')" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.Override.props')" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs" Condition="Exists('$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs')" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\msbuild*.binlog" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.status" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.h" />
@@ -35,6 +35,7 @@
   <Target Name="ZipBuildStatus"
       Inputs="@(_BuildStatusFiles)"
       Outputs="$(ResultPackageOutputPath)\$(BuildStatusZipName)">
+    <MakeDir Directories="$(ResultPackageOutputPath)"/>
     <Zip
         Entries="@(_BuildStatusFiles)"
         File="$(ResultPackageOutputPath)\$(BuildStatusZipName)"
@@ -43,6 +44,7 @@
   <Target Name="ZipTestResults"
       Inputs="@(_TestResultFiles)"
       Outputs="$(ResultPackageOutputPath)\$(TestResultZipName)">
+    <MakeDir Directories="$(ResultPackageOutputPath)"/>
     <Zip
         Entries="@(_TestResultFiles)"
         File="$(ResultPackageOutputPath)\$(TestResultZipName)"
