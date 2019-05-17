@@ -141,7 +141,7 @@ stages:
   - job: build_test
     displayName: Build and Test
     pool: Hosted VS2017
-    timeoutInMinutes: 240
+    timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     variables:
       _AndroidDesignTimeResDirIntermediate: .
@@ -186,7 +186,7 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         msbuildArguments: /t:RunNUnitTests /bl:$(Build.ArtifactStagingDirectory)\run-nunit-tests.binlog
-      timeoutInMinutes: 120
+      timeoutInMinutes: 240
 
     - task: MSBuild@1
       displayName: nunit Java.Interop Tests
