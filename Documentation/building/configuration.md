@@ -122,6 +122,13 @@ Overridable MSBuild properties include:
     build and reference projects from. By default, this is
     `external/Java.Interop` directory, maintained by `git submodule update`.
 
+  * `$(JavaSdkDirectory)`: The JDK directory.  `$(JavaSdkDirectory)\bin\java`,
+    `$(JavaSdkDirectory)\bin\javac`, and `$(JavaSdkDirectory)\bin\jar` must
+    exist.
+
+    If not specified, we'll attempt to use a default based on e.g. the
+    `JAVA_HOME` environment variable and other "known" directories.
+
   * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
     the number of CPU cores used when **make**(1) executes. By default this uses
     `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
