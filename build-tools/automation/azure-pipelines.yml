@@ -140,7 +140,7 @@ stages:
   jobs:
   - job: build_test
     displayName: Build and Test
-    pool: Hosted VS2017
+    pool: VSEng-MicroBuildVS2017
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     variables:
