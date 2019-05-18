@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
 <ItemGroup>
   <_RuntimeOutput Include="$(OutputPath)java_runtime.jar">
     <OutputJar>$(OutputPath)java_runtime.jar</OutputJar>
@@ -52,11 +53,15 @@
   />
 </Target>
 <Target Name="_GenerateRuntimeDex16"
-      AfterTargets="Build"
-      Inputs="@(_RuntimeOutput->'%(Identity)')"
-      Outputs="@(_RuntimeOutput->'%(OutputDex)')">
+    AfterTargets="Build"
+    Inputs="@(_RuntimeOutput->'%(Identity)')"
+    Outputs="@(_RuntimeOutput->'%(OutputDex)')">
+  <PropertyGroup>
+    <_JavaHome Condition=" '$(JAVA_HOME)' == '' And '$(JavaSdkDirectory)' != '' ">JAVA_HOME=$(JavaSdkDirectory)</_JavaHome>
+  </PropertyGroup>
   <Exec
       Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;%(_RuntimeOutput.OutputDex)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
+      EnvironmentVariables="$(_JavaHome)"
   />
 </Target>
 </Project>
