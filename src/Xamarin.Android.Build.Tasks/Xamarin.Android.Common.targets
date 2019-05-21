@@ -2309,34 +2309,41 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="@(_TypeMapAssemblySource)" />
   </ItemGroup>
 
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+</Target>
+
+<Target Name="_ConvertCustomView"
+    Condition="Exists('$(_CustomViewMapFile)')"
+    Inputs="$(_CustomViewMapFile);$(_AcwMapFile)"
+    Outputs="$(_AndroidStampDirectory)_ConvertCustomView.stamp">
   <ConvertCustomView
-	Condition="Exists('$(_CustomViewMapFile)')"
-	CustomViewMapFile="$(_CustomViewMapFile)"
-	AcwMapFile="$(_AcwMapFile)"
-	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
-	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-  >
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AcwMapFile="$(_AcwMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)">
     <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />	
   </ConvertCustomView>
-  <Delete Files="@(_ProcessedCustomViews->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+  <Delete
+      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+      Files="@(_ProcessedCustomViews->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
   />
   <Aapt2Compile
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="@(_LibraryResourceHashDirectories);$(MonoAndroidResDirIntermediate)"
-    ExplicitCrunch="$(AndroidExplicitCrunch)"
-    ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
-    FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-    ToolPath="$(Aapt2ToolPath)"
-    ToolExe="$(Aapt2ToolExe)">
+      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+      ContinueOnError="$(DesignTimeBuild)"
+      ResourceDirectories="@(_ProcessedCustomViews->'%(ResourceDirectory)'->Distinct())"
+      ExplicitCrunch="$(AndroidExplicitCrunch)"
+      ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+      FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+      ToolPath="$(Aapt2ToolPath)"
+      ToolExe="$(Aapt2ToolExe)">
     <Output TaskParameter="CompiledResourceFlatArchives" ItemName="_UpdatedFlatArchives" />	
   </Aapt2Compile>
-  <Touch Files="@(_UpdatedFlatArchives->'$(_AndroidLibraryFlatArchivesDirectory)\%(Filename).stamp')"
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_UpdatedFlatArchives)' != '' "
-    AlwaysCreate="True"
+  <Touch
+      Condition=" '@(_UpdatedFlatArchives)' != '' "
+      Files="@(_UpdatedFlatArchives->'$(_AndroidLibraryFlatArchivesDirectory)\%(Filename).stamp')"
+      AlwaysCreate="True"
   />
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidStampDirectory)_ConvertCustomView.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_ReadAndroidManifest"
@@ -2400,6 +2407,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
     _GenerateJavaStubs;
+    _ConvertCustomView;
     _GenerateEnvironmentFiles;
     _AddStaticResources;
     $(_AfterAddStaticResources);
@@ -2453,6 +2461,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
 		_GenerateJavaStubs;
+		_ConvertCustomView;
 		_GenerateEnvironmentFiles;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
@@ -2578,7 +2587,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_GenerateEnvironmentFiles;">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ConvertCustomView;_GenerateEnvironmentFiles;">
   <CreateItem
     Include="$(IntermediateOutputPath)android\src\\**\*.java">
     <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
@@ -2944,6 +2953,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CopyMdbFiles;
 		_LinkAssemblies;
 		_GenerateJavaStubs;
+		_ConvertCustomView;
 		_GenerateEnvironmentFiles;
 		_CompileJava;
 		_CompileDex;
