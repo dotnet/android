@@ -48,7 +48,6 @@
   <Target Name="RunNUnitDeviceTests" DependsOnTargets="$(RunNUnitDeviceTestsDependsOn)"/>
 
   <Target Name="RunMSBuildDeviceIntegration">
-    <SetEnvironmentVariable Name="USE_MSBUILD" Value="0" Condition=" '$(USE_MSBUILD)' == '' " />
     <ItemGroup>
       <NUnitTarget Include="@(_DeviceTestAssembly)">
         <TestFilename>%(_DeviceTestAssembly.Filename)</TestFilename>
