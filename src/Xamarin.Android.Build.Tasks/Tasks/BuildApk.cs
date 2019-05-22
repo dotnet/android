@@ -109,10 +109,11 @@ namespace Xamarin.Android.Tasks
 
 		void ExecuteWithAbi (string supportedAbis, string apkInputPath, string apkOutputPath)
 		{
+			var temp = apkOutputPath + "new";
 			ArchiveFileList files = new ArchiveFileList ();
 			if (apkInputPath != null)
-				File.Copy (apkInputPath, apkOutputPath + "new", overwrite: true);
-			using (var apk = new ZipArchiveEx (apkOutputPath + "new", apkInputPath != null ? FileMode.Open : FileMode.Create )) {
+				File.Copy (apkInputPath, temp, overwrite: true);
+			using (var apk = new ZipArchiveEx (temp, apkInputPath != null ? FileMode.Open : FileMode.Create )) {
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				apk.Archive.AddEntry (RootPath + "NOTICE",
 						Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"));
@@ -192,8 +193,12 @@ namespace Xamarin.Android.Tasks
 				}
 				FixupArchive (apk);
 			}
-			MonoAndroidHelper.CopyIfZipChanged (apkOutputPath + "new", apkOutputPath);
-			File.Delete (apkOutputPath + "new");
+			if (MonoAndroidHelper.CopyIfZipChanged (temp, apkOutputPath)) {
+				Log.LogDebugMessage ($"Copied {temp} to {apkOutputPath}");
+			} else {
+				Log.LogDebugMessage ($"Skipped {apkOutputPath}: up to date");
+			}
+			File.Delete (temp);
 		}
 
 		public override bool Execute ()
