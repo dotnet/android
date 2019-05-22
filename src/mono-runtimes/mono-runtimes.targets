@@ -681,10 +681,10 @@
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)" Condition=" '@(_MonoCrossRuntime)' != '' " />
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" Condition=" '@(_MonoCrossRuntime)' != '' " />
       <BundleItem Include="@(_BclTestOutput)" />
-      <BundleItem Include="@(MonoFacadeAssembly->'$(_MonoArchiveBclDir)\Facades\%(Identity)')" />
-      <BundleItem Include="@(MonoProfileAssembly->'$(_MonoArchiveBclDir)\%(Identity)')" />
-      <BundleItem Include="@(MonoFacadeAssembly->'$(_WindowsMonoArchiveBclDir)\Facades\%(Identity)')" />
-      <BundleItem Include="@(MonoProfileAssembly->'$(_WindowsMonoArchiveBclDir)\%(Identity)')" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(_MSBuildDir)\$(HostOS)\bcl\Facades\%(Identity)')" />
+      <BundleItem Include="@(MonoProfileAssembly->'$(_MSBuildDir)\$(HostOS)\bcl\%(Identity)')" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(_MSBuildDir)\bcl\Facades\%(Identity)')" />
+      <BundleItem Include="@(MonoProfileAssembly->'$(_MSBuildDir)\bcl\%(Identity)')" />
     </ItemGroup>
   </Target>
 
