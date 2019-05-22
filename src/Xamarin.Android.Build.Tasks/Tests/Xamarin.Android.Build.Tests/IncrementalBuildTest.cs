@@ -526,6 +526,88 @@ namespace Lib2
 		}
 
 		[Test]
+		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+					new BuildItem.Source ("CustomTextView.cs") {
+						TextContent = () => 
+							@"using Android.Widget;
+							using Android.Content;
+							using Android.Util;
+							namespace MyApp
+							{
+								public class CustomTextView : TextView
+								{
+									public CustomTextView(Context context, IAttributeSet attributes) : base(context, attributes)
+									{
+									}
+								}
+							}"
+					}
+				}
+			};
+			// Use a custom view
+			app.LayoutMain = app.LayoutMain.Replace ("</LinearLayout>", "<MyApp.CustomTextView android:id=\"@+id/myText\" /></LinearLayout>");
+			//NOTE: so _BuildApkEmbed runs in commercial tests
+			app.SetProperty ("EmbedAssembliesIntoApk", "True");
+			app.SetProperty ("AndroidUseSharedRuntime", "False");
+			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+
+			int count = 0;
+			var lib = new DotNetStandard {
+				ProjectName = "MyLibrary",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"
+					},
+				}
+			};
+			//NOTE: this test is checking when $(ProduceReferenceAssembly) is False
+			lib.SetProperty ("ProduceReferenceAssembly", "False");
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				lib.Touch ("Bar.cs");
+
+				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
+
+				var targetsShouldSkip = new [] {
+					"_BuildLibraryImportsCache",
+					"_ResolveLibraryProjectImports",
+					"_ConvertCustomView",
+				};
+				foreach (var target in targetsShouldSkip) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+
+				var targetsShouldRun = new [] {
+					//MyLibrary.dll changed and $(ProduceReferenceAssembly)=False
+					"CoreCompile",
+					"_GenerateJavaStubs",
+					"_BuildApkEmbed",
+					"_CopyPackage",
+					"_Sign",
+				};
+				foreach (var target in targetsShouldRun) {
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+			}
+		}
+
+		[Test]
 		public void ResolveLibraryProjectImports ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
