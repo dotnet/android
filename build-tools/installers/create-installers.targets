@@ -20,6 +20,10 @@
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
   </PropertyGroup>
   <ItemGroup>
+    <_DesignerFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\bcl\**\*" />
+    <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
+  </ItemGroup>
+  <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\AndroidApiInfo.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\mono.android.dex" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.dll" />
@@ -266,11 +270,17 @@
       <MSBuildItemsWin Include="@(_MSBuildLibHostFilesWin)">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
       </MSBuildItemsWin>
+      <MSBuildItemsWin Include="@(_DesignerFilesWin)">
+        <RelativePath>bcl\%(RecursiveDir)\%(Filename)%(Extension)</RelativePath>
+      </MSBuildItemsWin>
       <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
+      </MSBuildItemsUnix>
+      <MSBuildItemsUnix Include="@(_DesignerFilesUnix)">
+        <RelativePath>$(HostOS)\bcl\%(RecursiveDir)\%(Filename)%(Extension)</RelativePath>
       </MSBuildItemsUnix>
     </ItemGroup>
   </Target>
