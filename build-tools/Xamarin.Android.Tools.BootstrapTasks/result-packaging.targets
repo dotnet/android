@@ -39,6 +39,7 @@
     <Zip
         Entries="@(_BuildStatusFiles)"
         File="$(ResultPackageOutputPath)\$(BuildStatusZipName)"
+        Prefix="$(XamarinAndroidSourcePath)"
     />
   </Target>
   <Target Name="ZipTestResults"
@@ -48,6 +49,7 @@
     <Zip
         Entries="@(_TestResultFiles)"
         File="$(ResultPackageOutputPath)\$(TestResultZipName)"
+        Prefix="$(XamarinAndroidSourcePath)"
     />
   </Target>
 </Project>
