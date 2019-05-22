@@ -168,7 +168,11 @@
       <Output TaskParameter="CommitHash"   PropertyName="_MonoGitCommitHash" />
     </GitCommitHash>
     <PropertyGroup>
+      <_MonoArchiveUriBase>https://xamjenkinsartifact.azureedge.net/mono-sdks</_MonoArchiveUriBase>
       <_MonoArchiveName>android-$(_MonoSdksConfiguration)-$(HostOS)-$(_MonoGitCommitHash)</_MonoArchiveName>
+      <_WindowsMonoArchiveName>android-release-Windows-$(_MonoGitCommitHash)</_WindowsMonoArchiveName>
+      <_MonoArchiveBclDir>$(_MSBuildDir)\$(HostOS)\bcl</_MonoArchiveBclDir>
+      <_WindowsMonoArchiveBclDir>$(_MSBuildDir)\bcl</_WindowsMonoArchiveBclDir>
     </PropertyGroup>
   </Target>
 
@@ -302,18 +306,21 @@
 
   <Target Name="_DownloadArchive"
       DependsOnTargets="_GetMonoGitCommitHash"
-      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') " >
+      Condition=" !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-build') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download') And !Exists('$(MonoSourceFullPath)\sdks\out\.stamp-$(_WindowsMonoArchiveName)-download') " >
     <MakeDir
         Directories="$(MonoSourceFullPath)\sdks\out"
     />
     <DownloadUri
-        SourceUris="https://xamjenkinsartifact.azureedge.net/mono-sdks/$(_MonoArchiveName).zip"
+        SourceUris="$(_MonoArchiveUriBase)/$(_MonoArchiveName).zip"
         DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
         ContinueOnError="True"
     />
     <PropertyGroup>
       <_UnzipTempPath>$(MonoSourceFullPath)\sdks\.out.$([System.IO.Path]::GetRandomFileName())</_UnzipTempPath>
+      <_HostBclFilesDir>$(MonoSourceFullPath)\sdks\out\android-bcl\monodroid</_HostBclFilesDir>
+      <_WindowsBclFilesDir>$(_WindowsMonoArchiveBclDir)\android-bcl\monodroid</_WindowsBclFilesDir>
     </PropertyGroup>
+
     <SystemUnzip
         HostOS="$(HostOS)"
         SourceFiles="$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip"
@@ -323,6 +330,7 @@
     <RemoveDir
         Directories="$(_UnzipTempPath)"
     />
+
     <ItemGroup>
       <_ExtractedSdkFiles Include="$(MonoSourceFullPath)\sdks\out\**\*" />
     </ItemGroup>
@@ -337,6 +345,63 @@
         Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"
         AlwaysCreate="True"
     />
+    <MakeDir
+        Directories="$(_MonoArchiveBclDir)\Facades"
+    />
+    <ItemGroup>
+      <_ExtractedAndroidMainBclFiles Include="$(_HostBclFilesDir)\*" Exclude="$(_HostBclFilesDir)\*.pdb;$(_HostBclFilesDir)\*.unsafe.dll.tmp;$(_HostBclFilesDir)\Consts.cs" />
+      <_ExtractedAndroidFacadeBclFiles Include="$(_HostBclFilesDir)\Facades\*" Exclude="$(_HostBclFilesDir)\Facades\*.pdb;$(_HostBclFilesDir)\Facades\.stamp" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_ExtractedAndroidMainBclFiles)"
+        DestinationFiles="@(_ExtractedAndroidMainBclFiles->'$(_MonoArchiveBclDir)\%(Filename)%(Extension)')"
+    />
+    <Copy
+        SourceFiles="@(_ExtractedAndroidFacadeBclFiles)"
+        DestinationFiles="@(_ExtractedAndroidFacadeBclFiles->'$(_MonoArchiveBclDir)\Facades\%(Filename)%(Extension)')"
+    />
+
+    <MakeDir
+        Directories="$(_WindowsMonoArchiveBclDir)\Facades"
+    />
+    <DownloadUri
+        SourceUris="$(_MonoArchiveUriBase)/$(_WindowsMonoArchiveName).zip"
+        DestinationFiles="$(AndroidToolchainCacheDirectory)\$(_WindowsMonoArchiveName).zip"
+        ContinueOnError="True"
+    />
+    <PropertyGroup>
+      <_UnzipTempPath>$(_MSBuildDir)\.windows-bcl.$([System.IO.Path]::GetRandomFileName())</_UnzipTempPath>
+    </PropertyGroup>
+    <SystemUnzip
+        HostOS="$(HostOS)"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\$(_WindowsMonoArchiveName).zip"
+        DestinationFolder="$(_WindowsMonoArchiveBclDir)"
+        TempUnzipDir="$(_UnzipTempPath)"
+    />
+    <RemoveDir
+        Directories="$(_UnzipTempPath)"
+    />
+    <ItemGroup>
+      <_ExtractedWindowsAndroidMainBclFiles Include="$(_WindowsBclFilesDir)\*" Exclude="$(_WindowsBclFilesDir)\*.pdb;$(_WindowsBclFilesDir)\*.unsafe.dll.tmp;$(_WindowsBclFilesDir)\Consts.cs" />
+      <_ExtractedWindowsAndroidFacadeBclFiles Include="$(_WindowsBclFilesDir)\Facades\*" Exclude="$(_WindowsBclFilesDir)\Facades\*.pdb;$(_WindowsBclFilesDir)\Facades\.stamp" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_ExtractedWindowsAndroidMainBclFiles)"
+        DestinationFiles="@(_ExtractedWindowsAndroidMainBclFiles->'$(_WindowsMonoArchiveBclDir)\%(Filename)%(Extension)')"
+    />
+    <Copy
+        SourceFiles="@(_ExtractedWindowsAndroidFacadeBclFiles)"
+        DestinationFiles="@(_ExtractedWindowsAndroidFacadeBclFiles->'$(_WindowsMonoArchiveBclDir)\Facades\%(Filename)%(Extension)')"
+    />
+    <RemoveDir
+        Directories="$(_WindowsMonoArchiveBclDir)\android-bcl"
+    />
+    <Touch
+        Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_WindowsMonoArchiveName).zip') "
+        Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_WindowsMonoArchiveName)-download"
+        AlwaysCreate="True"
+    />
+
   </Target>
 
   <Target Name="_Build"
@@ -616,6 +681,10 @@
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName).d%(_MonoCrossRuntime.ExeSuffix)" Condition=" '@(_MonoCrossRuntime)' != '' " />
       <BundleItem Include="$(_MSBuildDir)\%(_MonoCrossRuntime.InstallPath)%(_MonoCrossRuntime.CrossMonoName)%(_MonoCrossRuntime.ExeSuffix)" Condition=" '@(_MonoCrossRuntime)' != '' " />
       <BundleItem Include="@(_BclTestOutput)" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(_MSBuildDir)\$(HostOS)\bcl\Facades\%(Identity)')" />
+      <BundleItem Include="@(MonoProfileAssembly->'$(_MSBuildDir)\$(HostOS)\bcl\%(Identity)')" />
+      <BundleItem Include="@(MonoFacadeAssembly->'$(_MSBuildDir)\bcl\Facades\%(Identity)')" />
+      <BundleItem Include="@(MonoProfileAssembly->'$(_MSBuildDir)\bcl\%(Identity)')" />
     </ItemGroup>
   </Target>
 
