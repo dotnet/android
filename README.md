@@ -33,7 +33,8 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 | **Commercial Xamarin.Android 8.3 (d15-7)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 8.3, macOS+VS2017][commercial-d15-7-macOS-x86_64-icon]][commercial-d15-7-macOS-x86_64-status] |
 | **Commercial Xamarin.Android 9.0 (d15-8)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 9.0, macOS+VS2017][commercial-d15-8-macOS-x86_64-icon]][commercial-d15-8-macOS-x86_64-status] |
 | **Commercial Xamarin.Android 9.1 (d15-9)** for macOS &amp; Windows+Visual Studio 2017       | [![Commercial Xamarin.Android 9.1, macOS+VS2017][commercial-d15-9-macOS-x86_64-icon]][commercial-d15-9-macOS-x86_64-status] |
-| **Commercial Xamarin.Android 9.1.99 (master)** for macOS &amp; Windows+Visual Studio 2017   | [![Commercial Xamarin.Android 9.1.99, macOS][commercial-master-macOS-x86_64-icon]][commercial-master-macOS-x86_64-status] |
+| **Commercial Xamarin.Android 9.2 (d16-0)** for Windows+Visual Studio 2019       | [Download][commercial-d16-0-Windows-x86_64] |
+| **Commercial Xamarin.Android 9.2 (d16-0)** for macOS                            | [Download][commercial-d16-0-macOS-x86_64]   |
 
 [commercial-d15-2-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/badge/icon
 [commercial-d15-2-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-2/
@@ -51,8 +52,8 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-d15-8-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-8/
 [commercial-d15-9-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/badge/icon
 [commercial-d15-9-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/
-[commercial-master-macOS-x86_64-icon]:    https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/badge/icon
-[commercial-master-macOS-x86_64-status]:  https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-master/
+[commercial-d16-0-Windows-x86_64]:        https://download.visualstudio.microsoft.com/download/pr/b153d2f1-f6ce-4fdf-b38d-5e228ae08bd6/d308fbee786cfb26a2fd783f183f4e7e/xamarin.android.sdk.9.2.3.0.vsix
+[commercial-d16-0-macOS-x86_64]:          https://download.visualstudio.microsoft.com/download/pr/70ad99db-5313-4c32-9b0e-9c5b37a995c9/e505e4500a1a89d947906fecad034031/xamarin.android-9.2.3-0.pkg
 
 # Contributing
 
