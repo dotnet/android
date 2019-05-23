@@ -965,36 +965,39 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void MultiDexCustomMainDexFileList ([Values (true, false)] bool useD8)
+		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
 		{
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
 				"android/support/multidex/MultiDexApplication.class",
 				"android/support/multidex/MultiDex$V19.class",
-				"android/support/multidex/MultiDex$V4.class",
 				"android/support/multidex/ZipUtil.class",
 				"android/support/multidex/MultiDexExtractor$1.class",
 				"android/support/multidex/MultiDexExtractor.class",
-				"android/support/multidex/MultiDex$V14.class",
 				"android/support/multidex/MultiDex.class",
 				"MyTest.class",
 			};
 			var proj = CreateMultiDexRequiredApplication ();
-			if (useD8) {
-				proj.DexTool = "d8";
-			}
+			proj.DexTool = dexTool;
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{minSdkVersion}\" />");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (MultiDexCustomMainDexFileList)}{useD8}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "build should succeed. Run will fail.");
-
+				string androidBinDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin");
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
+				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
+				if (dexTool == "d8" && minSdkVersion == "21") {
+					//NOTE: d8/r8 does not support custom dex list files in this case
+					return;
+				}
 				//NOTE: d8 has the list in a different order, so we should do an unordered comparison
 				var actual = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep"));
 				foreach (var item in expected) {
 					Assert.IsTrue (actual.Contains (item), $"multidex.keep did not contain `{item}`");
 				}
-				Assert.AreEqual (expected.Length, actual.Length, "multidex.keep file contained more items than expected!");
 			}
 		}
 
