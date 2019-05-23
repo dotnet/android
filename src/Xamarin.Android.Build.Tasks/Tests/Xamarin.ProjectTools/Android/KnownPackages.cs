@@ -473,38 +473,38 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
-		public static Package XamarinForms_3_6_0_220655 = new Package {
+		public static Package XamarinForms_4_0_0_425677 = new Package {
 			Id = "Xamarin.Forms",
-			Version = "3.6.0.220655",
+			Version = "4.0.0.425677",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
 				},
 				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\FormsViewGroup.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\FormsViewGroup.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
 				},
 			}
 		};
-		public static Package XamarinFormsMaps_3_6_0_220655 = new Package {
+		public static Package XamarinFormsMaps_4_0_0_425677 = new Package {
 			Id = "Xamarin.Forms.Maps",
-			Version = "3.6.0.220655",
+			Version = "4.0.0.425677",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Forms.Maps.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.Android.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.Android.dll"
 				},
 				new BuildItem.Reference ("Xamarin.Forms.Maps") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.3.6.0.220655\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.dll"
 				},
 			}
 		};
