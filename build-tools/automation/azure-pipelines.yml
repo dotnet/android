@@ -2,7 +2,7 @@
 
 trigger:
   - master
-  - d16*
+  - d16-?
 
 # Global variables
 variables:
@@ -143,12 +143,6 @@ stages:
     pool: VSEng-MicroBuildVS2017
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
-    variables:
-      _AndroidDesignTimeResDirIntermediate: .
-      CleanAllFiles: False
-      CleanOnNuGetPackagesChange: False
-      NuGet.Show.Stack: true
-      NUnit.Extra: --trace=Verbose
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -159,14 +153,12 @@ stages:
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
-        msbuildVersion: 15.0
         msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
-        msbuildVersion: 15.0
         msbuildArguments: /t:Build /bl:$(Build.ArtifactStagingDirectory)\build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
