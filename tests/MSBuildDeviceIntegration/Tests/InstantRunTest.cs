@@ -41,6 +41,8 @@ namespace Xamarin.Android.Build.Tests
 					string className = "Lcom/xamarin/forms/platform/android/FormsViewGroup;";
 					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should *not* include `{className}`!");
 					className = "Lmono/MonoRuntimeProvider;";
+					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+					className = "Lmono/MonoPackageManager;";
 					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
 				} finally {
 					File.Delete (dexFile);
