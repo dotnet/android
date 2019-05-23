@@ -208,8 +208,8 @@ EXTERNAL_XA_PATH=$(topdir)
 EXTERNAL_GIT_PATH=$(topdir)/external
 
 prepare-external-git-dependencies:
-	$(call MSBUILD_BINLOG,prep-external-tasks) build-tools/xa-prep-tasks/xa-prep-tasks.csproj
-	$(call MSBUILD_BINLOG,prep-external-checkout) build-tools/xa-prep-tasks/xa-prep-tasks.csproj \
+	msbuild build-tools/xa-prep-tasks/xa-prep-tasks.csproj /p:Configuration=$(CONFIGURATION)
+	msbuild build-tools/xa-prep-tasks/xa-prep-tasks.csproj /p:Configuration=$(CONFIGURATION) \
 		/t:CheckoutExternalGitSources /p:ExternalSourceDependencyDirectory='$(EXTERNAL_GIT_PATH)'
 
 -include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
