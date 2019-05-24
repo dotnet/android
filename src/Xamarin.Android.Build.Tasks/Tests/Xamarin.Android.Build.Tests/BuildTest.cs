@@ -2692,7 +2692,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_6_0_220655);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
@@ -2735,7 +2735,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_3_6_0_220655);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");
