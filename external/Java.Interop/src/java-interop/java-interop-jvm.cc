@@ -24,7 +24,7 @@ java_interop_jvm_load (const char *path)
 		return JAVA_INTEROP_JVM_FAILED_ALREADY_LOADED;
 	}
 
-	jvm = calloc (1, sizeof (struct DylibJVM));
+	jvm = static_cast<DylibJVM*>(calloc (1, sizeof (DylibJVM)));
 	if (!jvm) {
 		return JAVA_INTEROP_JVM_FAILED_OOM;
 	}
@@ -38,17 +38,19 @@ java_interop_jvm_load (const char *path)
 
 	int symbols_missing = 0;
 
-#define LOAD_SYMBOL(symbol) do { \
-		jvm->symbol = dlsym (jvm->dl_handle, #symbol); \
+#define LOAD_SYMBOL_CAST(symbol, Type) do { \
+		jvm->symbol = reinterpret_cast<Type>(dlsym (jvm->dl_handle, #symbol)); \
 		if (!jvm->symbol) { \
 			log_error (LOG_DEFAULT, "Failed to load JVM symbol: %s", #symbol); \
 			symbols_missing = 1; \
 		} \
 	} while (0)
+#define LOAD_SYMBOL(symbol) LOAD_SYMBOL_CAST(symbol, java_interop_ ## symbol ## _fptr)
 
 	LOAD_SYMBOL(JNI_CreateJavaVM);
 	LOAD_SYMBOL(JNI_GetCreatedJavaVMs);
 
+#undef LOAD_SYMBOL_CAST
 #undef LOAD_SYMBOL
 
 	if (symbols_missing) {

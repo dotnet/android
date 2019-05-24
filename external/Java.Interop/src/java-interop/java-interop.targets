@@ -13,31 +13,44 @@
   <PropertyGroup>
     <_MacLib>$(OutputPath)\lib$(OutputName).dylib</_MacLib>
   </PropertyGroup>
-  <Target Name="BuildMac"
-      Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
-      Inputs="@(Compile)"
-      Outputs="$(_MacLib)">
-    <PropertyGroup>
-      <_FixedDefines>$(DefineSymbols.Split(' '))</_FixedDefines>
-    </PropertyGroup>
+  <Target Name="_CompileObjectFiles"
+      Condition=" '$(OS)' != 'Windows_NT' "
+      Inputs="@(ClCompile)"
+      Outputs="obj\$(Configuration)\%(Filename).o">
+    <MakeDir Directories="obj\$(Configuration)" />
     <ItemGroup>
-      <_Defines Include="$(_FixedDefines)" />
+      <_Defines Include="%(ClCompile.PreprocessorDefinitions)" />
+      <_Includes Include="%(ClCompile.AdditionalIncludeDirectories)" />
     </ItemGroup>
     <PropertyGroup>
-      <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
-      <_Includes>@(MonoIncludePath-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
+      <_Arch Condition=" Exists ('/Library/Frameworks/') ">-m64</_Arch>
+      <_Cc Condition=" '%(ClCompile.Extension)' == '.c' ">gcc -std=c99</_Cc>
+      <_Cc Condition=" '%(ClCompile.Extension)' == '.cc' ">g++</_Cc>
+      <_Def>@(_Defines->'-D%(Identity)', ' ')</_Def>
+      <_Inc>@(_Includes->'-I "%(Identity)"', ' ')</_Inc>
+    </PropertyGroup>
+    <Exec
+        Command="$(_Cc) -c -g $(_Arch) -o &quot;obj\$(Configuration)\%(ClCompile.Filename).o&quot; $(_Def) $(_Inc) &quot;%(Identity)&quot;"
+    />
+  </Target>
+  <Target Name="BuildMac"
+      Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
+      DependsOnTargets="_CompileObjectFiles"
+      Inputs="@(ClCompile)"
+      Outputs="$(_MacLib)">
+    <PropertyGroup>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
       <_Libs>$(MonoLibs)</_Libs>
-      <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
+      <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
     </PropertyGroup>
-    <MakeDir Directories="obj" />
-    <Exec Command="gcc -g -shared -m64 -std=c99 -o &quot;$(_MacLib)&quot; $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+    <Exec Command="gcc -g -shared -m64 -std=c99 -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
     <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;$(_MacLib)&quot;" />
   </Target>
   <Target Name="BuildUnixLibraries"
       Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/')"
-      Inputs="@(Compile)"
+      DependsOnTargets="_CompileObjectFiles"
+      Inputs="@(ClCompile)"
       Outputs="$(OutputPath)\lib$(OutputName).so">
     <PropertyGroup>
       <_FixedDefines>$(DefineSymbols.Split(' '))</_FixedDefines>
@@ -46,14 +59,11 @@
       <_Defines Include="$(_FixedDefines)" />
     </ItemGroup>
     <PropertyGroup>
-      <_CppFlags>@(_Defines -&gt; '-D%(Identity)', ' ')</_CppFlags>
-      <_Includes>@(MonoIncludePath-&gt;'-I %(Identity)', ' ') @(JdkIncludePath-&gt;'-I %(Identity)', ' ')</_Includes>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace -fPIC</_LinkFlags>
       <_Libs>$(MonoLibs)</_Libs>
-      <_Files>@(Compile -&gt; '%(Identity)', ' ')</_Files>
+      <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
     </PropertyGroup>
-    <MakeDir Directories="obj" />
-    <Exec Command="gcc -g -shared -std=c99 -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L -o $(OutputPath)\lib$(OutputName).so $(_CppFlags) $(_LinkFlags) $(_Libs) $(_Includes) $(_Files)" />
+    <Exec Command="g++ -g -shared -o &quot;$(OutputPath)\lib$(OutputName).so&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
   </Target>
   <Target Name="Clean">
     <RemoveDir Directories="obj" />

@@ -83,8 +83,8 @@ lookup_optional_mono_thread_functions (void)
 	if (!h)
 		return;
 
-	_mono_thread_get_managed_id     = dlsym (h, "mono_thread_get_managed_id");
-	_mono_thread_get_name_utf8      = dlsym (h, "mono_thread_get_name_utf8");
+	_mono_thread_get_managed_id     = reinterpret_cast<MonoThreadGetManagedId>(dlsym (h, "mono_thread_get_managed_id"));
+	_mono_thread_get_name_utf8      = reinterpret_cast<MonoThreadGetNameUtf8>(dlsym (h, "mono_thread_get_name_utf8"));
 }
 
 static jobject
@@ -93,8 +93,8 @@ lref_to_gref (JNIEnv *env, jobject lref)
 	jobject g;
 	if (lref == 0)
 		return 0;
-	g = (*env)->NewGlobalRef (env, lref);
-	(*env)->DeleteLocalRef (env, lref);
+	g = env->NewGlobalRef (lref);
+	env->DeleteLocalRef (lref);
 	return g;
 }
 
@@ -103,9 +103,9 @@ ensure_jnienv (JavaInteropGCBridge *bridge)
 {
 	JavaVM *jvm = bridge->jvm;
 	JNIEnv *env;
-	if ((*bridge->jvm)->GetEnv (bridge->jvm, (void**)&env, JNI_VERSION_1_6) != JNI_OK || env == NULL) {
+	if (bridge->jvm->GetEnv ((void**)&env, JNI_VERSION_1_6) != JNI_OK || env == NULL) {
 		mono_thread_attach (mono_domain_get ());
-		(*jvm)->GetEnv (jvm, (void**)&env, JNI_VERSION_1_6);
+		jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	}
 	return env;
 }
@@ -118,9 +118,9 @@ java_interop_gc_bridge_destroy (JavaInteropGCBridge *bridge)
 
 	JNIEnv *env = ensure_jnienv (bridge);
 	if (env != NULL) {
-		(*env)->DeleteGlobalRef (env, bridge->Runtime_instance);
-		(*env)->DeleteGlobalRef (env, bridge->WeakReference_class);
-		(*env)->DeleteGlobalRef (env, bridge->GCUserPeerable_class);
+		env->DeleteGlobalRef (bridge->Runtime_instance);
+		env->DeleteGlobalRef (bridge->WeakReference_class);
+		env->DeleteGlobalRef (bridge->GCUserPeerable_class);
 
 		bridge->Runtime_instance    = NULL;
 		bridge->WeakReference_class = NULL;
@@ -276,37 +276,37 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 	bridge.jvm  = jvm;
 
 	JNIEnv *env;
-	if ((*jvm)->GetEnv (jvm, (void**) &env, JNI_VERSION_1_6) != JNI_OK)
+	if (jvm->GetEnv ((void**) &env, JNI_VERSION_1_6) != JNI_OK)
 		return NULL;
 
-	jobject     Runtime_class           = (*env)->FindClass (env, "java/lang/Runtime");
+	jclass      Runtime_class           = env->FindClass ("java/lang/Runtime");
 	if (Runtime_class != NULL) {
-		bridge.Runtime_gc               = (*env)->GetMethodID (env, Runtime_class, "gc", "()V");
+		bridge.Runtime_gc               = env->GetMethodID (Runtime_class, "gc", "()V");
 
-		jmethodID   Runtime_getRuntime  = (*env)->GetStaticMethodID (env, Runtime_class, "getRuntime", "()Ljava/lang/Runtime;");
+		jmethodID   Runtime_getRuntime  = env->GetStaticMethodID (Runtime_class, "getRuntime", "()Ljava/lang/Runtime;");
 		bridge.Runtime_instance         = Runtime_getRuntime
-			? lref_to_gref (env, (*env)->CallStaticObjectMethod (env, Runtime_class, Runtime_getRuntime))
+			? lref_to_gref (env, env->CallStaticObjectMethod (Runtime_class, Runtime_getRuntime))
 			: NULL;
 
-		(*env)->DeleteLocalRef (env, Runtime_class);
+		env->DeleteLocalRef (Runtime_class);
 	}
 
-	jobject     WeakReference_class     = (*env)->FindClass (env, "java/lang/ref/WeakReference");
+	jclass      WeakReference_class     = env->FindClass ("java/lang/ref/WeakReference");
 	if (WeakReference_class != NULL) {
-		bridge.WeakReference_init       = (*env)->GetMethodID (env, WeakReference_class, "<init>", "(Ljava/lang/Object;)V");
-		bridge.WeakReference_get        = (*env)->GetMethodID (env, WeakReference_class, "get", "()Ljava/lang/Object;");
-		bridge.WeakReference_class      = lref_to_gref (env, WeakReference_class);
+		bridge.WeakReference_init       = env->GetMethodID (WeakReference_class, "<init>", "(Ljava/lang/Object;)V");
+		bridge.WeakReference_get        = env->GetMethodID (WeakReference_class, "get", "()Ljava/lang/Object;");
+		bridge.WeakReference_class      = static_cast<jclass>(lref_to_gref (env, WeakReference_class));
 	}
 
-	jobject     GCUserPeerable_class    = (*env)->FindClass (env, "com/xamarin/java_interop/GCUserPeerable");
+	jclass      GCUserPeerable_class    = env->FindClass ("com/xamarin/java_interop/GCUserPeerable");
 	if (GCUserPeerable_class) {
-		bridge.GCUserPeerable_add       = (*env)->GetMethodID (env, GCUserPeerable_class, "jiAddManagedReference",      "(Ljava/lang/Object;)V");
-		bridge.GCUserPeerable_clear     = (*env)->GetMethodID (env, GCUserPeerable_class, "jiClearManagedReferences",   "()V");
-		bridge.GCUserPeerable_class     = lref_to_gref (env, GCUserPeerable_class);
+		bridge.GCUserPeerable_add       = env->GetMethodID (GCUserPeerable_class, "jiAddManagedReference",      "(Ljava/lang/Object;)V");
+		bridge.GCUserPeerable_clear     = env->GetMethodID (GCUserPeerable_class, "jiClearManagedReferences",   "()V");
+		bridge.GCUserPeerable_class     = static_cast<jclass>(lref_to_gref (env, GCUserPeerable_class));
 		fflush (stdout);
 	}
 
-	JavaInteropGCBridge *p  = calloc (1, sizeof (JavaInteropGCBridge));
+	JavaInteropGCBridge *p  = static_cast<JavaInteropGCBridge*>(calloc (1, sizeof (JavaInteropGCBridge)));
 
 	if (p == NULL || bridge.jvm == NULL ||
 			bridge.Runtime_instance == NULL || bridge.Runtime_gc == NULL ||
@@ -356,7 +356,7 @@ java_interop_gc_bridge_set_bridge_processing_field (
 	if (bridge == NULL || type_handle.value == NULL || field_name == NULL)
 		return -1;
 
-	MonoType *type = type_handle.value;
+	MonoType *type = static_cast<MonoType*>(type_handle.value);
 
 	bridge->BridgeProcessing_type   = mono_class_from_mono_type (type);
 	bridge->BridgeProcessing_field  = mono_class_get_field_from_name (bridge->BridgeProcessing_type,    field_name);
@@ -375,7 +375,7 @@ java_interop_gc_bridge_register_bridgeable_type (
 	if (bridge->num_bridge_types >= NUM_GC_BRIDGE_TYPES)
 	    return -1;
 
-	MonoType               *type    = type_handle.value;
+	MonoType               *type    = static_cast<MonoType*>(type_handle.value);
 	int                     i       = bridge->num_bridge_types;
 	MonoJavaGCBridgeInfo   *info    = &bridge->mono_java_gc_bridge_info [i];
 
@@ -527,12 +527,11 @@ log_gref (JavaInteropGCBridge *bridge, const char *format, ...)
 }
 
 static char
-get_object_ref_type (JNIEnv *env, void *handle)
+get_object_ref_type (JNIEnv *env, jobject handle)
 {
-	jobjectRefType value;
 	if (handle == NULL)
 		return 'I';
-	value = (*env)->GetObjectRefType (env, handle);
+	jobjectRefType value    = env->GetObjectRefType (handle);
 	switch (value) {
 		case JNIInvalidRefType:     return 'I';
 		case JNILocalRefType:       return 'L';
@@ -799,21 +798,21 @@ take_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj,
 	if (bridge_info == NULL)
 		return 0;
 
-	void *weak;
+	jobject weak;
 	mono_field_get_value (obj, bridge_info->weak_handle, &weak);
 
-	void *handle    = (*env)->CallObjectMethod (env, weak, bridge->WeakReference_get);
+	jobject handle  = env->CallObjectMethod (weak, bridge->WeakReference_get);
 	log_gref (bridge, "*try_take_global_2_1 obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
 
 	if (handle) {
-		void *h     = (*env)->NewGlobalRef (env, handle);
-		(*env)->DeleteLocalRef (env, handle);
+		jobject h   = env->NewGlobalRef (handle);
+		env->DeleteLocalRef (handle);
 		handle      = h;
 		java_interop_gc_bridge_gref_log_new (bridge, weak, get_object_ref_type (env, weak),
 				handle, get_object_ref_type (env, handle), thread_name, thread_id, "take_global_ref_java");
 	}
 	java_interop_gc_bridge_weak_gref_log_delete (bridge, weak, get_object_ref_type (env, weak), thread_name, thread_id, "take_global_ref_java");
-	(*env)->DeleteGlobalRef (env, weak);
+	env->DeleteGlobalRef (weak);
 	weak        = NULL;
 	mono_field_set_value (obj, bridge_info->weak_handle, &weak);
 
@@ -832,19 +831,19 @@ take_weak_global_ref_java (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject 
 	if (bridge_info == NULL)
 		return 0;
 
-	void *handle;
+	jobject handle;
 	mono_field_get_value (obj, bridge_info->handle, &handle);
 
-	jobject weaklocal   = (*env)->NewObject (env, bridge->WeakReference_class, bridge->WeakReference_init, handle);
-	void   *weakglobal  = (*env)->NewGlobalRef (env, weaklocal);
-	(*env)->DeleteLocalRef (env, weaklocal);
+	jobject weaklocal   = env->NewObject (bridge->WeakReference_class, bridge->WeakReference_init, handle);
+	jobject weakglobal  = env->NewGlobalRef (weaklocal);
+	env->DeleteLocalRef (weaklocal);
 
 	log_gref (bridge, "*take_weak_2_1 obj=%p -> wref=%p handle=%p\n", obj, weakglobal, handle);
 	java_interop_gc_bridge_weak_gref_log_new (bridge, handle, get_object_ref_type (env, handle),
 			weakglobal, get_object_ref_type (env, weakglobal), thread_name, thread_id, "take_weak_global_ref_2_1_compat");
 
 	java_interop_gc_bridge_gref_log_delete (bridge, handle, get_object_ref_type (env, handle), thread_name, thread_id, "take_weak_global_ref_2_1_compat");
-	(*env)->DeleteGlobalRef (env, handle);
+	env->DeleteGlobalRef (handle);
 
 	mono_field_set_value (obj, bridge_info->weak_handle, &weakglobal);
 
@@ -858,10 +857,10 @@ take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, 
 	if (bridge_info == NULL)
 		return 0;
 
-	void *weak;
+	jobject weak;
 	mono_field_get_value (obj, bridge_info->handle, &weak);
 
-	void *handle    = (*env)->NewGlobalRef (env, weak);
+	jobject handle  = env->NewGlobalRef (weak);
 	log_gref (bridge, "*try_take_global obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
 
 	if (handle) {
@@ -873,7 +872,7 @@ take_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, 
 
 	java_interop_gc_bridge_weak_gref_log_delete (bridge, weak, 'W',
 			thread_name, thread_id, "take_global_ref_jni");
-	(*env)->DeleteWeakGlobalRef (env, weak);
+	env->DeleteWeakGlobalRef (weak);
 
 	mono_field_set_value (obj, bridge_info->handle, &handle);
 
@@ -889,19 +888,19 @@ take_weak_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *
 	if (bridge_info == NULL)
 		return 0;
 
-	void *handle;
+	jobject handle;
 	mono_field_get_value (obj, bridge_info->handle, &handle);
 
 	log_gref (bridge, "*take_weak obj=%p; handle=%p\n", obj, handle);
 
-	void *weak  = (*env)->NewWeakGlobalRef (env, handle);
+	jobject weak    = env->NewWeakGlobalRef (handle);
 	java_interop_gc_bridge_weak_gref_log_new (bridge, handle, get_object_ref_type (env, handle),
 			weak, get_object_ref_type (env, weak),
 			thread_name, thread_id, "take_weak_global_ref_jni");
 
 	java_interop_gc_bridge_gref_log_delete (bridge, handle, get_object_ref_type (env, handle),
 			thread_name, thread_id, "take_weak_global_ref_jni");
-	(*env)->DeleteGlobalRef (env, handle);
+	env->DeleteGlobalRef (handle);
 
 	mono_field_set_value (obj, bridge_info->handle, &weak);
 
@@ -916,14 +915,14 @@ get_add_reference_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject obj,
 {
 	if (!obj)
 		return NULL;
-	if (bridge->GCUserPeerable_class && (*env)->IsInstanceOf (env, obj, bridge->GCUserPeerable_class)) {
+	if (bridge->GCUserPeerable_class && env->IsInstanceOf (obj, bridge->GCUserPeerable_class)) {
 		return bridge->GCUserPeerable_add;
 	}
-	jclass      klass   = (*env)->GetObjectClass (env, obj);
-	jmethodID   add     = (*env)->GetMethodID (env, klass, "monodroidAddReference", "(Ljava/lang/Object;)V");
+	jclass      klass   = env->GetObjectClass (obj);
+	jmethodID   add     = env->GetMethodID (klass, "monodroidAddReference", "(Ljava/lang/Object;)V");
 	if (!add)
-		(*env)->ExceptionClear (env);
-	(*env)->DeleteLocalRef (env, klass);
+		env->ExceptionClear ();
+	env->DeleteLocalRef (klass);
 	return add;
 }
 
@@ -932,14 +931,14 @@ add_reference (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *obj, MonoJa
 {
 	MonoClass *klass    = mono_object_get_class (obj);
 
-	void *handle;
+	jobject handle;
 	mono_field_get_value (obj, bridge_info->handle, &handle);
 
 	jmethodID   add_method_id   = get_add_reference_method (bridge, env, handle, klass);
 	if (add_method_id) {
-	    void *reffed_handle;
+		jobject reffed_handle;
 		mono_field_get_value (reffed_obj, bridge_info->handle, &reffed_handle);
-		(*env)->CallVoidMethod (env, handle, add_method_id, reffed_handle);
+		env->CallVoidMethod (handle, add_method_id, reffed_handle);
 #if DEBUG
 		if (bridge->gref_log_level > 1)
 			log_gref (bridge,
@@ -1022,14 +1021,14 @@ get_clear_references_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject o
 {
 	if (!obj)
 		return NULL;
-	if (bridge->GCUserPeerable_class && (*env)->IsInstanceOf (env, obj, bridge->GCUserPeerable_class)) {
+	if (bridge->GCUserPeerable_class && env->IsInstanceOf (obj, bridge->GCUserPeerable_class)) {
 		return bridge->GCUserPeerable_clear;
 	}
-	jclass      klass   = (*env)->GetObjectClass (env, obj);
-	jmethodID   clear   = (*env)->GetMethodID (env, klass, "monodroidClearReferences", "()V");
+	jclass      klass   = env->GetObjectClass (obj);
+	jmethodID   clear   = env->GetMethodID (klass, "monodroidClearReferences", "()V");
 	if (!clear)
-		(*env)->ExceptionClear (env);
-	(*env)->DeleteLocalRef (env, klass);
+		env->ExceptionClear ();
+	env->DeleteLocalRef (klass);
 	return clear;
 }
 
@@ -1064,7 +1063,7 @@ gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int 
 				if (refs_added) {
 					jmethodID   clear_method_id = get_clear_references_method (bridge, env, jref);
 					if (clear_method_id) {
-						(*env)->CallVoidMethod (env, jref, clear_method_id);
+						env->CallVoidMethod (jref, clear_method_id);
 					} else {
 #if DEBUG
 						if (bridge->gref_log_level > 1) {
@@ -1092,7 +1091,7 @@ gc_cleanup_after_java_collection (JavaInteropGCBridge *bridge, JNIEnv *env, int 
 static void
 java_gc (JavaInteropGCBridge *bridge, JNIEnv *env)
 {
-	(*env)->CallVoidMethod (env, bridge->Runtime_instance, bridge->Runtime_gc);
+	env->CallVoidMethod (bridge->Runtime_instance, bridge->Runtime_gc);
 }
 
 int
@@ -1121,8 +1120,8 @@ java_interop_gc_bridge_add_current_app_domain (JavaInteropGCBridge *bridge)
 
 	if (bridge->BridgeProcessing_vtables_count == bridge->BridgeProcessing_vtables_length) {
 		int             new_length  = bridge->BridgeProcessing_vtables_length + 1;
-		MonoDomain    **new_domains = calloc (new_length, sizeof (MonoDomain*));
-		MonoVTable    **new_vtbles  = calloc (new_length, sizeof (MonoVTable*));
+		MonoDomain    **new_domains = static_cast<MonoDomain**>(calloc (new_length, sizeof (MonoDomain*)));
+		MonoVTable    **new_vtbles  = static_cast<MonoVTable**>(calloc (new_length, sizeof (MonoVTable*)));
 		if (new_domains == NULL || new_vtbles == NULL) {
 			free (new_domains);
 			free (new_vtbles);

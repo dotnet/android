@@ -29,17 +29,27 @@
   <Import Project="$(JNIEnvGenPath)\JdkInfo.props" />
   <Import Project="$(JNIEnvGenPath)\MonoInfo.props" Condition="Exists('$(JNIEnvGenPath)\MonoInfo.props')" />
   <ItemGroup>
-    <None Include="java-interop.h" />
-    <None Include="java-interop-gc-bridge.h" />
-    <None Include="java-interop-mono.h" />
+    <ClInclude Include="java-interop.h" />
+    <ClInclude Include="java-interop-gc-bridge.h" />
+    <ClInclude Include="java-interop-mono.h" />
   </ItemGroup>
+  <PropertyGroup>
+    <_MonoIncludePath>@(MonoIncludePath->'%(FullPath)')</_MonoIncludePath>
+    <_JdkIncludePath>@(JdkIncludePath->'%(FullPath)')</_JdkIncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>$([MSBuild]::Unescape($(DefineSymbols.Replace(' ', ';'))))</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$([MSBuild]::Unescape($(_MonoIncludePath)));$([MSBuild]::Unescape($(_JdkIncludePath)))</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <Compile Include="jni.c" />
-    <Compile Include="java-interop.c" />
-    <Compile Include="java-interop-jvm.c" />
-    <Compile Include="java-interop-logger.c" />
-    <Compile Include="java-interop-mono.c" />
-    <Compile Include="java-interop-gc-bridge-mono.c" />
+    <ClCompile Include="jni.c" />
+    <ClCompile Include="java-interop.cc" />
+    <ClCompile Include="java-interop-jvm.cc" />
+    <ClCompile Include="java-interop-logger.cc" />
+    <ClCompile Include="java-interop-mono.cc" />
+    <ClCompile Include="java-interop-gc-bridge-mono.cc" />
   </ItemGroup>
   <PropertyGroup>
     <BuildDependsOn>

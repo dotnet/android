@@ -3,10 +3,15 @@
 
 #include "java-interop-logger.h"
 
-#define DO_LOG(_kind_,_category_,_format_,_args_)			\
-	va_start ((_args_), (_format_));									                        \
-	log_vprint (_kind_, CATEGORY_NAME((_category_)), (_format_), (_args_)); \
-	va_end ((_args_));
+#define LOG_VA_ARGS(_kind_,_category_,_format_)                                 \
+	do {                                                                    \
+		const char*     kind      = (_kind_);                           \
+		LogCategories   category  = (_category_);                       \
+		va_list args;                                                   \
+		va_start (args, (_format_));                                    \
+		log_vprint (kind, CATEGORY_NAME (category), (_format_), args);  \
+		va_end (args);                                                  \
+	} while (0)
 
 // Must match the same ordering as LogCategories
 static const char* log_names[] = {
@@ -47,45 +52,35 @@ unsigned int log_categories = 0xFFFFFFFF;
 void
 log_error (LogCategories category, const char *format, ...)
 {
-	va_list args;
-
-	DO_LOG ("error", category, format, args);
+	LOG_VA_ARGS ("error", category, format);
 }
 
 void
 log_fatal (LogCategories category, const char *format, ...)
 {
-	va_list args;
-
-	DO_LOG ("fatal error", category, format, args);
+	LOG_VA_ARGS ("fatal error", category, format);
 }
 
 void
 log_info_nocheck (LogCategories category, const char *format, ...)
 {
-	va_list args;
-
 	if ((log_categories & category) == 0)
 		return;
 
-	DO_LOG ("info", category, format, args);
+	LOG_VA_ARGS ("info", category, format);
 }
 
 void
 log_warn (LogCategories category, const char *format, ...)
 {
-	va_list args;
-
-	DO_LOG ("warning", category, format, args);
+	LOG_VA_ARGS ("warning", category, format);
 }
 
 void
 log_debug_nocheck (LogCategories category, const char *format, ...)
 {
-	va_list args;
-
 	if ((log_categories & category) == 0)
 		return;
 
-	DO_LOG ("debug", category, format, args);
+	LOG_VA_ARGS ("debug", category, format);
 }
