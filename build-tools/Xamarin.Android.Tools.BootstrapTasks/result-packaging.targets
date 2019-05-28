@@ -32,7 +32,7 @@
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
       <ResultPackageOutputPath Condition=" '$(ResultPackageOutputPath)' == '' ">$(XamarinAndroidSourcePath)</ResultPackageOutputPath>
-      <_ResultSuffix>$(ProductVersion).$(XAVersionCommitCount)_$(XAVersionHash)-$(OS)-$(Configuration)</_ResultSuffix>
+      <_ResultSuffix>$(ProductVersion).$(XAVersionCommitCount)_$(XAVersionHash)-$(HostOS)-$(Configuration)</_ResultSuffix>
       <BuildStatusZipName Condition=" '$(BuildStatusZipName)' == '' ">xa-build-status-$(_ResultSuffix)</BuildStatusZipName>
       <TestResultZipName Condition=" '$(TestResultZipName)' == '' ">xa-test-results-$(_ResultSuffix)</TestResultZipName>
     </PropertyGroup>
