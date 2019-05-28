@@ -329,15 +329,6 @@
     <RemoveDir
         Directories="$(_UnzipTempPath)"
     />
-    <ItemGroup>
-      <_ExtractedSdkFiles Include="$(MonoSourceFullPath)\sdks\out\**\*" />
-    </ItemGroup>
-    <Touch
-        Condition=" Exists ('%(_ExtractedSdkFiles.Identity)')"
-        Files="%(_ExtractedSdkFiles.Identity)"
-        ForceTouch="true"
-        ContinueOnError="true"
-    />
     <Touch
         Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
         Files="$(MonoSourceFullPath)\sdks\out\.stamp-$(_MonoArchiveName)-download"

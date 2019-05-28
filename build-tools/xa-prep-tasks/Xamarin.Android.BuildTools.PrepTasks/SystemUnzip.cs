@@ -156,11 +156,15 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 						using (var p = Process.Start (psi)) {
 							p.WaitForExit ();
 						}
+						Directory.SetLastWriteTimeUtc (dest, DateTime.UtcNow);
+						Directory.SetLastAccessTimeUtc (dest, DateTime.UtcNow);
 					}
 					else {
 						if (File.Exists (dest))
 							File.Delete (dest);
 						File.Move (file, dest);
+						File.SetLastWriteTimeUtc (dest, DateTime.UtcNow);
+						File.SetLastAccessTimeUtc (dest, DateTime.UtcNow);
 					}
 				}
 			}
