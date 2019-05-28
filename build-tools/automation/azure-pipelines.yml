@@ -2,7 +2,7 @@
 
 trigger:
   - master
-  - d16-?
+  - d16-*
 
 # Global variables
 variables:
@@ -13,7 +13,6 @@ stages:
 - stage: prepare
   displayName: Prepare
   variables:
-    Configuration: Release
     MSBuildAbiArgs: >-
       /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
       /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
@@ -25,20 +24,20 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
-    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+    - script: make prepare-deps V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: make prepare-deps
 
     - task: MSBuild@1
       displayName: create bundle
       inputs:
         solution: build-tools/create-bundle/create-bundle.csproj
-        configuration: $(Configuration)
-        msbuildArguments: /bl:bin/Build$(Configuration)/msbuild-createbundle.binlog $(MSBuildAbiArgs)
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /bl:bin/Build$(XA.Build.Configuration)/msbuild-createbundle.binlog $(MSBuildAbiArgs)
 
     - task: CopyFiles@2
       displayName: copy bundle
       inputs:
-        sourceFolder: bin/$(Configuration)
+        sourceFolder: bin/$(XA.Build.Configuration)
         contents: bundle-*.zip
         targetFolder: $(Build.ArtifactStagingDirectory)
 
@@ -52,7 +51,7 @@ stages:
       displayName: package build results
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(Configuration)
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)/results
       condition: always()
 
@@ -72,17 +71,13 @@ stages:
     pool: Hosted Mac Internal
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    variables:
-      Configuration: Release
-      JavaSdkDirectory: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
-      JAVA_HOME: $(JavaSdkDirectory)
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(BundleArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)
 
-    - script: make prepare-external-git-dependencies CONFIGURATION=$(Configuration)
+    - script: make prepare-external-git-dependencies CONFIGURATION=$(XA.Build.Configuration)
       displayName: make prepare-commercial
       condition: eq(variables['XA.Commercial.Build'], 'true')
       env:
@@ -96,19 +91,19 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
         provisioning_extra_args: -vv
 
-    - script: make prepare-deps V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
+    - script: make prepare-deps V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
       displayName: make prepare-deps
 
-    - script: make prepare jenkins V=1 CONFIGURATION=$(Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
+    - script: make prepare jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
       displayName: make prepare jenkins
 
-    - script: make create-installers V=1 CONFIGURATION=$(Configuration)
+    - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
 
     - script: |
         mkdir -p $(System.DefaultWorkingDirectory)/unsigned-installers
-        cp bin/Build$(Configuration)/*.vsix $(System.DefaultWorkingDirectory)/unsigned-installers
-        cp bin/Build$(Configuration)/*.pkg $(System.DefaultWorkingDirectory)/unsigned-installers
+        cp bin/Build$(XA.Build.Configuration)/*.vsix $(System.DefaultWorkingDirectory)/unsigned-installers
+        cp bin/Build$(XA.Build.Configuration)/*.pkg $(System.DefaultWorkingDirectory)/unsigned-installers
       displayName: copy build artifacts
 
     - task: PublishPipelineArtifact@0
@@ -121,7 +116,7 @@ stages:
       displayName: package build results
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(Configuration)
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
@@ -135,8 +130,6 @@ stages:
 - stage: win_build_test
   displayName: Win
   dependsOn: prepare
-  variables:
-    Configuration: Release
   jobs:
   - job: build_test
     displayName: Build and Test
@@ -165,12 +158,12 @@ stages:
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
-        msbuildArguments: /p:Configurations=$(Configuration) /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(Build.ArtifactStagingDirectory)\create-vsix.binlog
+        msbuildArguments: /p:Configurations=$(XA.Build.Configuration) /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(Build.ArtifactStagingDirectory)\create-vsix.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
-        filename: bin\$(Configuration)\bin\xabuild.exe
+        filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
         arguments: Xamarin.Android-Tests.sln /p:XAIntegratedTests=False /bl:$(Build.ArtifactStagingDirectory)\build-tests.binlog
 
     - task: MSBuild@1
@@ -186,7 +179,7 @@ stages:
         solution: Xamarin.Android.sln
         msbuildArguments: >
           /t:RunJavaInteropTests
-          /p:TestAssembly="bin\Test$(Configuration)\generator-Tests.dll;bin\Test$(Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Configuration)\LogcatParse-Tests.dll;bin\Test$(Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
+          /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\LogcatParse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(Build.ArtifactStagingDirectory)\run-ji-tests.binlog
       condition: succeededOrFailed()
 
@@ -203,7 +196,7 @@ stages:
       displayName: package test results
       inputs:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(Configuration)
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:ZipTestResults /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
