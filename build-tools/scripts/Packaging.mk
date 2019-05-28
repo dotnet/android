@@ -77,8 +77,8 @@ _RESULT_PACKAGE_SUFFIX   = -v$(PRODUCT_VERSION).$(-num-commits-since-version-cha
 
 "xa-test-results$(_RESULT_PACKAGE_SUFFIX).zip" package-test-results:
 	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipTestResults \
-		/p:Configuration=$(CONFIGURATION) /p:TestResultZipName="xa-test-results$(_RESULT_PACKAGE_SUFFIX).zip"
+		/p:Configuration=$(CONFIGURATION) /p:TestResultZipName="xa-test-results$(_RESULT_PACKAGE_SUFFIX)"
 
 "xa-build-status$(_RESULT_PACKAGE_SUFFIX).zip" package-build-status:
 	msbuild build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj /t:ZipBuildStatus \
-		/p:Configuration=$(CONFIGURATION) /p:BuildStatusZipName="xa-build-status$(_RESULT_PACKAGE_SUFFIX).zip"
+		/p:Configuration=$(CONFIGURATION) /p:BuildStatusZipName="xa-build-status$(_RESULT_PACKAGE_SUFFIX)"
