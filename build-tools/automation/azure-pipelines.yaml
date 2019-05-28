@@ -146,30 +146,34 @@ stages:
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Build /bl:$(Build.ArtifactStagingDirectory)\build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
-        msbuildArguments: /p:Configurations=$(XA.Build.Configuration) /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(Build.ArtifactStagingDirectory)\create-vsix.binlog
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(Build.ArtifactStagingDirectory)\create-vsix.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:XAIntegratedTests=False /bl:$(Build.ArtifactStagingDirectory)\build-tests.binlog
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(Build.ArtifactStagingDirectory)\build-tests.binlog
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests
       inputs:
         solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:RunNUnitTests /bl:$(Build.ArtifactStagingDirectory)\run-nunit-tests.binlog
       timeoutInMinutes: 240
 
@@ -177,6 +181,7 @@ stages:
       displayName: nunit Java.Interop Tests
       inputs:
         solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
         msbuildArguments: >
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\LogcatParse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
