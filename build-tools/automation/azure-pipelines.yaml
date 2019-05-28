@@ -147,34 +147,34 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Prepare /bl:$(Build.ArtifactStagingDirectory)\prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Prepare /bl:bin\Build$(Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build /bl:$(Build.ArtifactStagingDirectory)\build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Build /bl:bin\Build$(Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(Build.ArtifactStagingDirectory)\create-vsix.binlog
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:bin\Build$(Configuration)\msbuild-create-vsix.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(Build.ArtifactStagingDirectory)\build-tests.binlog
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:bin\Build$(Configuration)\msbuild-build-tests.binlog
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:RunNUnitTests /bl:$(Build.ArtifactStagingDirectory)\run-nunit-tests.binlog
+        msbuildArguments: /t:RunNUnitTests /bl:bin\Build$(Configuration)\msbuild-run-nunit-tests.binlog
       timeoutInMinutes: 240
 
     - task: MSBuild@1
@@ -185,7 +185,7 @@ stages:
         msbuildArguments: >
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\LogcatParse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
-          /bl:$(Build.ArtifactStagingDirectory)\run-ji-tests.binlog
+          /bl:bin\Build$(Configuration)\msbuild-run-ji-tests.binlog
       condition: succeededOrFailed()
 
     - task: PublishTestResults@2
@@ -198,16 +198,16 @@ stages:
       condition: succeededOrFailed()
 
     - task: MSBuild@1
-      displayName: package test results
+      displayName: package results
       inputs:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:ZipTestResults /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
+        msbuildArguments: /t:ZipBuildStatus;ZipTestResults /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
     - task: PublishPipelineArtifact@0
       displayName: upload artifacts
       inputs:
-        artifactName: win-build-results
+        artifactName: win-build-test-results
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
