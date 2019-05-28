@@ -3706,23 +3706,35 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				string target = "_CleanupOldStaticResources";
-				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				var targets = new [] {
+					"_CleanupOldStaticResources",
+					"_GeneratePackageManagerJava",
+					"_CompileJava",
+				};
+				Assert.IsTrue (b.Output.IsTargetSkipped (targets [0]), $"`{targets [0]}` should be skipped.");
 				var oldMonoPackageManager = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
-				var appRegistration = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "app", "ApplicationRegistration.java");
-				Directory.CreateDirectory (Path.GetDirectoryName (appRegistration));
+				var notifyTimeZoneChanges = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
+				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
-				File.WriteAllText (appRegistration, @"package mono.android.app;
+				File.WriteAllText (notifyTimeZoneChanges, @"package mono.android.app;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
 				File.WriteAllText (oldMonoPackageManagerClass, "");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
-				Assert.IsFalse (File.Exists (oldMonoPackageManagerClass), $"{oldMonoPackageManagerClass} should have been deleted.");
-				Assert.IsFalse (File.Exists (oldMonoPackageManager), $"{oldMonoPackageManager} should have been deleted.");
-				Assert.IsFalse (File.Exists (appRegistration), $"{appRegistration} should have been deleted.");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped.");
+				}
+				// Old files that should *not* exist
+				FileAssert.DoesNotExist (oldMonoPackageManager);
+				FileAssert.DoesNotExist (oldMonoPackageManagerClass);
+				FileAssert.DoesNotExist (notifyTimeZoneChanges);
+				// New files that should exist
+				var monoPackageManager_Resources = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
+				var monoPackageManager_ResourcesClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes", "mono", "MonoPackageManager_Resources.class");
+				FileAssert.Exists (monoPackageManager_Resources);
+				FileAssert.Exists (monoPackageManager_ResourcesClass);
 			}
 		}
 
