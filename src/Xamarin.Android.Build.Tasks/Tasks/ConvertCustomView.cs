@@ -90,8 +90,9 @@ namespace Xamarin.Android.Tasks {
 				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
 				Log.LogDebugMessage ($"{filename} {stampFile}");
 				output.Add (new TaskItem (file, new Dictionary<string, string> {
-					{ "StampFile" , $"{stampFile}" },
-					{ "Hash" , $"{filename}" },
+					{ "StampFile" , stampFile },
+					{ "Hash" , filename },
+					{ "ResourceDirectory", resdir.ItemSpec }
 				}));
 			}
 			Processed = output.ToArray ();

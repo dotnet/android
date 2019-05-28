@@ -148,8 +148,7 @@ namespace Xamarin.Android.Tools {
 					File.WriteAllText (destination + ".hash", hash);
 #endif
 				return true;
-			}/* else
-				Console.WriteLine ("Skipping copying {0}, unchanged", Path.GetFileName (destination));*/
+			}
 
 			return false;
 		}

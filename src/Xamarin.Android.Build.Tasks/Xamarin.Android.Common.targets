@@ -1921,15 +1921,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanupOldStaticResources"
-    Condition="Exists ('$(MonoAndroidIntermediate)android\src\mono\app\ApplicationRegistration.java')">
+    Condition=" Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java') ">
   <ItemGroup>
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\ResourcePatcher.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\MonoPackageManager.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\Placeholder.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\app\ApplicationRegistration.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\app\NotifyTimeZoneChanges.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MonkeyPatcher.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\MultiDexLoader.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\ResourcePatcher.class" />
@@ -1937,9 +1936,10 @@ because xbuild doesn't support framework reference assemblies.
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager_Resources.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\Placeholder.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\app\ApplicationRegistration.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\app\NotifyTimeZoneChanges.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\MonkeyPatcher.class" />
+    <_OldStaticResources Include="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
+    <_OldStaticResources Include="$(IntermediateOutputPath)_javac.stamp" />
   </ItemGroup>
   <Delete Files="@(_OldStaticResources)" />
 </Target>
@@ -2109,7 +2109,7 @@ because xbuild doesn't support framework reference assemblies.
     <_AssembliesToProcess Include="@(ResolvedAssemblies)" Condition=" '%(Filename)' != '' And '@(_JniFrameworkAssembly)' != '' " />
   </ItemGroup>
   <Exec
-       Command="MONO_CONFIG=&quot;$(MonoAndroidBinDirectory)mono.config&quot; MONO_PATH=&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot; &quot;$(MonoAndroidBinDirectory)mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
+       Command="MONO_CONFIG=&quot;$(MonoAndroidBinDirectory)mono.config&quot; MONO_PATH=&quot;$(MonoAndroidBinDirectory)\bcl&quot;:&quot;$(MonoAndroidBinDirectory)\bcl\Facades&quot;:&quot;$(_XATargetFrameworkDirectories):$(MonoAndroidLinkerInputDir)&quot; &quot;$(MonoAndroidBinDirectory)mono&quot; --debug &quot;$(MonoAndroidToolsDirectory)\jnimarshalmethod-gen.exe&quot; --jvm=&quot;$(JdkJvmPath)&quot; $(AndroidGenerateJniMarshalMethodsAdditionalArguments) @(_AssembliesToProcess->'&quot;$(MonoAndroidLinkerInputDir)%(Filename)%(Extension)&quot;', ' ')"
   />
   <Touch Files="$(_AndroidJniMarshalMethodsFlag)" AlwaysCreate="True" />
 </Target>
@@ -2309,34 +2309,41 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="@(_TypeMapAssemblySource)" />
   </ItemGroup>
 
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+</Target>
+
+<Target Name="_ConvertCustomView"
+    Condition="Exists('$(_CustomViewMapFile)')"
+    Inputs="$(_CustomViewMapFile);$(_AcwMapFile)"
+    Outputs="$(_AndroidStampDirectory)_ConvertCustomView.stamp">
   <ConvertCustomView
-	Condition="Exists('$(_CustomViewMapFile)')"
-	CustomViewMapFile="$(_CustomViewMapFile)"
-	AcwMapFile="$(_AcwMapFile)"
-	ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
-	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-  >
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AcwMapFile="$(_AcwMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)">
     <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />	
   </ConvertCustomView>
-  <Delete Files="@(_ProcessedCustomViews->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+  <Delete
+      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+      Files="@(_ProcessedCustomViews->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')"
   />
   <Aapt2Compile
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
-    ContinueOnError="$(DesignTimeBuild)"
-    ResourceDirectories="@(_LibraryResourceHashDirectories);$(MonoAndroidResDirIntermediate)"
-    ExplicitCrunch="$(AndroidExplicitCrunch)"
-    ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
-    FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-    ToolPath="$(Aapt2ToolPath)"
-    ToolExe="$(Aapt2ToolExe)">
+      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
+      ContinueOnError="$(DesignTimeBuild)"
+      ResourceDirectories="@(_ProcessedCustomViews->'%(ResourceDirectory)'->Distinct())"
+      ExplicitCrunch="$(AndroidExplicitCrunch)"
+      ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
+      FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+      ToolPath="$(Aapt2ToolPath)"
+      ToolExe="$(Aapt2ToolExe)">
     <Output TaskParameter="CompiledResourceFlatArchives" ItemName="_UpdatedFlatArchives" />	
   </Aapt2Compile>
-  <Touch Files="@(_UpdatedFlatArchives->'$(_AndroidLibraryFlatArchivesDirectory)\%(Filename).stamp')"
-    Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_UpdatedFlatArchives)' != '' "
-    AlwaysCreate="True"
+  <Touch
+      Condition=" '@(_UpdatedFlatArchives)' != '' "
+      Files="@(_UpdatedFlatArchives->'$(_AndroidLibraryFlatArchivesDirectory)\%(Filename).stamp')"
+      AlwaysCreate="True"
   />
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidStampDirectory)_ConvertCustomView.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_ReadAndroidManifest"
@@ -2400,6 +2407,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
     _GenerateJavaStubs;
+    _ConvertCustomView;
     _GenerateEnvironmentFiles;
     _AddStaticResources;
     $(_AfterAddStaticResources);
@@ -2453,6 +2461,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
 		_GenerateJavaStubs;
+		_ConvertCustomView;
 		_GenerateEnvironmentFiles;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
@@ -2578,7 +2587,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_GenerateEnvironmentFiles;">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ConvertCustomView;_GenerateEnvironmentFiles;">
   <CreateItem
     Include="$(IntermediateOutputPath)android\src\\**\*.java">
     <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
@@ -2944,6 +2953,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CopyMdbFiles;
 		_LinkAssemblies;
 		_GenerateJavaStubs;
+		_ConvertCustomView;
 		_GenerateEnvironmentFiles;
 		_CompileJava;
 		_CompileDex;
