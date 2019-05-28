@@ -60,19 +60,13 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <ItemGroup>
     <_ResolvedAssemblies
         Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-        KeepDuplicates="false"
-        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
     />
     <_ResolvedUserAssemblies
         Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-        KeepDuplicates="false"
-        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
     />
     <_ResolvedUserMonoAndroidAssembliesForDesigner
         Include="@(ResolvedUserAssemblies)"
         Condition="'%(ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
-        KeepDuplicates="false"
-        KeepMetadata="AndroidSkipJavaStubGeneration;TargetFrameworkIdentifier;HasMonoAndroidReference"
     />
   </ItemGroup>
 </Target>
