@@ -2961,14 +2961,8 @@ because xbuild doesn't support framework reference assemblies.
 		_CopyMdbFiles;
 		_LinkAssemblies;
 		_GenerateJavaStubs;
-<<<<<<< HEAD
-<<<<<<< HEAD
 		_ConvertCustomView;
-=======
 		$(AfterGenerateAndroidManifest);
->>>>>>> [Xamarin.Android.Build.Tasks] Add some extension points for the Components Team
-=======
->>>>>>> Add Unit Test. Rework the targets a bit
 		_GenerateEnvironmentFiles;
 		_CompileJava;
 		_CompileDex;
