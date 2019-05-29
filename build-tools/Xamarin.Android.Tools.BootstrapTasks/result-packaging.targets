@@ -31,8 +31,9 @@
   <Target Name="_GetResultFileNames"
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
-      <ResultPackageOutputPath Condition=" '$(ResultPackageOutputPath)' == '' ">$(XamarinAndroidSourcePath)</ResultPackageOutputPath>
       <_ResultSuffix>$(ProductVersion).$(XAVersionCommitCount)_$(XAVersionHash)-$(HostOS)-$(Configuration)</_ResultSuffix>
+      <BuildStatusZipOutputPath Condition=" '$(BuildStatusZipOutputPath)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)</BuildStatusZipOutputPath>
+      <TestResultZipOutputPath Condition=" '$(TestResultZipOutputPath)' == '' ">$(XamarinAndroidSourcePath)bin\Test$(Configuration)</TestResultZipOutputPath>
       <BuildStatusZipName Condition=" '$(BuildStatusZipName)' == '' ">xa-build-status-$(_ResultSuffix)</BuildStatusZipName>
       <TestResultZipName Condition=" '$(TestResultZipName)' == '' ">xa-test-results-$(_ResultSuffix)</TestResultZipName>
     </PropertyGroup>
@@ -40,39 +41,41 @@
   <Target Name="ZipBuildStatus"
       DependsOnTargets="_GetResultFileNames"
       Inputs="@(_BuildStatusFiles)"
-      Outputs="$(ResultPackageOutputPath)\$(BuildStatusZipName).zip">
-    <MakeDir Directories="$(ResultPackageOutputPath)\$(BuildStatusZipName)"/>
+      Outputs="$(BuildStatusZipOutputPath)\$(BuildStatusZipName).zip">
+    <MakeDir Directories="$(BuildStatusZipOutputPath)\$(BuildStatusZipName)"/>
     <Copy
+        UseHardlinksIfPossible="True"
         SourceFiles="@(_BuildStatusFiles)"
-        DestinationFiles="@(_BuildStatusFiles->'$(ResultPackageOutputPath)\$(BuildStatusZipName)\%(RecursiveDir)%(Filename)%(Extension)')"
+        DestinationFiles="@(_BuildStatusFiles->'$(BuildStatusZipOutputPath)\$(BuildStatusZipName)\%(RecursiveDir)%(Filename)%(Extension)')"
     />
     <ItemGroup>
-      <_BuildStatusFilesToZip Include="$(ResultPackageOutputPath)\$(BuildStatusZipName)\**\*" />
+      <_BuildStatusFilesToZip Include="$(BuildStatusZipOutputPath)\$(BuildStatusZipName)\**\*" />
     </ItemGroup>
     <Zip
         Entries="@(_BuildStatusFilesToZip)"
-        File="$(ResultPackageOutputPath)\$(BuildStatusZipName).zip"
-        Prefix="$(ResultPackageOutputPath)"
+        File="$(BuildStatusZipOutputPath)\$(BuildStatusZipName).zip"
+        Prefix="$(BuildStatusZipOutputPath)"
     />
-    <RemoveDir Directories="$(ResultPackageOutputPath)\$(BuildStatusZipName)" />
+    <RemoveDir Directories="$(BuildStatusZipOutputPath)\$(BuildStatusZipName)" />
   </Target>
   <Target Name="ZipTestResults"
       DependsOnTargets="_GetResultFileNames"
       Inputs="@(_TestResultFiles)"
-      Outputs="$(ResultPackageOutputPath)\$(TestResultZipName).zip">
-    <MakeDir Directories="$(ResultPackageOutputPath)\$(TestResultZipName)"/>
+      Outputs="$(TestResultZipOutputPath)\$(TestResultZipName).zip">
+    <MakeDir Directories="$(TestResultZipOutputPath)\$(TestResultZipName)"/>
     <Copy
+        UseHardlinksIfPossible="True"
         SourceFiles="@(_TestResultFiles)"
-        DestinationFiles="@(_TestResultFiles->'$(ResultPackageOutputPath)\$(TestResultZipName)\%(RecursiveDir)%(Filename)%(Extension)')"
+        DestinationFiles="@(_TestResultFiles->'$(TestResultZipOutputPath)\$(TestResultZipName)\%(RecursiveDir)%(Filename)%(Extension)')"
     />
     <ItemGroup>
-      <_TestResultFilesToZip Include="$(ResultPackageOutputPath)\$(TestResultZipName)\**\*" />
+      <_TestResultFilesToZip Include="$(TestResultZipOutputPath)\$(TestResultZipName)\**\*" />
     </ItemGroup>
     <Zip
         Entries="@(_TestResultFilesToZip)"
-        File="$(ResultPackageOutputPath)\$(TestResultZipName).zip"
-        Prefix="$(ResultPackageOutputPath)"
+        File="$(TestResultZipOutputPath)\$(TestResultZipName).zip"
+        Prefix="$(TestResultZipOutputPath)"
     />
-    <RemoveDir Directories="$(ResultPackageOutputPath)\$(TestResultZipName)" />
+    <RemoveDir Directories="$(TestResultZipOutputPath)\$(TestResultZipName)" />
   </Target>
 </Project>
