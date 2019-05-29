@@ -70,9 +70,8 @@ timestamps {
             echo "Build type: ${buildType}"
             echo "Stable build workflow: ${isStable}"
 
-            pBuilderBindMounts = "/home/${env.USER}"
+            pBuilderBindMounts = "/mnt/scratch"
             echo "pBuilderBindMounts: ${pBuilderBindMounts}"
-
             echo "chRootPackages: ${chRootPackages}"
 
             if (env.AdditionalPackages) {
@@ -103,6 +102,9 @@ timestamps {
         utils.stageWithTimeout('build and package', 7, 'HOURS', XADir, true) {    // Typically takes 4-5 hours
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                             """
+                                export AndroidToolchainDirectory=/mnt/scratch/android-toolchain
+                                export AndroidToolchainCacheDirectory=/mnt/scratch/android-archives
+
                                 if [ -z "\$JAVA_HOME" ]; then
                                     if [ -f /etc/profile.d/jdk.sh ]; then
                                         echo 'STAGE: jdk'
@@ -163,6 +165,9 @@ timestamps {
 
             execChRootCommand(env.ChRootName, chRootPackages, pBuilderBindMounts,
                     """
+                        export AndroidToolchainDirectory=/mnt/scratch/android-toolchain
+                        export AndroidToolchainCacheDirectory=/mnt/scratch/android-archives
+
                         echo "STAGE: run all tests"
                         xvfb-run -a -- make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1 || (killall adb && false)
                         killall adb || true
