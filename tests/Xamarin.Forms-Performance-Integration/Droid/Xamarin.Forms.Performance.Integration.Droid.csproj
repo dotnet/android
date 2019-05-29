@@ -78,7 +78,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Arch.Lifecycle.LiveData, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\packages\Xamarin.Android.Arch.Lifecycle.LiveData.1.1.1.1\lib/monoandroid90\Xamarin.Android.Arch.Lifecycle.LiveData.dll</HintPath>
+      <HintPath>..\..\..\packages\Xamarin.Android.Arch.Lifecycle.LiveData.1.1.1.1\lib\monoandroid90\Xamarin.Android.Arch.Lifecycle.LiveData.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Arch.Lifecycle.LiveData.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
