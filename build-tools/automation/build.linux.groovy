@@ -3,7 +3,61 @@
 
 def XADir = "xamarin-android"
 def buildTarget = 'jenkins'
-def chRootPackages = 'xvfb xauth mono-devel autoconf automake build-essential vim-common p7zip-full cmake gettext libtool libgdk-pixbuf2.0-dev intltool pkg-config ruby scons wget xz-utils git nuget ca-certificates-mono clang g++-mingw-w64 gcc-mingw-w64 libzip-dev zulu-8 unzip lib32stdc++6 lib32z1 libtinfo-dev:i386 linux-libc-dev:i386 zlib1g-dev:i386 gcc-multilib g++-multilib referenceassemblies-pcl zip fsharp psmisc libz-mingw-w64-dev msbuild mono-csharp-shell devscripts fakeroot debhelper libsqlite3-dev sqlite3 libc++-dev cli-common-dev curl libncurses-dev ninja-build ant libtool-bin'
+def chRootPackages = '''
+    ant
+    autoconf
+    automake
+    build-essential
+    ca-certificates-mono
+    clang
+    cli-common-dev
+    cmake
+    curl
+    debhelper
+    devscripts
+    fakeroot
+    fsharp
+    g++-mingw-w64
+    g++-multilib
+    gcc-mingw-w64
+    gcc-multilib
+    gettext
+    git
+    intltool
+    lib32stdc++6
+    lib32z1
+    libc++-dev
+    libgdk-pixbuf2.0-dev
+    libncurses-dev
+    libsqlite3-dev
+    libtinfo-dev:i386
+    libtool
+    libtool-bin
+    libz-mingw-w64-dev
+    libzip-dev
+    linux-libc-dev:i386
+    mono-csharp-shell
+    mono-devel
+    msbuild
+    ninja-build
+    nuget
+    p7zip-full
+    pkg-config
+    psmisc
+    referenceassemblies-pcl
+    ruby
+    scons
+    sqlite3
+    unzip
+    vim-common
+    wget
+    xauth
+    xvfb
+    xz-utils
+    zip
+    zlib1g-dev:i386
+    zulu-8
+'''
 def isPr = false                // Default to CI
 def isStable = false            // Stable build workflow
 def publishPackages = false
