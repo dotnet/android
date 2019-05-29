@@ -10,18 +10,14 @@
 struct TypeMapHeader;
 
 namespace xamarin { namespace android { namespace internal {
-#if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo;
-#endif
 	struct md_mmap_info;
 
 	class EmbeddedAssemblies
 	{
 	private:
 		static constexpr char assemblies_prefix[] = "assemblies/";
-#if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
-#endif
 		static const char *suffixes[];
 
 	public:
@@ -29,9 +25,7 @@ namespace xamarin { namespace android { namespace internal {
 		using monodroid_should_register = bool (*)(const char *filename);
 
 	public:
-#if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
-#endif
 		void install_preload_hooks ();
 		const char* typemap_java_to_managed (const char *java);
 		const char* typemap_managed_to_java (const char *managed);
@@ -61,9 +55,7 @@ namespace xamarin { namespace android { namespace internal {
 		bool gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
 		void extract_int (const char **header, const char *source_apk, const char *source_entry, const char *key_name, int *value);
-#if defined (DEBUG) || !defined (ANDROID)
 		bool add_type_mapping (TypeMappingInfo **info, const char *source_apk, const char *source_entry, const char *addr);
-#endif // DEBUG || !ANDROID
 		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
 
 		static md_mmap_info md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const char* apk);
@@ -88,10 +80,8 @@ namespace xamarin { namespace android { namespace internal {
 		bool                   register_debug_symbols;
 		MonoBundledAssembly  **bundled_assemblies;
 		size_t                 bundled_assemblies_count;
-#if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;
-#endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
 	};
 }}}

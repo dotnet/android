@@ -308,8 +308,10 @@ namespace Xamarin.Android.Tasks
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
 			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
-			TypeNameMapGenerator generator = new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
-			using (var gen = generator) {
+			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
+				new TypeNameMapGenerator (types, logger) :
+				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
+			using (var gen = createTypeMapGenerator ()) {
 				using (var ms = new MemoryStream ()) {
 					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
 					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
