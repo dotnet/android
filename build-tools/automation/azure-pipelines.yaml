@@ -20,7 +20,7 @@ stages:
   jobs:
   - job: create_bundle
     displayName: Create Bundle
-    pool: Hosted Mac Internal
+    pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
@@ -68,7 +68,7 @@ stages:
   jobs:
   - job: mac_build
     displayName: Build
-    pool: Hosted Mac Internal
+    pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     steps:
@@ -134,7 +134,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Test
-    pool: VSEng-MicroBuildVS2017
+    pool: $(XA.Build.Win.Pool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
