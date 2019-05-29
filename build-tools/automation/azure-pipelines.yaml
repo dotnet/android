@@ -52,7 +52,7 @@ stages:
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:ZipBuildStatus /p:ResultPackageOutputPath=$(Build.ArtifactStagingDirectory)/results
+        msbuildArguments: /t:ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)/results
       condition: always()
 
     - task: PublishPipelineArtifact@0
