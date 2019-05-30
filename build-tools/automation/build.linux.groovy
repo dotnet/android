@@ -144,7 +144,7 @@ timestamps {
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.dsc"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/*.deb"
             publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/build-status*"
-            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/xa-build-status*"
+            publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/Build${env.BuildFlavor}/xa-build-status*"
 
             echo "publishBuildFilePaths: ${publishBuildFilePaths}"
             def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishBuildFilePaths)
@@ -171,7 +171,7 @@ timestamps {
                         make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}
                     """)
 
-            def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
+            def publishTestFilePaths = "${XADir}/bin/Test${env.BuildFlavor}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, env.StorageVirtualPath, publishTestFilePaths)
