@@ -140,8 +140,6 @@ stages:
     pool: $(XA.Build.Win.Pool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
-    variables:
-      Configuration: $(XA.Build.Configuration)
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
