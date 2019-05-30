@@ -490,6 +490,47 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void ModifyManifest ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				Imports = {
+					new Import ("foo.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<PropertyGroup>
+	<AfterGenerateAndroidManifest>
+		$(AfterGenerateAndroidManifest);
+		_Foo;
+	</AfterGenerateAndroidManifest>
+	<Namespace>
+	    <Namespace Prefix=""android"" Uri=""http://schemas.android.com/apk/res/android"" />
+	</Namespace>
+</PropertyGroup>
+<ItemGroup>
+	<_Permissions Include=""&lt;uses-permission android:name=&quot;android.permission.READ_CONTACTS&quot; /&gt;"" />
+</ItemGroup>
+<Target Name=""_Foo"">
+	<XmlPoke
+		XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml""
+		Value=""@(_Permissions)""
+		Query=""/manifest""
+		Namespaces=""$(Namespace)""
+	/>
+</Target>
+</Project>
+"
+					},
+				},
+			};
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+				Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
+			}
+		}
+
+		[Test]
 		public void MergeLibraryManifest ()
 		{
 			byte [] classesJar;
