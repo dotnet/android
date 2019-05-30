@@ -25,8 +25,9 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
-    - script: make prepare-deps V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-      displayName: make prepare-deps
+      # Ensure the correct Mono.Cecil reference overrides are set before creating the bundle.
+    - script: make prepare-props V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+      displayName: make prepare-props
 
     - task: MSBuild@1
       displayName: create bundle
