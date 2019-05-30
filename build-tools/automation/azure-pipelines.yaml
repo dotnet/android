@@ -9,6 +9,7 @@ variables:
   BundleArtifactName: bundle
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
 
+# Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
 - stage: prepare
   displayName: Prepare
@@ -19,7 +20,7 @@ stages:
       /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
   jobs:
   - job: create_bundle
-    displayName: Create Bundle
+    displayName: Bundle
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
@@ -71,6 +72,8 @@ stages:
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    variables:
+      JAVA_HOME: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
     steps:
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -129,7 +132,7 @@ stages:
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 - stage: win_build_test
-  displayName: Win
+  displayName: Windows
   dependsOn: prepare
   jobs:
   - job: win_build_test
