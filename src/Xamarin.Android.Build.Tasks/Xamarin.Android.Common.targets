@@ -1617,8 +1617,6 @@ because xbuild doesn't support framework reference assemblies.
 		_GenerateAndroidResourceDir;
 		_IncludeLayoutBindingSources;
 		_DefineBuildTargetAbis;
-		_CompileAndroidLibraryResources;
-		_CompileResources;
 	</_UpdateAndroidResgenDependsOnTargets>
 	<_UpdateAndroidResgenInputs>
 		$(MSBuildAllProjects);
@@ -1636,7 +1634,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_UpdateAndroidResgen"
 	Inputs="$(_UpdateAndroidResgenInputs)"
 	Outputs="$(_AndroidResgenFlagFile)"
-	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets)">
+	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_CompileAndroidLibraryResources;_CompileResources">
 
 	<!-- Create a temporary directory to work in -->
 	<CreateTemporaryDirectory>
@@ -2090,7 +2088,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_LinkAssemblies"
-  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
+  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
 
 <Target Name="_GenerateJniMarshalMethods"
     Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None' And '$(OS)' != 'Windows_NT'"
@@ -2273,8 +2271,18 @@ because xbuild doesn't support framework reference assemblies.
   </PrepareAbiItems>
 </Target>
 
+<PropertyGroup>
+  <_GenerateJavaStubsDependsOnTargets>
+    _SetLatestTargetFrameworkVersion;
+    _PrepareNativeAssemblySources;
+    _LinkAssemblies;
+    _PrepareAssemblies;
+    $(_AfterPrepareAssemblies);
+  </_GenerateJavaStubsDependsOnTargets>
+</PropertyGroup>
+
 <Target Name="_GenerateJavaStubs"
-  DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;$(_AfterPrepareAssemblies);_PrepareNativeAssemblySources"
+  DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
   Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
   Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
@@ -2477,7 +2485,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CreateBaseApk"
-  DependsOnTargets="$(_CreateBaseApkDependsOnTargets)"
+  DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest)"
   Inputs="$(_CreateBaseApkInputs)"
   Outputs="$(_PackagedResources)">
   <!-- Create a temporary directory to work in, or else R.java will always get updated -->
@@ -2816,7 +2824,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CompileDex"
-		DependsOnTargets="$(_CompileDexDependsOn)">
+		DependsOnTargets="$(_BeforeCompileDex);$(_CompileDexDependsOn)">
 	<ItemGroup>
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
 		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />
@@ -2949,6 +2957,7 @@ because xbuild doesn't support framework reference assemblies.
 		_LinkAssemblies;
 		_GenerateJavaStubs;
 		_ConvertCustomView;
+		$(AfterGenerateAndroidManifest);
 		_GenerateEnvironmentFiles;
 		_CompileJava;
 		_CompileDex;
