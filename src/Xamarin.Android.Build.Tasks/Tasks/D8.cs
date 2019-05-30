@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual string MainClass => "com.android.tools.r8.D8";
 
+		protected int MinSdkVersion { get; set; }
+
 		protected virtual CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = new CommandLineBuilder ();
@@ -66,8 +68,10 @@ namespace Xamarin.Android.Tasks
 			//NOTE: if this is blank, we can omit --min-api in this call
 			if (!string.IsNullOrEmpty (AndroidManifestFile)) {
 				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
-				int minApiVersion = doc.MinSdkVersion == null ? 4 : (int)doc.MinSdkVersion;
-				cmd.AppendSwitchIfNotNull ("--min-api ", minApiVersion.ToString ());
+				if (doc.MinSdkVersion.HasValue) {
+					MinSdkVersion = doc.MinSdkVersion.Value;
+					cmd.AppendSwitchIfNotNull ("--min-api ", MinSdkVersion.ToString ());
+				}
 			}
 
 			if (!EnableDesugar)

@@ -51,7 +51,9 @@ namespace Xamarin.Android.Tasks
 			var cmd = base.GetCommandLineBuilder ();
 
 			if (EnableMultiDex) {
-				if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
+				if (MinSdkVersion >= 21) {
+					Log.LogCodedWarning ("XA4306", "R8 does not support `MultiDexMainDexList` files when android:minSdkVersion >= 21");
+				} else if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
 					Log.LogCodedWarning ("XA4305", $"MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.");
 				} else {
 					var content = new List<string> ();
