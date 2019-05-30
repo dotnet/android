@@ -87,7 +87,7 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 			apk = Path.Combine (testProjectPath, "bin", XABuildPaths.Configuration, $"{ProjectPackageName}-Signed.apk");
 			string projectPath = Path.Combine (testProjectPath, $"{ProjectName}.csproj");
 			LocalBuilder builder = GetBuilder ("Xamarin.Android.MakeBundle-Tests");
-			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true" });
+			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true", $"Configuration={XABuildPaths.Configuration}" });
 
 			Assert.That (success, Is.True, "Should have been built");
 		}
