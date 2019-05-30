@@ -32,7 +32,17 @@ namespace Xamarin.Android.Tasks
 
 		public string TimestampAuthorityCertificateAlias { get; set; }
 
+		/// <summary>
+		/// -sigalg switch, should be md5withRSA for APKs or SHA256withRSA for App Bundles
+		/// </summary>
+		[Required]
 		public string SigningAlgorithm { get; set; }
+
+		/// <summary>
+		/// -digestalg switch, should be SHA1 for APKs or SHA-256 for App Bundles
+		/// </summary>
+		[Required]
+		public string DigestAlgorithm { get; set; }
 
 		public string FileSuffix { get; set; }
 
@@ -49,8 +59,8 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-keystore ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("-storepass ", StorePass);
 			cmd.AppendSwitchIfNotNull ("-keypass ", KeyPass);
-			cmd.AppendSwitchIfNotNull ("-digestalg ", "SHA1");
-			cmd.AppendSwitchIfNotNull ("-sigalg ", string.IsNullOrWhiteSpace (SigningAlgorithm) ? "md5withRSA" : SigningAlgorithm);
+			cmd.AppendSwitchIfNotNull ("-digestalg ", DigestAlgorithm);
+			cmd.AppendSwitchIfNotNull ("-sigalg ", SigningAlgorithm);
 			cmd.AppendSwitchIfNotNull ("-signedjar ", Path.Combine (SignedApkDirectory, $"{fileName}{FileSuffix}{extension}" ));
 
 			cmd.AppendFileNameIfNotNull (UnsignedApk);

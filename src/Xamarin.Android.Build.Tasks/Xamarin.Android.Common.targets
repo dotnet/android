@@ -307,6 +307,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidUseAapt2            Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</AndroidUseAapt2>
 	<AndroidUseApkSigner        Condition=" '$(AndroidPackageFormat)' == 'aab' ">False</AndroidUseApkSigner>
 	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
+	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' And '$(AndroidPackageFormat)' != 'aab' ">md5withRSA</AndroidApkSigningAlgorithm>
+	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' And '$(AndroidPackageFormat)' == 'aab' ">SHA256withRSA</AndroidApkSigningAlgorithm>
+	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' And '$(AndroidPackageFormat)' != 'aab' ">SHA1</AndroidApkDigestAlgorithm>
+	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' And '$(AndroidPackageFormat)' == 'aab' ">SHA-256</AndroidApkDigestAlgorithm>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -3308,6 +3312,7 @@ because xbuild doesn't support framework reference assemblies.
 		TimestampAuthorityUrl="$(JarsignerTimestampAuthorityUrl)"
 		TimestampAuthorityCertificateAlias="$(JarsignerTimestampAuthorityCertificateAlias)"
 		SigningAlgorithm="$(AndroidApkSigningAlgorithm)"
+		DigestAlgorithm="$(AndroidApkDigestAlgorithm)"
 	/>
 	<ItemGroup>
 		<ApkAbiFilesSigned Include="$(ApkFileSigned)" Condition="'$(AndroidUseApkSigner)' == 'true'" />
