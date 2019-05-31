@@ -17,9 +17,9 @@
     <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
     <Exec Command="&quot;$(NdkBuildPath)&quot;" />
   </Target>
-  <!-- Not required for testing against a system installation -->
+  <!-- Not required when testing against a system installation of XA. -->
   <Target Name="EnsureJavaInteropDllConfigs"
-      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll.config')"
+      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
       BeforeTargets="_GenerateJniMarshalMethods"
       DependsOnTargets="_CreateJavaInteropDllConfigs">
   </Target>

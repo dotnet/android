@@ -6,8 +6,7 @@
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props')" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.Override.props')" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs" Condition="Exists('$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs')" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\msbuild*.binlog" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\bootstrap*.binlog" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.binlog" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\prepare*.log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.mk" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.projitems" />
@@ -27,7 +26,7 @@
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.log" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\msbuild*.binlog*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.binlog" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.binlog" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.log" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\EmbeddedDSO\EmbeddedDSO.build\**\*" />

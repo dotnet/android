@@ -175,6 +175,8 @@
       <_KeyAlias>mykey</_KeyAlias>
       <_KeyPass>android</_KeyPass>
       <_StorePass>android</_StorePass>
+      <!-- Support for running against a system installation of XA. -->
+      <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
       <JavaPath Condition=" '$(JavaPath)' == '' And !$([MSBuild]::IsOsPlatform(Windows)) ">$(JavaSdkDirectory)\bin\java</JavaPath>
       <JavaPath Condition=" '$(JavaPath)' == '' And $([MSBuild]::IsOsPlatform(Windows)) ">$(JavaSdkDirectory)\bin\java.exe</JavaPath>
     </PropertyGroup>
@@ -182,7 +184,7 @@
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"
         JavaPath="$(JavaPath)"
-        JarPath="$(AndroidBundleToolJarPath)"
+        JarPath="$(BundleToolJarPath)"
         AdbToolExe="$(AdbToolExe)"
         AdbToolPath="$(AdbToolPath)"
         KeyStore="$([System.IO.Path]::GetFullPath ('$(_KeyStore)'))"
@@ -195,7 +197,7 @@
         Arguments="install-apks --modules _ALL_ --apks &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"
         JavaPath="$(JavaPath)"
-        JarPath="$(AndroidBundleToolJarPath)"
+        JarPath="$(BundleToolJarPath)"
         AdbToolExe="$(AdbToolExe)"
         AdbToolPath="$(AdbToolPath)"
     />
