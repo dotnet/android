@@ -9,7 +9,6 @@
     <AssemblyName>create-pkg</AssemblyName>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
-  <Import Project="create-pkg.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -19,6 +18,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
@@ -29,4 +29,5 @@
     <None Include="distribution.xml.in" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="create-pkg.targets" />
 </Project>

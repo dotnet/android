@@ -16,6 +16,7 @@
     <PkgScriptsDir>$(MSBuildThisFileDirectory)scripts</PkgScriptsDir>
     <UpdateInfoGuid>d1ec039f-f3db-468b-a508-896d7c382999</UpdateInfoGuid>
   </PropertyGroup>
+  <Target Name="Build" />
   <Target Name="_CopyFilesToPayloadDir"
       DependsOnTargets="ConstructInstallerItems;GetXAVersion" >
     <PropertyGroup>

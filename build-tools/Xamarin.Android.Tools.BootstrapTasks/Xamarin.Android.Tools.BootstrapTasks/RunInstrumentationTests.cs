@@ -42,7 +42,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		int                     currentState = -1;
 		string                  targetTestResultsPath;
-		TextWriter              logcatWriter;
 
 		bool                    adbRestarted;
 

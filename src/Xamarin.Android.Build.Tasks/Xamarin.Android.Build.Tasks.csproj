@@ -745,6 +745,7 @@
     <ProjectReference Include="..\..\build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj">
       <Project>{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}</Project>
       <Name>fetch-windows-assemblers</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="ILRepack.targets" />
