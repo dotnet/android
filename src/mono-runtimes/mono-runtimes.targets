@@ -294,9 +294,15 @@
       <_BclTestAssembly  Include="@(MonoTestAssembly)" Condition="'%(MonoTestAssembly.TestType)' == '' Or '%(MonoTestAssembly.TestType)' == 'xunit' " />
       <_BclTestAssemblySource Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
-      <_BclTestAssemblySymbols Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')" />
-      <_BclTestAssemblySymbols Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')" />
-      <_BclTestAssemblySource Include="@(_BclTestAssemblySymbols)" Condition="Exists('%(Identity)')" />
+      <_BclTestAssemblySymbols
+          Include="@(_BclTestAssemblyReference->'$(_MonoProfileDir)\%(Filename).pdb')"
+          Exclude="@(_BclExcludeDebugSymbols->'$(_MonoProfileDir)\%(Filename).pdb')"
+      />
+      <_BclTestAssemblySymbols
+          Include="@(_BclTestAssembly->'$(_MonoProfileDir)\tests\%(Filename).pdb')"
+          Exclude="@(_BclExcludeDebugSymbols->'$(_MonoProfileDir)\tests\%(Filename).pdb')"
+      />
+      <_BclTestAssemblySource Include="@(_BclTestAssemblySymbols)" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Identity)')" />
       <_BclTestAssemblySource Include="@(MonoTestRunner->'$(_MonoProfileDir)\%(Filename).pdb')" />
       <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'$(_MonoProfileDir)\tests\%(Identity)')" />
@@ -329,16 +335,6 @@
     />
     <RemoveDir
         Directories="$(_UnzipTempPath)"
-    />
-
-    <ItemGroup>
-      <_ExtractedSdkFiles Include="$(MonoSourceFullPath)\sdks\out\**\*" />
-    </ItemGroup>
-    <Touch
-        Condition=" Exists ('%(_ExtractedSdkFiles.Identity)')"
-        Files="%(_ExtractedSdkFiles.Identity)"
-        ForceTouch="true"
-        ContinueOnError="true"
     />
     <Touch
         Condition=" Exists('$(AndroidToolchainCacheDirectory)\$(_MonoArchiveName).zip') "
