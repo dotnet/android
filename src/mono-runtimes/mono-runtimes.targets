@@ -107,6 +107,8 @@
     <_MonoUtility  Include="illinkanalyzer.exe" />
     <_MonoUtility  Include="mono-symbolicate.exe" />
     <_MonoUtility  Include="mkbundle.exe" />
+    <_MonoUtility  Include="mono-api-html.exe" />
+    <_MonoUtility  Include="mono-api-info.exe" />
   </ItemGroup>
   <ItemGroup>
     <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoProfileToolsDir)\%(Identity)')" />
