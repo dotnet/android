@@ -27,11 +27,11 @@
 + [XA0033](xa0033.md): Failed to get the Java SDK version as it does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version. 
 
-+ [XA0100](xa0100.md): EmbeddedNativeLibrary is invalid in Android Application project. Please use AndroidNativeLibrary instead.
++ XA0100: EmbeddedNativeLibrary is invalid in Android Application project. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
 + [XA0103](xa0103.md): Generic `lint` Error.
-+ [XA0104](xa0104.md): Invalid Sequence Point mode.
++ XA0104: Invalid Sequence Point mode.
 + [XA0105](xa0105.md): The $(TargetFrameworkVersion) for a dll is greater than the $(TargetFrameworkVersion) for your project.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.
