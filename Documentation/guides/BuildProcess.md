@@ -220,10 +220,17 @@ when packaging Release applications.
 
     Added in Xamarin.Android 8.2.
 
+-   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
+    the digest algorithm to use with `jarsigner -digestalg`.
+
+    The default value is `SHA1` for APKs and `SHA-256` for App Bundles.
+
+    Added in Xamarin.Android 9.4.
+
 -   **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
     the signing algorithm to use with `jarsigner -sigalg`.
 
-    The default value is `md5withRSA`.
+    The default value is `md5withRSA` for APKs and `SHA256withRSA` for App Bundles.
 
     Added in Xamarin.Android 8.2.
 
