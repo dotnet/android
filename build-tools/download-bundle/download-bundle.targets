@@ -11,7 +11,8 @@
   <Target Name="_GetBundleOutputPath"
       DependsOnTargets="GetBundleFileName">
     <PropertyGroup>
-      <_BundlePath>$(AndroidToolchainCacheDirectory)\$(XABundleFileName)</_BundlePath>
+      <BundleRootPath Condition=" '$(BundleRootPath)' == '' ">$(AndroidToolchainCacheDirectory)</BundleRootPath>
+      <_BundlePath>$(BundleRootPath)\$(XABundleFileName)</_BundlePath>
     </PropertyGroup>
   </Target>
   <Target Name="_DownloadBundle"

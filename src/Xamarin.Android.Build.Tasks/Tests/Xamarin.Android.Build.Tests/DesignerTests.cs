@@ -41,6 +41,22 @@ namespace Xamarin.Android.Build.Tests
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
+				Imports = {
+				new Import ("foo.targets") {
+					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<PropertyGroup>
+	<BeforeGenerateAndroidManifest>
+		$(BeforeGenerateAndroidManifest);
+		_Foo;
+	</BeforeGenerateAndroidManifest>
+</PropertyGroup>
+<Target Name=""_Foo"">
+</Target>
+</Project>
+"
+					},
+				},
 			};
 			proj.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
 				TextContent = () => @"using Android.Widget;
@@ -82,6 +98,7 @@ namespace UnnamedProject
 				appb.Target = target;
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
+				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				var customViewPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "res", "layout", "custom_text.xml");
 				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
 				var doc = XDocument.Load (customViewPath);
@@ -94,6 +111,7 @@ namespace UnnamedProject
 				appb.Target = "Build";
 				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
+				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
 					"UnnamedProject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
@@ -102,6 +120,7 @@ namespace UnnamedProject
 				appb.Target = target;
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
+				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
 					"UnnamedProject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");

@@ -239,7 +239,7 @@ timestamps {
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor} V=1"
 
                 if (isCommercial) {
-                    sh "cp xa-build-status-*.zip ${packagePath}"
+                    sh "cp ${XADir}/bin/Build${env.BuildFlavor}/xa-build-status-*.zip ${packagePath}"
                 }
             } catch (error) {
                 echo "ERROR : NON-FATAL : processBuildStatus: Unexpected error: ${error}"
@@ -248,7 +248,7 @@ timestamps {
 
         utils.stageWithTimeout('publish packages to Azure', 30, 'MINUTES', '', true, 3) {    // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             def publishRootDir = ''
-            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/xa-build-status*"
+            def publishBuildFilePaths = "${XADir}/xamarin.android-oss*.zip,${XADir}/bin/Build*/Xamarin.Android.Sdk-OSS*,${XADir}/build-status*,${XADir}/bin/Build${env.BuildFlavor}/xa-build-status*"
             if (isCommercial) {
                 publishRootDir = packageDir
                 publishBuildFilePaths = "xamarin.android*.pkg,Xamarin.Android*.vsix,build-status*,xa-build-status*,*updateinfo"
@@ -333,7 +333,7 @@ timestamps {
 
             sh "make -C ${XADir} -k package-test-results CONFIGURATION=${env.BuildFlavor}"
 
-            def publishTestFilePaths = "${XADir}/xa-test-results*,${XADir}/test-errors.zip"
+            def publishTestFilePaths = "${XADir}/bin/Test${env.BuildFlavor}/xa-test-results*,${XADir}/test-errors.zip"
 
             echo "publishTestFilePaths: ${publishTestFilePaths}"
             def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, storageVirtualPath, publishTestFilePaths)

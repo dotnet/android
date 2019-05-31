@@ -104,6 +104,41 @@ The following build targets are defined for Xamarin.Android projects:
     `Resource.designer.cs` file. This target is usually called by the
     IDE when new resources are added to the project.
 
+<a name="Build_Extension_Points" />
+
+## Build Extension Points
+
+The Xamarin.Android build system exposes a few public extension points
+for those users wanting to hook into our build process. To use these 
+extension points you will need to define your own target inside a 
+`PropertyGroup`, for example
+
+   ```
+   <PropertyGroup>
+      <AfterGenerateAndroidManifest>
+         $(AfterGenerateAndroidManifest);
+         YourTarget;
+      </AfterGenerateAndroidManifest>
+   </PropertyGroup>
+   ```
+
+A word of caution about extending the build process. If not 
+written correctly build extensions can effect your build
+performance, especially if they run on every build. It is 
+highly recommended that you read the MSBuild [documentation](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild)
+before implementing such extensions.
+
+-   **AfterGenerateAndroidManifest** &ndash; This target will run 
+    directly after the internal `_GenerateJavaStubs` target. This
+    is where the `AndroidManifest.xml` file is generated in the 
+    `$(IntermediateOutputPath)`. So you you want to make any 
+    modifications to the generated `AndroidManifest.xml` file
+    you can do this using this extension point.
+
+-   **BeforeGenerateAndroidManifest** &ndash; This target will
+    run directly before `_GenerateJavaStubs`.
+
+<a name="Build_Properties" />
 
 ## Build Properties
 
@@ -185,10 +220,17 @@ when packaging Release applications.
 
     Added in Xamarin.Android 8.2.
 
+-   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
+    the digest algorithm to use with `jarsigner -digestalg`.
+
+    The default value is `SHA1` for APKs and `SHA-256` for App Bundles.
+
+    Added in Xamarin.Android 9.4.
+
 -   **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
     the signing algorithm to use with `jarsigner -sigalg`.
 
-    The default value is `md5withRSA`.
+    The default value is `md5withRSA` for APKs and `SHA256withRSA` for App Bundles.
 
     Added in Xamarin.Android 8.2.
 

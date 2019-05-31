@@ -126,6 +126,8 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
+				if (!assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (asm.ItemSpec)))
+					continue;
 				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
 				assemblies.Add (asm.ItemSpec);
 			}
@@ -308,8 +310,10 @@ namespace Xamarin.Android.Tasks
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
 			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
-			TypeNameMapGenerator generator = new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
-			using (var gen = generator) {
+			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
+				new TypeNameMapGenerator (types, logger) :
+				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
+			using (var gen = createTypeMapGenerator ()) {
 				using (var ms = new MemoryStream ()) {
 					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
 					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);

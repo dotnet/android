@@ -490,6 +490,8 @@ namespace CodeBehindUnitTests
 				ret.Add ($"ExtraConstants={extras}");
 			}
 
+			ret.Add ($"Configuration={XABuildPaths.Configuration}");
+
 			return ret.ToArray ();
 		}
 
