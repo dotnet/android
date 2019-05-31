@@ -4,7 +4,7 @@
     <!-- The default Android API level to bind in src/Mono.Android -->
     <AndroidApiLevel>28</AndroidApiLevel>
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
-    <AndroidFrameworkVersion>v7.0</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion>v9.0</AndroidFrameworkVersion>
 
     <!--
       Colon-separated list of ABIs to build the mono JIT for.
