@@ -25,6 +25,10 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+
       # Ensure the correct Mono.Cecil reference overrides are set before creating the bundle.
     - script: make prepare-props V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: make prepare-props
@@ -76,6 +80,10 @@ stages:
     variables:
       JAVA_HOME: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
     steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(BundleArtifactName)
@@ -142,6 +150,10 @@ stages:
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(BundleArtifactName)
