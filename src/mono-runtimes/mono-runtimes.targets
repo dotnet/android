@@ -109,7 +109,6 @@
     <_MonoUtility  Include="mono-symbolicate.exe" />
     <_MonoUtility  Include="mono-api-html.exe" />
     <_MonoUtility  Include="mono-api-info.exe" />
-    <_MonoUtility  Include="Mono.CompilerServices.SymbolWriter.dll" />
   </ItemGroup>
   <ItemGroup>
     <_MonoUtilitySource Include="@(_MonoUtility->'$(_MonoProfileToolsDir)\%(Identity)')" />

@@ -85,7 +85,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle-api.h" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CSharp.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Terminal.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
