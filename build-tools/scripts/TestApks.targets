@@ -305,7 +305,6 @@
         DestinationFolder="$(MSBuildThisFileDirectory)..\.."
         SourceFile="%(TestApkInstrumentation.ResultsPath)"
         TestsFlavor="$(TestsFlavor)"
-        LogcatFilenameDistincion="%(TestApkInstrumentation.LogcatFilenameDistincion)"
     />
   </Target>
   <Target Name="RecordApkSizes"
