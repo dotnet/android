@@ -125,6 +125,7 @@
     <Compile Include="ConfigAndData\Runtimes.cs" />
     <Compile Include="OperatingSystems\OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scenarios\Scenario_AndroidToolchain.cs" />
     <Compile Include="Scenarios\Scenario_PrepareExternalGitDependencies.cs" />
     <Compile Include="Scenarios\Scenario_PrepareImageDependencies.cs" />
     <Compile Include="Scenarios\Scenario_Required.cs" />
