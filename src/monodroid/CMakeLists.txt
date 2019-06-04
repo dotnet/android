@@ -36,8 +36,8 @@ if(NOT ANDROID)
   endforeach()
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.c
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.c
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
 endif()
 
@@ -207,9 +207,9 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c
   ${SOURCES_DIR}/zip/unzip.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.c
+  ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   )
 
 if(UNIX)
