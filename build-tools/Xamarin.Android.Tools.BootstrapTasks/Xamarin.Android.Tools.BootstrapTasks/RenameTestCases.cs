@@ -20,8 +20,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  bool                DeleteSourceFiles           { get; set; }
 		public                  string              Configuration               { get; set; }
 		public                  string              TestsFlavor                 { get; set; }
-		public                  string              LogcatFilenameDistincion    { get; set; }
-
 		[Required]
 		public                  string              SourceFile                  { get; set; }
 		[Required]
@@ -46,7 +44,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			catch (Exception e) {
 				Log.LogWarning ($"Unable to process `{SourceFile}`.  Is it empty?  (Did a unit test runner SIGSEGV?)");
 				Log.LogWarningFromException (e);
-				CreateErrorResultsFile (SourceFile, dest, Configuration, TestsFlavor, LogcatFilenameDistincion, e, m => {
+				CreateErrorResultsFile (SourceFile, dest, Configuration, TestsFlavor, e, m => {
 						Log.LogMessage (MessageImportance.Low, m);
 				});
 			}
@@ -108,9 +106,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 	partial class RenameTestCases {
 
-		static void CreateErrorResultsFile (string sourceFile, string destFile, string config, string flavor, string distinction, Exception e, Action<string> logDebugMessage)
+		static void CreateErrorResultsFile (string sourceFile, string destFile, string config, string flavor, Exception e, Action<string> logDebugMessage)
 		{
-			GetTestCaseInfo (sourceFile, Path.GetDirectoryName (destFile), config, flavor, distinction, logDebugMessage, out var testSuiteName, out var testCaseName, out var logcatPath);
+			GetTestCaseInfo (sourceFile, Path.GetDirectoryName (destFile), config, flavor, logDebugMessage, out var testSuiteName, out var testCaseName, out var logcatPath);
 			var contents  = new StringBuilder ();
 			if (File.Exists (sourceFile)) {
 				contents.Append (File.ReadAllText (sourceFile));
@@ -164,14 +162,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/logcat-Release-Mono.Android_Tests.txt
 		//
 		// We need to extract the "base" test name from `SourceFile`, and use that to construct `logcatPath`
-		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, string flavor, string distinction, Action<string> logDebugMessage, out string testSuiteName, out string testCaseName, out string logcatPath)
+		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, string flavor, Action<string> logDebugMessage, out string testSuiteName, out string testCaseName, out string logcatPath)
 		{
 			var name        = Path.GetFileNameWithoutExtension (sourceFile);
 			if (name.StartsWith ("TestResult-"))
 				name    = name.Substring ("TestResult-".Length);
 			testSuiteName   = name;
 			testCaseName    = $"Possible Crash / {config}";
-			logcatPath      = Path.Combine (destinationFolder, "bin", $"Test{config}", $"logcat-{config}{flavor}-{name}{distinction}.txt");
+			logcatPath      = Path.Combine (destinationFolder, "bin", $"Test{config}", $"logcat-{config}{flavor}-{name}.txt");
 			logDebugMessage ($"Looking for `adb logcat` output in the file: {logcatPath}");
 			if (!File.Exists (logcatPath)) {
 				logDebugMessage ($"Could not find file `{logcatPath}`.  Will not be including `adb logcat` output.");
@@ -199,7 +197,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			string destFile       = args [0];
 			string sourceFile     = args.Length > 1 ? args [1] : "source.xml";
 			string config         = args.Length > 2 ? args [2] : "Debug";
-			CreateErrorResultsFile (sourceFile, destFile, config, "", "", new Exception ("Wee!!!"), Console.WriteLine);
+			CreateErrorResultsFile (sourceFile, destFile, config, "", new Exception ("Wee!!!"), Console.WriteLine);
 		}
 	}
 #endif  // APP
