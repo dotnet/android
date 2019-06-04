@@ -18,6 +18,7 @@
         SourceUris="$(_NuGetUri)"
         DestinationFiles="$(_NuGet)"
     />
+    <Exec Command="$(_NuGet) restore Mono.Cecil.sln" WorkingDirectory="$(_TopDir)\external\cecil" />
     <Exec Command="$(_NuGet) restore Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
     <JdkInfo
         JdksRoot="$(ProgramFiles)\Java"

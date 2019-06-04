@@ -1,6 +1,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AssemblyName>$(AssemblyName.Replace('Mono', 'Xamarin.Android'))</AssemblyName>
+    <AssemblyName>$(MSBuildProjectName.Replace('Mono', 'Xamarin.Android'))</AssemblyName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
