@@ -35,10 +35,7 @@
       <HintPath>..\..\packages\NodaTime.2.4.5\lib\net45\NodaTime.dll</HintPath>
     </Reference>
   </ItemGroup>
-    <ItemGroup>
-    <Compile Include="..\..\bin\Test$(CONFIGURATION)\XABuildPaths.cs">
-      <Link>XABuildPaths.cs</Link>
-    </Compile>
+  <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
       <Link>Utilities\DeviceTest.cs</Link>
     </Compile>

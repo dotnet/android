@@ -94,8 +94,6 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 		{
 			XElement jd = Element;
 
-			RegisterAttribute mregister;
-			string anchor;
 			var section = GetSection (member, tregister);
 			if (section == null)
 				return;
@@ -104,7 +102,6 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 			IEnumerable<XElement> destinations = GetMdocMembers (mdoc, member, section.RegisterAttribute, out property);
 			MemberInfo secondPropertyMember = null;
 			DocumentSection secondSection = null;
-			RegisterAttribute secondmregister;
 			string prefix = null, secondPrefix = null;
 			if (property != null) {
 				MethodInfo mi = member as MethodInfo;

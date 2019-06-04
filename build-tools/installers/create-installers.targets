@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\Configuration.props" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
   <Import Project="..\..\src\Mono.Android\Mono.Android.projitems" />
