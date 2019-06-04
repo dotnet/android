@@ -6,6 +6,7 @@
     <CecilOutputPath>$([System.IO.Path]::Combine ($(MSBuildThisFileDirectory), $(OutputPath)))</CecilOutputPath>
     <CecilOutputPath>$([System.IO.Path]::GetFullPath ($(CecilOutputPath)))</CecilOutputPath>
     <CecilAssemblies>$(OutputPath)\Xamarin.Android.Cecil.dll;$(OutputPath)\Xamarin.Android.Cecil.Mdb.dll</CecilAssemblies>
+    <_CecilSolution>$(CecilFullPath)\Mono.Cecil.sln</_CecilSolution>
   </PropertyGroup>
   <ItemGroup>
     <_CecilProject  Include="$(CecilFullPath)\Mono.Cecil.csproj" />
@@ -16,8 +17,12 @@
       Inputs="@(_CecilSource)"
       Outputs="$(CecilAssemblies)">
     <MSBuild
+        Projects="$(_CecilSolution)"
+        Targets="Restore"
+        StopOnFirstFailure="True" />
+    <MSBuild
         Projects="@(_CecilProject)"
-        Targets="Clean;Restore;Build"
+        Targets="Clean;Build"
         StopOnFirstFailure="True"
         Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
     <Touch Files="$(CecilAssemblies)" />
