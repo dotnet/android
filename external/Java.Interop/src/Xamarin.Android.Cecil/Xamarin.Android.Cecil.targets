@@ -17,7 +17,7 @@
       Outputs="$(CecilAssemblies)">
     <MSBuild
         Projects="@(_CecilProject)"
-        Targets="Clean;Build"
+        Targets="Clean;Restore;Build"
         StopOnFirstFailure="True"
         Properties="Configuration=net_4_0_Debug;OutputPath=$(CecilOutputPath);BuildingSolutionFile=false" />
     <Touch Files="$(CecilAssemblies)" />
