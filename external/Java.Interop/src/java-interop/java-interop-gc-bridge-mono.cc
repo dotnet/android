@@ -24,6 +24,10 @@
 
 #include <dlfcn.h>
 
+#if defined (XAMARIN_ANDROID_DYLIB_MONO)
+using namespace xamarin::android;
+#endif
+
 typedef struct MonoJavaGCBridgeInfo {
 	MonoClass          *klass;
 	MonoClassField     *handle;
@@ -262,12 +266,12 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 	if (jvm == NULL)
 		return NULL;
 
-#if defined (ANDROID) || defined (DYLIB_MONO)
+#if defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO)
 	if (!monodroid_dylib_mono_init (monodroid_get_dylib (), NULL)) {
 		log_fatal (LOG_DEFAULT, "mono runtime initialization error: %s", dlerror ());
 		exit (FATAL_EXIT_CANNOT_FIND_MONO);
 	}
-#endif  /* defined (ANDROID) || defined (DYLIB_MONO) */
+#endif  /* defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO) */
 
 	lookup_optional_mono_thread_functions ();
 
@@ -351,7 +355,7 @@ int
 java_interop_gc_bridge_set_bridge_processing_field (
 		JavaInteropGCBridge                            *bridge,
 		struct JavaInterop_System_RuntimeTypeHandle     type_handle,
-		const char                                     *field_name)
+		char                                           *field_name)
 {
 	if (bridge == NULL || type_handle.value == NULL || field_name == NULL)
 		return -1;
@@ -380,10 +384,10 @@ java_interop_gc_bridge_register_bridgeable_type (
 	MonoJavaGCBridgeInfo   *info    = &bridge->mono_java_gc_bridge_info [i];
 
 	info->klass             = mono_class_from_mono_type (type);
-	info->handle            = mono_class_get_field_from_name (info->klass,     "handle");
-	info->handle_type       = mono_class_get_field_from_name (info->klass,     "handle_type");
-	info->refs_added        = mono_class_get_field_from_name (info->klass,     "refs_added");
-	info->weak_handle       = mono_class_get_field_from_name (info->klass,     "weak_handle");
+	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
+	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
+	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
+	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
 
 	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
 			info->refs_added == NULL || info->weak_handle == NULL)
@@ -1186,7 +1190,7 @@ gc_bridge_class_kind (MonoClass *klass)
 {
 	int i;
 	if (mono_bridge->gc_disabled)
-		return GC_BRIDGE_TRANSPARENT_CLASS;
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 
 	i = get_gc_bridge_index (mono_bridge, klass);
 	if (i == -NUM_GC_BRIDGE_TYPES) {
@@ -1194,14 +1198,14 @@ gc_bridge_class_kind (MonoClass *klass)
 				"asked if a class %s.%s is a bridge before we inited GC Bridge Types!\n",
 				mono_class_get_namespace (klass),
 				mono_class_get_name (klass));
-		return GC_BRIDGE_TRANSPARENT_CLASS;
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 	}
 
 	if (i >= 0) {
-		return GC_BRIDGE_TRANSPARENT_BRIDGE_CLASS;
+		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_BRIDGE_CLASS;
 	}
 
-	return GC_BRIDGE_TRANSPARENT_CLASS;
+	return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 }
 
 static mono_bool
