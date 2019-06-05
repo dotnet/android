@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -82,10 +82,10 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
-		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
+		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, bool saveProject = true)
 		{
 			//NOTE: since $(BuildingInsideVisualStudio) is set, Build will not happen by default
-			return RunTarget (project, "Build,Install", doNotCleanupOnUpdate, saveProject: saveProject);
+			return RunTarget (project, "Build,Install", doNotCleanupOnUpdate, parameters, saveProject: saveProject);
 		}
 
 		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
@@ -93,9 +93,9 @@ namespace Xamarin.ProjectTools
 			return RunTarget (project, "Uninstall", doNotCleanupOnUpdate);
 		}
 
-		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
-			return RunTarget (project, "Restore", doNotCleanupOnUpdate);
+			return RunTarget (project, "Restore", doNotCleanupOnUpdate, parameters);
 		}
 
 		public bool Clean (XamarinProject project, bool doNotCleanupOnUpdate = false)
