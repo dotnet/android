@@ -22,9 +22,7 @@
 #include <android/log.h>
 #endif
 
-extern "C" {
 #include "logger.h"
-}
 
 #include "globals.h"
 #include "xamarin_getifaddrs.h"

@@ -21,6 +21,8 @@
 	__android_log_vprint ((_level_), CATEGORY_NAME((_category_)), (_format_), (_args_)); \
 	va_end ((_args_));
 
+using namespace xamarin::android;
+
 // Must match the same ordering as LogCategories
 static const char* log_names[] = {
 	"*none*",
@@ -127,7 +129,7 @@ init_logging_categories ()
 	log_categories = LOG_DEFAULT;
 #endif
 	log_timing_categories = LOG_TIMING_DEFAULT;
-	if (monodroid_get_namespaced_system_property (DEBUG_MONO_LOG_PROPERTY, &value) == 0)
+	if (monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, &value) == 0)
 		return;
 
 	args = monodroid_strsplit (value, ",", -1);

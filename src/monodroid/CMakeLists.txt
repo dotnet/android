@@ -165,7 +165,7 @@ endif()
 
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
-add_definitions("-DDYLIB_MONO")
+add_definitions("-DXAMARIN_ANDROID_DYLIB_MONO")
 add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
 add_definitions("-DSGEN_BRIDGE_VERSION=${SGEN_BRIDGE_VERSION}")
@@ -200,7 +200,7 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
-  ${SOURCES_DIR}/logger.c
+  ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/timezones.cc

@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <new>
 
-extern "C" {
 #include "java-interop-util.h"
-}
 
 static void*
 do_alloc (size_t size)
