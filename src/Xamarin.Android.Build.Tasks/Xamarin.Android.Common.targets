@@ -1927,6 +1927,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\ResourcePatcher.java" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\MonoPackageManager.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\Placeholder.java" />
@@ -1934,6 +1935,7 @@ because xbuild doesn't support framework reference assemblies.
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MonkeyPatcher.java" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\MultiDexLoader.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\ResourcePatcher.class" />
+    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\Seppuku.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager_Resources.class" />
     <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
