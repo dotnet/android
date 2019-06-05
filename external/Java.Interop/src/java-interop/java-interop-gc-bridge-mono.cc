@@ -1,3 +1,5 @@
+#define __STDC_FORMAT_MACROS
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -164,7 +166,7 @@ _ji_realpath_win_loop (wchar_t* wpath, DWORD len)
 {
 	DWORD retval;
 	char* fullpath = NULL;
-	wchar_t *allocated_buffer = xmalloc (sizeof (wchar_t)*len);;
+	wchar_t *allocated_buffer = static_cast<wchar_t*> (xmalloc (sizeof (wchar_t)*len));
 
 	while (1) {
 		retval = GetFullPathNameW (wpath, len, allocated_buffer, NULL);
@@ -180,7 +182,7 @@ _ji_realpath_win_loop (wchar_t* wpath, DWORD len)
 		// other thread probably called chdir ()
 		// be on the safe side and allocate more space in case it will happen again
 		len = retval*2;
-		allocated_buffer = xrealloc (allocated_buffer, sizeof (wchar_t)*len);
+		allocated_buffer = static_cast<wchar_t*> (xrealloc (allocated_buffer, sizeof (wchar_t)*len));
 	}
 
 	free (allocated_buffer);
