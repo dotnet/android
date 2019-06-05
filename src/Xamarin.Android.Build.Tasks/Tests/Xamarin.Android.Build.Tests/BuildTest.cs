@@ -3798,6 +3798,49 @@ public class ApplicationRegistration { }");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 			}
 		}
+
+		[Test]
+		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2)
+		{
+			var path = Path.Combine ("temp", TestName);
+
+			// Create a "library" with all the application stuff in it
+			var lib = new XamarinAndroidApplicationProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { }"
+					},
+				}
+			};
+			lib.SetProperty ("AndroidApplication", "False");
+			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+
+			// Create an "app" that is basically empty and references the library
+			var app = new XamarinAndroidLibraryProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			app.AndroidResources.Clear (); // No Resources
+			app.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer.cs");
+			app.SetProperty ("AndroidApplication", "True");
+			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
+
+				var r_txt = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "R.txt");
+				FileAssert.Exists (r_txt);
+			}
+		}
 	}
 }
 

@@ -1699,7 +1699,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 
 	<Aapt2Link
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' And Exists ('$(_AndroidLibraryFlatArchivesDirectory)\compiled.flata')"
+		Condition=" '$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' "
 		ContinueOnError="$(DesignTimeBuild)"
 		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
