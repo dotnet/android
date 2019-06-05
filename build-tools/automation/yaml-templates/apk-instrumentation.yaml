@@ -3,7 +3,7 @@ parameters:
   testName: []
   project: []
   testResultsFiles: []
-  extraBuildArgs: []
+  extraBuildArgs: ""
   testResultsFormat: NUnit
   packageType: Apk
 
@@ -15,7 +15,7 @@ steps:
     configuration: ${{ parameters.configuration }}
     msbuildArguments: >
       /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTest${{ parameters.packageType }}s,RunTestApks,RenameApkTestCases,ReportComponentFailures
-      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}run${{ parameters.testName }}.binlog
+      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
       ${{ parameters.extraBuildArgs }}
   condition: succeededOrFailed()
 
@@ -24,6 +24,5 @@ steps:
   inputs:
     testResultsFormat: ${{ parameters.testResultsFormat }}
     testResultsFiles: ${{ parameters.testResultsFiles }}
-    failTaskOnFailedTests: true
     testRunTitle: ${{ parameters.testName }}
   condition: succeededOrFailed()

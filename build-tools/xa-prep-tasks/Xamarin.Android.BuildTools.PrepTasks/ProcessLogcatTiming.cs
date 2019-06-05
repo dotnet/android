@@ -53,7 +53,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					} else {
 						if (line.Contains ($"Process {ApplicationPackageName} (pid {PID}) has died")) {
 							Log.LogError ("Application crash detected. Could not collect performance data.");
-							reader.Close ();
 							return false;
 						}
 
@@ -99,11 +98,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					WriteResults ();
 				} else {
 					Log.LogError ("Application start wasn't detected. Could not collect performance data.");
-					reader.Close ();
 					return false;
 				}
-
-				reader.Close ();
 			}
 
 			return true;

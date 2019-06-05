@@ -177,8 +177,7 @@
       <_StorePass>android</_StorePass>
       <!-- Support for running against a system installation of XA. -->
       <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
-      <JavaPath Condition=" '$(JavaPath)' == '' And !$([MSBuild]::IsOsPlatform(Windows)) ">$(JavaSdkDirectory)\bin\java</JavaPath>
-      <JavaPath Condition=" '$(JavaPath)' == '' And $([MSBuild]::IsOsPlatform(Windows)) ">$(JavaSdkDirectory)\bin\java.exe</JavaPath>
+      <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java</JavaPath>
     </PropertyGroup>
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
@@ -303,7 +302,7 @@
     />
   </Target>
   <Target Name="RenameApkTestCases"
-      Condition=" '@(TestApk)' != '' ">
+      Condition=" '@(TestApk)' != '' Or '@(TestAab)' != '' ">
     <RenameTestCases
         Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
         Configuration="$(Configuration)"

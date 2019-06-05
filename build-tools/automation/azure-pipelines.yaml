@@ -216,7 +216,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
         testRunTitle: xamarin-android
-        failTaskOnFailedTests: true
       condition: succeededOrFailed()
 
     - task: MSBuild@1
@@ -243,6 +242,8 @@ stages:
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
     variables:
       ApkTestConfiguration: Release
     steps:
@@ -254,11 +255,18 @@ stages:
 
     - template: yaml-templates/run-installer.yaml
 
-    # HACK - Provision Emulator
+    - task: MSBuild@1
+      displayName: build xaprepare
+      inputs:
+        solution: build-tools/xaprepare/xaprepare.sln
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /t:Restore,Build
+
     - script: |
-        make prepare CONFIGURATION=$(ApkTestConfiguration) V=1 MSBUILD=msbuild MSBUILD_ARGS="$(AutoProvisionArgs)"
-        git clean -xfd
-      displayName: (hack) make prepare - provision emulator
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+      displayName: provision dependencies
 
     - task: NuGetCommand@2
       displayName: nuget restore Xamarin.Android.Tools.sln
@@ -416,7 +424,14 @@ stages:
     - task: MSBuild@1
       displayName: package results
       inputs:
-        solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: /t:ZipTestResults /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+        msbuildArguments: /t:ZipBuildStatus;ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+      condition: always()
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
+      inputs:
+        artifactName: mac-apk-test-results
+        targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
