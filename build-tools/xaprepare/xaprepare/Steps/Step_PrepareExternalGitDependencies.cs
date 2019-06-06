@@ -18,20 +18,23 @@ namespace Xamarin.Android.Prepare
 			bool failed = false;
 			Log.StatusLine ();
 			Log.StatusLine ("Updating external repositories");
-			var git = new GitRunner (context);
+			var git = new GitRunner (context) {
+				EchoCmdAndArguments = false
+			};
 			foreach (ExternalGitDependency egd in externalDependencies) {
 				Log.StatusLine ($"  {context.Characters.Bullet} {egd.Name}");
 				string destDir = Path.Combine (Configurables.Paths.ExternalGitDepsDestDir, egd.Name);
 				if (!Directory.Exists (destDir)) {
-					Log.StatusLine ($"    {context.Characters.Link} cloning from {egd.Url}");
-					if (!await git.Clone (egd.Url, destDir)) {
+					var egdUrl = await GetGitHubURL (egd, git);
+					Log.StatusLine ($"    {context.Characters.Link} cloning from {egd.Owner}/{egd.Name}");
+					if (!await git.Clone (egdUrl, destDir)) {
 						Log.ErrorLine ($"Failed to clone {egd.Name}");
 						failed = true;
 						continue;
 					}
 				}
 
-				Log.StatusLine ($"    {context.Characters.Link} fetching changes from {egd.Url}");
+				Log.StatusLine ($"    {context.Characters.Link} fetching changes from {egd.Owner}/{egd.Name}");
 				if (!await git.Fetch (destDir)) {
 					Log.ErrorLine ($"Failed to fetch changes for {egd.Name}");
 					failed = true;
@@ -64,6 +67,20 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return !failed;
+		}
+
+		async Task<string> GetGitHubURL (ExternalGitDependency egd, GitRunner git)
+		{
+			string ghToken = Environment.GetEnvironmentVariable("GH_AUTH_SECRET");
+			if (!String.IsNullOrEmpty (ghToken)) {
+				return  $"https://{ghToken}@github.com:/{egd.Owner}/{egd.Name}";
+			} else {
+				if (await git.IsRepoUrlHttps (BuildPaths.XamarinAndroidSourceRoot)) {
+					return $"https://github.com:/{egd.Owner}/{egd.Name}";
+				} else {
+					return $"git@github.com:/{egd.Owner}/{egd.Name}";
+				}
+			}
 		}
 	}
 }

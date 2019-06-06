@@ -8,16 +8,16 @@ trigger:
 variables:
   BundleArtifactName: bundle
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  AndroidTargetAbiArgs: >-
+    /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+    /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
 - stage: prepare
   displayName: Prepare
   variables:
-    MSBuildAbiArgs: >-
-      /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-      /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
-      /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
+    MSBuildAbiArgs: $(AndroidTargetAbiArgs) /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
   jobs:
   - job: create_bundle
     displayName: Bundle
@@ -35,7 +35,7 @@ stages:
     - script: |
         make prepare-update-mono PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
         make prepare PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-      displayName: make prepare-props
+      displayName: create bundle
 
     - task: CopyFiles@2
       displayName: copy bundle
@@ -149,7 +149,6 @@ stages:
     cancelTimeoutInMinutes: 5
     variables:
       JAVA_HOME: '%HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk'
-      XA_MSBUILD_ARGS: "/p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64 /p:AndroidSupportedTargetAotAbis=armeabi-v7a:win-armeabi-v7a:arm64:win-arm64:x86:win-x86:x86_64:win-x86_64"
     steps:
     - checkout: self
       clean: true
@@ -175,20 +174,20 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory) $(XA_MSBUILD_ARGS)
+        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory) $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog $(XA_MSBUILD_ARGS)
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog $(AndroidTargetAbiArgs)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(XA_MSBUILD_ARGS)
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests

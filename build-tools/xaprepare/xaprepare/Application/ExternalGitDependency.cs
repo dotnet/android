@@ -32,7 +32,6 @@ $
 		public string Commit { get; private set; }
 		public string Name   { get; private set; }
 		public string Owner  { get; private set; }
-		public string Url    { get; private set; }
 
 		public static List<ExternalGitDependency> GetDependencies (Context context, string externalFilePath)
 		{
@@ -54,22 +53,12 @@ $
 						Name   = match.Groups["repo"].Value,
 						Owner  = match.Groups["owner"].Value,
 					};
-					SetGitHubURL (e);
 					externals.Add (e);
 					Log.Instance.StatusLine ($"    {context.Characters.Bullet} {e.Owner}/{e.Name} ({e.Commit})");
 				}
 			}
 
 			return externals;
-		}
-
-		static void SetGitHubURL (ExternalGitDependency egd)
-		{
-			string ghToken = Environment.GetEnvironmentVariable ("GH_AUTH_SECRET");
-			if (!String.IsNullOrEmpty (ghToken))
-				egd.Url = $"https://{ghToken}@github.com:/{egd.Owner}/{egd.Name}";
-			else
-				egd.Url = $"git@github.com:/{egd.Owner}/{egd.Name}";
 		}
 	}
 }

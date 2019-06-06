@@ -160,6 +160,36 @@ namespace Xamarin.Android.Prepare
 			return parserState.Entries;
 		}
 
+		public async Task<bool> IsRepoUrlHttps (string workingDirectory)
+		{
+			if (!Directory.Exists (workingDirectory))
+				throw new ArgumentException ("must exist", nameof (workingDirectory));
+
+			var runner = CreateGitRunner (workingDirectory);
+			runner.AddArgument ("config");
+			runner.AddArgument ("--get");
+			runner.AddArgument ("remote.origin.url");
+
+			bool containsHttps = false;
+
+			bool success = await RunTool (
+				() => {
+					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
+						outputSink.LineCallback = (string line) => {
+							containsHttps = !string.IsNullOrEmpty (line) && line.Contains ("https://");
+						};
+						runner.WorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
+						return runner.Run ();
+					}
+				}
+			);
+
+			if (!success)
+				return false;
+
+			return containsHttps;
+		}
+
 		ProcessRunner CreateGitRunner (string workingDirectory, List<string> arguments = null)
 		{
 			var runner = CreateProcessRunner ();

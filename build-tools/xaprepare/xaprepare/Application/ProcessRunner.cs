@@ -62,6 +62,7 @@ namespace Xamarin.Android.Prepare
 		public Dictionary <string, string> Environment                       { get; } = new Dictionary <string, string> (StringComparer.Ordinal);
 		public int ExitCode                                                  { get; private set; } = -1;
 		public ErrorReasonCode ErrorReason                                   { get; private set; } = ErrorReasonCode.NotExecutedYet;
+		public bool EchoCmdAndArguments                                      { get; set; } = true;
 		public bool EchoStandardOutput                                       { get; set; }
 		public ProcessStandardStreamWrapper.LogLevel EchoStandardOutputLevel { get; set; } = ProcessStandardStreamWrapper.LogLevel.Message;
 		public bool EchoStandardError                                        { get; set; }
@@ -232,7 +233,8 @@ namespace Xamarin.Android.Prepare
 				StartInfo = psi
 			};
 
-			Log.DebugLine ($"Running: {FullCommandLine}");
+			if (EchoCmdAndArguments)
+				Log.DebugLine ($"Running: {FullCommandLine}");
 
 			try {
 				process.Start ();

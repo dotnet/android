@@ -21,6 +21,7 @@ namespace Xamarin.Android.Prepare
 		public string FullToolPath             { get; }
 		protected string VersionString         => GetVersion ();
 
+		public bool EchoCmdAndArguments        { get; set; } = true;
 		public bool EchoStandardError          { get; set; } = true;
 		public bool EchoStandardOutput         { get; set; }
 		public string LogMessageIndent         { get; set; } = String.Empty;
@@ -88,6 +89,7 @@ namespace Xamarin.Android.Prepare
 
 			var runner = new ProcessRunner (managedRunner ?? FullToolPath, initialParams) {
 				ProcessTimeout = ProcessTimeout,
+				EchoCmdAndArguments = EchoCmdAndArguments,
 				EchoStandardError = EchoStandardError,
 				EchoStandardOutput = EchoStandardOutput,
 			};
