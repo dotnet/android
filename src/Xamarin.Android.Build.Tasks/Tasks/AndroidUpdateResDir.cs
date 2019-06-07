@@ -98,11 +98,17 @@ namespace Xamarin.Android.Tasks
 							}
 						}
 					}
-					if (prefixes != null) {
-						foreach (var p in prefixes) {
-							if (rel.StartsWith (p))
-								rel = rel.Substring (p.Length);
-						}
+				}
+
+				if (Path.IsPathRooted (rel)) {
+					var root = Path.GetPathRoot (rel);
+					rel = rel.Substring (root.Length);
+				}
+
+				if (prefixes != null) {
+					foreach (var p in prefixes) {
+						if (rel.StartsWith (p))
+							rel = rel.Substring (p.Length);
 					}
 				}
 
@@ -112,6 +118,11 @@ namespace Xamarin.Android.Tasks
 				if (baseFileName != rel)
 					nameCaseMap.WriteLine ("{0}|{1}", rel, baseFileName);
 				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
+				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
+				// if the path ends up "outside" of our target intermediate directory, just use the filename
+				if (String.Compare (intermediateDirFullPath, 0, dest, 0, intermediateDirFullPath.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
+				}
 				var newItem = new TaskItem (dest);
 				newItem.SetMetadata ("LogicalName", rel);
 				item.CopyMetadataTo (newItem);

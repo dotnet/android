@@ -108,6 +108,7 @@
     <Compile Include="Tasks\ConvertResourcesCasesTests.cs" />
     <Compile Include="Tasks\NdkUtilTests.cs" />
     <Compile Include="Tasks\CheckGoogleSdkRequirementsTests.cs" />
+    <Compile Include="Tasks\AndroidComputeResPathsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
