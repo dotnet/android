@@ -117,8 +117,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bundletool", "src\bundletoo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proprietary", "build-tools\proprietary\proprietary.csproj", "{D93CAC27-3893-42A3-99F1-2BCA72E186F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "download-bundle", "build-tools\download-bundle\download-bundle.csproj", "{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jit-times", "tools\jit-times\jit-times.csproj", "{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "create-pkg", "build-tools\create-pkg\create-pkg.csproj", "{46529930-A5CC-4205-A50D-0AAAC639F082}"
@@ -353,10 +351,6 @@ Global
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{D93CAC27-3893-42A3-99F1-2BCA72E186F4}.Release|AnyCPU.Build.0 = Release|Any CPU
-		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
-		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Debug|AnyCPU.Build.0 = Debug|Any CPU
-		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Release|AnyCPU.ActiveCfg = Release|Any CPU
-		{1DA0CB12-5508-4E83-A242-0C8D6D99A49B}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{F3CFF31C-037B-450F-B22D-1D6E529B2DCC}.Release|AnyCPU.ActiveCfg = Release|Any CPU
