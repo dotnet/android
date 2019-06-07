@@ -3715,16 +3715,24 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 					"_CompileJava",
 				};
 				Assert.IsTrue (b.Output.IsTargetSkipped (targets [0]), $"`{targets [0]}` should be skipped.");
-				var oldMonoPackageManager = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager.java");
-				var notifyTimeZoneChanges = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
+				var seppuku = Path.Combine (intermediate, "android", "src", "mono", "android", "Seppuku.java");
+				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
+				Directory.CreateDirectory (Path.GetDirectoryName (seppuku));
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
+				File.WriteAllText (seppuku, @"package mono.android;
+public class Seppuku { }");
 				File.WriteAllText (notifyTimeZoneChanges, @"package mono.android.app;
 public class ApplicationRegistration { }");
-				var oldMonoPackageManagerClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
+				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
+				var seppukuClass = Path.Combine (intermediate, "android", "bin", "classes", "mono", "android", "Seppuku.class");
+				Directory.CreateDirectory (Path.GetDirectoryName (seppukuClass));
 				File.WriteAllText (oldMonoPackageManagerClass, "");
+				File.WriteAllText (seppukuClass, "");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped.");
@@ -3732,10 +3740,12 @@ public class ApplicationRegistration { }");
 				// Old files that should *not* exist
 				FileAssert.DoesNotExist (oldMonoPackageManager);
 				FileAssert.DoesNotExist (oldMonoPackageManagerClass);
+				FileAssert.DoesNotExist (seppuku);
+				FileAssert.DoesNotExist (seppukuClass);
 				FileAssert.DoesNotExist (notifyTimeZoneChanges);
 				// New files that should exist
-				var monoPackageManager_Resources = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
-				var monoPackageManager_ResourcesClass = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes", "mono", "MonoPackageManager_Resources.class");
+				var monoPackageManager_Resources = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager_Resources.java");
+				var monoPackageManager_ResourcesClass = Path.Combine (intermediate, "android", "bin", "classes", "mono", "MonoPackageManager_Resources.class");
 				FileAssert.Exists (monoPackageManager_Resources);
 				FileAssert.Exists (monoPackageManager_ResourcesClass);
 			}
