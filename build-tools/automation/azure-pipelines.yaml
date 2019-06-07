@@ -8,16 +8,16 @@ trigger:
 variables:
   BundleArtifactName: bundle
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  AndroidTargetAbiArgs: >-
+    /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+    /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
 - stage: prepare
   displayName: Prepare
   variables:
-    MSBuildAbiArgs: >-
-      /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-      /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
-      /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
+    MSBuildAbiArgs: $(AndroidTargetAbiArgs) /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
   jobs:
   - job: create_bundle
     displayName: Bundle
@@ -25,20 +25,17 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
+
     - checkout: self
       clean: true
       submodules: recursive
 
-      # Ensure the correct Mono.Cecil reference overrides are set before creating the bundle.
-    - script: make prepare-props V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-      displayName: make prepare-props
-
-    - task: MSBuild@1
+      # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
+      # The 'prepare' step creates the bundle
+    - script: |
+        make prepare-update-mono PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+        make prepare PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: create bundle
-      inputs:
-        solution: build-tools/create-bundle/create-bundle.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/msbuild-createbundle.binlog $(MSBuildAbiArgs)
 
     - task: CopyFiles@2
       displayName: copy bundle
@@ -58,7 +55,7 @@ stages:
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)/results
+        msbuildArguments: /t:Build,ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)/results
       condition: always()
 
     - task: PublishPipelineArtifact@0
@@ -89,7 +86,7 @@ stages:
         artifactName: $(BundleArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)
 
-    - script: make prepare-external-git-dependencies CONFIGURATION=$(XA.Build.Configuration)
+    - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make prepare-commercial
       condition: eq(variables['XA.Commercial.Build'], 'true')
       env:
@@ -103,11 +100,12 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
         provisioning_extra_args: -vv
 
-    - script: make prepare-deps V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs)"
-      displayName: make prepare-deps
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)" MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
+      displayName: make prepare-update-mono
 
-    - script: make prepare jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
-      displayName: make prepare jenkins
+      # No need to add `prepare` to the command line, the `jenkins` rule depends on `prepare-jenkins` which will run the bootstrapper
+    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)" MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
+      displayName: make jenkins
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
@@ -149,6 +147,8 @@ stages:
     pool: $(XA.Build.Win.Pool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
+    variables:
+      JAVA_HOME: '%HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk'
     steps:
     - checkout: self
       clean: true
@@ -160,31 +160,34 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
-      displayName: msbuild Xamarin.Android /t:Prepare
+      displayName: build xaprepare
       inputs:
-        solution: Xamarin.Android.sln
+        solution: build-tools\xaprepare\xaprepare.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Prepare /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: $(AutoProvisionArgs) $(AndroidTargetAbiArgs) /t:"Restore;Build"
+
+    - script: build-tools\xaprepare\xaprepare\bin\$(XA.Build.Configuration)\xaprepare.exe -v:d --no-emoji --run-mode=CI -a --bundle-path="$(System.DefaultWorkingDirectory)"
+      displayName: run xaprepare
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory) $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog $(AndroidTargetAbiArgs)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests

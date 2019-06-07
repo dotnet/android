@@ -361,11 +361,6 @@
       <Name>jcw-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\mono-runtimes\mono-runtimes.csproj">
-      <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
-      <Name>mono-runtimes</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj">
       <Project>{1D4FC8F1-0DA4-4F38-BE68-11AEBA9A0EA4}</Project>
       <Name>java-runtime</Name>

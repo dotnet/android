@@ -149,7 +149,7 @@ timestamps {
 
         utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer if any prereqs need to be provisioned
             if (isCommercial) {
-                sh "make prepare-external-git-dependencies"
+                sh "make prepare-external-git-dependencies PREPARE_CI=1 V=1 "
 
                 utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialPath}/build-tools/provisionator", true) {
                     sh('./provisionator.sh profile.csx -v')
@@ -166,12 +166,11 @@ timestamps {
                     }
                 }
             }
-
-            sh "make prepare-deps CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
-            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
                 sh "cp bin/${env.BuildFlavor}/bundle-*.zip ${packagePath}"

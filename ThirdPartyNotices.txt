@@ -16,9 +16,8 @@ The attached notices are provided for information only.
 3. nunit/nunitlite (https://github.com/nunit/nunitlite/)
 4. zLibDll/minizip (http://www.winimage.com/zLibDll/minizip.html)
 
-
 %% bazelbuild/bazel NOTICES AND INFORMATION BEGIN HERE
-=========================================
+======================================================
 
                                  Apache License
                            Version 2.0, January 2004
@@ -221,11 +220,12 @@ The attached notices are provided for information only.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-=========================================
+
+======================================================
 END OF bazelbuild/bazel NOTICES AND INFORMATION
 
 %% google/desugar NOTICES AND INFORMATION BEGIN HERE
-=========================================
+====================================================
 
                                  Apache License
                            Version 2.0, January 2004
@@ -428,12 +428,12 @@ END OF bazelbuild/bazel NOTICES AND INFORMATION
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-=========================================
+
+====================================================
 END OF google/desugar NOTICES AND INFORMATION
 
 %% nunit/nunitlite NOTICES AND INFORMATION BEGIN HERE
-=========================================
-
+=====================================================
 Copyright (c) 2004-2013 Charlie Poole
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -454,12 +454,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-=========================================
+
+
+=====================================================
 END OF nunit/nunitlite NOTICES AND INFORMATION
 
 %% zLibDll/minizip NOTICES AND INFORMATION BEGIN HERE
-=========================================
-
+=====================================================
 Copyright (C) 1998-2005 Gilles Vollant
 
 This software is provided 'as-is', without any express or implied
@@ -478,5 +479,7 @@ appreciated but is not required.
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 
-=========================================
+
+=====================================================
 END OF zLibDll/minizip NOTICES AND INFORMATION
+
