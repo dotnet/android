@@ -3839,6 +3839,11 @@ public class ApplicationRegistration { }");
 
 				var r_txt = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "R.txt");
 				FileAssert.Exists (r_txt);
+
+				var resource_designer_cs = Path.Combine (Root, appBuilder.ProjectDirectory, "Resources", "Resource.designer.cs");
+				FileAssert.Exists (resource_designer_cs);
+				var contents = File.ReadAllText (resource_designer_cs);
+				Assert.AreNotEqual ("", contents);
 			}
 		}
 	}

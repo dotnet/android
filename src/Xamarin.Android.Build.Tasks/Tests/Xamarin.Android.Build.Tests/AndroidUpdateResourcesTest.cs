@@ -569,6 +569,9 @@ namespace UnnamedProject
 	android:layout_height=""wrap_content"" 
 	android:text=""Hello""
 	/>
+<TextView
+	android:id=""@+id/myText""
+	/>
 </LinearLayout>";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) != FileAttributes.ReadOnly,

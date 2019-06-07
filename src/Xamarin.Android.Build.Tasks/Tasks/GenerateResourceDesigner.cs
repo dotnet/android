@@ -229,7 +229,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			MonoAndroidHelper.CopyIfStringChanged (code, file);
+			if (MonoAndroidHelper.CopyIfStringChanged (code, file)) {
+				Log.LogDebugMessage ($"Writing to: {file}");
+			}
 		}
 
 		private void AddRename (string android, string user)
