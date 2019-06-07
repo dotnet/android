@@ -76,6 +76,11 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "Asset2",
 						Encoding = Encoding.ASCII,
 					},
+					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset5.txt") {
+						TextContent = () => "Asset5",
+						Encoding = Encoding.ASCII,
+						Metadata = { { "LogicalName", Path.Combine (Path.GetPathRoot (Root), "Assets", "subfolder", "asset5.txt") } },
+					},
 				}
 			};
 			var proj = new XamarinAndroidApplicationProject () {
@@ -92,6 +97,11 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset4.txt") {
 						TextContent = () => "Asset4",
 						Encoding = Encoding.ASCII,
+					},
+					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset6.txt") {
+						TextContent = () => "Asset6",
+						Encoding = Encoding.ASCII,
+						Metadata = { { "LogicalName", Path.Combine (Path.GetPathRoot (Root), "Assets", "subfolder", "asset6.txt") } },
 					},
 				}
 			};
