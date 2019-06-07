@@ -160,7 +160,6 @@
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\lib64\libc++.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)" />
