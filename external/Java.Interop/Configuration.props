@@ -19,6 +19,7 @@
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
   <PropertyGroup>
+    <CecilRestoreConfiguration Condition=" '$(CecilRestoreConfiguration)' == '' ">$(Configuration)</CecilRestoreConfiguration>
     <CecilSourceDirectory   Condition=" '$(CecilSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\cecil</CecilSourceDirectory>
     <UtilityOutputFullPath  Condition=" '$(UtilityOutputFullPath)' == '' ">$(MSBuildThisFileDirectory)bin\$(_Configuration)\</UtilityOutputFullPath>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>

@@ -19,7 +19,8 @@
     <MSBuild
         Projects="$(_CecilSolution)"
         Targets="Restore"
-        StopOnFirstFailure="True" />
+        StopOnFirstFailure="True"
+        Properties="Configuration=$(CecilRestoreConfiguration);OutputPath=$(CecilOutputPath)" />
     <MSBuild
         Projects="@(_CecilProject)"
         Targets="Clean;Build"
