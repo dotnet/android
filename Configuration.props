@@ -38,12 +38,17 @@
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' == '' ">
+    <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
+    <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>
+    <HostOS Condition="$([MSBuild]::IsOSPlatform('osx'))">Darwin</HostOS>
+  </PropertyGroup>
   <PropertyGroup>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
-    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\lib\xamarin.android\</XAInstallPrefix>
+    <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
+    <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
     <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
-    <HostOS Condition=" '$(HostOS)' == '' And '$(OS)' == 'Windows_NT' ">Windows</HostOS>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
     <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
     <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc32)</HostCc>
@@ -171,7 +176,8 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe&quot;</RemapAssemblyRefTool>
+    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
+    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
   <!-- Unit Test Properties -->

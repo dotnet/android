@@ -20,6 +20,7 @@
 /build-tools/manifest-attribute-codegen @jonpryor
 /build-tools/scripts/PrepareWindows.targets @jonathanpeppers
 /build-tools/timing @jonathanpeppers @radekdoulik
+/build-tools/xaprepare @grendello
 
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor

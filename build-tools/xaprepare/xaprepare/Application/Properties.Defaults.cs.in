@@ -1,0 +1,54 @@
+using System;
+
+namespace Xamarin.Android.Prepare
+{
+	partial class Properties
+	{
+		void InitDefaults ()
+		{
+			properties.Add (KnownProperties.AndroidCmakeVersion,                 StripQuotes ("@AndroidCmakeVersion@"));
+			properties.Add (KnownProperties.AndroidCmakeVersionPath,             StripQuotes (@"@AndroidCmakeVersionPath@"));
+			properties.Add (KnownProperties.AndroidLatestStableFrameworkVersion, StripQuotes ("@AndroidLatestStableFrameworkVersion@"));
+			properties.Add (KnownProperties.AndroidMxeFullPath,                  StripQuotes (@"@AndroidMxeFullPath@"));
+			properties.Add (KnownProperties.AndroidNdkDirectory,                 StripQuotes (@"@AndroidNdkDirectory@"));
+			properties.Add (KnownProperties.AndroidSdkDirectory,                 StripQuotes (@"@AndroidSdkDirectory@"));
+			properties.Add (KnownProperties.AndroidSupportedHostJitAbis,         StripQuotes ("@AndroidSupportedHostJitAbis@"));
+			properties.Add (KnownProperties.AndroidSupportedTargetAotAbis,       StripQuotes ("@AndroidSupportedTargetAotAbis@"));
+			properties.Add (KnownProperties.AndroidSupportedTargetJitAbis,       StripQuotes ("@AndroidSupportedTargetJitAbis@"));
+			properties.Add (KnownProperties.AndroidToolchainCacheDirectory,      StripQuotes (@"@AndroidToolchainCacheDirectory@"));
+			properties.Add (KnownProperties.AndroidToolchainDirectory,           StripQuotes (@"@AndroidToolchainDirectory@"));
+			properties.Add (KnownProperties.AutoProvision,                       StripQuotes ("@AutoProvision@"));
+			properties.Add (KnownProperties.AutoProvisionUsesSudo,               StripQuotes ("@AutoProvisionUsesSudo@"));
+			properties.Add (KnownProperties.Configuration,                       StripQuotes ("@Configuration@"));
+			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
+			properties.Add (KnownProperties.IgnoreMaxMonoVersion,                StripQuotes ("@IgnoreMaxMonoVersion@"));
+			properties.Add (KnownProperties.JavaInteropFullPath,                 StripQuotes (@"@JavaInteropFullPath@"));
+			properties.Add (KnownProperties.JavaSdkDirectory,                    StripQuotes (@"@JavaSdkDirectory@"));
+			properties.Add (KnownProperties.LibZipSourceFullPath,                StripQuotes (@"@LibZipSourceFullPath@"));
+			properties.Add (KnownProperties.ManagedRuntime,                      StripQuotes (@"@ManagedRuntime@"));
+			properties.Add (KnownProperties.MingwCommandPrefix32,                StripQuotes ("@MingwCommandPrefix32@"));
+			properties.Add (KnownProperties.MingwCommandPrefix64,                StripQuotes ("@MingwCommandPrefix64@"));
+			properties.Add (KnownProperties.MingwDependenciesRootDirectory,      StripQuotes (@"@MingwDependenciesRootDirectory@"));
+			properties.Add (KnownProperties.MingwZlibLibraryName,                StripQuotes ("@MingwZlibLibraryName@"));
+			properties.Add (KnownProperties.MingwZlibRootDirectory32,            StripQuotes (@"@MingwZlibRootDirectory32@"));
+			properties.Add (KnownProperties.MingwZlibRootDirectory64,            StripQuotes (@"@MingwZlibRootDirectory64@"));
+			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
+			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
+			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
+			properties.Add (KnownProperties.RemapAssemblyRefToolExecutable,      StripQuotes (@"@RemapAssemblyRefToolExecutable@"));
+			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
+			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
+			properties.Add (KnownProperties.XABinRelativeInstallPrefix,          StripQuotes (@"@XABinRelativeInstallPrefix@"));
+			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));
+			properties.Add (KnownProperties.XAPlatformToolsVersion,              StripQuotes ("@XAPlatformToolsVersion@"));
+		}
+
+		string StripQuotes (string input)
+		{
+			if (String.IsNullOrEmpty (input))
+				return String.Empty;
+
+			return input.Trim ('"');
+		}
+	}
+}

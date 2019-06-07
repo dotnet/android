@@ -1,11 +1,3 @@
-_BUNDLE_ZIPS_INCLUDE  = \
-	$(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt \
-	$(ZIP_OUTPUT_BASENAME)/bin/Debug \
-	$(ZIP_OUTPUT_BASENAME)/bin/Release
-
-_BUNDLE_ZIPS_EXCLUDE  = \
-	$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip
-
 create-installers: create-pkg create-vsix
 
 create-pkg:

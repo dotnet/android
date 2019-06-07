@@ -5,7 +5,7 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
 
-  <Import Project="..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
@@ -164,7 +164,6 @@
     <PropertyGroup>
       <_NDKToolFileName>$([System.IO.Path]::GetFileName ('$(_NDKToolLocation)'))</_NDKToolFileName>
       <_NDKToolDestinationBase>$(XAInstallPrefix)xbuild\Xamarin\Android</_NDKToolDestinationBase>
-      <_WinAsmDestDir>$(XAInstallPrefix)xbuild\Xamarin\Android</_WinAsmDestDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -172,21 +171,6 @@
       <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
       <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_FetchWindowsAssemblers"
-      Condition=" '$(HostOS)' != 'Windows' "
-      DependsOnTargets="_PrepareNDKToolsItems"
-      AfterTargets="Build"
-      Inputs="..\..\build-tools\scripts\Ndk.targets"
-      Outputs="$(_WinAsmDestDir)\%(_ToolchainPrefix.Identity)-as.exe">
-    <MakeDir
-        Directories="$(_WinAsmDestDir)"
-    />
-    <Exec
-        Command="$(ManagedRuntime) $(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\fetch-windows-assemblers.exe $(AndroidNdkVersion) &quot;$(_WinAsmDestDir)&quot; https://dl.google.com/android/repository/android-ndk-r$(AndroidNdkVersion)-windows-x86_64.zip"
-        WorkingDirectory="$(_WinAsmDestDir)"
-    />
   </Target>
 
   <Target Name="_CopyNDKTools"

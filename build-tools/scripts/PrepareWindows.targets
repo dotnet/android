@@ -3,97 +3,24 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_NuGet>.nuget\NuGet.exe</_NuGet>
-    <_NuGetVerbosity>-Verbosity Detailed</_NuGetVerbosity>
+    <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
+    <_XAPrepareStandardArgs>--no-emoji --run-mode=CI</_XAPrepareStandardArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.JdkInfo" />
-  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <Target Name="PrepareExternal">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" Targets="CheckoutExternalGitSources"/>
+  <Target Name="_BuildXAPrepare">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" Targets="Restore" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" />
   </Target>
-  <Target Name="Prepare">
+  <Target Name="PrepareExternal"
+          DependsOnTargets="_BuildXAPrepare">
+    <Exec Command="$(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
+  </Target>
+  <Target Name="Prepare"
+          DependsOnTargets="_BuildXAPrepare">
     <Error
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
-    <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\download-bundle\download-bundle.csproj" />
-    <Exec
-        Command="$(_NuGet) restore $(_NuGetVerbosity) Xamarin.Android.sln"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <Exec
-        Command="$(_NuGet) restore $(_NuGetVerbosity) external\Java.Interop\Java.Interop.sln"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <Exec
-        Command="$(_NuGet) restore $(_NuGetVerbosity) external\LibZipSharp\libZipSharp.sln"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <Exec
-        Command="$(_NuGet) restore $(_NuGetVerbosity) external\xamarin-android-tools\Xamarin.Android.Tools.sln"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj" />
-    <MSBuild Projects="tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj" Targets="Restore" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\android-toolchain\android-toolchain.csproj" />
-    <!--NOTE: need to restore test sln *after* android-toolchain has the Android SDK in place-->
-    <Exec
-        Command="$(_NuGet) restore $(_NuGetVerbosity) Xamarin.Android-Tests.sln"
-        WorkingDirectory="$(_TopDir)"
-        IgnoreStandardErrorWarningFormat="True"
-    />
-    <JdkInfo
-        AndroidSdkPath="$(AndroidSdkDirectory)"
-        AndroidNdkPath="$(AndroidNdkDirectory)"
-        JavaSdkPath="$(JavaSdkDirectory)"
-        MaxJdkVersion="$(MaxJdkVersion)"
-        Output="$(_TopDir)\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props">
-      <Output TaskParameter="JavaSdkDirectory" PropertyName="_JavaSdkDirectory" />
-    </JdkInfo>
-    <Copy
-        SourceFiles="$(MSBuildThisFileDirectory)Configuration.Java.Interop.Override.props"
-        DestinationFiles="$(_TopDir)\external\Java.Interop\Configuration.Override.props"
-        SkipUnchangedFiles="True"
-    />
-    <ReplaceFileContents
-        SourceFile="$(MSBuildThisFileDirectory)Windows-Configuration.OperatingSystem.props.in"
-        DestinationFile="$(_TopDir)\Configuration.OperatingSystem.props"
-        Replacements="@JAVA_HOME@=$(_JavaSdkDirectory)"
-    />
-    <ItemGroup>
-      <_CecilFiles Include="$(_TopDir)\external\Java.Interop\external\Mono.Cecil*" />
-    </ItemGroup>
-    <Copy
-        SourceFiles="@(_CecilFiles)"
-        DestinationFolder="$(_TopDir)\external\mono\external"
-        SkipUnchangedFiles="True"
-    />
-    <Copy
-        SourceFiles="$(_TopDir)\external\Java.Interop\product.snk"
-        DestinationFolder="$(_TopDir)\external\mono"
-        SkipUnchangedFiles="True"
-    />
-    <MakeDir Directories="$(_TopDir)\bin\Test$(Configuration)" />
-    <ReplaceFileContents
-        SourceFile="$(MSBuildThisFileDirectory)XABuildPaths.cs.in"
-        DestinationFile="$(_TopDir)\bin\Test$(Configuration)\XABuildPaths.cs"
-        Replacements="@TOP_DIRECTORY@=$(_TopDir);@CONFIGURATION@=$(Configuration)"
-    />
-    <MSBuild 
-        Projects="$(_TopDir)\build-tools\ThirdPartyNotices\ThirdPartyNotices.csproj"
-        Properties="ThirdPartyNoticeFile=$(_TopDir)\ThirdPartyNotices.txt;ThirdPartyNoticeLicenseType=foundation"
-    />
-    <MSBuild 
-        Projects="$(_TopDir)\build-tools\ThirdPartyNotices\ThirdPartyNotices.csproj"
-        Properties="ThirdPartyNoticeFile=$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\ThirdPartyNotices.txt;ThirdPartyNoticeLicenseType=microsoft-oss;TpnIncludeExternalDependencies=True"
-    />
+    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs)" WorkingDirectory="$(_TopDir)" />
   </Target>
 </Project>
