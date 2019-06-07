@@ -9,9 +9,7 @@
 #include <libgen.h>
 #include <errno.h>
 
-extern "C" {
 #include "java-interop-util.h"
-}
 
 #include "monodroid.h"
 #include "dylib-mono.h"

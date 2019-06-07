@@ -26,9 +26,7 @@
 #include <android/log.h>
 #endif
 
-extern "C" {
 #include "java-interop-util.h"
-}
 
 #include "monodroid.h"
 #include "debug.h"

@@ -2,9 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-extern "C" {
 #include "java-interop-util.h"
-}
 
 #include "mono_android_Runtime.h"
 #include "monodroid.h"

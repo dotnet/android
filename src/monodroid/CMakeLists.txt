@@ -36,8 +36,8 @@ if(NOT ANDROID)
   endforeach()
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.c
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.c
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
 endif()
 
@@ -165,7 +165,7 @@ endif()
 
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
-add_definitions("-DDYLIB_MONO")
+add_definitions("-DXAMARIN_ANDROID_DYLIB_MONO")
 add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
 add_definitions("-DSGEN_BRIDGE_VERSION=${SGEN_BRIDGE_VERSION}")
@@ -200,16 +200,16 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
-  ${SOURCES_DIR}/logger.c
+  ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c
   ${SOURCES_DIR}/zip/unzip.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.c
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.c
+  ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   )
 
 if(UNIX)

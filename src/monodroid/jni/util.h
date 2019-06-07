@@ -50,16 +50,8 @@ typedef struct stat monodroid_stat_t;
 typedef struct dirent monodroid_dirent_t;
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
 #include "java-interop-util.h"
 #include "logger.h"
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
 #define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
