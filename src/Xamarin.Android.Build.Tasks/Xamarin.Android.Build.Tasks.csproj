@@ -238,7 +238,6 @@
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
     <Compile Include="Tasks\GetImportedLibraries.cs" />
     <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
-    <Compile Include="Tasks\CreateAndroidResourceStamp.cs" />
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
     <Compile Include="Tasks\ImportJavaDoc.cs" />
     <Compile Include="Tasks\MDoc.cs" />

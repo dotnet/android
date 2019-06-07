@@ -104,7 +104,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateAndroidResourceStamp" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ParseAndroidWearProjectAndManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareWearApplicationFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1758,7 +1757,7 @@ because xbuild doesn't support framework reference assemblies.
 	<GenerateResourceDesigner
 		Condition="'$(_AndroidResourceDesignerFile)' != ''"
 		ContinueOnError="$(DesignTimeBuild)"
-		NetResgenOutputFile="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
+		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		Namespace="$(AndroidResgenNamespace)"
 		ProjectDir="$(ProjectDir)"
@@ -1772,23 +1771,13 @@ because xbuild doesn't support framework reference assemblies.
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 	/>
 
-	<!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
-	<CopyIfChanged
-		SourceFiles="$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)"
-		DestinationFiles="$(_AndroidResourceDesignerFile)"
-		Condition="'$(_AndroidResourceDesignerFile)' != '' And Exists ('$(ResgenTemporaryDirectory)\$(AndroidResgenFilename)')"
-	/>
-
 	<!-- Delete our temporary directory -->
 	<RemoveDirFixed Directories="$(ResgenTemporaryDirectory)" />
-	
-	<!-- If there are no _AndroidResource items, create a blank file -->
-	<CreateAndroidResourceStamp
-		Condition="'$(_AndroidResourceDesignerFile)' != ''"
-		AndroidResgenFile="$(_AndroidResourceDesignerFile)"
-		AndroidResourceDest="@(_AndroidResourceDest)"
-		MonoAndroidResDirIntermediate="$(MonoAndroidResDirIntermediate)"
-		AndroidResgenFlagFile="$(_AndroidResgenFlagFile)" />
+
+  <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidResgenFlagFile)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CreateManagedLibraryResourceArchive"
