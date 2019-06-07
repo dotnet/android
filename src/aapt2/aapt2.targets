@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" />
   <PropertyGroup>
-    <Aapt2Version>3.3.1-5013011</Aapt2Version>
+    <Aapt2Version>3.4.1-5326820</Aapt2Version>
     <BuildDependsOn>
       ResolveReferences;
       _DownloadAapt2;
