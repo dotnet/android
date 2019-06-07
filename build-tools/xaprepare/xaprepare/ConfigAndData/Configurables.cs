@@ -328,8 +328,8 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveMonoHash                 => ctx.BuildInfo.FullMonoHash;
 			public static string MonoArchiveBaseFileName             => $"android-{Defaults.MonoSdksConfiguration}-{ctx.OS.Type}-{MonoArchiveMonoHash}";
 			public static string MonoArchiveWindowsBaseFileName      => $"android-release-Windows-{MonoArchiveMonoHash}";
-			public static string MonoArchiveFileName                 => $"{MonoArchiveBaseFileName}.zip";
-			public static string MonoArchiveWindowsFileName          => $"{MonoArchiveWindowsBaseFileName}.zip";
+			public static string MonoArchiveFileName                 => $"{MonoArchiveBaseFileName}.7z";
+			public static string MonoArchiveWindowsFileName          => $"{MonoArchiveWindowsBaseFileName}.7z";
 			public static string MonoArchiveLocalPath                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveFileName);
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
