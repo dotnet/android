@@ -34,7 +34,7 @@ stages:
       # The 'prepare' step creates the bundle
     - script: |
         make prepare-update-mono PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-        make prepare PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+        make prepare PREPARE_CI=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: create bundle
 
     - task: CopyFiles@2

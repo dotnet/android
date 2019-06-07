@@ -320,7 +320,7 @@ namespace Xamarin.Android.Prepare
 			else
 				targetFileName = destinationFileName;
 
-			if (!File.Exists (sourceFilePath))
+			if (!FileExists (sourceFilePath))
 				throw new InvalidOperationException ($"Location '{sourceFilePath}' does not point to a file");
 
 			CreateDirectory (destinationDirectory);

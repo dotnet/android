@@ -310,6 +310,12 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string XABundlePath { get; set; }
 
+		/// <summary>
+		///   Full filesystem path to the directory where the downloaded bundle should be copied to. This is used by the
+		///   Azure CI bots.
+		/// </summary>
+		public string XABundleCopyDir { get; set; }
+
 		static Context ()
 		{
 			Instance = new Context ();
