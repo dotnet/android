@@ -483,7 +483,7 @@ namespace Xamarin.Android.Prepare
 
 		public static void TouchFileWithRetry (string filePath, DateTime stamp)
 		{
-			if (!FileExists (filePath))
+			if (!File.Exists (filePath))
 				return;
 
 			Log.DebugLine ($"Resetting timestamp of {filePath}");
@@ -520,7 +520,7 @@ namespace Xamarin.Android.Prepare
 			Log.DebugLine ($"Moving '{source}' to '{destination}'");
 			for (int i = 0; i < IOExceptionRetries; i++) {
 				try {
-					File.Move (source, destination);
+					FileMove (source, destination);
 					break;
 				} catch (Exception e) {
 					ex = e;
