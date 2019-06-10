@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 			/// <summary>
 			///   Base URL to download the XA binary bundle from
 			/// </summary>
-			public static Uri Bundle_XABundleDownloadPrefix => new Uri (Bundle_AzureBaseUri, $"{Bundle_AzureJobUri}/xamarin-android/bin/{Context.Instance.Configuration}");
+			public static Uri Bundle_XABundleDownloadPrefix => new Uri (Bundle_AzureBaseUri, $"{Bundle_AzureJobUri}/xamarin-android/bin/{Context.Instance.Configuration}/");
 			static readonly Uri Bundle_AzureBaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-jenkins/");
 			const string Bundle_AzureJobUri_Debug = "xamarin-android-debug";
 			const string Bundle_AzureJobUri_Release = "xamarin-android";

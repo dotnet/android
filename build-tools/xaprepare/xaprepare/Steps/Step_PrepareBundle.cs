@@ -28,7 +28,7 @@ namespace Xamarin.Android.Prepare
 				Log.InfoLine ($"Forced Mono runtimes rebuild requested but rebuilding on {context.OS.Type} is currently not supported.");
 			}
 
-			string localPackagePath = Path.Combine (Configurables.Paths.BundleArchivePath);
+			string localPackagePath = Configurables.Paths.BundleArchivePath;
 			if (await Utilities.VerifyArchive (localPackagePath)) {
 				Log.StatusLine ("Xamarin.Android Bundle archive already downloaded and valid");
 			} else {
@@ -86,6 +86,21 @@ namespace Xamarin.Android.Prepare
 			} finally {
 				Utilities.DeleteDirectorySilent (tempDir);
 			}
+
+			if (String.IsNullOrEmpty (context.XABundleCopyDir))
+				return true;
+
+			string destPackagePath = Path.Combine (context.XABundleCopyDir, Path.GetFileName (localPackagePath));
+			Log.DebugLine ($"Copy of the XA bundle was requested to be created at {destPackagePath}");
+			if (Utilities.FileExists (destPackagePath)) {
+				Log.DebugLine ("Bundle copy already exists");
+				return true;
+			}
+
+			// Utilities.FileExists above will return `false` for a dangling symlink at `destPackagePath`, doesn't hurt
+			// to remove it here just in case
+			Utilities.DeleteFileSilent (destPackagePath);
+			Utilities.CopyFile (localPackagePath, destPackagePath);
 
 			return true;
 		}
