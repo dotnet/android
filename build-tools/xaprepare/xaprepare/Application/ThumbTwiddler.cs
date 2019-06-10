@@ -8,6 +8,7 @@ namespace Xamarin.Android.Prepare
 	partial class ThumbTwiddler : AppObject
 	{
 		// yeah, I know, I know :P
+		// Feel free to add more cheesy messages - the more the merrier! :)
 		static readonly List <string> alternateTwiddlerMessages = new List <string> {
 			"Working",
 			"Twiddle de dum, twiddle de de",
@@ -114,11 +115,11 @@ namespace Xamarin.Android.Prepare
 
 		void WriteTwiddler (string s, bool showElapsed, bool skipLogFile = true)
 		{
-			int curRow = ConsoleCursorTop;
+			int curRow = Utilities.ConsoleCursorTop;
 			int curColumn = 0; // Console.CursorLeft is curiously unreliable on Mono, the cursor jumps around
 
 			try {
-				ConsoleSetCursorPosition (0, Console.WindowHeight - 1);
+				Utilities.ConsoleSetCursorPosition (0, Utilities.ConsoleWindowHeight - 1);
 				string message;
 				if (!showElapsed)
 					message = s;
@@ -129,7 +130,7 @@ namespace Xamarin.Android.Prepare
 			} catch {
 				// ignore
 			} finally {
-				ConsoleSetCursorPosition (curColumn, curRow);
+				Utilities.ConsoleSetCursorPosition (curColumn, curRow);
 			}
 		}
 

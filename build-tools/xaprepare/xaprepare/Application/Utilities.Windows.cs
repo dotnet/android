@@ -12,6 +12,31 @@ namespace Xamarin.Android.Prepare
 
 		internal const char VolumeSeparatorChar = ':';
 
+		public static int ConsoleCursorTop    => SafeConsoleAccess (() => Console.CursorTop);
+		public static int ConsoleCursorLeft   => SafeConsoleAccess (() => Console.CursorLeft);
+		public static int ConsoleWindowHeight => SafeConsoleAccess (() => Console.WindowHeight);
+
+		public static void ConsoleSetCursorPosition (int left, int top)
+		{
+			SafeConsoleAccess (() => {
+					Console.SetCursorPosition (left, top);
+					return 0;
+				}
+			);
+		}
+
+		static int SafeConsoleAccess (Func<int> code)
+		{
+			// Accessing the console may throw an exception of Windows (e.g. when xaprepare runs from within msbuild)
+			try {
+				return code ();
+			} catch (IOException) {
+				// Ignore
+			}
+
+			return 0;
+		}
+
 		public static void FileMove (string sourcePath, string destinationPath)
 		{
 			File.Move (sourcePath, destinationPath);

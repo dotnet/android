@@ -47,7 +47,7 @@ namespace Xamarin.Android.Prepare
 
 		public static void LogDownloadProgress (DownloadStatus status, bool fancyLogging)
 		{
-			int curRow = Console.CursorTop;
+			int curRow = ConsoleCursorTop;
 			try {
 				double percentComplete = Math.Round ((status.DownloadedSoFar * 100.0) / status.TotalSize, 2);
 
@@ -59,13 +59,13 @@ namespace Xamarin.Android.Prepare
 					Log.StatusLine ($"Download progress: {progress}", ConsoleColor.White);
 					return;
 				}
-				Console.SetCursorPosition (0, Console.WindowHeight - 1);
+				ConsoleSetCursorPosition (0, ConsoleWindowHeight - 1);
 				Log.Status ($"{progress}             ", ConsoleColor.White);
 			} catch (Exception ex) {
 				Log.DebugLine ($"Failed to report progress: {ex.Message}");
 				Log.DebugLine (ex.ToString ());
 			} finally {
-				Console.SetCursorPosition (0, curRow);
+				ConsoleSetCursorPosition (0, curRow);
 			}
 		}
 
