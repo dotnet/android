@@ -27,7 +27,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] Assemblies { get; set; }
 		
 		// Which ABIs to include native libs for
-		public string SupportedAbis { get; set; }
+		[Required]
+		public string [] SupportedAbis { get; set; }
 		
 		[Required]
 		public string TempOutputPath { get; set; }
@@ -53,10 +54,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			Log.LogDebugMessage ("Assemblies: {0}", Assemblies.Length);
-			Log.LogDebugMessage ("SupportedAbis: {0}", SupportedAbis);
-			Log.LogDebugMessage ("AutoDeps: {0}", AutoDeps);
-
 			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
 				return false;
 
@@ -74,14 +71,13 @@ namespace Xamarin.Android.Tasks
 
 		bool DoExecute ()
 		{
-			var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			var results = new List<ITaskItem> ();
 			string bundlepath = Path.Combine (TempOutputPath, "bundles");
 			if (!Directory.Exists (bundlepath))
 				Directory.CreateDirectory (bundlepath);
 			else
 				Directory.Delete (bundlepath, true);
-			foreach (var abi in abis) {
+			foreach (var abi in SupportedAbis) {
 				AndroidTargetArch arch = AndroidTargetArch.Other;
 				switch (abi) {
 				case "arm64":

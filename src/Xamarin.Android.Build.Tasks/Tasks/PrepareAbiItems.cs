@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tasks
 	public class PrepareAbiItems : Task
 	{
 		[Required]
-		public string BuildTargetAbis { get; set; }
+		public string [] BuildTargetAbis { get; set; }
 
 		[Required]
 		public string ItemNamePattern { get; set; }
@@ -19,9 +19,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			string[] abis = BuildTargetAbis.Split (new [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 			var items = new List<ITaskItem> ();
-			foreach (string abi in abis) {
+			foreach (string abi in BuildTargetAbis) {
 				var item = new TaskItem (ItemNamePattern.Replace ("@abi@", abi));
 				item.SetMetadata ("abi", abi);
 				items.Add (item);

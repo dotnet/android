@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] DalvikClasses { get; set; }
 
 		[Required]
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		public bool CreatePackagePerAbi { get; set; }
 
@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void FixupArchive (ZipArchiveEx zip) { }
 
-		void ExecuteWithAbi (string supportedAbis, string apkInputPath, string apkOutputPath)
+		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath)
 		{
 			var temp = apkOutputPath + "new";
 			ArchiveFileList files = new ArchiveFileList ();
@@ -214,16 +214,14 @@ namespace Xamarin.Android.Tasks
 
 			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath);
 			outputFiles.Add (ApkOutputPath);
-			if (CreatePackagePerAbi) {
-				var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-				if (abis.Length > 1)
-					foreach (var abi in abis) {
-						var path = Path.GetDirectoryName (ApkOutputPath);
-						var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
-						ExecuteWithAbi (abi, String.Format ("{0}-{1}", ApkInputPath, abi), 
-							Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
-						outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
-					}
+			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
+				foreach (var abi in SupportedAbis) {
+					var path = Path.GetDirectoryName (ApkOutputPath);
+					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
+					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi), 
+						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
+					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
+				}
 			}
 
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
@@ -412,11 +410,10 @@ namespace Xamarin.Android.Tasks
 			//  * "legacy":
 		}
 
-		void AddRuntimeLibraries (ZipArchiveEx apk, string supportedAbis)
+		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)
 		{
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
-			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var abi in abis) {
+			foreach (var abi in supportedAbis) {
 				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
 				AddNativeLibrary (apk, abi, library, "libmonodroid.so");
 
@@ -435,7 +432,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		private void AddNativeLibraries (ArchiveFileList files, string supportedAbis)
+		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
 				.Select (v => new LibInfo { Path = v.ItemSpec, Abi = GetNativeLibraryAbi (v) });
@@ -456,7 +453,7 @@ namespace Xamarin.Android.Tasks
 			return lib_abi;
 		}
 
-		void AddNativeLibraries (ArchiveFileList files, string supportedAbis, System.Collections.Generic.IEnumerable<LibInfo> libs)
+		void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis, System.Collections.Generic.IEnumerable<LibInfo> libs)
 		{
 			if (libs.Any (lib => lib.Abi == null))
 				Log.LogCodedWarning (
@@ -464,9 +461,7 @@ namespace Xamarin.Android.Tasks
 						"Could not determine abi of some native libraries, ignoring those: " +
 				                    string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
 			libs = libs.Where (lib => lib.Abi != null);
-
-			var abis = supportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			libs = libs.Where (lib => abis.Contains (lib.Abi));
+			libs = libs.Where (lib => supportedAbis.Contains (lib.Abi));
 			foreach (var arm in ArmAbis)
 				foreach (var info in libs.Where (lib => lib.Abi == arm))
 					AddNativeLibrary (files, info.Path, info.Abi);
@@ -474,7 +469,7 @@ namespace Xamarin.Android.Tasks
 				AddNativeLibrary (files, info.Path, info.Abi);
 		}
 
-		private void AddAdditionalNativeLibraries (ArchiveFileList files, string supportedAbis)
+		private void AddAdditionalNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
 			if (AdditionalNativeLibraryReferences == null || !AdditionalNativeLibraryReferences.Any ())
 				return;
