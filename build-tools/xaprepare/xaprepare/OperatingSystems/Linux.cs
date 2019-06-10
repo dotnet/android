@@ -64,6 +64,15 @@ and re-enable it after building with the following command:
 			Log.WarningLine (BinfmtBaseWarning, ConsoleColor.White, showSeverity: false);
 		}
 
+		protected override bool InitOS ()
+		{
+			if (!base.InitOS ())
+				return false;
+
+			AntDirectory = "/usr";
+			return true;
+		}
+
 		public static Linux DetectAndCreate (Context context)
 		{
 			string name;

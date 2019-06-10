@@ -88,10 +88,11 @@ After all the issues are fixed, please re-run the bootstrapper.
 			// `HostHomebrewPrefix` property which is defined in `Configuration.OperatingSystem.props` but we're here to
 			// *generate* the latter file, so when the bootstrapper is built `HostHomebrewPrefix` is empty and we can't
 			// access mingw utilities. So, we need to cheat here.
-			string brewPrefix = Context.Instance.Properties.GetValue (KnownProperties.AndroidMxeFullPath);
-			if (String.IsNullOrEmpty (brewPrefix))
+			string mxePath = Context.Instance.Properties.GetValue (KnownProperties.AndroidMxeFullPath);
+			if (String.IsNullOrEmpty (mxePath))
 				Context.Instance.Properties.Set (KnownProperties.AndroidMxeFullPath, HomebrewPrefix);
 
+			AntDirectory = HomebrewPrefix;
 			return true;
 		}
 

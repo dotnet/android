@@ -88,7 +88,6 @@ namespace Xamarin.Android.Prepare
 		protected override bool InitOS ()
 		{
 			Log.Todo ("gather dependencies here");
-			Log.Todo ("Implement JdkInfo");
 
 			JavaHome = Context.Instance.Properties.GetValue ("JavaSdkDirectory")?.Trim ();
 			if (String.IsNullOrEmpty (JavaHome))
@@ -101,6 +100,8 @@ namespace Xamarin.Android.Prepare
 			// This is required by Android SDK which uses a utility to locate Java on Windows
 			// ($SDK_ROOT/tools/lib/find_java.bat) and that utility, in turn, looks at JAVA_HOME
 			EnvironmentVariables ["JAVA_HOME"] = JavaHome;
+			AntDirectory = Configurables.Paths.AntInstallDir;
+
 			return true;
 		}
 
