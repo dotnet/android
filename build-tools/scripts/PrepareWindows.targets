@@ -4,7 +4,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
-    <_XAPrepareStandardArgs>--no-emoji --run-mode=CI</_XAPrepareStandardArgs>
+    <_XAPrepareStandardArgs>--no-emoji --run-mode=CI -a</_XAPrepareStandardArgs>
+    <_XAPrepareBundleArgs Condition=" '$(BundleRootPath)' != '' ">--bundle-path=&quot;$(BundleRootPath)&quot;</_XAPrepareBundleArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <Target Name="_BuildXAPrepare">
@@ -21,6 +22,6 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
-    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs)" WorkingDirectory="$(_TopDir)" />
+    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) $(_XAPrepareBundleArgs)" WorkingDirectory="$(_TopDir)" />
   </Target>
 </Project>
