@@ -29,6 +29,8 @@ namespace Xamarin.Android.Prepare
 			}
 
 			string localPackagePath = Configurables.Paths.BundleArchivePath;
+			Log.DebugLine ($"Local bundle path: {localPackagePath}");
+
 			if (await Utilities.VerifyArchive (localPackagePath)) {
 				Log.StatusLine ("Xamarin.Android Bundle archive already downloaded and valid");
 			} else {
@@ -36,6 +38,7 @@ namespace Xamarin.Android.Prepare
 					// User indicated they wanted to use a specific bundle that's supposed to be on disk. It's not (or
 					// it's invalid) and that means we have no way of getting it - we can't download the default one
 					// since that was not the intention behind overriding the location. Thus, we error out.
+					Log.DebugLine ($"Bundle directory from command line: {context.XABundlePath}");
 					throw new InvalidOperationException ($"Xamarin.Android bundle indicated on the command line does not exist ({context.XABundlePath})");
 				}
 

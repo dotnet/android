@@ -41,7 +41,7 @@ stages:
       displayName: copy bundle
       inputs:
         sourceFolder: bin/$(XA.Build.Configuration)
-        contents: bundle-*.zip
+        contents: bundle-*.7z
         targetFolder: $(Build.ArtifactStagingDirectory)
 
     - task: PublishPipelineArtifact@0

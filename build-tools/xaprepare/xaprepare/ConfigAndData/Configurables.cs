@@ -69,7 +69,7 @@ namespace Xamarin.Android.Prepare
 				{SevenZipCompressionFormatName, new CompressionFormat (SevenZipCompressionFormatName, "7Zip", "7z")},
 			};
 
-			public static CompressionFormat DefaultCompressionFormat => CompressionFormats [ZipCompressionFormatName];
+			public static CompressionFormat DefaultCompressionFormat => CompressionFormats [SevenZipCompressionFormatName];
 
 			/// <summary>
 			///   Default execution mode. One of:
