@@ -37,7 +37,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-26_r02",         "26"),
 				new AndroidPlatformComponent ("platform-27_r03",         "27"),
 				new AndroidPlatformComponent ("platform-28_r04",         "28"),
-				new AndroidPlatformComponent ("platform-Q_r02",          "Q"),
+				new AndroidPlatformComponent ("platform-Q_r03",          "Q"),
 
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs"),
 				new AndroidToolchainComponent ("android_m2repository_r16",                          destDir: Path.Combine ("extras", "android", "m2repository")),
