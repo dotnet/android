@@ -32,7 +32,7 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ($"Unsupported compression type: {cf.Description}");
 			}
 
-			List<string> items = allRuntimes.BundleItems.Select (
+			List<string> items = allRuntimes.BundleItems.Where (item => item.ShouldInclude == null || item.ShouldInclude (context)).Select (
 				item => {
 					string relPath = Utilities.GetRelativePath (binRoot, item.SourcePath);
 					Log.DebugLine ($"Bundle item: {item.SourcePath} (archive path: {relPath})");
