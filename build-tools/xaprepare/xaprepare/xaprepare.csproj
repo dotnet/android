@@ -180,7 +180,6 @@
   <ItemGroup Condition=" '$(OS)' == 'Unix' ">
     <Compile Include="Application\EssentialTools.Unix.cs" />
     <Compile Include="Application\Log.Unix.cs" />
-    <Compile Include="Application\ThumbTwiddler.Unix.cs" />
     <Compile Include="Application\Utilities.Unix.cs" />
     <Compile Include="ConfigAndData\Configurables.Unix.cs" />
     <Compile Include="ConfigAndData\Runtimes.Unix.cs" />
@@ -248,7 +247,6 @@
     <Compile Include="Application\DetermineWindowsVersion.Windows.cs" />
     <Compile Include="Application\LlvmRuntime.Windows.cs" />
     <Compile Include="Application\Log.Windows.cs" />
-    <Compile Include="Application\ThumbTwiddler.Windows.cs" />
     <Compile Include="Application\Utilities.Windows.cs" />
     <Compile Include="ConfigAndData\Configurables.Windows.cs" />
     <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.Windows.cs" />

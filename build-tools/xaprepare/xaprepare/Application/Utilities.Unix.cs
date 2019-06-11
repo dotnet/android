@@ -9,10 +9,19 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
-		/// <summary>
-		///   Checks if the file exists as well as whether it's a symbolic link. If it is one, the method checks whether
-		///   the file pointed to exists and returns <c>false</c> if it's not there.
-		/// </summary>
+		public static int ConsoleCursorTop    => Console.CursorTop;
+		public static int ConsoleCursorLeft   => Console.CursorLeft;
+		public static int ConsoleWindowHeight => Console.WindowHeight;
+
+		public static void ConsoleSetCursorPosition (int left, int top)
+		{
+			Console.SetCursorPosition (left, top);
+		}
+
+        /// <summary>
+        ///   Checks if the file exists as well as whether it's a symbolic link. If it is one, the method checks whether
+        ///   the file pointed to exists and returns <c>false</c> if it's not there.
+        /// </summary>
 		public static bool FileExists (string path)
 		{
 			if (!File.Exists (path))
