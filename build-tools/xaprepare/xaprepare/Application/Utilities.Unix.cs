@@ -56,7 +56,7 @@ namespace Xamarin.Android.Prepare
 			// Source is a symlink
 			ret = Syscall.stat (sourcePath, out sbuf);
 			Log.DebugLine ($"stat on {sourcePath} returned {ret}. Errno: {Stdlib.GetLastError ()}");
-			if (FileIsDanglingSymlink (sourcePath)) {
+			if (!FileIsDanglingSymlink (sourcePath)) {
 				// let BCL handle it
 				File.Move (sourcePath, destinationPath);
 				return;
