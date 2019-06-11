@@ -4,115 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using Mono.Cecil;
 
 using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Binder;
-using Xamarin.Android.Tools;
 
 using MonoDroid.Utils;
-using System.Xml.Linq;
 
-namespace MonoDroid.Generation {
-#if HAVE_CECIL	
-	public class ManagedClassGen : ClassGen {
-		TypeDefinition t;
-		TypeReference nominal_base_type;
-		
-		public ManagedClassGen (TypeDefinition t, CodeGenerationOptions opt)
-			: base (new ManagedGenBaseSupport (t, opt))
-		{
-			this.t = t;
-			foreach (var ifaceImpl in t.Interfaces) {
-				var iface   = ifaceImpl.InterfaceType;
-				var def     = ifaceImpl.InterfaceType.Resolve ();
-				if (def != null && def.IsNotPublic)
-					continue;
-				AddInterface (iface.FullNameCorrected ());
-			}
-			bool implements_charsequence = t.Interfaces.Any (it => it.InterfaceType.FullName == "Java.Lang.CharSequence");
-			foreach (var m in t.Methods) {
-				if (m.IsPrivate || m.IsAssembly || !m.CustomAttributes.Any (ca => ca.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute"))
-					continue;
-				if (implements_charsequence && t.Methods.Any (mm => mm.Name == m.Name + "Formatted"))
-					continue;
-				if (m.IsConstructor)
-					Ctors.Add (new ManagedCtor (this, m));
-				else
-					AddMethod (new ManagedMethod (this, m));
-			}
-			foreach (var f in t.Fields)
-				if (!f.IsPrivate && !f.CustomAttributes.Any (ca => ca.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute"))
-					AddField (new ManagedField (f));
-			for (nominal_base_type = t.BaseType; nominal_base_type != null && (nominal_base_type.HasGenericParameters || nominal_base_type.IsGenericInstance); nominal_base_type = nominal_base_type.Resolve ().BaseType)
-				; // iterate up to non-generic type, at worst System.Object.
-		}
-		
-		public override string BaseType {
-			get { return nominal_base_type != null ? nominal_base_type.FullNameCorrected () : null; }
-			set { throw new NotSupportedException (); }
-		}
-
-		public override bool IsAbstract {
-			get { return t.IsAbstract; }
-		}
-
-		public override bool IsFinal {
-			get { return t.IsSealed; }
-		}
-	}
-#endif  // HAVE_CECIL
-	
-	public class XmlClassGen : ClassGen {
-		bool is_abstract;
-		bool is_final;
-		string base_type;
-
-		public XmlClassGen (XElement pkg, XElement elem)
-			: base (new XmlGenBaseSupport (pkg, elem))//FIXME: should not be xml specific
-		{
-			is_abstract = elem.XGetAttribute ("abstract") == "true";
-			is_final = elem.XGetAttribute ("final") == "true";
-			base_type = elem.XGetAttribute ("extends");
-			foreach (var child in elem.Elements ()) {
-				switch (child.Name.LocalName) {
-				case "implements":
-					string iname = child.XGetAttribute ("name-generic-aware");
-					iname = iname.Length > 0 ? iname : child.XGetAttribute ("name");
-					AddInterface (iname);
-					break;
-				case "method":
-					AddMethod (new XmlMethod (this, child));
-					break;
-				case "constructor":
-					Ctors.Add (new XmlCtor (this, child));
-					break;
-				case "field":
-					AddField (new XmlField (child));
-					break;
-				case "typeParameters":
-					break; // handled at GenBaseSupport
-				default:
-					Report.Warning (0, Report.WarningClassGen + 1, "unexpected class child {0}.", child.Name);
-					break;
-				}
-			}
-		}
-		
-		public override bool IsAbstract {
-			get { return is_abstract; }
-		}
-		
-		public override bool IsFinal {
-			get { return is_final; }
-		}
-		
-		public override string BaseType {
-			get { return base_type; }
-			set { base_type = value; }
-		}
-	}
+namespace MonoDroid.Generation
+{
 
 	public abstract class ClassGen : GenBase {
 
