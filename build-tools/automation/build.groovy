@@ -173,7 +173,7 @@ timestamps {
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
-                sh "cp bin/${env.BuildFlavor}/bundle-*.zip ${packagePath}"
+                sh "cp bin/${env.BuildFlavor}/bundle-* ${packagePath}"
 
                 sh '''
                     VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
@@ -255,9 +255,9 @@ timestamps {
 
             if (!isPr) {
                 if (isCommercial) {
-                    publishBuildFilePaths = "${publishBuildFilePaths},bundle-*.zip"
+                    publishBuildFilePaths = "${publishBuildFilePaths},bundle-*"
                 } else {
-                    publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*.zip"
+                    publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*"
                 }
             }
 
