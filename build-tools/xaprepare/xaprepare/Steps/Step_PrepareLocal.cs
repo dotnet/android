@@ -19,6 +19,9 @@ namespace Xamarin.Android.Prepare
 			bool result = await msbuild.Run (
 				projectPath: remapAsmRefPath,
 				logTag: "remap-assembly-ref",
+				arguments: new List<string> {
+					"/restore" // Restore, in addition to Build
+				},
 				binlogName: "build-remap-assembly-ref"
 			);
 
@@ -32,7 +35,7 @@ namespace Xamarin.Android.Prepare
 				projectPath: xfTestPath,
 				logTag: "xfperf",
 				arguments: new List <string> {
-					"/t:Restore"
+					"/t:Restore" // Just the Restore target
 				},
 				binlogName: "prepare-restore"
 			);
