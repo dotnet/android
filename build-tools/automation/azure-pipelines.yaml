@@ -34,7 +34,7 @@ stages:
       # The 'prepare' step creates the bundle
     - script: |
         make prepare-update-mono PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-        make prepare PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+        make prepare PREPARE_CI=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
       displayName: create bundle
 
     - task: CopyFiles@2
@@ -160,14 +160,11 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
-      displayName: build xaprepare
+      displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
-        solution: build-tools\xaprepare\xaprepare.sln
+        solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: $(AutoProvisionArgs) $(AndroidTargetAbiArgs) /t:"Restore;Build"
-
-    - script: build-tools\xaprepare\xaprepare\bin\$(XA.Build.Configuration)\xaprepare.exe -v:d --no-emoji --run-mode=CI -a --bundle-path="$(System.DefaultWorkingDirectory)"
-      displayName: run xaprepare
+        msbuildArguments: $(AutoProvisionArgs) $(AndroidTargetAbiArgs) /t:Prepare /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
