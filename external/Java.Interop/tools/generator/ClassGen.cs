@@ -313,7 +313,7 @@ namespace MonoDroid.Generation {
 
 			foreach (Ctor ctor in ctors) {
 				if (IsFinal && ctor.Visibility == "protected")
-					return;
+					continue;
 				ctor.Name = Name;
 				ctor.Generate (sw, indent, opt, inherits_object, this);
 			}

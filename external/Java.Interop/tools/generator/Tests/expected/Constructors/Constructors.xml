@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <api>
 	<package name="java.lang">
 	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
@@ -8,6 +8,15 @@
 	  <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
 	  		final="false" name="SomeObject" static="false" visibility="public">
 	  		<constructor deprecated="deprecated" final="false" name="SomeObject" static="false" type="xamarin.test.SomeObject" visibility="public">
+	      	</constructor>
+	      	<constructor deprecated="not deprecated" final="false" name="SomeObject" static="false" type="xamarin.test.SomeObject" visibility="public">
+		      	<parameter name="aint" type="int">
+	       		</parameter>
+	      	</constructor>
+	    </class>
+	  <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="true" name="SomeObject2" static="false" visibility="public">
+	  		<constructor deprecated="not deprecated" final="false" name="SomeObject" static="false" type="xamarin.test.SomeObject" visibility="protected">
 	      	</constructor>
 	      	<constructor deprecated="not deprecated" final="false" name="SomeObject" static="false" type="xamarin.test.SomeObject" visibility="public">
 		      	<parameter name="aint" type="int">
