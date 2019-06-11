@@ -166,6 +166,13 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: $(AutoProvisionArgs) $(AndroidTargetAbiArgs) /t:Prepare /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
+    - task: PublishPipelineArtifact@0
+      displayName: upload xaprepare logs
+      inputs:
+        artifactName: win-xaprepare-results
+        targetPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\
+      condition: always()
+
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
