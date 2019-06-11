@@ -12,6 +12,11 @@ namespace Xamarin.Android.Prepare
 
 		internal const char VolumeSeparatorChar = ':';
 
+		public static void FileMove (string sourcePath, string destinationPath)
+		{
+			File.Move (sourcePath, destinationPath);
+		}
+
 		public static bool FileExists (string filePath)
 		{
 			return File.Exists (filePath);
