@@ -19,8 +19,10 @@ namespace Xamarin.Android.Prepare
 		void Copy (string dir = "")
 		{
 			var src = Path.Combine (Configurables.Paths.InstallMSBuildDir, dir, LibZip);
-			var dest = Path.Combine (Configurables.Paths.BuildBinDir, dir, LibZip);
-			Utilities.CopyFile (src, dest, overwriteDestinationFile: true);
+			var buildBin = Path.Combine (Configurables.Paths.BuildBinDir, dir, LibZip);
+			Utilities.CopyFile (src, buildBin, overwriteDestinationFile: true);
+			var testBin = Path.Combine (Configurables.Paths.TestBinDir, dir, LibZip);
+			Utilities.CopyFile (src, testBin, overwriteDestinationFile: true);
 		}
 	}
 }
