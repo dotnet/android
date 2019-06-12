@@ -252,9 +252,7 @@ timestamps {
             }
 
             if (!isPr) {
-                if (isCommercial) {
-                    publishBuildFilePaths = "${publishBuildFilePaths}"
-                } else {
+                if (!isCommercial) {
                     publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*"
                 }
             }
