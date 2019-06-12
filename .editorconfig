@@ -7,10 +7,7 @@ root = true
 # All files
 [*]
 charset = utf-8
-indent_style = tab
-tab_width = 8
 trim_trailing_whitespace = true
-max_line_length = 180
 
 # MSBuild
 [*.{csproj,proj,projitems,shproj,fsproj,targets,props}]
@@ -35,6 +32,10 @@ indent_size = 4
 # Code files
 [*.{cs,csx,vb,vbx}]
 insert_final_newline = true
+indent_style = tab
+tab_width = 8
+indent_size = 8
+max_line_length = 180
 
 ###############################
 # .NET Coding Conventions     #
