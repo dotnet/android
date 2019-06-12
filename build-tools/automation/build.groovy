@@ -173,8 +173,6 @@ timestamps {
             sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
-                sh "cp bin/${env.BuildFlavor}/bundle-* ${packagePath}"
-
                 sh '''
                     VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
                     echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > ../package/updateinfo
@@ -255,7 +253,7 @@ timestamps {
 
             if (!isPr) {
                 if (isCommercial) {
-                    publishBuildFilePaths = "${publishBuildFilePaths},bundle-*"
+                    publishBuildFilePaths = "${publishBuildFilePaths}"
                 } else {
                     publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*"
                 }
