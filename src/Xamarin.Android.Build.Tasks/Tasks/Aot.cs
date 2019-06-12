@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 
 		// Which ABIs to include native libs for
 		[Required]
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		[Required]
 		public string AotOutputDirectory { get; set; }
@@ -237,20 +237,8 @@ namespace Xamarin.Android.Tasks
 			return level;
 		}
 
-		bool DoExecute () {
-			LogDebugMessage ("Aot:", AndroidAotMode);
-			LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
-			LogDebugMessage ("  AndroidAotMode: {0}", AndroidAotMode);
-			LogDebugMessage ("  AndroidSequencePointsMode: {0}", AndroidSequencePointsMode);
-			LogDebugMessage ("  AndroidNdkDirectory: {0}", AndroidNdkDirectory);
-			LogDebugMessage ("  AotOutputDirectory: {0}", AotOutputDirectory);
-			LogDebugMessage ("  EnableLLVM: {0}", EnableLLVM);
-			LogDebugMessage ("  IntermediateAssemblyDir: {0}", IntermediateAssemblyDir);
-			LogDebugMessage ("  LinkMode: {0}", LinkMode);
-			LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			LogDebugTaskItems ("  ResolvedAssemblies:", ResolvedAssemblies);
-			LogDebugTaskItems ("  AdditionalNativeLibraryReferences:", AdditionalNativeLibraryReferences);
-
+		bool DoExecute ()
+		{
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
 				LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
@@ -316,8 +304,7 @@ namespace Xamarin.Android.Tasks
 				Directory.CreateDirectory (AotOutputDirectory);
 
 			var sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
-			var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var abi in abis) {
+			foreach (var abi in SupportedAbis) {
 				string aotCompiler = "";
 				string outdir = "";
 				string mtriple = "";

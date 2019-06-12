@@ -102,6 +102,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -614,7 +615,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
-    _CheckSupportedAbis;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
@@ -1131,16 +1131,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CheckTargetFramework">
 	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
-</Target>
-
-<Target Name="_CheckSupportedAbis">
-	<PropertyGroup>
-		<_RequestedAbis>;$(AndroidSupportedAbis.Replace(',', ';'));</_RequestedAbis>
-	</PropertyGroup>
-	<Error Code="XA0115"
-			Condition="$(_RequestedAbis.Contains(';armeabi;'))"
-			Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
-	/>
 </Target>
 
 <Target Name="_CheckForContent">
@@ -1692,7 +1682,7 @@ because xbuild doesn't support framework reference assemblies.
 		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
 		YieldDuringToolExecution="$(YieldDuringToolExecution)"
 		ExplicitCrunch="$(AndroidExplicitCrunch)"
-		SupportedAbis="$(_BuildTargetAbis)"
+		SupportedAbis="@(_BuildTargetAbis)"
 		ResourceSymbolsTextFileDirectory="$(IntermediateOutputPath)"
 		ContinueOnError="$(DesignTimeBuild)"
 	/>
@@ -2255,13 +2245,13 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareNativeAssemblySources">
   <PrepareAbiItems
-    BuildTargetAbis="$(_BuildTargetAbis)"
+    BuildTargetAbis="@(_BuildTargetAbis)"
     ItemNamePattern="$(_NativeAssemblySourceDir)typemap.jm.@abi@.s">
       <Output TaskParameter="OutputItems" ItemName="_TypeMapAssemblySource" />
   </PrepareAbiItems>
 
   <PrepareAbiItems
-    BuildTargetAbis="$(_BuildTargetAbis)"
+    BuildTargetAbis="@(_BuildTargetAbis)"
     ItemNamePattern="$(_NativeAssemblySourceDir)typemap.mj.@abi@.s" >
       <Output TaskParameter="OutputItems" ItemName="_TypeMapAssemblySource" />
   </PrepareAbiItems>
@@ -2305,7 +2295,7 @@ because xbuild doesn't support framework reference assemblies.
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
 	FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
 	AcwMapFile="$(_AcwMapFile)"
-	SupportedAbis="$(_BuildTargetAbis)">
+	SupportedAbis="@(_BuildTargetAbis)">
   </GenerateJavaStubs>
 
   <ItemGroup>
@@ -2399,7 +2389,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareEnvironmentAssemblySources">
   <PrepareAbiItems
-    BuildTargetAbis="$(_BuildTargetAbis)"
+    BuildTargetAbis="@(_BuildTargetAbis)"
     ItemNamePattern="$(_NativeAssemblySourceDir)environment.@abi@.s">
       <Output TaskParameter="OutputItems" ItemName="_EnvironmentAssemblySource" />
   </PrepareAbiItems>
@@ -2443,7 +2433,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
     IsBundledApplication="$(BundleAssemblies)"
-    SupportedAbis="$(_BuildTargetAbis)"
+    SupportedAbis="@(_BuildTargetAbis)"
     AndroidPackageName="$(_AndroidPackage)"
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
   >
@@ -2528,7 +2518,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 	ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
     AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-    SupportedAbis="$(_BuildTargetAbis)"
+    SupportedAbis="@(_BuildTargetAbis)"
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     YieldDuringToolExecution="$(YieldDuringToolExecution)"
     ExplicitCrunch="$(AndroidExplicitCrunch)"
@@ -2558,7 +2548,7 @@ because xbuild doesn't support framework reference assemblies.
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
     VersionCodePattern="$(AndroidVersionCodePattern)"
     VersionCodeProperties="$(AndroidVersionCodeProperties)"
-    SupportedAbis="$(_BuildTargetAbis)"
+    SupportedAbis="@(_BuildTargetAbis)"
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     AssetsDirectory="$(MonoAndroidAssetsDirIntermediate)"
     AndroidSdkPlatform="$(_AndroidApiLevel)"
@@ -2921,12 +2911,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
   <ItemGroup>
-    <_XARuntimeArchitecture Include="$(_BuildTargetAbis)"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_XARuntimeArchitecture.Identity)\libxamarin-app.so">
-      <abi>%(_XARuntimeArchitecture.Identity)</abi>
+    <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
+      <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
 </Target>
@@ -3020,7 +3006,7 @@ because xbuild doesn't support framework reference assemblies.
 	AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 	AndroidApiLevel="$(_AndroidApiLevel)"
 	ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-	SupportedAbis="$(_BuildTargetAbis)"
+	SupportedAbis="@(_BuildTargetAbis)"
 	AndroidSequencePointsMode="$(_SequencePointsMode)"
 	AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
 	ResolvedAssemblies="@(_ResolvedUserAssemblies);@(_ShrunkFrameworkAssemblies)"
@@ -3049,7 +3035,7 @@ because xbuild doesn't support framework reference assemblies.
 		AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 		Assemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
 		IncludePath="$(MonoAndroidIncludeDirectory)"
-		SupportedAbis="$(_BuildTargetAbis)"
+		SupportedAbis="@(_BuildTargetAbis)"
 		TempOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(_MonoAndroidToolsDirectory)"
 		BundleApiPath="$(MSBuildThisFileDirectory)\mkbundle-api.h">
@@ -3071,7 +3057,7 @@ because xbuild doesn't support framework reference assemblies.
     AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
     EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(_ReferencePath);@(_ReferenceDependencyPaths)"
     DalvikClasses="@(_DexFile)"
-    SupportedAbis="$(_BuildTargetAbis)"
+    SupportedAbis="@(_BuildTargetAbis)"
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     Debug="$(AndroidIncludeDebugSymbols)"
@@ -3100,7 +3086,7 @@ because xbuild doesn't support framework reference assemblies.
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
       DalvikClasses="@(_DexFile)"
-      SupportedAbis="$(_BuildTargetAbis)"
+      SupportedAbis="@(_BuildTargetAbis)"
       CreatePackagePerAbi="False"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
@@ -3139,10 +3125,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
-	<CreateProperty Value="$(AndroidSupportedAbis)" Condition="'$(_BuildTargetAbis)' == ''">
-		<Output TaskParameter="Value" PropertyName="_BuildTargetAbis"/>
-	</CreateProperty>
-	<Message Text="Build target ABI: $(_BuildTargetAbis)" />
+  <SplitProperty Value="$(AndroidSupportedAbis)">
+    <Output TaskParameter="Output" ItemName="_BuildTargetAbis"/>
+  </SplitProperty>
+  <Error Code="XA0115"
+      Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
+      Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
+  />
 </Target>
 
 <PropertyGroup>
@@ -3169,8 +3158,7 @@ because xbuild doesn't support framework reference assemblies.
   />
 
   <ItemGroup>
-    <_BuiltAbis Include="$(_BuildTargetAbis)" />
-    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuiltAbis.Identity)\**\*.msym" />
+    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuildTargetAbis.Identity)\**\*.msym" />
   </ItemGroup>
 
   <Copy Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "

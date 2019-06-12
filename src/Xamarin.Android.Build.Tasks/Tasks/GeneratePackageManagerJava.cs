@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 		public bool IsBundledApplication { get; set; }
 
 		[Required]
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		[Required]
 		public string AndroidPackageName { get; set; }
@@ -231,7 +231,7 @@ namespace Xamarin.Android.Tasks
 
 			using (var ms = new MemoryStream ()) {
 				var utf8Encoding = new UTF8Encoding (false);
-				foreach (string abi in SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+				foreach (string abi in SupportedAbis) {
 					ms.SetLength (0);
 					NativeAssemblerTargetProvider asmTargetProvider;
 					string asmFileName = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}.s");

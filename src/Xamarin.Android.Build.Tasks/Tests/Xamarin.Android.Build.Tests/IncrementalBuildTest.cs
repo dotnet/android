@@ -608,9 +608,10 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ResolveLibraryProjectImports ()
+		public void ResolveLibraryProjectImports ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -621,6 +622,8 @@ namespace Lib2
 					$"{nameof (expected.Jars)} should not be empty");
 				Assert.AreNotEqual (0, expected.ResolvedResourceDirectories.Length,
 					$"{nameof (expected.ResolvedResourceDirectories)} should not be empty");
+				Assert.AreNotEqual (0, expected.ResolvedResourceDirectoryStamps.Length,
+					$"{nameof (expected.ResolvedResourceDirectoryStamps)} should not be empty");
 
 				// Delete the stamp file; this triggers <ResolveLibraryProjectImports/> to re-run.
 				// However, the task will skip everything, since the hashes of each assembly will be the same.
@@ -647,6 +650,25 @@ namespace Lib2
 					$"{nameof (expected.Jars)} should have one more item");
 				Assert.AreEqual (expected.ResolvedResourceDirectories.Length + 1, actual.ResolvedResourceDirectories.Length,
 					$"{nameof (expected.ResolvedResourceDirectories)} should have one more item");
+				Assert.AreEqual (expected.ResolvedResourceDirectoryStamps.Length + 1, actual.ResolvedResourceDirectoryStamps.Length,
+					$"{nameof (expected.ResolvedResourceDirectoryStamps)} should have one more item");
+				foreach (var s in actual.ResolvedResourceDirectoryStamps) {
+					FileAssert.Exists (s.ItemSpec);
+				}
+
+				// Build with no changes, checking we are skipping targets appropriately
+				Assert.IsTrue (b.Build (proj), "fourth build should have succeeded.");
+				var targets = new List<string> {
+					"_UpdateAndroidResgen",
+					"_CompileJava",
+					"_CreateBaseApk",
+				};
+				if (useAapt2) {
+					targets.Add ("_ConvertLibraryResourcesCases");
+				}
+				foreach (var targetName in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				}
 			}
 		}
 

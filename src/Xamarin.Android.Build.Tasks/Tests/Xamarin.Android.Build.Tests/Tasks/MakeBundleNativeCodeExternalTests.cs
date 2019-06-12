@@ -35,7 +35,7 @@ namespace Xamarin.Android.Build.Tests {
 				BuildEngine = engine,
 				AndroidNdkDirectory = androidNdkDirectory,
 				Assemblies = new ITaskItem [0],
-				SupportedAbis = "armeabi-v7a",
+				SupportedAbis = new [] { "armeabi-v7a" },
 				TempOutputPath = path,
 				ToolPath = "",
 				BundleApiPath = ""
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidAotMode = "normal",
 				AndroidApiLevel = "28",
 				ResolvedAssemblies = new ITaskItem [0],
-				SupportedAbis = "armeabi-v7a",
+				SupportedAbis = new [] { "armeabi-v7a" },
 				AotOutputDirectory = path,
 				IntermediateAssemblyDir = path
 			};
