@@ -377,7 +377,7 @@ namespace Xamarin.Android.Tasks
 
 				bool updated = false;
 				string aarHash = MonoAndroidHelper.HashFile (aarFile.ItemSpec);
-				string stamp = Path.Combine (outdir, Path.GetFileNameWithoutExtension (aarFile.ItemSpec) + ".stamp");
+				string stamp = Path.Combine (outdir, aarIdentityName + ".stamp");
 				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				var aarFullPath = Path.GetFullPath (aarFile.ItemSpec);
 				if (aarHash == stampHash) {
