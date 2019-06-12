@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool AndroidUseLatestPlatformSdk { get; set; }
 
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		public bool CreatePackagePerAbi { get; set; }
 
@@ -196,8 +196,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var defaultAbi = new string [] { null };
-			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
+			var abis = CreatePackagePerAbi && SupportedAbis?.Length > 1 ? defaultAbi.Concat (SupportedAbis) : defaultAbi;
+			foreach (var abi in abis) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
 				if (!string.IsNullOrEmpty (currentResourceOutputFile) && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);

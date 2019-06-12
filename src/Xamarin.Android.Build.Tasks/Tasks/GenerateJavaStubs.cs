@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] FrameworkDirectories { get; set; }
 
 		[Required]
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
@@ -340,7 +340,7 @@ namespace Xamarin.Android.Tasks
 				string dataFileName = Path.GetFileName (dataFilePath);
 				NativeAssemblerTargetProvider asmTargetProvider;
 				var utf8Encoding = new UTF8Encoding (false);
-				foreach (string abi in SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+				foreach (string abi in SupportedAbis) {
 					ms.SetLength (0);
 					switch (abi.Trim ()) {
 						case "armeabi-v7a":
