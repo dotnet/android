@@ -12,14 +12,14 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug\Xamarin.Android.MakeBundle-UnitTests</OutputPath>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease\Xamarin.Android.MakeBundle-UnitTests</OutputPath>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
