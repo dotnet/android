@@ -659,10 +659,11 @@ public:
 	MonoObject* object_new (MonoDomain *domain, MonoClass *klass);
 	void* object_unbox (MonoObject *obj);
 	MonoProfilerHandle profiler_create ();
-	void profiler_install_thread (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn, MonoThreadStoppedEventFunc end_ftn);
 	void profiler_set_jit_begin_callback (MonoProfilerHandle handle, MonoJitBeginEventFunc begin_ftn);
 	void profiler_set_jit_done_callback (MonoProfilerHandle handle, MonoJitDoneEventFunc done_ftn);
 	void profiler_set_jit_failed_callback (MonoProfilerHandle handle, MonoJitFailedEventFunc failed_ftn);
+	void profiler_set_thread_started_callback (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn);
+	void profiler_set_thread_stopped_callback (MonoProfilerHandle handle, MonoThreadStoppedEventFunc end_ftn);
 	void property_set_value (MonoProperty *prop, void *obj, void **params, MonoObject **exc);
 	void register_bundled_assemblies (const MonoBundledAssembly **assemblies);
 	void register_config_for_assembly (const char* assembly_name, const char* config_xml);

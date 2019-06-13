@@ -894,7 +894,8 @@ mono_runtime_init (char *runtime_args)
 	}
 
 	profiler_handle = monoFunctions.profiler_create ();
-	monoFunctions.profiler_install_thread (profiler_handle, thread_start, thread_end);
+	monoFunctions.profiler_set_thread_started_callback (profiler_handle, thread_start);
+	monoFunctions.profiler_set_thread_stopped_callback (profiler_handle, thread_end);
 	if (XA_UNLIKELY (log_methods)) {
 		jit_time.mark_start ();
 		monoFunctions.profiler_set_jit_begin_callback (profiler_handle, jit_begin);
