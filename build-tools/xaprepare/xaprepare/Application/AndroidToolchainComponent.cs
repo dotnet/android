@@ -10,9 +10,9 @@ namespace Xamarin.Android.Prepare
 		public Uri RelativeUrl            { get; }
 		public bool IsMultiVersion        { get; }
 		public bool NoSubdirectory        { get; }
-		public string ExpectedPkgRevision { get; }
+		public string PkgRevision         { get; }
 
-		public AndroidToolchainComponent (string name, string destDir, Uri relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string expectedPkgRevision = null)
+		public AndroidToolchainComponent (string name, string destDir, Uri relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string pkgRevision = null)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -24,14 +24,14 @@ namespace Xamarin.Android.Prepare
 			RelativeUrl = relativeUrl;
 			IsMultiVersion = isMultiVersion;
 			NoSubdirectory = noSubdirectory;
-			ExpectedPkgRevision = expectedPkgRevision;
+			PkgRevision = pkgRevision;
 		}
 	}
 
 	class AndroidPlatformComponent : AndroidToolchainComponent
 	{
-		public AndroidPlatformComponent (string name, string apiLevel)
-			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"))
+		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision)
+			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision)
 		{}
 	}
 }
