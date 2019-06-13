@@ -18,18 +18,13 @@
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <IncludeMonoBundleComponents Condition="'$(IncludeMonoBuildComponents)' == ''">True</IncludeMonoBundleComponents>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
+    <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">True</_HasCommercialFiles>
   </PropertyGroup>
   <ItemGroup>
     <_DesignerFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\bcl\**\*" />
     <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
   </ItemGroup>
   <ItemGroup>
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\AndroidApiInfo.xml" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\mono.android.dex" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\mono.android.jar" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\RedistList\FrameworkList.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.dll" />
@@ -204,17 +199,7 @@
     <VersionFiles Include="$(RootBuildDir)\Version.rev" />
   </ItemGroup>
   <!-- monodroid -->
-  <ItemGroup Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v4.4.87\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v5.0\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v5.1\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v6.0\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v7.0\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v7.1\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v8.0\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\v8.1\Mono.Android.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(AndroidLatestFrameworkVersion)\Mono.Android.xml" />
+  <ItemGroup Condition=" '$(_HasCommercialFiles)' == 'True' ">
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\INIFileParser.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" />
@@ -242,6 +227,27 @@
     <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-docs.source" />
     <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-lib.tree" />
     <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-lib.zip" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.CompilerServices.SymbolWriter.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Tds.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Security.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\mscorlib.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Core.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ComponentModel.Composition.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ComponentModel.DataAnnotations.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Data.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Json.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Numerics.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Runtime.Serialization.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ServiceModel.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ServiceModel.Web.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Transactions.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Web.Services.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Xml.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Xml.Linq.xml" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <Target Name="ConstructInstallerItems"
       Returns="@(FrameworkItemsWin);@(FrameworkItemsUnix);@(MSBuildItemsWin);@(MSBuildItemsUnix)">
@@ -253,6 +259,7 @@
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.dll')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\mono.android.jar')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.pdb')" />
+      <_FrameworkFilesWin Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.xml')" Condition=" '$(_HasCommercialFiles)' == 'True' " />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\RedistList\FrameworkList.xml')" />
       <FrameworkItemsWin Include="@(_FrameworkFiles);@(_FrameworkFilesWin)">
         <RelativePath>$([MSBuild]::MakeRelative($(FrameworkSrcDir), %(FullPath)))</RelativePath>
