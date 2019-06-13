@@ -473,9 +473,6 @@ namespace Xamarin.Android.Tasks
 				WindowStyle=ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
 			};
-
-			psi.EnvironmentVariables ["MONO_LOG_LEVEL"] = "debug";
-			psi.EnvironmentVariables ["MONO_LOG_MASK"] = "aot";
 			
 			// we do not want options to be provided out of band to the cross compilers
 			psi.EnvironmentVariables ["MONO_ENV_OPTIONS"] = String.Empty;
