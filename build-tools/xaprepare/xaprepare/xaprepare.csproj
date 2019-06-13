@@ -132,6 +132,7 @@
     <Compile Include="Scenarios\Scenario_Standard.cs" />
     <Compile Include="Steps\Step_Android_SDK_NDK.cs" />
     <Compile Include="Steps\Step_BuildMingwDependencies.cs" />
+    <Compile Include="Steps\Step_CopyLibZip.cs" />
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.cs" />
