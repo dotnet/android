@@ -1,5 +1,7 @@
 # Xamarin.Android Pipeline
 
+name: $(Build.SourceBranch)-$(Build.SourceVersion)-$(Rev:r)
+
 trigger:
   - master
   - d16-*
@@ -24,10 +26,10 @@ stages:
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
     steps:
-
     - checkout: self
-      clean: true
       submodules: recursive
 
       # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
@@ -74,11 +76,12 @@ stages:
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
     variables:
       JAVA_HOME: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
     steps:
     - checkout: self
-      clean: true
       submodules: recursive
 
     - task: DownloadPipelineArtifact@1
@@ -147,11 +150,12 @@ stages:
     pool: $(XA.Build.Win.Pool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
     variables:
       JAVA_HOME: '%HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk'
     steps:
     - checkout: self
-      clean: true
       submodules: recursive
 
     - task: DownloadPipelineArtifact@1
