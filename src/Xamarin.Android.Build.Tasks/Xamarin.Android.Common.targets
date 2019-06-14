@@ -2916,7 +2916,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
   <ItemGroup>
-    <_XARuntimeArchitecture Include="$(_BuildTargetAbis)"/>
+    <_XARuntimeArchitecture Include="$([MSBuild]::Unescape($(_BuildTargetAbis.Replace(',', ';'))))"/>
   </ItemGroup>
 
   <ItemGroup>

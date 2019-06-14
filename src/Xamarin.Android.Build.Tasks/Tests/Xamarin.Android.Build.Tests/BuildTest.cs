@@ -3853,6 +3853,16 @@ public class ApplicationRegistration { }");
 				Assert.AreNotEqual ("", contents);
 			}
 		}
+
+		[Test]
+		public void AbiDelimiters ([Values ("armeabi-v7a%3bx86", "armeabi-v7a,x86")] string abis)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, abis);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (AbiDelimiters)}_{abis.GetHashCode ()}"))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
 	}
 }
 
