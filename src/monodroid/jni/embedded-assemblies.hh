@@ -3,7 +3,8 @@
 #define INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 
 #include <cstring>
-#include "dylib-mono.h"
+#include <mono/metadata/assembly.h>
+
 #include "unzip.h"
 #include "ioapi.h"
 

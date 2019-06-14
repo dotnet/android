@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <jni.h>
 
-#include "dylib-mono.h"
+#include <mono/metadata/appdomain.h>
+#include <mono/utils/mono-publib.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -7,6 +7,7 @@
     <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -a -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
     <_XAPrepareBundleArgs Condition=" '$(BundleRootPath)' != '' ">--bundle-path=&quot;$(BundleRootPath)&quot;</_XAPrepareBundleArgs>
+    <_XAPrepareBundleArgs Condition=" '$(RunMode)' == 'CI' ">$(_XAPrepareBundleArgs) -v:d</_XAPrepareBundleArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <Target Name="_BuildXAPrepare">

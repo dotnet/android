@@ -7,6 +7,8 @@ namespace Xamarin.Android.Prepare
 	{
 		partial void AddRequiredOSSpecificSteps (bool beforeBundle)
 		{
+			AddRequiredMacOSSteps (beforeBundle);
+
 			if (!beforeBundle) {
 				// It has to go after the bundle step because bundle unpacking or creation *always* cleans its
 				// destination directory and this is where we download the GAS binaries. They are not part of the bundle
@@ -24,5 +26,7 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ("Windows JIT ABis DISABLED, SKIPPING MinGW dependencies build step");
 			}
 		}
+
+		partial void AddRequiredMacOSSteps (bool beforeBundle);
 	}
 }

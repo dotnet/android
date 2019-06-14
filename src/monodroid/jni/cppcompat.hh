@@ -4,6 +4,21 @@
 
 #include <pthread.h>
 
+#undef HAVE_WORKING_MUTEX
+
+// On desktop builds we can include the actual C++ standard library files which declare type traits
+// as well as the `lock_guard` and `mutex` classes. However, some versions of MinGW, even though
+// they have the required files, do not declare `mutex` because the `gthreads` feature is not
+// enabled. Thus the complicated `#if` below.
+#if !defined (ANDROID) && (!defined (WINDOWS) || (defined (WINDOWS) && defined (_GLIBCXX_HAS_GTHREADS)))
+#define HAVE_WORKING_MUTEX 1
+#endif
+
+#if !defined (ANDROID)
+#include <type_traits>
+#include <mutex> // Also declares `lock_guard` even if it doesn't declare `mutex`
+#endif
+
 // Since Android doesn't currently have any standard C++ library
 // and we don't want to use any implementation of it shipped in
 // source form with the NDK (for space reasons), this header will
@@ -14,6 +29,7 @@
 // we can remove this file.
 namespace std
 {
+#if defined (ANDROID)
 	template <typename T> struct remove_reference      { using type = T; };
 	template <typename T> struct remove_reference<T&>  { using type = T; };
 	template <typename T> struct remove_reference<T&&> { using type = T; };
@@ -48,7 +64,9 @@ namespace std
 	private:
 		mutex_type &_mutex;
 	};
+#endif // !def ANDROID
 
+#if !defined (HAVE_WORKING_MUTEX)
 	class mutex
 	{
 	public:
@@ -67,5 +85,7 @@ namespace std
 	private:
 		pthread_mutex_t _pmutex = PTHREAD_MUTEX_INITIALIZER;
 	};
+#endif // !def HAVE_WORKING_MUTEX
 }
+
 #endif

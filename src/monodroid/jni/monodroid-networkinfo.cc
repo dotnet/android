@@ -31,8 +31,9 @@
 
 #include "monodroid.h"
 #include "monodroid-glue.h"
-#include "util.h"
-#include "globals.h"
+
+#include "util.hh"
+#include "globals.hh"
 
 using namespace xamarin::android;
 

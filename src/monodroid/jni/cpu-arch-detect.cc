@@ -10,7 +10,7 @@
 #include <windows.h>
 #endif
 
-#include "cpu-arch.h"
+#include "cpu-arch.hh"
 
 #if __ANDROID__
 #define BUF_SIZE 512

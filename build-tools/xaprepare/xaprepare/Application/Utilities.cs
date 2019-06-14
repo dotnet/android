@@ -654,7 +654,7 @@ namespace Xamarin.Android.Prepare
 					return;
 				} catch (IOException e) {
 					ex = e;
-				}  catch (UnauthorizedAccessException e) {
+				} catch (UnauthorizedAccessException e) {
 					ex = e;
 					tryResetFilePermissions = true;
 				}

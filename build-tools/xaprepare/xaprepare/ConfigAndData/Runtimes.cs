@@ -7,8 +7,6 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Runtimes
 	{
-		static Context ctx => Context.Instance;
-
 		public readonly List<Runtime> Items = new List <Runtime> {
 			new MonoJitRuntime (
 				abiName: AbiNames.TargetJit.AndroidArmV7a,
@@ -392,9 +390,289 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public readonly List<RuntimeFile> RuntimeFilesToInstall = new List<RuntimeFile> {
 			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (GetAndroidInputRootDir (runtime), "share", "mono-2.0", "mono", "eglib", "eglib-config.h"),
-				destinationCreator:(Runtime runtime) => Path.Combine (Configurables.Paths.OutputIncludeDir, runtime.PrefixedName, "eglib", "eglib-config.h"),
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "share", "mono-2.0", "mono", "eglib", "eglib-config.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.OutputIncludeDir, runtime.PrefixedName, "eglib", "eglib-config.h"),
 				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime)
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "cil", "opcode.def"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "cil", "opcode.def"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "jit", "jit.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "jit", "jit.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "appdomain.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "appdomain.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "assembly.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "assembly.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "attrdefs.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "attrdefs.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "blob.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "blob.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "class.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "class.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "debug-helpers.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "debug-helpers.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "debug-mono-symfile.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "debug-mono-symfile.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "environment.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "environment.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "exception.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "exception.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "image.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "image.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "loader.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "loader.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "metadata.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "metadata.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "mono-config.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "mono-config.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "mono-debug.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "mono-debug.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "mono-gc.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "mono-gc.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "object-forward.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "object-forward.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "object.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "object.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "opcodes.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "opcodes.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "profiler-events.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "profiler-events.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "profiler.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "profiler.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "reflection.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "reflection.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "row-indexes.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "row-indexes.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "sgen-bridge.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "sgen-bridge.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "threads.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "threads.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "tokentype.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "tokentype.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "verify.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "verify.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-counters.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-counters.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-dl-fallback.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-dl-fallback.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-error.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-error.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-forward.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-forward.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-jemalloc.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-jemalloc.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-logger.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-logger.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-publib.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-publib.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
 			),
 
 			new RuntimeFile (
@@ -436,7 +714,14 @@ namespace Xamarin.Android.Prepare
 				shared: true
 			),
 
-			 // Stripped runtime
+			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "lib", "libmonosgen-2.0.dll.a"),
+				destinationCreator: (Runtime runtime) => Path.Combine (GetRuntimeOutputDir (runtime), "libmonosgen-2.0.dll.a"),
+				shouldSkip: (Runtime runtime) => !IsAbi (runtime, AbiNames.HostJit.Win32, AbiNames.HostJit.Win64),
+				strip: false
+			),
+
+			// Stripped runtime
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetRuntimeOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetRuntimeOutputDestinationPath (runtime, debug: false),
@@ -489,7 +774,7 @@ namespace Xamarin.Android.Prepare
 
 			// Unstripped host mono binary
 			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (GetAndroidInputRootDir (runtime), "bin", "mono"),
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "bin", "mono"),
 				destinationCreator: (Runtime runtime) => Path.Combine (runtime.Name, "mono"),
 				shouldSkip: (Runtime runtime) => !IsRuntimeType<MonoHostRuntime> (runtime) || IsAbi (runtime, AbiNames.HostJit.Win32, AbiNames.HostJit.Win64),
 				type: RuntimeFileType.StrippableBinary,
@@ -644,248 +929,5 @@ namespace Xamarin.Android.Prepare
 			Configurables.Paths.InstallBCLFrameworkDir,
 			Configurables.Paths.OutputIncludeDir,
 		};
-
-		static string GetMonoUtilitySourcePath (string utilityName)
-		{
-			return Path.Combine (Configurables.Paths.MonoProfileToolsDir, utilityName);
-		}
-
-		static string GetLlvmOutputSourcePath (Runtime runtime)
-		{
-			var llvmRuntime = EnsureRuntimeType<LlvmRuntime> (runtime, "LLVM");
-			return Path.Combine (GetLlvmInputDir (runtime), "bin");
-		}
-
-		static string GetLlvmOutputDestinationPath (Runtime runtime)
-		{
-			var llvmRuntime = EnsureRuntimeType<LlvmRuntime> (runtime, "LLVM");
-			return llvmRuntime.InstallPath;
-		}
-
-		static string GetMonoPosixHelperOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"{monoRuntime.OutputMonoPosixHelperFilename}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetMonoPosixHelperOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputMonoPosixHelperFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetMonoBtlsOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"{monoRuntime.OutputMonoBtlsFilename}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetMonoBtlsOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputMonoBtlsFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetAotProfilerOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"{monoRuntime.OutputAotProfilerFilename}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetAotProfilerOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputAotProfilerFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetProfilerOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"{monoRuntime.OutputProfilerFilename}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetProfilerOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputProfilerFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetCrossRuntimeOutputSourcePath (Runtime runtime)
-		{
-			var crossRuntime = EnsureRuntimeType<MonoCrossRuntime> (runtime, "cross compilation");
-			return Path.Combine (GetAndroidInputRootDir (runtime), "bin", $"{crossRuntime.ExePrefix}mono-sgen{crossRuntime.ExeSuffix}");
-		}
-
-		static string GetCrossRuntimeOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var crossRuntime = EnsureRuntimeType<MonoCrossRuntime> (runtime, "cross compilation");
-			string runtimeName = $"{crossRuntime.CrossMonoName}{GetDebugInfix (debug)}{crossRuntime.ExeSuffix}";
-			if (String.IsNullOrEmpty (crossRuntime.InstallPath))
-				return runtimeName;
-
-			return Path.Combine (crossRuntime.InstallPath, runtimeName);
-		}
-
-		static string GetRuntimeOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"{monoRuntime.OutputRuntimeFilename}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetRuntimeOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputRuntimeFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetMonoNativeOutputSourcePath (Runtime runtime)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			if (IsAbi (runtime, AbiNames.HostJit.Darwin))
-				return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"libmono-native-compat{monoRuntime.NativeLibraryExtension}");
-
-			return Path.Combine (GetAndroidInputLibDir (runtime), monoRuntime.NativeLibraryDirPrefix, $"libmono-native{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetMonoNativeOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
-			return Path.Combine (GetRuntimeOutputDir (runtime), $"libmono-native{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
-		}
-
-		static string GetDebugInfix (bool debug)
-		{
-			return debug ? Configurables.Defaults.DebugBinaryInfix : String.Empty;
-		}
-
-		static bool IsHostOrTargetRuntime (Runtime runtime)
-		{
-			return IsRuntimeType<MonoJitRuntime> (runtime) || IsRuntimeType<MonoHostRuntime> (runtime);
-		}
-
-		static T EnsureRuntimeType<T> (Runtime runtime, string typeName) where T: Runtime
-		{
-			var ret = runtime.As<T> ();
-			if (ret == null)
-				throw new InvalidOperationException ($"Runtime {runtime.Name} is not a {typeName} runtime");
-
-			return ret;
-		}
-
-		static bool IsRuntimeType <T> (Runtime runtime) where T: Runtime
-		{
-			return runtime.As<T>() != null;
-		}
-
-		static bool IsWindowsRuntime (Runtime runtime)
-		{
-			return String.Compare (runtime.ExeSuffix, Configurables.Defaults.WindowsExecutableSuffix, StringComparison.Ordinal) == 0;
-		}
-
-		static bool IsAbi (Runtime runtime, string abiName, params string[] furtherAbiNames)
-		{
-			if (ExpectedAbi (abiName))
-				return true;
-
-			if (furtherAbiNames == null)
-				return false;
-
-			foreach (string a in furtherAbiNames) {
-				if (ExpectedAbi (a))
-					return true;
-			}
-
-			return false;
-
-			bool ExpectedAbi (string abi)
-			{
-				if (String.IsNullOrEmpty (abi))
-					return false;
-
-				return String.Compare (abi, runtime.Name ?? String.Empty, StringComparison.Ordinal) == 0;
-			}
-		}
-
-		static string GetLlvmInputDir (Runtime runtime)
-		{
-			return GetLlvmInputRootDir (runtime);
-		}
-
-		static string GetLlvmInputRootDir (Runtime runtime)
-		{
-			return Path.Combine (Configurables.Paths.MonoSDKSRelativeOutputDir, $"llvm-{runtime.PrefixedName}");
-		}
-
-		static string GetAndroidInputLibDir (Runtime runtime)
-		{
-			return Path.Combine (GetAndroidInputRootDir (runtime), "lib");
-		}
-
-		static string GetAndroidInputRootDir (Runtime runtime)
-		{
-			return Path.Combine (Configurables.Paths.MonoSDKSRelativeOutputDir, $"android-{runtime.PrefixedName}-{Configurables.Defaults.MonoSdksConfiguration}");
-		}
-
-		static string GetRuntimeOutputDir (Runtime runtime)
-		{
-			return Path.Combine (Configurables.Paths.RuntimeInstallRelativeLibDir, runtime.PrefixedName);
-		}
-
-		static bool IsLlvmRuntimeEnabled (Context ctx, string llvmAbi)
-		{
-			bool enabled = false;
-			bool windows = ctx.IsLlvmWindowsAbi (llvmAbi);
-			bool is64Bit = ctx.Is64BitLlvmAbi (llvmAbi);
-
-			HashSet<string> targets;
-			if (windows)
-				targets = is64Bit ? AbiNames.All64BitWindowsAotAbis : AbiNames.All32BitWindowsAotAbis;
-			else
-				targets = is64Bit ? AbiNames.All64BitHostAotAbis : AbiNames.All32BitHostAotAbis;
-
-			foreach (string target in targets) {
-				if (Context.Instance.IsTargetAotAbiEnabled (target)) {
-					enabled = true;
-					break;
-				}
-			}
-
-			return enabled && (!is64Bit || Context.Instance.OS.Is64Bit);
-		}
-
-		public Runtimes ()
-		{
-			Context c = ctx;
-			foreach (Runtime runtime in Items) {
-				runtime.Init (c);
-			}
-
-			DesignerHostBclFilesToInstall = new List<BclFile> ();
-			DesignerWindowsBclFilesToInstall = new List<BclFile> ();
-
-			PopulateDesignerBclFiles (DesignerHostBclFilesToInstall, DesignerWindowsBclFilesToInstall);
-		}
-
-		partial void PopulateDesignerBclFiles (List<BclFile> designerHostBclFilesToInstall, List<BclFile> designerWindowsBclFilesToInstall);
-
-		List<BclFile> BclToDesigner (BclFileTarget ignoreForTarget)
-		{
-			return BclFilesToInstall.Where (bf => ShouldIncludeDesignerBcl (bf)).Select (bf => new BclFile (bf.Name, bf.Type, excludeDebugSymbols: true, version: bf.Version, target: ignoreForTarget)).ToList ();
-
-			bool ShouldIncludeDesignerBcl (BclFile bf)
-			{
-				if (DesignerIgnoreFiles == null || !DesignerIgnoreFiles.TryGetValue (bf.Name, out (BclFileType Type, BclFileTarget Target) bft)) {
-					return true;
-				}
-
-				if (bf.Type != bft.Type || bft.Target != ignoreForTarget)
-					return true;
-
-				Log.Instance.DebugLine ($"BCL file {bf.Name} will NOT be included in the installed Designer BCL files ({ignoreForTarget})");
-				return false;
-			}
-		}
-
-		List<BundleItem> bundleItems;
 	}
 }

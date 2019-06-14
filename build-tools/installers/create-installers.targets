@@ -73,6 +73,7 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libMonoPosixHelper.so')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmonosgen-2.0.so')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />

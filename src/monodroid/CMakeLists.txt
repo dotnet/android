@@ -23,15 +23,30 @@ include("../../build-tools/cmake/xa_macros.cmake")
 set(JAVA_INTEROP_SRC_PATH "../../external/Java.Interop/src/java-interop")
 string(REPLACE "\\" "/" TOP_DIR ${CMAKE_SOURCE_DIR})
 
-if(NOT DEFINED SGEN_BRIDGE_VERSION)
-  message(FATAL_ERROR "Please set the SGEN_BRIDGE_VERSION variable on command line (-DSGEN_BRIDGE_VERSION=VERSION)")
-endif()
-
 if(NOT DEFINED MONO_PATH)
   message(FATAL_ERROR "Please set the MONO_PATH variable on command line (-DMONO_PATH=PATH)")
 else()
   string(REPLACE "\\" "/" MONO_PATH ${MONO_PATH})
 endif()
+
+if(NOT DEFINED CONFIGURATION)
+  message(FATAL_ERROR "Please set the CONFIGURATION variable on command line (-DCONFIGURATION=name)")
+endif()
+
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  message(FATAL_ERROR "Please set the CMAKE_BUILD_TYPE variable on command line (-DCMAKE_BUILD_TYPE=name)")
+endif()
+
+set(BIN_DIRS ${CMAKE_BUILD_TYPE} ${CONFIGURATION})
+foreach(bdir ${BIN_DIRS})
+  set(BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${bdir}")
+  if(EXISTS ${BIN_DIR})
+    message(STATUS "BIN_DIR exists")
+    set(DEFAULT_BIN_DIR "${BIN_DIR}")
+    break()
+  endif()
+endforeach(bdir)
+set(XA_LIB_TOP_DIR "${DEFAULT_BIN_DIR}/lib/xamarin.android/xbuild/Xamarin/Android/lib")
 
 if(NOT ANDROID)
   if (NOT DEFINED JDK_INCLUDE)
@@ -120,6 +135,8 @@ if(ENABLE_NDK)
     # This is missing from the current NDK releases headers (that includes NDK r19b2)
     add_definitions("-D__ANDROID_API_Q__=29")
   endif()
+
+  link_directories("${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
 else()
   # MinGW needs it for {v,a}sprintf
   add_definitions("-D_GNU_SOURCE")
@@ -146,7 +163,7 @@ else()
   if(WIN32 OR MINGW)
     message(STATUS "Win32 or MinGW")
     set(EXTRA_COMPILER_FLAGS "${EXTRA_COMPILER_FLAGS} -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer")
-    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -static -pthread -dynamic -lwsock32 -lshlwapi -lpsapi")
+    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -static -pthread -dynamic -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm")
 
     if (MINGW_TARGET_32)
       set(ANDROID_ABI "host-mxe-Win32")
@@ -163,16 +180,16 @@ else()
         include_directories("/usr/local/opt/mingw-zlib/usr/x86_64-w64-mingw32/include")
       endif()
     endif()
+
+    link_directories("${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
   endif()
 
   if(DEFINED HOST_BUILD_NAME)
-    include_directories("../../bin/${CMAKE_BUILD_TYPE}/include/${HOST_BUILD_NAME}")
-    include_directories("../../bin/${CMAKE_BUILD_TYPE}/include/${HOST_BUILD_NAME}/eglib")
-
-    if (DEFINED CONFIGURATION)
-      include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}")
-      include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}/eglib")
-    endif()
+    link_directories("${XA_LIB_TOP_DIR}/${HOST_BUILD_NAME}")
+    include_directories("${DEFAULT_BIN_DIR}/include/${HOST_BUILD_NAME}")
+    include_directories("${DEFAULT_BIN_DIR}/include/${HOST_BUILD_NAME}/eglib")
+    include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}")
+    include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}/eglib")
   endif()
 endif()
 
@@ -186,22 +203,19 @@ endif()
 
 add_definitions("-DHAVE_CONFIG_H")
 add_definitions("-D_REENTRANT")
-add_definitions("-DXAMARIN_ANDROID_DYLIB_MONO")
 add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
-add_definitions("-DSGEN_BRIDGE_VERSION=${SGEN_BRIDGE_VERSION}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
 
+include_directories("${DEFAULT_BIN_DIR}/include/mono-2.0")
 include_directories("jni")
-include_directories("../../bin/${CMAKE_BUILD_TYPE}/include")
-include_directories("../../bin/${CMAKE_BUILD_TYPE}/include/${ANDROID_ABI}/eglib")
-if (DEFINED CONFIGURATION)
-  # This is to allow "release" builds with Debug build type and vice versa
-  include_directories("../../bin/${CONFIGURATION}/include")
-  include_directories("../../bin/${CONFIGURATION}/include/${ANDROID_ABI}/eglib")
-endif()
+include_directories("${DEFAULT_BIN_DIR}/include")
+include_directories("${DEFAULT_BIN_DIR}/include/${ANDROID_ABI}/eglib")
+# This is to allow "release" builds with Debug build type and vice versa
+include_directories("../../bin/${CONFIGURATION}/include")
+include_directories("../../bin/${CONFIGURATION}/include/${ANDROID_ABI}/eglib")
 include_directories("${MONO_PATH}/mono/eglib")
 include_directories("jni/zip")
 include_directories("${JAVA_INTEROP_SRC_PATH}")
@@ -218,15 +232,17 @@ set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/android-system.cc
+  ${SOURCES_DIR}/basic-android-system.cc
+  ${SOURCES_DIR}/basic-utilities.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc
-  ${SOURCES_DIR}/dylib-mono.cc
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/osbridge.cc
+  ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/zip/ioapi.c
@@ -247,6 +263,18 @@ endif()
 
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
+
+if(NOT WIN32 AND NOT MINGW)
+  set(XAMARIN_DEBUG_APP_HELPER_SOURCES
+	${SOURCES_DIR}/basic-android-system.cc
+	${SOURCES_DIR}/basic-utilities.cc
+	${SOURCES_DIR}/cpu-arch-detect.cc
+	${SOURCES_DIR}/debug-app-helper.cc
+	${SOURCES_DIR}/new_delete.cc
+	${SOURCES_DIR}/shared-constants.cc
+	)
+  add_library(xamarin-debug-app-helper SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
+endif()
 
 set(SOURCES_FRAGMENT_FILE "sources.projitems")
 file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
@@ -272,15 +300,21 @@ if(APPLE)
 endif()
 
 if(MINGW_ZLIB_LIBRARY_PATH)
-  set(LINK_LIBS "${MINGW_ZLIB_LIBRARY_PATH} ${EXTRA_LINKER_FLAGS}")
+  set(LINK_LIBS "-lmonosgen-2.0.dll ${MINGW_ZLIB_LIBRARY_PATH} ${EXTRA_LINKER_FLAGS}")
 else()
-  set(LINK_LIBS "-lz ${EXTRA_LINKER_FLAGS}")
+  set(LINK_LIBS "-lmonosgen-2.0 -lz ${EXTRA_LINKER_FLAGS}")
 endif()
 
+set(DEBUG_HELPER_LINK_LIBS "-ldl")
 if(ENABLE_NDK)
   set(LINK_LIBS "${LINK_LIBS} -llog")
+  set(DEBUG_HELPER_LINK_LIBS "${DEBUG_HELPER_LINK_LIBS} -llog")
 elseif(NOT ANDROID)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 
 target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
+
+if(NOT WIN32 AND NOT MINGW)
+  target_link_libraries(xamarin-debug-app-helper ${DEBUG_HELPER_LINK_LIBS})
+endif()
