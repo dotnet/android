@@ -864,7 +864,8 @@ namespace Xamarin.Android.UnitTests.XUnit
 					if (string.Compare (testCase.DisplayName, filter.TestCaseName, StringComparison.OrdinalIgnoreCase) == 0 ||
 							(testCase.DisplayName.Length > filter.TestCaseName.Length &&
 							 testCase.DisplayName.StartsWith (filter.TestCaseName) &&
-							 testCase.DisplayName [filter.TestCaseName.Length] == '(')) {
+							 (testCase.DisplayName [filter.TestCaseName.Length] == '(' ||
+							  testCase.DisplayName [filter.TestCaseName.Length] == '.'))) {
 						return !filter.Exclude;
 					}
 					continue;
