@@ -9,7 +9,7 @@
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\msbuild*.binlog" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\bootstrap*.binlog" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\prepare*.log" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\rules.mk" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.mk" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.projitems" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.cmake" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.targets" />
