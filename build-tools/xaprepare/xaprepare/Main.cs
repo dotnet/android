@@ -28,10 +28,10 @@ namespace Xamarin.Android.Prepare
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
 			public bool IgnoreMaxMonoVersion   { get; set; }
-			public bool RefreshPrograms        { get; set; }
 			public bool EnableAll              { get; set; }
 			public string XABundlePath         { get; set; }
 			public string XABundleCopyDir      { get; set; }
+			public RefreshableComponent RefreshList { get; set; }
 		}
 
 		public static int Main (string[] args)
@@ -101,6 +101,7 @@ namespace Xamarin.Android.Prepare
 				{"a|enable-all", "Enable preparation of all the supported targets, ABIs etc", v => parsedOptions.EnableAll = true},
 				{"b|bundle-path=", "Full path to the {{DIRECTORY}} where Xamarin.Android bundle can be found (excluding the file name)", v => parsedOptions.XABundlePath = v?.Trim ()},
 				{"copy-bundle-to=", "Full path to the {{DIRECTORY}} where downloaded bundle should be copied (excluding the file name)", v => parsedOptions.XABundleCopyDir = v?.Trim ()},
+				{"refresh=", "[sdk,ndk] Comma separated list of components which should be reinstalled.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim ())},
 				"",
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
@@ -137,6 +138,7 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
 			Context.Instance.IgnoreMaxMonoVersion  = parsedOptions.IgnoreMaxMonoVersion;
 			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
+			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 
 			if (!String.IsNullOrEmpty (parsedOptions.XABundlePath))
 				Context.Instance.XABundlePath = parsedOptions.XABundlePath;
@@ -308,5 +310,36 @@ namespace Xamarin.Android.Prepare
 
 			throw new InvalidOperationException ($"Unknown boolean value: {value}");
 		}
+
+		static RefreshableComponent ParseRefreshableComponents (string refreshList)
+		{
+			if (String.IsNullOrEmpty (refreshList))
+				return RefreshableComponent.None;
+
+			if (refreshList.IndexOf (',') == -1)
+				return ParseSingleComponent (refreshList);
+
+			RefreshableComponent allParsedComponents = RefreshableComponent.None;
+			var refreshListArray = refreshList.Split (',');
+			foreach (var c in refreshListArray) {
+				RefreshableComponent parsed = ParseSingleComponent (c);
+				if (parsed != RefreshableComponent.None)
+					allParsedComponents |= parsed;
+			}
+
+			return allParsedComponents;
+
+
+			RefreshableComponent ParseSingleComponent (string component) {
+				if (String.Compare ("sdk", component, StringComparison.OrdinalIgnoreCase) == 0)
+					return RefreshableComponent.AndroidSDK;
+
+				if (String.Compare ("ndk", component, StringComparison.OrdinalIgnoreCase) == 0)
+					return RefreshableComponent.AndroidNDK;
+
+				return RefreshableComponent.None;
+			}
+		}
+
 	}
 }

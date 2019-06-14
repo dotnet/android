@@ -19,6 +19,9 @@ namespace Xamarin.Android.Prepare
 			public string DestinationDir;
 		}
 
+		bool RefreshSdk = false;
+		bool RefreshNdk = false;
+
 		public Step_Android_SDK_NDK ()
 			: base ("Preparing Android SDK and NDK")
 		{}
@@ -28,6 +31,9 @@ namespace Xamarin.Android.Prepare
 			string sdkRoot = context.Properties.GetRequiredValue (KnownProperties.AndroidSdkDirectory);
 			string ndkRoot = context.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			string packageCacheDir = context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
+
+			RefreshSdk = context.ComponentsToRefresh.HasFlag (RefreshableComponent.AndroidSDK);
+			RefreshNdk = context.ComponentsToRefresh.HasFlag (RefreshableComponent.AndroidNDK);
 
 			Log.StatusLine ("Android SDK location: ", sdkRoot, tailColor: Log.DestinationColor);
 			Log.StatusLine ("Android NDK location: ", ndkRoot, tailColor: Log.DestinationColor);
@@ -64,7 +70,7 @@ namespace Xamarin.Android.Prepare
 					if (!success)
 						continue;
 					totalDownloadSize += size;
-				};
+				}
 
 				toDownload.ForEach (p => Log.StatusLine ($"  {context.Characters.Link} {p.Url}", ConsoleColor.White));
 
@@ -123,8 +129,14 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($"  {context.Characters.Bullet} Installing ", pkg.Component.Name, tailColor: ConsoleColor.White);
 
 			if (File.Exists (pkg.LocalPackagePath)) {
-				Log.DebugLine ($"Component '{pkg.Component.Name}' package exists: {pkg.LocalPackagePath}");
-				LogStatus ("already downloaded", 4, Log.InfoColor);
+				if ((RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
+					LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
+					Utilities.DeleteFile (pkg.LocalPackagePath);
+					toDownload.Add (pkg);
+				} else {
+					Log.DebugLine ($"Component '{pkg.Component.Name}' package exists: {pkg.LocalPackagePath}");
+					LogStatus ("already downloaded", 4, Log.InfoColor);
+				}
 			} else {
 				Log.DebugLine ($"Component '{pkg.Component.Name}' package not downloaded yet: {pkg.LocalPackagePath}");
 				LogStatus ("not downloaded yet", 4, ConsoleColor.Magenta);
@@ -227,6 +239,11 @@ namespace Xamarin.Android.Prepare
 			}
 
 			missing = false;
+			if ((RefreshSdk && !IsNdk (component)) || (RefreshNdk && IsNdk (component))) {
+				Log.DebugLine ($"A reinstall has been requested for component '{component.Name}'");
+				return false;
+			}
+
 			if (String.IsNullOrEmpty (component.ExpectedPkgRevision)) {
 				Log.DebugLine ($"Component '{component.Name}' does not specify required Pkg.Revision, assuming it's valid");
 				return true;
@@ -263,6 +280,11 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ($"Installed version of '{component.Name}' ({pkgVer}) is different than the required one ({expectedPkgVer})");
 
 			return equal;
+		}
+
+		bool IsNdk (AndroidToolchainComponent component)
+		{
+			return component.Name.StartsWith ("android-ndk", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }
