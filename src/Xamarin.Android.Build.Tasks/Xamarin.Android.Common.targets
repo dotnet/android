@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -2307,7 +2307,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ConvertCustomView"
     Condition="Exists('$(_CustomViewMapFile)')"
-    Inputs="$(_CustomViewMapFile);$(_AcwMapFile)"
+    Inputs="$(_CustomViewMapFile);$(_AcwMapFile);@(_AndroidResourceDest);@(_LibraryResourceDirectoryStamps)"
     Outputs="$(_AndroidStampDirectory)_ConvertCustomView.stamp">
   <ConvertCustomView
       CustomViewMapFile="$(_CustomViewMapFile)"
