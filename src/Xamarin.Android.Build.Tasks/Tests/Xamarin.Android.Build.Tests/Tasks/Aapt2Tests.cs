@@ -15,9 +15,15 @@ namespace Xamarin.Android.Build.Tests {
 
 		string GetPathToAapt2 ()
 		{
-			var path = Path.Combine (AndroidSdkPath, "build-tools");
+
+			var exe = IsWindows ? "aapt2.exe" : "aapt2";
+			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
+			if (File.Exists (Path.Combine (path, exe)))
+				return path;
+
+			path = Path.Combine (AndroidSdkPath, "build-tools");
 			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => x)) {
-				var aapt2 = Path.Combine (dir, IsWindows ? "aapt2.exe" : "aapt");
+				var aapt2 = Path.Combine (dir, exe);
 				if (File.Exists (aapt2))
 					return dir;
 			}
@@ -175,8 +181,9 @@ namespace Xamarin.Android.Build.Tests {
 			} finally {
 				Directory.SetCurrentDirectory (current);
 			}
-			Assert.AreEqual (1, errors.Count, "One Error should have been raised.");
+			Assert.AreEqual (2, errors.Count, $"Two Error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors[0].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
+			Assert.AreEqual ($"Resources{directorySeperator}Values{directorySeperator}Strings.xml", errors [1].File, $"`values{directorySeperator}strings.xml` should have been replaced with `Resources{directorySeperator}Values{directorySeperator}Strings.xml`");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -223,7 +230,7 @@ namespace Xamarin.Android.Build.Tests {
 				ExtraArgs = "--no-crunch "
 			};
 			Assert.False (task.Execute (), "task should have failed.");
-			Assert.AreEqual (1, errors.Count, "One error should have been raised.");
+			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}
