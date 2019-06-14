@@ -26,7 +26,7 @@
 
 #include <dlfcn.h>
 
-#if defined (XAMARIN_ANDROID_DYLIB_MONO)
+#if defined (ANDROID)
 using namespace xamarin::android;
 #endif
 
@@ -267,13 +267,6 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 {
 	if (jvm == NULL)
 		return NULL;
-
-#if defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO)
-	if (!monodroid_dylib_mono_init (monodroid_get_dylib (), NULL)) {
-		log_fatal (LOG_DEFAULT, "mono runtime initialization error: %s", dlerror ());
-		exit (FATAL_EXIT_CANNOT_FIND_MONO);
-	}
-#endif  /* defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO) */
 
 	lookup_optional_mono_thread_functions ();
 
