@@ -169,8 +169,12 @@ timestamps {
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+            // The 'prepare*' targets must run separately to '${buildTarget}` as preparation generates the 'rules.mk' file conditionally included by
+            // Makefile and it will **NOT** be included if we call e.g `make prepare jenkins` so the 'jenkns' target will **NOT** build all the supported
+            // targets and architectures leading to test errors later on (e.g. in EmbeddedDSOs tests)
             sh "make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
                 sh '''

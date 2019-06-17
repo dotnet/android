@@ -163,3 +163,25 @@ System.IO.Pipes.Tests.TestPipeStream.TestCheckPipePropertyOperations_Unix
 System.IO.Pipes.Tests.TestPipeStream.TestCheckReadWrite
 System.IO.Pipes.Tests.TestPipeStream.TestInitializeHandle
 
+
+#
+# Suspected OOM-causing and related tests, via:
+#   * https://github.com/xamarin/xamarin-macios/commit/762146a95cc182d8942220141491ea8a37c4b657
+#   * https://github.com/xamarin/xamarin-macios/blob/e0dbde288d8afa1b2f72c67cacb029ed8a240623/tests/bcl-test/common-monotouch_corlib_xunit-test.dll.ignore#L805
+#
+
+System.IO.Tests.FileInfo_CopyTo_str_b
+System.IO.Tests.File_Copy_str_str_b
+System.IO.Tests.FileInfo_CopyTo_str
+System.IO.Tests.File_Copy_str_str
+System.Reflection.Tests.MemberInfoNetCoreAppTests
+System.Memory.Tests.ReadOnlySequenceTestsChar+SplitInThreeSegments
+System.Memory.Tests.ReadOnlySequenceTestsChar+SegmentPerChar
+System.Memory.Tests.ReadOnlySequenceTestsChar+SingleSegment
+System.Memory.Tests.ReadOnlySequenceTestsChar+Memory
+System.Memory.Tests.ReadOnlySequenceTestsChar+String
+System.Memory.Tests.ReadOnlySequenceTestsChar+Array
+System.Memory.Tests.ReadOnlySequenceTestsByte+SplitInThreeSegments
+System.Memory.Tests.ReadOnlySequenceTestsByte+SegmentPerByte
+System.Memory.Tests.ReadOnlySequenceTestsByte+SingleSegment
+

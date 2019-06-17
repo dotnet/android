@@ -124,7 +124,6 @@ bool DylibMono::init (void *libmono_handle)
 	LOAD_SYMBOL(mono_object_unbox)
 	LOAD_SYMBOL(mono_profiler_install)
 	LOAD_SYMBOL(mono_profiler_install_jit_end)
-	LOAD_SYMBOL(mono_profiler_install_thread)
 	LOAD_SYMBOL(mono_profiler_set_events)
 	LOAD_SYMBOL(mono_property_set_value)
 	LOAD_SYMBOL(mono_register_bundled_assemblies)
@@ -677,12 +676,20 @@ DylibMono::profiler_create ()
 }
 
 void
-DylibMono::profiler_install_thread (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn, MonoThreadStoppedEventFunc end_ftn)
+DylibMono::profiler_set_thread_started_callback (MonoProfilerHandle handle, MonoThreadStartedEventFunc start_ftn)
 {
-	if (mono_profiler_set_thread_started_callback == nullptr || mono_profiler_set_thread_stopped_callback == nullptr)
+	if (mono_profiler_set_thread_started_callback == nullptr)
 		return;
 
 	mono_profiler_set_thread_started_callback (handle, start_ftn);
+}
+
+void
+DylibMono::profiler_set_thread_stopped_callback (MonoProfilerHandle handle, MonoThreadStoppedEventFunc end_ftn)
+{
+	if (mono_profiler_set_thread_stopped_callback == nullptr)
+		return;
+
 	mono_profiler_set_thread_stopped_callback (handle, end_ftn);
 }
 
