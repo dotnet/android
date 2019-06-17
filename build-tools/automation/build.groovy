@@ -240,6 +240,7 @@ timestamps {
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor} V=1"
 
                 if (isCommercial) {
+                    sh "ls -l ${XADir}/bin/Build${env.BuildFlavor}"
                     sh "cp ${XADir}/bin/Build${env.BuildFlavor}/xa-build-status-*.zip ${packagePath}"
                 }
             } catch (error) {
