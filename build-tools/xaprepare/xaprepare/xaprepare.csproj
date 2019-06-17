@@ -179,6 +179,7 @@
     <Compile Include="ToolRunners\ToolRunner.cs" />
     <Compile Include="ToolRunners\ToolRunner.OutputSink.cs" />
     <Compile Include="Application\RefreshableComponent.cs" />
+    <Compile Include="Steps\Step_DownloadXDelta.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(OS)' == 'Unix' ">
     <Compile Include="Application\EssentialTools.Unix.cs" />

@@ -36,6 +36,8 @@ namespace Xamarin.Android.Prepare
 			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe");
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
+
+			public static readonly Uri XDeltaUri = new Uri ("https://github.com/dellis1972/xdelta/releases/download/");
 		}
 
 		public static partial class Defaults

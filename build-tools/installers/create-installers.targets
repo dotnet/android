@@ -119,6 +119,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavaDocImporter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Android\x86\xdelta3" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Android\x86_64\xdelta3" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Android\armeabi-v7a\xdelta3" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Android\arm64-v8a\xdelta3" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Bindings.After.targets" />
@@ -133,6 +137,7 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\xdelta3.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aarch64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\arm-linux-androideabi-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
@@ -155,6 +160,7 @@
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\xdelta3" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)" />

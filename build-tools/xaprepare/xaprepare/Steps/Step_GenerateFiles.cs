@@ -95,6 +95,7 @@ namespace Xamarin.Android.Prepare
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
 				{ "@ANT_DIRECTORY@",        context.OS.AntDirectory },
+				{ "@SevenZip@",             context.Tools.SevenZipPath },
 			};
 
 			return new GeneratedPlaceholdersFile (

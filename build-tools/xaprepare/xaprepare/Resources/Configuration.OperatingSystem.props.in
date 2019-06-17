@@ -21,5 +21,6 @@
         <JavaPath Condition=" '$(JavaPath)' == '' ">@java@</JavaPath>
         <HostHomebrewPrefix Condition=" '$(HostHomebrewPrefix)' == '' ">@HOST_HOMEBREW_PREFIX@</HostHomebrewPrefix>
         <AntDirectory Condition=" '$(AntDirectory)' == '' ">@ANT_DIRECTORY@</AntDirectory>
+        <SevenZip Condition=" '$(SevenZip)' == '' ">@SevenZip@</SevenZip>
     </PropertyGroup>
 </Project>
