@@ -1,0 +1,4 @@
+protected override global::System.Type ThresholdType {
+	get { return typeof (Com.MyPackage.Foo); }
+}
+

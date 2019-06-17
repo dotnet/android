@@ -80,6 +80,16 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteClassHandle ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+
+			generator.WriteClassHandle (@class, writer, string.Empty, options, false);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassHandle)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
 		public void WriteClassInvoker ()
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
@@ -89,6 +99,16 @@ namespace generatortests
 			options.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvoker)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteClassInvokerHandle ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+
+			generator.WriteClassInvokerHandle (@class, writer, string.Empty, options, "Com.MyPackage.Foo");
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvokerHandle)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]
@@ -262,6 +282,100 @@ namespace generatortests
 			generator.WriteField (field, writer, string.Empty, options, @class);
 
 			StringAssert.Contains ("protected int bar {", builder.ToString (), "Property should be protected!");
+		}
+
+		[Test]
+		public void WriteFieldConstant ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar").SetConstant ();
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteField (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstant)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldConstantWithIntValue ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("int", "bar").SetConstant ("1234");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteField (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithIntValue)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldConstantWithStringValue ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar").SetConstant ("\"hello\"");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteField (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithStringValue)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldGetBody ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteFieldGetBody (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldGetBody)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldIdField ()
+		{
+			var field = new TestField ("java.lang.String", "bar");
+
+			generator.WriteFieldIdField (field, writer, string.Empty, options);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldIdField)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldInt ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("int", "bar");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteField (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldInt)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldSetBody ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteFieldSetBody (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldSetBody)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteFieldString ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var field = new TestField ("java.lang.String", "bar");
+
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			generator.WriteField (field, writer, string.Empty, options, @class);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldString)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]
@@ -512,6 +626,137 @@ namespace generatortests
 			options.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfacePropertyInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodAbstractWithVoidReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetAbstract ();
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAbstractWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodAsyncifiedWithIntReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "int").SetAsyncify ();
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAsyncifiedWithIntReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodAsyncifiedWithVoidReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetAsyncify ();
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAsyncifiedWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodBody ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethodBody (method, writer, string.Empty, options);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodBody)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodFinalWithVoidReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetFinal ();
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodFinalWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodIdField ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+
+			generator.WriteMethodIdField (method, writer, string.Empty, options);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodIdField)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodProtected ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetVisibility ("protected");
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodProtected)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodStaticWithVoidReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar").SetStatic ();
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodStaticWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodWithIntReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "int");
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithIntReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodWithStringReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar", @return: "java.lang.String");
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithStringReturn)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteMethodWithVoidReturn ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "bar");
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			generator.WriteMethod (method, writer, string.Empty, options, @class, true);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]

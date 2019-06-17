@@ -1,0 +1,22 @@
+static IntPtr bar_jfieldId;
+
+// Metadata.xml XPath field reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/field[@name='bar']"
+[Register ("bar")]
+public string bar {
+	get {
+		if (bar_jfieldId == IntPtr.Zero)
+			bar_jfieldId = JNIEnv.GetFieldID (class_ref, "bar", "Ljava/lang/String;");
+		IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, bar_jfieldId);
+		return JNIEnv.GetString (__ret, JniHandleOwnership.TransferLocalRef);
+	}
+	set {
+		if (bar_jfieldId == IntPtr.Zero)
+			bar_jfieldId = JNIEnv.GetFieldID (class_ref, "bar", "Ljava/lang/String;");
+		IntPtr native_value = JNIEnv.NewString (value);
+		try {
+			JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, bar_jfieldId, native_value);
+		} finally {
+			JNIEnv.DeleteLocalRef (native_value);
+		}
+	}
+}

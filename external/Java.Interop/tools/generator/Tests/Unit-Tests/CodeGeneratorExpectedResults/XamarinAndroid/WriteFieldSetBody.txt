@@ -1,0 +1,8 @@
+if (bar_jfieldId == IntPtr.Zero)
+	bar_jfieldId = JNIEnv.GetFieldID (class_ref, "bar", "Ljava/lang/String;");
+IntPtr native_value = JNIEnv.NewString (value);
+try {
+	JNIEnv.SetField (((global::Java.Lang.Object) this).Handle, bar_jfieldId, native_value);
+} finally {
+	JNIEnv.DeleteLocalRef (native_value);
+}

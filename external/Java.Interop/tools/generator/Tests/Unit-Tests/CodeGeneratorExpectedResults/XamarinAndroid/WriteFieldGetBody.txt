@@ -1,0 +1,4 @@
+if (bar_jfieldId == IntPtr.Zero)
+	bar_jfieldId = JNIEnv.GetFieldID (class_ref, "bar", "Ljava/lang/String;");
+IntPtr __ret = JNIEnv.GetObjectField (((global::Java.Lang.Object) this).Handle, bar_jfieldId);
+return JNIEnv.GetString (__ret, JniHandleOwnership.TransferLocalRef);

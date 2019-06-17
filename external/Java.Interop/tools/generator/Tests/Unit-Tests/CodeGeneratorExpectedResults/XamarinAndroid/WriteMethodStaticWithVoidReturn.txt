@@ -1,0 +1,13 @@
+static IntPtr id_bar;
+// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]"
+[Register ("bar", "()V", "")]
+public static unsafe void bar ()
+{
+	if (id_bar == IntPtr.Zero)
+		id_bar = JNIEnv.GetStaticMethodID (class_ref, "bar", "()V");
+	try {
+		JNIEnv.CallStaticVoidMethod  (class_ref, id_bar);
+	} finally {
+	}
+}
+
