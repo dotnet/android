@@ -60,6 +60,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java-interop.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')" />
