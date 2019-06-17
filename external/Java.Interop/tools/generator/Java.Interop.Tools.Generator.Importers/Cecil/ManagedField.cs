@@ -76,5 +76,5 @@ namespace MonoDroid.Generation
 			}
 		}
 	}
-}
 #endif
+}

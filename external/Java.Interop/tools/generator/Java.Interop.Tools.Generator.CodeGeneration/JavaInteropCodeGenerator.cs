@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace MonoDroid.Generation {
@@ -123,7 +123,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			ctor.Parameters.WriteCallArgs (writer, indent, opt, invoker:false);
+			WriteParameterListCallArgs (ctor.Parameters, writer, indent, opt, invoker: false);
 			writer.WriteLine ("{0}var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (){1});", indent, ctor.Parameters.GetCallArgs (opt, invoker:false));
 			writer.WriteLine ("{0}SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);", indent);
 			writer.WriteLine ("{0}_members.InstanceMethods.FinishCreateInstance (__id, this{1});", indent, ctor.Parameters.GetCallArgs (opt, invoker:false));
@@ -147,7 +147,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			method.Parameters.WriteCallArgs (writer, indent, opt, invoker: false);
+			WriteParameterListCallArgs (method.Parameters, writer, indent, opt, invoker: false);
 
 			var invokeType  = GetInvokeType (method.RetVal.CallMethodPrefix);
 

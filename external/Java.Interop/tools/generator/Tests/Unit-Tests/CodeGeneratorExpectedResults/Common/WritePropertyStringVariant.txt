@@ -1,0 +1,9 @@
+public string MyProperty {
+	get { return MyProperty == null ? null : MyProperty.ToString (); }
+	set {
+		global::Java.Lang.String jls = value == null ? null : new global::Java.Lang.String (value);
+		MyProperty = jls;
+		if (jls != null) jls.Dispose ();
+	}
+}
+

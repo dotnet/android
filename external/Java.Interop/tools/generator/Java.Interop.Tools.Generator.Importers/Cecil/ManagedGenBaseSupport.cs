@@ -106,5 +106,5 @@ namespace MonoDroid.Generation
 			get { return t.IsPublic || t.IsNestedPublic ? "public" : "protected internal"; }
 		}
 	}
-}
 #endif
+}

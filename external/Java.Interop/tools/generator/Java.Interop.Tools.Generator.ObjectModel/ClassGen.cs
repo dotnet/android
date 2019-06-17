@@ -56,6 +56,11 @@ namespace MonoDroid.Generation
 
 		public abstract string BaseType { get; set; }
 
+		public bool NeedsNew {
+			get => needs_new;
+			set => needs_new = value;
+		}
+
 		public bool ContainsCtor (string jni_sig)
 		{
 			foreach (Ctor c in ctors)
@@ -203,242 +208,17 @@ namespace MonoDroid.Generation
 			foreach (var nt in NestedTypes)
 				nt.FixupExplicitImplementation ();
 		}
-		
-		void GenConstructors (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			if (FullName != "Java.Lang.Object" && inherits_object) {
-				sw.WriteLine ("{0}{1} {2} (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {{}}", indent, IsFinal ? "internal" : "protected", Name);
-				sw.WriteLine ();
-			}
-
-			foreach (Ctor ctor in ctors) {
-				if (IsFinal && ctor.Visibility == "protected")
-					continue;
-				ctor.Name = Name;
-				ctor.Generate (sw, indent, opt, inherits_object, this);
-			}
-		}
 
 		public override ClassGen BaseGen {
 			get { return (base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as ClassGen; }
 		}
 
-		void GenerateAbstractMembers (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			foreach (InterfaceGen gen in GetAllDerivedInterfaces ())
-				gen.GenerateAbstractMembers (this, sw, indent, opt);
-		}
-
-		void GenMethods (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			// This does not exclude overrides (unlike virtual methods) because we're not sure
-			// if calling the base interface default method via JNI expectedly dispatches to
-			// the derived method.
-			var defaultMethods = GetAllDerivedInterfaces ()
-				.SelectMany (i => i.Methods)
-				.Where (m => m.IsInterfaceDefaultMethod)
-				.Where (m => !ContainsMethod (m, false, false));
-			var overrides = defaultMethods.Where (m => m.IsInterfaceDefaultMethodOverride);
-
-			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
-				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
-
-			foreach (Method m in Methods.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable)) {
-				bool virt = m.IsVirtual;
-				m.IsVirtual = !IsFinal && virt;
-				if (m.IsAbstract && !m.IsInterfaceDefaultMethodOverride && !m.IsInterfaceDefaultMethod)
-					opt.CodeGenerator.WriteMethodAbstractDeclaration (m, sw, indent, opt, null, this);
-				else
-					opt.CodeGenerator.WriteMethod (m, sw, indent, opt, this, true);
-				opt.ContextGeneratedMethods.Add (m);
-				m.IsVirtual = virt;
-			}
-
-			var methods = Methods.Concat (Properties.Where (p => p.Setter != null).Select (p => p.Setter));
-			foreach (InterfaceGen type in methods.Where (m => m.IsListenerConnector && m.EventName != String.Empty).Select (m => m.ListenerType).Distinct ()) {
-				sw.WriteLine ("#region \"Event implementation for {0}\"", type.FullName);
-				type.GenerateEventsOrPropertiesForListener (sw, indent, opt, this);
-				sw.WriteLine ("#endregion");
-			}
-		}
-
-		void GenProperties (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			foreach (Property prop in Properties) {
-				bool get_virt = prop.Getter.IsVirtual;
-				bool set_virt = prop.Setter == null ? false : prop.Setter.IsVirtual;
-				prop.Getter.IsVirtual = !IsFinal && get_virt;
-				if (prop.Setter != null)
-					prop.Setter.IsVirtual = !IsFinal && set_virt;
-				if (prop.Getter.IsAbstract)
-					prop.GenerateAbstractDeclaration (sw, indent, opt, this);
-				else
-					prop.Generate (this, sw, indent, opt);
-				prop.Getter.IsVirtual = get_virt;
-				if (prop.Setter != null)
-					prop.Setter.IsVirtual = set_virt;
-			}
-		}
-
 		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
-			opt.ContextTypes.Push (this);
-			opt.ContextGeneratedMethods = new List<Method> ();
-
-			gen_info.TypeRegistrations.Add (new KeyValuePair<string, string>(RawJniName, AssemblyQualifiedName));
-			bool is_enum = base_symbol != null && base_symbol.FullName == "Java.Lang.Enum";
-			if (is_enum)
-				gen_info.Enums.Add (RawJniName.Replace ('/', '.') + ":" + Namespace + ":" + JavaSimpleName);
-			StringBuilder sb = new StringBuilder ();
-			foreach (ISymbol isym in Interfaces) {
-				GenericSymbol gs = isym as GenericSymbol;
-				InterfaceGen gen = (gs == null ? isym : gs.Gen) as InterfaceGen;
-				if (gen != null && gen.IsConstSugar)
-					continue;
-				if (sb.Length > 0)
-					sb.Append (", ");
-				sb.Append (opt.GetOutputName (isym.FullName));
-			}
-
-			string obj_type = null;
-			if (base_symbol != null) {
-				GenericSymbol gs = base_symbol as GenericSymbol;
-				obj_type = gs != null && gs.IsConcrete ? gs.GetGenericType (null) : opt.GetOutputName (base_symbol.FullName);
-			}
-
-			sw.WriteLine ("{0}// Metadata.xml XPath class reference: path=\"{1}\"", indent, MetadataXPathReference);
-
-			if (this.IsDeprecated)
-				sw.WriteLine ("{0}[ObsoleteAttribute (@\"{1}\")]", indent, this.DeprecatedComment);
-			sw.WriteLine ("{0}[global::Android.Runtime.Register (\"{1}\", DoNotGenerateAcw=true{2})]", indent, RawJniName, this.AdditionalAttributeString ());
-			if (this.TypeParameters != null && this.TypeParameters.Any ())
-				sw.WriteLine ("{0}{1}", indent, TypeParameters.ToGeneratedAttributeString ());
-			string inherits = "";
-			if (inherits_object && obj_type != null) {
-				inherits  = ": " + obj_type;
-			}
-			if (sb.Length > 0) {
-				if (string.IsNullOrEmpty (inherits))
-					inherits = ": ";
-				else
-					inherits += ", ";
-			}
-			sw.WriteLine ("{0}{1} {2}{3}{4}partial class {5} {6}{7} {{",
-					indent,
-					Visibility,
-					needs_new ? "new " : String.Empty,
-					IsAbstract ? "abstract " : String.Empty,
-					IsFinal ? "sealed " : String.Empty,
-					Name,
-					inherits,
-					sb.ToString ());
-			sw.WriteLine ();
-
-			var seen = new HashSet<string> ();
-			GenFields (sw, indent + "\t", opt, seen);
-			bool haveNested = false;
-			foreach (var iface in GetAllImplementedInterfaces ()
-					.Except (BaseGen == null
-						? new InterfaceGen[0]
-						: BaseGen.GetAllImplementedInterfaces ())
-					.Where (i => i.Fields.Count > 0)) {
-				if (!haveNested) {
-					sw.WriteLine ();
-					sw.WriteLine ("{0}\tpublic static class InterfaceConsts {{", indent);
-					haveNested = true;
-				}
-				sw.WriteLine ();
-				sw.WriteLine ("{0}\t\t// The following are fields from: {1}", indent, iface.JavaName);
-				iface.GenFields (sw, indent + "\t\t", opt, seen);
-			}
-
-			if (haveNested)
-				sw.WriteLine ("{0}\t}}\n", indent);
-
-			foreach (GenBase nest in NestedTypes) {
-				if (BaseGen != null && BaseGen.ContainsNestedType (nest))
-					if (nest is ClassGen)
-						(nest as ClassGen).needs_new = true;
-				nest.Generate (sw, indent + "\t", opt, gen_info);
-				sw.WriteLine ();
-			}
-
-			bool requireNew = InheritsObject;
-			if (!requireNew) {
-				for (var bg = BaseGen; bg != null && bg is XmlClassGen; bg = bg.BaseGen) {
-					if (bg.InheritsObject) {
-						requireNew = true;
-						break;
-					}
-				}
-			}
-			opt.CodeGenerator.WriteClassHandle (this, sw, indent, opt, requireNew);
-
-			GenConstructors (sw, indent + "\t", opt);
-
-			GenProperties (sw, indent + "\t", opt);
-			GenMethods (sw, indent + "\t", opt);
-
-			if (IsAbstract)
-				GenerateAbstractMembers (sw, indent + "\t", opt);
-
-			bool is_char_seq = false;
-			foreach (ISymbol isym in Interfaces) {
-				if (isym is GenericSymbol) {
-					GenericSymbol gs = isym as GenericSymbol;
-					if (gs.IsConcrete) {
-						// FIXME: not sure if excluding default methods is a valid idea...
-						foreach (Method m in gs.Gen.Methods) {
-							if (m.IsInterfaceDefaultMethod || m.IsStatic)
-								continue;
-							if (m.IsGeneric)
-								opt.CodeGenerator.WriteMethodExplicitIface (m, sw, indent + "\t", opt, gs);
-						}
-
-						var adapter = gs.Gen.AssemblyQualifiedName + "Invoker";
-						foreach (Property p in gs.Gen.Properties) {
-							if (p.Getter != null) {
-								if (p.Getter.IsInterfaceDefaultMethod || p.Getter.IsStatic)
-									continue;
-							}
-							if (p.Setter != null) {
-								if (p.Setter.IsInterfaceDefaultMethod || p.Setter.IsStatic)
-									continue;
-							}
-							if (p.IsGeneric)
-								p.GenerateExplicitIface (sw, indent + "\t", opt, gs, adapter);
-						}
-					}
-				} else if (isym.FullName == "Java.Lang.ICharSequence")
-					is_char_seq = true;
-			}
-
-			if (is_char_seq)
-				GenCharSequenceEnumerator (sw, indent + "\t", opt);
-
-			sw.WriteLine (indent + "}");
-
-			if (!AssemblyQualifiedName.Contains ('/')) {
-				foreach (InterfaceExtensionInfo nestedIface in GetNestedInterfaceTypes ())
-					nestedIface.Type.GenerateExtensionsDeclaration (sw, indent, opt, nestedIface.DeclaringType);
-			}
-
-			if (IsAbstract) {
-				sw.WriteLine ();
-				GenerateInvoker (sw, indent, opt);
-			}
-
-			opt.ContextGeneratedMethods.Clear ();
-
-			opt.ContextTypes.Pop ();
+			opt.CodeGenerator.WriteClass (this, sw, indent, opt, gen_info);
 		}
 
-		class InterfaceExtensionInfo {
-			public string DeclaringType;
-			public InterfaceGen Type;
-		}
-
-		IEnumerable<InterfaceExtensionInfo> GetNestedInterfaceTypes ()
+		internal IEnumerable<InterfaceExtensionInfo> GetNestedInterfaceTypes ()
 		{
 			var nestedInterfaces = new List<InterfaceExtensionInfo> ();
 			AddNestedInterfaceTypes (this, nestedInterfaces);
@@ -458,82 +238,13 @@ namespace MonoDroid.Generation
 					AddNestedInterfaceTypes (nt, nestedInterfaces);
 			}
 		}
-
-		void GenerateInvoker (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			StringBuilder sb = new StringBuilder ();
-			foreach (InterfaceGen igen in GetAllDerivedInterfaces ())
-				if (igen.IsGeneric)
-					sb.Append (", " + opt.GetOutputName (igen.FullName));
-			sw.WriteLine ("{0}[global::Android.Runtime.Register (\"{1}\", DoNotGenerateAcw=true{2})]", indent, RawJniName, this.AdditionalAttributeString ());
-			sw.WriteLine ("{0}internal partial class {1}Invoker : {1}{2} {{", indent, Name, sb.ToString ());
-			sw.WriteLine ();
-			sw.WriteLine ("{0}\tpublic {1}Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {{}}", indent, Name);
-			sw.WriteLine ();
-			opt.CodeGenerator.WriteClassInvokerHandle (this, sw, indent + "\t", opt, Name + "Invoker");
-
-			HashSet<string> members = new HashSet<string> ();
-			GenerateInvokerMembers (sw, indent + "\t", opt, members);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		void GenerateInvokerMembers (StreamWriter sw, string indent, CodeGenerationOptions opt, HashSet<string> members)
-		{
-			GenerateInvoker (sw, Properties, indent, opt, members);
-			GenerateInvoker (sw, Methods, indent, opt, members, null);
-
-			foreach (InterfaceGen iface in GetAllDerivedInterfaces ()) {
-//				if (iface.IsGeneric)
-//					continue;
-				GenerateInvoker (sw, iface.Properties.Where (p => !ContainsProperty (p.Name, false, false)), indent, opt, members);
-				GenerateInvoker (sw, iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !ContainsMethod (m, false, false) && !IsCovariantMethod (m) && !explicitly_implemented_iface_methods.Contains (m.GetSignature ())), indent, opt, members, iface);
-			}
-
-			if (BaseGen != null && BaseGen.FullName != "Java.Lang.Object")
-				BaseGen.GenerateInvokerMembers (sw, indent, opt, members);
-		}
-
-		void GenerateInvoker (StreamWriter sw, IEnumerable<Property> properties, string indent, CodeGenerationOptions opt, HashSet<string> members)
-		{
-			foreach (Property prop in properties) {
-				if (members.Contains (prop.Name))
-					continue;
-				members.Add (prop.Name);
-				if ((prop.Getter != null && !prop.Getter.IsAbstract) ||
-						(prop.Setter != null && !prop.Setter.IsAbstract))
-					continue;
-				prop.Generate (this, sw, indent, opt, false, true);
-			}
-		}
 		
-		bool IsExplicitlyImplementedMethod (string sig)
+		public bool IsExplicitlyImplementedMethod (string sig)
 		{
 			for (ClassGen c = this; c != null; c = c.BaseGen)
 				if (c.explicitly_implemented_iface_methods.Contains (sig))
 					return true;
 			return false;
-		}
-
-		void GenerateInvoker (StreamWriter sw, IEnumerable<Method> methods, string indent, CodeGenerationOptions opt, HashSet<string> members, InterfaceGen gen)
-		{
-			foreach (Method m in methods) {
-				string sig = m.GetSignature ();
-				if (members.Contains (sig))
-					continue;
-				members.Add (sig);
-				if (!m.IsAbstract)
-					continue;
-				if (IsExplicitlyImplementedMethod (sig)) {
-					// sw.WriteLine ("// This invoker explicitly implements this method");
-					opt.CodeGenerator.WriteMethodExplicitInterfaceInvoker (m, sw, indent, opt, gen);
-				} else {
-					// sw.WriteLine ("// This invoker overrides {0} method", gen.FullName);
-					m.IsOverride = true;
-					opt.CodeGenerator.WriteMethod (m, sw, indent, opt, this, false);
-					m.IsOverride = false;
-				}
-			}
 		}
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
@@ -552,7 +263,7 @@ namespace MonoDroid.Generation
 			sw.WriteLine ("namespace {0} {{", Namespace);
 			sw.WriteLine ();
 
-			Generate (sw, "\t", opt, gen_info);
+			opt.CodeGenerator.WriteClass (this, sw, "\t", opt, gen_info);
 
 			sw.WriteLine ("}");
 			sw.Close ();

@@ -52,5 +52,5 @@ namespace MonoDroid.Generation
 			get { return t.IsSealed; }
 		}
 	}
-}
 #endif
+}

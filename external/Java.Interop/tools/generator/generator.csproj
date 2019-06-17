@@ -57,6 +57,7 @@
     <Compile Include="..\..\src\utils\XmlExtensions.cs">
       <Link>utils\XmlExtensions.cs</Link>
     </Compile>
+    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\InterfaceExtensionInfo.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiFixup.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiTransform.cs" />
     <Compile Include="ApiVersionsProvider.cs" />
@@ -87,7 +88,6 @@
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\IRequireGenericMarshal.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\ISymbol.cs" />
     <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\CodeGenerator.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\IndentableTextWriter.cs" />
     <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\JavaInteropCodeGenerator.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Importers\Cecil\ManagedClassGen.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Importers\Cecil\ManagedCtor.cs" />

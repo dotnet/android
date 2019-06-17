@@ -97,6 +97,8 @@ namespace MonoDroid.Generation {
 			get { return false; }
 		}
 
+		public bool IsValid => is_valid;
+
 		public string ElementType {
 			get { return null; }
 		}
@@ -207,7 +209,7 @@ namespace MonoDroid.Generation {
 			return false;
 		}
 
-		protected IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
+		protected internal IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
 		{
 			var set = new HashSet<InterfaceGen> ();
 			Action<ISymbol> visit = null;
@@ -264,7 +266,7 @@ namespace MonoDroid.Generation {
 			get { return nested_types; }
 		}
 
-		protected bool HasNestedType (string name)
+		protected internal bool HasNestedType (string name)
 		{
 			foreach (GenBase g in NestedTypes)
 				if (g.Name == name)
@@ -556,45 +558,7 @@ namespace MonoDroid.Generation {
 			return ObjectRequiresNew.Contains (name);
 		}
 
-		protected void GenCharSequenceEnumerator (StreamWriter sw, string indent, CodeGenerationOptions opt)
-		{
-			sw.WriteLine ("{0}System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()", indent);
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\treturn GetEnumerator ();", indent);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-			sw.WriteLine ("{0}public System.Collections.Generic.IEnumerator<char> GetEnumerator ()", indent);
-			sw.WriteLine ("{0}{{", indent);
-			sw.WriteLine ("{0}\tfor (int i = 0; i < Length(); i++)", indent);
-			sw.WriteLine ("{0}\t\tyield return CharAt (i);", indent);
-			sw.WriteLine ("{0}}}", indent);
-			sw.WriteLine ();
-		}
-
-		public bool GenFields (StreamWriter sw, string indent, CodeGenerationOptions opt, HashSet<string> seen = null)
-		{
-			bool needsProperty = false;
-			foreach (Field f in fields) {
-				if (ContainsName (f.Name)) {
-					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}, due to a duplicate field, method or nested type name. {2} (Java type: {3})", this.FullName, f.Name, HasNestedType (f.Name) ? "(Nested type)" : ContainsProperty (f.Name, false) ? "(Property)" : "(Method)", this.JavaName);
-					continue;
-				}
-				if (seen != null && seen.Contains (f.Name)) {
-					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", this.FullName, f.Name, this.JavaName);
-					continue;
-				}
-				if (f.Validate (opt, TypeParameters)) {
-					if (seen != null)
-						seen.Add (f.Name);
-					needsProperty = needsProperty || f.NeedsProperty;
-					sw.WriteLine ();
-					opt.CodeGenerator.WriteField (f, sw, indent, opt, this);
-				}
-			}
-			return needsProperty;
-		}
-
-		protected ISymbol base_symbol;
+		protected internal ISymbol base_symbol;
 		public GenBase BaseSymbol {
 			get { return (base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as GenBase; }
 		}

@@ -27,5 +27,5 @@ namespace MonoDroid.Generation
 			get { return !this.IsAcw; }
 		}
 	}
-}
 #endif
+}

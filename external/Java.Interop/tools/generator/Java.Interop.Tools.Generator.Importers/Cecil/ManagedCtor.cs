@@ -50,5 +50,5 @@ namespace MonoDroid.Generation
 
 		public override string Deprecated => m.Deprecated ();
 	}
-}
 #endif
+}

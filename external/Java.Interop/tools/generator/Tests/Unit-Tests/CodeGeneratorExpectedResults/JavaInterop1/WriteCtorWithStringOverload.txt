@@ -1,0 +1,43 @@
+// Metadata.xml XPath constructor reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/constructor[@name='foo' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
+ unsafe Object (Java.Lang.ICharSequence mystring)
+	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+{
+	const string __id = "(Ljava/lang/CharSequence;)V";
+
+	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+		return;
+
+	IntPtr native_mystring = CharSequence.ToLocalJniHandle (mystring);
+	try {
+		JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+		__args [0] = new JniArgumentValue (native_mystring);
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+	} finally {
+		JNIEnv.DeleteLocalRef (native_mystring);
+	}
+}
+
+[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
+ unsafe Object (string mystring)
+	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+{
+	const string __id = "(Ljava/lang/CharSequence;)V";
+
+	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+		return;
+
+	IntPtr native_mystring = CharSequence.ToLocalJniHandle (mystring);
+	try {
+		JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+		__args [0] = new JniArgumentValue (native_mystring);
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+	} finally {
+		JNIEnv.DeleteLocalRef (native_mystring);
+	}
+}
+

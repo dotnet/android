@@ -74,24 +74,6 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		public void WriteCallArgs (TextWriter writer, string indent, CodeGenerationOptions opt, bool invoker)
-		{
-			if (items.Count == 0)
-				return;
-			string JValue   = "JValue";
-			switch (opt.CodeGenerationTarget) {
-			case CodeGenerationTarget.XAJavaInterop1:
-			case CodeGenerationTarget.JavaInterop1:
-				JValue  = invoker ? JValue : "JniArgumentValue";
-				break;
-			}
-			writer.WriteLine ("{0}{1}* __args = stackalloc {1} [{2}];", indent, JValue, items.Count);
-			for (int i  = 0; i < items.Count; ++i) {
-				var p   = items [i];
-				writer.WriteLine ("{0}__args [{1}] = new {2} ({3});", indent, i, JValue, p.GetCall (opt));
-			}
-		}
-
 		public string GetCallArgs (CodeGenerationOptions opt, bool invoker)
 		{
 			if (items.Count != 0)

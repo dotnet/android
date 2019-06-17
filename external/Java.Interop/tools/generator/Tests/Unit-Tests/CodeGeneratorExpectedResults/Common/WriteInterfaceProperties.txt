@@ -1,0 +1,21 @@
+int Count {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Count' and count(parameter)=0]"
+	[Register ("get_Count", "()I", "Getget_CountHandler:java.code.IMyInterfaceInvoker, ")] get;
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_Count", "(I)V", "Getset_Count_IHandler:java.code.IMyInterfaceInvoker, ")] set;
+}
+
+java.lang.String Key {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Key' and count(parameter)=0]"
+	[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler:java.code.IMyInterfaceInvoker, ")] get;
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")] set;
+}
+
+int AbstractCount {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_AbstractCount' and count(parameter)=0]"
+	[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler:java.code.IMyInterfaceInvoker, ")] get;
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler:java.code.IMyInterfaceInvoker, ")] set;
+}
+

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace MonoDroid.Generation {
@@ -69,7 +69,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			ctor.Parameters.WriteCallArgs (writer, indent, opt, invoker:false);
+			WriteParameterListCallArgs (ctor.Parameters, writer, indent, opt, invoker:false);
 			writer.WriteLine ("{0}if (((object) this).GetType () != typeof ({1})) {{", indent, ctor.Name);
 			writer.WriteLine ("{0}\tSetHandle (", indent);
 			writer.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), \"{1}\"{2}),",
@@ -128,7 +128,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			method.Parameters.WriteCallArgs (writer, indent, opt, invoker: false);
+			WriteParameterListCallArgs (method.Parameters, writer, indent, opt, invoker: false);
 			if (method.IsStatic) {
 				GenerateJNICall (method, writer, indent, opt, "JNIEnv.CallStatic" + method.RetVal.CallMethodPrefix + "Method  (class_ref, " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")", true);
 			} else if (use_non_virtual) {
