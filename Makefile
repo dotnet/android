@@ -71,6 +71,10 @@ ifneq ($(PREPARE_SCENARIO),)
 _PREPARE_ARGS += -s:"$(PREPARE_SCENARIO)"
 endif
 
+ifeq ($(XA_FORCE_COMPONENT_REFRESH),true)
+_PREPARE_ARGS += -refresh
+endif
+
 _PREPARE_ARGS += $(PREPARE_ARGS)
 
 include build-tools/scripts/msbuild.mk

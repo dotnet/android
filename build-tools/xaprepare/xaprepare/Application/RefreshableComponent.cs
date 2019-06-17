@@ -7,6 +7,6 @@ namespace Xamarin.Android.Prepare
 		None = 0,
 		AndroidSDK = 1,
 		AndroidNDK = 2,
-		CorrettoJDK = 4,
+		All = AndroidSDK | AndroidNDK
 	}
 }

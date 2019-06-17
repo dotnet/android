@@ -101,7 +101,7 @@ namespace Xamarin.Android.Prepare
 				{"a|enable-all", "Enable preparation of all the supported targets, ABIs etc", v => parsedOptions.EnableAll = true},
 				{"b|bundle-path=", "Full path to the {{DIRECTORY}} where Xamarin.Android bundle can be found (excluding the file name)", v => parsedOptions.XABundlePath = v?.Trim ()},
 				{"copy-bundle-to=", "Full path to the {{DIRECTORY}} where downloaded bundle should be copied (excluding the file name)", v => parsedOptions.XABundleCopyDir = v?.Trim ()},
-				{"refresh=", "[sdk,ndk] Comma separated list of components which should be reinstalled.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim ())},
+				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim ())},
 				"",
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
@@ -314,12 +314,12 @@ namespace Xamarin.Android.Prepare
 		static RefreshableComponent ParseRefreshableComponents (string refreshList)
 		{
 			if (String.IsNullOrEmpty (refreshList))
-				return RefreshableComponent.None;
+				return RefreshableComponent.All;
 
 			if (refreshList.IndexOf (',') == -1)
 				return ParseSingleComponent (refreshList);
 
-			RefreshableComponent allParsedComponents = RefreshableComponent.None;
+			var allParsedComponents = RefreshableComponent.None;
 			var refreshListArray = refreshList.Split (',');
 			foreach (var c in refreshListArray) {
 				RefreshableComponent parsed = ParseSingleComponent (c);
