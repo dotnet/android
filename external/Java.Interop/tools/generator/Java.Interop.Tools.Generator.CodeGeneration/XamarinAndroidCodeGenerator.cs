@@ -5,7 +5,11 @@ namespace MonoDroid.Generation {
 
 	class XamarinAndroidCodeGenerator : CodeGenerator {
 
-		internal override void WriteClassHandle (ClassGen type, TextWriter writer, string indent, CodeGenerationOptions opt, bool requireNew)
+		public XamarinAndroidCodeGenerator (TextWriter writer, CodeGenerationOptions options) : base (writer, options)
+		{
+		}
+
+		internal override void WriteClassHandle (ClassGen type, string indent, bool requireNew)
 		{
 
 			writer.WriteLine ("{0}\tinternal static {1}IntPtr java_class_handle;", indent, requireNew ? "new " : string.Empty);
@@ -27,12 +31,12 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		internal override void WriteClassHandle (InterfaceGen type, TextWriter writer, string indent, CodeGenerationOptions opt, string declaringType)
+		internal override void WriteClassHandle (InterfaceGen type, string indent, string declaringType)
 		{
 			writer.WriteLine ("{0}new static IntPtr class_ref = JNIEnv.FindClass (\"{1}\");", indent, type.RawJniName);
 		}
 
-		internal override void WriteClassInvokerHandle (ClassGen type, TextWriter writer, string indent, CodeGenerationOptions opt, string declaringType)
+		internal override void WriteClassInvokerHandle (ClassGen type, string indent, string declaringType)
 		{
 			writer.WriteLine ("{0}protected override global::System.Type ThresholdType {{", indent);
 			writer.WriteLine ("{0}\tget {{ return typeof ({1}); }}", indent, declaringType);
@@ -40,7 +44,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ();
 		}
 
-		internal override void WriteInterfaceInvokerHandle (InterfaceGen type, TextWriter writer, string indent, CodeGenerationOptions opt, string declaringType)
+		internal override void WriteInterfaceInvokerHandle (InterfaceGen type, string indent, string declaringType)
 		{
 			writer.WriteLine ("{0}static IntPtr java_class_ref = JNIEnv.FindClass (\"{1}\");", indent, type.RawJniName);
 			writer.WriteLine ();
@@ -54,12 +58,12 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ();
 		}
 
-		internal override void WriteConstructorIdField (Ctor ctor, TextWriter writer, string indent, CodeGenerationOptions opt)
+		internal override void WriteConstructorIdField (Ctor ctor, string indent)
 		{
 			writer.WriteLine ("{0}static IntPtr {1};", indent, ctor.ID);
 		}
 
-		internal override void WriteConstructorBody (Ctor ctor, TextWriter writer, string indent, CodeGenerationOptions opt, System.Collections.Specialized.StringCollection call_cleanup)
+		internal override void WriteConstructorBody (Ctor ctor, string indent, System.Collections.Specialized.StringCollection call_cleanup)
 		{
 			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, opt.ContextType.GetObjectHandleProperty ("this"));
 			writer.WriteLine ("{0}\treturn;", indent);
@@ -69,7 +73,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			WriteParameterListCallArgs (ctor.Parameters, writer, indent, opt, invoker:false);
+			WriteParameterListCallArgs (ctor.Parameters, indent, invoker:false);
 			writer.WriteLine ("{0}if (((object) this).GetType () != typeof ({1})) {{", indent, ctor.Name);
 			writer.WriteLine ("{0}\tSetHandle (", indent);
 			writer.WriteLine ("{0}\t\t\tglobal::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), \"{1}\"{2}),",
@@ -103,12 +107,12 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}}}", indent);
 		}
 
-		internal override void WriteMethodIdField (Method method, TextWriter writer, string indent, CodeGenerationOptions opt)
+		internal override void WriteMethodIdField (Method method, string indent)
 		{
 			writer.WriteLine ("{0}static IntPtr {1};", indent, method.EscapedIdName);
 		}
 
-		void GenerateJNICall (Method method, TextWriter writer, string indent, CodeGenerationOptions opt, string call, bool declare_ret)
+		void GenerateJNICall (Method method, string indent, string call, bool declare_ret)
 		{
 			if (method.IsVoid)
 				writer.WriteLine ("{0}{1};", indent, call);
@@ -118,7 +122,7 @@ namespace MonoDroid.Generation {
 				writer.WriteLine ("{0}return {1};", indent, method.RetVal.FromNative (opt, call, true));
 		}
 
-		internal override void WriteMethodBody (Method method, TextWriter writer, string indent, CodeGenerationOptions opt)
+		internal override void WriteMethodBody (Method method, string indent)
 		{
 			writer.WriteLine ("{0}if ({1} == IntPtr.Zero)", indent, method.EscapedIdName);
 			writer.WriteLine ("{0}\t{1} = JNIEnv.Get{2}MethodID (class_ref, \"{3}\", \"{4}\");", indent, method.EscapedIdName, method.IsStatic ? "Static" : String.Empty, method.JavaName, method.JniSignature);
@@ -128,21 +132,21 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}try {{", indent);
 			var oldindent = indent;
 			indent += "\t";
-			WriteParameterListCallArgs (method.Parameters, writer, indent, opt, invoker: false);
+			WriteParameterListCallArgs (method.Parameters, indent, invoker: false);
 			if (method.IsStatic) {
-				GenerateJNICall (method, writer, indent, opt, "JNIEnv.CallStatic" + method.RetVal.CallMethodPrefix + "Method  (class_ref, " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")", true);
+				GenerateJNICall (method, indent, "JNIEnv.CallStatic" + method.RetVal.CallMethodPrefix + "Method  (class_ref, " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")", true);
 			} else if (use_non_virtual) {
 				writer.WriteLine ();
 				if (!method.IsVoid && method.Parameters.HasCleanup)
 					writer.WriteLine ("{0}{1} __ret;", indent, opt.GetOutputName (method.RetVal.FullName));
 				writer.WriteLine ("{0}if (((object) this).GetType () == ThresholdType)", indent);
-				GenerateJNICall (method, writer, indent + "\t", opt,
+				GenerateJNICall (method, indent + "\t",
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
 						method.DeclaringType.GetObjectHandleProperty ("this") +
 						", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker:false) + ")",
 						declare_ret: false);
 				writer.WriteLine ("{0}else", indent);
-				GenerateJNICall (method, writer, indent + "\t", opt,
+				GenerateJNICall (method, indent + "\t",
 						"JNIEnv.CallNonvirtual" + method.RetVal.CallMethodPrefix + "Method (" +
 						method.DeclaringType.GetObjectHandleProperty ("this") +
 						", ThresholdClass, " +
@@ -152,9 +156,7 @@ namespace MonoDroid.Generation {
 			} else {
 				GenerateJNICall (
 						method,
-						writer,
 						indent,
-						opt,
 						"JNIEnv.Call" + method.RetVal.CallMethodPrefix + "Method (" +
 							method.DeclaringType.GetObjectHandleProperty ("this") +
 							", " + method.EscapedIdName +
@@ -171,12 +173,12 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}}}", indent);
 		}
 
-		internal override void WriteFieldIdField (Field field, TextWriter writer, string indent, CodeGenerationOptions opt)
+		internal override void WriteFieldIdField (Field field, string indent)
 		{
 			writer.WriteLine ("{0}static IntPtr {1};", indent, field.ID);
 		}
 
-		internal override void WriteFieldGetBody (Field field, TextWriter writer, string indent, CodeGenerationOptions opt, GenBase type)
+		internal override void WriteFieldGetBody (Field field, string indent, GenBase type)
 		{
 			writer.WriteLine ("{0}if ({1} == IntPtr.Zero)", indent, field.ID);
 			writer.WriteLine ("{0}\t{1} = JNIEnv.Get{2}FieldID (class_ref, \"{3}\", \"{4}\");", indent, field.ID, field.IsStatic ? "Static" : String.Empty, field.JavaName, field.Symbol.JniName);
@@ -202,7 +204,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		internal override void WriteFieldSetBody (Field field, TextWriter writer, string indent, CodeGenerationOptions opt, GenBase type)
+		internal override void WriteFieldSetBody (Field field, string indent, GenBase type)
 		{
 			writer.WriteLine ("{0}if ({1} == IntPtr.Zero)", indent, field.ID);
 			writer.WriteLine ("{0}\t{1} = JNIEnv.Get{2}FieldID (class_ref, \"{3}\", \"{4}\");", indent, field.ID, field.IsStatic ? "Static" : String.Empty, field.JavaName, field.Symbol.JniName);

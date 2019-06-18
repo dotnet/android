@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.CSharp;
 using Xamarin.Android.Binder;
@@ -38,22 +39,28 @@ namespace MonoDroid.Generation
 			set {
 				switch (value) {
 				case CodeGenerationTarget.XamarinAndroid:
-					CodeGenerator   = new XamarinAndroidCodeGenerator ();
-					break;
 				case CodeGenerationTarget.XAJavaInterop1:
-					CodeGenerator   = new XAJavaInteropCodeGenerator ();
-					break;
 				case CodeGenerationTarget.JavaInterop1:
-					CodeGenerator   = new JavaInteropCodeGenerator ();
+					codeGenerationTarget    = value;
 					break;
 				default:
 					throw new NotSupportedException ("Don't know what to do for target '" + value + "'.");
 				}
-				codeGenerationTarget    = value;
 			}
 		}
 
-		internal    CodeGenerator           CodeGenerator           { get; private set; } = new XamarinAndroidCodeGenerator ();
+		internal CodeGenerator CreateCodeGenerator (TextWriter writer)
+		{
+			switch (codeGenerationTarget) {
+				case CodeGenerationTarget.JavaInterop1:
+					return new JavaInteropCodeGenerator (writer, this);
+				case CodeGenerationTarget.XAJavaInterop1:
+					return new XAJavaInteropCodeGenerator (writer, this);
+				case CodeGenerationTarget.XamarinAndroid:
+				default:
+					return new XamarinAndroidCodeGenerator (writer, this);
+			}
+		}
 
 		public      SymbolTable             SymbolTable             { get; } = new SymbolTable ();
 

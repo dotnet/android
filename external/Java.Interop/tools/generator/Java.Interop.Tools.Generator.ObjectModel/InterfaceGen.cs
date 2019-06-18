@@ -175,11 +175,6 @@ namespace MonoDroid.Generation
 			}
 			return nameBase.Substring (start, nameBase.Length - start - trim) + "EventArgs";
 		}
-		
-		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
-		{
-			opt.CodeGenerator.WriteInterface (this, sw, indent, opt, gen_info);
-		}
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
@@ -197,7 +192,8 @@ namespace MonoDroid.Generation
 			sw.WriteLine ("namespace {0} {{", Namespace);
 			sw.WriteLine ();
 
-			Generate (sw, "\t", opt, gen_info);
+			var generator = opt.CreateCodeGenerator (sw);
+			generator.WriteInterface (this, "\t", gen_info);
 
 			sw.WriteLine ("}");
 			sw.Close ();

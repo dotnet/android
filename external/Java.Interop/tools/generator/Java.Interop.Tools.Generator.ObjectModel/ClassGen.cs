@@ -213,11 +213,6 @@ namespace MonoDroid.Generation
 			get { return (base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as ClassGen; }
 		}
 
-		public override void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info)
-		{
-			opt.CodeGenerator.WriteClass (this, sw, indent, opt, gen_info);
-		}
-
 		internal IEnumerable<InterfaceExtensionInfo> GetNestedInterfaceTypes ()
 		{
 			var nestedInterfaces = new List<InterfaceExtensionInfo> ();
@@ -263,7 +258,8 @@ namespace MonoDroid.Generation
 			sw.WriteLine ("namespace {0} {{", Namespace);
 			sw.WriteLine ();
 
-			opt.CodeGenerator.WriteClass (this, sw, "\t", opt, gen_info);
+			var generator = opt.CreateCodeGenerator (sw);
+			generator.WriteClass (this, "\t", gen_info);
 
 			sw.WriteLine ("}");
 			sw.Close ();

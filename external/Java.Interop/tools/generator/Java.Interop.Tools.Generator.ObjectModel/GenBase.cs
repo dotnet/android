@@ -310,7 +310,6 @@ namespace MonoDroid.Generation {
 		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);
 		public abstract string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null);
 
-		public abstract void Generate (StreamWriter sw, string indent, CodeGenerationOptions opt, GenerationInfo gen_info);
 		public abstract void Generate (CodeGenerationOptions opt, GenerationInfo gen_info);
 
 		public IEnumerable<GenBase> Invalidate ()
