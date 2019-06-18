@@ -54,6 +54,7 @@
       <Replacement Include="@AutoProvisionUsesSudo@=$(AutoProvisionUsesSudo)" />
       <Replacement Include="@Configuration@=$(Configuration)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
+      <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@IgnoreMaxMonoVersion@=$(IgnoreMaxMonoVersion)" />
       <Replacement Include="@JavaInteropFullPath@=$(JavaInteropFullPath)" />
       <Replacement Include="@JavaSdkDirectory@=$(JavaSdkDirectory)" />

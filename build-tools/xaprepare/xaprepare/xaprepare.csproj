@@ -177,6 +177,7 @@
     <Compile Include="ToolRunners\TarRunner.OutputSink.cs" />
     <Compile Include="ToolRunners\ToolRunner.cs" />
     <Compile Include="ToolRunners\ToolRunner.OutputSink.cs" />
+    <Compile Include="Application\RefreshableComponent.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(OS)' == 'Unix' ">
     <Compile Include="Application\EssentialTools.Unix.cs" />
