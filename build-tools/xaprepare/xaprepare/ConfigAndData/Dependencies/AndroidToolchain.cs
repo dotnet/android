@@ -17,6 +17,7 @@ namespace Xamarin.Android.Prepare
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
 			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
+			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
 			string XABuildToolsVersion     = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
@@ -32,7 +33,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("android-21_r02",    apiLevel: "21", pkgRevision: "2"),
 				new AndroidPlatformComponent ("android-22_r02",    apiLevel: "22", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-23_r03",   apiLevel: "23", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-24_r02",   apiLevel: "24", pkgRevision: "2"),
+				new AndroidPlatformComponent ("platform-24_r02",   apiLevel: "24", pkgRevision: "3"), // Local package revision is actually .3
 				new AndroidPlatformComponent ("platform-25_r03",   apiLevel: "25", pkgRevision: "3"),
 				new AndroidPlatformComponent ("platform-26_r02",   apiLevel: "26", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-27_r03",   apiLevel: "27", pkgRevision: "3"),
@@ -44,9 +45,9 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ("x86-28_r04",                                        destDir: Path.Combine ("system-images", "android-28", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "4"),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: "19.2.5345600"),
 				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
-				new AndroidToolchainComponent ($"platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools"),
-				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools"),
-				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator"),
+				new AndroidToolchainComponent ($"platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
+				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
+				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision),
 				new AndroidToolchainComponent ($"cmake-{AndroidCmakeVersion}-{osTag}-x86_64",       destDir: Path.Combine ("cmake", AndroidCmakeVersionPath), isMultiVersion: true, noSubdirectory: true, pkgRevision: "3.10.2"),
 			};
 		}
