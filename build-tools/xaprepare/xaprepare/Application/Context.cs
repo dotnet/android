@@ -316,6 +316,11 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string XABundleCopyDir { get; set; }
 
+		/// <summary>
+		///   Collection of programs or dependencies which should be reinstalled.
+		/// </summary>
+		public RefreshableComponent ComponentsToRefresh { get; set; }
+
 		static Context ()
 		{
 			Instance = new Context ();

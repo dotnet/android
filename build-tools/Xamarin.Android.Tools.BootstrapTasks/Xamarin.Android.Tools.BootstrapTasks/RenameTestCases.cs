@@ -74,6 +74,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			var destFilename = Path.GetFileNameWithoutExtension (source) +
 				(string.IsNullOrWhiteSpace (Configuration) ? "" : "-" + Configuration) +
+				(string.IsNullOrWhiteSpace (TestsFlavor) ? "" : TestsFlavor) +
 				Path.GetExtension (source);
 			var dest = Path.Combine (DestinationFolder, destFilename);
 			return dest;

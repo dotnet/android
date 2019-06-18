@@ -9,6 +9,7 @@ trigger:
 # Global variables
 variables:
   BundleArtifactName: bundle
+  InstallerArtifactName: unsigned-installers
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   AndroidTargetAbiArgs: >-
     /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
@@ -122,7 +123,7 @@ stages:
     - task: PublishPipelineArtifact@0
       displayName: upload unsigned installers
       inputs:
-        artifactName: unsigned
+        artifactName: $(InstallerArtifactName)
         targetPath: bin/Build$(XA.Build.Configuration)/unsigned-installers
 
     - task: MSBuild@1
@@ -215,7 +216,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
         testRunTitle: xamarin-android
-        failTaskOnFailedTests: true
       condition: succeededOrFailed()
 
     - task: MSBuild@1
@@ -230,5 +230,208 @@ stages:
       displayName: upload artifacts
       inputs:
         artifactName: win-build-test-results
+        targetPath: $(Build.ArtifactStagingDirectory)
+      condition: always()
+
+- stage: test
+  displayName: Test
+  dependsOn: mac_build
+  jobs:
+  - job: mac_apk_tests
+    displayName: APK Instrumentation
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      ApkTestConfiguration: Release
+    steps:
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        itemPattern: "*.pkg"
+        downloadPath: $(System.DefaultWorkingDirectory)
+
+    - template: yaml-templates/run-installer.yaml
+
+    - task: MSBuild@1
+      displayName: build xaprepare
+      inputs:
+        solution: build-tools/xaprepare/xaprepare.sln
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /t:Restore,Build
+
+    - script: |
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+      displayName: provision dependencies
+
+    - task: NuGetCommand@2
+      displayName: nuget restore Xamarin.Android.Tools.sln
+      inputs:
+        restoreSolution: external/xamarin-android-tools/Xamarin.Android.Tools.sln
+
+    - task: MSBuild@1
+      displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+      inputs:
+        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/BootstrapTasks.binlog
+
+    - task: NuGetCommand@2
+      displayName: nuget restore Xamarin.Android-Tests.sln
+      inputs:
+        restoreSolution: Xamarin.Android-Tests.sln
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_Tests
+        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_Tests-Aot
+        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
+        extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_Tests-Profiled
+        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled.xml
+        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_Tests-Bundle
+        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
+        extraBuildArgs: /p:BundleAssemblies=true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_TestsAppBundle
+        project: tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
+        testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
+        packageType: Aab
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Mono.Android_TestsMultiDex
+        project: tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
+        testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.JcwGen_Tests
+        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.Locale_Tests
+        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.Locale_Tests-Aot
+        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Aot.xml
+        extraBuildArgs: /p:AotAssemblies=True
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.Locale_Tests-Profiled
+        project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled.xml
+        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.EmbeddedDSO_Test
+        project: tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj
+        testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
+
+    - task: MSBuild@1
+      displayName: run Xamarin.Forms-Performance-Integration
+      inputs:
+        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf.binlog
+      condition: succeededOrFailed()
+
+    - task: MSBuild@1
+      displayName: run Xamarin.Forms-Performance-Integration-Aot
+      inputs:
+        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Aot.binlog
+          /p:AotAssemblies=true
+      condition: succeededOrFailed()
+
+    - task: MSBuild@1
+      displayName: run Xamarin.Forms-Performance-Integration-Profiled
+      inputs:
+        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Profiled.binlog
+          /p:AndroidEnableProfiledAot=true
+      condition: succeededOrFailed()
+
+    - task: MSBuild@1
+      displayName: run Xamarin.Forms-Performance-Integration-Bundle
+      inputs:
+        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Bundle.binlog
+          /p:BundleAssemblies=true
+      condition: succeededOrFailed()
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/shutdown-emulator.binlog
+      condition: always()
+
+    - task: MSBuild@1
+      displayName: package results
+      inputs:
+        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /t:ZipBuildStatus;ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+      condition: always()
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
+      inputs:
+        artifactName: mac-apk-test-results
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
