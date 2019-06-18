@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace MonoDroid.Generation
 {
@@ -41,18 +40,6 @@ namespace MonoDroid.Generation
 		{
 			// IBlahBlah is not prefixed with 'I'
 			return name.Length <= 2 || name [0] != 'I' || !Char.IsUpper (name [1]);
-		}
-	}
-	
-	public class InterfaceXmlGenBaseSupport : XmlGenBaseSupport
-	{
-		public InterfaceXmlGenBaseSupport (XElement pkg, XElement elem)
-			: base (pkg, elem)
-		{
-		}
-		
-		public override string TypeNamePrefix {
-			get { return (IsPrefixableName (RawName) ? "I" : string.Empty); }
 		}
 	}
 }

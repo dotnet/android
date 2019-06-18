@@ -57,7 +57,10 @@
     <Compile Include="..\..\src\utils\XmlExtensions.cs">
       <Link>utils\XmlExtensions.cs</Link>
     </Compile>
+    <Compile Include="CodeGenerationTarget.cs" />
+    <Compile Include="CodeGeneratorOptions.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\InterfaceExtensionInfo.cs" />
+    <Compile Include="Java.Interop.Tools.Generator.Importers\Xml\InterfaceXmlGenBaseSupport.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiFixup.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiTransform.cs" />
     <Compile Include="ApiVersionsProvider.cs" />
