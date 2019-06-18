@@ -1,0 +1,28 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "remap-assembly-ref", "remap-assembly-ref.csproj", "{C876DA71-8573-4CEF-9149-716D72455ED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj", "{15945D4B-FF56-4BCC-B598-2718D199DD08}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Gendarme|Any CPU = Gendarme|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Gendarme|Any CPU.ActiveCfg = Debug|Any CPU
+		{C876DA71-8573-4CEF-9149-716D72455ED4}.Gendarme|Any CPU.Build.0 = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Gendarme|Any CPU.ActiveCfg = Gendarme|Any CPU
+		{15945D4B-FF56-4BCC-B598-2718D199DD08}.Gendarme|Any CPU.Build.0 = Gendarme|Any CPU
+	EndGlobalSection
+EndGlobal
