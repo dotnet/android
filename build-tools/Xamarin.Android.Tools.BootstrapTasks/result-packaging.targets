@@ -24,13 +24,10 @@
   <ItemGroup>
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)TestResult-*.xml" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.log" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\msbuild*.binlog*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.binlog" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*.log" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\EmbeddedDSO\EmbeddedDSO.build\**\*" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.binlog" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.log" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestOutput-*.txt" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\Timing_*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)*.csv" />
