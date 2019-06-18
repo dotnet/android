@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		const                   string              TestResultsPathResult       = "INSTRUMENTATION_RESULT: nunit2-results-path=";
 		internal const          string              AdbRestartText              = "daemon not running; starting now at tcp:";
 		internal const          string              AdbCrashErrorText           = "The adb might have crashed and was restarted. ";
+		const                   string              InstrumentationExitCodeName = "INSTRUMENTATION_CODE: ";
 		const                   int                 StateRunInstrumentation     = 0;
 		const                   int                 StateGetLogcat              = 1;
 		const                   int                 StateClearLogcat            = 2;
@@ -41,6 +42,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string              LogLevel                    { get; set; }
 
 		int                     currentState = -1;
+		int                     instrumentationExitCode = 99;
 		string                  targetTestResultsPath;
 
 		bool                    adbRestarted;
@@ -65,6 +67,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Log.LogError (
 						$"{adbText}Could not find NUnit2 results file after running component `{Component}`: " +
 						"no `nunit2-results-path` bundle value found in command output!");
+				return false;
+			}
+
+			if (instrumentationExitCode != -1) {
+				FailedToRun = Component;
+				Log.LogError (
+					$"Instrumentation for component `{Component}` did not exit successfully. " +
+					"Process crashed or test failures occurred!");
 				return false;
 			}
 
@@ -134,11 +144,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			if (currentState != StateRunInstrumentation || String.IsNullOrEmpty (line))
 				return;
 
-			int i = line.IndexOf (TestResultsPathResult, StringComparison.OrdinalIgnoreCase);
-			if (i < 0)
-				return;
+			int testResultIndex = line.IndexOf (TestResultsPathResult, StringComparison.OrdinalIgnoreCase);
+			int exitCodeIndex = line.IndexOf (InstrumentationExitCodeName, StringComparison.OrdinalIgnoreCase);
 
-			targetTestResultsPath = line.Substring (i + TestResultsPathResult.Length).Trim ();
+			if (testResultIndex < 0 && exitCodeIndex < 0)
+				return;
+			else if (testResultIndex >= 0)
+				targetTestResultsPath = line.Substring (testResultIndex + TestResultsPathResult.Length).Trim ();
+			else if (exitCodeIndex >= 0)
+				instrumentationExitCode = int.Parse (line.Substring (exitCodeIndex + InstrumentationExitCodeName.Length).Trim ());
 		}
 	}
 }
