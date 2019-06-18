@@ -38,11 +38,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease)
+		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease, [Values (true, false)] bool xamarinForms)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = xamarinForms ?
+				new XamarinFormsAndroidApplicationProject () :
+				new XamarinAndroidApplicationProject ();
+			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "0 Warning(s)"), "Should have zero MSBuild warnings.");
