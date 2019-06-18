@@ -109,10 +109,10 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public const string LogFilePrefix = "prepare";
 
-            /// <summary>
-            ///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
-            /// </summary>
-            public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
+			/// <summary>
+			///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
+			/// </summary>
+			public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
 
 			/// <summary>
 			///   Version of the XA binary bundle downloaded/created by this tool.

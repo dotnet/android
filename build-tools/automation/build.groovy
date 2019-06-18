@@ -169,12 +169,14 @@ timestamps {
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
+            // The 'prepare*' targets must run separately to '${buildTarget}` as preparation generates the 'rules.mk' file conditionally included by
+            // Makefile and it will **NOT** be included if we call e.g `make prepare jenkins` so the 'jenkns' target will **NOT** build all the supported
+            // targets and architectures leading to test errors later on (e.g. in EmbeddedDSOs tests)
             sh "make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-            sh "make prepare ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
-                sh "cp bin/${env.BuildFlavor}/bundle-* ${packagePath}"
-
                 sh '''
                     VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
                     echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > ../package/updateinfo
@@ -238,6 +240,7 @@ timestamps {
                 sh "make package-build-status CONFIGURATION=${env.BuildFlavor} V=1"
 
                 if (isCommercial) {
+                    sh "ls -l ${XADir}/bin/Build${env.BuildFlavor}"
                     sh "cp ${XADir}/bin/Build${env.BuildFlavor}/xa-build-status-*.zip ${packagePath}"
                 }
             } catch (error) {
@@ -254,9 +257,7 @@ timestamps {
             }
 
             if (!isPr) {
-                if (isCommercial) {
-                    publishBuildFilePaths = "${publishBuildFilePaths},bundle-*"
-                } else {
+                if (!isCommercial) {
                     publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*"
                 }
             }

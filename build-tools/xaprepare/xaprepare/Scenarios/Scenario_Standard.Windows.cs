@@ -6,10 +6,11 @@ namespace Xamarin.Android.Prepare
 	{
 		partial void AddRequiredOSSpecificSteps (bool beforeBundle)
 		{
-			if (!beforeBundle)
-				return;
-
-			Steps.Add (new Step_InstallAnt ());
+			if (beforeBundle) {
+				Steps.Add (new Step_InstallAnt ());
+			} else {
+				Steps.Add (new Step_CopyLibZip ());
+			}
 		}
 	}
 }
