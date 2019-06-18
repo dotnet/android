@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
