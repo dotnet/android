@@ -129,8 +129,12 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($"  {context.Characters.Bullet} Installing ", pkg.Component.Name, tailColor: ConsoleColor.White);
 
 			if (File.Exists (pkg.LocalPackagePath)) {
-				if ((RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
-					LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
+				bool valid = Utilities.VerifyArchive (pkg.LocalPackagePath).GetAwaiter ().GetResult ();
+				if (!valid || (RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
+					if (valid)
+						LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
+					else
+						LogStatus ("Downloaded package is invalid, re-download required. Deleting cache.", 4, ConsoleColor.Magenta);
 					Utilities.DeleteFile (pkg.LocalPackagePath);
 					toDownload.Add (pkg);
 				} else {
@@ -153,8 +157,10 @@ namespace Xamarin.Android.Prepare
 
 			string tempDir = Path.Combine (tempDirRoot, Path.GetRandomFileName ());
 
-			if (!await Utilities.Unpack (pkg.LocalPackagePath, tempDir))
+			if (!await Utilities.Unpack (pkg.LocalPackagePath, tempDir)) {
+				Utilities.DeleteFileSilent (pkg.LocalPackagePath);
 				throw new InvalidOperationException ($"Failed to unpack {pkg.LocalPackagePath}");
+			}
 
 			if (pkg.Component.NoSubdirectory) {
 				Utilities.MoveDirectoryContentsRecursively (tempDir, pkg.DestinationDir);
