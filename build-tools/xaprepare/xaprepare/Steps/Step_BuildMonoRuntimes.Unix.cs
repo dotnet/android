@@ -159,7 +159,7 @@ namespace Xamarin.Android.Prepare
 				Utilities.DeleteFileSilent (localPath);
 
 				var url = new Uri (Configurables.Urls.MonoArchive_BaseUri, archiveFileName);
-				Log.StatusLine ($"Downloading {name} archive");
+				Log.StatusLine ($"Downloading {name} archive from {url}");
 
 				(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (url);
 				if (!success) {
