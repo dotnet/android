@@ -12,19 +12,20 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/master
+    ref: refs/heads/pjcollins_productsign-pkg
     endpoint: xamarin
 
 # Global variables
 variables:
   BundleArtifactName: bundle
-  InstallerArtifactName: unsigned-installers
+  InstallerArtifactName: installers
   AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   AndroidTargetAbiArgs: >-
     /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
     /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
+# Check - "Xamarin.Android (Prepare bundle)"
 stages:
 - stage: prepare
   displayName: Prepare
@@ -77,11 +78,12 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)/results
       condition: always()
 
+# Check - "Xamarin.Android (Mac Build)"
 - stage: mac_build
   displayName: Mac
   dependsOn: prepare
   jobs:
-  - job: mac_build
+  - job: mac_build_create_installers
     displayName: Build
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
@@ -124,16 +126,16 @@ stages:
       displayName: make create-installers
 
     - script: |
-        mkdir -p bin/Build$(XA.Build.Configuration)/unsigned-installers
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/unsigned-installers
-        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/unsigned-installers
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
       displayName: copy unsigned installers
 
     - task: PublishPipelineArtifact@0
-      displayName: upload unsigned installers
+      displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
-        targetPath: bin/Build$(XA.Build.Configuration)/unsigned-installers
+        targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - task: MSBuild@1
       displayName: package build results
@@ -150,7 +152,61 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
+# Temporary stage to test signing
+- stage: temp_mac_sign
+  displayName: Mac
+  dependsOn: []
+  jobs:
+  - job: mac_sign_job
+    displayName: Sign Installers
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        buildType: specific
+        project: $(dd.proj.guid)
+        pipeline: 11063
+        downloadType: specific
+        itemPattern: |
+          **/*.vsix
+          **/*.pkg
+        downloadPath: $(System.DefaultWorkingDirectory)/$(InstallerArtifactName)
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path  $(System.DefaultWorkingDirectory)/$(InstallerArtifactName)/artifacts/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in  $(System.DefaultWorkingDirectory)/$(InstallerArtifactName)/artifacts"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
+
+    - template: productsign-pkg.yml@yaml
+      parameters:
+        UnsignedPkgPath: $(XA.Unsigned.Pkg)
+
+    - template: upload-to-storage.yml@yaml
+      parameters:
+        BuildPackages: $(System.DefaultWorkingDirectory)/$(InstallerArtifactName)/artifacts
+        AzureContainerName: vsts-devdiv
+        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+
+    - powershell: |
+        $baseUri = 'http://code-sign.guest.corp.microsoft.com:8080/job/sign-from-github-esrp/buildWithParameters?SIGN_TYPE=Real'
+        $repo = '&REPO=$(Build.Repository.Name)'
+        $commit = '&COMMIT=$(Build.SourceVersion)'
+        $context = '&GITHUB_CONTEXT=vsts-devdiv%20artifacts'
+        $files = '&FILES_TO_SIGN=%2E*%2Evsix'
+        $jenkinsSignJobUri = '$baseUri$repo$commit$context$files'
+        Invoke-WebRequest -Method Post -UseBasicParsing -Uri $jenkinsSignJobUri
+      displayName: trigger vsix signing job
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
+# Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
   dependsOn: prepare
@@ -246,7 +302,7 @@ stages:
   displayName: Test
   dependsOn: mac_build
   jobs:
-  # Test APK Instrumentation
+  # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
     displayName: APK Instrumentation
     pool: $(XA.Build.Mac.Pool)
@@ -446,7 +502,7 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
-  # Test Designer Mac  
+  # Check - "Xamarin.Android (Test Designer Mac)"
   - job: designer_integration_mac
     displayName: Designer Mac
     pool: $(XA.Build.Mac.Pool)
@@ -486,7 +542,7 @@ stages:
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
-  # Test Designer Windows
+  # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
     displayName: Designer Windows
     pool:
