@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,8 +24,7 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
-		public class SetUp
-		{
+		public class SetUp {
 			public static bool HasDevices {
 				get;
 				private set;
@@ -40,11 +40,35 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static string AndroidMSBuildDirectory {
+				get;
+				private set;
+			}
+
+			public static bool IsMacOS {
+				get;
+				private set;
+			}
+
+			public static bool IsLinux {
+				get;
+				private set;
+			}
+
+			public static bool IsWindows {
+				get;
+				private set;
+			}
+
 			static SetUp ()
 			{
 				using (var builder = new Builder ()) {
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
+					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;
 				}
+				IsWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+				IsMacOS = !IsWindows && IsDarwin ();
+				IsLinux = !IsWindows && !IsMacOS;
 			}
 
 			[OneTimeSetUp]
@@ -94,15 +118,37 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var p in Process.GetProcessesByName ("adb.exe"))
 					p.Kill ();
 			}
+
+			[DllImport ("libc")]
+			static extern int uname (IntPtr buf);
+
+			static bool IsDarwin ()
+			{
+				IntPtr buf = IntPtr.Zero;
+				try {
+					buf = Marshal.AllocHGlobal (8192);
+					if (uname (buf) == 0) {
+						string os = Marshal.PtrToStringAnsi (buf);
+						return os == "Darwin";
+					}
+				} catch {
+				} finally {
+					if (buf != IntPtr.Zero)
+						Marshal.FreeHGlobal (buf);
+				}
+				return false;
+			}
 		}
 
 		protected bool HasDevices => SetUp.HasDevices;
 
 		protected string DeviceAbi => SetUp.DeviceAbi;
 
-		protected bool IsWindows {
-			get { return Environment.OSVersion.Platform == PlatformID.Win32NT; }
-		}
+		protected bool IsWindows => SetUp.IsWindows;
+
+		protected bool IsMacOS => SetUp.IsMacOS;
+
+		protected bool IsLinux => SetUp.IsLinux;
 
 		public string CacheRootPath {
 			get {
@@ -129,6 +175,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+
+		public static string AndroidMSBuildDirectory => SetUp.AndroidMSBuildDirectory;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
