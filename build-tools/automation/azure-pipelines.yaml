@@ -131,7 +131,7 @@ stages:
       inputs:
         solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)
+        msbuildArguments: /t:Build,ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
     - task: PublishPipelineArtifact@0
@@ -223,7 +223,7 @@ stages:
       inputs:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:ZipBuildStatus;ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
     - task: PublishPipelineArtifact@0
@@ -426,7 +426,7 @@ stages:
       inputs:
         solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: /t:ZipBuildStatus;ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
       condition: always()
 
     - task: PublishPipelineArtifact@0
