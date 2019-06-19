@@ -6,8 +6,8 @@
     <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
     <_XAPrepareStandardArgs>--no-emoji --run-mode=CI -a</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
-    <!--Enable diagnostic output when executing from Azure Pipelines-->
-    <_XAPrepareStandardArgs Condition=" '$(SYSTEM_DEFAULTWORKINGDIRECTORY)' != '' ">$(_XAPrepareStandardArgs) -v:d</_XAPrepareStandardArgs>
+    <!-- Enable diagnostic output when executing from the Xamarin.Android Azure Pipeline -->
+    <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">$(_XAPrepareStandardArgs) -v:d</_XAPrepareStandardArgs>
     <_XAPrepareBundleArgs Condition=" '$(BundleRootPath)' != '' ">--bundle-path=&quot;$(BundleRootPath)&quot;</_XAPrepareBundleArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
