@@ -8,9 +8,6 @@ using System.Xml.Linq;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
-#endif // HAVE_CECIL
-
 	public class XmlGenBaseSupport : GenBaseSupport
 	{
 		public XmlGenBaseSupport (XElement pkg, XElement elem)

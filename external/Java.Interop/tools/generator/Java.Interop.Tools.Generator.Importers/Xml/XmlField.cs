@@ -1,13 +1,9 @@
 ﻿using System;
-
-using Xamarin.Android.Tools;
 using System.Xml.Linq;
+using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
-#endif  // HAVE_CECIL
-
 	public class XmlField : Field {
 
 		XElement elem;

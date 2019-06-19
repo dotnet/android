@@ -3,9 +3,6 @@ using System.Xml.Linq;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
-#endif  // HAVE_CECIL
-
 	public class XmlClassGen : ClassGen {
 		bool is_abstract;
 		bool is_final;

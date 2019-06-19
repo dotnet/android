@@ -5,9 +5,6 @@ using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
-#endif  // HAVE_CECIL
-
 	public class XmlCtor : Ctor {
 		XElement elem;
 		string name;

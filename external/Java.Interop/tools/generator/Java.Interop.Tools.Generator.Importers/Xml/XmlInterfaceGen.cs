@@ -3,9 +3,6 @@ using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
-#endif  // HAVE_CECIL
-
 	public class XmlInterfaceGen : InterfaceGen {
 
 		string args_type;
