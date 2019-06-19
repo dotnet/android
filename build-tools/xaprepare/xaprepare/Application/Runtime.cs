@@ -6,8 +6,13 @@ namespace Xamarin.Android.Prepare
 	{
 		Func<Context, bool> enabledCheck;
 
+		/// <summary>
+		///   Set to <c>true</c> if the current runtime is supported on the host OS.
+		/// </summary>
+		protected bool SupportedOnHostOS { get; set; } = true;
+
 		protected Context Context => Context.Instance;
-		public bool Enabled       => enabledCheck (Context);
+		public bool Enabled       => SupportedOnHostOS && enabledCheck (Context);
 		public string ExeSuffix   { get; protected set; }
 
 		/// <summary>

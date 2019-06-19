@@ -2,6 +2,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Context
 	{
+		static bool isWindows = true;
+
 		void InitOS ()
 		{
 			OS = new Windows (Context.Instance);

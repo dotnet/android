@@ -425,7 +425,7 @@ namespace Xamarin.Android.Prepare
 		}
 #pragma warning restore CS1998
 
-		public static void MoveDirectoryContentsRecursively (string sourceDir, string destinationDir, bool cleanDestinationDir = true, bool resetFileTimestamp = false)
+		public static void MoveDirectoryContentsRecursively (string sourceDir, string destinationDir, bool cleanDestinationDir = true, bool resetFileTimestamp = false, bool ignoreDeletionErrors = false)
 		{
 			if (String.IsNullOrEmpty (sourceDir))
 				throw new ArgumentException ("must not be null or empty", nameof (sourceDir));
@@ -449,7 +449,15 @@ namespace Xamarin.Android.Prepare
 
 			Log.DebugLine ($"Moving directory {sourceDir} to {destinationDir}");
 			MoveDirectory (sourceDir, destinationDir, resetFileTimestamp);
-			DeleteDirectoryWithRetry (sourceDir, true);
+			try {
+				DeleteDirectoryWithRetry (sourceDir, true);
+			} catch (Exception ex) {
+				if (!ignoreDeletionErrors)
+					throw;
+
+				Log.DebugLine ($"Attempt to recursively delete directory {sourceDir} failed. Error was ignored, there might be some files left behind.");
+				Log.DebugLine (ex.ToString ());
+			}
 		}
 
 		static void MoveDirectory (string sourceDir, string destinationDir, bool resetFileTimestamp)
@@ -537,20 +545,41 @@ namespace Xamarin.Android.Prepare
 			TouchFileWithRetry (destination);
 		}
 
+		static void ResetFilePermissions (string directoryPath)
+		{
+			foreach (string file in Directory.EnumerateFiles (directoryPath, "*", SearchOption.AllDirectories)) {
+				FileAttributes attrs = File.GetAttributes (file);
+				if ((attrs & (FileAttributes.Hidden | FileAttributes.ReadOnly | FileAttributes.System)) == 0)
+					continue;
+
+				File.SetAttributes (file, FileAttributes.Normal);
+			}
+		}
+
 		public static void DeleteDirectoryWithRetry (string directoryPath, bool recursive)
 		{
 			TimeSpan delay = IOExceptionRetryInitialDelay;
 			Exception ex = null;
+			bool tryResetFilePermissions = false;
 
 			for (int i = 0; i < IOExceptionRetries; i++) {
+				ex = null;
 				try {
+					if (tryResetFilePermissions) {
+						tryResetFilePermissions = false;
+						ResetFilePermissions (directoryPath);
+					}
 					Log.DebugLine ($"Deleting directory {directoryPath} (recursively? {recursive})");
 					Directory.Delete (directoryPath, recursive);
 					return;
 				} catch (IOException e) {
 					ex = e;
+				}  catch (UnauthorizedAccessException e) {
+					ex = e;
+					tryResetFilePermissions = true;
 				}
-				WaitAWhile($"Directory {directoryPath} deletion", i, ref ex, ref delay);
+
+				WaitAWhile ($"Directory {directoryPath} deletion", i, ref ex, ref delay);
 			}
 
 			if (ex != null)

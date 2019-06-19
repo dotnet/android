@@ -188,7 +188,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			Log.DebugLine ("Moving unpacked Mono archive from {tempDir} to {destinationDirectory}");
+			Log.DebugLine ($"Moving unpacked Mono archive from {tempDir} to {destinationDirectory}");
 			try {
 				Utilities.MoveDirectoryContentsRecursively (tempDir, destinationDirectory, resetFileTimestamp: true);
 			} finally {

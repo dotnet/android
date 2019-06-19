@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
-	class MonoCrossRuntime : MonoRuntime
+	partial class MonoCrossRuntime : MonoRuntime
 	{
 		public override string Flavor => "cross compilation";
 
@@ -32,6 +32,10 @@ namespace Xamarin.Android.Prepare
 
 			CrossMonoName = Configurables.Defaults.CrossRuntimeNames [Name];
 			ExePrefix = Configurables.Defaults.CrossRuntimeExePrefixes [Name];
+
+			InitOS (context);
 		}
+
+		partial void InitOS (Context context);
 	}
 }
