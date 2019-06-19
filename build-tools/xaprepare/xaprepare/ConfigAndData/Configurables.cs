@@ -342,8 +342,8 @@ namespace Xamarin.Android.Prepare
 			//   * The "file" part must always be a valid glob pattern
 			//
 			public static readonly List<string> BundleVersionHashFiles = new List<string> {
-				Path.Combine (BuildToolsScriptsDir, "BuildEverything.mk"),
 				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "BuildAndroidPlatforms.cs"),
+				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "Runtimes.cs"),
 			};
 
 			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();
