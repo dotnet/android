@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
-	class MonoCrossRuntime : MonoRuntime
+	partial class MonoCrossRuntime : MonoRuntime
 	{
 		public override string Flavor => "cross compilation";
 
@@ -13,6 +13,8 @@ namespace Xamarin.Android.Prepare
 
 		public override void Init (Context context)
 		{
+			InitOS ();
+
 			if (context.IsHostCrossAotAbi (Name)) {
 				InstallPath = context.OS.Type; // Linux | Darwin | Windows
 				Strip = "strip";
@@ -33,5 +35,7 @@ namespace Xamarin.Android.Prepare
 			CrossMonoName = Configurables.Defaults.CrossRuntimeNames [Name];
 			ExePrefix = Configurables.Defaults.CrossRuntimeExePrefixes [Name];
 		}
+
+		partial void InitOS ();
 	}
 }
