@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -43,22 +43,22 @@ namespace MSBuild.Fuzzer
 				}
 
 				Func<bool> [] operations = {
-					NuGetRestore,
+					AddClass,
+					AddResource,
 					Build,
-					DesignTimeBuild,
-					DesignerBuild,
+					ChangePackageName,
 					Clean,
+					DesignerBuild,
+					DesignTimeBuild,
 					Install,
-					Uninstall,
+					NuGetRestore,
+					RemoveClass,
+					RemoveResource,
+					RenameClass,
+					RenameResource,
 					Run,
 					TouchRandomFile,
-					ChangePackageName,
-					AddClass,
-					RemoveClass,
-					RenameClass,
-					AddResource,
-					RemoveResource,
-					RenameResource,
+					Uninstall,
 				};
 
 				while (true) {
@@ -119,6 +119,7 @@ namespace MSBuild.Fuzzer
 
 		static bool Uninstall ()
 		{
+			Console.WriteLine (nameof (Uninstall));
 			foreach (var packageName in installedPackages) {
 				Adb ($"uninstall {packageName}");
 			}
@@ -160,14 +161,29 @@ namespace MSBuild.Fuzzer
 			};
 			var builder = new StringBuilder ();
 			using (var process = new Process ()) {
+				var stdout_done = new ManualResetEventSlim (false);
+				var stderr_done = new ManualResetEventSlim (false);
 				process.StartInfo = info;
-				process.OutputDataReceived += (sender, e) => builder.AppendLine (e.Data);
-				process.ErrorDataReceived += (sender, e) => builder.AppendLine (e.Data);
+				process.OutputDataReceived += (sender, e) => {
+					if (e.Data != null) {
+						builder.AppendLine (e.Data);
+					} else {
+						stdout_done.Set ();
+					}
+				};
+				process.ErrorDataReceived += (sender, e) => {
+					if (e.Data != null) {
+						builder.AppendLine (e.Data);
+					} else {
+						stderr_done.Set ();
+					}
+				};
 				process.Start ();
 				process.BeginErrorReadLine ();
 				process.BeginOutputReadLine ();
 				process.WaitForExit ();
-
+				stderr_done.Wait ();
+				stdout_done.Wait ();
 				if (!ignoreExitCode && process.ExitCode != 0) {
 					Console.WriteLine (builder);
 					throw new Exception ($"Adb exited with code: {process.ExitCode}");
@@ -179,9 +195,9 @@ namespace MSBuild.Fuzzer
 		static readonly string [] extensions = {
 			".cs",
 			".csproj",
+			".png",
 			".xaml",
 			".xml",
-			".png",
 		};
 
 		static bool TouchRandomFile ()
