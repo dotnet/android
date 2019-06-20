@@ -53,12 +53,12 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-d15-8-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-8/
 [commercial-d15-9-macOS-x86_64-icon]:     https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/badge/icon
 [commercial-d15-9-macOS-x86_64-status]:   https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android-builds-d15-9/
-[commercial-d16-0-Windows-x86_64]:        https://download.visualstudio.microsoft.com/download/pr/b153d2f1-f6ce-4fdf-b38d-5e228ae08bd6/d308fbee786cfb26a2fd783f183f4e7e/xamarin.android.sdk.9.2.3.0.vsix
-[commercial-d16-0-macOS-x86_64]:          https://download.visualstudio.microsoft.com/download/pr/70ad99db-5313-4c32-9b0e-9c5b37a995c9/e505e4500a1a89d947906fecad034031/xamarin.android-9.2.3-0.pkg
-[commercial-d16-1-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-release-windows
-[commercial-d16-1-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-release-macos
-[commercial-d16-2-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-preview-windows
-[commercial-d16-2-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-preview-macos
+[commercial-d16-0-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-0-windows
+[commercial-d16-0-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-0-macos
+[commercial-d16-1-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-1-windows
+[commercial-d16-1-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-1-macos
+[commercial-d16-2-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-2-windows
+[commercial-d16-2-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-2-macos
 [oss-master-macOS-x86_64-icon]:           https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/badge/icon
 [oss-master-macOS-x86_64-artifacts]:      https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/Azure
 
