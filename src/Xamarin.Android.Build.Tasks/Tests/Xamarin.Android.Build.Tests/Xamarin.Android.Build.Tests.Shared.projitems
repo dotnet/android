@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BuildAssetsTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildTest.TestCaseSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DeleteBinObjTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesignerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DeferredBuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncrementalBuildTest.cs" />

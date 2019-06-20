@@ -226,7 +226,7 @@ namespace Xamarin.ProjectTools
 			UpdateProjectFiles (directory, projectFiles);
 		}
 
-		public void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)
+		public virtual void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)
 		{
 			directory = Path.Combine (Root, directory.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar));
 
