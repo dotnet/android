@@ -1,0 +1,22 @@
+parameters:
+  artifactDirectory: $(System.DefaultWorkingDirectory)
+
+steps:
+- powershell: |
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $installer = Get-ChildItem -Path "${{ parameters.artifactDirectory }}/*" -Include *.pkg -File
+    } else {
+        $installer = Get-ChildItem -Path "${{ parameters.artifactDirectory }}\*" -Include *.vsix -File
+    }
+    if (![System.IO.File]::Exists($installer)) {
+        throw [System.IO.FileNotFoundException] "Installer not found in $artifactDirectory."
+    }
+    Write-Host "##vso[task.setvariable variable=XA.Provisionator.Args]$installer"
+  displayName: find installer and set provisionator variable
+
+- task: provisionator@2
+  inputs:
+    provisionator_uri: $(provisionator-uri)
+    github_token: $(GitHub.Token)
+    provisioning_script: $(XA.Provisionator.Args)
+    provisioning_extra_args: -vv

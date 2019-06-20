@@ -40,7 +40,8 @@ namespace Xamarin.Android.Prepare
 					Log.ErrorLine ("Mono runtime build failed");
 					return false;
 				}
-			}
+			} else
+				SaveAbiChoice (context);
 
 			CleanupBeforeInstall ();
 			Log.StatusLine ();
@@ -119,22 +120,7 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ("Checking if all runtime files are present");
 			allRuntimes = new Runtimes ();
-			bool runtimesFoundAndComplete = true;
-			foreach (BundleItem item in allRuntimes.BundleItems) {
-				if (item == null)
-					continue;
-
-				// BundleItem.SourcePath is the path *after* the file is installed into our tree
-				if (File.Exists (item.SourcePath))
-					continue;
-
-				runtimesFoundAndComplete = false;
-				Log.DebugLine ($"{item.SourcePath} missing, skipping the rest of file scan");
-				Log.StatusLine ($"  {context.Characters.Bullet} some Mono Runtime files are missing, download/rebuild forced");
-				break;
-			}
-
-			if (runtimesFoundAndComplete) {
+			if (MonoRuntimesHelpers.AllBundleItemsPresent (allRuntimes)) {
 				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
 				if (!AbiChoiceChanged (context)) {
 					Log.StatusLine ("Mono runtimes already present and complete. No need to download or build.");
@@ -143,6 +129,7 @@ namespace Xamarin.Android.Prepare
 
 				Log.StatusLine ("Mono already present, but the choice of ABIs changed since previous build, runtime refresh is necessary");
 			}
+			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download/rebuild/reinstall forced");
 
 			bool result = await DownloadAndUpackIfNeeded (
 				context,
@@ -172,7 +159,7 @@ namespace Xamarin.Android.Prepare
 				Utilities.DeleteFileSilent (localPath);
 
 				var url = new Uri (Configurables.Urls.MonoArchive_BaseUri, archiveFileName);
-				Log.StatusLine ($"Downloading {name} archive");
+				Log.StatusLine ($"Downloading {name} archive from {url}");
 
 				(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (url);
 				if (!success) {
@@ -201,7 +188,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			Log.DebugLine ("Moving unpacked Mono archive from {tempDir} to {destinationDirectory}");
+			Log.DebugLine ($"Moving unpacked Mono archive from {tempDir} to {destinationDirectory}");
 			try {
 				Utilities.MoveDirectoryContentsRecursively (tempDir, destinationDirectory, resetFileTimestamp: true);
 			} finally {
@@ -337,8 +324,6 @@ namespace Xamarin.Android.Prepare
 
 			StatusStep (context, "Installing Designer Windows BCL assemblies");
 			InstallBCLFiles (allRuntimes.DesignerWindowsBclFilesToInstall);
-
-			Utilities.DeleteDirectorySilent (Configurables.Paths.BCLWindowsOutputDir);
 
 			return GenerateFrameworkList (
 				context,

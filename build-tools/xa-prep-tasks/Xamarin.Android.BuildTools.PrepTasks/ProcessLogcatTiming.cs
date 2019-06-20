@@ -51,6 +51,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 						timingRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+{PID}\s+(?<message>.*)$");
 						started = true;
 					} else {
+						if (line.Contains ($"Process {ApplicationPackageName} (pid {PID}) has died")) {
+							Log.LogError ("Application crash detected. Could not collect performance data.");
+							return false;
+						}
+
 						var match = timingRegex.Match (line);
 						if (!match.Success) {
 							if (!string.IsNullOrEmpty (Activity)) {
@@ -91,10 +96,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 
 					WriteResults ();
-				} else
-					Log.LogWarning ("Wasn't able to collect the performance data");
-
-				reader.Close ();
+				} else {
+					Log.LogError ("Application start wasn't detected. Could not collect performance data.");
+					return false;
+				}
 			}
 
 			return true;

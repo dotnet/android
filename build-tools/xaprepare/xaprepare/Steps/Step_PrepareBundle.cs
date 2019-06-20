@@ -84,20 +84,20 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 
-				Log.DebugLine ("Moving unpacked bundle from {tempDir} to {Configurables.Paths.Bundle_InstallDir}");
-				Utilities.MoveDirectoryContentsRecursively (tempDir, Configurables.Paths.BundleInstallDir, resetFileTimestamp: true);
+				Log.DebugLine ($"Moving unpacked bundle from {tempDir} to {Configurables.Paths.BundleInstallDir}");
+				Utilities.MoveDirectoryContentsRecursively (tempDir, Configurables.Paths.BundleInstallDir, resetFileTimestamp: true, ignoreDeletionErrors: true);
 			} finally {
 				Utilities.DeleteDirectorySilent (tempDir);
 			}
 
 			if (String.IsNullOrEmpty (context.XABundleCopyDir))
-				return true;
+				return HaveEverything ();
 
 			string destPackagePath = Path.Combine (context.XABundleCopyDir, Path.GetFileName (localPackagePath));
 			Log.DebugLine ($"Copy of the XA bundle was requested to be created at {destPackagePath}");
 			if (Utilities.FileExists (destPackagePath)) {
 				Log.DebugLine ("Bundle copy already exists");
-				return true;
+				return HaveEverything ();
 			}
 
 			// Utilities.FileExists above will return `false` for a dangling symlink at `destPackagePath`, doesn't hurt
@@ -105,7 +105,15 @@ namespace Xamarin.Android.Prepare
 			Utilities.DeleteFileSilent (destPackagePath);
 			Utilities.CopyFile (localPackagePath, destPackagePath);
 
-			return true;
+			return HaveEverything ();
+
+			bool HaveEverything ()
+			{
+				bool ret = MonoRuntimesHelpers.AllBundleItemsPresent (new Runtimes ());
+				if (!ret)
+					Log.Instance.StatusLine ($"Some bundle files are missing, download/rebuild/reinstall forced");
+				return ret;
+			}
 		}
 	}
 }
