@@ -84,8 +84,8 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 
-				Log.DebugLine ("Moving unpacked bundle from {tempDir} to {Configurables.Paths.Bundle_InstallDir}");
-				Utilities.MoveDirectoryContentsRecursively (tempDir, Configurables.Paths.BundleInstallDir, resetFileTimestamp: true);
+				Log.DebugLine ($"Moving unpacked bundle from {tempDir} to {Configurables.Paths.BundleInstallDir}");
+				Utilities.MoveDirectoryContentsRecursively (tempDir, Configurables.Paths.BundleInstallDir, resetFileTimestamp: true, ignoreDeletionErrors: true);
 			} finally {
 				Utilities.DeleteDirectorySilent (tempDir);
 			}
