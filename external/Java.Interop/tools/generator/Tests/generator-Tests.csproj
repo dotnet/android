@@ -74,6 +74,7 @@
     <Compile Include="Unit-Tests\JavaInteropCodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
+    <Compile Include="Unit-Tests\TestExtensions.cs" />
     <Compile Include="Unit-Tests\XamarinAndroidCodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\XmlTests.cs" />
   </ItemGroup>
@@ -166,6 +167,306 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SupportFiles\JavaTypeParametersAttribute.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteCharSequenceEnumerator.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClass.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassConstructors.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassHandle.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassInvokerHandle.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassInvokerMembers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassMethodInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassMethodInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassMethods.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassProperties.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassPropertyInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassPropertyInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldConstant.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldConstantWithIntValue.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldConstantWithStringValue.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldGetBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldIdField.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldInt.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldSetBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldString.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodAbstractWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodAsyncifiedWithIntReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodAsyncifiedWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodFinalWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodIdField.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodProtected.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodStaticWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodWithIntReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodWithStringReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClass.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteClassAbstractMembers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassConstructors.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassHandle.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassInvokerHandle.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassInvokerMembers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassMethodInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassMethodInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassMethods.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassProperties.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassPropertyInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClassPropertyInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterface.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldConstant.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldConstantWithIntValue.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldConstantWithStringValue.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldGetBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldIdField.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldInt.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldSetBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldString.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteInterface.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceEventArgs.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceEventHandler.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceEventHandlerImpl.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceEventHandlerImplContent.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceExtensionMethods.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceExtensionsDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteInterfaceInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceListenerEvent.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceListenerProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceMethodInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceMethodInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceMethods.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceProperties.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfacePropertyInvokers.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfacePropertyInvokersWithSkips.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteParameterListCallArgs.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteParameterListCallArgsForInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodAbstractWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodAsyncifiedWithIntReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodAsyncifiedWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodBody.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodFinalWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodIdField.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodProtected.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodStaticWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodWithIntReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodWithStringReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteMethodWithVoidReturn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteParameterListCallArgs.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteParameterListCallArgsForInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WritePropertyAbstractDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WritePropertyCallbacks.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WritePropertyDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WritePropertyInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WritePropertyStringVariant.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteCtorWithStringOverload.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteCtorDeprecated.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteCtor.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteCtorWithStringOverload.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteCtorDeprecated.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteCtor.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

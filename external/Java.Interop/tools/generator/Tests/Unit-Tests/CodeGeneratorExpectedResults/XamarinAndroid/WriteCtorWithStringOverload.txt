@@ -1,0 +1,62 @@
+static IntPtr id_ctor_Ljava_lang_CharSequence_;
+// Metadata.xml XPath constructor reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/constructor[@name='foo' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
+ unsafe Object (Java.Lang.ICharSequence mystring)
+	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+{
+	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+		return;
+
+	IntPtr native_mystring = CharSequence.ToLocalJniHandle (mystring);
+	try {
+		JValue* __args = stackalloc JValue [1];
+		__args [0] = new JValue (native_mystring);
+		if (((object) this).GetType () != typeof (Object)) {
+			SetHandle (
+					global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(Ljava/lang/CharSequence;)V", __args),
+					JniHandleOwnership.TransferLocalRef);
+			global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
+			return;
+		}
+
+		if (id_ctor_Ljava_lang_CharSequence_ == IntPtr.Zero)
+			id_ctor_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Ljava/lang/CharSequence;)V");
+		SetHandle (
+				global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Ljava_lang_CharSequence_, __args),
+				JniHandleOwnership.TransferLocalRef);
+		JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
+	} finally {
+		JNIEnv.DeleteLocalRef (native_mystring);
+	}
+}
+
+[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
+ unsafe Object (string mystring)
+	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+{
+	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+		return;
+
+	IntPtr native_mystring = CharSequence.ToLocalJniHandle (mystring);
+	try {
+		JValue* __args = stackalloc JValue [1];
+		__args [0] = new JValue (native_mystring);
+		if (((object) this).GetType () != typeof (Object)) {
+			SetHandle (
+					global::Android.Runtime.JNIEnv.StartCreateInstance (((object) this).GetType (), "(Ljava/lang/CharSequence;)V", __args),
+					JniHandleOwnership.TransferLocalRef);
+			global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "(Ljava/lang/CharSequence;)V", __args);
+			return;
+		}
+
+		if (id_ctor_Ljava_lang_CharSequence_ == IntPtr.Zero)
+			id_ctor_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Ljava/lang/CharSequence;)V");
+		SetHandle (
+				global::Android.Runtime.JNIEnv.StartCreateInstance (class_ref, id_ctor_Ljava_lang_CharSequence_, __args),
+				JniHandleOwnership.TransferLocalRef);
+		JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, class_ref, id_ctor_Ljava_lang_CharSequence_, __args);
+	} finally {
+		JNIEnv.DeleteLocalRef (native_mystring);
+	}
+}
+

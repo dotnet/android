@@ -1,0 +1,52 @@
+[global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
+internal partial class MyClassInvoker : MyClass {
+
+	public MyClassInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+
+	internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/code/MyClass", typeof (MyClassInvoker));
+
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+
+	public override unsafe int AbstractCount {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
+		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler")]
+		get {
+			const string __id = "get_AbstractCount.()I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return __rm;
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler")]
+		set {
+			const string __id = "set_AbstractCount.(I)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+			}
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='AbstractMethod' and count(parameter)=0]"
+	[Register ("AbstractMethod", "()V", "GetAbstractMethodHandler")]
+	public override unsafe void AbstractMethod ()
+	{
+		const string __id = "AbstractMethod.()V";
+		try {
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		} finally {
+		}
+	}
+
+}
+

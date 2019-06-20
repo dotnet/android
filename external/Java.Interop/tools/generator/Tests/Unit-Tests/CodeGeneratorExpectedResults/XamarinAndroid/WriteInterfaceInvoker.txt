@@ -1,0 +1,274 @@
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+
+	static IntPtr java_class_ref = JNIEnv.FindClass ("java/code/IMyInterface");
+
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+
+	protected override global::System.Type ThresholdType {
+		get { return typeof (IMyInterfaceInvoker); }
+	}
+
+	IntPtr class_ref;
+
+	public static IMyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
+	}
+
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
+						JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
+		return handle;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+
+	static Delegate cb_get_Count;
+#pragma warning disable 0169
+	static Delegate Getget_CountHandler ()
+	{
+		if (cb_get_Count == null)
+			cb_get_Count = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_Count);
+		return cb_get_Count;
+	}
+
+	static int n_get_Count (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.Count;
+	}
+#pragma warning restore 0169
+
+	static Delegate cb_set_Count_I;
+#pragma warning disable 0169
+	static Delegate Getset_Count_IHandler ()
+	{
+		if (cb_set_Count_I == null)
+			cb_set_Count_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_Count_I);
+		return cb_set_Count_I;
+	}
+
+	static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.Count = value;
+	}
+#pragma warning restore 0169
+
+	IntPtr id_get_Count;
+	IntPtr id_set_Count_I;
+	public unsafe int Count {
+		get {
+			if (id_get_Count == IntPtr.Zero)
+				id_get_Count = JNIEnv.GetMethodID (class_ref, "get_Count", "()I");
+			return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_get_Count);
+		}
+		set {
+			if (id_set_Count_I == IntPtr.Zero)
+				id_set_Count_I = JNIEnv.GetMethodID (class_ref, "set_Count", "(I)V");
+			JValue* __args = stackalloc JValue [1];
+			__args [0] = new JValue (value);
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_Count_I, __args);
+		}
+	}
+
+	static Delegate cb_get_Key;
+#pragma warning disable 0169
+	static Delegate Getget_KeyHandler ()
+	{
+		if (cb_get_Key == null)
+			cb_get_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_get_Key);
+		return cb_get_Key;
+	}
+
+	static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return JNIEnv.NewString (__this.Key);
+	}
+#pragma warning restore 0169
+
+	static Delegate cb_set_Key_Ljava_lang_String_;
+#pragma warning disable 0169
+	static Delegate Getset_Key_Ljava_lang_String_Handler ()
+	{
+		if (cb_set_Key_Ljava_lang_String_ == null)
+			cb_set_Key_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_set_Key_Ljava_lang_String_);
+		return cb_set_Key_Ljava_lang_String_;
+	}
+
+	static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		string value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+		__this.Key = value;
+	}
+#pragma warning restore 0169
+
+	IntPtr id_get_Key;
+	IntPtr id_set_Key_Ljava_lang_String_;
+	public unsafe string Key {
+		get {
+			if (id_get_Key == IntPtr.Zero)
+				id_get_Key = JNIEnv.GetMethodID (class_ref, "get_Key", "()Ljava/lang/String;");
+			return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_get_Key), JniHandleOwnership.TransferLocalRef);
+		}
+		set {
+			if (id_set_Key_Ljava_lang_String_ == IntPtr.Zero)
+				id_set_Key_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "set_Key", "(Ljava/lang/String;)V");
+			IntPtr native_value = JNIEnv.NewString (value);
+			JValue* __args = stackalloc JValue [1];
+			__args [0] = new JValue (native_value);
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_Key_Ljava_lang_String_, __args);
+			JNIEnv.DeleteLocalRef (native_value);
+		}
+	}
+
+	static Delegate cb_get_AbstractCount;
+#pragma warning disable 0169
+	static Delegate Getget_AbstractCountHandler ()
+	{
+		if (cb_get_AbstractCount == null)
+			cb_get_AbstractCount = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_AbstractCount);
+		return cb_get_AbstractCount;
+	}
+
+	static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.AbstractCount;
+	}
+#pragma warning restore 0169
+
+	static Delegate cb_set_AbstractCount_I;
+#pragma warning disable 0169
+	static Delegate Getset_AbstractCount_IHandler ()
+	{
+		if (cb_set_AbstractCount_I == null)
+			cb_set_AbstractCount_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_AbstractCount_I);
+		return cb_set_AbstractCount_I;
+	}
+
+	static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.AbstractCount = value;
+	}
+#pragma warning restore 0169
+
+	IntPtr id_get_AbstractCount;
+	IntPtr id_set_AbstractCount_I;
+	public unsafe int AbstractCount {
+		get {
+			if (id_get_AbstractCount == IntPtr.Zero)
+				id_get_AbstractCount = JNIEnv.GetMethodID (class_ref, "get_AbstractCount", "()I");
+			return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_get_AbstractCount);
+		}
+		set {
+			if (id_set_AbstractCount_I == IntPtr.Zero)
+				id_set_AbstractCount_I = JNIEnv.GetMethodID (class_ref, "set_AbstractCount", "(I)V");
+			JValue* __args = stackalloc JValue [1];
+			__args [0] = new JValue (value);
+			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_AbstractCount_I, __args);
+		}
+	}
+
+	static Delegate cb_GetCountForKey_Ljava_lang_String_;
+#pragma warning disable 0169
+	static Delegate GetGetCountForKey_Ljava_lang_String_Handler ()
+	{
+		if (cb_GetCountForKey_Ljava_lang_String_ == null)
+			cb_GetCountForKey_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_GetCountForKey_Ljava_lang_String_);
+		return cb_GetCountForKey_Ljava_lang_String_;
+	}
+
+	static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		string key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+		int __ret = __this.GetCountForKey (key);
+		return __ret;
+	}
+#pragma warning restore 0169
+
+	IntPtr id_GetCountForKey_Ljava_lang_String_;
+	public unsafe int GetCountForKey (string key)
+	{
+		if (id_GetCountForKey_Ljava_lang_String_ == IntPtr.Zero)
+			id_GetCountForKey_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "GetCountForKey", "(Ljava/lang/String;)I");
+		IntPtr native_key = JNIEnv.NewString (key);
+		JValue* __args = stackalloc JValue [1];
+		__args [0] = new JValue (native_key);
+		int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_GetCountForKey_Ljava_lang_String_, __args);
+		JNIEnv.DeleteLocalRef (native_key);
+		return __ret;
+	}
+
+	static Delegate cb_Key;
+#pragma warning disable 0169
+	static Delegate GetKeyHandler ()
+	{
+		if (cb_Key == null)
+			cb_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_Key);
+		return cb_Key;
+	}
+
+	static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return JNIEnv.NewString (__this.Key ());
+	}
+#pragma warning restore 0169
+
+	IntPtr id_Key;
+	public unsafe string Key ()
+	{
+		if (id_Key == IntPtr.Zero)
+			id_Key = JNIEnv.GetMethodID (class_ref, "Key", "()Ljava/lang/String;");
+		return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_Key), JniHandleOwnership.TransferLocalRef);
+	}
+
+	static Delegate cb_AbstractMethod;
+#pragma warning disable 0169
+	static Delegate GetAbstractMethodHandler ()
+	{
+		if (cb_AbstractMethod == null)
+			cb_AbstractMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_AbstractMethod);
+		return cb_AbstractMethod;
+	}
+
+	static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.AbstractMethod ();
+	}
+#pragma warning restore 0169
+
+	IntPtr id_AbstractMethod;
+	public unsafe void AbstractMethod ()
+	{
+		if (id_AbstractMethod == IntPtr.Zero)
+			id_AbstractMethod = JNIEnv.GetMethodID (class_ref, "AbstractMethod", "()V");
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_AbstractMethod);
+	}
+
+}
+
