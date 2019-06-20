@@ -49,6 +49,14 @@ namespace Xamarin.Android.Prepare
 		public static Context Instance                 { get; }
 
 		/// <summary>
+		///   This should not really be here, but due to the fact that Windows is still special-cased (until we
+		///   can drop using the bundle and build everything on Windows) we need to check "dynamically" if we're
+		///   running on Windows in some cases. This will be set to <c>true</c> only when xaprepare is built on
+		///   Windows.
+		/// </summary>
+		public static bool IsWindows                   => isWindows;
+
+		/// <summary>
 		///   Information about the operating system we're currently running on. See <see cref="OS" />
 		/// </summary>
 		public OS OS                                   { get; private set; }

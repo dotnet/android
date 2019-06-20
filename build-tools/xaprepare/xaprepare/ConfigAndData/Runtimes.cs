@@ -560,7 +560,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"opt{runtime.As<LlvmRuntime>().ExeSuffix}"),
 				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"opt{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries,
+				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
 				type: RuntimeFileType.StrippableBinary
 			),
 
@@ -568,7 +568,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"llc{runtime.As<LlvmRuntime>().ExeSuffix}"),
 				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"llc{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries,
+				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
 				type: RuntimeFileType.StrippableBinary
 			)
 		};
@@ -764,6 +764,11 @@ namespace Xamarin.Android.Prepare
 			return runtime.As<T>() != null;
 		}
 
+		static bool IsWindowsRuntime (Runtime runtime)
+		{
+			return String.Compare (runtime.ExeSuffix, Configurables.Defaults.WindowsExecutableSuffix, StringComparison.Ordinal) == 0;
+		}
+
 		static bool IsAbi (Runtime runtime, string abiName, params string[] furtherAbiNames)
 		{
 			if (ExpectedAbi (abiName))
@@ -842,15 +847,19 @@ namespace Xamarin.Android.Prepare
 				runtime.Init (c);
 			}
 
-			DesignerHostBclFilesToInstall = BclToDesigner (BclFileTarget.DesignerHost);
-			DesignerWindowsBclFilesToInstall = BclToDesigner (BclFileTarget.DesignerWindows);
+			DesignerHostBclFilesToInstall = new List<BclFile> ();
+			DesignerWindowsBclFilesToInstall = new List<BclFile> ();
 
-			List<BclFile> BclToDesigner (BclFileTarget ignoreForTarget)
-			{
-				return BclFilesToInstall.Where (bf => ShouldInclude (bf, ignoreForTarget)).Select (bf => new BclFile (bf.Name, bf.Type, excludeDebugSymbols: true, version: bf.Version, target: ignoreForTarget)).ToList ();
-			}
+			PopulateDesignerBclFiles (DesignerHostBclFilesToInstall, DesignerWindowsBclFilesToInstall);
+		}
 
-			bool ShouldInclude (BclFile bf, BclFileTarget ignoreForTarget)
+		partial void PopulateDesignerBclFiles (List<BclFile> designerHostBclFilesToInstall, List<BclFile> designerWindowsBclFilesToInstall);
+
+		List<BclFile> BclToDesigner (BclFileTarget ignoreForTarget)
+		{
+			return BclFilesToInstall.Where (bf => ShouldIncludeDesignerBcl (bf)).Select (bf => new BclFile (bf.Name, bf.Type, excludeDebugSymbols: true, version: bf.Version, target: ignoreForTarget)).ToList ();
+
+			bool ShouldIncludeDesignerBcl (BclFile bf)
 			{
 				if (DesignerIgnoreFiles == null || !DesignerIgnoreFiles.TryGetValue (bf.Name, out (BclFileType Type, BclFileTarget Target) bft)) {
 					return true;
