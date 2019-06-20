@@ -6,6 +6,15 @@ trigger:
   - master
   - d16-*
 
+# External yaml template files
+resources:
+  repositories:
+  - repository: yaml
+    type: github
+    name: xamarin/yaml-templates
+    ref: refs/heads/master
+    endpoint: xamarin
+
 # Global variables
 variables:
   BundleArtifactName: bundle
@@ -237,6 +246,7 @@ stages:
   displayName: Test
   dependsOn: mac_build
   jobs:
+  # Test APK Instrumentation
   - job: mac_apk_tests
     displayName: APK Instrumentation
     pool: $(XA.Build.Mac.Pool)
@@ -435,3 +445,89 @@ stages:
         artifactName: mac-apk-test-results
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
+
+  # Test Designer Mac  
+  - job: designer_integration_mac
+    displayName: Designer Mac
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      EnableRegressionTest: true
+    steps:
+    - script: |
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
+        cd designer
+        git submodule update -q --init --recursive
+      displayName: Clone and update designer
+
+    - task: provisionator@2
+      displayName: provision designer dependencies
+      inputs:
+        github_token: $(GitHub.Token)
+        provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
+        provisioning_extra_args: -remove Xamarin.Android -vv
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        itemPattern: "*.pkg"
+        downloadPath: $(System.DefaultWorkingDirectory)
+
+    - template: yaml-templates/run-installer.yaml
+
+    - template: designer/android-designer-build-mac.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+
+    - template: designer/android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+
+  # Test Designer Windows
+  - job: designer_integration_win
+    displayName: Designer Windows
+    pool:
+      name: VSEng-Xamarin-QA
+      demands: XQA.XA.Deviceless.Win
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      EnableRegressionTest: true
+      RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
+      XQA_VISUALSTUDIO_LOCATION: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise
+      VCINSTALLDIR: $(XQA_VISUALSTUDIO_LOCATION)\VC\
+      VisualStudioVersion: 15.0
+    steps:
+    - script: |
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
+        cd designer
+        git submodule update -q --init --recursive
+      displayName: Clone and update designer
+
+    - task: provisionator@2
+      displayName: provision designer dependencies
+      inputs:
+        github_token: $(GitHub.Token)
+        provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
+        provisioning_extra_args: '-remove "Visual Studio extension Xamarin.Android.Sdk" -vv'
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        itemPattern: "*.vsix"
+        downloadPath: $(System.DefaultWorkingDirectory)
+
+    - template: yaml-templates\run-installer.yaml
+
+    - template: designer\android-designer-build-win.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+
+    - template: designer\android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
