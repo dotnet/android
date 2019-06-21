@@ -3125,8 +3125,8 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_DefineBuildTargetAbis" DependsOnTargets="$(_BeforeDefineBuildTargetAbis)">
-  <SplitProperty Value="$(AndroidSupportedAbis)">
-    <Output TaskParameter="Output" ItemName="_BuildTargetAbis"/>
+  <SplitProperty Value="$(AndroidSupportedAbis)" Condition="'@(_BuildTargetAbis)' == ''">
+    <Output TaskParameter="Output" ItemName="_BuildTargetAbis" />
   </SplitProperty>
   <Error Code="XA0115"
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
