@@ -14,9 +14,9 @@ namespace Xamarin.Android.Prepare
 		    if (context == null)
 			    throw new ArgumentNullException (nameof (context));
 
+		    Steps.Add (new Step_InstallCorrettoOpenJDK ());
 		    Steps.Add (new Step_Android_SDK_NDK ());
 		    Steps.Add (new Step_GenerateFiles (atBuildStart: true));
-		    Steps.Add (new Step_InstallCorrettoOpenJDK ());
 		    Steps.Add (new Step_PrepareProps ());
 		    Steps.Add (new Step_PrepareExternal ());
 		    Steps.Add (new Step_PrepareLocal ());
