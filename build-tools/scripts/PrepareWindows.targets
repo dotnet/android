@@ -4,8 +4,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
-    <_XAPrepareStandardArgs>--no-emoji --run-mode=CI -a</_XAPrepareStandardArgs>
-    <_XAPrepareStandardArgs Condition= " '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
+    <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -a -v:d</_XAPrepareStandardArgs>
+    <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
     <_XAPrepareBundleArgs Condition=" '$(BundleRootPath)' != '' ">--bundle-path=&quot;$(BundleRootPath)&quot;</_XAPrepareBundleArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
