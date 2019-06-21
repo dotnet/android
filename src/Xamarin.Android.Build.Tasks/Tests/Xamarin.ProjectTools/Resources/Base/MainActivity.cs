@@ -28,6 +28,8 @@ namespace ${ROOT_NAMESPACE}
 			button.Click += delegate {
 				button.Text = string.Format ("{0} clicks!", count++);
 			};
+
+			//${AFTER_ONCREATE}
 		}
 	}
 }

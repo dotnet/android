@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+    <ProjectGuid>{A3671983-ABC2-4693-8872-463427B57117}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
+      <Project>{2dd1ee75-6d8d-4653-a800-0a24367f7f38}</Project>
+      <Name>Xamarin.ProjectTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
