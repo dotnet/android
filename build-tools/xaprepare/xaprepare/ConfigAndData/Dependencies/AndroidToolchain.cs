@@ -13,6 +13,7 @@ namespace Xamarin.Android.Prepare
 		public AndroidToolchain ()
 		{
 			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
+			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
@@ -43,7 +44,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1"),
 				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0"),
 				new AndroidToolchainComponent ("x86-28_r04",                                        destDir: Path.Combine ("system-images", "android-28", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "4"),
-				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: "19.2.5345600"),
+				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
 				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
 				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
