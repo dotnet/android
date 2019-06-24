@@ -227,7 +227,7 @@ namespace Xamarin.Android.Tasks
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
 						});
-						if (assembliesToSkipCaseFixup.Contains (assemblyFileName))
+						if (assembliesToSkipCaseFixup.Contains (assemblyPath))
 							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 						resolvedResourceDirectories.Add (taskItem);
 					}
@@ -331,7 +331,7 @@ namespace Xamarin.Android.Tasks
 							var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
 							});
-							if (assembliesToSkipCaseFixup.Contains (assemblyFileName))
+							if (assembliesToSkipCaseFixup.Contains (assemblyPath))
 								taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 							resolvedResourceDirectories.Add (taskItem);
 						}

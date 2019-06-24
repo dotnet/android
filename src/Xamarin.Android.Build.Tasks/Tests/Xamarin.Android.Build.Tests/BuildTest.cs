@@ -193,14 +193,13 @@ class MemTest {
 					"Xamarin.Android.Support.Design.dll",
 					"Xamarin.Android.Support.Media.Compat.dll",
 					"Xamarin.Android.Support.Transition.dll",
-					"Xamarin.Android.Support.v4.dll",
 					"Xamarin.Android.Support.v7.AppCompat.dll",
 					"Xamarin.Android.Support.v7.CardView.dll",
 					"Xamarin.Android.Support.v7.MediaRouter.dll",
 					"Xamarin.Android.Support.v7.RecyclerView.dll",
 					"material-menu-1.1.0.aar",
 				};
-				foreach (var file in skipped) {
+				foreach (var file in files) {
 					Assert.IsTrue (StringAssertEx.ContainsText (skipped, file), $"`{target}` should skip `{file}`.");
 				}
 			}
