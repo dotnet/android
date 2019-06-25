@@ -99,7 +99,9 @@ namespace Xamarin.Android.Build.Tests
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
 			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity", output: out string logcat), "Activity should have started");
-			StringAssert.Contains ($"TimeZoneInfo={timeZone}", logcat, $"TimeZone should have been {timeZone}");
+			Assert.IsTrue (MonitorAdbLogcat ((l)=> {
+				return l.Contains ($"TimeZoneInfo={timeZone}");
+			}), $"TimeZone should have been {timeZone}");
 		}
 	}
 }
