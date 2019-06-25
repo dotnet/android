@@ -43,8 +43,13 @@ namespace Xamarin.Android.Prepare
 			var toInstall = new List <AndroidPackage> ();
 
 			toolchain.Components.ForEach (c => Check (context, packageCacheDir, sdkRoot, c, toInstall, 4));
-			if (toInstall.Count == 0)
+			if (toInstall.Count == 0) {
+				if (!AcceptLicenses (context, sdkRoot)) {
+					Log.ErrorLine ("Failed to accept Android SDK licenses");
+					return false;
+				}
 				return GatherNDKInfo (context, ndkRoot);
+			}
 
 			Log.MessageLine ();
 			toInstall.ForEach (p => Log.DebugLine ($"Missing Android component: {p.Component.Name}"));
