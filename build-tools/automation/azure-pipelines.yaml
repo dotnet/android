@@ -1,6 +1,6 @@
 # Xamarin.Android Pipeline
 
-name: $(Build.SourceBranch)-$(Build.SourceVersion)-$(Rev:r)
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
 trigger:
   - master
