@@ -15,13 +15,7 @@
     <_EmbeddedBlobDestination Include="jni\machine.config.include" />
   </ItemGroup>
   <Target Name="_BuildRuntimes"
-      DependsOnTargets="_GenerateIncludeFiles;_BuildAndroidRuntimes;_BuildHostRuntimes">
-  </Target>
-  <Target Name="_GenerateIncludeFiles"
-      Inputs="@(_EmbeddedBlobSource);jni\config.h"
-      Outputs="@(_EmbeddedBlobDestination);$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h">
-    <Copy SourceFiles="jni/config.h" DestinationFiles="$(MSBuildThisFileDirectory)bin\$(Configuration)\include\config.h" />
-    <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
+      DependsOnTargets="_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
 
   <Target Name="_ConfigureHostRuntimes"
