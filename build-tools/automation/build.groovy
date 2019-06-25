@@ -21,6 +21,7 @@ def skipTest = false
 
 def hasPrLabelFullMonoIntegrationBuild = false
 
+def prepareFlags = 'PREPARE_CI=1'
 def buildTarget = 'jenkins'
 
 def utils = null
@@ -119,6 +120,7 @@ timestamps {
                     hasPrLabelFullMonoIntegrationBuild = true
                     buildTarget = 'jenkins'
                 } else {
+                    prepareFlags = 'PREPARE_CI_PR=1'
                     buildTarget = 'all'
                     // Also compile host libs for windows so that a complete VSIX can be created
                     if (isUnix()) {
@@ -149,7 +151,7 @@ timestamps {
 
         utils.stageWithTimeout('prepare deps', 30, 'MINUTES', XADir, true) {    // Typically takes less than 2 minutes, but can take longer if any prereqs need to be provisioned
             if (isCommercial) {
-                sh "make prepare-external-git-dependencies PREPARE_CI=1 V=1 "
+                sh "make prepare-external-git-dependencies ${prepareFlags} V=1 "
 
                 utils.stageWithTimeout('provisionator', 30, 'MINUTES', "${commercialPath}/build-tools/provisionator", true) {
                     sh('./provisionator.sh profile.csx -v')
@@ -172,9 +174,9 @@ timestamps {
             // The 'prepare*' targets must run separately to '${buildTarget}` as preparation generates the 'rules.mk' file conditionally included by
             // Makefile and it will **NOT** be included if we call e.g `make prepare jenkins` so the 'jenkns' target will **NOT** build all the supported
             // targets and architectures leading to test errors later on (e.g. in EmbeddedDSOs tests)
-            sh "make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-            sh "make prepare CONFIGURATION=${env.BuildFlavor} V=1 PREPARE_CI=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
-            sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make prepare CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
+            sh "make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'"
 
             if (isCommercial) {
                 sh '''
