@@ -188,10 +188,9 @@ timestamps {
 
         utils.stageWithTimeout('create installers', 30, 'MINUTES', XADir, true) {    // Typically takes less than 5 minutes
             if (isPr) {
-                // Override _MSBUILD_ARGS to ensure we only package the `AndroidSupportedTargetJitAbis` which are built.
-                // Also ensure that we don't require mono bundle components in the installer if this is not a full mono integration build.
+                // Exclude mono components if they aren't being built.
                 def msbuildInstallerArgs = hasPrLabelFullMonoIntegrationBuild ? '' : '/p:IncludeMonoBundleComponents=False'
-                sh "make create-installers CONFIGURATION=${env.BuildFlavor} V=1 _MSBUILD_ARGS='${msbuildInstallerArgs}'"
+                sh "make create-installers CONFIGURATION=${env.BuildFlavor} V=1 MSBUILD_ARGS='${msbuildInstallerArgs}'"
             } else {
                 sh "make create-installers CONFIGURATION=${env.BuildFlavor} V=1"
             }
