@@ -52,7 +52,7 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 
-				Log.DebugLine ("Moving unpacked Ant from {tempDir} to {Configurables.Paths.AntInstallDir}");
+				Log.DebugLine ($"Moving unpacked Ant from {tempDir} to {Configurables.Paths.AntInstallDir}");
 
 				// There should be just a single subdirectory
 				List<string> subdirs = Directory.EnumerateDirectories (tempDir).ToList ();

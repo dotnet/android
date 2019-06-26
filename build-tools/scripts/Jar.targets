@@ -7,6 +7,8 @@
       <_JavacSourceVersion Condition=" '$(_JavacSourceVersion)' == '' ">1.5</_JavacSourceVersion>
       <_JavacTargetVersion Condition="$(_JdkVersion.StartsWith ('9'))">1.8</_JavacTargetVersion>
       <_JavacTargetVersion Condition=" '$(_JavacTargetVersion)' == '' ">1.6</_JavacTargetVersion>
+      <JarPath Condition=" '$(JarPath)' == '' ">$(JavaSdkDirectory)\bin\jar</JarPath>
+      <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac</JavaCPath>
     </PropertyGroup>
   </Target>
   <Target Name="BuildTestJarFile"

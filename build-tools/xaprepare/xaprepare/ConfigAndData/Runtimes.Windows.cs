@@ -7,14 +7,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Runtimes
 	{
-		partial void AddUnixBundleItems (List<BundleItem> bundleItems)
-		{
-			bundleItems.AddRange (UnixBundleItems);
-		}
-
 		partial void PopulateDesignerBclFiles (List<BclFile> designerHostBclFilesToInstall, List<BclFile> designerWindowsBclFilesToInstall)
 		{
-			designerHostBclFilesToInstall.AddRange (BclToDesigner (BclFileTarget.DesignerHost));
 			designerWindowsBclFilesToInstall.AddRange (BclToDesigner (BclFileTarget.DesignerWindows));
 		}
 	}

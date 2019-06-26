@@ -19,6 +19,9 @@ namespace Xamarin.Android.Prepare
 			public string DestinationDir;
 		}
 
+		bool RefreshSdk = false;
+		bool RefreshNdk = false;
+
 		public Step_Android_SDK_NDK ()
 			: base ("Preparing Android SDK and NDK")
 		{}
@@ -29,6 +32,9 @@ namespace Xamarin.Android.Prepare
 			string ndkRoot = context.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			string packageCacheDir = context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
 
+			RefreshSdk = context.ComponentsToRefresh.HasFlag (RefreshableComponent.AndroidSDK);
+			RefreshNdk = context.ComponentsToRefresh.HasFlag (RefreshableComponent.AndroidNDK);
+
 			Log.StatusLine ("Android SDK location: ", sdkRoot, tailColor: Log.DestinationColor);
 			Log.StatusLine ("Android NDK location: ", ndkRoot, tailColor: Log.DestinationColor);
 			Log.DebugLine ($"Toolchain cache directory: {packageCacheDir}");
@@ -37,8 +43,13 @@ namespace Xamarin.Android.Prepare
 			var toInstall = new List <AndroidPackage> ();
 
 			toolchain.Components.ForEach (c => Check (context, packageCacheDir, sdkRoot, c, toInstall, 4));
-			if (toInstall.Count == 0)
+			if (toInstall.Count == 0) {
+				if (!AcceptLicenses (context, sdkRoot)) {
+					Log.ErrorLine ("Failed to accept Android SDK licenses");
+					return false;
+				}
 				return GatherNDKInfo (context, ndkRoot);
+			}
 
 			Log.MessageLine ();
 			toInstall.ForEach (p => Log.DebugLine ($"Missing Android component: {p.Component.Name}"));
@@ -64,7 +75,7 @@ namespace Xamarin.Android.Prepare
 					if (!success)
 						continue;
 					totalDownloadSize += size;
-				};
+				}
 
 				toDownload.ForEach (p => Log.StatusLine ($"  {context.Characters.Link} {p.Url}", ConsoleColor.White));
 
@@ -123,8 +134,18 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($"  {context.Characters.Bullet} Installing ", pkg.Component.Name, tailColor: ConsoleColor.White);
 
 			if (File.Exists (pkg.LocalPackagePath)) {
-				Log.DebugLine ($"Component '{pkg.Component.Name}' package exists: {pkg.LocalPackagePath}");
-				LogStatus ("already downloaded", 4, Log.InfoColor);
+				bool valid = Utilities.VerifyArchive (pkg.LocalPackagePath).GetAwaiter ().GetResult ();
+				if (!valid || (RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
+					if (valid)
+						LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
+					else
+						LogStatus ("Downloaded package is invalid, re-download required. Deleting cache.", 4, ConsoleColor.Magenta);
+					Utilities.DeleteFile (pkg.LocalPackagePath);
+					toDownload.Add (pkg);
+				} else {
+					Log.DebugLine ($"Component '{pkg.Component.Name}' package exists: {pkg.LocalPackagePath}");
+					LogStatus ("already downloaded", 4, Log.InfoColor);
+				}
 			} else {
 				Log.DebugLine ($"Component '{pkg.Component.Name}' package not downloaded yet: {pkg.LocalPackagePath}");
 				LogStatus ("not downloaded yet", 4, ConsoleColor.Magenta);
@@ -141,8 +162,10 @@ namespace Xamarin.Android.Prepare
 
 			string tempDir = Path.Combine (tempDirRoot, Path.GetRandomFileName ());
 
-			if (!await Utilities.Unpack (pkg.LocalPackagePath, tempDir))
+			if (!await Utilities.Unpack (pkg.LocalPackagePath, tempDir)) {
+				Utilities.DeleteFileSilent (pkg.LocalPackagePath);
 				throw new InvalidOperationException ($"Failed to unpack {pkg.LocalPackagePath}");
+			}
 
 			if (pkg.Component.NoSubdirectory) {
 				Utilities.MoveDirectoryContentsRecursively (tempDir, pkg.DestinationDir);
@@ -227,6 +250,11 @@ namespace Xamarin.Android.Prepare
 			}
 
 			missing = false;
+			if ((RefreshSdk && !IsNdk (component)) || (RefreshNdk && IsNdk (component))) {
+				Log.DebugLine ($"A reinstall has been requested for component '{component.Name}'");
+				return false;
+			}
+
 			if (String.IsNullOrEmpty (component.PkgRevision)) {
 				Log.DebugLine ($"Component '{component.Name}' does not specify required Pkg.Revision, assuming it's valid");
 				return true;
@@ -279,6 +307,11 @@ namespace Xamarin.Android.Prepare
 				return true;
 
 			return false;
+		}
+
+		bool IsNdk (AndroidToolchainComponent component)
+		{
+			return component.Name.StartsWith ("android-ndk", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

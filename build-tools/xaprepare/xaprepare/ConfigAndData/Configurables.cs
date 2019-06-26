@@ -109,10 +109,10 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public const string LogFilePrefix = "prepare";
 
-            /// <summary>
-            ///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
-            /// </summary>
-            public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
+			/// <summary>
+			///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
+			/// </summary>
+			public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
 
 			/// <summary>
 			///   Version of the XA binary bundle downloaded/created by this tool.
@@ -342,8 +342,8 @@ namespace Xamarin.Android.Prepare
 			//   * The "file" part must always be a valid glob pattern
 			//
 			public static readonly List<string> BundleVersionHashFiles = new List<string> {
-				Path.Combine (BuildToolsScriptsDir, "BuildEverything.mk"),
 				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "BuildAndroidPlatforms.cs"),
+				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "Runtimes.cs"),
 			};
 
 			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();

@@ -43,6 +43,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  bool            IgnoreExitCode        { get; set; }
 		public                  int             Timeout               { get; set; } = -1;
 		public                  string[]        EnvironmentVariables  { get; set; }
+		public                  bool            WriteOutputAsMessage  { get; set; } = false;
 
 		[Required]
 		public                  string          ToolPath              { get; set; }
@@ -147,7 +148,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			lock (linesLock) lines.Add (line);
 
 			if (!info.SuppressMSbuildLog) {
-				if (isStdout)
+				if (isStdout || WriteOutputAsMessage)
 					Log.LogMessage (MessageImportance.Low, line);
 				else
 					Log.LogWarning (line);

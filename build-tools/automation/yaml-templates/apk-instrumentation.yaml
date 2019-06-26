@@ -1,0 +1,28 @@
+parameters:
+  configuration: []
+  testName: []
+  project: []
+  testResultsFiles: []
+  extraBuildArgs: ""
+  testResultsFormat: NUnit
+  packageType: Apk
+
+steps:
+- task: MSBuild@1
+  displayName: run ${{ parameters.testName }}
+  inputs:
+    solution: ${{ parameters.project }}
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: >
+      /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTest${{ parameters.packageType }}s,RunTestApks,RenameApkTestCases,ReportComponentFailures
+      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
+      ${{ parameters.extraBuildArgs }}
+  condition: succeededOrFailed()
+
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testName }} results
+  inputs:
+    testResultsFormat: ${{ parameters.testResultsFormat }}
+    testResultsFiles: ${{ parameters.testResultsFiles }}
+    testRunTitle: ${{ parameters.testName }}
+  condition: succeededOrFailed()
