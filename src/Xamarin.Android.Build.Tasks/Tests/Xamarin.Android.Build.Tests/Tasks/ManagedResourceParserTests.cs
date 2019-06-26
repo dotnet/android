@@ -302,5 +302,49 @@ int transition transition 0x7f0f0000
 				 $"{task.NetResgenOutputFile} and {expected} do not match.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		public void UpdateLayoutIdIsIncludedInDesigner ()
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			File.WriteAllText (Path.Combine (Root, path, "R.txt"), Rtxt);
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var task = new GenerateResourceDesigner {
+				BuildEngine = engine
+			};
+			task.UseManagedResourceGenerator = true;
+			task.DesignTimeBuild = true;
+			task.Namespace = "Foo.Foo";
+			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
+			task.ProjectDir = Path.Combine (Root, path);
+			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
+			task.Resources = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "res", "values", "strings.xml"), new Dictionary<string, string> () {
+					{ "LogicalName", "values\\strings.xml" },
+				}),
+			};
+			task.AdditionalResourceDirectories = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "lp", "res")),
+			};
+			task.ResourceFlagFile = Path.Combine (Root, path, "AndroidResgen.flag");
+			File.WriteAllText (task.ResourceFlagFile, string.Empty);
+			task.IsApplication = true;
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			// Update the id, and force the managed parser to re-parse the output
+			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main.Replace ("@+id/textview.withperiod", "@+id/textview.withperiod2"));
+			File.SetLastWriteTimeUtc (task.ResourceFlagFile, DateTime.UtcNow);
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
+			var data = File.ReadAllText (expected);
+			var expectedWithNewId = Path.Combine (Root, "Expected", "GenerateDesignerFileExpectedWithNewId.cs");
+			File.WriteAllText (expectedWithNewId, data.Replace ("withperiod", "withperiod2"));
+			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expectedWithNewId),
+				 $"{task.NetResgenOutputFile} and {expectedWithNewId} do not match.");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }
