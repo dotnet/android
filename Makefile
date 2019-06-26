@@ -15,11 +15,13 @@ PREPARE_COMMON_MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(PREPARE_MSBUI
 PREPARE_MSBUILD_FLAGS = /binaryLogger:"$(PREPARE_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
 PREPARE_RESTORE_FLAGS = /binaryLogger:"$(PREPARE_RESTORE_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
 PREPARE_SCENARIO =
+PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
 PREPARE_AUTOPROVISION ?= 0
 PREPARE_IGNORE_MONO_VERSION ?= 1
 
-_PREPARE_CI_MODE_ARGS = --no-emoji --run-mode=CI -a
+_PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
+_PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
 _PREPARE_ARGS =
 
 all:
@@ -45,6 +47,10 @@ ifneq ($(V),0)
 MONO_OPTIONS   += --debug
 NUGET_VERBOSITY = -Verbosity Detailed
 _PREPARE_ARGS += -v:d
+endif
+
+ifneq ($(PREPARE_CI_PR),0)
+_PREPARE_ARGS += $(_PREPARE_CI_MODE_PR_ARGS)
 endif
 
 ifneq ($(PREPARE_CI),0)
@@ -186,10 +192,6 @@ prepare-build-init:
 prepare-build: prepare-build-init
 	msbuild $(PREPARE_MSBUILD_FLAGS) $(PREPARE_SOLUTION)
 
-.PHONY: prepare-build-ci
-prepare-build-ci: prepare-build-init
-	msbuild $(PREPARE_MSBUILD_FLAGS) $(PREPARE_SOLUTION) $(_MSBUILD_ARGS)
-
 .PHONY: prepare
 prepare:: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS)
@@ -198,46 +200,9 @@ prepare:: prepare-build
 prepare-help: prepare-build
 	mono --debug $(PREPARE_EXE) -h
 
-# Hack: The current commercial pipeline doesn't pass all the required arguments when preparing the build, in particular it doesn't override the
-# ABI targets to build and so the prepare step configures only for the default set (armeabi-v7a, arm64-v8a, x86, $HOST_OS) which is not enough.
-# The `jenkins` rule in `BuildEverything.mk`, invoked by the commercial pipeline, now calls the rule below in which we rebuild the bootstrapper
-# with all the required properties set to include all the ABIs - it should fix the build. After the PR is merged, the commercial pipeline should
-# be modified to do the right thing instead.
-#
-# Commercial pipeline should also set PREPARE_CI=1 when calling targets. Since this is currently not done, we have to pass $(_PREPARE_CI_MODE_ARGS)
-# directly below
-#
-.PHONY: prepare-jenkins
-prepare-jenkins: prepare-build-ci prepare-commercial
-	@echo preparing jenkins build
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) $(_PREPARE_CI_MODE_ARGS)
-
-# This should go away once we can modify the commercial pipeline for the bootstrapper
-.PHONY: prepare-commercial
-ifeq ($(USE_COMMERCIAL_INSTALLER_NAME),true)
-prepare-commercial:
-	cd $(TOP) && ./configure --with-xamarin-android='$(XAMARIN_ANDROID_PATH)'
-	mkdir -p $(XA_MSBUILD_DIR)
-
-else
-prepare-commercial:
-endif
-
 .PHONY: prepare-update-mono
+prepare-update-mono: prepare-build
+	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
 
-prepare-update-mono: prepare-build-ci
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) $(_PREPARE_CI_MODE_ARGS) /s:UpdateMono
-
-# These targets exist only temporarily to satisfy requirements of the commercial build (since we can't modify the pipeline script in this PR)
-.PHONY: prepare-deps
-
-# Commercial pipeline installs an older version of Mono and in effect we fail. `prepare-deps` is called after provisionator is ran and so we
-# can, temporarily, re-update Mono here. After the PR is merged and commercial pipeline updated, this step should be removed.
-prepare-deps: prepare-update-mono
-	@echo prepare-deps is no-op, prepare-jenkins or prepare do the work instead
-
-prepare-image-dependencies: prepare-build-ci
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) $(_PREPARE_CI_MODE_ARGS) -s:PrepareImageDependencies
-
-prepare-external-git-dependencies: prepare-build-ci prepare-update-mono
-	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) $(_PREPARE_CI_MODE_ARGS) -s:PrepareExternalGitDependencies
+prepare-external-git-dependencies: prepare-build
+	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
