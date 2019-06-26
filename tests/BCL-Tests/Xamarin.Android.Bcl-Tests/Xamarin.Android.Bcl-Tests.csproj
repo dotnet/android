@@ -126,6 +126,9 @@
     </EmbeddedResource>
     <AndroidEnvironment Include="Environment.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <LinkDescription Include="LinkerDescription.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Xamarin.Android.Bcl-Tests.targets" />
   <Import Project="..\..\..\packages\xunit.core.2.3.1\build\xunit.core.targets" Condition="Exists('..\..\..\packages\xunit.core.2.3.1\build\xunit.core.targets')" />

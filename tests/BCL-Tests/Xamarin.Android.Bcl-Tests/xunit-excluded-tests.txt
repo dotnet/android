@@ -201,6 +201,3 @@ System.Net.Security.Tests.ServerAllowNoEncryptionTest.ServerAllowNoEncryption_Cl
 System.Net.Security.Tests.ServerRequireEncryptionTest.ServerRequireEncryption_ClientAllowNoEncryption_ConnectWithEncryption
 System.Net.Security.Tests.ServerRequireEncryptionTest.ServerRequireEncryption_ClientRequireEncryption_ConnectWithEncryption
 System.Net.Security.Tests.SslStreamSniTest
-
-# mono 2019-06 issue w/ vector tests https://github.com/xamarin/xamarin-android/issues/3285
-System.Numerics.Tests.GenericVectorTests
