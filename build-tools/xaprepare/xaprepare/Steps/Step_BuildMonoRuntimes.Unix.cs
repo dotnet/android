@@ -26,7 +26,7 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			List<Runtime> enabledRuntimes = GetEnabledRuntimes (enableLogging: true);
+			List<Runtime> enabledRuntimes = GetEnabledRuntimes (enableLogging: false);
 			if (enabledRuntimes.Count == 0) {
 				Log.StatusLine ("No runtimes to build/install");
 				return true;
