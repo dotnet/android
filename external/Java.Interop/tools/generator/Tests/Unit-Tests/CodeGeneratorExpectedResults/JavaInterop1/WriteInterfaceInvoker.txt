@@ -1,5 +1,5 @@
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
-internal class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
 
 	internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 

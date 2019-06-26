@@ -23,7 +23,7 @@ namespace Xamarin.Test {
 			}
 
 			[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$Action$Factory", DoNotGenerateAcw=true)]
-			internal class IFactoryInvoker : global::Java.Lang.Object, IFactory {
+			internal partial class IFactoryInvoker : global::Java.Lang.Object, IFactory {
 
 				static IntPtr java_class_ref = JNIEnv.FindClass ("xamarin/test/NotificationCompatBase$Action$Factory");
 

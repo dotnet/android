@@ -17,7 +17,7 @@ namespace Java.Lang {
 	}
 
 	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
-	internal class IComparableInvoker : global::Java.Lang.Object, IComparable {
+	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 

@@ -12,7 +12,7 @@ namespace Android.Text {
 	}
 
 	[global::Android.Runtime.Register ("android/text/Spannable", DoNotGenerateAcw=true)]
-	internal class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
+	internal partial class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
 

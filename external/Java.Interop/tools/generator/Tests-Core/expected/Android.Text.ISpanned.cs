@@ -16,7 +16,7 @@ namespace Android.Text {
 	}
 
 	[global::Android.Runtime.Register ("android/text/Spanned", DoNotGenerateAcw=true)]
-	internal class ISpannedInvoker : global::Java.Lang.Object, ISpanned {
+	internal partial class ISpannedInvoker : global::Java.Lang.Object, ISpanned {
 
 		static IntPtr java_class_ref = JNIEnv.FindClass ("android/text/Spanned");
 

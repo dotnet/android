@@ -17,7 +17,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	}
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", DoNotGenerateAcw=true)]
-	internal class IExoMediaDrmOnEventListenerInvoker : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
+	internal partial class IExoMediaDrmOnEventListenerInvoker : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
 
@@ -198,7 +198,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	}
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm", DoNotGenerateAcw=true)]
-	internal class IExoMediaDrmInvoker : global::Java.Lang.Object, IExoMediaDrm {
+	internal partial class IExoMediaDrmInvoker : global::Java.Lang.Object, IExoMediaDrm {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
 

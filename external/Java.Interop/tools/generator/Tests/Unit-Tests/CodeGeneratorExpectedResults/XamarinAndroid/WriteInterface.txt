@@ -70,7 +70,7 @@ public partial interface IMyInterface : IJavaObject {
 }
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
-internal class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
 
 	static IntPtr java_class_ref = JNIEnv.FindClass ("java/code/IMyInterface");
 

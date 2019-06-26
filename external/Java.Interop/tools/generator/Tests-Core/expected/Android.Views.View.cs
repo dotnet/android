@@ -19,7 +19,7 @@ namespace Android.Views {
 		}
 
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
-		internal class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
+		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
 
 			static IntPtr java_class_ref = JNIEnv.FindClass ("android/view/View$OnClickListener");
 

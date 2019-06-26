@@ -15,7 +15,7 @@ namespace Xamarin.Test {
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/I1", DoNotGenerateAcw=true)]
-	internal class II1Invoker : global::Java.Lang.Object, II1 {
+	internal partial class II1Invoker : global::Java.Lang.Object, II1 {
 
 		static IntPtr java_class_ref = JNIEnv.FindClass ("xamarin/test/I1");
 

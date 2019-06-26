@@ -11,7 +11,7 @@ namespace Xamarin.Test {
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/SpinnerAdapter", DoNotGenerateAcw=true)]
-	internal class ISpinnerAdapterInvoker : global::Java.Lang.Object, ISpinnerAdapter {
+	internal partial class ISpinnerAdapterInvoker : global::Java.Lang.Object, ISpinnerAdapter {
 
 		static IntPtr java_class_ref = JNIEnv.FindClass ("xamarin/test/SpinnerAdapter");
 

@@ -78,7 +78,7 @@ namespace Test.ME {
 	}
 
 	[global::Android.Runtime.Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
-	internal class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
+	internal partial class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 

@@ -20,7 +20,7 @@ namespace Android.Views {
 		}
 
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
-		internal class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
+		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
 
 			internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 

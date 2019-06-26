@@ -16,7 +16,7 @@ namespace Java.Lang {
 	}
 
 	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
-	internal class IComparableInvoker : global::Java.Lang.Object, IComparable {
+	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
 
 		static IntPtr java_class_ref = JNIEnv.FindClass ("java/lang/Comparable");
 

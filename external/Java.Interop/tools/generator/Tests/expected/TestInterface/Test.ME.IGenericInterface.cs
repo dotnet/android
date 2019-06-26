@@ -16,7 +16,7 @@ namespace Test.ME {
 	}
 
 	[global::Android.Runtime.Register ("test/me/GenericInterface", DoNotGenerateAcw=true)]
-	internal class IGenericInterfaceInvoker : global::Java.Lang.Object, IGenericInterface {
+	internal partial class IGenericInterfaceInvoker : global::Java.Lang.Object, IGenericInterface {
 
 		static IntPtr java_class_ref = JNIEnv.FindClass ("test/me/GenericInterface");
 

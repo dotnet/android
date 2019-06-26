@@ -712,7 +712,7 @@ namespace MonoDroid.Generation
 		public void WriteInterfaceInvoker (InterfaceGen @interface, string indent)
 		{
 			writer.WriteLine ("{0}[global::Android.Runtime.Register (\"{1}\", DoNotGenerateAcw=true{2})]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
-			writer.WriteLine ("{0}internal class {1}Invoker : global::Java.Lang.Object, {1} {{", indent, @interface.Name);
+			writer.WriteLine ("{0}internal partial class {1}Invoker : global::Java.Lang.Object, {1} {{", indent, @interface.Name);
 			writer.WriteLine ();
 			WriteInterfaceInvokerHandle (@interface, indent + "\t", @interface.Name + "Invoker");
 			writer.WriteLine ("{0}\t{1}IntPtr class_ref;", indent, opt.BuildingCoreAssembly ? "new " : "");

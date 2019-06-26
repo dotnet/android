@@ -24,7 +24,7 @@ namespace Xamarin.Test {
 			}
 
 			[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$Action$Factory", DoNotGenerateAcw=true)]
-			internal class IFactoryInvoker : global::Java.Lang.Object, IFactory {
+			internal partial class IFactoryInvoker : global::Java.Lang.Object, IFactory {
 
 				internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
 

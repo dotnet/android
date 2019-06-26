@@ -20,7 +20,7 @@ namespace Test.ME {
 	}
 
 	[global::Android.Runtime.Register ("test/me/GenericPropertyInterface", DoNotGenerateAcw=true)]
-	internal class IGenericPropertyInterfaceInvoker : global::Java.Lang.Object, IGenericPropertyInterface {
+	internal partial class IGenericPropertyInterfaceInvoker : global::Java.Lang.Object, IGenericPropertyInterface {
 
 		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("test/me/GenericPropertyInterface", typeof (IGenericPropertyInterfaceInvoker));
 
