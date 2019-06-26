@@ -108,8 +108,10 @@ namespace MonoDroid.Generation
 				WriteFields (iface.Fields, indent + "\t\t", iface, seen);
 			}
 
-			if (haveNested)
-				writer.WriteLine ("{0}\t}}\n", indent);
+			if (haveNested) {
+				writer.WriteLine ("{0}\t}}", indent);
+				writer.WriteLine ();
+			}
 
 			foreach (GenBase nest in @class.NestedTypes) {
 				if (@class.BaseGen != null && @class.BaseGen.ContainsNestedType (nest))
@@ -362,16 +364,16 @@ namespace MonoDroid.Generation
 			if (constructor.Annotation != null)
 				writer.WriteLine ("{0}{1}", indent, constructor.Annotation);
 
-			writer.WriteLine ("{0}{1} unsafe {2} ({3})\n{0}\t: {4} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)",
-					indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt), useBase ? "base" : "this");
+			writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt));
+			writer.WriteLine ("{0}\t: {1} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)", indent, useBase ? "base" : "this");
 			writer.WriteLine ("{0}{{", indent);
 			WriteConstructorBody (constructor, indent + "\t", call_cleanup);
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
 			if (gen_string_overload) {
 				writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, ".ctor", jni_sig, String.Empty, constructor.AdditionalAttributeString ());
-				writer.WriteLine ("{0}{1} unsafe {2} ({3})\n{0}\t: {4} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)",
-						indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"), useBase ? "base" : "this");
+				writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+				writer.WriteLine ("{0}\t: {1} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)", indent, useBase ? "base" : "this");
 				writer.WriteLine ("{0}{{", indent);
 				WriteConstructorBody (constructor, indent + "\t", call_cleanup);
 				writer.WriteLine ("{0}}}", indent);
