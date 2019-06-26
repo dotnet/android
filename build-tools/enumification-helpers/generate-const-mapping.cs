@@ -30,10 +30,10 @@ namespace MonoDroid.Tools
 	public class ConversionMapping2MapCsv
 	{
 		static readonly Dictionary<string,string> namespaces = new Dictionary<string,string> ();
-		
+
 		static ConversionMapping2MapCsv ()
 		{
-			foreach (Android.Runtime.NamespaceMappingAttribute a in 
+			foreach (Android.Runtime.NamespaceMappingAttribute a in
 				  typeof (ConversionMapping2MapCsv).Assembly.GetCustomAttributes (typeof (Android.Runtime.NamespaceMappingAttribute), false))
 				namespaces.Add (a.Java, a.Managed);
 		}
@@ -103,14 +103,14 @@ namespace MonoDroid.Tools
 						fieldName = ToPascal (f);
 					}
 					var api = fld.ApiLevel;
-					
+
 					if (!enteredTransientMode && map.GetAttribute ("is-transient") != "false") {
 						output.WriteLine ();
 						output.WriteLine ("- ENTER TRANSIENT MODE -");
 						output.WriteLine ();
 						enteredTransientMode = true;
 					}
-					
+
 					output.WriteLine ("{6},{0}{1},{2},{3}{4},{5}",
 						enn.Contains ('.') ? string.Empty : CSharpPkg (pkg),
 						enn.Contains ('.') ? enn : "." + enn,
@@ -120,7 +120,7 @@ namespace MonoDroid.Tools
 						val,
 						string.IsNullOrEmpty (forceApiLevel) ? api : forceApiLevel);
 				}
-				} catch (Exception ex) {
+				} catch (Exception) {
 					Console.Error.WriteLine ("Error in {0} / {1} / {2}", pkg, type, enn);
 					throw;
 				}
@@ -156,4 +156,3 @@ namespace MonoDroid.Tools
 		}
 	}
 }
-

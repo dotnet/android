@@ -17,7 +17,7 @@ API_XML_TOOL = $(BUILDBIN)/api-xml-adjuster.exe
 RUNTIME = mono --debug
 RUN_CLASS_PARSE = $(RUNTIME) $(CLASS_PARSE)
 RUN_API_XML_TOOL = $(RUNTIME) $(API_XML_TOOL)
-API_LEVELS = 10 15 16 17 18 19 20 21 22 23 24 25 26 27 28 Q
+API_LEVELS = 10 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
 
 XML_OUTPUT_DIR = .
 
@@ -125,4 +125,3 @@ $(DOCS_DIR)/docs-api-25: docs-25_web.zip	# Google hadn't published docs componen
 
 $(DOCS_DIR)/docs-api-26: docs-O_web.zip	# No preview docs yet
 	$(call extract-docs,$<,docs)
-

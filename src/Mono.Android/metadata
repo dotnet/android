@@ -64,7 +64,7 @@
   <!--
   These setter methods were incorrectly treated as public, but they are actually protected.
   Getters are public and generator used to ignore mismatching visibility.
-  
+
   Unfortunately, there is no way to define "partial" properties and we cannot
   manually add setter-only properties in other sources.
   So far the only way to fix it is, to fake API and treat them as public.
@@ -250,6 +250,7 @@
   <attr path="/api/package[@name='android.text.format']/class[@name='Time']/field[@name='YEAR_DAY']" name="managedName">YearDayValue</attr>
   <attr path="/api/package[@name='android.text.method']/class[@name='CharacterPickerDialog']/method[@name='onItemClick']/parameter[@name='parent']" name="type">android.widget.AdapterView&lt;?&gt;</attr>
   <attr path="/api/package[@name='android.view']" name="managedName">Android.Views</attr>
+  <attr path="/api/package[@name='android.view.contentcapture']" name="managedName">Android.Views.ContentCaptures</attr>
   <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getLayoutParams']" name="managedName">GetLayoutParameters</attr>
   <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setLayoutParams']" name="managedName">SetLayoutParameters</attr>
   <attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnCreateContextMenuListener']" name="eventName">ContextMenuCreated</attr>
@@ -481,11 +482,11 @@
   <!-- For these types' constructors, both Map and SortedMap are mapped to IDictionary and one results in duplicate definition. So one needs to be removed. -->
   <remove-node path="/api/package[@name='java.util']/class[@name='TreeMap']/constructor[parameter[1][@type='java.util.SortedMap&lt;K, ? extends V>']]" />
   <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentSkipListMap']/constructor[parameter[1][@type='java.util.SortedMap&lt;K, ? extends V>']]" api-since="10" />
-  
+
   <!-- FIXME: they bring too messy breakages, so just kill 'em so far -->
   <remove-node path="/api/package[@name='java.util.concurrent']/class[@name='ConcurrentSkipListSet']" api-since="10" />
   <remove-node path="/api/package[@name='java.util.concurrent']/interface[@name='ConcurrentNavigableMap']" api-since="10" />
-  
+
   <!-- generic collections have those generic inheritance which we cannot support - remove type parameters for now -->
   <!-- comment out them so far, as removing them somehow rather causes more API removal.
   <remove-node path="/api/package[@name='java.util']/interface[@name='Queue']/typeParameters" />
@@ -531,7 +532,7 @@
   <!-- FIXME: they should not be required, but generator tries to convert them to property setters -->
   <remove-node path="/api/package[@name='org.apache.http.entity']/class[@name='BasicHttpEntity']/method[@name='setContent']" />
   <remove-node path="/api/package[@name='org.apache.http.entity']/class[@name='BasicHttpEntity']/method[@name='setContentLength']" />
-  <!-- protected fields in final class! why oh why apache -->  
+  <!-- protected fields in final class! why oh why apache -->
   <remove-node path="/api/package[@name='org.apache.http.protocol']/class[@name='BasicHttpProcessor']/field[@name='requestInterceptors']" />
   <remove-node path="/api/package[@name='org.apache.http.protocol']/class[@name='BasicHttpProcessor']/field[@name='responseInterceptors']" />
 
@@ -545,9 +546,9 @@
 
   <!-- this btw results in missing interface implementation (sigh) so we have additional source for explicit interface implementation. -->
   <attr path="/api/package[@name='org.apache.http.impl.conn']/class[@name='DefaultClientConnection']/method[@name='getSocket']" name="visibility">protected</attr>
-  
-  <!-- FIXME: these generateDispatchingSetter attributes SHOULD work, but generator somehow ignores them. Giving "additional" sources so far 
-  
+
+  <!-- FIXME: these generateDispatchingSetter attributes SHOULD work, but generator somehow ignores them. Giving "additional" sources so far
+
   <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setComment']" name="generateDispatchingSetter">true</attr>
   <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setDomain']" name="generateDispatchingSetter">true</attr>
   <attr path="/api/package[@name='org.apache.http.impl.cookie']/class[@name='BasicClientCookie']/method[@name='setExpiryDate']" name="generateDispatchingSetter">true</attr>
@@ -800,7 +801,7 @@
   <attr path="/api/package[@name='java.io']/class[@name='StreamTokenizer']/field[@name='ttype']" name="type">Java.IO.TokenType</attr>
   <attr path="/api/package[@name='java.net']/class[@name='HttpURLConnection']/field[@name='responseCode']" name="type">Java.Net.HttpStatus</attr>
   <attr path="/api/package[@name='java.security']/class[@name='Signature']/field[@name='state']" name="type">Java.Security.SignatureState</attr>
-  
+
   <!-- below are constant fields -->
   <attr path="/api/package[@name='android.os']/class[@name='Build.VERSION']/field[@name='SDK_INT']" name="type">Android.OS.BuildVersionCodes</attr>
 
@@ -828,7 +829,7 @@
        This interface is a "multi-methods event listener" and ALSO it contains method overloads (causes event name conflicts) AND those overloads share the same argument name (causes conflict in the event args property)!
        Still, instead of totally killing this shit, we rename one event and one parameter for argument.
        This caused new generator/metadata feature: parameter/@managedName
-              
+
        STILL, this was not even enough! It even required to rename managed method name because event handler implementor requires OnBlahEventHandler based on method name!
    -->
   <attr path="/api/package[@name='android.media']/interface[@name='RemoteController.OnClientUpdateListener']/method[@name='onClientPlaybackStateUpdate' and count(parameter)=1]/parameter[1]" name="managedName" api-since="19">stateSimple</attr>
@@ -845,7 +846,7 @@
     but since the Java signature changed, they are regarded as different and causes
     duplicate output.
     This mess is not only ours, Android SDK Reference website also suffers.
-    
+
     Of course this has no effect until we enable JUnit...
   <remove-node path="/api/package[@name='junit.framework']/class[@name='TestSuite']/constructor[parameter[@type='java.lang.Class']]" api-since="16" />
   <remove-node path="/api/package[@name='junit.framework']/class[@name='TestSuite']/method[parameter[@type='java.lang.Class']]" api-since="16" />
@@ -1137,7 +1138,7 @@
 	platforms/android-23/src/generated/Android.Media.Image.cs(349,68): (Location of the symbol related to previous error)
   -->
   <remove-node path="/api/package[@name='android.media']/class[@name='Image']/method[@name='setTimestamp']" api-since="23" />
-  
+
   <attr path="/api/package[@name='android.app']/class[@name='Notification']/method[@name='getLargeIcon']" name="propertyName"></attr>
 
   <!-- Android N (API Level 24-25) -->
@@ -1148,14 +1149,14 @@
   <attr path="/api/package[@name='android.icu.text']/class[@name='MeasureFormat']/method[@name='parseObject']" name="managedReturn">Java.Lang.Object</attr>
 
   <!-- seems like conlicting other base method definition -->
-  <remove-node path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='addAll' and count(typeParameters) &gt; 0]" /> 
+  <remove-node path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='addAll' and count(typeParameters) &gt; 0]" />
 
   <!-- FIXME: We have enumified this method's int overload, which had
    (and has) to be done by parameter name. Unfortunately the parameter
    name is exactly same as the new one that we don't want to enumify.
-   
+
    Until we introduce some decent enumification filters, we have to disable the new method.
-   
+
    Another mess: we should be able to use 'api-since' here, but that information is provided by platform-tools/api/annotations.zip which is NOT part of N preview 1. So we use api-merge info instead...
   -->
   <remove-node path="/api/package[@name='java.awt.font']/class[@name='NumericShaper']/method[@name='getContextualShaper' and contains(@merge.SourceFile, 'api-24.xml.in')]" />
@@ -1164,7 +1165,7 @@
   <!-- StringBuffer.Append(bool) is newly added, and it causes override
     resolution conflict with base AbstractStringBuilder. However, that "forcibly exposed internal-only" class returned AbstractStringBuilder itself, which doesn't match the expected return type. For this case, we need to modify the internal type.
   -->
-  <attr path="/api/package[@name='java.lang']/class[@name='AbstractStringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr> 
+  <attr path="/api/package[@name='java.lang']/class[@name='AbstractStringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
 
   <!--
   Google had renamed DateTimePickerDialog constructor arguments to
@@ -1173,34 +1174,34 @@
   naming and should be improved to not rely on unstable part of the
   API, but so far we need workaround.
   -->
-  <attr path="/api/package[@name='android.app']/class[@name='DatePickerDialog']/constructor/parameter[@name='monthInYear']" api-until="23" name="name">month</attr> 
+  <attr path="/api/package[@name='android.app']/class[@name='DatePickerDialog']/constructor/parameter[@name='monthInYear']" api-until="23" name="name">month</attr>
 
   <!-- invariant method overrides fixup -->
   <attr path="/api/package[@name='android.icu.util']/class[@name='CECalendar']" name="visibility">public</attr>
 
   <!-- FIXME: Enable below only after we enable NetworkChannel
-    
+
   <attr path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/method[@name='bind']" name="managedReturn">Java.Nio.Channels.INetworkChannel</attr>
 
   Similar changed are needed for getOption() and setOption().
-  
+
   At this state, it is impossible to generate bindings for
   getOpion() and setOption() (generic methods).
 
   "Fixing" this is either impossible by design, or impossible
   because we cannot introduce API breakers, or impossible because
   there are too many changes involved in generator code base.
-  
+
   Manually bound API is still an option.
 
   -->
-  
-  <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
-  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" /> 
+
+  <remove-node path="/api/package[@name='java.nio.channels']/interface[@name='NetworkChannel']" />
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='DatagramChannel']/implements[@name='java.nio.channels.NetworkChannel']" />
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='SocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" />
+  <remove-node path="/api/package[@name='java.nio.channels']/class[@name='ServerSocketChannel']/implements[@name='java.nio.channels.NetworkChannel']" />
 
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='Striped64']" name="visibility">public</attr>
 
@@ -1213,16 +1214,16 @@
   <attr path="/api/package[@name='java.util.concurrent']/class[@name='CompletableFuture']/method[@static='false' and starts-with (@return, 'java.util.concurrent.CompletableFuture') and @name!='toCompletableFuture']" name="managedReturn">Java.Util.Concurrent.ICompletionStage</attr>
 
   <!--
-  
+
   Spliterator had brought TONS of issues that cannot really be easily resolved. Considering that those Java8 API is primarily useful
   only for Java developers, they should not be regarded as major
   binding blockers. So, just remove them.
-  
+
   We had been removing EntityIterator for exactly same reason
   (non-generic derived interfaces from generic interface, that has variant return values are regarded as our unsupported use of
   generics; we slightly removed limitation by some manual metadata
   fixes and .cs additions, but this is "unsupported" in principle.
-  
+
   -->
 
   <remove-node path="/api/package[@name='java.util']/interface[starts-with (@name, 'Spliterator.Of')]" />
@@ -1232,14 +1233,14 @@
     interface default method within generic types don't get marked
     as override as expected. For example, some Spliterator.AbstractIntSpliterator#forEachRemaining() overload
     (among many) isn't marked as override, while it should be.
-    
+
     Here we are removing interface default method. Usually removing
     interface method cannot be done as Java stub generator will
     not emit required Java methods for the ACWs and then javac
     will reject such incomplete interface implementation.
     But here it is about default methods which don't have to be
     necessarily implemented.
-    
+
     Same goes for other spliterator methods, streams and
     PrimitiveIterators.
 
@@ -1251,11 +1252,11 @@
   <attr path="/api/package[@name='java.util.stream']/interface[@name='IntStream' or @name='LongStream' or @name='DoubleStream']/method[@name='iterator']" name="managedReturn">Java.Util.IIterator</attr>
 
   <attr path="/api/package[@name='java.util']/interface[starts-with (@name, 'PrimitiveIterator.Of')]/method[@name='next']" name="managedReturn">Java.Lang.Object</attr>
-  
+
   <!--
   The return value is generic argument and it is not respected here,
   and thus treated as Java.Lang.Object. It needs to be fixed.
-  --> 
+  -->
   <attr path="/api/package[@name='java.util']/class[starts-with (@name, 'Spliterators.Abstract')]/method[@name='trySplit']" name="managedReturn">Java.Util.ISpliterator</attr>
 
   <attr path="/api/package[@name='android.service.quicksettings']" name="managedName">Android.Service.QuickSettings</attr>
@@ -1283,7 +1284,7 @@
   There is no other solution but removing IAudioRouting and all relevant
   types and methods so far. Offering awkward API that forces manual
   fixup to rename every descendants is no-go.
- 
+
   -->
 
   <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting']" />
@@ -1309,7 +1310,7 @@
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicInteger']/method[@name='getAndIncrement']" name="propertyName"></attr>
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndDecrement']" name="propertyName"></attr>
   <attr path="/api/package[@name='java.util.concurrent.atomic']/class[@name='AtomicLong']/method[@name='getAndIncrement']" name="propertyName"></attr>
-  
+
 
   <!-- Android O (API Level 26) -->
 
@@ -1327,7 +1328,7 @@
   <!-- FIXME: fix build and enable these packages -->
   <remove-node path="/api/package[@name='java.time']" api-since="26" />
   <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
-  
+
   <!-- FIXME: fix build and enable this method -->
   <remove-node path="/api/package[@name='android.text']/class[@name='TextUtils']/method[@name='listEllipsize']" api-since="26" />
 
@@ -1339,7 +1340,7 @@
        We remove one with java.lang.String; with a System.String overload it should be fine for most of managed developers. -->
   <remove-node path="/api/package[@name='android.text']/class[@name='BidiFormatter']/method[@name='unicodeWrap' and @return='java.lang.String']" api-since="26" />
 
-  <!-- interfaces that implement BasicFileAttributeView often have return value of a derived type. So change the managed return type. --> 
+  <!-- interfaces that implement BasicFileAttributeView often have return value of a derived type. So change the managed return type. -->
   <attr path="/api/package[@name='java.nio.file.attribute']/*[implements[@name='java.nio.file.attribute.BasicFileAttributeView']]/method[@name='readAttributes']" name="managedReturn">Java.Nio.FileNio.Attributes.IBasicFileAttributes</attr>
 
   <!-- When propertized, they conflict with existing boolean property (isFocused()/setFocused(boolean)) -->
@@ -1356,7 +1357,7 @@
   That is technically different in Java sources, but are identical to
   former non-generic version. So they should be regarded as identical.
   Also, for this method we have *manually* bound generic method.
-  
+
   We could make fixes in api-merge, but manual fix is 100x simpler.
   Sadly api-merge is processed before metadata fixup, so it cannot be simple overload removal. -->
   <remove-node path="/api/package/class/method[@name='findViewById' or @name='onFindViewById' or @name='findViewWithTag']/typeParameters" api-since="26" />
@@ -1366,11 +1367,11 @@
   Destroyable, which is not a breaking change in Java land, but it DOES
   break in C# land without default interface method support. And it
   does break build at javax.crypto.spec.SecretKeySpec.
-  
+
   Until C# supports default interface methods, we have to eliminate this
   "implements" part. Since it contains only default methods, an
   implementing JCW can be safely compiled with this unbound Java interface.
-  
+
   java.security.PrivateKey seems also affected, so removed any query condition for package names and interface names.
   -->
   <remove-node path="/api/package/interface/implements[@name='javax.security.auth.Destroyable']" />
