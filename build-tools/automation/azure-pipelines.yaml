@@ -1,6 +1,6 @@
 # Xamarin.Android Pipeline
 
-name: $(Build.SourceBranch)-$(Build.SourceVersion)-$(Rev:r)
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
 trigger:
   - master
@@ -18,18 +18,13 @@ resources:
 # Global variables
 variables:
   BundleArtifactName: bundle
-  InstallerArtifactName: unsigned-installers
-  AutoProvisionArgs: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
-  AndroidTargetAbiArgs: >-
-    /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-    /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
+  InstallerArtifactName: installers
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
+# Check - "Xamarin.Android (Prepare bundle)"
 stages:
 - stage: prepare
   displayName: Prepare
-  variables:
-    MSBuildAbiArgs: $(AndroidTargetAbiArgs) /p:AndroidSupportedHostJitAbis=Darwin:mxe-Win32:mxe-Win64
   jobs:
   - job: create_bundle
     displayName: Bundle
@@ -45,8 +40,8 @@ stages:
       # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
       # The 'prepare' step creates the bundle
     - script: |
-        make prepare-update-mono PREPARE_CI=1 V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
-        make prepare PREPARE_CI=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(AutoProvisionArgs) $(MSBuildAbiArgs)"
+        make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: create bundle
 
     - task: CopyFiles@2
@@ -81,7 +76,8 @@ stages:
   displayName: Mac
   dependsOn: prepare
   jobs:
-  - job: mac_build
+  # Check - "Xamarin.Android (Mac Build)"
+  - job: mac_build_create_installers
     displayName: Build
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
@@ -99,8 +95,11 @@ stages:
         artifactName: $(BundleArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)
 
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+      displayName: make prepare-update-mono
+
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: make prepare-commercial
+      displayName: make prepare-external-git-dependencies
       condition: eq(variables['XA.Commercial.Build'], 'true')
       env:
         GH_AUTH_SECRET: $(Github.Token)
@@ -113,27 +112,47 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
         provisioning_extra_args: -vv
 
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)" MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
-      displayName: make prepare-update-mono
-
-      # No need to add `prepare` to the command line, the `jenkins` rule depends on `prepare-jenkins` which will run the bootstrapper
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)" MSBUILD_ARGS="$(AutoProvisionArgs) /p:BundleRootPath=$(System.DefaultWorkingDirectory)"
+    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
       displayName: make jenkins
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
 
     - script: |
-        mkdir -p bin/Build$(XA.Build.Configuration)/unsigned-installers
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/unsigned-installers
-        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/unsigned-installers
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
       displayName: copy unsigned installers
 
+    - script: |
+        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
+        echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+      displayName: create updateinfo file
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path "bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
+      displayName: set variable to pkg path
+
+    - template: productsign-pkg.yml@yaml
+      parameters:
+        UnsignedPkgPath: $(XA.Unsigned.Pkg)
+
     - task: PublishPipelineArtifact@0
-      displayName: upload unsigned installers
+      displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
-        targetPath: bin/Build$(XA.Build.Configuration)/unsigned-installers
+        targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+    - template: upload-to-storage.yml@yaml
+      parameters:
+        BuildPackages: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        AzureContainerName: $(Azure.Container.Name)
+        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
     - task: MSBuild@1
       displayName: package build results
@@ -150,7 +169,32 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
+  # Check - "Xamarin.Android (Mac Queue Vsix Signing)"
+  # Actually runs on a Windows host, but the work is done in a Jenkins job. Does not run on PR builds.
+  - job: queue_vsix_signing
+    displayName: Queue Vsix Signing
+    dependsOn: mac_build_create_installers
+    pool: $(XA.Build.Win.Pool)
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    timeoutInMinutes: 30
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    steps:
+    - task: JenkinsQueueJob@2
+      displayName: xamarin vsix codesign - run jenkins job
+      inputs:
+        serverEndpoint: $(Signing.Endpoint)
+        jobName: $(Signing.Job)
+        isParameterizedJob: true
+        jobParameters: |
+          REPO=$(Build.Repository.Name)
+          COMMIT=$(Build.SourceVersion)
+          SIGN_TYPE=Real
+          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
+
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
+# Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
   dependsOn: prepare
@@ -163,6 +207,9 @@ stages:
     workspace:
       clean: all
     variables:
+      AndroidTargetAbiArgs: >-
+        /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
+        /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
       JAVA_HOME: '%HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk'
     steps:
     - checkout: self
@@ -178,14 +225,14 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: $(AutoProvisionArgs) $(AndroidTargetAbiArgs) /t:Prepare /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Prepare /p:AutoProvision=true $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory) $(AndroidTargetAbiArgs)
+        msbuildArguments: /t:Build $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -246,7 +293,7 @@ stages:
   displayName: Test
   dependsOn: mac_build
   jobs:
-  # Test APK Instrumentation
+  # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
     displayName: APK Instrumentation
     pool: $(XA.Build.Mac.Pool)
@@ -446,7 +493,7 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
-  # Test Designer Mac  
+  # Check - "Xamarin.Android (Test Designer Mac)"
   - job: designer_integration_mac
     displayName: Designer Mac
     pool: $(XA.Build.Mac.Pool)
@@ -486,7 +533,7 @@ stages:
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
-  # Test Designer Windows
+  # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
     displayName: Designer Windows
     pool:

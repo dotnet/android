@@ -80,10 +80,12 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle-api.h" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CSharp.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Terminal.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.html" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup.aotprofile" />

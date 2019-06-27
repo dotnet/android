@@ -49,6 +49,7 @@
       Outputs="$(OutputPath)mono.android.dex">
     <Exec
         Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
     />
   </Target>
 </Project>

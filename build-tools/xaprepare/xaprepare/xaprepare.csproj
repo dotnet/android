@@ -89,6 +89,7 @@
     <Compile Include="Application\MonoHostRuntime.cs" />
     <Compile Include="Application\MonoJitRuntime.cs" />
     <Compile Include="Application\MonoRuntime.cs" />
+    <Compile Include="Application\MonoRuntimesHelpers.cs" />
     <Compile Include="Application\MonoUtilityFile.cs" />
     <Compile Include="Application\ProcessRunner.cs" />
     <Compile Include="Application\ProcessStandardStreamWrapper.cs" />
@@ -136,7 +137,6 @@
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.cs" />
-    <Compile Include="Steps\MonoRuntimesHelpers.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />
     <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.cs" />
@@ -144,6 +144,7 @@
     <Compile Include="Steps\Step_PrepareLocal.cs" />
     <Compile Include="Steps\Step_PrepareMSBuild.cs" />
     <Compile Include="Steps\Step_PrepareProps.cs" />
+    <Compile Include="Steps\Step_ShowEnabledRuntimes.cs" />
     <Compile Include="Steps\Step_ThirdPartyNotices.cs" />
     <Compile Include="ThirdPartyNotices\aapt2.cs" />
     <Compile Include="ThirdPartyNotices\bundletool.cs" />
