@@ -2293,6 +2293,7 @@
 15,Android.Views.MetaKeyStates,MetaMask,android/view/KeyEvent.META_META_MASK,458752
 15,Android.Views.MetaKeyStates,MetaOn,android/view/KeyEvent.META_META_ON,65536
 15,Android.Views.MetaKeyStates,MetaRightOn,android/view/KeyEvent.META_META_RIGHT_ON,262144
+0,Android.Views.MetaKeyStates,None,,0
 15,Android.Views.MetaKeyStates,NumLockOn,android/view/KeyEvent.META_NUM_LOCK_ON,2097152
 15,Android.Views.MetaKeyStates,ScrollLockOn,android/view/KeyEvent.META_SCROLL_LOCK_ON,4194304
 10,Android.Views.MetaKeyStates,ShiftLeftOn,android/view/KeyEvent.META_SHIFT_LEFT_ON,64
