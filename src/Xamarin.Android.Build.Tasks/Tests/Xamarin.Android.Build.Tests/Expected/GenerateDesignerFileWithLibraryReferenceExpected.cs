@@ -24,6 +24,20 @@ namespace Foo.Foo
 			global::Android.Runtime.ResourceIdManager.UpdateIdValues();
 		}
 		
+		public static void UpdateIdValues()
+		{
+			global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;
+			global::Library.Resource.Array.widths_array = global::Foo.Foo.Resource.Array.widths_array;
+			global::Library.Resource.Dimension.main_text_item_size = global::Foo.Foo.Resource.Dimension.main_text_item_size;
+			global::Library.Resource.Drawable.ic_menu_preferences = global::Foo.Foo.Resource.Drawable.ic_menu_preferences;
+			global::Library.Resource.Font.arial = global::Foo.Foo.Resource.Font.arial;
+			global::Library.Resource.Id.menu_settings = global::Foo.Foo.Resource.Id.menu_settings;
+			global::Library.Resource.Mipmap.icon = global::Foo.Foo.Resource.Mipmap.icon;
+			global::Library.Resource.String.@fixed = global::Foo.Foo.Resource.String.@fixed;
+			global::Library.Resource.String.foo = global::Foo.Foo.Resource.String.foo;
+			global::Library.Resource.String.menu_settings = global::Foo.Foo.Resource.String.menu_settings;
+		}
+		
 		public partial class Animator
 		{
 			
