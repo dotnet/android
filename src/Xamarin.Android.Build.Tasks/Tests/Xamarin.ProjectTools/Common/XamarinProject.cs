@@ -32,6 +32,10 @@ namespace Xamarin.ProjectTools
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
+		/// <summary>
+		/// If true, the ProjectDirectory will be deleted and populated on the first build
+		/// </summary>
+		public virtual bool ShouldPopulate => true;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 
