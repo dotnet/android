@@ -68,7 +68,6 @@ namespace MonoDroid.Generation
 		public bool IgnoreNonPublicType { get; set; }
 		public string AssemblyName { get; set; }
 		public bool UseShortFileNames { get; set; }
-		public IList<GenBase> Gens {get;set;}
 		public int ProductVersion { get; set; }
 		public bool SupportInterfaceConstants { get; set; }
 

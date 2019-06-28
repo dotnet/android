@@ -105,6 +105,7 @@
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Parameter.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\ParameterList.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\Parser.cs" />
+    <Compile Include="Utilities\AncestorDescendantCache.cs" />
     <Compile Include="Utilities\ProcessRocks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Property.cs" />

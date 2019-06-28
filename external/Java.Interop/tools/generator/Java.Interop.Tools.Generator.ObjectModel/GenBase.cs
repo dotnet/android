@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Collections;
 using System.Security.Policy;
 using System.Text;
+using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation {
 	
@@ -798,24 +799,24 @@ namespace MonoDroid.Generation {
 
 		bool enum_updated;
 
-		public virtual void UpdateEnums (CodeGenerationOptions opt)
+		public virtual void UpdateEnums (CodeGenerationOptions opt, AncestorDescendantCache cache)
 		{
 			if (enum_updated || !IsGeneratable)
 				return;
 			enum_updated = true;
 			var baseGen = GetBaseGen (opt);
 			if (baseGen != null)
-				baseGen.UpdateEnums (opt);
+				baseGen.UpdateEnums (opt, cache);
 
 			foreach (Method m in methods) {
-				AutoDetectEnumifiedOverrideParameters (m, opt);
-				AutoDetectEnumifiedOverrideReturn (m, opt);
+				AutoDetectEnumifiedOverrideParameters (m, cache);
+				AutoDetectEnumifiedOverrideReturn (m, cache);
 			}
 			foreach (Property p in Properties)
-				AutoDetectEnumifiedOverrideProperties (p, opt);
+				AutoDetectEnumifiedOverrideProperties (p, cache);
 			UpdateEnumsInInterfaceImplementation ();
 			foreach (var ngen in NestedTypes)
-				ngen.UpdateEnums (opt);
+				ngen.UpdateEnums (opt, cache);
 		}
 
 		public virtual void UpdateEnumsInInterfaceImplementation ()
@@ -951,11 +952,11 @@ namespace MonoDroid.Generation {
 			return t.Methods.Concat (t.Properties.Select (p => p.Getter)).Concat (t.Properties.Select (p => p.Setter).Where (m => m != null));
 		}
 
-		static string [] AutoDetectEnumifiedOverrideParameters (MethodBase method, CodeGenerationOptions opt)
+		static string [] AutoDetectEnumifiedOverrideParameters (MethodBase method, AncestorDescendantCache cache)
 		{
 			if (method.Parameters.All (p => p.Type != "int"))
 				return null;
-			var classes = method.DeclaringType.Ancestors ().Concat (method.DeclaringType.Descendants (opt.Gens));
+			var classes = cache.GetAncestorsAndDescendants (method.DeclaringType);
 			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
 			foreach (var t in classes) {
 				foreach (var candidate in GetAllMethods (t).Where (m => m.Name == method.Name
@@ -982,11 +983,11 @@ namespace MonoDroid.Generation {
 			return null;
 		}
 
-		static string AutoDetectEnumifiedOverrideReturn (Method method, CodeGenerationOptions opt)
+		static string AutoDetectEnumifiedOverrideReturn (Method method, AncestorDescendantCache cache)
 		{
 			if (method.RetVal.FullName != "int")
 				return null;
-			var classes = method.DeclaringType.Ancestors ().Concat (method.DeclaringType.Descendants (opt.Gens));
+			var classes = cache.GetAncestorsAndDescendants (method.DeclaringType);
 			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
 			foreach (var t in classes) {
 				foreach (var candidate in GetAllMethods (t).Where (m => m.Name == method.Name && m.Parameters.Count == method.Parameters.Count)) {
@@ -999,11 +1000,11 @@ namespace MonoDroid.Generation {
 			return null;
 		}
 
-		void AutoDetectEnumifiedOverrideProperties (Property prop, CodeGenerationOptions opt)
+		void AutoDetectEnumifiedOverrideProperties (Property prop, AncestorDescendantCache cache)
 		{
 			if (prop.Type != "int")
 				return;
-			var classes = prop.Getter.DeclaringType.Ancestors ().Concat (prop.Getter.DeclaringType.Descendants (opt.Gens));
+			var classes = cache.GetAncestorsAndDescendants (prop.Getter.DeclaringType);
 			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
 			foreach (var t in classes) {
 				foreach (var candidate in t.Properties.Where (p => p.Name == prop.Name)) {

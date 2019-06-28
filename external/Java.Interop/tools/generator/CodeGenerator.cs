@@ -11,6 +11,7 @@ using Xamarin.Android.Tools.ApiXmlAdjuster;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
+using MonoDroid.Generation.Utilities;
 
 namespace Xamarin.Android.Binder
 {
@@ -130,7 +131,6 @@ namespace Xamarin.Android.Binder
 				return;
 			}
 			apiSource = p.ApiSource;
-			opt.Gens = gens;
 
 			// disable interface default methods here, especially before validation.
 			gens = gens.Where (g => !g.IsObfuscated && g.Visibility != "private").ToList ();
@@ -148,8 +148,10 @@ namespace Xamarin.Android.Binder
 			foreach (GenBase gen in gens)
 				gen.FillProperties ();
 
+			var cache = new AncestorDescendantCache (gens);
+
 			foreach (var gen in gens)
-				gen.UpdateEnums (opt);
+				gen.UpdateEnums (opt, cache);
 
 			foreach (GenBase gen in gens)
 				gen.FixupMethodOverrides (opt);
