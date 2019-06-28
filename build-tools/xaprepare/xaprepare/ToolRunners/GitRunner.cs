@@ -95,7 +95,16 @@ namespace Xamarin.Android.Prepare
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 
 			var runner = CreateGitRunner (runnerWorkingDirectory);
-			runner.AddArgument ("rev-parse");
+
+			// Get commit message of merge commit being built, to parse the HEAD of the source branch.
+			if (Context.BuildingAZPPullRequest) {
+				runner.AddArgument ("log");
+				runner.AddArgument ("--format=%B");
+				runner.AddArgument ("-n");
+				runner.AddArgument ("1");
+			} else {
+				runner.AddArgument ("rev-parse");
+			}
 			runner.AddArgument ("HEAD");
 
 			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
@@ -105,7 +114,14 @@ namespace Xamarin.Android.Prepare
 				outputSink.LineCallback = (string line) => {
 					if (!String.IsNullOrEmpty (hash))
 						return;
-					hash = line?.Trim ();
+					if (Context.BuildingAZPPullRequest) {
+						// Parse merge commit message example:
+						// Merge 6d6b90779d04fb646a9bd12b4faac85285917b43 into a849e2153370453ada1bda9bc86fb98076c92498
+						string [] messageParts = line.Split (' ');
+						hash = messageParts [1];
+					} else {
+						hash = line?.Trim ();
+					}
 				};
 
 				if (!runner.Run ())

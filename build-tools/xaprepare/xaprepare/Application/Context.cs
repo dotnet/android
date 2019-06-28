@@ -329,6 +329,15 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
+
+		public bool BuildingAZPPullRequest {
+			get {
+				string buildReason = Environment.GetEnvironmentVariable ("BUILD_REASON");
+				return !String.IsNullOrEmpty (buildReason) && buildReason == "PullRequest";
+
+			}
+		}
+
 		static Context ()
 		{
 			Instance = new Context ();
