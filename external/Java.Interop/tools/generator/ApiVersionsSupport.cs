@@ -31,11 +31,11 @@ namespace MonoDroid.Generation
 
 		public static void AssignApiLevels (IList<GenBase> gens, string apiVersionsXml)
 		{
-			var flattenGens = FlattenGens (gens);
+			var flattenGens = FlattenGens (gens).ToLookup (g => g.JavaName);
 			var versions = new ApiVersionsProvider ();
 			versions.Parse (apiVersionsXml);
 			foreach (var type in versions.Versions.Values) {
-				var matchedGens = flattenGens.Where (g => g.JavaName == type.Name);
+				var matchedGens = flattenGens [type.Name];
 				if (!matchedGens.Any ())
 					// There are known missing types, and it's going to be too noisy to report missing ones here.
 					// That task should be done elsewhere.
