@@ -101,6 +101,12 @@ namespace generatortests
 			return this;
 		}
 
+		public TestField SetValue (string value)
+		{
+			this.value = value;
+			return this;
+		}
+
 		public override bool IsDeprecated => isDeprecated;
 
 		public override string DeprecatedComment => deprecatedComment;
@@ -352,7 +358,7 @@ namespace generatortests
 			return ctor;
 		}
 
-		public static TestInterface CreateEmptyInterface (string interfaceName, CodeGenerationOptions options)
+		public static TestInterface CreateEmptyInterface (string interfaceName)
 		{
 			var iface = new TestInterface (null, interfaceName);
 
@@ -361,7 +367,7 @@ namespace generatortests
 
 		public static TestInterface CreateInterface (string interfaceName, CodeGenerationOptions options)
 		{
-			var iface = CreateEmptyInterface (interfaceName, null);
+			var iface = CreateEmptyInterface (interfaceName);
 
 			iface.Properties.Add (CreateProperty (iface, "Count", "int", options));
 			iface.Properties.Add (CreateProperty (iface, "Key", "java.lang.String", options));
@@ -400,7 +406,6 @@ namespace generatortests
 				Getter = CreateMethod (parent, $"get_{propertyName}", options, propertyType, isStatic, isAbstract),
 				Setter = CreateMethod (parent, $"set_{propertyName}", options, "void", isStatic, isAbstract, parameters: new Parameter ("value", propertyType, propertyType, false))
 			};
-
 
 			return prop;
 		}

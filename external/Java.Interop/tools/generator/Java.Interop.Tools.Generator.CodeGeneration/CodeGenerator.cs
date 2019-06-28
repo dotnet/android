@@ -441,61 +441,26 @@ namespace MonoDroid.Generation
 		public void WriteInterface (InterfaceGen @interface, string indent, GenerationInfo gen_info)
 		{
 			opt.ContextTypes.Push (@interface);
+
 			// interfaces don't nest, so generate as siblings
 			foreach (GenBase nest in @interface.NestedTypes) {
 				WriteType (nest, indent, gen_info);
 				writer.WriteLine ();
 			}
 
-			var staticMethods = @interface.Methods.Where (m => m.IsStatic);
-			if (@interface.Fields.Any () || staticMethods.Any ()) {
-				string name = @interface.HasManagedName
-					? @interface.Name.Substring (1) + "Consts"
-					: @interface.Name.Substring (1);
-				writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
-				writer.WriteLine ("{0}public abstract class {1} : Java.Lang.Object {{", indent, name);
-				writer.WriteLine ();
-				writer.WriteLine ("{0}\tinternal {1} ()", indent, name);
-				writer.WriteLine ("{0}\t{{", indent);
-				writer.WriteLine ("{0}\t}}", indent);
+			WriteInterfaceImplementedMembersAlternative (@interface, indent);
 
-				var seen = new HashSet<string> ();
-				bool needsClassRef = WriteFields (@interface.Fields, indent + "\t", @interface, seen) || staticMethods.Any ();
-				foreach (var iface in @interface.GetAllImplementedInterfaces ().OfType<InterfaceGen> ()) {
-					writer.WriteLine ();
-					writer.WriteLine ("{0}\t// The following are fields from: {1}", indent, iface.JavaName);
-					bool v = WriteFields (iface.Fields, indent + "\t", iface, seen);
-					needsClassRef = needsClassRef || v;
-				}
-
-				foreach (var m in @interface.Methods.Where (m => m.IsStatic))
-					WriteMethod (m, indent + "\t", @interface, true);
-
-				if (needsClassRef) {
-					writer.WriteLine ();
-					WriteClassHandle (@interface, indent + "\t", name);
-				}
-
-				writer.WriteLine ("{0}}}", indent, @interface.Name);
-				writer.WriteLine ();
-
-				if (!@interface.HasManagedName) {
-					writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
-					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This type will be removed in a future release.\")]", indent, name);
-					writer.WriteLine ("{0}public abstract class {1}Consts : {1} {{", indent, name);
-					writer.WriteLine ();
-					writer.WriteLine ("{0}\tprivate {1}Consts ()", indent, name);
-					writer.WriteLine ("{0}\t{{", indent);
-					writer.WriteLine ("{0}\t}}", indent);
-					writer.WriteLine ("{0}}}", indent);
-					writer.WriteLine ();
-				}
-			}
-
-			if (@interface.IsConstSugar)
+			// If this interface is just fields and we can't generate any of them
+			// then we don't need to write the interface
+			if (@interface.IsConstSugar && @interface.GetGeneratableFields (opt).Count () == 0)
 				return;
 
 			WriteInterfaceDeclaration (@interface, indent);
+
+			// If this interface is just constant fields we don't need to write all the invoker bits
+			if (@interface.IsConstSugar)
+				return;
+
 			if (!@interface.AssemblyQualifiedName.Contains ('/'))
 				WriteInterfaceExtensionsDeclaration (@interface, indent, null);
 			WriteInterfaceInvoker (@interface, indent);
@@ -547,11 +512,15 @@ namespace MonoDroid.Generation
 
 			if (@interface.IsDeprecated)
 				writer.WriteLine ("{0}[ObsoleteAttribute (@\"{1}\")]", indent, @interface.DeprecatedComment);
-			writer.WriteLine ("{0}[Register (\"{1}\", \"\", \"{2}\"{3})]", indent, @interface.RawJniName, @interface.Namespace + "." + @interface.FullName.Substring (@interface.Namespace.Length + 1).Replace ('.', '/') + "Invoker", @interface.AdditionalAttributeString ());
+
+			if (!@interface.IsConstSugar)
+				writer.WriteLine ("{0}[Register (\"{1}\", \"\", \"{2}\"{3})]", indent, @interface.RawJniName, @interface.Namespace + "." + @interface.FullName.Substring (@interface.Namespace.Length + 1).Replace ('.', '/') + "Invoker", @interface.AdditionalAttributeString ());
+
 			if (@interface.TypeParameters != null && @interface.TypeParameters.Any ())
 				writer.WriteLine ("{0}{1}", indent, @interface.TypeParameters.ToGeneratedAttributeString ());
-			writer.WriteLine ("{0}{1} partial interface {2} : {3} {{", indent, @interface.Visibility, @interface.Name,
-				@interface.Interfaces.Count == 0 || sb.Length == 0 ? "IJavaObject" : sb.ToString ());
+			writer.WriteLine ("{0}{1} partial interface {2}{3} {{", indent, @interface.Visibility, @interface.Name,
+				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : IJavaObject" : " : " + sb.ToString ());
+			WriteInterfaceFields (@interface, indent + "\t");
 			writer.WriteLine ();
 			WriteInterfaceProperties (@interface, indent + "\t");
 			WriteInterfaceMethods (@interface, indent + "\t");
@@ -707,6 +676,74 @@ namespace MonoDroid.Generation
 			WriteInterfaceExtensionMethods (@interface, indent + "\t");
 			writer.WriteLine (indent + "}");
 			writer.WriteLine ();
+		}
+
+		public void WriteInterfaceFields (InterfaceGen iface, string indent)
+		{
+			// Interface fields are only supported with DIM
+			if (!opt.SupportInterfaceConstants)
+				return;
+
+			var seen = new HashSet<string> ();
+			var fields = iface.GetGeneratableFields (opt).ToList ();
+
+			WriteFields (fields, indent, iface, seen);
+		}
+
+		public void WriteInterfaceImplementedMembersAlternative (InterfaceGen @interface, string indent)
+		{
+			// Historically .NET has not allowed interface implemented fields or constants, so we
+			// initially worked around that by moving them to an abstract class, generally
+			// IMyInterface -> MyInterfaceConsts
+			// This was later expanded to accomodate static interface methods, creating a more appropriately named class
+			// IMyInterface -> MyInterface
+			// In this case the XXXConsts class is [Obsolete]'d and simply inherits from the newer class
+			// in order to maintain backward compatibility.
+			var staticMethods = @interface.Methods.Where (m => m.IsStatic);
+
+			if (@interface.Fields.Any () || staticMethods.Any ()) {
+				string name = @interface.HasManagedName
+					? @interface.Name.Substring (1) + "Consts"
+					: @interface.Name.Substring (1);
+				writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
+				writer.WriteLine ("{0}public abstract class {1} : Java.Lang.Object {{", indent, name);
+				writer.WriteLine ();
+				writer.WriteLine ("{0}\tinternal {1} ()", indent, name);
+				writer.WriteLine ("{0}\t{{", indent);
+				writer.WriteLine ("{0}\t}}", indent);
+
+				var seen = new HashSet<string> ();
+				bool needsClassRef = WriteFields (@interface.Fields, indent + "\t", @interface, seen) || staticMethods.Any ();
+				foreach (var iface in @interface.GetAllImplementedInterfaces ().OfType<InterfaceGen> ()) {
+					writer.WriteLine ();
+					writer.WriteLine ("{0}\t// The following are fields from: {1}", indent, iface.JavaName);
+					bool v = WriteFields (iface.Fields, indent + "\t", iface, seen);
+					needsClassRef = needsClassRef || v;
+				}
+
+				foreach (var m in @interface.Methods.Where (m => m.IsStatic))
+					WriteMethod (m, indent + "\t", @interface, true);
+
+				if (needsClassRef) {
+					writer.WriteLine ();
+					WriteClassHandle (@interface, indent + "\t", name);
+				}
+
+				writer.WriteLine ("{0}}}", indent, @interface.Name);
+				writer.WriteLine ();
+
+				if (!@interface.HasManagedName) {
+					writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
+					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This type will be removed in a future release.\")]", indent, name);
+					writer.WriteLine ("{0}public abstract class {1}Consts : {1} {{", indent, name);
+					writer.WriteLine ();
+					writer.WriteLine ("{0}\tprivate {1}Consts ()", indent, name);
+					writer.WriteLine ("{0}\t{{", indent);
+					writer.WriteLine ("{0}\t}}", indent);
+					writer.WriteLine ("{0}}}", indent);
+					writer.WriteLine ();
+				}
+			}
 		}
 
 		public void WriteInterfaceInvoker (InterfaceGen @interface, string indent)

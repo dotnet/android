@@ -1,40 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using generatortests.Unit_Tests;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using Xamarin.Android.Binder;
 
 namespace generatortests
 {
-	abstract class CodeGeneratorTests
+	[TestFixture]
+	class JavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
-		protected CodeGenerator generator;
-		protected StringBuilder builder;
-		protected StringWriter writer;
-		protected CodeGenerationOptions options;
+		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
+	}
 
-		[SetUp]
-		public void SetUp ()
-		{
-			builder = new StringBuilder ();
-			writer = new StringWriter (builder);
-			options = new CodeGenerationOptions {
-				CodeGenerationTarget = Target
-			};
-			generator = options.CreateCodeGenerator (writer);
-		}
+	[TestFixture]
+	class XamarinAndroidCodeGeneratorTests : CodeGeneratorTests
+	{
+		protected override CodeGenerationTarget Target => CodeGenerationTarget.XamarinAndroid;
+	}
 
-		[TearDown]
-		public void TearDown ()
-		{
-			writer.Dispose ();
-		}
-
-		protected abstract Xamarin.Android.Binder.CodeGenerationTarget Target { get; }
-
+	abstract class CodeGeneratorTests : CodeGeneratorTestBase
+	{
 		[Test]
 		public void WriteCharSequenceEnumerator ()
 		{
@@ -839,23 +826,6 @@ namespace generatortests
 			options.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WritePropertyInvoker)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		// Get the test results from "Common" for tests with the same results regardless of Target
-		string GetExpected (string testName)
-		{
-			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
-
-			return File.ReadAllText (Path.Combine (root, "Unit-Tests", "CodeGeneratorExpectedResults", "Common", $"{testName}.txt")).NormalizeLineEndings ();
-		}
-
-		// Get the test results from "JavaInterop1" or "XamarinAndroid" for tests with the different results per Target
-		string GetTargetedExpected (string testName)
-		{
-			var target = Target.ToString ();
-			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
-
-			return File.ReadAllText (Path.Combine (root, "Unit-Tests", "CodeGeneratorExpectedResults", target, $"{testName}.txt")).NormalizeLineEndings ();
 		}
 	}
 }

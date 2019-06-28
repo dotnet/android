@@ -69,13 +69,13 @@
     <Compile Include="Integration-Tests\GenericArguments.cs" />
     <Compile Include="Integration-Tests\InterfaceMethodsConflict.cs" />
     <Compile Include="SupportFiles\RegisterAttribute.cs" />
+    <Compile Include="Unit-Tests\CodeGeneratorTestBase.cs" />
     <Compile Include="Unit-Tests\CodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\AdjusterTests.cs" />
-    <Compile Include="Unit-Tests\JavaInteropCodeGeneratorTests.cs" />
+    <Compile Include="Unit-Tests\DefaultInterfaceMethodsTests.cs" />
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
     <Compile Include="Unit-Tests\TestExtensions.cs" />
-    <Compile Include="Unit-Tests\XamarinAndroidCodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\XmlTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -208,6 +208,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClassPropertyInvokersWithSkips.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteConstSugarInterfaceFields.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldConstant.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -230,6 +233,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldString.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceFields.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodAbstractWithVoidReturn.txt">
@@ -310,6 +316,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceInvoker.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteConstSugarInterfaceFields.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteFieldConstant.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -356,6 +365,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceExtensionsDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteInterfaceFields.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteInterfaceInvoker.txt">

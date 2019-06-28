@@ -70,6 +70,7 @@ namespace MonoDroid.Generation
 		public bool UseShortFileNames { get; set; }
 		public IList<GenBase> Gens {get;set;}
 		public int ProductVersion { get; set; }
+		public bool SupportInterfaceConstants { get; set; }
 
 		bool? buildingCoreAssembly;
 		public bool BuildingCoreAssembly {

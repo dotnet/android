@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,15 @@ namespace MonoDroid.Generation
 		}
 
 		public bool HasManagedName => hasManagedName;
+
+		// These are fields that we currently support generating on the interface with DIM
+		public IEnumerable<Field> GetGeneratableFields (CodeGenerationOptions options)
+		{
+			if (!options.SupportInterfaceConstants)
+				return Enumerable.Empty<Field> ();
+
+			return Fields.Where (f => !f.NeedsProperty && !(f.DeprecatedComment?.Contains ("constant will be removed") == true));
+		}
 
 		public bool IsConstSugar {
 			get { 
