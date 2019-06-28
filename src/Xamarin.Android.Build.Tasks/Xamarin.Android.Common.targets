@@ -1302,6 +1302,7 @@ because xbuild doesn't support framework reference assemblies.
 		UseManagedResourceGenerator="True"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
+		ResourceFlagFile="$(_AndroidResFlagFile)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
 	<ItemGroup>
