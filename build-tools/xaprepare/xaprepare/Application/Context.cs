@@ -329,12 +329,14 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
-
-		public bool BuildingAZPPullRequest {
+		/// <summary>
+		///   True if the Azure Pipelines build was automatically triggered from a pull request.
+		///   Manually triggered pull request builds will have a 'Manual' build reason, and return false.
+		/// </summary>
+		public bool BuildingAzurePullRequest {
 			get {
 				string buildReason = Environment.GetEnvironmentVariable ("BUILD_REASON");
 				return !String.IsNullOrEmpty (buildReason) && buildReason == "PullRequest";
-
 			}
 		}
 
@@ -751,6 +753,9 @@ namespace Xamarin.Android.Prepare
 			Banner ("Updating Git submodules");
 
 			var git = new GitRunner (this);
+			if (!await git.CheckoutPullRequestSourceHead ())
+				Log.WarningLine ("Failed to update revision to HEAD of pull request source.");
+
 			if (!await git.SubmoduleUpdate ())
 				Log.WarningLine ("Failed to update Git submodules");
 
