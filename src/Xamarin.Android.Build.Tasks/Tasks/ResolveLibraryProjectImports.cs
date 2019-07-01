@@ -67,7 +67,6 @@ namespace Xamarin.Android.Tasks
 		};
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap();
-		HashSet<string> assembliesToSkipCaseFixup, assembliestoSkipExtraction;
 
 		public ResolveLibraryProjectImports ()
 		{
@@ -83,16 +82,6 @@ namespace Xamarin.Android.Tasks
 			var resolvedEnvironmentFiles      = new List<ITaskItem> ();
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
-			assembliesToSkipCaseFixup = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			assembliestoSkipExtraction = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			bool metaDataValue;
-			foreach (var asm in Assemblies) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipResourceProcessing), out metaDataValue) && metaDataValue)
-					assembliesToSkipCaseFixup.Add (asm.ItemSpec);
-				if (bool.TryParse (asm.GetMetadata (GetAdditionalResourcesFromAssemblies.AndroidSkipResourceExtraction), out metaDataValue) && metaDataValue)
-					assembliestoSkipExtraction.Add (asm.ItemSpec);
-			}
-
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
 				try {
 					Extract (resolver, jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles);
@@ -170,10 +159,9 @@ namespace Xamarin.Android.Tasks
 			foreach (var assembly in Assemblies)
 				res.Load (assembly.ItemSpec);
 
-			// FIXME: reorder references by import priority (not sure how to do that yet)
-			foreach (var assemblyPath in Assemblies
-					.Select (a => a.ItemSpec)
-					.Distinct ()) {
+			bool skip;
+			foreach (var assemblyItem in Assemblies) {
+				var assemblyPath = assemblyItem.ItemSpec;
 				var fileName = Path.GetFileName (assemblyPath);
 				if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
 						!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
@@ -185,7 +173,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
 					continue;
 				}
-				if (assembliestoSkipExtraction.Contains (assemblyPath)) {
+				if (bool.TryParse (assemblyItem.GetMetadata (GetAdditionalResourcesFromAssemblies.AndroidSkipResourceExtraction), out skip) && skip) {
 					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
 					continue;
 				}
@@ -216,7 +204,7 @@ namespace Xamarin.Android.Tasks
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, assemblyPath },
 						});
-						if (assembliesToSkipCaseFixup.Contains (assemblyPath))
+						if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 						resolvedResourceDirectories.Add (taskItem);
 					}
@@ -320,7 +308,7 @@ namespace Xamarin.Android.Tasks
 							var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 								{ OriginalFile, assemblyPath }
 							});
-							if (assembliesToSkipCaseFixup.Contains (assemblyPath))
+							if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 								taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
 							resolvedResourceDirectories.Add (taskItem);
 						}
