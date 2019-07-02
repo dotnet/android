@@ -164,7 +164,7 @@
     <Which
         HostOS="$(HostOS)"
         HostOSName="$(HostOsName)"
-        Program="$(AndroidNdkFullPath)/toolchains/%(_ToolchainTool.Identity)-4.9/prebuilt/$(_PrebuiltToolchainDir)/bin/%(ToolPrefix)-%(Tool)"
+        Program="$(AndroidNdkFullPath)\toolchains\%(_ToolchainTool.Identity)-4.9\prebuilt\$(_PrebuiltToolchainDir)\bin\%(ToolPrefix)-%(Tool)"
         Required="True">
       <Output TaskParameter="Location" PropertyName="_NDKToolLocation%(_ToolchainTool.Identity)-%(Tool)" />
     </Which>
