@@ -87,6 +87,22 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentException ("must not be null or empty", nameof (command));
 
 			this.command = command;
+			AddArgumentsInternal (ignoreEmptyArguments, arguments);
+		}
+
+		public ProcessRunner AddArguments (params string[] arguments)
+		{
+			return AddArguments (true, arguments);
+		}
+
+		public ProcessRunner AddArguments (bool ignoreEmptyArguments, params string[] arguments)
+		{
+			AddArgumentsInternal (ignoreEmptyArguments, arguments);
+			return this;
+		}
+
+		void AddArgumentsInternal (bool ignoreEmptyArguments, params string[] arguments)
+		{
 			if (arguments == null)
 				return;
 

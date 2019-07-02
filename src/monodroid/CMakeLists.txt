@@ -215,7 +215,6 @@ set(MONODROID_SOURCES
 if(UNIX)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${MONO_PATH}/support/nl.c
     ${SOURCES_DIR}/debug.cc
     ${SOURCES_DIR}/monodroid-networkinfo.cc
     ${SOURCES_DIR}/xamarin_getifaddrs.cc

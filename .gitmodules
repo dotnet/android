@@ -16,7 +16,7 @@
     branch = rel-1-5-1
 [submodule "external/LibZipSharp"]
     path = external/LibZipSharp
-    url = https://github.com/grendello/LibZipSharp.git
+    url = https://github.com/xamarin/LibZipSharp.git
     branch = master
 [submodule "external/mman-win32"]
     path = external/mman-win32

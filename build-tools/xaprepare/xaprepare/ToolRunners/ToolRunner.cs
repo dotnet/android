@@ -87,7 +87,7 @@ namespace Xamarin.Android.Prepare
 			if (managedRunner != null)
 				managedRunner = Context.OS.Which (managedRunner);
 
-			var runner = new ProcessRunner (managedRunner ?? FullToolPath, initialParams) {
+			var runner = new ProcessRunner (managedRunner ?? FullToolPath) {
 				ProcessTimeout = ProcessTimeout,
 				EchoCmdAndArguments = EchoCmdAndArguments,
 				EchoStandardError = EchoStandardError,
@@ -103,6 +103,7 @@ namespace Xamarin.Android.Prepare
 			if (managedRunner != null)
 				runner.AddQuotedArgument (FullToolPath);
 
+			runner.AddArguments (initialParams);
 			return runner;
 		}
 

@@ -23,7 +23,6 @@ namespace Xamarin.Android.Build.Tests {
     <item quantity=""one""> One location reported</item>
     <item quantity=""other"">%d locations reported</item>
   </plurals>
-  <string name=""menu_settings"">Android Beam settings</string>
 </resources>
 ";
 
@@ -37,6 +36,8 @@ namespace Xamarin.Android.Build.Tests {
     <item>Thickish</item>
     <item>Thick</item>
   </string-array>
+  <string name=""menu_settings"">Android Beam settings</string>
+  <string name=""fixed""></string>
 </resources>
 ";
 		const string Menu = @"<menu xmlns:android=""http://schemas.android.com/apk/res/android"">
@@ -136,9 +137,10 @@ int mipmap icon 0x7f0a0000
 int plurals num_locations_reported 0x7f0b0000
 int raw foo 0x7f0c0000
 int string app_name 0x7f0d0000
-int string foo 0x7f0d0001
-int string hello 0x7f0d0002
-int string menu_settings 0x7f0d0003
+int string fixed 0x7f0d0001
+int string foo 0x7f0d0002
+int string hello 0x7f0d0003
+int string menu_settings 0x7f0d0004
 int[] styleable CustomFonts { 0x010100d2, 0x7f030000 }
 int styleable CustomFonts_android_scrollX 0
 int styleable CustomFonts_customFont 1
@@ -198,6 +200,35 @@ int transition transition 0x7f0f0000
 			File.WriteAllText (Path.Combine (Root, path, "lp", "__res_name_case_map.txt"), "menu/Options.xml;menu/options.xml");
 		}
 
+		void BuildLibraryWithResources (string path)
+		{
+			var library = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library",
+			};
+
+			var libraryStrings = library.AndroidResources.FirstOrDefault (r => r.Include () == @"Resources\values\Strings.xml");
+
+			library.AndroidResources.Clear ();
+			library.AndroidResources.Add (libraryStrings);
+			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "animator", "slide_in_bottom.xml")) { TextContent = () => Animator });
+			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "font", "arial.ttf")) { TextContent = () => "" });
+			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "values", "strings2.xml")) { TextContent = () => StringsXml2 });
+			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "values", "dimen.xml")) { TextContent = () => Dimen });
+
+			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
+				var icon_binary_mdpi = new byte [stream.Length];
+				stream.Read (icon_binary_mdpi, 0, (int)stream.Length);
+				library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "drawable", "ic_menu_preferences.png")) { BinaryContent = () => icon_binary_mdpi });
+				library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "mipmap-hdpi", "icon.png")) { BinaryContent = () => icon_binary_mdpi });
+			}
+
+			library.AndroidResources.Add (new AndroidItem.AndroidResource (Path.Combine ("Resources", "menu", "options.xml")) { TextContent = () => Menu });
+
+			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine (Root, path))) {
+				Assert.IsTrue (builder.Build (library), "Build should have succeeded");
+			}
+		}
+
 		[Test]
 		public void GenerateDesignerFileWithÜmläüts ()
 		{
@@ -232,7 +263,7 @@ int transition transition 0x7f0f0000
 		}
 
 		[Test]
-		public void GenerateDesignerFileFromRtxt ()
+		public void GenerateDesignerFileFromRtxt ([Values (false, true)] bool withLibraryReference)
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
@@ -257,11 +288,62 @@ int transition transition 0x7f0f0000
 			};
 			task.IsApplication = true;
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			if (withLibraryReference) {
+				var libraryPath = Path.Combine (path, "Library");
+				BuildLibraryWithResources (libraryPath);
+				task.References = new TaskItem [] {
+					new TaskItem (Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll"))
+				};
+			}
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			var expected = Path.Combine (Root, "Expected", withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
+			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
+				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
+		public void UpdateLayoutIdIsIncludedInDesigner ()
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			File.WriteAllText (Path.Combine (Root, path, "R.txt"), Rtxt);
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var task = new GenerateResourceDesigner {
+				BuildEngine = engine
+			};
+			task.UseManagedResourceGenerator = true;
+			task.DesignTimeBuild = true;
+			task.Namespace = "Foo.Foo";
+			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
+			task.ProjectDir = Path.Combine (Root, path);
+			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
+			task.Resources = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "res", "values", "strings.xml"), new Dictionary<string, string> () {
+					{ "LogicalName", "values\\strings.xml" },
+				}),
+			};
+			task.AdditionalResourceDirectories = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, path, "lp", "res")),
+			};
+			task.ResourceFlagFile = Path.Combine (Root, path, "AndroidResgen.flag");
+			File.WriteAllText (task.ResourceFlagFile, string.Empty);
+			task.IsApplication = true;
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			// Update the id, and force the managed parser to re-parse the output
+			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main.Replace ("@+id/textview.withperiod", "@+id/textview.withperiod2"));
+			File.SetLastWriteTimeUtc (task.ResourceFlagFile, DateTime.UtcNow);
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
-				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			var data = File.ReadAllText (expected);
+			var expectedWithNewId = Path.Combine (Root, "Expected", "GenerateDesignerFileExpectedWithNewId.cs");
+			File.WriteAllText (expectedWithNewId, data.Replace ("withperiod", "withperiod2"));
+			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expectedWithNewId),
+				 $"{task.NetResgenOutputFile} and {expectedWithNewId} do not match.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}

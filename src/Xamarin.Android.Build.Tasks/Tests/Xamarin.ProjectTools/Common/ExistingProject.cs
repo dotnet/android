@@ -9,6 +9,8 @@ namespace Xamarin.ProjectTools
 	{
 		public override string ProjectTypeGuid => string.Empty;
 
+		public override bool ShouldPopulate => false;
+
 		public override List<ProjectResource> Save (bool saveProject = true) => new List<ProjectResource> ();
 
 		public override void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false) { }

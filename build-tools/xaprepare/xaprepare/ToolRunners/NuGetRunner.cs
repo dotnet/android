@@ -10,7 +10,7 @@ namespace Xamarin.Android.Prepare
 		protected override string ToolName                  => "NuGet";
 
 		public NuGetRunner (Context context, Log log = null, string nugetPath = null)
-			: base (context, log, nugetPath)
+			: base (context, log, nugetPath ?? Configurables.Paths.LocalNugetPath)
 		{}
 
 		public async Task<bool> Restore (string solutionFilePath)

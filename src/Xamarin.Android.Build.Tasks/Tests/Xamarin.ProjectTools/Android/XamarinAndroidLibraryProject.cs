@@ -19,6 +19,7 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			SetProperty ("AndroidApplication", "False");
+			SetProperty ("AndroidResgenFile", Path.Combine ("Resources", "Resource.designer.cs"));
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 			StringsXml = default_strings_xml;

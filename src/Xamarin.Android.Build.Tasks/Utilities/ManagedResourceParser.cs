@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaPlatformDirectory { get; set; }
 
+		public string ResourceFlagFile { get; set; }
+
 		void SortMembers (CodeTypeDeclaration decl)
 		{
 			CodeTypeMember [] members = new CodeTypeMember [decl.Members.Count];
@@ -98,10 +100,13 @@ namespace Xamarin.Android.Tasks
 				publicXml = XDocument.Load (publicXmlPath);
 			}
 
+			var resModifiedDate = !string.IsNullOrEmpty (ResourceFlagFile) && File.Exists (ResourceFlagFile)
+				? File.GetLastWriteTimeUtc (ResourceFlagFile)
+				: DateTime.MinValue;
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
 			var rTxt = Path.Combine(resourceDirectory, "..", "R.txt");
-			if (File.Exists (rTxt)) {
+			if (File.Exists (rTxt) && File.GetLastWriteTimeUtc (rTxt) > resModifiedDate) {
 				ProcessRtxtFile (rTxt);
 			} else {
 				foreach (var dir in Directory.EnumerateDirectories (resourceDirectory, "*", SearchOption.TopDirectoryOnly)) {
