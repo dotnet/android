@@ -18,6 +18,9 @@ namespace Xamarin.Android.Prepare
 
 		public static void ConsoleSetCursorPosition (int left, int top)
 		{
+			if (left < 0 || top < 0)
+				return;
+
 			SafeConsoleAccess (() => {
 					Console.SetCursorPosition (left, top);
 					return 0;
