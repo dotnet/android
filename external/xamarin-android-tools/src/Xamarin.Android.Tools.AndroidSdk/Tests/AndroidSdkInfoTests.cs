@@ -135,6 +135,35 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
+		[Test]
+		[Ignore ("This test will only work locally if you rename/remove your Open JDK directory.")]
+		public void JdkDirectory_JavaHome ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+			JdkInfoTests.CreateFauxJdk (jdk, releaseVersion: "1.8.999", releaseBuildNumber: "9", javaVersion: "1.8.999-9");
+
+			var logs = new StringWriter ();
+			Action<TraceLevel, string> logger = (level, message) => {
+				logs.WriteLine ($"[{level}] {message}");
+			};
+
+			string java_home = null;
+			try {
+				// We only set via JAVA_HOME
+				java_home = Environment.GetEnvironmentVariable ("JAVA_HOME", EnvironmentVariableTarget.Process);
+				Environment.SetEnvironmentVariable ("JAVA_HOME", jdk);
+				var info = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: "");
+
+				Assert.AreEqual (ndk, info.AndroidNdkPath, "AndroidNdkPath not preserved!");
+				Assert.AreEqual (sdk, info.AndroidSdkPath, "AndroidSdkPath not preserved!");
+				Assert.AreEqual (jdk, info.JavaSdkPath, "JavaSdkPath not preserved!");
+			} finally {
+				if (java_home != null)
+					Environment.SetEnvironmentVariable ("JAVA_HOME", java_home, EnvironmentVariableTarget.Process);
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
 		static  bool    IsWindows   => OS.IsWindows;
 
 		static void CreateSdks (out string root, out string jdk, out string ndk, out string sdk)

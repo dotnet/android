@@ -135,7 +135,19 @@ namespace Xamarin.Android.Tools
 			return ToJdkInfos (GetPreferredJdkPaths (), "Preferred Registry")
 				.Concat (ToJdkInfos (GetOpenJdkPaths (), "OpenJDK"))
 				.Concat (ToJdkInfos (GetKnownOpenJdkPaths (), "Well-known OpenJDK paths"))
-				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"));
+				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"))
+				.Concat (ToJdkInfos (GetEnvironmentJdkPaths (), "Environment Variables"));
+		}
+
+		private static IEnumerable<string> GetEnvironmentJdkPaths ()
+		{
+			var environment = new [] { "JAVA_HOME" };
+			foreach (var key in environment) {
+				var value = Environment.GetEnvironmentVariable (key);
+				if (!string.IsNullOrEmpty (value)) {
+					yield return value;
+				}
+			}
 		}
 
 		private static IEnumerable<string> GetPreferredJdkPaths ()
