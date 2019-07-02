@@ -157,7 +157,7 @@
     </ItemGroup>
 
     <CreateItem
-	Include="@(_ToolchainPrefix)" AdditionalMetadata="Tool=%(_ToolName.Identity)">
+        Include="@(_ToolchainPrefix)" AdditionalMetadata="Tool=%(_ToolName.Identity)">
       <Output TaskParameter="Include" ItemName="_ToolchainTool" />
     </CreateItem>
 
