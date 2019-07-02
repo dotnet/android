@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	class Step_Get_Windows_Binutils : Step
+	class Step_Get_Windows_GAS : Step
 	{
 		const int EndFileChunkSize   = 65535 + 22; // Maximum comment size + EOCD size
 		const uint EOCDSignature     = 0x06054b50;
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Prepare
 			public byte[] ExtraField;
 		};
 
-		public Step_Get_Windows_Binutils ()
+		public Step_Get_Windows_GAS ()
 			: base ("Downloading NDK tools for Windows")
 		{}
 
@@ -79,17 +79,9 @@ namespace Xamarin.Android.Prepare
 
 			var neededFiles = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/i686-linux-android-strip.exe",
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/arm-linux-androideabi-strip.exe",
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android-strip.exe",
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-as.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ld.exe",
-				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-strip.exe",
 			};
 
 			string destinationDirectory = Path.Combine (Configurables.Paths.InstallMSBuildDir);

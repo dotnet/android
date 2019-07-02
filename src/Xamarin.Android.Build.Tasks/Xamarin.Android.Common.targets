@@ -3005,7 +3005,6 @@ because xbuild doesn't support framework reference assemblies.
 	Condition="'$(AotAssemblies)' == 'True'"
 	AndroidAotMode="$(AndroidAotMode)"
 	AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-	ToolsDirectory="$(MonoAndroidBinDirectory)"
 	AndroidApiLevel="$(_AndroidApiLevel)"
 	ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 	SupportedAbis="@(_BuildTargetAbis)"

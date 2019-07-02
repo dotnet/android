@@ -151,22 +151,14 @@
       <_ToolchainPrefix Include="x86_64">
         <ToolPrefix>x86_64-linux-android</ToolPrefix>
       </_ToolchainPrefix>
-      <_ToolName Include="as"/>
-      <_ToolName Include="ld"/>
-      <_ToolName Include="strip"/>
     </ItemGroup>
-
-    <CreateItem
-	Include="@(_ToolchainPrefix)" AdditionalMetadata="Tool=%(_ToolName.Identity)">
-      <Output TaskParameter="Include" ItemName="_ToolchainTool" />
-    </CreateItem>
 
     <Which
         HostOS="$(HostOS)"
         HostOSName="$(HostOsName)"
-        Program="$(AndroidNdkFullPath)/toolchains/%(_ToolchainTool.Identity)-4.9/prebuilt/$(_PrebuiltToolchainDir)/bin/%(ToolPrefix)-%(Tool)"
+        Program="$(AndroidNdkFullPath)/toolchains/%(_ToolchainPrefix.Identity)-4.9/prebuilt/$(_PrebuiltToolchainDir)/bin/%(_ToolchainPrefix.ToolPrefix)-as"
         Required="True">
-      <Output TaskParameter="Location" PropertyName="_NDKToolLocation%(_ToolchainTool.Identity)-%(Tool)" />
+      <Output TaskParameter="Location" PropertyName="_NDKToolLocation%(_ToolchainPrefix.Identity)" />
     </Which>
 
     <PropertyGroup>
@@ -175,9 +167,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_NDKToolSource Include="$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))" />
-      <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))'))" />
-      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))'))" />
+      <_NDKToolSource Include="$(_NDKToolLocation%(_ToolchainPrefix.Identity))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainPrefix.Identity))'))" />
     </ItemGroup>
   </Target>
 
