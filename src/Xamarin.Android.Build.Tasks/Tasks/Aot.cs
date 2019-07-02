@@ -35,7 +35,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidAotMode { get; set; }
 
-		[Required]
 		public string AndroidNdkDirectory { get; set; }
 
 		[Required]
@@ -71,6 +70,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] Profiles { get; set; }
 
+		public string ToolsDirectory { get; set; }
+
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
 
@@ -83,7 +84,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
+			if (EnableLLVM && !NdkUtil.Init (Log, AndroidNdkDirectory))
 				return false;
 
 			try {
@@ -346,7 +347,7 @@ namespace Xamarin.Android.Tasks
 					throw new Exception ("Unsupported Android target architecture ABI: " + abi);
 				}
 
-				if (!NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
+				if (EnableLLVM && !NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
 					yield return Config.Invalid;
 					yield break;
 				}
@@ -360,11 +361,18 @@ namespace Xamarin.Android.Tasks
 				if (!Directory.Exists (outdir))
 					Directory.CreateDirectory (outdir);
 
-				int level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch);
-				string toolPrefix = NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level);
+				int level = 0;
+				string toolPrefix = EnableLLVM
+					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
+					: $"{ToolsDirectory}{NdkUtil.GetArchDirName (arch)}-";
 				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
 				var ldFlags = string.Empty;
 				if (EnableLLVM) {
+					if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
+						yield return Config.Invalid;
+						yield break;
+					}
+
 					string androidLibPath = string.Empty;
 					try {
 						androidLibPath = NdkUtil.GetNdkPlatformLibPath(AndroidNdkDirectory, arch, level);
