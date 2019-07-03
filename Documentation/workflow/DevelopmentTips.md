@@ -153,7 +153,7 @@ versions of `libmonosgen-2.0.so`.
     corresponding `lib` subdirectory of the app project as described in the
     [Using Native Libraries][using-native-libraries] documentation.  For
     example, if debugging an arm64-v8a app, add the arm64-v8a version of
-    `libmonosgen-2.0.d.so` to the project in `lib/arm64-v8a/.
+    `libmonosgen-2.0.d.so` to the project in `lib/arm64-v8a/`.
 
  3. Rename the file to `libmonosgen-2.0.so`.
 
