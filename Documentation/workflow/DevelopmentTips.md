@@ -2,7 +2,7 @@
 
 Tips and tricks while developing Xamarin.Android.
 
-## Update directory
+# Update directory
 
 When a Xamarin.Android app launches on an Android device, and the app was
 built in the `Debug` configuration, it will create an "update" directory
@@ -53,68 +53,13 @@ files in `/data/local/tmp/`.  In that case, you can use a `cat` command that
         run-as Mono.Android_Tests sh -c \
         'cat > /data/data/Mono.Android_Tests/files/.__override__/mscorlib.dll'"
 
-## Attaching LLDB using Android Studio on Windows or macOS
+# Attaching LLDB using mono/lldb-binaries on macOS
 
-Android Studio can attach LLDB to Xamarin.Android for native debugging.  The
-integration includes the usual features like a graphical thread and stack frame
-browser and the ability to set breakpoints using the source code editor.
+Download the precompiled `lldb` and `lldb-server` binaries from
+<https://github.com/mono/lldb-binaries/releases>, and follow the instructions
+within [README.md][lldb-readme].
 
- 1. Install [Android Studio][android-studio].  If you already have an Android
-    SDK installation for Xamarin.Android, you can click **Cancel** on the **Android
-    Studio Setup Wizard** when you launch Android Studio.
-
- 2. Open the signed debuggable APK for the application in Android Studio via
-    **Profile or debug APK** on the start window or the **File > Profile or
-    Debug APK** menu item.
-
-    ![Profile or debug in the Android Studio start
-      window](../images/android-studio-start-window.png)
-
- 3. If you skipped the **Android Studio Setup Wizard**, navigate to **File >
-    Project Structure > Modules > Mono.Android_Tests-Signed > Dependencies**,
-    click **New > Android SDK** next to the **Module SDK**.
-
-    ![New SDK in the Android Studio Project Structure Modules Dependencies
-      window](../images/android-studio-modules-dependencies.png)
-
-    Select the Android SDK folder you're using with Xamarin.Android, and then
-    under **Build target**, pick the appropriate Android API to match the APK.
-
-    ![Create New Android SDK window in Android
-      Studio](../images/android-studio-create-new-android-sdk.png)
-
- 4. Wait for the **Indexing** status message at the bottom of the Android Studio
-    window to disappear.
-
- 5. Start the app, for example by launching it with or without managed debugging
-    from Visual Studio, or by tapping the app on the device.
-
- 6. In Android Studio, select **Run > Attach Debugger to Android Process**, or
-    click the corresponding toolbar icon.
-
-    ![Attach Debugger to Android Process in Android Studio Run
-      menu](../images/android-studio-attach-debugger.png)
-
- 7. Set the **Debugger** to **Native**, select the running app, and click
-    **OK**.
-
-    If the `adb` connection is slow, the first connection to the app will take a
-    while to download all the system libraries.  The connection might time out
-    if this takes too long, but the next connection attempt will have fewer
-    libraries left to download and will likely succeed.
-
- 8. You can set LLDB to continue through the various native signals that Mono
-    uses for its normal internal operations by opening **View > Tool Windows >
-    Debug**, selecting the **Android Native Debugger** tab, navigating to the
-    inner **Debugger \[tab\] > LLDB \[tab\]** command prompt, and running the
-    following `process handle` command:
-
-        (lldb) process handle -p true -n true -s false SIGXCPU SIG33 SIG35 SIGPWR SIGTTIN SIGTTOU SIGSYS
-
-    ![LLDB process handle command in Android Studio LLDB command
-      prompt](../images/android-studio-lldb-no-stop-signals.png)
-
-[android-studio]: https://developer.android.com/studio/
+[lldb-readme]: https://github.com/mono/lldb-binaries/blob/master/README.md
 
 ## Adding debug symbols for `libmonosgen-2.0.so`
 
@@ -230,17 +175,7 @@ the symbols by hand might be useful in some cases.
 
         (lldb) image load -f libmonosgen-2.0.d.so .text 0x00000071106c4e80
 
-## Attaching LLDB or GDB without Android Studio
-
-### Attaching LLDB using mono/lldb-binaries on macOS
-
-Download the precompiled `lldb` and `lldb-server` binaries from
-<https://github.com/mono/lldb-binaries/releases>, and follow the instructions
-within [README.md][lldb-readme].
-
-[lldb-readme]: https://github.com/mono/lldb-binaries/blob/master/README.md
-
-### Attaching GDB using Visual Studio on Windows
+# Attaching GDB using Visual Studio on Windows
 
 The GDB integration in Visual Studio is quite similar to the LLDB integration in
 Android Studio.  It might be a more convenient option for users who already have
@@ -290,3 +225,66 @@ the Android NDK installed and who don't currently have Android Studio installed.
     the **Immediate** window:
 
         -exec handle SIGXCPU SIG33 SIG35 SIGPWR SIGTTIN SIGTTOU SIGSYS nostop noprint
+
+# Attaching LLDB using Android Studio on Windows or macOS
+
+Android Studio can attach LLDB to Xamarin.Android for native debugging.  The
+integration includes the usual features like a graphical thread and stack frame
+browser and the ability to set breakpoints using the source code editor.
+
+ 1. Install [Android Studio][android-studio].  If you already have an Android
+    SDK installation for Xamarin.Android, you can click **Cancel** on the **Android
+    Studio Setup Wizard** when you launch Android Studio.
+
+ 2. Open the signed debuggable APK for the application in Android Studio via
+    **Profile or debug APK** on the start window or the **File > Profile or
+    Debug APK** menu item.
+
+    ![Profile or debug in the Android Studio start
+      window](../images/android-studio-start-window.png)
+
+ 3. If you skipped the **Android Studio Setup Wizard**, navigate to **File >
+    Project Structure > Modules > Mono.Android_Tests-Signed > Dependencies**,
+    click **New > Android SDK** next to the **Module SDK**.
+
+    ![New SDK in the Android Studio Project Structure Modules Dependencies
+      window](../images/android-studio-modules-dependencies.png)
+
+    Select the Android SDK folder you're using with Xamarin.Android, and then
+    under **Build target**, pick the appropriate Android API to match the APK.
+
+    ![Create New Android SDK window in Android
+      Studio](../images/android-studio-create-new-android-sdk.png)
+
+ 4. Wait for the **Indexing** status message at the bottom of the Android Studio
+    window to disappear.
+
+ 5. Start the app, for example by launching it with or without managed debugging
+    from Visual Studio, or by tapping the app on the device.
+
+ 6. In Android Studio, select **Run > Attach Debugger to Android Process**, or
+    click the corresponding toolbar icon.
+
+    ![Attach Debugger to Android Process in Android Studio Run
+      menu](../images/android-studio-attach-debugger.png)
+
+ 7. Set the **Debugger** to **Native**, select the running app, and click
+    **OK**.
+
+    If the `adb` connection is slow, the first connection to the app will take a
+    while to download all the system libraries.  The connection might time out
+    if this takes too long, but the next connection attempt will have fewer
+    libraries left to download and will likely succeed.
+
+ 8. You can set LLDB to continue through the various native signals that Mono
+    uses for its normal internal operations by opening **View > Tool Windows >
+    Debug**, selecting the **Android Native Debugger** tab, navigating to the
+    inner **Debugger \[tab\] > LLDB \[tab\]** command prompt, and running the
+    following `process handle` command:
+
+        (lldb) process handle -p true -n true -s false SIGXCPU SIG33 SIG35 SIGPWR SIGTTIN SIGTTOU SIGSYS
+
+    ![LLDB process handle command in Android Studio LLDB command
+      prompt](../images/android-studio-lldb-no-stop-signals.png)
+
+[android-studio]: https://developer.android.com/studio/
