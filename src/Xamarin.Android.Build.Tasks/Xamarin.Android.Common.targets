@@ -1038,7 +1038,7 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\bundletool-all-$(BundleToolVersion).jar">
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\bundletool.jar">
 		<Output TaskParameter="Value" PropertyName="AndroidBundleToolJarPath"
 				Condition="'$(AndroidBundleToolJarPath)' == ''"
 		/>
