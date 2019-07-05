@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -1483,6 +1483,26 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+			}
+		}
+
+		[Test]
+		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string aaptCommand = useAapt2 ? "Executing link" : "Executing package";
+				foreach (var line in b.LastBuildOutput) {
+					if (line.Contains (aaptCommand)) {
+						StringAssert.Contains ("--no-version-vectors", line, "The Xamarin.Android.Support.Vector.Drawable NuGet should set `--no-version-vectors`!");
+						return;
+					}
+				}
+
+				Assert.Fail ($"aapt log message was not found: {aaptCommand}");
 			}
 		}
 	}
