@@ -82,3 +82,4 @@ Android.Media.Session.MediaSessionFlags
 Android.Render.CreateFlag
 Android.Views.ScrollAxis
 Android.Security.Keystore.KeyStorePurpose
+Android.Views.Accessibility.Action
