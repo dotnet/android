@@ -297,3 +297,66 @@ installed and don't currently have the Android NDK installed.
       prompt](../images/android-studio-lldb-no-stop-signals.png)
 
 [android-studio]: https://developer.android.com/studio/
+
+# Attaching GDB on the command line on Windows or macOS
+
+If the automated methods to attach LLDB or GDB are hitting errors or getting
+stuck, you can try to attach GDB from the command line as a fallback.  These
+steps rely on having the Android NDK installed.
+
+ 1. Push the appropriate architecture of `gdbserver` to the device for the app
+    you are debugging.  For example, if debugging an arm64-v8a app:
+
+        $ adb push ~/Library/Developer/Xamarin/android-sdk-macosx/ndk-bundle/prebuilt/android-arm64/gdbserver/gdbserver \
+            /data/local/tmp/ && \
+          adb shell run-as Mono.Android_Tests cp /data/local/tmp/gdbserver ./ && \
+          adb shell run-as Mono.Android_Tests chmod +x ./gdbserver
+
+ 2. Ensure all users have execute permissions on the application's data
+    directory:
+
+        $ adb shell run-as Mono.Android_Tests \
+            chmod a+x /data/data/Mono.Android_Tests/
+
+ 3. Start the app, for example by launching it with or without managed debugging
+    from Visual Studio, or by tapping the app on the device.
+
+ 4. Find the process ID of the running app, for example by using `adb shell ps`:
+
+        $ adb shell ps | grep -F 'Mono.Android_Tests'
+
+    Example output:
+
+        u0_a247   15087 336   780568 69200 SyS_epoll_ 00000000 S Mono.Android_Tests
+
+ 5. Start `gdbserver`, attaching it to the running app process:
+
+        $ adb shell run-as Mono.Android_Tests ./gdbserver \
+            +debug_socket --attach 15087
+
+ 6. In another console window, use `adb` to forward the `debug_socket` UNIX
+    domain socket to a TCP port on the local host:
+
+        $ adb forward tcp:50999 localfilesystem:/data/data/Mono.Android_Tests/debug_socket
+
+ 7. Pull the appropriate `app_process*` file for the application to a local
+    location.  For example, if debugging an arm64-v8a app:
+
+        $ adb pull /system/bin/app_process64 /tmp/gdb-symbols/
+
+ 8. If you need symbols for `libmonosgen-2.0`, copy the library file with
+    symbols to the same local location, making sure the file name matches the
+    name on device (for example, `libmonosgen-64bit-2.0.so` if using the 64-bit
+    shared runtime).
+
+ 9. Run `gdb`:
+
+        $ ~/Library/Developer/Xamarin/android-sdk-macosx/ndk-bundle/prebuilt/darwin-x86_64/bin/gdb
+
+10. Run the following commands in GDB to set up the debugger and attach it to
+    the app:
+
+        (gdb) file /tmp/gdb-symbols/app_process64
+        (gdb) set sysroot /tmp/gdb-symbols
+        (gdb) set solib-search-path /tmp/gdb-symbols
+        (gdb) target remote :50999
