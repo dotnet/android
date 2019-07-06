@@ -59,6 +59,14 @@ Download the precompiled `lldb` and `lldb-server` binaries from
 <https://github.com/mono/lldb-binaries/releases>, and follow the instructions
 within [README.md][lldb-readme].
 
+If you need to run the app with managed debugger attached, first edit the
+`xa-lldb` script to comment out the following line:
+
+    shell "am start -S -n $PKG/$CLASS -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
+
+Then start the app from Visual Studio with managed debugging as usual.  After
+that, run the `xa-lldb` script as described in README.md.
+
 [lldb-readme]: https://github.com/mono/lldb-binaries/blob/master/README.md
 
 ## Adding debug symbols for `libmonosgen-2.0.so`
@@ -177,9 +185,9 @@ the symbols by hand might be useful in some cases.
 
 # Attaching GDB using Visual Studio on Windows
 
-The GDB integration in Visual Studio is quite similar to the LLDB integration in
-Android Studio.  It might be a more convenient option for users who already have
-the Android NDK installed and who don't currently have Android Studio installed.
+Visual Studio can attach GDB to Xamarin.Android for native debugging.  The
+integration includes the usual features like the graphical thread and call stack
+windows and the ability to set breakpoints using the source code editor.
 
  1. In the Visual Studio Installer, under the **Individual components** tab,
     ensure that **Development activities > C++ Android development tools** is
@@ -203,10 +211,10 @@ the Android NDK installed and who don't currently have Android Studio installed.
     platform named `ARM64` and set it as the active platform.
 
  7. If you need symbols for `libmonosgen-2.0`, copy the library file with
-    symbols to a convenient local location, make sure the file name matches the
-    name on device (for example, `libmonosgen-64bit-2.0.so` if using the 64-bit
-    shared runtime), and add the local location of the library to **Project >
-    Properties > Additional Symbol Search Paths**.
+    symbols to a convenient local location, making sure the file name matches
+    the name on device (for example, `libmonosgen-64bit-2.0.so` if using the
+    64-bit shared runtime), and add the local location of the library to
+    **Project > Properties > Additional Symbol Search Paths**.
 
  8. Start the app, for example by launching it with or without managed debugging
     from Visual Studio, or by tapping the app on the device.
@@ -228,9 +236,10 @@ the Android NDK installed and who don't currently have Android Studio installed.
 
 # Attaching LLDB using Android Studio on Windows or macOS
 
-Android Studio can attach LLDB to Xamarin.Android for native debugging.  The
-integration includes the usual features like a graphical thread and stack frame
-browser and the ability to set breakpoints using the source code editor.
+The LLDB integration in Android Studio is quite similar to the GDB integration
+in Visual Studio.  This is a useful option if you are debugging on Windows and
+are more familiar with LLDB than GDB or if you already have Android Studio
+installed and don't currently have the Android NDK installed.
 
  1. Install [Android Studio][android-studio].  If you already have an Android
     SDK installation for Xamarin.Android, you can click **Cancel** on the **Android
