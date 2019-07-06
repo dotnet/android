@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			foreach (var resource in Resources) {
-				var resourceFile = resource.GetMetadata ("LogicalName");
+				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
 				if (string.IsNullOrEmpty (resourceFile))
 					resourceFile = resource.ItemSpec;
 				var fileName = Path.GetFileName (resourceFile);
