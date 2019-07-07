@@ -105,13 +105,6 @@ namespace Xamarin.Android.NetTests {
 				Assert.Fail ("#2");
 			} catch (ArgumentOutOfRangeException) {
 			}
-
-			h.UseProxy = false;
-			try {
-				h.Proxy = new Proxy ();
-				Assert.Fail ("#3");
-			} catch (InvalidOperationException) {
-			}
 		}
 
 		[Test]
