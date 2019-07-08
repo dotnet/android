@@ -228,15 +228,6 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var entry in zip) {
 					if (entry.FullName.EndsWith (".so")) {
 						Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
-					} else if (entry.FullName == "environment") {
-						using (var stream = new MemoryStream ()) {
-							entry.Extract (stream);
-							stream.Position = 0;
-							using (var reader = new StreamReader (stream)) {
-								string environment = reader.ReadToEnd ();
-								StringAssert.Contains ("__XA_DSO_IN_APK=1", environment, "`__XA_DSO_IN_APK=1` should be set via @(AndroidEnvironment)");
-							}
-						}
 					}
 				}
 			}

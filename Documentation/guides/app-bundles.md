@@ -245,11 +245,14 @@ older API levels:
     // always support uncompressed native libraries (even on Android L), because they are not always
     // executed by the Android platform.
 
-This means that developer's `extractNativeLibs` setting in their
-`AndroidManifest.xml` is basically ignored. See [bundletool's source
-code][nativelibs] for details.
+A developer's `extractNativeLibs` setting in `AndroidManifest.xml` is
+basically ignored. To make matters worse, on some devices the value
+will be set and others not. This means we cannot rely on a known value
+at build time.
 
-[nativelibs]: https://github.com/google/bundletool/blob/fe1129820cb263b3fef18ab7e95d80c228c065a1/src/main/java/com/android/tools/build/bundletool/splitters/NativeLibrariesCompressionSplitter.java#L74-L78
+See [bundletool's source code][nativelibs] for details.
+
+[nativelibs]: https://github.com/google/bundletool/blob/5ac94cb61e949f135c50f6ce52bbb5f00e8e959f/src/main/java/com/android/tools/build/bundletool/splitters/NativeLibrariesCompressionSplitter.java#L75-L86
 
 ## Signing
 
