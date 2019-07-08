@@ -554,6 +554,7 @@ stages:
     - script: |
         git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
         cd designer
+        git checkout build-cleanup
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
