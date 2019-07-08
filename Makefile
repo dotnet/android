@@ -125,12 +125,6 @@ uninstall::
 	rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
-include build-tools/scripts/BuildEverything.mk
-
-# Must be after BuildEverything.mk - it uses variables defined there
-include build-tools/scripts/Packaging.mk
-include tests/api-compatibility/api-compatibility.mk
-
 topdir  := $(shell pwd)
 
 # Used by External XA Build
@@ -138,6 +132,12 @@ EXTERNAL_XA_PATH=$(topdir)
 EXTERNAL_GIT_PATH=$(topdir)/external
 
 -include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
+
+include build-tools/scripts/BuildEverything.mk
+
+# Must be after BuildEverything.mk - it uses variables defined there
+include build-tools/scripts/Packaging.mk
+include tests/api-compatibility/api-compatibility.mk
 
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
@@ -193,7 +193,7 @@ prepare-build: prepare-build-init
 	msbuild $(PREPARE_MSBUILD_FLAGS) $(PREPARE_SOLUTION)
 
 .PHONY: prepare
-prepare:: prepare-build
+prepare: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS)
 
 .PHONY: prepare-help
