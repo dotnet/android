@@ -19,7 +19,6 @@ resources:
 variables:
   BundleArtifactName: bundle
   InstallerArtifactName: installers
-  MacAndroidToolchainMSBuildArgs: /p:AndroidToolchainDirectory=/Users/vsts/Library/Android
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 # Check - "Xamarin.Android (Prepare bundle)"
@@ -42,7 +41,7 @@ stages:
       # The 'prepare' step creates the bundle
     - script: |
         make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS="$(MacAndroidToolchainMSBuildArgs)"
+        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: create bundle
 
     - task: CopyFiles@2
@@ -113,7 +112,7 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
         provisioning_extra_args: -vv
 
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)" MSBUILD_ARGS="$(MacAndroidToolchainMSBuildArgs)"
+    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
       displayName: make jenkins
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
@@ -323,7 +322,7 @@ stages:
     - script: |
         mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
         mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
-        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI $(MacAndroidToolchainMSBuildArgs)
+        mono build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
       displayName: provision dependencies
 
     - task: NuGetCommand@2
