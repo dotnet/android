@@ -726,6 +726,32 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (false, true)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
+				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\strings-2.xml") {
+				Metadata = { { "LogicalName", "Resources\\values\\strings2.xml" } },
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hellome"">Hello World, Click Me!</string>
+</resources>",
+			});
+			var projectPath = string.Format ($"temp/{TestName}");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.DoesNotContain ("Invalid file name:", b.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("1 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
 		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
