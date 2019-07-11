@@ -38,9 +38,6 @@
   <ItemGroup>
     <Compile Include="BuildTests.cs" />
     <Compile Include="$(IntermediateOutputPath)Config.cs" />
-    <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
-       <Link>XABuildPaths.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -151,16 +151,8 @@ int styleable MultiSelectListPreference_entries 2
 int styleable MultiSelectListPreference_entryValues 3
 int transition transition 0x7f0f0000
 ";
-		[OneTimeSetUp]
-		public void Setup ()
-		{
-			using (var builder = new Builder ()) {
-				builder.ResolveSdks ();
-				AndroidSdkDirectory = builder.AndroidSdkDirectory;
-			}
-		}
 
-		public string AndroidSdkDirectory { get; set; }
+		public string AndroidSdkDirectory { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 
 		public void CreateResourceDirectory (string path)
 		{

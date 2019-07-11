@@ -14,8 +14,6 @@ using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
-using XABuildPaths = global::Xamarin.Android.Build.Paths;
-
 namespace Xamarin.Android.MakeBundle.UnitTests
 {
 	sealed class LocalBuilder : Builder

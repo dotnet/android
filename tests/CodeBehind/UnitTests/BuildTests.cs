@@ -10,8 +10,6 @@ using NUnit.Framework;
 
 using Xamarin.ProjectTools;
 
-using XABuildPaths = global::Xamarin.Android.Build.Paths;
-
 namespace CodeBehindUnitTests
 {
 	sealed class LocalBuilder : Builder

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
@@ -10,8 +10,6 @@ using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
 using Xamarin.Android.Tools.VSWhere;
-
-using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.ProjectTools
 {
@@ -237,20 +235,18 @@ namespace Xamarin.ProjectTools
 
 		public int GetMaxInstalledPlatform ()
 		{
-			using (var builder = new Builder ()) {
-				builder.ResolveSdks ();
-				int result = 0;
-				foreach (var dir in Directory.EnumerateDirectories (Path.Combine (builder.AndroidSdkDirectory, "platforms"))) {
-					int version;
-					string v = Path.GetFileName (dir).Replace ("android-", "");
-					if (!int.TryParse (v, out version))
-						continue;
-					if (version < result)
-						continue;
-					result = version;
-				}
-				return result;
+			string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+			int result = 0;
+			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
+				int version;
+				string v = Path.GetFileName (dir).Replace ("android-", "");
+				if (!int.TryParse (v, out version))
+					continue;
+				if (version < result)
+					continue;
+				result = version;
 			}
+			return result;
 		}
 
 		static string GetApiLevelFromInfoPath (string androidApiInfo)
@@ -318,49 +314,8 @@ namespace Xamarin.ProjectTools
 			GC.SuppressFinalize (this);
 		}
 
-		public string AndroidSdkDirectory { get; private set; }
-
-		public string AndroidNdkDirectory { get; private set; }
-
-		/// <summary>
-		/// Locates and sets AndroidSdkDirectory and AndroidNdkDirectory
-		/// </summary>
-		public void ResolveSdks ()
-		{
-			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
-			if (string.IsNullOrEmpty (AndroidSdkDirectory)) {
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
-				if (String.IsNullOrEmpty (sdkPath))
-					sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
-				if (String.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
-				if (Directory.Exists (sdkPath)) {
-					AndroidSdkDirectory = sdkPath;
-				}
-			}
-			if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
-				var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
-				if (String.IsNullOrEmpty (ndkPath))
-					ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
-				if (String.IsNullOrEmpty (ndkPath))
-					ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
-				if (Directory.Exists (ndkPath)) {
-					AndroidNdkDirectory = ndkPath;
-				}
-			}
-		}
-
 		protected virtual void Dispose (bool disposing)
 		{
-		}
-
-		string GetPathFromRegistry (string valueName)
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				return (string)Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
-			}
-			return null;
 		}
 
 		Regex timeElapsedRegEx = new Regex (
@@ -382,8 +337,6 @@ namespace Xamarin.ProjectTools
 				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
-			ResolveSdks ();
-
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
@@ -399,11 +352,13 @@ namespace Xamarin.ProjectTools
 				if (BuildingInsideVisualStudio && RunningMSBuild) {
 					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
-				if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
-					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
+				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+				if (Directory.Exists (sdkPath)) {
+					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
 				}
-				if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
-					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
+				string ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
+				if (Directory.Exists (ndkPath)) {
+					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
 				}
 				if (parameters != null) {
 					foreach (var param in parameters) {
@@ -525,12 +480,8 @@ namespace Xamarin.ProjectTools
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				//NOTE: enormous logs will lock up IDE's UI
-				if (IsRunningInIDE) {
-					throw new FailedBuildException (message);
-				} else {
-					throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
-				}
+				//NOTE: enormous logs will lock up IDE's UI. Build result files should be appended to the TestResult on failure.
+				throw new FailedBuildException (message);
 			}
 
 			return result;

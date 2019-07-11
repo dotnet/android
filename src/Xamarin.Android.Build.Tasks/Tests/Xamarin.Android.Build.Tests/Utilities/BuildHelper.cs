@@ -25,7 +25,7 @@ namespace Xamarin.Android.Build.Tests
 				CleanupAfterSuccessfulBuild = cleanupAfterSuccessfulBuild,
 				CleanupOnDispose = cleanupOnDispose,
 				Verbosity = LoggerVerbosity.Diagnostic,
-				Root = Xamarin.Android.Build.Paths.TestOutputDirectory,
+				Root = XABuildPaths.TestOutputDirectory,
 			};
 		}
 	}

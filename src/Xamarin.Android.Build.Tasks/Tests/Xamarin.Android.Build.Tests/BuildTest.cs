@@ -856,7 +856,7 @@ namespace UnamedProject
 					"Landroid/runtime/UncaughtExceptionHandler;",
 				};
 				foreach (var className in classes) {
-					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				}
 			}
 		}
@@ -1072,7 +1072,7 @@ namespace UnnamedProject {
 				var className = "Landroid/support/multidex/MultiDexApplication;";
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
 
@@ -1534,8 +1534,8 @@ namespace App1
 		void FixLintOnWindows ()
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var userProfile = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var androidSdkTools = Path.Combine (userProfile, "android-toolchain", "sdk", "tools");
+				var androidSdk = AndroidSdkResolver.GetAndroidSdkPath ();
+				var androidSdkTools = Path.Combine (androidSdk, "tools");
 				if (Directory.Exists (androidSdkTools)) {
 					Environment.SetEnvironmentVariable ("JAVA_OPTS", $"\"-Dcom.android.tools.lint.bindir={androidSdkTools}\"", EnvironmentVariableTarget.Process);
 				}
@@ -2077,8 +2077,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
-				string multidex_path = bbuilder.RunningMSBuild ? @"$(MSBuildExtensionsPath)" : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild";
-				string multidex_jar = $@"{multidex_path}\Xamarin\Android\android-support-multidex.jar";
+				string multidex_path = bbuilder.RunningMSBuild ? TestEnvironment.MonoAndroidToolsDirectory : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android";
+				string multidex_jar = $@"{multidex_path}\android-support-multidex.jar";
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 
 				Assert.IsTrue (bbuilder.Build (binding));
@@ -2504,7 +2504,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				var className = "Lmono/MonoRuntimeProvider;";
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
 
@@ -3487,7 +3487,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var className = "Lmono/MonoRuntimeProvider;";
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, builder.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
 
