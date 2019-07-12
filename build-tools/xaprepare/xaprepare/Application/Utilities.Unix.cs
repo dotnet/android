@@ -15,13 +15,28 @@ namespace Xamarin.Android.Prepare
 
 		public static void ConsoleSetCursorPosition (int left, int top)
 		{
-			Console.SetCursorPosition (left, top);
+			// Console will throw an exception when the cursor coordinates are out of range, but we don't
+			// want to check whether left/top are less than the buffer width/height, respectively, because
+			// that might throw as well, so we just catch the possible exception below.
+			//
+			// On Unix it may happen when the windows were just being re-created (e.g. when switching
+			// between monitors) and there's no reason to stop the app because of this so just catch the
+			// exception, log it and move on.
+			if (left < 0 || top < 0)
+				return;
+
+			try {
+				Console.SetCursorPosition (left, top);
+			} catch (Exception ex) {
+				Log.Instance.Debug ("Exception thrown while setting console cursor position (ignored)");
+				Log.Instance.Debug (ex.ToString ());
+			}
 		}
 
-        /// <summary>
-        ///   Checks if the file exists as well as whether it's a symbolic link. If it is one, the method checks whether
-        ///   the file pointed to exists and returns <c>false</c> if it's not there.
-        /// </summary>
+		/// <summary>
+		///   Checks if the file exists as well as whether it's a symbolic link. If it is one, the method checks whether
+		///   the file pointed to exists and returns <c>false</c> if it's not there.
+		/// </summary>
 		public static bool FileExists (string path)
 		{
 			if (!File.Exists (path))

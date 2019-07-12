@@ -64,6 +64,7 @@
     <HOME Condition=" '$(HOME)' == '' ">$(USERPROFILE)</HOME>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
+    <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' And '$(RunningOnCI)' == 'true' And '$(HostOS)' == 'Darwin' ">$(HOME)\Library\Android</AndroidToolchainDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
@@ -107,7 +108,7 @@
     <XAPlatformToolsVersion>29.0.1</XAPlatformToolsVersion>
     <XAIntegratedTests Condition="'$(XAIntegratedTests)' == ''">False</XAIntegratedTests>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
-    <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.8.0</XABundleToolVersion>
+    <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.10.0</XABundleToolVersion>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
@@ -144,7 +145,7 @@
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>
-    <BundleToolJarPath Condition=" '$(BundleToolJarPath)' == '' ">$(XAInstallPrefix)xbuild\Xamarin\Android\bundletool-all-$(XABundleToolVersion).jar</BundleToolJarPath>
+    <BundleToolJarPath Condition=" '$(BundleToolJarPath)' == '' ">$(XAInstallPrefix)xbuild\Xamarin\Android\bundletool.jar</BundleToolJarPath>
   </PropertyGroup>
   <!--
     "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere

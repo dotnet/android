@@ -172,11 +172,12 @@ namespace Xamarin.Android.Net
 		/// cref="t:System.TimeSpan.Zero"/>
 		/// </para>
 		/// <para>
-		/// The default value is <c>100</c> seconds, the same as the documented value of <see
-		/// cref="t:System.Net.Http.HttpClient.Timeout"/>
+		/// The default value is <c>24</c> hours, much higher than the documented value of <see
+		/// cref="t:System.Net.Http.HttpClient.Timeout"/> and the same as the value of iOS-specific
+		/// NSUrlSessionHandler.
 		/// </para>
 		/// </summary>
-		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromSeconds (100);
+		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
 		/// <summary>
 		/// <para>
@@ -192,7 +193,7 @@ namespace Xamarin.Android.Net
 		/// The default value is <c>120</c> seconds.
 		/// </para>
 		/// </summary>
-		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds (120);
+		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
 
 		protected override void Dispose (bool disposing)
 		{

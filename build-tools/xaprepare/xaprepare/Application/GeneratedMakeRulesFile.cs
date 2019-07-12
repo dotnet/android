@@ -97,6 +97,7 @@ namespace Xamarin.Android.Prepare
 			WriteVariable ("ALL_JIT_ABIS",      ToValue (AbiNames.AllJitAbis));
 			WriteVariable ("ALL_HOST_ABIS",     ToValue (AbiNames.AllHostAbis));
 			WriteVariable ("ALL_AOT_ABIS",      ToValue (AbiNames.AllAotAbis));
+			WriteVariable ("ANDROID_TOOLCHAIN_DIR", context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory));
 			if (context.MonoOptions != null && context.MonoOptions.Count > 0) {
 				WriteVariable ("MONO_OPTIONS", ToValue (context.MonoOptions));
 				sw.WriteLine ("export MONO_OPTIONS");

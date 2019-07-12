@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -720,6 +720,32 @@ namespace UnnamedProject
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
 				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (false, true)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
+				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\strings-2.xml") {
+				Metadata = { { "LogicalName", "Resources\\values\\strings2.xml" } },
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hellome"">Hello World, Click Me!</string>
+</resources>",
+			});
+			var projectPath = string.Format ($"temp/{TestName}");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.DoesNotContain ("Invalid file name:", b.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -1483,6 +1509,26 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+			}
+		}
+
+		[Test]
+		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string aaptCommand = useAapt2 ? "Executing link" : "Executing package";
+				foreach (var line in b.LastBuildOutput) {
+					if (line.Contains (aaptCommand)) {
+						StringAssert.Contains ("--no-version-vectors", line, "The Xamarin.Android.Support.Vector.Drawable NuGet should set `--no-version-vectors`!");
+						return;
+					}
+				}
+
+				Assert.Fail ($"aapt log message was not found: {aaptCommand}");
 			}
 		}
 	}

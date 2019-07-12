@@ -22,8 +22,11 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			foreach (var resource in Resources) {
-				var fileName = Path.GetFileName (resource.ItemSpec);
-				var directory = Path.GetFileName (Path.GetDirectoryName (resource.ItemSpec));
+				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
+				if (string.IsNullOrEmpty (resourceFile))
+					resourceFile = resource.ItemSpec;
+				var fileName = Path.GetFileName (resourceFile);
+				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));
 				if (directory.StartsWith ("values", StringComparison.OrdinalIgnoreCase)) {
 					var match = fileNameWithHyphenCheck.Match (fileName);
 					if (match.Success) {

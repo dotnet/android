@@ -10,9 +10,12 @@
 # The other targets depended upon by leeroy also require rules.mk to be present and thus they
 # are invoked in the same way framework-assemblies is
 #
-jenkins::
+jenkins:
 	$(MAKE) PREPARE_CI=1 prepare
 	$(MAKE) leeroy $(ZIP_OUTPUT)
+ifeq ($(XA_INVERTED_COMMERCIAL_BUILD),true)
+	$(MAKE) commercial
+endif
 
 leeroy: leeroy-all framework-assemblies opentk-jcw
 

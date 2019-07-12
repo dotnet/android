@@ -892,7 +892,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	/>
 	<PropertyGroup>
 		<AndroidExplicitCrunch Condition=" '$(_AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
-		<AndroidAapt2LinkExtraArgs Condition=" '$(_AndroidUseAapt2)' == 'True' And $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
 	</PropertyGroup>
 </Target>
 
@@ -1040,7 +1039,7 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\bundletool-all-$(BundleToolVersion).jar">
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\bundletool.jar">
 		<Output TaskParameter="Value" PropertyName="AndroidBundleToolJarPath"
 				Condition="'$(AndroidBundleToolJarPath)' == ''"
 		/>
@@ -1631,6 +1630,10 @@ because xbuild doesn't support framework reference assemblies.
 	Inputs="$(_UpdateAndroidResgenInputs)"
 	Outputs="$(_AndroidResgenFlagFile)"
 	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_CompileAndroidLibraryResources;_CompileResources">
+
+	<PropertyGroup>
+		<AndroidAapt2LinkExtraArgs Condition=" '$(_AndroidUseAapt2)' == 'True' And $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
+	</PropertyGroup>
 
 	<!-- Create a temporary directory to work in -->
 	<CreateTemporaryDirectory>
