@@ -56,11 +56,6 @@
     <Exec WorkingDirectory="$(PayloadDir)\Library\Frameworks\Xamarin.Android.framework\Versions"
         Command="ln -fs $(XAVersion) Current"
     />
-    <!-- Required for VS Mac Updater -->
-    <MakeDir Directories="$(PayloadDir)\Developer" />
-    <Exec WorkingDirectory="$(PayloadDir)\Developer"
-        Command="ln -fs &quot;../Library/Frameworks/Xamarin.Android.framework/Versions/Current&quot; MonoAndroid"
-    />
     <Exec WorkingDirectory="$(MSBuildTargetsDir)\lib"
         Command="ln -fs host-$(HostOS) host"
     />
