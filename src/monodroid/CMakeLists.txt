@@ -191,7 +191,6 @@ check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
 set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
-  ${MONO_PATH}/support/zlib-helper.c
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
@@ -260,4 +259,3 @@ elseif(NOT ANDROID)
 endif()
 
 target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
-

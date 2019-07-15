@@ -8,5 +8,13 @@ namespace Xamarin.Android.Prepare
 	{
 		public Scenario_Required () : base ("Required", "Just the basic steps to quickly install required tools and generate build files.", Context.Instance)
 		{}
+
+		protected override void AddSteps (Context context)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			Steps.Add (new Step_GenerateFiles (atBuildStart: true, onlyRequired: true));
+		}
 	}
 }

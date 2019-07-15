@@ -8,11 +8,13 @@ namespace Xamarin.Android.Prepare
 	partial class Step_GenerateFiles : Step
 	{
 		bool atBuildStart;
+		bool onlyRequired;
 
-		public Step_GenerateFiles (bool atBuildStart)
+		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
 			: base ("Generating files required by the build")
 		{
 			this.atBuildStart = atBuildStart;
+			this.onlyRequired = onlyRequired;
 		}
 
 #pragma warning disable CS1998
@@ -42,16 +44,26 @@ namespace Xamarin.Android.Prepare
 		List<GeneratedFile> GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
-				return new List <GeneratedFile> {
-					Get_Configuration_OperatingSystem_props (context),
-					Get_Ndk_projitems (context),
-					Get_XABuildPaths_cs (context),
-					Get_XABuildConfig_cs (context),
-					Get_mingw_32_cmake (context),
-					Get_mingw_64_cmake (context),
-					Get_bundle_path_targets (context),
-				};
+				if (onlyRequired) {
+					return new List<GeneratedFile> {
+						Get_MonoGitHash_props (context),
+					};
+				} else {
+					return new List <GeneratedFile> {
+						Get_Configuration_OperatingSystem_props (context),
+						Get_Ndk_projitems (context),
+						Get_XABuildPaths_cs (context),
+						Get_XABuildConfig_cs (context),
+						Get_mingw_32_cmake (context),
+						Get_mingw_64_cmake (context),
+						Get_bundle_path_targets (context),
+						Get_MonoGitHash_props (context),
+					};
+				}
 			}
+
+			if (onlyRequired)
+				return null;
 
 			var steps = new List <GeneratedFile> {
 				new GeneratedProfileAssembliesProjitemsFile (Configurables.Paths.ProfileAssembliesProjitemsPath),
@@ -191,6 +203,21 @@ namespace Xamarin.Android.Prepare
 			};
 
 			return new GeneratedPlaceholdersFile (replacements, Configurables.Paths.BundlePathTemplate, Configurables.Paths.BundlePathOutput);
+		}
+
+		GeneratedFile Get_MonoGitHash_props (Context context)
+		{
+			const string OutputFileName = "MonoGitHash.props";
+
+			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@MONO_COMMIT_HASH@", context.BuildInfo.MonoHash }
+			};
+
+			return new GeneratedPlaceholdersFile (
+				replacements,
+				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
+				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
+			);
 		}
 	}
 }

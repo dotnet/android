@@ -6,15 +6,13 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitInfo" />
+  <Import Project="..\..\bin\Build$(Configuration)\MonoGitHash.props" />
   <Target Name="_GetSubmodulesVersionInfo">
     <ItemGroup>
       <!-- If anything changes in this list, make sure to update:
            src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.targets (the _GenerateXACommonProps target)
            build-tools/create-vsix/create-vsix.targets (the _CreateDependencies target)
       -->
-      <_SubmoduleBranchInfo Include="external/mono">
-        <OutputPropertyName>_BuildInfo_MonoCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>

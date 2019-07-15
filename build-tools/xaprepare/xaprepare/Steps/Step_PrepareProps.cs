@@ -26,10 +26,6 @@ namespace Xamarin.Android.Prepare
 
 			LogStep (context, "Copying code signing keys");
 			Utilities.CopyFileToDir (Path.Combine (javaInteropDir, "product.snk"), monoSourceDir);
-			Utilities.CopyFileToDir (
-				Path.Combine (monoSourceDir, "mcs", "class", "msfinal.pub"),
-				BuildPaths.XamarinAndroidSourceRoot
-			);
 
 			LogStep (context, "Configuring Java.Interop property overrides");
 			Utilities.CopyFileToDir (
