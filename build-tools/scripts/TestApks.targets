@@ -241,7 +241,8 @@
         InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)">
+        ToolPath="$(AdbToolPath)"
+        Timeout="3600000">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
     <RunUITests
