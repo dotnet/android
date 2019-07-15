@@ -52,6 +52,7 @@ namespace MonoDroid.Tuner
 			context.SymbolWriterProvider = new DefaultSymbolWriterProvider ();
 			context.OutputDirectory = options.OutputDirectory;
 			context.PreserveJniMarshalMethods = options.PreserveJniMarshalMethods;
+			context.DisabledOptimizations = CodeOptimizations.UnreachableBodies;
 			return context;
 		}
 

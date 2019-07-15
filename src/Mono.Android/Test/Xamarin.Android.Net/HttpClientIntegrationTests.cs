@@ -571,36 +571,6 @@ namespace Xamarin.Android.NetTests {
 		}
 #endif  // TODO
 		[Test]
-		public void Send_Transfer_Encoding_Custom ()
-		{
-			bool? failed = null;
-
-			var listener = CreateListener (l => {
-					failed = true;
-				});
-
-			using (listener) {
-				try {
-					var client = new HttpClient ();
-					client.DefaultRequestHeaders.TransferEncoding.Add (new TransferCodingHeaderValue ("chunked2"));
-
-					var request = new HttpRequestMessage (HttpMethod.Get, LocalServer);
-
-					try {
-						client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
-						Assert.Fail ("#1");
-					} catch (AggregateException e) {
-						Assert.AreEqual (typeof (InvalidOperationException), e.InnerException.GetType (), "#2; threw: {0}", e);
-					}
-					Assert.IsNull (failed, "#102");
-				} finally {
-					listener.Abort ();
-					listener.Close ();
-				}
-			}
-		}
-
-		[Test]
 		void UrlEscaping_Bug43411 ()
 		{
 			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");

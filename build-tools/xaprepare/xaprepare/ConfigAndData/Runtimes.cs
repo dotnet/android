@@ -95,11 +95,6 @@ namespace Xamarin.Android.Prepare
 			),
 
 			new LlvmRuntime (
-				name: AbiNames.Llvm.Host32Bit,
-				enabledCheck: (Context ctx) => IsLlvmRuntimeEnabled (ctx, AbiNames.Llvm.Host32Bit)
-			),
-
-			new LlvmRuntime (
 				name: AbiNames.Llvm.Host64Bit,
 				enabledCheck: (Context ctx) => IsLlvmRuntimeEnabled (ctx, AbiNames.Llvm.Host64Bit)
 			),
