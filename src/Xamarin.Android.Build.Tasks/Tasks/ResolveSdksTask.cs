@@ -56,6 +56,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string MonoAndroidBinPath { get; set; }
 
+		[Output]
+		public string MonoAndroidLibPath { get; set; }
+
 		public override bool Execute ()
 		{
 			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
@@ -64,6 +67,7 @@ namespace Xamarin.Android.Tasks
 				MonoAndroidToolsPath  = Path.GetDirectoryName (typeof (ResolveSdks).Assembly.Location);
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
+			MonoAndroidLibPath  = MonoAndroidHelper.GetOSLibPath () + Path.DirectorySeparatorChar;
 
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 

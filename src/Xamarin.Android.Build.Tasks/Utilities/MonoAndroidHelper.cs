@@ -82,6 +82,12 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (toolsDir, uname.Value);
 		}
 
+		internal static string GetOSLibPath ()
+		{
+			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
+			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
+		}
+
 #if MSBUILD
 		static TaskLoggingHelper androidSdkLogger;
 

@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 			var msbuild = new MSBuildRunner (context);
 
 			// This needs to be built *after* we copy Java.Interop props or we'll get the wrong Mono.Cecil assembly.
-			string remapAsmRefPath = Path.Combine (Configurables.Paths.BuildToolsDir, "remap-assembly-ref", "remap-assembly-ref.sln");
+			string remapAsmRefPath = Path.Combine (Configurables.Paths.BuildToolsDir, "remap-assembly-ref", "remap-assembly-ref.csproj");
 			bool result = await msbuild.Run (
 				projectPath: remapAsmRefPath,
 				logTag: "remap-assembly-ref",
