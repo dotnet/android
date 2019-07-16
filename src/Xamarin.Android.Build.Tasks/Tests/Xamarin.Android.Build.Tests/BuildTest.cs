@@ -504,11 +504,9 @@ namespace UnamedProject
 				// Xamarin.Android unless fastdev is enabled.
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
-					if (!info.Exists) {
-						Assert.Ignore ($"{info.Name} does not exist, timestamp check skipped");
-						continue;
+					if (info.Exists) {
+						Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 					}
-					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
 
 				//One last build with no changes
@@ -1188,12 +1186,6 @@ namespace UnnamedProject {
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
-					"the _CopyMdbFiles target should be skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyPdbFiles"),
-					"the _CopyPdbFiles target should be skipped");
-				Assert.IsTrue (
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
 					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
@@ -1252,9 +1244,11 @@ namespace App1
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
 				using (var b = CreateApkBuilder (Path.Combine (path, "App1"))) {
 					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
-					var assetsPdb = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Library1.pdb");
-					var linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "Library1.pdb");
-					var linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "Library1.pdb");
+					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
+					var linkDst = Path.Combine (intermediate, "linkdst", "Library1.pdb");
+					var binSrc = Path.Combine (outputPath, "Library1.pdb");
 					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
@@ -1262,29 +1256,27 @@ namespace App1
 						File.Exists (linkDst),
 						"Library1.pdb should not be copied to linkdst directory because it has no Abstrsact methods to fix up.");
 					Assert.IsTrue (
-						File.Exists (linkSrc),
-						"Library1.pdb must be copied to linksrc directory");
-					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+						File.Exists (binSrc),
+						"Library1.pdb must be copied to bin directory");
 					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
 						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
 						if (data == null)
 							data = File.ReadAllBytes (assetsPdb);
-						var filedata = File.ReadAllBytes (linkSrc);
-						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", linkSrc);
+						var filedata = File.ReadAllBytes (binSrc);
+						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", binSrc);
 					}
-					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.pdb");
-					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.pdb");
+					linkDst = Path.Combine (intermediate, "linkdst", "App1.pdb");
+					binSrc = Path.Combine (outputPath, "App1.pdb");
 					Assert.IsTrue (
 						File.Exists (linkDst),
 						"App1.pdb should be copied to linkdst directory because it has Abstrsact methods to fix up.");
 					Assert.IsTrue (
-						File.Exists (linkSrc),
-						"App1.pdb must be copied to linksrc directory");
-					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should not differ.", linkSrc, linkDst);
-					linkDst = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linkdst", "App1.dll");
-					linkSrc = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "linksrc", "App1.dll");
-					FileAssert.AreEqual (linkSrc, linkDst, "{0} and {1} should match.", linkSrc, linkDst);
-
+						File.Exists (binSrc),
+						"App1.pdb must be copied to bin directory");
+					FileAssert.AreEqual (binSrc, linkDst, "{0} and {1} should not differ.", binSrc, linkDst);
+					linkDst = Path.Combine (intermediate, "linkdst", "App1.dll");
+					binSrc = Path.Combine (outputPath, "App1.dll");
+					FileAssert.AreEqual (binSrc, linkDst, "{0} and {1} should match.", binSrc, linkDst);
 				}
 			}
 		}
@@ -1333,15 +1325,9 @@ namespace App1
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
 					"NetStandard16.pdb must be copied to Intermediate directory");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
-					"the _CopyMdbFiles target should be skipped");
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
-					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
 					File.GetLastWriteTimeUtc (pdbToMdbPath),
 					"{0} should have been updated", pdbToMdbPath);
@@ -2855,16 +2841,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				}
 				b.BuildLogFile = "build1.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
-					"the _CopyMdbFiles target should be skipped");
 				b.BuildLogFile = "build2.log";
 				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
 				pdb.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_CopyMdbFiles"),
-					"the _CopyMdbFiles target should not be skipped");
 				Assert.Less (lastTime,
 					File.GetLastWriteTimeUtc (pdbToMdbPath),
 					"{0} should have been updated", pdbToMdbPath);
