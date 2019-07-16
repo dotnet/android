@@ -164,8 +164,7 @@ namespace Android.App {
 			  "NetworkSecurityConfig",
 			  "networkSecurityConfig",
 			  self          => self._NetworkSecurityConfig,
-			  (self, value) => self._NetworkSecurityConfig = (string) value,
-			  typeof (Type)
+			  (self, value) => self._NetworkSecurityConfig = (string) value
 			}, {
 			  "Permission",
 			  "permission",
