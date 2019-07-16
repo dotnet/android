@@ -222,12 +222,8 @@ namespace Xamarin.Android.Tasks {
 				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
 				: ret;
 			foreach (var line in output) {
-				if (line.StdError) {
-					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
-						break;
-				} else {
-					LogMessage (line.Line, MessageImportance.Normal);
-				}
+				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
+					break;
 			}
 			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";

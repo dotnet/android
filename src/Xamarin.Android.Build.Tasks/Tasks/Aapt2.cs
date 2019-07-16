@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tasks {
 				proc.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null)
 						lock (lockObject)
-							output.Add (new OutputLine (e.Data, stdError: true));
+							output.Add (new OutputLine (e.Data, stdError: !IsAapt2Warning (e.Data)));
 					else
 						stderr_completed.Set ();
 				};
@@ -91,6 +91,23 @@ namespace Xamarin.Android.Tasks {
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 				return proc.ExitCode == 0 && !output.Any (x => x.StdError);
 			}
+		}
+
+		bool IsAapt2Warning (string singleLine)
+		{
+			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
+			if (match.Success) {
+				var file = match.Groups ["file"].Value;
+				var level = match.Groups ["level"].Value.ToLowerInvariant ();
+				var message = match.Groups ["message"].Value;
+				if (file.StartsWith ("W/", StringComparison.OrdinalIgnoreCase))
+					return true;
+				if (message.Contains ("warn:"))
+					return true;
+				if (level.Contains ("warning"))
+					return true;
+			}
+			return false;
 		}
 
 		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)

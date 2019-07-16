@@ -66,12 +66,8 @@ namespace Xamarin.Android.Tasks {
 					archives.Add (new TaskItem (outputArchive));
 			}
 			foreach (var line in output) {
-				if (line.StdError) {
-					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
-						break;
-				} else {
-					LogMessage (line.Line, MessageImportance.Normal);
-				}
+				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
+					break;
 			}
 		}
 
