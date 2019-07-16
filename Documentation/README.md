@@ -35,10 +35,9 @@
 # Development Workflow
 
   * [How to add support for a new Android API level](workflow/HowToAddNewApiLevel.md)
-  * [Native debugging with `lldb`](workflow/Debugging.md)
   * [Using Your Build](workflow/UsingYourBuild.md)
   * [Jenkins Build Artifacts](workflow/JenkinsBuildArtifacts.md)
-  * [Development Tips](workflow/DevelopmentTips.md)
+  * [Development tips and native debugging](workflow/DevelopmentTips.md)
 
 
 # Coding Guidelines
