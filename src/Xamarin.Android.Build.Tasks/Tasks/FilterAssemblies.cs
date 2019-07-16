@@ -9,20 +9,16 @@ using System.Reflection.PortableExecutable;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Filters a set of assemblies based on a given TargetFrameworkIdentifier or FallbackReference
+	/// Filters a set of assemblies to be known as "Xamarin.Android" assemblies through various checks:
+	/// * The presence of [assembly: System.Runtime.Versioning.TargetFramework("MonoAndroid,Version=v9.0")]
+	/// * A Mono.Android.dll reference
+	/// * An EmbeddedResource ending with *.jar
+	/// * An EmbeddedResource beginning with __Android
 	/// </summary>
 	public class FilterAssemblies : Task
 	{
-		/// <summary>
-		/// The MonoAndroid portion of [assembly: System.Runtime.Versioning.TargetFramework("MonoAndroid,v9.0")]
-		/// </summary>
-		[Required]
-		public string TargetFrameworkIdentifier { get; set; }
-
-		/// <summary>
-		/// If TargetFrameworkIdentifier is missing, we can look for Mono.Android.dll references instead
-		/// </summary>
-		public string FallbackReference { get; set; }
+		const string TargetFrameworkIdentifier = "MonoAndroid";
+		const string MonoAndroidReference = "Mono.Android";
 
 		[Required]
 		public bool DesignTimeBuild { get; set; }
@@ -51,23 +47,52 @@ namespace Xamarin.Android.Tasks
 						output.Add (assemblyItem);
 						continue;
 					}
-					// Fallback to looking at references
-					if (string.IsNullOrEmpty (targetFrameworkIdentifier) && !string.IsNullOrEmpty (FallbackReference)) {
-						Log.LogDebugMessage ($"Checking references for: {assemblyItem.ItemSpec}");
-						foreach (var handle in reader.AssemblyReferences) {
-							var reference = reader.GetAssemblyReference (handle);
-							var name = reader.GetString (reference.Name);
-							if (FallbackReference == name) {
-								output.Add (assemblyItem);
-								break;
-							}
-						}
+
+					// In the rare case, [assembly: TargetFramework("MonoAndroid,Version=v9.0")] may not match
+					Log.LogDebugMessage ($"{nameof (TargetFrameworkIdentifier)} did not match: {assemblyItem.ItemSpec}");
+
+					// Fallback to looking for a Mono.Android reference
+					if (HasReference (reader)) {
+						Log.LogDebugMessage ($"{MonoAndroidReference} reference found: {assemblyItem.ItemSpec}");
+						output.Add (assemblyItem);
+						continue;
+					}
+					// Fallback to looking for *.jar or __Android EmbeddedResource files
+					if (HasEmbeddedResource (reader)) {
+						Log.LogDebugMessage ($"EmbeddedResource found: {assemblyItem.ItemSpec}");
+						output.Add (assemblyItem);
+						continue;
 					}
 				}
 			}
 			OutputAssemblies = output.ToArray ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		bool HasReference (MetadataReader reader)
+		{
+			foreach (var handle in reader.AssemblyReferences) {
+				var reference = reader.GetAssemblyReference (handle);
+				var name = reader.GetString (reference.Name);
+				if (MonoAndroidReference == name) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool HasEmbeddedResource (MetadataReader reader)
+		{
+			foreach (var handle in reader.ManifestResources) {
+				var resource = reader.GetManifestResource (handle);
+				var name = reader.GetString (resource.Name);
+				if (name.EndsWith (".jar", StringComparison.OrdinalIgnoreCase) ||
+					name.StartsWith ("__Android", StringComparison.OrdinalIgnoreCase)) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

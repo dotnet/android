@@ -519,8 +519,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
   <FilterAssemblies
       DesignTimeBuild="$(DesignTimeBuild)"
-      TargetFrameworkIdentifier="MonoAndroid"
-      FallbackReference="Mono.Android"
       InputAssemblies="@(_ReferencePath);@(_ReferenceDependencyPaths)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferencePath" />
   </FilterAssemblies>
