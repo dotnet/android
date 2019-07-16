@@ -227,7 +227,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Ahead-of-time compilation properties -->
 	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
-	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' ">True</AotAssemblies>
+	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' And '$(AndroidAotMode)' != 'None' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
 
 	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
@@ -545,11 +545,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <Touch
       Condition=" '$(DesignTimeBuild)' != 'True' "
-      Files="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp"
+      Files="$(_AndroidStampDirectory)_BuildAdditionalResourcesCache.stamp;$(MonoAndroidIntermediateResourceCache).stamp"
       AlwaysCreate="True"
   />
   <ItemGroup>
     <FileWrites Include="$(_AndroidResourcePathsCache)" Condition=" Exists ('$(_AndroidResourcePathsCache)') " />
+    <FileWrites Include="$(MonoAndroidIntermediateResourceCache).stamp" Condition=" Exists ('$(MonoAndroidIntermediateResourceCache).stamp') " />
   </ItemGroup>
 </Target>
 
@@ -2603,7 +2604,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_RemoveRegisterAttribute"
   DependsOnTargets="_PrepareAssemblies"
-  Inputs="@(_ResolvedFrameworkAssemblies);$(_AndroidBuildPropertiesCache)"
+  Inputs="$(_AndroidLinkFlag)"
   Outputs="$(_RemoveRegisterFlag)"
   Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
 
@@ -2815,6 +2816,7 @@ because xbuild doesn't support framework reference assemblies.
 	Condition=" '$(AndroidAotMode)' == 'Hybrid' And '$(AotAssemblies)' == 'True' "
 	AndroidAotMode="$(AndroidAotMode)"
 	ToolPath="$(_MonoAndroidToolsDirectory)"
+	ApkOutputPath="$(_BuildApkEmbedOutputs)"
 	ResolvedAssemblies="@(_ResolvedAssemblies)">
   </CilStrip> 
 
