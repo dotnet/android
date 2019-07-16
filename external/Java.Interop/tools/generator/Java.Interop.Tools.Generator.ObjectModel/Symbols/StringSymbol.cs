@@ -64,7 +64,7 @@ namespace MonoDroid.Generation {
 			return String.Format ("JNIEnv.NewString ({0})", var_name);
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			return true;
 		}

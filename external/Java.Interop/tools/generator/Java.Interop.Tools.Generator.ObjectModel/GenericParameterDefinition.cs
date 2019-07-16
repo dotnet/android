@@ -28,7 +28,7 @@ namespace MonoDroid.Generation
 
 		bool validated, is_valid;
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (ConstraintExpressions == null || ConstraintExpressions.Length == 0)
 				return true;
@@ -38,7 +38,7 @@ namespace MonoDroid.Generation
 			foreach (var c in ConstraintExpressions) {
 				var sym = opt.SymbolTable.Lookup (c, type_params);
 				if (sym == null) {
-					Report.Warning (0, Report.WarningGenericParameterDefinition + 0, "Unknown generic argument constraint type {0} {1}.", c, opt.ContextString);
+					Report.Warning (0, Report.WarningGenericParameterDefinition + 0, "Unknown generic argument constraint type {0} {1}.", c, context.ContextString);
 					validated = true;
 					return false;
 				}
@@ -114,10 +114,10 @@ namespace MonoDroid.Generation
 			return Count == 0 ? null : '<' + String.Join (",", (from p in this select p.Name).ToArray ()) + '>';
 		}
 		
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			foreach (var pd in this)
-				if (!pd.Validate (opt, type_params))
+				if (!pd.Validate (opt, type_params, context))
 					return false;
 			return true;
 		}

@@ -2,14 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml;
-
 using Java.Interop.Tools.TypeNameMappings;
-
 using Xamarin.Android.Binder;
-
-using MonoDroid.Utils;
 
 namespace MonoDroid.Generation
 {
@@ -93,7 +87,7 @@ namespace MonoDroid.Generation
 			base.ResetValidation ();
 		}
 
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (validated)
 				return is_valid;
@@ -106,7 +100,7 @@ namespace MonoDroid.Generation
 			}
 
 			// We're validating this in prior to BaseType.
-			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params)) {
+			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params, context)) {
 				is_valid = false;
 				return false;
 			}
@@ -124,7 +118,7 @@ namespace MonoDroid.Generation
 				return false;
 			}
 
-			if ((base_symbol != null && !base_symbol.Validate (opt, TypeParameters)) || !base.OnValidate (opt, type_params)) {
+			if ((base_symbol != null && !base_symbol.Validate (opt, TypeParameters, context)) || !base.OnValidate (opt, type_params, context)) {
 				Report.Warning (0, Report.WarningClassGen + 3, "Class {0} has invalid base type {1}.", FullName, BaseType);
 				is_valid = false;
 				return false;
@@ -132,7 +126,7 @@ namespace MonoDroid.Generation
 
 			List<Ctor> valid_ctors = new List<Ctor> ();
 			foreach (Ctor c in ctors)
-				if (c.Validate (opt, TypeParameters))
+				if (c.Validate (opt, TypeParameters, context))
 					valid_ctors.Add (c);
 			ctors = valid_ctors;
 
@@ -244,113 +238,108 @@ namespace MonoDroid.Generation
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
-			gen_info.CurrentType = FullName;
+			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {
+				sw.WriteLine ("using System;");
+				sw.WriteLine ("using System.Collections.Generic;");
+				sw.WriteLine ("using Android.Runtime;");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
+					sw.WriteLine ("using Java.Interop;");
+				}
+				sw.WriteLine ();
+				sw.WriteLine ("namespace {0} {{", Namespace);
+				sw.WriteLine ();
 
-			StreamWriter sw = gen_info.Writer = gen_info.OpenStream(opt.GetFileName (FullName));
+				var generator = opt.CreateCodeGenerator (sw);
+				generator.WriteClass (this, "\t", gen_info);
 
-			sw.WriteLine ("using System;");
-			sw.WriteLine ("using System.Collections.Generic;");
-			sw.WriteLine ("using Android.Runtime;");
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
-				sw.WriteLine ("using Java.Interop;");
+				sw.WriteLine ("}");
 			}
-			sw.WriteLine ();
-			sw.WriteLine ("namespace {0} {{", Namespace);
-			sw.WriteLine ();
-
-			var generator = opt.CreateCodeGenerator (sw);
-			generator.WriteClass (this, "\t", gen_info);
-
-			sw.WriteLine ("}");
-			sw.Close ();
-			gen_info.Writer = null;
 		}
 
 		public static void GenerateTypeRegistrations (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
-			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (opt.GetFileName ("Java.Interop.__TypeRegistrations"));
+			using (var sw = gen_info.OpenStream (opt.GetFileName ("Java.Interop.__TypeRegistrations"))) {
 
-			Dictionary<string, List<KeyValuePair<string, string>>> mapping = new Dictionary<string, List<KeyValuePair<string, string>>>();
-			foreach (KeyValuePair<string, string> reg in gen_info.TypeRegistrations) {
-				int ls          = reg.Key.LastIndexOf ('/');
-				string package  = ls >= 0 ? reg.Key.Substring (0, ls) : "";
+				Dictionary<string, List<KeyValuePair<string, string>>> mapping = new Dictionary<string, List<KeyValuePair<string, string>>> ();
+				foreach (KeyValuePair<string, string> reg in gen_info.TypeRegistrations.OrderBy (p => p.Key, StringComparer.OrdinalIgnoreCase)) {
+					int ls = reg.Key.LastIndexOf ('/');
+					string package = ls >= 0 ? reg.Key.Substring (0, ls) : "";
 
-				if (JavaNativeTypeManager.ToCliType (reg.Key) == reg.Value)
-					continue;
-				List<KeyValuePair<string, string>> v;
-				if (!mapping.TryGetValue (package, out v))
-					mapping.Add (package, v = new List<KeyValuePair<string, string>>());
-				v.Add (new KeyValuePair<string, string>(reg.Key, reg.Value));
-			}
-
-			sw.WriteLine ("using System;");
-			sw.WriteLine ("using System.Collections.Generic;");
-			sw.WriteLine ("using Android.Runtime;");
-			sw.WriteLine ();
-			sw.WriteLine ("namespace Java.Interop {");
-			sw.WriteLine ();
-			sw.WriteLine ("\tpartial class __TypeRegistrations {");
-			sw.WriteLine ();
-			sw.WriteLine ("\t\tpublic static void RegisterPackages ()");
-			sw.WriteLine ("\t\t{");
-			sw.WriteLine ("#if MONODROID_TIMING");
-			sw.WriteLine ("\t\t\tvar start = DateTime.Now;");
-			sw.WriteLine ("\t\t\tAndroid.Util.Log.Info (\"MonoDroid-Timing\", \"RegisterPackages start: \" + (start - new DateTime (1970, 1, 1)).TotalMilliseconds);");
-			sw.WriteLine ("#endif // def MONODROID_TIMING");
-			sw.WriteLine ("\t\t\tJava.Interop.TypeManager.RegisterPackages (");
-			sw.WriteLine ("\t\t\t\t\tnew string[]{");
-			foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> e in mapping) {
-				sw.WriteLine ("\t\t\t\t\t\t\"{0}\",", e.Key);
-			}
-			sw.WriteLine ("\t\t\t\t\t},");
-			sw.WriteLine ("\t\t\t\t\tnew Converter<string, Type>[]{");
-			foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> e in mapping) {
-				sw.WriteLine ("\t\t\t\t\t\tlookup_{0}_package,", e.Key.Replace ('/', '_'));
-			}
-			sw.WriteLine ("\t\t\t\t\t});");
-			sw.WriteLine ("#if MONODROID_TIMING");
-			sw.WriteLine ("\t\t\tvar end = DateTime.Now;");
-			sw.WriteLine ("\t\t\tAndroid.Util.Log.Info (\"MonoDroid-Timing\", \"RegisterPackages time: \" + (end - new DateTime (1970, 1, 1)).TotalMilliseconds + \" [elapsed: \" + (end - start).TotalMilliseconds + \" ms]\");");
-			sw.WriteLine ("#endif // def MONODROID_TIMING");
-			sw.WriteLine ("\t\t}");
-			sw.WriteLine ();
-			sw.WriteLine ("\t\tstatic Type Lookup (string[] mappings, string javaType)");
-			sw.WriteLine ("\t\t{");
-			sw.WriteLine ("\t\t\tstring managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);");
-			sw.WriteLine ("\t\t\tif (managedType == null)");
-			sw.WriteLine ("\t\t\t\treturn null;");
-			sw.WriteLine ("\t\t\treturn Type.GetType (managedType);");
-			sw.WriteLine ("\t\t}");
-			foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> map in mapping) {
-				sw.WriteLine ();
-				string package = map.Key.Replace ('/', '_');
-				sw.WriteLine ("\t\tstatic string[] package_{0}_mappings;", package);
-				sw.WriteLine ("\t\tstatic Type lookup_{0}_package (string klass)", package);
-				sw.WriteLine ("\t\t{");
-				sw.WriteLine ("\t\t\tif (package_{0}_mappings == null) {{", package);
-				sw.WriteLine ("\t\t\t\tpackage_{0}_mappings = new string[]{{", package);
-				map.Value.Sort ((a, b) => a.Key.CompareTo (b.Key));
-				foreach (KeyValuePair<string, string> t in map.Value) {
-					sw.WriteLine ("\t\t\t\t\t\"{0}:{1}\",", t.Key, t.Value);
+					if (JavaNativeTypeManager.ToCliType (reg.Key) == reg.Value)
+						continue;
+					List<KeyValuePair<string, string>> v;
+					if (!mapping.TryGetValue (package, out v))
+						mapping.Add (package, v = new List<KeyValuePair<string, string>> ());
+					v.Add (new KeyValuePair<string, string> (reg.Key, reg.Value));
 				}
-				sw.WriteLine ("\t\t\t\t};");
-				sw.WriteLine ("\t\t\t}");
-				sw.WriteLine ("");
-				sw.WriteLine ("\t\t\treturn Lookup (package_{0}_mappings, klass);", package);
+
+				sw.WriteLine ("using System;");
+				sw.WriteLine ("using System.Collections.Generic;");
+				sw.WriteLine ("using Android.Runtime;");
+				sw.WriteLine ();
+				sw.WriteLine ("namespace Java.Interop {");
+				sw.WriteLine ();
+				sw.WriteLine ("\tpartial class __TypeRegistrations {");
+				sw.WriteLine ();
+				sw.WriteLine ("\t\tpublic static void RegisterPackages ()");
+				sw.WriteLine ("\t\t{");
+				sw.WriteLine ("#if MONODROID_TIMING");
+				sw.WriteLine ("\t\t\tvar start = DateTime.Now;");
+				sw.WriteLine ("\t\t\tAndroid.Util.Log.Info (\"MonoDroid-Timing\", \"RegisterPackages start: \" + (start - new DateTime (1970, 1, 1)).TotalMilliseconds);");
+				sw.WriteLine ("#endif // def MONODROID_TIMING");
+				sw.WriteLine ("\t\t\tJava.Interop.TypeManager.RegisterPackages (");
+				sw.WriteLine ("\t\t\t\t\tnew string[]{");
+				foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> e in mapping) {
+					sw.WriteLine ("\t\t\t\t\t\t\"{0}\",", e.Key);
+				}
+				sw.WriteLine ("\t\t\t\t\t},");
+				sw.WriteLine ("\t\t\t\t\tnew Converter<string, Type>[]{");
+				foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> e in mapping) {
+					sw.WriteLine ("\t\t\t\t\t\tlookup_{0}_package,", e.Key.Replace ('/', '_'));
+				}
+				sw.WriteLine ("\t\t\t\t\t});");
+				sw.WriteLine ("#if MONODROID_TIMING");
+				sw.WriteLine ("\t\t\tvar end = DateTime.Now;");
+				sw.WriteLine ("\t\t\tAndroid.Util.Log.Info (\"MonoDroid-Timing\", \"RegisterPackages time: \" + (end - new DateTime (1970, 1, 1)).TotalMilliseconds + \" [elapsed: \" + (end - start).TotalMilliseconds + \" ms]\");");
+				sw.WriteLine ("#endif // def MONODROID_TIMING");
 				sw.WriteLine ("\t\t}");
+				sw.WriteLine ();
+				sw.WriteLine ("\t\tstatic Type Lookup (string[] mappings, string javaType)");
+				sw.WriteLine ("\t\t{");
+				sw.WriteLine ("\t\t\tstring managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);");
+				sw.WriteLine ("\t\t\tif (managedType == null)");
+				sw.WriteLine ("\t\t\t\treturn null;");
+				sw.WriteLine ("\t\t\treturn Type.GetType (managedType);");
+				sw.WriteLine ("\t\t}");
+				foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> map in mapping) {
+					sw.WriteLine ();
+					string package = map.Key.Replace ('/', '_');
+					sw.WriteLine ("\t\tstatic string[] package_{0}_mappings;", package);
+					sw.WriteLine ("\t\tstatic Type lookup_{0}_package (string klass)", package);
+					sw.WriteLine ("\t\t{");
+					sw.WriteLine ("\t\t\tif (package_{0}_mappings == null) {{", package);
+					sw.WriteLine ("\t\t\t\tpackage_{0}_mappings = new string[]{{", package);
+					map.Value.Sort ((a, b) => a.Key.CompareTo (b.Key));
+					foreach (KeyValuePair<string, string> t in map.Value) {
+						sw.WriteLine ("\t\t\t\t\t\"{0}:{1}\",", t.Key, t.Value);
+					}
+					sw.WriteLine ("\t\t\t\t};");
+					sw.WriteLine ("\t\t\t}");
+					sw.WriteLine ("");
+					sw.WriteLine ("\t\t\treturn Lookup (package_{0}_mappings, klass);", package);
+					sw.WriteLine ("\t\t}");
+				}
+				sw.WriteLine ("\t}");
+				sw.WriteLine ("}");
 			}
-			sw.WriteLine ("\t}");
-			sw.WriteLine ("}");
-			sw.Close ();
-			gen_info.Writer = null;
 		}
 
 		public static void GenerateEnumList (GenerationInfo gen_info)
 		{
-			StreamWriter sw = new StreamWriter (File.Create (Path.Combine (gen_info.CSharpDir, "enumlist")));
-			foreach (string e in gen_info.Enums)
-				sw.WriteLine (e);
-			sw.Close ();
+			using (var sw = new StreamWriter (File.Create (Path.Combine (gen_info.CSharpDir, "enumlist")))) {
+				foreach (string e in gen_info.Enums.OrderBy (p => p, StringComparer.OrdinalIgnoreCase))
+					sw.WriteLine (e);
+			}
 		}
 		
 		protected override bool GetEnumMappedMemberInfo ()

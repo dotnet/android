@@ -278,10 +278,10 @@ namespace MonoDroid.Generation {
 			return sb.ToString ();
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			foreach (Parameter p in items)
-				if (!p.Validate (opt, type_params))
+				if (!p.Validate (opt, type_params, context))
 					return false;
 			return true;
 		}

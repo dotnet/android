@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -12,6 +13,8 @@ namespace MonoDroid.Generation
 	{
 		protected TextWriter writer;
 		protected CodeGenerationOptions opt;
+
+		public CodeGeneratorContext Context { get; } = new CodeGeneratorContext ();
 
 		protected CodeGenerator (TextWriter writer, CodeGenerationOptions options)
 		{
@@ -38,8 +41,8 @@ namespace MonoDroid.Generation
 
 		public void WriteClass (ClassGen @class, string indent, GenerationInfo gen_info)
 		{
-			opt.ContextTypes.Push (@class);
-			opt.ContextGeneratedMethods = new List<Method> ();
+			Context.ContextTypes.Push (@class);
+			Context.ContextGeneratedMethods = new List<Method> ();
 
 			gen_info.TypeRegistrations.Add (new KeyValuePair<string, string> (@class.RawJniName, @class.AssemblyQualifiedName));
 			bool is_enum = @class.base_symbol != null && @class.base_symbol.FullName == "Java.Lang.Enum";
@@ -186,9 +189,9 @@ namespace MonoDroid.Generation
 				WriteClassInvoker (@class, indent);
 			}
 
-			opt.ContextGeneratedMethods.Clear ();
+			Context.ContextGeneratedMethods.Clear ();
 
-			opt.ContextTypes.Pop ();
+			Context.ContextTypes.Pop ();
 		}
 
 		public void WriteClassAbstractMembers (ClassGen @class, string indent)
@@ -289,7 +292,7 @@ namespace MonoDroid.Generation
 					WriteMethodAbstractDeclaration (m, indent, null, @class);
 				else
 					WriteMethod (m, indent, @class, true);
-				opt.ContextGeneratedMethods.Add (m);
+				Context.ContextGeneratedMethods.Add (m);
 				m.IsVirtual = virt;
 			}
 
@@ -393,7 +396,7 @@ namespace MonoDroid.Generation
 					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
-				if (f.Validate (opt, gen.TypeParameters)) {
+				if (f.Validate (opt, gen.TypeParameters, Context)) {
 					if (seen != null)
 						seen.Add (f.Name);
 					needsProperty = needsProperty || f.NeedsProperty;
@@ -440,7 +443,7 @@ namespace MonoDroid.Generation
 
 		public void WriteInterface (InterfaceGen @interface, string indent, GenerationInfo gen_info)
 		{
-			opt.ContextTypes.Push (@interface);
+			Context.ContextTypes.Push (@interface);
 
 			// interfaces don't nest, so generate as siblings
 			foreach (GenBase nest in @interface.NestedTypes) {
@@ -465,7 +468,7 @@ namespace MonoDroid.Generation
 				WriteInterfaceExtensionsDeclaration (@interface, indent, null);
 			WriteInterfaceInvoker (@interface, indent);
 			WriteInterfaceEventHandler (@interface, indent);
-			opt.ContextTypes.Pop ();
+			Context.ContextTypes.Pop ();
 		}
 
 		// For each interface, generate either an abstract method or an explicit implementation method.
@@ -474,7 +477,7 @@ namespace MonoDroid.Generation
 			foreach (Method m in @interface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
 				bool mapped = false;
 				string sig = m.GetSignature ();
-				if (opt.ContextGeneratedMethods.Any (_ => _.Name == m.Name && _.JniSignature == m.JniSignature))
+				if (Context.ContextGeneratedMethods.Any (_ => _.Name == m.Name && _.JniSignature == m.JniSignature))
 					continue;
 				for (var cls = gen; cls != null; cls = cls.BaseGen)
 					if (cls.ContainsMethod (m, false) || cls != gen && gen.ExplicitlyImplementedInterfaceMethods.Contains (sig)) {
@@ -487,7 +490,7 @@ namespace MonoDroid.Generation
 					WriteMethodExplicitInterfaceImplementation (m, indent, @interface);
 				else
 					WriteMethodAbstractDeclaration (m, indent, @interface, gen);
-				opt.ContextGeneratedMethods.Add (m);
+				Context.ContextGeneratedMethods.Add (m);
 			}
 			foreach (Property prop in @interface.Properties.Where (p => !p.Getter.IsStatic)) {
 				if (gen.ContainsProperty (prop.Name, false))
@@ -777,7 +780,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			writer.WriteLine ("{0}\tpublic {1}Invoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)", indent, @interface.Name);
 			writer.WriteLine ("{0}\t{{", indent);
-			writer.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass ({1});", indent, opt.ContextType.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}\t\tIntPtr local_ref = JNIEnv.GetObjectClass ({1});", indent, Context.ContextType.GetObjectHandleProperty ("this"));
 			writer.WriteLine ("{0}\t\tthis.class_ref = JNIEnv.NewGlobalRef (local_ref);", indent);
 			writer.WriteLine ("{0}\t\tJNIEnv.DeleteLocalRef (local_ref);", indent);
 			writer.WriteLine ("{0}\t}}", indent);
@@ -1176,7 +1179,7 @@ namespace MonoDroid.Generation
 			WriteParameterListCallArgs (method.Parameters, indent, invoker: true);
 			string env_method = "Call" + method.RetVal.CallMethodPrefix + "Method";
 			string call = "JNIEnv." + env_method + " (" +
-			    opt.ContextType.GetObjectHandleProperty ("this") + ", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker: true) + ")";
+			    Context.ContextType.GetObjectHandleProperty ("this") + ", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker: true) + ")";
 			if (method.IsVoid)
 				writer.WriteLine ("{0}{1};", indent, call);
 			else

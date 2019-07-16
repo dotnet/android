@@ -118,7 +118,7 @@ namespace MonoDroid.Generation
 			base.ResetValidation ();
 		}
 
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (validated)
 				return is_valid;
@@ -127,10 +127,10 @@ namespace MonoDroid.Generation
 			
 			// Due to demand to validate in prior to validate ClassGen's BaseType, it is *not* done at
 			// GenBase.
-			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params))
+			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params, context))
 				return false;
 
-			if (!base.OnValidate (opt, type_params) || iface_validation_failed || MethodValidationFailed) {
+			if (!base.OnValidate (opt, type_params, context) || iface_validation_failed || MethodValidationFailed) {
 				if (iface_validation_failed)
 					Report.Warning (0, Report.WarningInterfaceGen + 2, "Invalidating {0} and all nested types because some of its interfaces were invalid.", FullName);
 				else if (MethodValidationFailed)
@@ -188,26 +188,22 @@ namespace MonoDroid.Generation
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
-			gen_info.CurrentType = FullName;
+			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {
+				sw.WriteLine ("using System;");
+				sw.WriteLine ("using System.Collections.Generic;");
+				sw.WriteLine ("using Android.Runtime;");
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
+					sw.WriteLine ("using Java.Interop;");
+				}
+				sw.WriteLine ();
+				sw.WriteLine ("namespace {0} {{", Namespace);
+				sw.WriteLine ();
 
-			StreamWriter sw = gen_info.Writer = gen_info.OpenStream(opt.GetFileName (FullName));
+				var generator = opt.CreateCodeGenerator (sw);
+				generator.WriteInterface (this, "\t", gen_info);
 
-			sw.WriteLine ("using System;");
-			sw.WriteLine ("using System.Collections.Generic;");
-			sw.WriteLine ("using Android.Runtime;");
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
-				sw.WriteLine ("using Java.Interop;");
+				sw.WriteLine ("}");
 			}
-			sw.WriteLine ();
-			sw.WriteLine ("namespace {0} {{", Namespace);
-			sw.WriteLine ();
-
-			var generator = opt.CreateCodeGenerator (sw);
-			generator.WriteInterface (this, "\t", gen_info);
-
-			sw.WriteLine ("}");
-			sw.Close ();
-			gen_info.Writer = null;
 			
 			GenerateAnnotationAttribute (opt, gen_info);
 		}

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.Design;
 using System.IO;
 
 namespace MonoDroid.Generation {
@@ -65,7 +66,7 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteConstructorBody (Ctor ctor, string indent, System.Collections.Specialized.StringCollection call_cleanup)
 		{
-			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, opt.ContextType.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, Context.ContextType.GetObjectHandleProperty ("this"));
 			writer.WriteLine ("{0}\treturn;", indent);
 			writer.WriteLine ();
 			foreach (string prep in ctor.Parameters.GetCallPrep (opt))
@@ -83,7 +84,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}\t\t\tJniHandleOwnership.TransferLocalRef);", indent);
 			writer.WriteLine ("{0}\tglobal::Android.Runtime.JNIEnv.FinishCreateInstance ({1}, \"{2}\"{3});",
 					indent,
-					opt.ContextType.GetObjectHandleProperty ("this"),
+					Context.ContextType.GetObjectHandleProperty ("this"),
 					ctor.IsNonStaticNestedType ? "(" + ctor.Parameters.JniNestedDerivedSignature + ")V" : ctor.JniSignature,
 					ctor.Parameters.GetCallArgs (opt, invoker:false));
 			writer.WriteLine ("{0}\treturn;", indent);
@@ -97,7 +98,7 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}\t\tJniHandleOwnership.TransferLocalRef);", indent);
 			writer.WriteLine ("{0}JNIEnv.FinishCreateInstance ({1}, class_ref, {2}{3});",
 					indent,
-					opt.ContextType.GetObjectHandleProperty ("this"),
+					Context.ContextType.GetObjectHandleProperty ("this"),
 					ctor.ID,
 					ctor.Parameters.GetCallArgs (opt, invoker:false));
 			indent = oldindent;

@@ -74,7 +74,7 @@ namespace MonoDroid.Generation {
 			return String.Format (opt.GetOutputName ("Android.Runtime.{0}Adapter") + ".ToLocalJniHandle ({1})", base_name, var_name);
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			return true;
 		}

@@ -68,11 +68,11 @@ namespace MonoDroid.Generation
 			set { name = value; }
 		}
 
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList tps)
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList tps, CodeGeneratorContext context)
 		{
 			if (missing_enclosing_class)
 				return false;
-			return base.OnValidate (opt, tps);
+			return base.OnValidate (opt, tps, context);
 		}
 
 		public override string CustomAttributes {

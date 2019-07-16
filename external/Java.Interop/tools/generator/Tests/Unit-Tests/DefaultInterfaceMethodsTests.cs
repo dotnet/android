@@ -37,11 +37,11 @@ namespace generatortests
 			iface.Fields.Add (new TestField ("int", "MyConstantField").SetConstant ().SetValue ("7"));
 			iface.Methods.Add (new TestMethod (iface, "DoSomething").SetAbstract ());
 
-			iface.Validate (options, new GenericParameterDefinitionList ());
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceDeclaration (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -62,11 +62,11 @@ namespace generatortests
 			iface.Fields.Add (new TestField ("int", "MyDeprecatedEnumField").SetConstant ().SetValue ("MyEnumValue").SetDeprecated ("This constant will be removed in the future version."));
 			iface.Fields.Add (new TestField ("int", "MyStaticField").SetStatic ().SetValue ("7"));
 
-			iface.Validate (options, new GenericParameterDefinitionList ());
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceDeclaration (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteConstSugarInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
 		}

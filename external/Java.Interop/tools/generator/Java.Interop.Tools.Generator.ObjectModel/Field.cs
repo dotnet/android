@@ -83,21 +83,21 @@ namespace MonoDroid.Generation
 
 		public string Annotation { get; internal set; }
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			symbol = opt.SymbolTable.Lookup (TypeName, type_params);
 			
-			if (symbol == null || !symbol.Validate (opt, type_params)) {
-				Report.Warning (0, Report.WarningField + 0, "unexpected field type {0} {1}.", TypeName, opt.ContextString);
+			if (symbol == null || !symbol.Validate (opt, type_params, context)) {
+				Report.Warning (0, Report.WarningField + 0, "unexpected field type {0} {1}.", TypeName, context.ContextString);
 				return false;
 			}
 
 			setParameters = new ParameterList () {
 				SetterParameter,
 			};
-			if (!setParameters.Validate (opt, type_params))
+			if (!setParameters.Validate (opt, type_params, context))
 				throw new NotSupportedException (
-					string.Format ("Unable to generate setter parameter list {0}", opt.ContextString));
+					string.Format ("Unable to generate setter parameter list {0}", context.ContextString));
 
 			return true;
 		}

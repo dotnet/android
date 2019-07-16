@@ -35,9 +35,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClass)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -47,9 +47,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassAbstractMembers (@class, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteClassAbstractMembers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -59,9 +59,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassConstructors (@class, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassConstructors)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -81,9 +81,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassInvoker (@class, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvoker)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -105,9 +105,9 @@ namespace generatortests
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			var members = new HashSet<string> ();
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassInvokerMembers (@class, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassInvokerMembers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -119,9 +119,9 @@ namespace generatortests
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			var members = new HashSet<string> ();
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassMethodInvokers (@class, @class.Methods, string.Empty, members, null);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethodInvokers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -133,9 +133,9 @@ namespace generatortests
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			var members = new HashSet<string> (new [] { @class.Methods [0].Name });
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassMethodInvokers (@class, @class.Methods, string.Empty, members, null);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethodInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -145,9 +145,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassMethods (@class, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassMethods)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -157,9 +157,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassProperties (@class, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassProperties)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -171,9 +171,9 @@ namespace generatortests
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			var members = new HashSet<string> ();
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassPropertyInvokers (@class, @class.Properties, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassPropertyInvokers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -185,9 +185,9 @@ namespace generatortests
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
 			var members = new HashSet<string> (new [] { @class.Properties [0].Name });
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteClassPropertyInvokers (@class, @class.Properties, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteClassPropertyInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -198,9 +198,9 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var ctor = new TestCtor (@class, "Object");
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtor)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -214,9 +214,9 @@ namespace generatortests
 				.SetCustomAttributes ("[MyAttribute]")
 				.SetAnnotation ("[global::Android.Runtime.IntDefinition (null, JniField = \"xamarin/test/SomeObject.SOME_VALUE\")]");
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtorDeprecated)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -228,11 +228,11 @@ namespace generatortests
 			var ctor = new TestCtor (@class, "Object");
 
 			ctor.Parameters.Add (new Parameter ("mystring", "java.lang.CharSequence", "Java.Lang.ICharSequence", false));
-			ctor.Validate (options, null);
+			ctor.Validate (options, null, new CodeGeneratorContext ());
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WriteConstructor (ctor, string.Empty, true, @class);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteCtorWithStringOverload)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -242,7 +242,7 @@ namespace generatortests
 		{
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("int", "bar").SetEnumified ();
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			StringAssert.Contains ("[global::Android.Runtime.GeneratedEnum]", builder.ToString (), "Should contain GeneratedEnumAttribute!");
@@ -254,7 +254,7 @@ namespace generatortests
 			var comment = "Don't use this!";
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("int", "bar").SetConstant ("1234").SetDeprecated (comment);
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			StringAssert.Contains ($"[Obsolete (\"{comment}\")]", builder.ToString (), "Should contain ObsoleteAttribute!");
@@ -265,7 +265,7 @@ namespace generatortests
 		{
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("int", "bar").SetVisibility ("protected");
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			StringAssert.Contains ("protected int bar {", builder.ToString (), "Property should be protected!");
@@ -277,7 +277,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar").SetConstant ();
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstant)), writer.ToString ().NormalizeLineEndings ());
@@ -289,7 +289,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("int", "bar").SetConstant ("1234");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithIntValue)), writer.ToString ().NormalizeLineEndings ());
@@ -301,7 +301,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar").SetConstant ("\"hello\"");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldConstantWithStringValue)), writer.ToString ().NormalizeLineEndings ());
@@ -313,7 +313,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteFieldGetBody (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldGetBody)), writer.ToString ().NormalizeLineEndings ());
@@ -335,7 +335,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("int", "bar");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldInt)), writer.ToString ().NormalizeLineEndings ());
@@ -347,7 +347,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteFieldSetBody (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldSetBody)), writer.ToString ().NormalizeLineEndings ());
@@ -359,7 +359,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar");
 
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteFieldString)), writer.ToString ().NormalizeLineEndings ());
@@ -371,7 +371,7 @@ namespace generatortests
 			var comment = "Don't use this!";
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetDeprecated (comment);
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			StringAssert.Contains ($"[Obsolete (@\"{comment}\")]", builder.ToString (), "Should contain ObsoleteAttribute!");
@@ -382,7 +382,7 @@ namespace generatortests
 		{
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar", @return: "int").SetManagedReturn ("long");
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			StringAssert.Contains ("public virtual unsafe long bar ()", builder.ToString (), "Should contain return long!");
@@ -393,7 +393,7 @@ namespace generatortests
 		{
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar", @return: "int").SetManagedReturn ("int").SetReturnEnumified ();
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			StringAssert.Contains ("[return:global::Android.Runtime.GeneratedEnum]", builder.ToString (), "Should contain GeneratedEnumAttribute!");
@@ -405,9 +405,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var gen_info = new GenerationInfo (null, null, null);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterface (iface, string.Empty, gen_info);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterface)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -417,9 +417,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceDeclaration (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -429,9 +429,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceExtensionMethods (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionMethods)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -441,9 +441,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceEventArgs (iface, iface.Methods[0], string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -453,9 +453,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceEventHandler (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandler)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -465,9 +465,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceEventHandlerImpl (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandlerImpl)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -478,9 +478,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var handlers = new List<string> ();
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceEventHandlerImplContent (iface, iface.Methods[0], string.Empty, true, string.Empty, handlers);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (1, handlers.Count);
 			Assert.AreEqual ("GetCountForKey", handlers [0]);
@@ -492,9 +492,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceExtensionsDeclaration (iface, string.Empty, "java.code.DeclaringType");
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionsDeclaration)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -504,9 +504,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceInvoker (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceInvoker)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -516,9 +516,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceListenerEvent (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", true, "MyWrefSuffix", "Add", "Remove");
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceListenerEvent)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -528,9 +528,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceListenerProperty (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyConnectorFmt", "MyFullDelegateName");
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceListenerProperty)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -542,9 +542,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var members = new HashSet<string> ();
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceMethodInvokers (iface, iface.Methods, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceMethodInvokers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -556,9 +556,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var members = new HashSet<string> (new [] { iface.Methods [0].Name });
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceMethodInvokers (iface, iface.Methods, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceMethodInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -568,9 +568,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceMethods (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceMethods)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -580,9 +580,9 @@ namespace generatortests
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfaceProperties (iface, string.Empty);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceProperties)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -594,9 +594,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var members = new HashSet<string> ();
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfacePropertyInvokers (iface, iface.Properties, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfacePropertyInvokers)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -608,9 +608,9 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 			var members = new HashSet<string> (new [] { iface.Properties [0].Name });
 
-			options.ContextTypes.Push (iface);
+			generator.Context.ContextTypes.Push (iface);
 			generator.WriteInterfacePropertyInvokers (iface, iface.Properties, string.Empty, members);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfacePropertyInvokersWithSkips)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -621,7 +621,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetAbstract ();
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAbstractWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -633,7 +633,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar", @return: "int").SetAsyncify ();
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAsyncifiedWithIntReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -645,7 +645,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetAsyncify ();
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodAsyncifiedWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -657,7 +657,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar");
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethodBody (method, string.Empty);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodBody)), writer.ToString ().NormalizeLineEndings ());
@@ -669,7 +669,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetFinal ();
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodFinalWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -692,7 +692,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetVisibility ("protected");
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodProtected)), writer.ToString ().NormalizeLineEndings ());
@@ -704,7 +704,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar").SetStatic ();
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodStaticWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -716,7 +716,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar", @return: "int");
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithIntReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -728,7 +728,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar", @return: "java.lang.String");
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithStringReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -740,7 +740,7 @@ namespace generatortests
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var method = new TestMethod (@class, "bar");
 
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			generator.WriteMethod (method, string.Empty, @class, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteMethodWithVoidReturn)), writer.ToString ().NormalizeLineEndings ());
@@ -821,9 +821,9 @@ namespace generatortests
 		{
 			var @class = SupportTypeBuilder.CreateClassWithProperty ("java.lang.Object", "com.mypackage.foo", "MyProperty", "int", options);
 
-			options.ContextTypes.Push (@class);
+			generator.Context.ContextTypes.Push (@class);
 			generator.WritePropertyInvoker (@class.Properties.First (), string.Empty, @class);
-			options.ContextTypes.Pop ();
+			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WritePropertyInvoker)), writer.ToString ().NormalizeLineEndings ());
 		}

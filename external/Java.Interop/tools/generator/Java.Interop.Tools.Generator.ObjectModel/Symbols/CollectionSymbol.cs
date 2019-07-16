@@ -89,9 +89,9 @@ namespace MonoDroid.Generation {
 					opt.GetSafeIdentifier (varname));
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
-			return parms == null || parms.Validate (opt, type_params);
+			return parms == null || parms.Validate (opt, type_params, context);
 		}
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)

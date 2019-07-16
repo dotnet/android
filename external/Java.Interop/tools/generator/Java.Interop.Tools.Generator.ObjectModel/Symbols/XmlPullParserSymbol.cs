@@ -61,7 +61,7 @@ namespace MonoDroid.Generation {
 			return String.Format ("global::Android.Runtime.XmlReaderPullParser.ToLocalJniHandle ({0})", var_name);
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			return true;
 		}

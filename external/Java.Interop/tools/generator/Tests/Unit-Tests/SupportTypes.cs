@@ -353,7 +353,7 @@ namespace generatortests
 			foreach (var p in parameters)
 				ctor.Parameters.Add (p);
 
-			ctor.Validate (options, null);
+			ctor.Validate (options, null, new CodeGeneratorContext ());
 
 			return ctor;
 		}
@@ -394,8 +394,8 @@ namespace generatortests
 			foreach (var p in parameters)
 				method.Parameters.Add (p);
 
-			method.Validate (options, null);
-			method.RetVal.Validate (options, null);
+			method.Validate (options, null, new CodeGeneratorContext ());
+			method.RetVal.Validate (options, null, new CodeGeneratorContext ());
 
 			return method;
 		}
@@ -419,7 +419,7 @@ namespace generatortests
 			};
 
 			foreach (var p in list)
-				p.Validate (options, null);
+				p.Validate (options, null, new CodeGeneratorContext ());
 
 			return list;
 		}

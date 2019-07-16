@@ -84,9 +84,9 @@ namespace MonoDroid.Generation {
 			return String.Format ("JNIEnv.NewArray ({0})", var_name);
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
-			return sym.Validate (opt, type_params);
+			return sym.Validate (opt, type_params, context);
 		}
 
 		public string Call (CodeGenerationOptions opt, string var_name)

@@ -252,15 +252,15 @@ namespace MonoDroid.Generation {
 					name); 
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			sym = opt.SymbolTable.Lookup (type, type_params);
 			if (sym == null) {
-				Report.Warning (0, Report.WarningParameter + 0, "Unknown parameter type {0} {1}.", type, opt.ContextString);
+				Report.Warning (0, Report.WarningParameter + 0, "Unknown parameter type {0} {1}.", type, context.ContextString);
 				return false;
 			}
-			if (!sym.Validate (opt, type_params)) {
-				Report.Warning (0, Report.WarningParameter + 1, "Invalid parameter type {0} {1}.", type, opt.ContextString);
+			if (!sym.Validate (opt, type_params, context)) {
+				Report.Warning (0, Report.WarningParameter + 1, "Invalid parameter type {0} {1}.", type, context.ContextString);
 				return false;
 			}
 			return true;

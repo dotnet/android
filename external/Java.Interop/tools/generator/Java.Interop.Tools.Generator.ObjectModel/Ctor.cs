@@ -24,9 +24,9 @@ namespace MonoDroid.Generation
 			get { return "id_ctor" + IDSignature; }
 		}
 
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList tps)
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList tps, CodeGeneratorContext context)
 		{
-			if (!base.OnValidate (opt, tps))
+			if (!base.OnValidate (opt, tps, context))
 				return false;
 			jni_sig = "(" + Parameters.JniSignature + ")V";
 			return true;

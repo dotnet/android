@@ -79,23 +79,23 @@ namespace MonoDroid.Generation
 			return true;
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
-			opt.ContextMethod = this;
+			context.ContextMethod = this;
 			try {
-				return IsValid = OnValidate (opt, type_params);
+				return IsValid = OnValidate (opt, type_params, context);
 			} finally {
-				opt.ContextMethod = null;
+				context.ContextMethod = null;
 			}
 		}
 
-		protected virtual bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		protected virtual bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			var tpl = GenericParameterDefinitionList.Merge (type_params, GenericArguments);
-			if (!parms.Validate (opt, tpl))
+			if (!parms.Validate (opt, tpl, context))
 				return false;
 			if (Parameters.Count > 14) {
-				Report.Warning (0, Report.WarningMethodBase + 0, "More than 16 parameters were found, which goes beyond the maximum number of parameters. ({0})", opt.ContextString);
+				Report.Warning (0, Report.WarningMethodBase + 0, "More than 16 parameters were found, which goes beyond the maximum number of parameters. ({0})", context.ContextString);
 				return false;
 			}
 			return true;

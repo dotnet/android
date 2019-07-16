@@ -88,7 +88,7 @@ namespace MonoDroid.Generation {
 			return varname;
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			return true;
 		}

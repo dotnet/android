@@ -64,7 +64,7 @@ namespace MonoDroid.Generation {
 			return managed;
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList in_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList in_params, CodeGeneratorContext context)
 		{
 			if (validated)
 				return is_valid;
@@ -89,7 +89,7 @@ namespace MonoDroid.Generation {
 				}
 
 				ISymbol psym = opt.SymbolTable.Lookup (tp, in_params);
-				if (psym == null || !psym.Validate (opt, in_params))
+				if (psym == null || !psym.Validate (opt, in_params, context))
 					return false;
 				
 

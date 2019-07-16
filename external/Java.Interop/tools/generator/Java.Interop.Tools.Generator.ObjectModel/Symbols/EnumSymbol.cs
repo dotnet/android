@@ -66,7 +66,7 @@ namespace MonoDroid.Generation {
 			return "(int) " + varname;
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			return true;
 		}

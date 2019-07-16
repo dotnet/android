@@ -116,15 +116,15 @@ namespace MonoDroid.Generation {
 			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name)); 
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			sym = (IsEnumified ? opt.SymbolTable.Lookup (managed_type, type_params) : null) ?? opt.SymbolTable.Lookup (java_type, type_params);
 			if (sym == null) {
-				Report.Warning (0, Report.WarningReturnValue + 0, "Unknown return type {0} {1}.", java_type, opt.ContextString);
+				Report.Warning (0, Report.WarningReturnValue + 0, "Unknown return type {0} {1}.", java_type, context.ContextString);
 				return false;
 			}
-			if (!sym.Validate (opt, type_params)) {
-				Report.Warning (0, Report.WarningReturnValue + 1, "Invalid return type {0} {1}.", java_type, opt.ContextString);
+			if (!sym.Validate (opt, type_params, context)) {
+				Report.Warning (0, Report.WarningReturnValue + 1, "Invalid return type {0} {1}.", java_type, context.ContextString);
 				return false;
 			}
 			return true;

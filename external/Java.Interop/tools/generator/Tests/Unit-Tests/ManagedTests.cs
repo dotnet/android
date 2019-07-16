@@ -61,7 +61,7 @@ namespace generatortests
 
 			foreach (var type in module.Types.Where(t => t.IsClass && t.Namespace == "Java.Lang")) {
 				var @class = new ManagedClassGen (type, options);
-				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext()), "@class.Validate failed!");
 				options.SymbolTable.AddType (@class);
 			}
 		}
@@ -77,7 +77,7 @@ namespace generatortests
 		public void Class ()
 		{
 			var @class = new ManagedClassGen (module.GetType ("Com.Mypackage.Foo"), options);
-			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 
 			Assert.AreEqual ("public", @class.Visibility);
 			Assert.AreEqual ("Foo", @class.Name);
@@ -95,7 +95,7 @@ namespace generatortests
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = new ManagedClassGen (type, options);
 			var method = new ManagedMethod (@class, type.Methods.First (m => m.Name == "Bar"));
-			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 
 			Assert.AreEqual ("public", method.Visibility);
 			Assert.AreEqual ("void", method.Return);
@@ -140,7 +140,7 @@ namespace generatortests
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = new ManagedClassGen (type, options);
 			var method = new ManagedMethod (@class, type.Methods.First (m => m.Name == "BarWithParams"));
-			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
 			Assert.AreEqual ("java.lang.String", method.Return);
 			Assert.AreEqual ("System.String", method.ManagedReturn);
@@ -170,7 +170,7 @@ namespace generatortests
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = new ManagedClassGen (type, options);
 			var ctor = new ManagedCtor (@class, type.Methods.First (m => m.IsConstructor && !m.IsStatic));
-			Assert.IsTrue (ctor.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList ()), "ctor.Validate failed!");
+			Assert.IsTrue (ctor.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "ctor.Validate failed!");
 
 			Assert.AreEqual ("public", ctor.Visibility);
 			Assert.AreEqual (".ctor", ctor.Name);
@@ -184,7 +184,7 @@ namespace generatortests
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = new ManagedClassGen (type, options);
 			var field = new ManagedField (type.Fields.First (f => f.Name == "Value"));
-			Assert.IsTrue (field.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
 			Assert.AreEqual ("Value", field.Name);
 			Assert.AreEqual ("value", field.JavaName);
@@ -199,7 +199,7 @@ namespace generatortests
 		{
 			var type = module.GetType ("Com.Mypackage.IService");
 			var @interface = new ManagedInterfaceGen (type, options);
-			Assert.IsTrue (@interface.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList ()), "interface.Validate failed!");
+			Assert.IsTrue (@interface.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "interface.Validate failed!");
 
 			Assert.AreEqual ("public", @interface.Visibility);
 			Assert.AreEqual ("IService", @interface.Name);

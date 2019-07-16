@@ -172,15 +172,15 @@ namespace MonoDroid.Generation
 			return event_name;
 		}
 
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (GenericArguments != null)
-				GenericArguments.Validate (opt, type_params);
+				GenericArguments.Validate (opt, type_params, context);
 			var tpl = GenericParameterDefinitionList.Merge (type_params, GenericArguments);
-			if (!retval.Validate (opt, tpl))
+			if (!retval.Validate (opt, tpl, context))
 				return false;
 
-			return base.OnValidate (opt, tpl);
+			return base.OnValidate (opt, tpl, context);
 		}
 
 		string connector_name;

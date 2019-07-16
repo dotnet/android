@@ -21,7 +21,7 @@ namespace MonoDroid.Generation {
 		string FromNative (CodeGenerationOptions opt, string var_name, bool owned);
 		string ToNative (CodeGenerationOptions opt, string var_name, Dictionary<string, string> mappings = null);
 
-		bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params);
+		bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context);
 
 		string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned);
 		string[] PostCallback (CodeGenerationOptions opt, string var_name);

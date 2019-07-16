@@ -120,7 +120,7 @@ namespace MonoDroid.Generation {
 					? "(" + ctor.Parameters.JniNestedDerivedSignature + ")V"
 					: ctor.JniSignature);
 			writer.WriteLine ();
-			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, opt.ContextType.GetObjectHandleProperty ("this"));
+			writer.WriteLine ("{0}if ({1} != IntPtr.Zero)", indent, Context.ContextType.GetObjectHandleProperty ("this"));
 			writer.WriteLine ("{0}\treturn;", indent);
 			writer.WriteLine ();
 			foreach (string prep in ctor.Parameters.GetCallPrep (opt))

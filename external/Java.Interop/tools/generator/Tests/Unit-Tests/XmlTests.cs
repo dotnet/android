@@ -53,7 +53,7 @@ namespace generatortests
 			var javaLang = xml.Element ("api").Element ("package");
 			foreach (var type in javaLang.Elements("class")) {
 				var @class = new XmlClassGen (javaLang, type);
-				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 				options.SymbolTable.AddType (@class);
 			}
 
@@ -65,7 +65,7 @@ namespace generatortests
 		{
 			var element = package.Element ("class");
 			var @class = new XmlClassGen (package, element);
-			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList ()), "@class.Validate failed!");
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 
 			Assert.AreEqual ("public", @class.Visibility);
 			Assert.AreEqual ("Foo", @class.Name);
@@ -83,7 +83,7 @@ namespace generatortests
 			var element = package.Element ("class");
 			var @class = new XmlClassGen (package, element);
 			var method = new XmlMethod (@class, element.Element ("method"));
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 
 			Assert.AreEqual ("public", method.Visibility);
 			Assert.AreEqual ("void", method.Return);
@@ -128,7 +128,7 @@ namespace generatortests
 			var element = package.Element ("class");
 			var @class = new XmlClassGen (package, element);
 			var method = new XmlMethod (@class, element.Elements ("method").Where (e => e.Attribute ("name").Value == "barWithParams").First ());
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList ()), "method.Validate failed!");
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
 			Assert.AreEqual ("java.lang.String", method.Return);
 			Assert.AreEqual ("System.String", method.ManagedReturn);
@@ -158,7 +158,7 @@ namespace generatortests
 			var element = package.Element ("class");
 			var @class = new XmlClassGen (package, element);
 			var ctor = new XmlCtor (@class, element.Element ("constructor"));
-			Assert.IsTrue (ctor.Validate (options, new GenericParameterDefinitionList ()), "ctor.Validate failed!");
+			Assert.IsTrue (ctor.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "ctor.Validate failed!");
 
 			Assert.AreEqual ("public", ctor.Visibility);
 			Assert.AreEqual ("foo", ctor.Name);
@@ -172,7 +172,7 @@ namespace generatortests
 			var element = package.Element ("class");
 			var @class = new XmlClassGen (package, element);
 			var field = new XmlField (element.Element ("field"));
-			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList ()), "field.Validate failed!");
+			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
 			Assert.AreEqual ("Value", field.Name);
 			Assert.AreEqual ("value", field.JavaName);
@@ -187,7 +187,7 @@ namespace generatortests
 		{
 			var element = package.Element ("interface");
 			var @interface = new XmlInterfaceGen (package, element);
-			Assert.IsTrue (@interface.Validate (options, new GenericParameterDefinitionList ()), "interface.Validate failed!");
+			Assert.IsTrue (@interface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "interface.Validate failed!");
 
 			Assert.AreEqual ("public", @interface.Visibility);
 			Assert.AreEqual ("IService", @interface.Name);

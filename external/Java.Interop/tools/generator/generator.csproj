@@ -58,6 +58,7 @@
       <Link>utils\XmlExtensions.cs</Link>
     </Compile>
     <Compile Include="CodeGenerationTarget.cs" />
+    <Compile Include="CodeGeneratorContext.cs" />
     <Compile Include="CodeGeneratorOptions.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\InterfaceExtensionInfo.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Importers\Xml\InterfaceXmlGenBaseSupport.cs" />
