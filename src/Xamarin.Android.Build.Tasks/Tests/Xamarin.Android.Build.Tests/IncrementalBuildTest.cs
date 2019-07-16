@@ -681,5 +681,28 @@ namespace Lib2
 			Assert.IsTrue (task.Execute (), $"{nameof (ReadLibraryProjectImportsCache)} should have succeeded.");
 			return task;
 		}
+
+		[Test]
+		public void InvalidAndroidResource ([Values (true, false)] bool useAapt2)
+		{
+			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {
+				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources><item/></resources>"
+			};
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
+
+				proj.OtherBuildItems.Add (invalidXml);
+				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
+
+				proj.OtherBuildItems.Remove (invalidXml);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				proj.OtherBuildItems.Add (invalidXml);
+				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
+			}
+		}
 	}
 }
