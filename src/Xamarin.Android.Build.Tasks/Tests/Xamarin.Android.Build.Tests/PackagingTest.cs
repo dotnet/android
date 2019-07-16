@@ -371,6 +371,41 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		public void CheckAapt2WarningsDoNotGenerateErrors ()
+		{
+			//https://github.com/xamarin/xamarin-android/issues/3083
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v7.1",
+				UseLatestPlatformSdk = false,
+			};
+			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				if (!b.TargetFrameworkExists (proj.TargetFrameworkVersion))
+					Assert.Ignore ($"Skipped as {proj.TargetFrameworkVersion} not available.");
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				var packagedResource = Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "packaged_resources");
+				FileAssert.Exists (packagedResource, $"{packagedResource} should have been created.");
+				var packagedResourcearm = packagedResource + "-armeabi-v7a";
+				FileAssert.Exists (packagedResourcearm, $"{packagedResourcearm} should have been created.");
+				var packagedResourcex86 = packagedResource + "-x86";
+				FileAssert.Exists (packagedResourcex86, $"{packagedResourcex86} should have been created.");
+			}
+		}
+
+		[Test]
 		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
