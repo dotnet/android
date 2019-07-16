@@ -1545,6 +1545,8 @@ namespace App1
 		{
 			FixLintOnWindows ();
 
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup";
+
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
 					KnownPackages.AndroidSupportV4_27_0_2_1,
@@ -1553,7 +1555,7 @@ namespace App1
 			};
 			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
-			proj.SetProperty ("AndroidLintDisabledIssues", "StaticFieldLeak,ObsoleteSdkInt,AllowBackup");
+			proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
 			proj.SetProperty ("AndroidLintCheckIssues", "");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", @"
@@ -1581,8 +1583,12 @@ namespace App1
 				}
 			});
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
+				int maxApiLevel = b.GetMaxInstalledPlatform ();
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
+					disabledIssues += ",OldTargetApi";
+				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 				proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnamedProject.UnamedProject"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{APILEVEL}"" />
