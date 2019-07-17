@@ -126,8 +126,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CompileResources"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-    Inputs="@(AndroidResource)"
+    Condition=" '$(_AndroidUseAapt2)' == 'True' And '@(AndroidResource)' != '' "
+    Inputs="$(MSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(AndroidResource)"
     Outputs="$(_AndroidLibraryFlatArchivesDirectory)\_CompileResources.stamp"
     DependsOnTargets="$(_BeforeCompileResources);_ConvertResourcesCases"
   >
