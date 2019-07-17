@@ -73,6 +73,7 @@
     <Compile Include="Unit-Tests\CodeGeneratorTests.cs" />
     <Compile Include="Unit-Tests\AdjusterTests.cs" />
     <Compile Include="Unit-Tests\DefaultInterfaceMethodsTests.cs" />
+    <Compile Include="Unit-Tests\EnumGeneratorTests.cs" />
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
     <Compile Include="Unit-Tests\TestExtensions.cs" />
@@ -479,6 +480,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteCtor.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\EnumGeneratorExpectedResults\WriteBasicEnum.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\EnumGeneratorExpectedResults\WriteEnumWithGens.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\EnumGeneratorExpectedResults\WriteFlagsEnum.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

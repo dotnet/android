@@ -1,8 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -139,85 +141,36 @@ namespace MonoDroid.Generation {
 			if (!Directory.Exists (output_dir))
 				Directory.CreateDirectory (output_dir);
 
-			var files   = new List<string> ();
-			foreach (var enu in enums) {
-				var path    = Path.Combine (output_dir, GetFileName (enu.Key, useShortFileNames) + ".cs");
+			var files = new ConcurrentBag<string> ();
+
+			Parallel.ForEach (enums, enu => {
+				var path = Path.Combine (output_dir, GetFileName (enu.Key, useShortFileNames) + ".cs");
 				files.Add (path);
-				using (StreamWriter sw = new StreamWriter (path, append: false)) {
-					string ns = enu.Key.Substring (0, enu.Key.LastIndexOf ('.')).Trim ();
-					string enoom = enu.Key.Substring (enu.Key.LastIndexOf ('.') + 1).Trim ();
 
-					sw.WriteLine ("namespace {0} {{", ns);
-					if (enu.Value.BitField)
-						sw.WriteLine ("  [System.Flags]");
-					sw.WriteLine ("  public enum {0} {{", enoom);
-
-					foreach (var member in enu.Value.Members) {
-						var managedMember = FindManagedMember (ns, enoom, enu.Value, member.Key, gens);
-						sw.WriteLine ("    [global::Android.Runtime.IntDefinition (" + (managedMember != null? "\"" + managedMember + "\"" : "null") + ", JniField = \"" + StripExtraInterfaceSpec (enu.Value.JniNames [member.Key]) + "\")]");
-						sw.WriteLine ("    {0} = {1},", member.Key.Trim (), member.Value.Trim ());
-					}
-					sw.WriteLine ("  }");
-					sw.WriteLine ("}");
+				using (var sw = File.CreateText (path)) {
+					var generator = new EnumGenerator (sw);
+					generator.WriteEnumeration (enu, gens);
 				}
-			}
-			return files;
+			});
+
+			return files.ToList ();
 		}
 
-		string StripExtraInterfaceSpec (string jniFieldSpec)
-		{
-			return jniFieldSpec.StartsWith ("I:", StringComparison.Ordinal) ? jniFieldSpec.Substring (2) : jniFieldSpec;
-		}
-
-		string FindManagedMember (string ns, string enumName, EnumDescription desc, string enumFieldName, IEnumerable<GenBase> gens)
-		{
-			if (desc.FieldsRemoved)
-				return null;
-
-			var jniMember = desc.JniNames [enumFieldName];
-			if (string.IsNullOrWhiteSpace (jniMember)) {
-				// enum values like "None" falls here.
-				return null;
-			}
-			return FindManagedMember (jniMember, gens);
-		}
-
-		WeakReference cache_found_class;
-
-		string FindManagedMember (string jniMember, IEnumerable<GenBase> gens)
-		{
-			string package, type, member;
-			ParseJniMember (jniMember, out package, out type, out member);
-			var fullJavaType = (string.IsNullOrEmpty (package) ? "" : package + ".") + type;
-
-			var cls = cache_found_class != null ? cache_found_class.Target as GenBase : null;
-			if (cls == null || cls.JniName != fullJavaType) {
-				cls = gens.FirstOrDefault (g => g.JavaName == fullJavaType);
-				if (cls == null) {
-					// The class was not found e.g. removed by metadata fixup.
-					return null;
-				}
-				cache_found_class = new WeakReference (cls);
-			}
-			var fld = cls.Fields.FirstOrDefault (f => f.JavaName == member);
-			if (fld == null) {
-				// The field was not found e.g. removed by metadata fixup.
-                                return null;
-			}
-			return cls.FullName + "." + fld.Name;
-		}
-
-		Dictionary<string,string> file_name_map = new Dictionary<string, string> ();
+		readonly Dictionary<string,string> file_name_map = new Dictionary<string, string> ();
 
 		string GetFileName (string file, bool useShortFileNames)
 		{
 			if (!useShortFileNames)
 				return file;
 			string s;
-			if (file_name_map.TryGetValue (file, out s))
-				return s;
-			s = file_name_map.Count.ToString ();
-			file_name_map [file] = s;
+
+			lock (file_name_map) {
+				if (file_name_map.TryGetValue (file, out s))
+					return s;
+				s = file_name_map.Count.ToString ();
+				file_name_map [file] = s;
+			}
+
 			return s;
 		}
 

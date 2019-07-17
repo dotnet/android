@@ -1,0 +1,9 @@
+namespace Android.App {
+	[System.Flags]
+	public enum RecentTaskFlags {
+		[global::Android.Runtime.IntDefinition (null, JniField = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE")]
+		WithExcluded = 1,
+		[global::Android.Runtime.IntDefinition (null, JniField = "android/app/ActivityManager.RECENT_WITH_EXCLUDED")]
+		IgnoreUnavailable = 2,
+	}
+}
