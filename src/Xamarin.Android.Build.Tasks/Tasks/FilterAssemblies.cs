@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tasks
 				var resource = reader.GetManifestResource (handle);
 				var name = reader.GetString (resource.Name);
 				if (name.EndsWith (".jar", StringComparison.OrdinalIgnoreCase) ||
-					name.StartsWith ("__Android", StringComparison.OrdinalIgnoreCase)) {
+						name.StartsWith ("__Android", StringComparison.OrdinalIgnoreCase)) {
 					return true;
 				}
 			}
