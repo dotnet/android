@@ -65,8 +65,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var task = new FilterAssemblies {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
-				TargetFrameworkIdentifier = "MonoAndroid",
-				FallbackReference = "Mono.Android",
 				InputAssemblies = assemblies.Select (a => new TaskItem (a)).ToArray (),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
@@ -96,6 +94,17 @@ namespace Xamarin.Android.Build.Tests
 				"Xamarin.Forms.Platform.Android.dll",
 				"Xamarin.Forms.Platform.dll",
 			};
+			CollectionAssert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public async Task GuavaListenableFuture ()
+		{
+			var assemblies = await GetAssembliesFromNuGet (
+				"https://www.nuget.org/api/v2/package/Xamarin.Google.Guava.ListenableFuture/1.0.0",
+				"lib/MonoAndroid50/");
+			var actual = Run (assemblies);
+			var expected = new [] { "Xamarin.Google.Guava.ListenableFuture.dll" };
 			CollectionAssert.AreEqual (expected, actual);
 		}
 	}

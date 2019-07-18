@@ -3862,6 +3862,30 @@ public class ApplicationRegistration { }");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void WorkManager ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem.Source ("MyWorker.cs") {
+				TextContent = () =>
+@"using System;
+using Android.Content;
+using AndroidX.Work;
+
+public class MyWorker : Worker
+{
+	public MyWorker (Context c, WorkerParameters p) : base (c, p) { }
+
+	public override Result DoWork () => Result.InvokeSuccess ();
+}
+"
+			});
+			proj.PackageReferences.Add (KnownPackages.Android_Arch_Work_Runtime);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
 	}
 }
 

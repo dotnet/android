@@ -625,6 +625,16 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
+		public static Package Android_Arch_Work_Runtime = new Package {
+			Id = "Xamarin.Android.Arch.Work.Runtime",
+			Version = "1.0.0",
+			TargetFramework = "MonoAndroid90",
+			References = {
+				new BuildItem.Reference("Xamarin.Android.Arch.Work.Runtime") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Work.Runtime.1.0.0\\lib\\MonoAndroid90\\Xamarin.Android.Arch.Work.Runtime.dll"
+				}
+			}
+		};
 		public static Package Xamarin_Android_Crashlytics_2_9_4 = new Package {
 			Id = "Xamarin.Android.Crashlytics",
 			Version = "2.9.4",
