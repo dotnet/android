@@ -105,12 +105,12 @@ namespace MonoDroid.Generation
 				case "class":
 					if (elem.XGetAttribute ("obfuscated") == "true")
 						continue;
-					gen = new XmlClassGen (ns, elem);
+					gen = XmlApiImporter.CreateClass (ns, elem);
 					break;
 				case "interface":
 					if (elem.XGetAttribute ("obfuscated") == "true")
 						continue;
-					gen = new XmlInterfaceGen (ns, elem);
+					gen = XmlApiImporter.CreateInterface (ns, elem);
 					break;
 				default:
 					Report.Warning (0, Report.WarningParser + 3, "Unexpected node in package element: {0}.", elem.Name);

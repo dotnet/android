@@ -1,43 +1,81 @@
 using System;
+using System.Linq;
+using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation
 {
+	public class Method : MethodBase
+	{
+		bool is_override;
 
-	public abstract class Method : MethodBase {
-
-		protected Method (GenBase declaringType)
-			: base (declaringType)
+		public Method (GenBase declaringType) : base (declaringType)
 		{
 		}
-		
-		internal void FillReturnType ()
-		{
-			retval = new ReturnValue (this, Return, ManagedReturn, IsReturnEnumified);
+
+		public string ArgsType { get; set; }
+		public string CustomAttributes { get; set; }
+		public string EventName { get; set; }
+		public bool GenerateAsyncWrapper { get; set; }
+		public bool GenerateDispatchingSetter { get; set; }
+		public bool IsAbstract { get; set; }
+		public bool IsFinal { get; set; }
+		public bool IsInterfaceDefaultMethod { get; set; }
+		public bool IsInterfaceDefaultMethodOverride { get; set; }
+		public bool IsReturnEnumified { get; set; }
+		public bool IsStatic { get; set; }
+		public bool IsVirtual { get; set; }
+		public string JavaName { get; set; }
+		public string ManagedReturn { get; set; }
+		public string PropertyNameOverride { get; set; }
+		public string Return { get; set; }
+		public ReturnValue RetVal { get; set; }
+		public int SourceApiLevel { get; set; }
+
+		// it used to be private though...
+		internal string AdjustedName => IsReturnCharSequence ? Name + "Formatted" : Name;
+
+		public bool Asyncify {
+			get {
+				if (IsOverride)
+					return false;
+
+				return GenerateAsyncWrapper;
+			}
 		}
 
-		public bool GenerateDispatchingSetter { get; protected set; }
+		public string AutoDetectEnumifiedOverrideReturn (AncestorDescendantCache cache)
+		{
+			if (RetVal.FullName != "int")
+				return null;
 
-		public abstract string ArgsType { get; }
-		public abstract string EventName { get; }
-		public abstract bool IsAbstract { get; }
-		public abstract bool IsFinal { get; }
-		public abstract bool IsInterfaceDefaultMethod { get; }
-		public abstract string JavaName { get; }
-		public abstract bool IsStatic { get; }
-		public abstract bool IsVirtual { get; set; }
-		public abstract string Return { get; }
-		public abstract bool IsReturnEnumified { get; }
-		public abstract string ManagedReturn { get; }
-		protected abstract string PropertyNameOverride { get; }
-		public abstract int SourceApiLevel { get; }
-		public abstract bool Asyncify { get; }
-		public abstract string CustomAttributes { get; }
+			var classes = cache.GetAncestorsAndDescendants (DeclaringType);
+			classes = classes.Concat (classes.SelectMany (x => x.GetAllImplementedInterfaces ()));
 
-		// convenience properties
+			foreach (var t in classes) {
+				foreach (var candidate in t.GetAllMethods ().Where (m => m.Name == Name && m.Parameters.Count == Parameters.Count)) {
+					if (JniSignature != candidate.JniSignature)
+						continue;
+					if (candidate.IsReturnEnumified)
+						RetVal.SetGeneratedEnumType (candidate.RetVal.FullName);
+				}
+			}
+			return null;
+		}
+
 		public bool CanAdd {
 			get {
 				return Name.Length > 3 && Name.StartsWith ("Add") && Name.EndsWith ("Listener") && Parameters.Count == 1 && IsVoid &&
 					!(Parameters [0].IsArray);
+			}
+		}
+
+		public bool CanGet {
+			get {
+				return Parameters.Count == 0 &&
+					!IsVoid && !RetVal.IsArray &&
+					((Name.Length > 4 && Name.StartsWith ("Get") && char.IsUpper (Name [3])) ||
+					((Name.Length > 4 && Name.StartsWith ("Has") && char.IsUpper (Name [3]) && RetVal.JavaName == "boolean") ||
+					 (Name.Length > 3 && Name.StartsWith ("Is") && char.IsUpper (Name [2]) && RetVal.JavaName == "boolean")));
 			}
 		}
 
@@ -48,12 +86,94 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public string DefaultReturn {
-			get { return RetVal.DefaultValue; }
+		internal string CalculateEventName (Func<string, bool> checkNameDuplicate)
+		{
+			string event_name = EventName;
+			if (event_name == null) {
+				var trimSize = Name.EndsWith ("Listener", StringComparison.Ordinal) ? 8 : 0;
+				event_name = Name.Substring (0, Name.Length - trimSize).Substring (3);
+				if (event_name.StartsWith ("On"))
+					event_name = event_name.Substring (2);
+				if (checkNameDuplicate (event_name))
+					event_name += "Event";
+			}
+			return event_name;
 		}
 
-		public bool IsPropertyAccessor {
-			get { return CanGet || CanSet; }
+		public bool CanHaveStringOverload => IsReturnCharSequence || Parameters.HasCharSequence;
+
+		public string ConnectorName => $"Get{Name}{IDSignature}Handler";
+
+		public string EscapedCallbackName => $"cb_{JavaName}{IDSignature}";
+
+		public string EscapedIdName => "id_" + JavaName.Replace ("<", "_x60_").Replace (">", "_x62_") + IDSignature;
+
+		internal void FillReturnType ()
+		{
+			RetVal = new ReturnValue (this, Return, ManagedReturn, IsReturnEnumified);
+		}
+
+		internal string GetAdapterName (CodeGenerationOptions opt, string adapter)
+		{
+			if (string.IsNullOrEmpty (adapter))
+				return adapter;
+			if (AssemblyName == null)
+				return adapter + ", " + opt.AssemblyName;
+			return adapter + AssemblyName;
+		}
+
+		internal string GetDelegateType ()
+		{
+			var parms = Parameters.DelegateTypeParams;
+
+			if (IsVoid)
+				return $"Action<IntPtr, IntPtr{parms}>";
+			else
+				return $"Func<IntPtr, IntPtr{parms}, {RetVal.NativeType}>";
+		}
+
+		public string GetMetadataXPathReference (GenBase declaringType) =>
+			$"{declaringType.MetadataXPathReference}/method[@name='{JavaName}'{Parameters.GetMethodXPathPredicate ()}]";
+
+		public string GetSignature () => $"n_{JavaName}:{JniSignature}:{ConnectorName}";
+
+		public bool IsEventHandlerWithHandledProperty => RetVal.JavaName == "boolean" && EventName != "";
+
+		public override bool IsGeneric => base.IsGeneric || RetVal.IsGeneric;
+
+		public bool IsListenerConnector => (CanAdd || CanSet) && Parameters [0].IsListener;
+
+		public bool IsOverride {
+			get => !IsStatic && is_override;
+			set => is_override = value;
+		}
+
+		public bool IsPropertyAccessor => CanGet || CanSet;
+
+		public bool IsReturnCharSequence => RetVal.FullName.StartsWith ("Java.Lang.ICharSequence");
+
+		public bool IsSimpleEventHandler => RetVal.IsVoid && (Parameters.Count == 0 || (Parameters.HasSender && Parameters.Count == 1));
+
+		public bool IsVoid => RetVal.JavaName == "void";
+
+		public string JniSignature => "(" + Parameters.JniSignature + ")" + RetVal.JniName;
+
+		public InterfaceGen ListenerType => Parameters [0].ListenerType;
+
+		public override bool Matches (MethodBase other)
+		{
+			var ret = base.Matches (other);
+
+			if (!ret)
+				return ret;
+
+			if (!(other is Method otherMethod))
+				return false;
+
+			if (RetVal.RawJavaType != otherMethod.RetVal.RawJavaType)
+				return false;
+
+			return true;
 		}
 
 		public string PropertyName {
@@ -73,178 +193,17 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public bool CanGet {
-			get {
-				return Parameters.Count == 0 &&
-					!IsVoid && !RetVal.IsArray &&
-					((Name.Length > 4 && Name.StartsWith ("Get") && char.IsUpper (Name [3])) ||
-					((Name.Length > 4 && Name.StartsWith ("Has") && char.IsUpper (Name [3]) && retval.JavaName == "boolean") ||
-					 (Name.Length > 3 && Name.StartsWith ("Is")  && char.IsUpper (Name [2]) && retval.JavaName == "boolean")));
-			}
-		}
-
-		public override bool IsGeneric {
-			get { return base.IsGeneric || RetVal.IsGeneric; }
-		}
-
-		public bool IsListenerConnector {
-			get { return (CanAdd || CanSet) && Parameters [0].IsListener; }
-		}
-
-		internal bool IsReturnCharSequence {
-			get { return RetVal.FullName.StartsWith ("Java.Lang.ICharSequence"); }
-		}
-
-		internal bool IsSimpleEventHandler {
-			get { return RetVal.IsVoid && (Parameters.Count == 0 || (Parameters.HasSender && Parameters.Count == 1)); }
-		}
-		
-		public bool IsEventHandlerWithHandledProperty {
-			get { return RetVal.JavaName == "boolean" && EventName != ""; }
-		}
-
-		bool is_override;
-		public bool IsOverride {
-			get { return !IsStatic && is_override; }
-			set { is_override = value; }
-		}
-
-		public bool IsInterfaceDefaultMethodOverride { get; set; }
-
-		public bool IsVoid {
-			get { return RetVal.JavaName == "void"; }
-		}
-
-		string jni_sig;
-		public string JniSignature {
-			get {
-				if (jni_sig == null)
-					jni_sig = "(" + Parameters.JniSignature + ")" + RetVal.JniName;
-				return jni_sig;
-			}
-		}
-
-		public InterfaceGen ListenerType {
-			get { return Parameters [0].ListenerType; }
-		}
-
-		ReturnValue retval;
-		public ReturnValue RetVal {
-			get { return retval; }
-		}
-
-		public string ReturnType {
-			get { return RetVal.FullName; }
-		}
-
-		public override bool Matches (MethodBase other)
-		{
-			bool ret = base.Matches (other);
-			if (!ret)
-				return ret;
-
-			var otherMethod = other as Method;
-			if (otherMethod == null)
-				return false;
-
-			if (RetVal.RawJavaType != otherMethod.RetVal.RawJavaType)
-				return false;
-
-			return true;
-		}
-
-		public string GetMetadataXPathReference (GenBase declaringType)
-		{
-			return string.Format ("{0}/method[@name='{1}'{2}]", declaringType.MetadataXPathReference, JavaName, Parameters.GetMethodXPathPredicate ());
-		}
-		
-		internal string CalculateEventName (Func<string, bool> checkNameDuplicate)
-		{
-			string event_name = EventName;
-			if (event_name == null) {
-				var trimSize = Name.EndsWith ("Listener", StringComparison.Ordinal) ? 8 : 0;
-				event_name = Name.Substring (0, Name.Length - trimSize).Substring (3);
-				if (event_name.StartsWith ("On"))
-					event_name = event_name.Substring (2);
-				if (checkNameDuplicate (event_name))
-					event_name += "Event";
-			}
-			return event_name;
-		}
+		public string ReturnType => RetVal.FullName;
 
 		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (GenericArguments != null)
 				GenericArguments.Validate (opt, type_params, context);
 			var tpl = GenericParameterDefinitionList.Merge (type_params, GenericArguments);
-			if (!retval.Validate (opt, tpl, context))
+			if (!RetVal.Validate (opt, tpl, context))
 				return false;
 
 			return base.OnValidate (opt, tpl, context);
 		}
-
-		string connector_name;
-		public string ConnectorName {
-			get {
-				if (connector_name == null)
-					connector_name = "Get" + Name + IDSignature + "Handler";
-				return connector_name;
-			}
-		}
-
-		string escaped_cb_name;
-		internal string EscapedCallbackName {
-			get {
-				if (escaped_cb_name == null)
-					escaped_cb_name = "cb_" + JavaName + IDSignature;
-				return escaped_cb_name;
-			}
-		}
-
-		string escaped_id_name;
-		internal string EscapedIdName {
-			get {
-				if (escaped_id_name == null)
-					escaped_id_name = "id_" + JavaName.Replace ("<", "_x60_").Replace (">", "_x62_") + IDSignature;
-				return escaped_id_name;
-			}
-		}
-
-		string delegate_type;
-		internal string GetDelegateType ()
-		{
-			if (delegate_type == null) {
-				string parms = Parameters.DelegateTypeParams;
-				if (IsVoid)
-					delegate_type = String.Format ("Action<IntPtr, IntPtr{0}>", parms);
-				else
-					delegate_type = String.Format ("Func<IntPtr, IntPtr{0}, {1}>", parms, RetVal.NativeType);
-			}
-			return delegate_type;
-		}
-		
-		// it used to be private though...
-		internal string AdjustedName {
-			get { return IsReturnCharSequence ? Name + "Formatted" : Name; }
-		}
-
-		public string GetSignature ()
-		{
-			return String.Format ("n_{0}:{1}:{2}", JavaName, JniSignature, ConnectorName);
-		}
-
-		public bool CanHaveStringOverload {
-			get { return IsReturnCharSequence || Parameters.HasCharSequence; }
-		}
-
-		internal string GetAdapterName (CodeGenerationOptions opt, string adapter)
-		{
-			if (String.IsNullOrEmpty (adapter))
-				return adapter;
-			if (AssemblyName == null)
-				return adapter + ", " + opt.AssemblyName;
-			return adapter + AssemblyName;
-		}
 	}
 }
-

@@ -52,7 +52,7 @@ namespace MonoDroid.Generation
 		bool? buildingCoreAssembly;
 		public bool BuildingCoreAssembly {
 			get {
-				return buildingCoreAssembly ?? (buildingCoreAssembly = (SymbolTable.Lookup ("java.lang.Object") is XmlClassGen)).Value;
+				return buildingCoreAssembly ?? (buildingCoreAssembly = (SymbolTable.Lookup ("java.lang.Object") is ClassGen gen && gen.FromXml)).Value;
 			}
 		}
 

@@ -1,436 +1,94 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml;
-
-using MonoDroid.Utils;
-using System.Runtime.InteropServices;
-using System.Collections;
-using System.Security.Policy;
-using System.Text;
 using MonoDroid.Generation.Utilities;
 
-namespace MonoDroid.Generation {
-	
-	public abstract class GenBase : IGeneratable, ApiVersionsSupport.IApiAvailability {
+namespace MonoDroid.Generation
+{
+	public abstract class GenBase : IGeneratable, ApiVersionsSupport.IApiAvailability
+	{
+		bool enum_updated;
+		bool property_filled;
+		bool property_filling;
+		protected internal ISymbol base_symbol;
+		protected bool iface_validation_failed;
+		protected GenBaseSupport support;
+		protected bool validated = false;
+
+		readonly List<string> implemented_interfaces = new List<string> ();
+		readonly Dictionary<string, Method> jni_sig_hash = new Dictionary<string, Method> ();
+		readonly Dictionary<string, Property> prop_hash = new Dictionary<string, Property> ();
 
 		protected GenBase (GenBaseSupport support)
 		{
 			this.support = support;
 		}
-		
-		protected GenBaseSupport support;
 
-		Dictionary<string, Method> jni_sig_hash = new Dictionary<string, Method> ();
-		Dictionary<string, Property> prop_hash = new Dictionary<string, Property> ();
-		List<Field> fields = new List<Field> ();
-		List<Method> methods = new List<Method> ();
-		List<Property> props = new List<Property> ();
+		public List<Field> Fields { get; private set; } = new List<Field> ();
+		public List<ISymbol> Interfaces { get; } = new List<ISymbol> ();
+		public List<Method> Methods { get; private set; } = new List<Method> ();
+		public List<GenBase> NestedTypes { get; private set; } = new List<GenBase> ();
+		public List<Property> Properties { get; } = new List<Property> ();
+		public string DefaultValue { get; set; }
+		public bool HasVirtualMethods { get; set; }
 
-		protected bool iface_validation_failed;
-		protected bool is_valid = true;
-		protected bool validated = false;
-		bool has_virtual_methods;
-		bool method_validation_failed;
-		bool property_filled;
-		bool? has_enum_mapped_members;
-		
-		public abstract string DefaultValue { get; }
-		
-		public bool HasEnumMappedMembers {
-			get {
-				if (has_enum_mapped_members == null)
-					has_enum_mapped_members = GetEnumMappedMemberInfo ();
-				return (bool) has_enum_mapped_members;
-			}
-		}
-
-		public bool IsAcw {
-			get { return support.IsAcw; }
-		}
-		
-		public bool IsDeprecated {
-			get { return support.IsDeprecated; }
-		}
-		
-		public bool IsObfuscated {
-			get { return support.IsObfuscated; }
-		}
-
-		public string DeprecatedComment {
-			get { return support.DeprecatedComment; }
-		}
-
-		public bool IsGeneratable {
-			get { return support.IsGeneratable; }
-		}
-		
-		public virtual ClassGen BaseGen {
-			get { return null; }
-		}
-		
-		public bool ShouldGenerateAnnotationAttribute {
-			get { return IsAnnotation; }
-		}
-
-		protected bool HasVirtualMethods {
-			get { return has_virtual_methods; }
-		}
-
-		public bool IsGeneric {
-			get { return support.IsGeneric; }
-		}
-
-		public string FullName {
-			get { return support.FullName; }
-			set { support.FullName = value; }
-		}
-
-		public int ApiAvailableSince { get; set; }
-
-		public bool IsEnum {
-			get { return false; }
-		}
-
-		public bool IsArray {
-			get { return false; }
-		}
-
-		public bool IsValid => is_valid;
-
-		public string ElementType {
-			get { return null; }
-		}
-		
-		public string PackageName {
-			get { return support.PackageName; }
-			set { support.PackageName = value; }
-		}
-
-		public string JavaSimpleName {
-			get { return support.JavaSimpleName; }
-		}
-
-		public string JavaName {
-			get { return String.Format ("{0}.{1}", PackageName, JavaSimpleName); }
-		}
-
-		public string TypeNamePrefix {
-			get { return support.TypeNamePrefix; }
-		}
-
-		// not: not currently assembly qualified, but it uses needed
-		// Type.GetType() conventions such as '/' for nested types.
-		public string AssemblyQualifiedName {
-			get { return Namespace + "." + FullName.Substring (Namespace.Length + 1).Replace ('.', '/'); }
-		}
-
-		public string RawJniName {
-			get { return PackageName.Replace ('.', '/') + "/" + JavaSimpleName.Replace ('.', '$'); }
-		}
-
-		public string JniName {
-			get { return "L" + RawJniName + ";"; }
-		}
-		
-		/*
-		public string Marshaler {
-			get { return support.Marshaler; }
-		}
-		*/
-
-		protected bool MethodValidationFailed {
-			get { return method_validation_failed; }
-		}
-
-		public string Name {
-			get { return support.Name; }
-			set { support.Name = value; }
-		}
-
-		public string Namespace {
-			get { return support.Namespace; }
-		}
-
-		public abstract string NativeType { get; }
-
-		public List<Field> Fields {
-			get { return fields; }
-		}
-
-		List<ISymbol> ifaces = new List<ISymbol> ();
-		public List<ISymbol> Interfaces {
-			get { return ifaces; }
-		}
-		
-		public bool IsAnnotation {
-			get { return iface_names.Any (n => n == "Java.Lang.Annotation.Annotation" || n == "java.lang.annotation.Annotation"); }
-		}
-
-		public string MetadataXPathReference {
-			get {
-				string type = null;
-				if (this is ClassGen)
-					type = "class";
-				if (this is InterfaceGen)
-					type = "interface";
-				if (type == null)
-					throw new InvalidOperationException ("Uh...xpath? this is " + this.GetType ().FullName);
-				return string.Format ("/api/package[@name='{0}']/{1}[@name='{2}']",
-						PackageName, type, JavaSimpleName);
-			}
-		}
-
-		public string GetObjectHandleProperty (string variable)
+		public void AddField (Field f)
 		{
-			var handleType  = "Java.Lang.Object";
-			if (IsThrowable ())
-				handleType  = "Java.Lang.Throwable";
-
-			return $"((global::{handleType}) {variable}).Handle";
+			Fields.Add (f);
 		}
 
-		bool IsThrowable ()
+		public void AddImplementedInterface (string name)
 		{
-			if (FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable"))
-				return true;
-			return false;
+			implemented_interfaces.Add (name);
 		}
 
-		public bool RequiresNew (string memberName)
+		public void AddMethod (Method m)
 		{
-			if (ObjectRequiresNew.Contains (memberName)) {
-				return true;
-			}
-			if (IsThrowable () && ThrowableRequiresNew.Contains (memberName)) {
-				return true;
-			}
-			return false;
-		}
-
-		protected internal IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
-		{
-			var set = new HashSet<InterfaceGen> ();
-			Action<ISymbol> visit = null;
-			visit = isym => {
-				var gsym = isym as GenericSymbol;
-				var igen = (gsym != null ? gsym.Gen : isym) as InterfaceGen;
-				if (igen != null)
-					set.Add (igen);
-				GenBase b = isym as GenBase;
-				if (b == null)
-					return;
-				foreach (var i in b.Interfaces) {
-					visit (i);
-				}
-			};
-			foreach (var i in Interfaces)
-				visit (i);
-			return set;
-		}
-
-		public List<Method> Methods {
-			get { return methods; }
-		}
-
-		public List<Property> Properties {
-			get { return props; }
-		}
-
-		public GenericParameterDefinitionList TypeParameters {
-			get { return support.TypeParameters; }
-		}
-		
-		public string RawVisibility {
-			get { return support.Visibility; }
-		}
-
-		public string Visibility {
-			get { return String.IsNullOrEmpty (support.Visibility) ? "public" : support.Visibility; }
-		}
-
-		protected void AddField (Field f)
-		{
-			fields.Add (f);
-		}
-
-		List<string> iface_names = new List<string> ();
-		protected void AddInterface (string name)
-		{
-			iface_names.Add (name);
-		}
-
-		List<GenBase> nested_types = new List<GenBase> ();
-		public List<GenBase> NestedTypes {
-			get { return nested_types; }
-		}
-
-		protected internal bool HasNestedType (string name)
-		{
-			foreach (GenBase g in NestedTypes)
-				if (g.Name == name)
-					return true;
-			return false;
-		}
-
-		protected void AddMethod (Method m)
-		{
-			methods.Add (m);
+			Methods.Add (m);
 		}
 
 		public virtual void AddNestedType (GenBase gen)
 		{
-			foreach (GenBase nest in NestedTypes) {
+			foreach (var nest in NestedTypes) {
 				if (gen.JavaName.StartsWith (nest.JavaName + ".")) {
 					nest.AddNestedType (gen);
 					return;
 				}
 			}
 
-			List<GenBase> removes = new List<GenBase> ();
-			foreach (GenBase nest in NestedTypes) {
+			var removes = new List<GenBase> ();
+
+			foreach (var nest in NestedTypes) {
 				if (nest.JavaName.StartsWith (gen.JavaName + ".")) {
 					gen.AddNestedType (nest);
 					removes.Add (nest);
 				}
 			}
 
-			foreach (GenBase rmv in removes)
+			foreach (var rmv in removes)
 				NestedTypes.Remove (rmv);
 
 			NestedTypes.Add (gen);
 		}
 
-		public virtual string GetGenericType (Dictionary<string, string> mappings)
+		void AdjustNestedTypeFullName (GenBase parent)
 		{
-			return null;
-		}
-
-		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);
-		public abstract string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null);
-
-		public abstract void Generate (CodeGenerationOptions opt, GenerationInfo gen_info);
-
-		public IEnumerable<GenBase> Invalidate ()
-		{
-			is_valid = false;
-			validated = true;
-
-			foreach (var nt in NestedTypes) {
-				foreach (var sub in nt.Invalidate ())
-					yield return sub;
-				yield return nt;
-			}
-		}
-
-		public bool ContainsMethod (string name_and_jnisig)
-		{
-			return jni_sig_hash.ContainsKey (name_and_jnisig);
-		}
-
-		public bool ContainsMethod (Method method, bool check_ifaces)
-		{
-			return ContainsMethod (method, check_ifaces, true);
-		}
-
-		public bool ContainsMethod (Method method, bool check_ifaces, bool check_base_ifaces)
-		{
-			// background: bug #10123.
-			// Visibility check was introduced - and required so far - to block "public overrides protected" methods
-			// (which is allowed in Java but not in C#).
-			// The problem is, it does not *always* result in error and generates callable code, and we depend on
-			// that fact in several classes that implements some interface that requires "public Object clone()".
-			//
-			// This visibility inconsistency results in 1) error for abstract methods and 2) warning for virtual methods.
-			// Hence, for abstract methods we dare to ignore visibility difference and treat it as override,
-			// *then* C# compiler will report this inconsistency as error that users need to fix manually, but
-			// with obvious message saying "it is because of visibility consistency",
-			// not "abstract member not implemented" (it is *implemented* in different visibility and brings confusion).
-			// For virtual methods, just check the visibility difference and treat as different method.
-			// Regardless of whether it is actually an override or not, we just invoke Java method.
-			if (jni_sig_hash.ContainsKey (method.JavaName + method.JniSignature)) {
-				var bm = jni_sig_hash [method.JavaName + method.JniSignature];
-				if (bm.Visibility == method.Visibility || bm.IsAbstract)
-					return true;
-			}
-			if (check_ifaces) {
-				foreach (ISymbol isym in Interfaces) {
-					InterfaceGen igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
-					if (igen != null && igen.ContainsMethod (method, true))
-						return true;
-				}
-			}
-			return BaseSymbol != null && BaseSymbol.ContainsMethod (method, check_base_ifaces, check_base_ifaces);
-		}
-
-		public bool IsCovariantMethod (Method method)
-		{
-			return Methods.Any (m => m.Name == method.Name && ParameterList.Equals (m.Parameters, method.Parameters));
-			// TODO: check that method.ReturnType is a superclass of m.ReturnType
-		}
-
-		public bool ContainsProperty (string name, bool check_ifaces)
-		{
-			return ContainsProperty (name, check_ifaces, true);
-		}
-
-		public Property GetPropertyByName (string name, bool check_ifaces)
-		{
-			return GetPropertyByName (name, check_ifaces, true);
-		}
-
-		public bool ContainsProperty (string name, bool check_ifaces, bool check_base_ifaces)
-		{
-			return GetPropertyByName (name, check_ifaces, check_base_ifaces) != null;
-		}
-
-		public Property GetPropertyByName (string name, bool check_ifaces, bool check_base_ifaces)
-		{
-			if (prop_hash.ContainsKey (name))
-				return prop_hash [name];
-			if (check_ifaces) {
-				foreach (ISymbol isym in Interfaces) {
-					InterfaceGen igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
-					if (igen == null)
-						continue;
-					var ret = igen.GetPropertyByName (name, true);
-					if (ret != null)
-						return ret;
-				}
-			}
-			return BaseSymbol != null ? BaseSymbol.GetPropertyByName (name, check_base_ifaces, check_base_ifaces) : null;
-		}
-
-		public bool ContainsName (string name)
-		{
-			if (HasNestedType (name) || ContainsProperty (name, true))
-				return true;
-			foreach (Method m in methods)
-				if (m.Name == name)
-					return true;
-			return false;
-		}
-
-		bool ValidateMethod (CodeGenerationOptions opt, Method m, CodeGeneratorContext context)
-		{
-			if (!m.Validate (opt, TypeParameters, context)) {
-				return false;
-			}
-			return true;
+			if (parent is ClassGen)
+				foreach (var nested in parent.NestedTypes)
+					nested.FullName = parent.FullName + "." + nested.Name;
 		}
 
 		void AddPropertyAccessors ()
 		{
 			// First pass extracts getters and creates property hash
 			List<Method> unmatched = new List<Method> ();
-			foreach (Method m in methods) {
+			foreach (Method m in Methods) {
 				if (m.IsPropertyAccessor) {
 					string prop_name = m.PropertyName;
-					if (m.CanSet || prop_name == String.Empty || Name == prop_name || m.Name == "GetHashCode" || HasNestedType (prop_name) || IsInfrastructural (prop_name))
+					if (m.CanSet || prop_name == string.Empty || Name == prop_name || m.Name == "GetHashCode" || HasNestedType (prop_name) || IsInfrastructural (prop_name))
 						unmatched.Add (m);
-					else if (BaseGen != null && !BaseGen.prop_hash.ContainsKey (prop_name) && BaseGen.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches (m, BaseGen, mm) && ParameterList.Equals (mm.Parameters, m.Parameters)))
+					else if (BaseGen != null && !BaseGen.prop_hash.ContainsKey (prop_name) && BaseGen.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches(m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters)))
 						// this is to filter out those method that was *not* a property
 						// in the base type for some reason (e.g. name overlap).
 						// For example, android.graphics.drawable.BitmapDrawable#getConstantState()
@@ -446,28 +104,29 @@ namespace MonoDroid.Generation {
 								prop_hash [prop_name].Getter = m;
 							}
 						} else {
-							Property prop = new Property (prop_name);
-							prop.Getter = m;
+							var prop = new Property (prop_name) {
+								Getter = m
+							};
 							prop_hash [prop_name] = prop;
 						}
 					}
 				} else
 					unmatched.Add (m);
 			}
-			methods = unmatched;
+			Methods = unmatched;
 
 			// Second pass adds setters
 			unmatched = new List<Method> ();
-			foreach (Method m in methods) {
+			foreach (Method m in Methods) {
 				if (!m.CanSet) {
 					unmatched.Add (m);
 					continue;
 				}
-				
-				if (Ancestors ().All (a => !a.prop_hash.ContainsKey (m.PropertyName)) && Ancestors ().Any (a => a.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches (m, a, mm) && ParameterList.Equals (mm.Parameters, m.Parameters))))
+
+				if (Ancestors ().All (a => !a.prop_hash.ContainsKey (m.PropertyName)) && Ancestors ().Any (a => a.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches(m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters))))
 					unmatched.Add (m); // base setter exists, and it was not a property.
 				else if (prop_hash.ContainsKey (m.PropertyName)) {
-					Property baseProp = BaseGen != null ? BaseGen.Properties.FirstOrDefault (p => p.Name == m.PropertyName) : null;
+					Property baseProp = BaseGen?.Properties.FirstOrDefault (p => p.Name == m.PropertyName);
 					var prop = prop_hash [m.PropertyName];
 					if (prop.Getter.RetVal.FullName == m.Parameters [0].Type &&
 							prop.Getter.IsAbstract == m.IsAbstract && // SearchIterator abstract getIndex() and non-abstract setIndex()
@@ -494,33 +153,28 @@ namespace MonoDroid.Generation {
 				if (m.GenerateDispatchingSetter && prop_hash.ContainsKey (m.PropertyName))
 					prop_hash [m.PropertyName].GenerateDispatchingSetter = true;
 			}
-			methods = unmatched;
+			Methods = unmatched;
 		}
-		
+
 		IEnumerable<GenBase> Ancestors ()
 		{
 			for (var g = BaseGen; g != null; g = g.BaseGen)
 				yield return g;
 		}
 
-		IEnumerable<GenBase> Descendants (IList<GenBase> gens)
-		{
-			foreach (var directDescendants in gens.Where (x => x.BaseGen == this)) {
-				yield return directDescendants;
-				foreach (var indirectDescendants in  directDescendants.Descendants (gens)) {
-					yield return indirectDescendants;
-				}
-			}
-		}
+		// not: not currently assembly qualified, but it uses needed
+		// Type.GetType() conventions such as '/' for nested types.
+		public string AssemblyQualifiedName =>
+			$"{Namespace}.{FullName.Substring (Namespace.Length + 1).Replace ('.', '/')}";
 
-		bool ReturnTypeMatches (Method m, GenBase gen, Method mm)
-		{
-			if (mm.RetVal.FullName == m.RetVal.FullName)
-				return true;
-			if (BaseSymbol.IsGeneric && mm.RetVal.IsGeneric)
-				return true; // sloppy but pass
-			return false;
-		}
+		public int ApiAvailableSince { get; set; }
+
+		public virtual ClassGen BaseGen => null;
+
+		public GenBase BaseSymbol =>
+			(base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as GenBase;
+
+		public string Call (CodeGenerationOptions opt, string var_name) => opt.GetSafeIdentifier (var_name);
 
 		bool CanMethodBeIsStyleSetter (Method m)
 		{
@@ -532,181 +186,65 @@ namespace MonoDroid.Generation {
 			return GetAllDerivedInterfaces ().All (iface => !iface.Properties.Any (p => p.Name == "Is" + m.PropertyName && p.Setter == null));
 		}
 
-		static readonly HashSet<string>         ObjectRequiresNew       = new HashSet<string>(
-			typeof (object)
-				.GetMethods ()
-				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
-						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
-				.Select (m => m.Name)
-				.Concat (new[] { "Handle" }),
-			StringComparer.OrdinalIgnoreCase);
+		public bool ContainsMethod (string name_and_jnisig) => jni_sig_hash.ContainsKey (name_and_jnisig);
 
-		static readonly HashSet<string>         ThrowableRequiresNew    = new HashSet<string>(
-			typeof (System.Exception)
-				.GetMethods ()
-				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
-						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
-				.Select (m => m.Name)
-				.Concat (typeof (System.Exception).GetProperties ().Select (p => p.Name))
-				.Concat (new[] { "Handle" }),
-			StringComparer.OrdinalIgnoreCase);
+		public bool ContainsMethod (Method method, bool check_ifaces) => ContainsMethod (method, check_ifaces, true);
 
-		bool IsInfrastructural (string name)
+		public bool ContainsMethod (Method method, bool check_ifaces, bool check_base_ifaces)
 		{
-			// some names are reserved for use by us, e.g. we don't want another
-			// Handle property, as that conflicts with Java.Lang.Object.Handle.
-			return ObjectRequiresNew.Contains (name);
-		}
-
-		protected internal ISymbol base_symbol;
-		public GenBase BaseSymbol {
-			get { return (base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as GenBase; }
-		}
-
-		public List<InterfaceGen> GetAllDerivedInterfaces ()
-		{
-			List<InterfaceGen> result = new List<InterfaceGen> ();
-			GetAllDerivedInterfaces (result);
-			return result;
-		}
-
-		void GetAllDerivedInterfaces (List<InterfaceGen> ifaces)
-		{
-			foreach (ISymbol isym in Interfaces) {
-				InterfaceGen iface = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
-				if (iface == null)
-					continue;
-				bool found = false;
-				foreach (InterfaceGen known in ifaces)
-					if (known.FullName == iface.FullName)
-						found = true;
-				if (found)
-					continue;
-				ifaces.Add (iface);
-				iface.GetAllDerivedInterfaces (ifaces);
+			// background: bug #10123.
+			// Visibility check was introduced - and required so far - to block "public overrides protected" methods
+			// (which is allowed in Java but not in C#).
+			// The problem is, it does not *always* result in error and generates callable code, and we depend on
+			// that fact in several classes that implements some interface that requires "public Object clone()".
+			//
+			// This visibility inconsistency results in 1) error for abstract methods and 2) warning for virtual methods.
+			// Hence, for abstract methods we dare to ignore visibility difference and treat it as override,
+			// *then* C# compiler will report this inconsistency as error that users need to fix manually, but
+			// with obvious message saying "it is because of visibility consistency",
+			// not "abstract member not implemented" (it is *implemented* in different visibility and brings confusion).
+			// For virtual methods, just check the visibility difference and treat as different method.
+			// Regardless of whether it is actually an override or not, we just invoke Java method.
+			if (jni_sig_hash.ContainsKey (method.JavaName + method.JniSignature)) {
+				var bm = jni_sig_hash [method.JavaName + method.JniSignature];
+				if (bm.Visibility == method.Visibility || bm.IsAbstract)
+					return true;
 			}
-		}
-
-		public bool GetGenericMappings (InterfaceGen gen, Dictionary<string, string> mappings)
-		{
-			foreach (ISymbol sym in Interfaces) {
-				if (sym is GenericSymbol) {
-					GenericSymbol gsym = (GenericSymbol) sym;
-					if (gsym.Gen.FullName == gen.FullName) {
-						for (int i = 0; i < gsym.TypeParams.Length; i++)
-							mappings [gsym.Gen.TypeParameters [i].Name] = gsym.TypeParams [i].FullName;
+			if (check_ifaces) {
+				foreach (ISymbol isym in Interfaces) {
+					if ((isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) is InterfaceGen igen && igen.ContainsMethod (method, true))
 						return true;
-					} else if (gsym.Gen.GetGenericMappings (gen, mappings)) {
-						string[] keys = new string [mappings.Keys.Count];
-						mappings.Keys.CopyTo (keys, 0);
-						foreach (string tp in keys)
-							mappings [tp] = gsym.TypeParams [Array.IndexOf ((from gtp in gsym.Gen.TypeParameters select gtp.Name).ToArray (), mappings [tp])].FullName;
-						return true;
-					}
 				}
 			}
-			return false;
-		}
-		
-		public virtual void ResetValidation ()
-		{
-			ifaces.Clear ();
-			iface_validation_failed = false;
-			foreach (var nt in NestedTypes)
-				nt.ResetValidation ();
-		}
-		
-		void AdjustNestedTypeFullName (GenBase parent)
-		{
-			if (parent is ClassGen)
-				foreach (var nested in parent.NestedTypes)
-					nested.FullName = parent.FullName + "." + nested.Name;
+			return BaseSymbol != null && BaseSymbol.ContainsMethod (method, check_base_ifaces, check_base_ifaces);
 		}
 
-		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
+		public bool ContainsName (string name)
 		{
-			context.ContextTypes.Push (this);
-			try {
-				return is_valid = OnValidate (opt, type_params, context);
-			} finally {
-				context.ContextTypes.Pop ();
-			}
+			if (HasNestedType (name) || ContainsProperty (name, true))
+				return true;
+
+			return Methods.Any (m => m.Name == name);
 		}
 
-		protected virtual bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
+		public bool ContainsProperty (string name, bool check_ifaces) => ContainsProperty (name, check_ifaces, true);
+
+		public bool ContainsProperty (string name, bool check_ifaces, bool check_base_ifaces) =>
+			GetPropertyByName (name, check_ifaces, check_base_ifaces) != null;
+
+		public string DeprecatedComment => support.DeprecatedComment;
+
+		IEnumerable<GenBase> Descendants (IList<GenBase> gens)
 		{
-			if (Name.Length > TypeNamePrefix.Length &&
-			    (Name [TypeNamePrefix.Length] == '.' || Char.IsDigit (Name [TypeNamePrefix.Length]))) // see bug #5111
-				return false;
-				
-			if (!support.OnValidate (opt))
-				return false;
-
-			List<GenBase> valid_nests = new List<GenBase> ();
-			foreach (GenBase gen in nested_types) {
-				if (gen.Validate (opt, TypeParameters, context))
-					valid_nests.Add (gen);
-			}
-			nested_types = valid_nests;
-			
-			AdjustNestedTypeFullName (this);
-
-			foreach (string iface_name in iface_names) {
-				ISymbol isym = opt.SymbolTable.Lookup (iface_name);
-				if (isym != null && isym.Validate (opt, TypeParameters, context))
-					ifaces.Add (isym);
-				else {
-					if (isym == null)
-						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} does not exist.", FullName, iface_name);
-					else
-						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} is invalid.", FullName, iface_name);
-					iface_validation_failed = true;
+			foreach (var directDescendants in gens.Where (x => x.BaseGen == this)) {
+				yield return directDescendants;
+				foreach (var indirectDescendants in directDescendants.Descendants (gens)) {
+					yield return indirectDescendants;
 				}
 			}
-
-			List<Field> valid_fields = new List<Field> ();
-			foreach (Field f in fields) {
-				if (!f.Validate (opt, TypeParameters, context))
-					continue;
-				valid_fields.Add (f);
-			}
-			fields = valid_fields;
-
-			int method_cnt = methods.Count;
-			methods = methods.Where (m => ValidateMethod (opt, m, context)).ToList ();
-			method_validation_failed = method_cnt != methods.Count;
-			foreach (Method m in methods) {
-				if (m.IsVirtual)
-					has_virtual_methods = true;
-				if (m.Name == "HashCode" && m.Parameters.Count == 0) {
-					m.IsOverride = true;
-					m.Name = "GetHashCode";
-				}
-				jni_sig_hash [m.JavaName + m.JniSignature] = m;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
-					m.IsOverride = true;
-			}
-			return true;
-		}
-		
-		bool property_filling;
-
-		public void StripNonBindables ()
-		{
-			// As of now, if we generate bindings for interface default methods, that means users will
-			// have to "implement" those methods because they are declared and you have to implement
-			// any declared methods in C#. That is going to be problematic a lot.
-			methods = methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
-			nested_types = nested_types.Where (n => !n.IsObfuscated && n.Visibility != "private").ToList ();
-			foreach (var n in nested_types)
-				n.StripNonBindables ();
 		}
 
-		public virtual void FixupAccessModifiers (CodeGenerationOptions opt)
-		{
-			foreach (var nt in NestedTypes)
-				nt.FixupAccessModifiers (opt);
-		}
+		public string ElementType { get; set; }
 
 		public void FillProperties ()
 		{
@@ -726,29 +264,28 @@ namespace MonoDroid.Generation {
 
 			var names = prop_hash.Keys;
 			foreach (string name in names)
-				props.Add (prop_hash [name]);
-			props.Sort ((p1, p2) => string.CompareOrdinal (p1.Name, p2.Name));
+				Properties.Add (prop_hash [name]);
+			Properties.Sort ((p1, p2) => string.CompareOrdinal (p1.Name, p2.Name));
 			property_filling = false;
-			
+
 			foreach (var nt in NestedTypes)
 				nt.FillProperties ();
 		}
-		
-		protected virtual bool GetEnumMappedMemberInfo ()
+
+		public virtual void FixupAccessModifiers (CodeGenerationOptions opt)
 		{
-			foreach (var f in Fields)
-				if (f.IsEnumified)
-					return true;
-			foreach (var m in Methods)
-				if (m.IsReturnEnumified | m.Parameters.Any (p => p.IsEnumified))
-					return true;
-			return false;
+			foreach (var nt in NestedTypes)
+				nt.FixupAccessModifiers (opt);
 		}
-		
+
+		public virtual void FixupExplicitImplementation ()
+		{
+		}
+
 		public void FixupMethodOverrides (CodeGenerationOptions opt)
 		{
-			foreach (Method m in methods.Where (m => !m.IsInterfaceDefaultMethod)) {
-				for (var bt = this.GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
+			foreach (var m in Methods.Where (m => !m.IsInterfaceDefaultMethod)) {
+				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
 					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && mm.Visibility == m.Visibility && ParameterList.Equals (mm.Parameters, m.Parameters));
 					if (bm != null && bm.RetVal.FullName == m.RetVal.FullName) { // if return type is different, it could be still "new", not "override".
 						m.IsOverride = true;
@@ -758,8 +295,8 @@ namespace MonoDroid.Generation {
 			}
 
 			// Interface default methods can be overriden. We want to process them differently.
-			foreach (Method m in methods.Where (m => m.IsInterfaceDefaultMethod)) {
-				foreach (var bt in this.GetAllDerivedInterfaces ()) {
+			foreach (var m in Methods.Where (m => m.IsInterfaceDefaultMethod)) {
+				foreach (var bt in GetAllDerivedInterfaces ()) {
 					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && ParameterList.Equals (mm.Parameters, m.Parameters));
 					if (bm != null) {
 						m.IsInterfaceDefaultMethodOverride = true;
@@ -768,7 +305,7 @@ namespace MonoDroid.Generation {
 				}
 			}
 
-			foreach (Method m in methods) {
+			foreach (var m in Methods) {
 				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
 					m.Name = "Invoke" + m.Name;
 				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
@@ -779,89 +316,14 @@ namespace MonoDroid.Generation {
 				nt.FixupMethodOverrides (opt);
 		}
 
-		public virtual void FixupExplicitImplementation ()
-		{
+		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);
+
+		public string FullName {
+			get => support.FullName;
+			set => support.FullName = value;
 		}
 
-		GenBase GetBaseGen (CodeGenerationOptions opt)
-		{
-			if (this is InterfaceGen)
-				return null;
-			if (this.BaseGen != null)
-				return this.BaseGen;
-			if (this.BaseSymbol == null)
-				return null;
-			var bg = opt.SymbolTable.Lookup (this.BaseSymbol.FullName) as GenBase;
-			if (bg != null && bg != this)
-				return bg;
-			return null;
-		}
-
-		bool enum_updated;
-
-		public virtual void UpdateEnums (CodeGenerationOptions opt, AncestorDescendantCache cache)
-		{
-			if (enum_updated || !IsGeneratable)
-				return;
-			enum_updated = true;
-			var baseGen = GetBaseGen (opt);
-			if (baseGen != null)
-				baseGen.UpdateEnums (opt, cache);
-
-			foreach (Method m in methods) {
-				AutoDetectEnumifiedOverrideParameters (m, cache);
-				AutoDetectEnumifiedOverrideReturn (m, cache);
-			}
-			foreach (Property p in Properties)
-				AutoDetectEnumifiedOverrideProperties (p, cache);
-			UpdateEnumsInInterfaceImplementation ();
-			foreach (var ngen in NestedTypes)
-				ngen.UpdateEnums (opt, cache);
-		}
-
-		public virtual void UpdateEnumsInInterfaceImplementation ()
-		{
-		}
-
-		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
-		{
-			var rgm = this as IRequireGenericMarshal;
-
-			return new string[]{
-				string.Format ("{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
-				               opt.GetOutputName (FullName),
-				               opt.GetSafeIdentifier (var_name),
-				               opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
-				               owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer",
-				               opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? FullName) : FullName),
-				               rgm != null ? "(" + opt.GetOutputName (FullName) + ")" : string.Empty)
-			};
-		}
-
-		public string[] PostCallback (CodeGenerationOptions opt, string var_name)
-		{
-			return new string[]{
-			};
-		}
-
-		public string[] PreCall (CodeGenerationOptions opt, string var_name)
-		{
-			return new string[]{
-			};
-		}
-
-		public string Call (CodeGenerationOptions opt, string var_name)
-		{
-			return opt.GetSafeIdentifier (var_name);
-		}
-
-		public string[] PostCall (CodeGenerationOptions opt, string var_name)
-		{
-			return new string[]{
-			};
-		}
-
-		public bool NeedsPrep { get { return true; } }
+		public abstract void Generate (CodeGenerationOptions opt, GenerationInfo gen_info);
 
 		protected void GenerateAnnotationAttribute (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
@@ -876,7 +338,7 @@ namespace MonoDroid.Generation {
 					sw.WriteLine ("namespace {0} {{", Namespace);
 					sw.WriteLine ();
 					sw.WriteLine ("\t[global::Android.Runtime.Annotation (\"{0}\")]", JavaName);
-					sw.WriteLine ("\t{0} partial class {1} : Attribute", this.Visibility, attrClassNameBase);
+					sw.WriteLine ("\t{0} partial class {1} : Attribute", Visibility, attrClassNameBase);
 					sw.WriteLine ("\t{");
 
 					// An Annotation attribute property is generated for each applicable annotation method,
@@ -892,7 +354,186 @@ namespace MonoDroid.Generation {
 				}
 			}
 		}
-		
+
+		public List<InterfaceGen> GetAllDerivedInterfaces ()
+		{
+			var result = new List<InterfaceGen> ();
+			GetAllDerivedInterfaces (result);
+			return result;
+		}
+
+		void GetAllDerivedInterfaces (List<InterfaceGen> ifaces)
+		{
+			foreach (var isym in Interfaces) {
+				if (!((isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) is InterfaceGen iface))
+					continue;
+
+				var found = false;
+
+				foreach (var known in ifaces)
+					if (known.FullName == iface.FullName)
+						found = true;
+
+				if (found)
+					continue;
+
+				ifaces.Add (iface);
+				iface.GetAllDerivedInterfaces (ifaces);
+			}
+		}
+
+		protected internal IEnumerable<InterfaceGen> GetAllImplementedInterfaces ()
+		{
+			var set = new HashSet<InterfaceGen> ();
+
+			void visit (ISymbol isym)
+			{
+				if ((isym is GenericSymbol gsym ? gsym.Gen : isym) is InterfaceGen igen)
+					set.Add (igen);
+
+				if (!(isym is GenBase b))
+					return;
+
+				foreach (var i in b.Interfaces)
+					visit (i);
+			}
+
+			foreach (var i in Interfaces)
+				visit (i);
+
+			return set;
+		}
+
+		public IEnumerable<Method> GetAllMethods () =>
+			Methods.Concat (Properties.Select (p => p.Getter)).Concat (Properties.Select (p => p.Setter).Where (m => m != null));
+
+		GenBase GetBaseGen (CodeGenerationOptions opt)
+		{
+			if (this is InterfaceGen)
+				return null;
+
+			if (BaseGen != null)
+				return BaseGen;
+
+			if (BaseSymbol == null)
+				return null;
+
+			if (opt.SymbolTable.Lookup (BaseSymbol.FullName) is GenBase bg && bg != this)
+				return bg;
+
+			return null;
+		}
+
+		protected virtual bool GetEnumMappedMemberInfo ()
+		{
+			foreach (var f in Fields)
+				if (f.IsEnumified)
+					return true;
+			foreach (var m in Methods)
+				if (m.IsReturnEnumified | m.Parameters.Any (p => p.IsEnumified))
+					return true;
+			return false;
+		}
+
+		public bool GetGenericMappings (InterfaceGen gen, Dictionary<string, string> mappings)
+		{
+			foreach (var sym in Interfaces) {
+				if (sym is GenericSymbol gsym) {
+					if (gsym.Gen.FullName == gen.FullName) {
+						for (int i = 0; i < gsym.TypeParams.Length; i++)
+							mappings [gsym.Gen.TypeParameters [i].Name] = gsym.TypeParams [i].FullName;
+						return true;
+					} else if (gsym.Gen.GetGenericMappings (gen, mappings)) {
+						string [] keys = new string [mappings.Keys.Count];
+						mappings.Keys.CopyTo (keys, 0);
+						foreach (string tp in keys)
+							mappings [tp] = gsym.TypeParams [Array.IndexOf ((from gtp in gsym.Gen.TypeParameters select gtp.Name).ToArray (), mappings [tp])].FullName;
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public virtual string GetGenericType (Dictionary<string, string> mappings)
+		{
+			return null;
+		}
+
+		public string GetObjectHandleProperty (string variable)
+		{
+			var handleType = IsThrowable () ? "Java.Lang.Throwable" : "Java.Lang.Object";
+
+			return $"((global::{handleType}) {variable}).Handle";
+		}
+
+		public Property GetPropertyByName (string name, bool check_ifaces) =>
+			GetPropertyByName (name, check_ifaces, true);
+
+		public Property GetPropertyByName (string name, bool check_ifaces, bool check_base_ifaces)
+		{
+			if (prop_hash.ContainsKey (name))
+				return prop_hash [name];
+
+			if (check_ifaces) {
+				foreach (ISymbol isym in Interfaces) {
+					if (!((isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) is InterfaceGen igen))
+						continue;
+
+					var ret = igen.GetPropertyByName (name, true);
+					if (ret != null)
+						return ret;
+				}
+			}
+
+			return BaseSymbol?.GetPropertyByName (name, check_base_ifaces, check_base_ifaces);
+		}
+
+		public bool HasEnumMappedMembers => GetEnumMappedMemberInfo ();
+
+		protected internal bool HasNestedType (string name) => NestedTypes.Any (g => g.Name == name);
+
+		public IEnumerable<GenBase> Invalidate ()
+		{
+			IsValid = false;
+			validated = true;
+
+			foreach (var nt in NestedTypes) {
+				foreach (var sub in nt.Invalidate ())
+					yield return sub;
+				yield return nt;
+			}
+		}
+
+		public bool IsAcw => support.IsAcw;
+
+		public bool IsAnnotation =>
+			implemented_interfaces.Any (n => n == "Java.Lang.Annotation.Annotation" || n == "java.lang.annotation.Annotation");
+
+		public bool IsArray => false;
+
+		// TODO: check that method.ReturnType is a superclass of m.ReturnType
+		public bool IsCovariantMethod (Method method) =>
+			Methods.Any (m => m.Name == method.Name && ParameterList.Equals (m.Parameters, method.Parameters));
+
+		public bool IsDeprecated => support.IsDeprecated;
+
+		public bool IsEnum => false;
+
+		public bool IsGeneratable => support.IsGeneratable;
+
+		public bool IsGeneric => support.IsGeneric;
+
+		// some names are reserved for use by us, e.g. we don't want another
+		// Handle property, as that conflicts with Java.Lang.Object.Handle.
+		bool IsInfrastructural (string name) => ObjectRequiresNew.Contains (name);
+
+		public bool IsObfuscated => support.IsObfuscated;
+
+		bool IsThrowable () =>
+			FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable");
+
 		// This is not a perfect match with Java language specification http://docs.oracle.com/javase/specs/jls/se5.0/html/interfaces.html#9.7
 		// as it does not cover java.lang.Enum. Though C# attributes cannot handle JLE.
 		// Class literal (FooBar.class) cannot be supported either.
@@ -905,19 +546,18 @@ namespace MonoDroid.Generation {
 				return true;
 			if (sym is SimpleSymbol) {
 				switch (sym.JavaName) {
-				case "boolean":
-				case "char":
-				case "byte":
-				case "short":
-				case "int":
-				case "long":
-				case "float":
-				case "double":
-					return true;
+					case "boolean":
+					case "char":
+					case "byte":
+					case "short":
+					case "int":
+					case "long":
+					case "float":
+					case "double":
+						return true;
 				}
 			}
-			var arr = sym as ArraySymbol;
-			if (arr != null)
+			if (sym is ArraySymbol arr)
 				return IsTypeCommensurate (opt, opt.SymbolTable.Lookup (arr.ElementType));
 			if (sym is GenericSymbol)
 				return sym.JavaName == "java.lang.Class";
@@ -929,90 +569,236 @@ namespace MonoDroid.Generation {
 			return false;
 		}
 
-		public static string GetSignature (MethodBase method, CodeGenerationOptions opt)
-		{
-			StringBuilder sb = new StringBuilder ();
-			foreach (Parameter p in method.Parameters) {
-				if (sb.Length > 0)
-					sb.Append (", ");
-				if (p.IsEnumified)
-					sb.Append ("[global::Android.Runtime.GeneratedEnum] ");
-				if (p.Annotation != null)
-					sb.Append (p.Annotation);
-				sb.Append (opt.GetOutputName (p.Type));
-				sb.Append (" ");
-				sb.Append (opt.GetSafeIdentifier (p.Name));
+		public bool IsValid { get; set; } = true;
+
+		public string JavaName => $"{PackageName}.{JavaSimpleName}";
+
+		public string JavaSimpleName => support.JavaSimpleName;
+
+		public string JniName => $"L{RawJniName};";
+
+		public string MetadataXPathReference {
+			get {
+				string type = null;
+
+				if (this is ClassGen)
+					type = "class";
+				if (this is InterfaceGen)
+					type = "interface";
+				if (type == null)
+					throw new InvalidOperationException ("Uh...xpath? this is " + GetType ().FullName);
+
+				return $"/api/package[@name='{PackageName}']/{type}[@name='{JavaSimpleName}']";
 			}
-			return sb.ToString ();
 		}
 
-		static IEnumerable<Method> GetAllMethods (GenBase t)
-		{
-			return t.Methods.Concat (t.Properties.Select (p => p.Getter)).Concat (t.Properties.Select (p => p.Setter).Where (m => m != null));
+		public bool MethodValidationFailed { get; set; }
+
+		public string Name {
+			get => support.Name;
+			set => support.Name = value;
 		}
 
-		static string [] AutoDetectEnumifiedOverrideParameters (MethodBase method, AncestorDescendantCache cache)
+		public string Namespace => support.Namespace;
+
+		public string NativeType { get; set; }
+
+		public bool NeedsPrep => true;
+
+		static readonly HashSet<string> ObjectRequiresNew = new HashSet<string> (
+			typeof (object)
+				.GetMethods ()
+				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
+						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
+				.Select (m => m.Name)
+				.Concat (new [] { "Handle" }),
+			StringComparer.OrdinalIgnoreCase);
+
+		protected virtual bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
-			if (method.Parameters.All (p => p.Type != "int"))
-				return null;
-			var classes = cache.GetAncestorsAndDescendants (method.DeclaringType);
-			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
-			foreach (var t in classes) {
-				foreach (var candidate in GetAllMethods (t).Where (m => m.Name == method.Name
-					&& m.Parameters.Count == method.Parameters.Count
-					&& m.Parameters.Any (p => p.IsEnumified))) {
-					var ret = new string [method.Parameters.Count];
-					bool mismatch = false;
-					for (int i = 0; i < method.Parameters.Count; i++) {
-						if (method.Parameters [i].Type == "int" && candidate.Parameters [i].IsEnumified)
-							ret [i] = candidate.Parameters [i].Type;
-						else if (method.Parameters [i].Type != candidate.Parameters [i].Type) {
-							mismatch = true;
-							break;
-						}
-					}
-					if (mismatch)
-						continue;
-					for (int i = 0; i < ret.Length; i++)
-						if (ret [i] != null)
-							method.Parameters [i].SetGeneratedEnumType (ret [i]);
-					return ret;
+			if (Name.Length > TypeNamePrefix.Length &&
+			    (Name [TypeNamePrefix.Length] == '.' || char.IsDigit (Name [TypeNamePrefix.Length]))) // see bug #5111
+				return false;
+
+			if (!support.OnValidate (opt))
+				return false;
+
+			List<GenBase> valid_nests = new List<GenBase> ();
+			foreach (GenBase gen in NestedTypes) {
+				if (gen.Validate (opt, TypeParameters, context))
+					valid_nests.Add (gen);
+			}
+			NestedTypes = valid_nests;
+
+			AdjustNestedTypeFullName (this);
+
+			foreach (string iface_name in implemented_interfaces) {
+				ISymbol isym = opt.SymbolTable.Lookup (iface_name);
+				if (isym != null && isym.Validate (opt, TypeParameters, context))
+					Interfaces.Add (isym);
+				else {
+					if (isym == null)
+						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} does not exist.", FullName, iface_name);
+					else
+						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} is invalid.", FullName, iface_name);
+					iface_validation_failed = true;
 				}
 			}
-			return null;
-		}
 
-		static string AutoDetectEnumifiedOverrideReturn (Method method, AncestorDescendantCache cache)
-		{
-			if (method.RetVal.FullName != "int")
-				return null;
-			var classes = cache.GetAncestorsAndDescendants (method.DeclaringType);
-			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
-			foreach (var t in classes) {
-				foreach (var candidate in GetAllMethods (t).Where (m => m.Name == method.Name && m.Parameters.Count == method.Parameters.Count)) {
-					if (method.JniSignature != candidate.JniSignature)
-						continue;
-					if (candidate.IsReturnEnumified)
-						method.RetVal.SetGeneratedEnumType (candidate.RetVal.FullName);
-				}
+			List<Field> valid_fields = new List<Field> ();
+			foreach (Field f in Fields) {
+				if (!f.Validate (opt, TypeParameters, context))
+					continue;
+				valid_fields.Add (f);
 			}
-			return null;
+			Fields = valid_fields;
+
+			int method_cnt = Methods.Count;
+			Methods = Methods.Where (m => ValidateMethod (opt, m, context)).ToList ();
+			MethodValidationFailed = method_cnt != Methods.Count;
+			foreach (Method m in Methods) {
+				if (m.IsVirtual)
+					HasVirtualMethods = true;
+				if (m.Name == "HashCode" && m.Parameters.Count == 0) {
+					m.IsOverride = true;
+					m.Name = "GetHashCode";
+				}
+				jni_sig_hash [m.JavaName + m.JniSignature] = m;
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
+					m.IsOverride = true;
+			}
+			return true;
 		}
 
-		void AutoDetectEnumifiedOverrideProperties (Property prop, AncestorDescendantCache cache)
+		public string PackageName {
+			get => support.PackageName;
+			set => support.PackageName = value;
+		}
+
+		public string [] PreCall (CodeGenerationOptions opt, string var_name) => new string [] { };
+
+		public string [] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			if (prop.Type != "int")
+			var rgm = this as IRequireGenericMarshal;
+
+			return new string []{
+				string.Format ("{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
+					       opt.GetOutputName (FullName),
+					       opt.GetSafeIdentifier (var_name),
+					       opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
+					       owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer",
+					       opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? FullName) : FullName),
+					       rgm != null ? "(" + opt.GetOutputName (FullName) + ")" : string.Empty)
+			};
+		}
+
+		public string [] PostCall (CodeGenerationOptions opt, string var_name) => new string [] { };
+
+		public string [] PostCallback (CodeGenerationOptions opt, string var_name) => new string [] { };
+
+		public string RawJniName => PackageName.Replace ('.', '/') + "/" + JavaSimpleName.Replace ('.', '$');
+
+		public string RawVisibility => support.Visibility;
+
+		public bool RequiresNew (string memberName)
+		{
+			if (ObjectRequiresNew.Contains (memberName))
+				return true;
+
+			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
+		}
+
+		public virtual void ResetValidation ()
+		{
+			Interfaces.Clear ();
+			iface_validation_failed = false;
+
+			foreach (var nt in NestedTypes)
+				nt.ResetValidation ();
+		}
+
+		bool ReturnTypeMatches (Method m, Method mm)
+		{
+			if (mm.RetVal.FullName == m.RetVal.FullName)
+				return true;
+			if (BaseSymbol.IsGeneric && mm.RetVal.IsGeneric)
+				return true; // sloppy but pass
+			return false;
+		}
+
+		public bool ShouldGenerateAnnotationAttribute => IsAnnotation;
+
+		public void StripNonBindables ()
+		{
+			// As of now, if we generate bindings for interface default methods, that means users will
+			// have to "implement" those methods because they are declared and you have to implement
+			// any declared methods in C#. That is going to be problematic a lot.
+			Methods = Methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+			NestedTypes = NestedTypes.Where (n => !n.IsObfuscated && n.Visibility != "private").ToList ();
+			foreach (var n in NestedTypes)
+				n.StripNonBindables ();
+		}
+
+		static readonly HashSet<string> ThrowableRequiresNew = new HashSet<string> (
+			typeof (System.Exception)
+				.GetMethods ()
+				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
+						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
+				.Select (m => m.Name)
+				.Concat (typeof (System.Exception).GetProperties ().Select (p => p.Name))
+				.Concat (new [] { "Handle" }),
+			StringComparer.OrdinalIgnoreCase);
+
+		public abstract string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null);
+
+		public string TypeNamePrefix => support.TypeNamePrefix;
+
+		public GenericParameterDefinitionList TypeParameters => support.TypeParameters;
+
+		public virtual void UpdateEnums (CodeGenerationOptions opt, AncestorDescendantCache cache)
+		{
+			if (enum_updated || !IsGeneratable)
 				return;
-			var classes = cache.GetAncestorsAndDescendants (prop.Getter.DeclaringType);
-			classes = classes.Concat (classes.SelectMany(x => x.GetAllImplementedInterfaces ()));
-			foreach (var t in classes) {
-				foreach (var candidate in t.Properties.Where (p => p.Name == prop.Name)) {
-					if (prop.Getter.JniSignature != candidate.Getter.JniSignature)
-						continue;
-					if (candidate.Getter.IsReturnEnumified)
-						prop.Getter.RetVal.SetGeneratedEnumType (candidate.Getter.RetVal.FullName);
-				}
+
+			enum_updated = true;
+
+			var baseGen = GetBaseGen (opt);
+
+			if (baseGen != null)
+				baseGen.UpdateEnums (opt, cache);
+
+			foreach (var m in Methods) {
+				m.AutoDetectEnumifiedOverrideParameters (cache);
+				m.AutoDetectEnumifiedOverrideReturn (cache);
+			}
+
+			foreach (var p in Properties)
+				p.AutoDetectEnumifiedOverrideProperties (cache);
+
+			UpdateEnumsInInterfaceImplementation ();
+
+			foreach (var ngen in NestedTypes)
+				ngen.UpdateEnums (opt, cache);
+		}
+
+		public virtual void UpdateEnumsInInterfaceImplementation ()
+		{
+		}
+
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
+		{
+			context.ContextTypes.Push (this);
+
+			try {
+				return IsValid = OnValidate (opt, type_params, context);
+			} finally {
+				context.ContextTypes.Pop ();
 			}
 		}
+
+		bool ValidateMethod (CodeGenerationOptions opt, Method m, CodeGeneratorContext context) =>
+			m.Validate (opt, TypeParameters, context);
+
+		public string Visibility => string.IsNullOrEmpty (support.Visibility) ? "public" : support.Visibility;
 	}
 }

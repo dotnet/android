@@ -265,42 +265,5 @@ namespace MonoDroid.Generation {
 			}
 			return true;
 		}
-
-		public static Parameter FromElement (XElement elem)
-		{
-			string managedName = elem.XGetAttribute ("managedName");
-			string name = !string.IsNullOrEmpty (managedName) ? managedName : SymbolTable.MangleName (elem.XGetAttribute ("name"));
-			string java_type = elem.XGetAttribute ("type");
-			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
-			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
-			// FIXME: "enum_type ?? java_type" should be extraneous. Somewhere in generator uses it improperly.
-			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type);
-			if (elem.Attribute ("sender") != null)
-				result.IsSender = true;
-			return result;
-		}
-
-		public static Parameter FromClassElement (XElement elem)
-		{
-			string name          = "__self";
-			string java_type     = elem.XGetAttribute ("name");
-			string java_package  = elem.Parent.XGetAttribute ("name");
-			return new Parameter (name, java_package + "." + java_type, null, false);
-		}
-		
-#if HAVE_CECIL
-		public static Parameter FromManagedParameter (ParameterDefinition p, string jnitype, string rawtype)
-		{
-			// FIXME: safe to use CLR type name? assuming yes as we often use it in metadatamap.
-			// FIXME: IsSender?
-			bool isEnumType = p.CustomAttributes.Any (c => c.AttributeType.Name == "GeneratedEnumAttribute");
-			return new Parameter (SymbolTable.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected (), null, isEnumType, rawtype);
-		}
-		
-		public static Parameter FromManagedType (TypeDefinition t, string javaType)
-		{
-			return new Parameter ("__self", javaType ?? t.FullName, t.FullName, false);
-		}
-#endif	// HAVE_CECIL
 	}
 }

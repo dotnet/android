@@ -42,7 +42,7 @@ namespace MonoDroid.Generation
 				// custom enum types and cannot simply use JNI signature here.
 				var rawtype = e?.Current.Type;
 				var type = p.ParameterType.FullName == "System.IO.Stream" && e != null ? e.Current.Type : null;
-				yield return Parameter.FromManagedParameter (p, type, rawtype);
+				yield return CecilApiImporter.CreateParameter (p, type, rawtype);
 			}
 		}
 	}

@@ -4,31 +4,29 @@ using System.Xml;
 
 namespace MonoDroid.Generation
 {
-
-	public abstract class Ctor : MethodBase {
-
-		protected Ctor (GenBase declaringType)
-			: base (declaringType)
+	public class Ctor : MethodBase
+	{
+		public Ctor (GenBase declaringType) : base (declaringType)
 		{
 		}
-		
-		public abstract bool IsNonStaticNestedType { get; }
-		public abstract string CustomAttributes { get; }
 
-		string jni_sig;
-		public string JniSignature {
-			get { return jni_sig; }
-		}
+		public string CustomAttributes { get; set; }
+		public bool IsNonStaticNestedType { get; set; }
+		public string JniSignature { get; private set; }
+		public bool MissingEnclosingClass { get; set; }
 
-		public string ID {
-			get { return "id_ctor" + IDSignature; }
-		}
+		public string ID => "id_ctor" + IDSignature;
 
 		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList tps, CodeGeneratorContext context)
 		{
+			if (MissingEnclosingClass)
+				return false;
+
 			if (!base.OnValidate (opt, tps, context))
 				return false;
-			jni_sig = "(" + Parameters.JniSignature + ")V";
+
+			JniSignature = "(" + Parameters.JniSignature + ")V";
+
 			return true;
 		}
 	}

@@ -7,61 +7,42 @@ using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation
 {
-
-	public abstract class ClassGen : GenBase {
-
-		bool needs_new;
-		bool inherits_object;
-		List<Ctor> ctors = new List<Ctor> ();
-		List<string> explicitly_implemented_iface_methods = new List<string> (); // do not initialize here; see FixupMethodOverides()
+	public class ClassGen : GenBase
+	{
 		bool fill_explicit_implementation_started;
 
-		protected ClassGen (GenBaseSupport support)
-			: base (support)
+		public List<Ctor> Ctors { get; private set; } = new List<Ctor> ();
+
+		public ClassGen (GenBaseSupport support) : base (support)
 		{
-			inherits_object = true;
+			InheritsObject = true;
+
 			if (Namespace == "Java.Lang" && (Name == "Object" || Name == "Throwable"))
-				inherits_object = false;
+				InheritsObject = false;
+
+			DefaultValue = "IntPtr.Zero";
+			NativeType = "IntPtr";
 		}
 
-		public override string DefaultValue {
-			get { return "IntPtr.Zero"; }
-		}
-
-		internal    bool    InheritsObject {
-			get { return inherits_object; }
-		}
-		
-		public List<string> ExplicitlyImplementedInterfaceMethods {
-			get { return explicitly_implemented_iface_methods; }
-		}
-
-		public abstract bool IsAbstract { get; }
-
-		public abstract bool IsFinal { get; }
-
-		public override string NativeType {
-			get { return "IntPtr"; }
-		}
-
-		public IList<Ctor> Ctors {
-			get { return ctors; }
-		}
-
-		public abstract string BaseType { get; set; }
-
-		public bool NeedsNew {
-			get => needs_new;
-			set => needs_new = value;
-		}
-
-		public bool ContainsCtor (string jni_sig)
+		static void AddNestedInterfaceTypes (GenBase type, List<InterfaceExtensionInfo> nestedInterfaces)
 		{
-			foreach (Ctor c in ctors)
-				if (c.JniSignature == jni_sig)
-					return true;
-			return false;
+			foreach (var nt in type.NestedTypes) {
+				if (nt is InterfaceGen ni)
+					nestedInterfaces.Add (new InterfaceExtensionInfo {
+						DeclaringType = type.FullName.Substring (type.Namespace.Length + 1).Replace (".", "_"),
+						Type = ni
+					});
+				else
+					AddNestedInterfaceTypes (nt, nestedInterfaces);
+			}
 		}
+
+		public override ClassGen BaseGen =>
+			(base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as ClassGen;
+
+		public string BaseType { get; set; }
+
+		public bool ContainsCtor (string jni_sig) => Ctors.Any (c => c.JniSignature == jni_sig);
 
 		public bool ContainsNestedType (GenBase gen)
 		{
@@ -71,73 +52,12 @@ namespace MonoDroid.Generation
 			return HasNestedType (gen.Name);
 		}
 
-		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null) 
-		{
-			return String.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);
-		}
-
-		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned) 
-		{
-			return String.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
-		}
-
-		public override void ResetValidation ()
-		{
-			validated = false;
-			base.ResetValidation ();
-		}
-
-		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
-		{
-			if (validated)
-				return is_valid;
-			
-			validated = true;
-
-			if (!support.OnValidate (opt)) {
-				is_valid = false;
-				return false;
-			}
-
-			// We're validating this in prior to BaseType.
-			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params, context)) {
-				is_valid = false;
-				return false;
-			}
-
-			if (Char.IsNumber (Name [0])) {
-				// it is an anonymous class which does not need output.
-				is_valid = false;
-				return false;
-			}
-			
-			base_symbol = IsAnnotation ? opt.SymbolTable.Lookup ("java.lang.Object") : BaseType != null ? opt.SymbolTable.Lookup (BaseType) : null;
-			if (base_symbol == null && FullName != "Java.Lang.Object" && FullName != "System.Object") {
-				Report.Warning (0, Report.WarningClassGen + 2, "Class {0} has unknown base type {1}.", FullName, BaseType);
-				is_valid = false;
-				return false;
-			}
-
-			if ((base_symbol != null && !base_symbol.Validate (opt, TypeParameters, context)) || !base.OnValidate (opt, type_params, context)) {
-				Report.Warning (0, Report.WarningClassGen + 3, "Class {0} has invalid base type {1}.", FullName, BaseType);
-				is_valid = false;
-				return false;
-			}
-
-			List<Ctor> valid_ctors = new List<Ctor> ();
-			foreach (Ctor c in ctors)
-				if (c.Validate (opt, TypeParameters, context))
-					valid_ctors.Add (c);
-			ctors = valid_ctors;
-
-			return true;
-		}
+		public List<string> ExplicitlyImplementedInterfaceMethods { get; } = new List<string> (); // do not initialize here; see FixupMethodOverides()
 
 		public override void FixupAccessModifiers (CodeGenerationOptions opt)
 		{
 			while (!IsAnnotation && !string.IsNullOrEmpty (BaseType)) {
-				var baseClass = opt.SymbolTable.Lookup (BaseType) as ClassGen;
-				if (baseClass != null && RawVisibility == "public" && baseClass.RawVisibility != "public") {
+				if (opt.SymbolTable.Lookup (BaseType) is ClassGen baseClass && RawVisibility == "public" && baseClass.RawVisibility != "public") {
 					//Skip the BaseType and copy over any "missing" methods
 					foreach (var baseMethod in baseClass.Methods) {
 						var method = Methods.FirstOrDefault (m => m.Matches (baseMethod));
@@ -152,21 +72,20 @@ namespace MonoDroid.Generation
 
 			base.FixupAccessModifiers (opt);
 		}
-		
+
 		public override void FixupExplicitImplementation ()
 		{
 			if (fill_explicit_implementation_started)
 				return; // already done.
 			fill_explicit_implementation_started = true;
-			if (BaseGen != null && BaseGen.explicitly_implemented_iface_methods == null)
+			if (BaseGen != null && BaseGen.ExplicitlyImplementedInterfaceMethods == null)
 				BaseGen.FixupExplicitImplementation ();
 
 			foreach (InterfaceGen iface in GetAllDerivedInterfaces ()) {
 				if (iface.IsGeneric) {
 					bool skip = false;
 					foreach (ISymbol isym in Interfaces) {
-						var gs = isym as GenericSymbol;
-						if (gs != null && gs.IsConcrete && gs.Gen == iface)
+						if (isym is GenericSymbol gs && gs.IsConcrete && gs.Gen == iface)
 							skip = true;
 					}
 					if (skip)
@@ -182,10 +101,10 @@ namespace MonoDroid.Generation
 					else if (m.IsGeneric)
 						doExplicitly = true;
 					if (doExplicitly)
-						explicitly_implemented_iface_methods.Add (sig);
+						ExplicitlyImplementedInterfaceMethods.Add (sig);
 				}
 			}
-			
+
 			// Keep in sync with Generate() that generates explicit iface method impl.
 			foreach (ISymbol isym in Interfaces) {
 				if (isym is GenericSymbol) {
@@ -193,7 +112,7 @@ namespace MonoDroid.Generation
 					if (gs.IsConcrete) {
 						foreach (Method m in gs.Gen.Methods)
 							if (m.IsGeneric) {
-								explicitly_implemented_iface_methods.Add (m.GetSignature ());
+								ExplicitlyImplementedInterfaceMethods.Add (m.GetSignature ());
 							}
 					}
 				}
@@ -203,38 +122,10 @@ namespace MonoDroid.Generation
 				nt.FixupExplicitImplementation ();
 		}
 
-		public override ClassGen BaseGen {
-			get { return (base_symbol is GenericSymbol ? (base_symbol as GenericSymbol).Gen : base_symbol) as ClassGen; }
-		}
+		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned) =>
+			$"global::Java.Lang.Object.GetObject<{opt.GetOutputName (FullName)}> ({varname}, {(owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer")})";
 
-		internal IEnumerable<InterfaceExtensionInfo> GetNestedInterfaceTypes ()
-		{
-			var nestedInterfaces = new List<InterfaceExtensionInfo> ();
-			AddNestedInterfaceTypes (this, nestedInterfaces);
-			return nestedInterfaces;
-		}
-
-		static void AddNestedInterfaceTypes (GenBase type, List<InterfaceExtensionInfo> nestedInterfaces)
-		{
-			foreach (GenBase nt in type.NestedTypes) {
-				InterfaceGen ni = nt as InterfaceGen;
-				if (ni != null)
-					nestedInterfaces.Add (new InterfaceExtensionInfo {
-							DeclaringType = type.FullName.Substring (type.Namespace.Length+1).Replace (".","_"),
-							Type          = ni
-					});
-				else
-					AddNestedInterfaceTypes (nt, nestedInterfaces);
-			}
-		}
-		
-		public bool IsExplicitlyImplementedMethod (string sig)
-		{
-			for (ClassGen c = this; c != null; c = c.BaseGen)
-				if (c.explicitly_implemented_iface_methods.Contains (sig))
-					return true;
-			return false;
-		}
+		public bool FromXml { get; set; }
 
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
@@ -256,6 +147,14 @@ namespace MonoDroid.Generation
 			}
 		}
 
+		public static void GenerateEnumList (GenerationInfo gen_info)
+		{
+			using (var sw = new StreamWriter (File.Create (Path.Combine (gen_info.CSharpDir, "enumlist")))) {
+				foreach (string e in gen_info.Enums.OrderBy (p => p, StringComparer.OrdinalIgnoreCase))
+					sw.WriteLine (e);
+			}
+		}
+
 		public static void GenerateTypeRegistrations (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
 			using (var sw = gen_info.OpenStream (opt.GetFileName ("Java.Interop.__TypeRegistrations"))) {
@@ -267,8 +166,7 @@ namespace MonoDroid.Generation
 
 					if (JavaNativeTypeManager.ToCliType (reg.Key) == reg.Value)
 						continue;
-					List<KeyValuePair<string, string>> v;
-					if (!mapping.TryGetValue (package, out v))
+					if (!mapping.TryGetValue (package, out var v))
 						mapping.Add (package, v = new List<KeyValuePair<string, string>> ());
 					v.Add (new KeyValuePair<string, string> (reg.Key, reg.Value));
 				}
@@ -334,21 +232,94 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public static void GenerateEnumList (GenerationInfo gen_info)
-		{
-			using (var sw = new StreamWriter (File.Create (Path.Combine (gen_info.CSharpDir, "enumlist")))) {
-				foreach (string e in gen_info.Enums.OrderBy (p => p, StringComparer.OrdinalIgnoreCase))
-					sw.WriteLine (e);
-			}
-		}
-		
 		protected override bool GetEnumMappedMemberInfo ()
 		{
 			foreach (var m in Ctors)
 				return true;
+
 			return base.GetEnumMappedMemberInfo ();
 		}
-		
+
+		internal IEnumerable<InterfaceExtensionInfo> GetNestedInterfaceTypes ()
+		{
+			var nestedInterfaces = new List<InterfaceExtensionInfo> ();
+			AddNestedInterfaceTypes (this, nestedInterfaces);
+			return nestedInterfaces;
+		}
+
+		public bool InheritsObject { get; set; }
+
+		public bool IsAbstract { get; set; }
+
+		public bool IsExplicitlyImplementedMethod (string sig)
+		{
+			for (var c = this; c != null; c = c.BaseGen)
+				if (c.ExplicitlyImplementedInterfaceMethods.Contains (sig))
+					return true;
+			return false;
+		}
+
+		public bool IsFinal { get; set; }
+
+		public bool NeedsNew { get; set; }
+
+		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
+		{
+			if (validated)
+				return IsValid;
+
+			validated = true;
+
+			if (!support.OnValidate (opt)) {
+				IsValid = false;
+				return false;
+			}
+
+			// We're validating this in prior to BaseType.
+			if (TypeParameters != null && !TypeParameters.Validate (opt, type_params, context)) {
+				IsValid = false;
+				return false;
+			}
+
+			if (char.IsNumber (Name [0])) {
+				// it is an anonymous class which does not need output.
+				IsValid = false;
+				return false;
+			}
+
+			base_symbol = IsAnnotation ? opt.SymbolTable.Lookup ("java.lang.Object") : BaseType != null ? opt.SymbolTable.Lookup (BaseType) : null;
+			if (base_symbol == null && FullName != "Java.Lang.Object" && FullName != "System.Object") {
+				Report.Warning (0, Report.WarningClassGen + 2, "Class {0} has unknown base type {1}.", FullName, BaseType);
+				IsValid = false;
+				return false;
+			}
+
+			if ((base_symbol != null && !base_symbol.Validate (opt, TypeParameters, context)) || !base.OnValidate (opt, type_params, context)) {
+				Report.Warning (0, Report.WarningClassGen + 3, "Class {0} has invalid base type {1}.", FullName, BaseType);
+				IsValid = false;
+				return false;
+			}
+
+			var valid_ctors = new List<Ctor> ();
+
+			foreach (var c in Ctors)
+				if (c.Validate (opt, TypeParameters, context))
+					valid_ctors.Add (c);
+
+			Ctors = valid_ctors;
+
+			return true;
+		}
+
+		public override void ResetValidation ()
+		{
+			validated = false;
+			base.ResetValidation ();
+		}
+
+		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null) =>
+			$"JNIEnv.ToLocalJniHandle ({varname})";
+
 		public override void UpdateEnumsInInterfaceImplementation ()
 		{
 			foreach (InterfaceGen iface in GetAllDerivedInterfaces ()) {
@@ -369,4 +340,3 @@ namespace MonoDroid.Generation
 		}
 	}
 }
-

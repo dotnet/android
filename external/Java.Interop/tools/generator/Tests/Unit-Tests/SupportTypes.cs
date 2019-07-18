@@ -7,14 +7,10 @@ namespace generatortests
 	{
 		public TestClass (string baseType, string javaName) : base (new TestBaseSupport (javaName))
 		{
-			this.BaseType = baseType;
+			BaseType = baseType;
+			IsAbstract = false;
+			IsFinal = false;
 		}
-
-		public override bool IsAbstract => false;
-
-		public override bool IsFinal => false;
-
-		public override string BaseType { get; set; }
 	}
 
 	class TestBaseSupport : GenBaseSupport
@@ -24,238 +20,145 @@ namespace generatortests
 			var split = javaName.Split ('.');
 			Name = split.Last ();
 			FullName = javaName;
+			JavaSimpleName = Name;
 			PackageName = javaName.Substring (0, javaName.Length - Name.Length - 1);
+			Namespace = PackageName;
+			IsGeneratable = true;
+			Visibility = "public";
+			TypeParameters = new GenericParameterDefinitionList ();
 		}
-
-		public override bool IsAcw => false;
-
-		public override bool IsDeprecated => false;
-
-		public override string DeprecatedComment => string.Empty;
-
-		public override bool IsGeneratable => true;
-
-		public override bool IsGeneric => false;
-
-		public override bool IsObfuscated => false;
-
-		public override string FullName { get; set; }
-
-		public override string Name { get; set; }
-
-		public override string Namespace => PackageName;
-
-		public override string JavaSimpleName => Name;
-
-		public override string PackageName { get; set; }
-
-		public override string Visibility => "public";
-
-		GenericParameterDefinitionList typeParameters = new GenericParameterDefinitionList ();
-
-		public override GenericParameterDefinitionList TypeParameters => typeParameters;
 	}
 
 	class TestField : Field
 	{
-		bool isFinal, isStatic, isEnumified, isDeprecated;
-		string type, value, deprecatedComment, visibility = "public";
-		Parameter setterParameter;
-
 		public TestField (string type, string name)
 		{
-			this.type = type;
+			TypeName = type;
+			JavaName = name;
 			Name = name;
+			Visibility = "public";
+
+			//NOTE: passing `type` for `managedType`, required since `SymbolTable` is no longer static
+			//	This currently isn't causing any test failures
+			SetterParameter = new Parameter ("value", TypeName, TypeName, IsEnumified);
 		}
 
 		public TestField SetStatic ()
 		{
-			isStatic = true;
+			IsStatic = true;
 			return this;
 		}
 
 		public TestField SetConstant (string value = null)
 		{
-			isFinal =
-				isStatic = true;
-			this.value = value;
+			IsFinal = true;
+			IsStatic = true;
+			Value = value;
 			return this;
 		}
 
 		public TestField SetEnumified ()
 		{
-			isEnumified = true;
+			IsEnumified = true;
+			SetterParameter = new Parameter ("value", TypeName, TypeName, IsEnumified);
 			return this;
 		}
 
 		public TestField SetDeprecated (string comment = null)
 		{
-			isDeprecated = true;
-			deprecatedComment = comment;
+			IsDeprecated = true;
+			DeprecatedComment = comment;
 			return this;
 		}
 
 		public TestField SetVisibility (string visibility)
 		{
-			this.visibility = visibility;
+			Visibility = visibility;
 			return this;
 		}
 
 		public TestField SetValue (string value)
 		{
-			this.value = value;
+			Value = value;
 			return this;
-		}
-
-		public override bool IsDeprecated => isDeprecated;
-
-		public override string DeprecatedComment => deprecatedComment;
-
-		public override bool IsFinal => isFinal;
-
-		public override bool IsStatic => isStatic;
-
-		public override string JavaName => Name;
-
-		public override bool IsEnumified => isEnumified;
-
-		public override string TypeName => type;
-
-		public override string Name { get; set; }
-
-		public override string Value => value;
-
-		public override string Visibility => visibility;
-
-		protected override Parameter SetterParameter {
-			get {
-				if (setterParameter == null) {
-					//NOTE: passing `type` for `managedType`, required since `SymbolTable` is no longer static
-					//	This currently isn't causing any test failures
-					setterParameter = new Parameter ("value", type, type, isEnumified);
-				}
-				return setterParameter;
-			}
 		}
 	}
 
 	class TestMethod : Method
 	{
-		int apiLevel = 27;
-		string @return, managedReturn, visibility = "public", deprecated;
-		bool isAbstract, isFinal, isStatic, asyncify, isReturnEnumified;
-
 		public TestMethod (GenBase @class, string name, string @return = "void") : base (@class)
 		{
 			Name = name;
-			this.@return = @return;
+			JavaName = name;
+			SourceApiLevel = 27;
+			IsVirtual = true;
+			Visibility = "public";
+			Return = @return;
+
 			FillReturnType ();
 		}
 
 		public TestMethod SetApiLevel (int apiLevel)
 		{
-			this.apiLevel = apiLevel;
+			SourceApiLevel = apiLevel;
 			return this;
 		}
 
 		public TestMethod SetManagedReturn (string managedReturn)
 		{
-			this.managedReturn = managedReturn;
+			ManagedReturn = managedReturn;
 			FillReturnType ();
 			return this;
 		}
 
 		public TestMethod SetFinal ()
 		{
-			isFinal = true;
+			IsFinal = true;
 			IsVirtual = false;
 			return this;
 		}
 
 		public TestMethod SetAbstract ()
 		{
-			isAbstract = true;
+			IsAbstract = true;
 			return this;
 		}
 
 		public TestMethod SetStatic ()
 		{
-			isFinal =
-				isStatic = true;
+			IsFinal =
+				IsStatic = true;
 			IsVirtual = false;
 			return this;
 		}
 
 		public TestMethod SetAsyncify ()
 		{
-			asyncify = true;
+			GenerateAsyncWrapper = true;
 			return this;
 		}
 
 		public TestMethod SetVisibility (string visibility)
 		{
-			this.visibility = visibility;
+			Visibility = visibility;
 			return this;
 		}
 
 		public TestMethod SetDeprecated (string deprecated)
 		{
-			this.deprecated = deprecated;
+			Deprecated = deprecated;
 			return this;
 		}
 
 		public TestMethod SetReturnEnumified ()
 		{
-			this.isReturnEnumified = true;
+			IsReturnEnumified = true;
 			return this;
 		}
-
-		public override string ArgsType => null;
-
-		public override string EventName => null;
-
-		public override bool IsAbstract => isAbstract;
-
-		public override bool IsFinal => isFinal;
-
-		public override bool IsInterfaceDefaultMethod => false;
-
-		public override string JavaName => Name;
-
-		public override bool IsStatic => isStatic;
-
-		public override bool IsVirtual { get; set; } = true;
-
-		public override string Return => @return;
-
-		public override bool IsReturnEnumified => isReturnEnumified;
-
-		public override string ManagedReturn => managedReturn;
-
-		public override int SourceApiLevel => apiLevel;
-
-		public override bool Asyncify => asyncify;
-
-		public override string CustomAttributes => null;
-
-		public override string Name { get; set; }
-
-		protected override string PropertyNameOverride => null;
-
-		public override string AssemblyName => null;
-
-		public override string Deprecated => deprecated;
-
-		public override string Visibility => visibility;
 	}
 
 	class TestCtor : Ctor
 	{
-		string custom_attributes;
-		string deprecated;
-		bool is_non_static_nested_type;
-		string visibility;
-
 		public TestCtor (GenBase @class, string name) : base (@class)
 		{
 			Name = name;
@@ -269,49 +172,35 @@ namespace generatortests
 
 		public TestCtor SetCustomAttributes (string value)
 		{
-			custom_attributes = value;
+			CustomAttributes = value;
 			return this;
 		}
 
 		public TestCtor SetDeprecated (string value)
 		{
-			deprecated = value;
+			Deprecated = value;
 			return this;
 		}
 
 		public TestCtor SetIsNonStaticNestedType (bool value)
 		{
-			is_non_static_nested_type = value;
+			IsNonStaticNestedType = value;
 			return this;
 		}
 
 		public TestCtor SetVisibility (string value)
 		{
-			visibility = value;
+			Visibility = value;
 			return this;
 		}
-
-		public override string CustomAttributes => custom_attributes;
-
-		public override string Deprecated => deprecated;
-
-		public override bool IsNonStaticNestedType => is_non_static_nested_type;
-
-		public override string Name { get; set; }
-
-		public override string Visibility => visibility;
 	}
 
 	class TestInterface : InterfaceGen
 	{
-		string args_type;
-
 		public TestInterface (string argsType, string javaName) : base (new TestBaseSupport (javaName))
 		{
-			args_type = argsType;
+			ArgsType = argsType;
 		}
-
-		public override string ArgsType => args_type;
 	}
 
 	static class SupportTypeBuilder

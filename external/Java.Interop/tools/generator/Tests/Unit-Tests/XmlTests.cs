@@ -1,4 +1,4 @@
-﻿using MonoDroid.Generation;
+using MonoDroid.Generation;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +52,7 @@ namespace generatortests
 			options = new CodeGenerationOptions ();
 			var javaLang = xml.Element ("api").Element ("package");
 			foreach (var type in javaLang.Elements("class")) {
-				var @class = new XmlClassGen (javaLang, type);
+				var @class = XmlApiImporter.CreateClass (javaLang, type);
 				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 				options.SymbolTable.AddType (@class);
 			}
@@ -64,7 +64,7 @@ namespace generatortests
 		public void Class ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element);
 			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 
 			Assert.AreEqual ("public", @class.Visibility);
@@ -81,8 +81,8 @@ namespace generatortests
 		public void Method ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
-			var method = new XmlMethod (@class, element.Element ("method"));
+			var @class = XmlApiImporter.CreateClass (package, element);
+			var method = XmlApiImporter.CreateMethod (@class, element.Element ("method"));
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 
 			Assert.AreEqual ("public", method.Visibility);
@@ -101,10 +101,10 @@ namespace generatortests
 		public void Method_Matches_True ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element);
 			var unknownTypes = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
-			var methodA = new XmlMethod (@class, unknownTypes);
-			var methodB = new XmlMethod (@class, unknownTypes);
+			var methodA = XmlApiImporter.CreateMethod (@class, unknownTypes);
+			var methodB = XmlApiImporter.CreateMethod (@class, unknownTypes);
 			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
 		}
 
@@ -112,12 +112,12 @@ namespace generatortests
 		public void Method_Matches_False ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element);
 			var unknownTypesA = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
 			var unknownTypesB = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypesReturn").First ();
 			unknownTypesB.Attribute ("name").Value = "unknownTypes";
-			var methodA = new XmlMethod (@class, unknownTypesA);
-			var methodB = new XmlMethod (@class, unknownTypesB);
+			var methodA = XmlApiImporter.CreateMethod (@class, unknownTypesA);
+			var methodB = XmlApiImporter.CreateMethod (@class, unknownTypesB);
 			//Everything the same besides return type
 			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
@@ -126,8 +126,8 @@ namespace generatortests
 		public void MethodWithParameters ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
-			var method = new XmlMethod (@class, element.Elements ("method").Where (e => e.Attribute ("name").Value == "barWithParams").First ());
+			var @class = XmlApiImporter.CreateClass (package, element);
+			var method = XmlApiImporter.CreateMethod (@class, element.Elements ("method").Where (e => e.Attribute ("name").Value == "barWithParams").First ());
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
 			Assert.AreEqual ("java.lang.String", method.Return);
@@ -156,8 +156,8 @@ namespace generatortests
 		public void Ctor ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
-			var ctor = new XmlCtor (@class, element.Element ("constructor"));
+			var @class = XmlApiImporter.CreateClass (package, element);
+			var ctor = XmlApiImporter.CreateCtor (@class, element.Element ("constructor"));
 			Assert.IsTrue (ctor.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "ctor.Validate failed!");
 
 			Assert.AreEqual ("public", ctor.Visibility);
@@ -170,8 +170,8 @@ namespace generatortests
 		public void Field ()
 		{
 			var element = package.Element ("class");
-			var @class = new XmlClassGen (package, element);
-			var field = new XmlField (element.Element ("field"));
+			var @class = XmlApiImporter.CreateClass (package, element);
+			var field = XmlApiImporter.CreateField (element.Element ("field"));
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
 			Assert.AreEqual ("Value", field.Name);
@@ -186,7 +186,7 @@ namespace generatortests
 		public void Interface ()
 		{
 			var element = package.Element ("interface");
-			var @interface = new XmlInterfaceGen (package, element);
+			var @interface = XmlApiImporter.CreateInterface (package, element);
 			Assert.IsTrue (@interface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "interface.Validate failed!");
 
 			Assert.AreEqual ("public", @interface.Visibility);

@@ -126,7 +126,7 @@ namespace MonoDroid.Generation
 
 			bool requireNew = @class.InheritsObject;
 			if (!requireNew) {
-				for (var bg = @class.BaseGen; bg != null && bg is XmlClassGen; bg = bg.BaseGen) {
+				for (var bg = @class.BaseGen; bg != null && bg is ClassGen classGen && classGen.FromXml; bg = bg.BaseGen) {
 					if (bg.InheritsObject) {
 						requireNew = true;
 						break;
@@ -367,7 +367,7 @@ namespace MonoDroid.Generation
 			if (constructor.Annotation != null)
 				writer.WriteLine ("{0}{1}", indent, constructor.Annotation);
 
-			writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt));
+			writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, constructor.GetSignature (opt));
 			writer.WriteLine ("{0}\t: {1} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)", indent, useBase ? "base" : "this");
 			writer.WriteLine ("{0}{{", indent);
 			WriteConstructorBody (constructor, indent + "\t", call_cleanup);
@@ -375,7 +375,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			if (gen_string_overload) {
 				writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, ".ctor", jni_sig, String.Empty, constructor.AdditionalAttributeString ());
-				writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, GenBase.GetSignature (constructor, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+				writer.WriteLine ("{0}{1} unsafe {2} ({3})", indent, constructor.Visibility, constructor.Name, constructor.GetSignature (opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 				writer.WriteLine ("{0}\t: {1} (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)", indent, useBase ? "base" : "this");
 				writer.WriteLine ("{0}{{", indent);
 				WriteConstructorBody (constructor, indent + "\t", call_cleanup);
@@ -582,7 +582,7 @@ namespace MonoDroid.Generation
 					writer.WriteLine ();
 				}
 			} else {
-				writer.WriteLine ("{0}public delegate {1} {2} ({3});", indent, opt.GetOutputName (m.RetVal.FullName), @interface.GetEventDelegateName (m), GenBase.GetSignature (m, opt));
+				writer.WriteLine ("{0}public delegate {1} {2} ({3});", indent, opt.GetOutputName (m.RetVal.FullName), @interface.GetEventDelegateName (m), m.GetSignature (opt));
 				writer.WriteLine ();
 			}
 		}
@@ -645,7 +645,7 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("#pragma warning restore 0649");
 			}
 			writer.WriteLine ();
-			writer.WriteLine ("{0}\tpublic {1} {2} ({3})", indent, m.RetVal.FullName, m.Name, GenBase.GetSignature (m, opt));
+			writer.WriteLine ("{0}\tpublic {1} {2} ({3})", indent, m.RetVal.FullName, m.Name, m.GetSignature (opt));
 			writer.WriteLine ("{0}\t{{", indent);
 			if (m.EventName == string.Empty) {
 				// generate nothing
@@ -1047,7 +1047,7 @@ namespace MonoDroid.Generation
 		{
 			//writer.WriteLine ("// explicitly implemented method from " + iface.FullName);
 			WriteMethodCustomAttributes (method, indent);
-			writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (iface.FullName), method.Name, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (iface.FullName), method.Name, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\treturn {1} ({2});", indent, method.Name, method.Parameters.GetCall (opt));
 			writer.WriteLine ("{0}}}", indent);
@@ -1059,7 +1059,7 @@ namespace MonoDroid.Generation
 			//writer.WriteLine ("\t\t// explicitly implemented invoker method from " + iface.FullName);
 			WriteMethodIdField (method, indent);
 			writer.WriteLine ("{0}unsafe {1} {2}.{3} ({4})",
-				indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (iface.FullName), method.Name, GenBase.GetSignature (method, opt));
+				indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (iface.FullName), method.Name, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodBody (method, indent + "\t");
 			writer.WriteLine ("{0}}}", indent);
@@ -1070,7 +1070,7 @@ namespace MonoDroid.Generation
 		{
 			if (method.RetVal.IsGeneric && gen != null) {
 				WriteMethodCustomAttributes (method, indent);
-				writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (gen.FullName), method.Name, GenBase.GetSignature (method, opt));
+				writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (gen.FullName), method.Name, method.GetSignature (opt));
 				writer.WriteLine ("{0}{{", indent);
 				writer.WriteLine ("{0}\tthrow new NotImplementedException ();", indent);
 				writer.WriteLine ("{0}}}", indent);
@@ -1089,7 +1089,7 @@ namespace MonoDroid.Generation
 					method.Visibility,
 					opt.GetOutputName (method.RetVal.FullName),
 					name,
-					GenBase.GetSignature (method, opt));
+					method.GetSignature (opt));
 				writer.WriteLine ();
 
 				if (gen_as_formatted || method.Parameters.HasCharSequence)
@@ -1111,13 +1111,13 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("{0}[global::Java.Interop.JavaInterfaceDefaultMethod]", indent);
 			writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})]", indent, method.JavaName, method.JniSignature, method.ConnectorName, method.GetAdapterName (opt, adapter), method.AdditionalAttributeString ());
 			WriteMethodCustomAttributes (method, indent);
-			writer.WriteLine ("{0}{1} {2} ({3});", indent, opt.GetOutputName (method.RetVal.FullName), method.AdjustedName, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}{1} {2} ({3});", indent, opt.GetOutputName (method.RetVal.FullName), method.AdjustedName, method.GetSignature (opt));
 			writer.WriteLine ();
 		}
 
 		public void WriteMethodEventDelegate (Method method, string indent)
 		{
-			writer.WriteLine ("{0}public delegate {1} {2}EventHandler ({3});", indent, opt.GetOutputName (method.RetVal.FullName), method.Name, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}public delegate {1} {2}EventHandler ({3});", indent, opt.GetOutputName (method.RetVal.FullName), method.Name, method.GetSignature (opt));
 			writer.WriteLine ();
 		}
 
@@ -1126,7 +1126,7 @@ namespace MonoDroid.Generation
 		{
 			writer.WriteLine ("{0}// This method is explicitly implemented as a member of an instantiated {1}", indent, gen.FullName);
 			WriteMethodCustomAttributes (method, indent);
-			writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (gen.Gen.FullName), method.Name, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}{1} {2}.{3} ({4})", indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (gen.Gen.FullName), method.Name, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			Dictionary<string, string> mappings = new Dictionary<string, string> ();
 			for (int i = 0; i < gen.TypeParams.Length; i++)
@@ -1163,7 +1163,7 @@ namespace MonoDroid.Generation
 			WriteMethodCallback (method, indent, type, null, method.IsReturnCharSequence);
 			WriteMethodIdField (method, indent, invoker: true);
 			writer.WriteLine ("{0}public unsafe {1}{2} {3} ({4})",
-				      indent, method.IsStatic ? "static " : string.Empty, opt.GetOutputName (method.RetVal.FullName), method.AdjustedName, GenBase.GetSignature (method, opt));
+				      indent, method.IsStatic ? "static " : string.Empty, opt.GetOutputName (method.RetVal.FullName), method.AdjustedName, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodInvokerBody (method, indent + "\t");
 			writer.WriteLine ("{0}}}", indent);
@@ -1239,7 +1239,7 @@ namespace MonoDroid.Generation
 			string ret = opt.GetOutputName (method.RetVal.FullName.Replace ("Java.Lang.ICharSequence", "string"));
 			if (method.Deprecated != null)
 				writer.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, method.Deprecated.Replace ("\"", "\"\"").Trim ());
-			writer.WriteLine ("{0}{1}{2} {3} {4} ({5})", indent, method.Visibility, static_arg, ret, method.Name, GenBase.GetSignature (method, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+			writer.WriteLine ("{0}{1}{2} {3} {4} ({5})", indent, method.Visibility, static_arg, ret, method.Name, method.GetSignature (opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodStringOverloadBody (method, indent + "\t", false);
 			writer.WriteLine ("{0}}}", indent);
@@ -1255,7 +1255,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			writer.WriteLine ("{0}public static {1} {2} (this {3} self, {4})",
 				indent, ret, method.Name, selfType,
-			    GenBase.GetSignature (method, opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+			    method.GetSignature (opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodStringOverloadBody (method, indent + "\t", true);
 			writer.WriteLine ("{0}}}", indent);
@@ -1274,7 +1274,7 @@ namespace MonoDroid.Generation
 			else
 				ret = "global::System.Threading.Tasks.Task<" + opt.GetOutputName (method.RetVal.FullName) + ">";
 
-			writer.WriteLine ("{0}{1}{2} {3} {4}Async ({5})", indent, method.Visibility, static_arg, ret, method.AdjustedName, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}{1}{2} {3} {4}Async ({5})", indent, method.Visibility, static_arg, ret, method.AdjustedName, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => {1} ({2}));", indent, method.AdjustedName, method.Parameters.GetCall (opt));
 			writer.WriteLine ("{0}}}", indent);
@@ -1293,7 +1293,7 @@ namespace MonoDroid.Generation
 			else
 				ret = "global::System.Threading.Tasks.Task<" + opt.GetOutputName (method.RetVal.FullName) + ">";
 
-			writer.WriteLine ("{0}public static {1} {2}Async (this {3} self{4}{5})", indent, ret, method.AdjustedName, selfType, method.Parameters.Count > 0 ? ", " : string.Empty, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}public static {1} {2}Async (this {3} self{4}{5})", indent, ret, method.AdjustedName, selfType, method.Parameters.Count > 0 ? ", " : string.Empty, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\treturn global::System.Threading.Tasks.Task.Run (() => self.{1} ({2}));", indent, method.AdjustedName, method.Parameters.GetCall (opt));
 			writer.WriteLine ("{0}}}", indent);
@@ -1329,7 +1329,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]",
 			    indent, method.JavaName, method.JniSignature, method.IsVirtual ? method.ConnectorName : String.Empty, method.AdditionalAttributeString ());
 			WriteMethodCustomAttributes (method, indent);
-			writer.WriteLine ("{0}{1}{2}{3}{4} unsafe {5} {6} ({7})", indent, method.Visibility, static_arg, virt_ov, seal, ret, method.AdjustedName, GenBase.GetSignature (method, opt));
+			writer.WriteLine ("{0}{1}{2}{3}{4} unsafe {5} {6} ({7})", indent, method.Visibility, static_arg, virt_ov, seal, ret, method.AdjustedName, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodBody (method, indent + "\t");
 			writer.WriteLine ("{0}}}", indent);

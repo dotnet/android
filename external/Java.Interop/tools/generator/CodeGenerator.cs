@@ -267,7 +267,7 @@ namespace Xamarin.Android.Binder
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
 			}
 
-			ISymbol gb = td.IsEnum ? (ISymbol)new EnumSymbol (td.FullNameCorrected ()) : td.IsInterface ? (ISymbol)new ManagedInterfaceGen (td, opt) : new ManagedClassGen (td, opt);
+			ISymbol gb = td.IsEnum ? (ISymbol)new EnumSymbol (td.FullNameCorrected ()) : td.IsInterface ? (ISymbol)CecilApiImporter.CreateInterface (td, opt) : CecilApiImporter.CreateClass (td, opt);
 			opt.SymbolTable.AddType (gb);
 
 			foreach (var nt in td.NestedTypes)
