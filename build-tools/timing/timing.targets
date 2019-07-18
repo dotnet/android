@@ -7,9 +7,18 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
   <Target Name="LogcatTiming">
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > tmp-logcat-timing.log" />
+    <PropertyGroup>
+      <_DefaultLogcatInputFilename>tmp-logcat-timing.log</_DefaultLogcatInputFilename>
+    </PropertyGroup>
+    <Exec
+        Condition=" '$(LogcatInputFilename)' == '' "
+        Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_DefaultLogcatInputFilename)"
+    />
+    <PropertyGroup Condition=" '$(LogcatInputFilename)' == '' ">
+      <LogcatInputFilename>$(_DefaultLogcatInputFilename)</LogcatInputFilename>
+    </PropertyGroup>
     <ProcessLogcatTiming
-        InputFilename="tmp-logcat-timing.log"
+        InputFilename="$(LogcatInputFilename)"
         ApplicationPackageName="$(Package)"
         PID="$(PID)"
         ResultsFilename="tmp-timing-results.csv"
