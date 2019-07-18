@@ -12,6 +12,7 @@ using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
 using MonoDroid.Generation.Utilities;
+using System.Threading.Tasks;
 
 namespace Xamarin.Android.Binder
 {
@@ -171,9 +172,10 @@ namespace Xamarin.Android.Binder
 
 			new NamespaceMapping (gens).Generate (opt, gen_info);
 
-			foreach (IGeneratable gen in gens)
+			Parallel.ForEach (gens, gen => {
 				if (gen.IsGeneratable)
 					gen.Generate (opt, gen_info);
+			});
 
 
 			ClassGen.GenerateTypeRegistrations (opt, gen_info);
