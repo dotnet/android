@@ -22,6 +22,17 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildBasicBindingLibrary (string classParser)
 		{
+			var targets = new List<string> {
+				"_ExtractJavaDocJars",
+				"ExportJarToXml",
+				"GenerateBindings",
+				"ResolveLibraryProjects",
+				"BuildDocumentation",
+				"_ResolveLibraryProjectImports",
+				"_BuildAdditionalResourcesCache",
+				"CoreCompile",
+			};
+
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 			};
@@ -41,6 +52,11 @@ namespace Xamarin.Android.Build.Tests
 				};
 				foreach (var property in properties) {
 					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
+				}
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
 				}
 			}
 		}
