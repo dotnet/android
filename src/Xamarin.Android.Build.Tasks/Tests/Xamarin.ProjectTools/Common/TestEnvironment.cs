@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.ProjectTools
 {
@@ -51,12 +53,40 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public static string MonoAndroidToolsDirectory {
+		public static readonly string MacOSInstallationRoot = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
+
+		static string visualStudioDirectory;
+		public static string GetVisualStudioDirectory ()
+		{
+			//We should cache and reuse this value, so we don't run vswhere.exe so much
+			if (!string.IsNullOrEmpty (visualStudioDirectory))
+				return visualStudioDirectory;
+
+			var instance = MSBuildLocator.QueryLatest ();
+			return visualStudioDirectory = instance.VisualStudioRootPath;
+		}
+
+		public static string MonoAndroidFrameworkDirectory {
 			get {
-				return IsWindows ? @"$(MSBuildExtensionsPath)\Xamarin\Android" : "/Library/Frameworks/Mono.framework/External/xbuild/Xamarin/Android";
+				if (IsWindows) {
+					string visualStudioDirectory = GetVisualStudioDirectory ();
+					return Path.Combine (visualStudioDirectory, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid");
+				} else {
+					return Path.Combine (MacOSInstallationRoot, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
+				}
 			}
 		}
 
+		public static string MonoAndroidToolsDirectory {
+			get {
+				if (IsWindows) {
+					string visualStudioDirectory = GetVisualStudioDirectory ();
+					return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
+				} else {
+					return Path.Combine (MacOSInstallationRoot, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				}
+			}
+		}
 	}
 }
 

@@ -47,18 +47,6 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
-		static string visualStudioDirectory;
-
-		string GetVisualStudioDirectory ()
-		{
-			//We should cache and reuse this value, so we don't run vswhere.exe so much
-			if (!string.IsNullOrEmpty (visualStudioDirectory))
-				return visualStudioDirectory;
-
-			var instance = MSBuildLocator.QueryLatest ();
-			return visualStudioDirectory = instance.VisualStudioRootPath;
-		}
-
 		public string XABuildExe {
 			get {
 				RunningMSBuild = true;
@@ -119,7 +107,7 @@ namespace Xamarin.ProjectTools
 					if (Directory.Exists (Path.Combine (outdir, "lib")) && File.Exists (Path.Combine (outdir, libmonodroidPath)))
 						return Path.Combine (outdir, "lib", "xamarin.android");
 
-					var visualStudioDirectory = GetVisualStudioDirectory ();
+					var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
 					if (!string.IsNullOrEmpty (visualStudioDirectory))
 						return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
 
@@ -139,7 +127,7 @@ namespace Xamarin.ProjectTools
 	
 					return string.Empty;
 				}
-				var visualStudioDirectory = GetVisualStudioDirectory ();
+				var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
 				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
 					path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
 					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
@@ -437,7 +425,7 @@ namespace Xamarin.ProjectTools
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
-					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
+					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 15, 0).TotalMilliseconds);
 					if (psi.RedirectStandardOutput)
 						stdout.WaitOne ();
 					if (psi.RedirectStandardError)
