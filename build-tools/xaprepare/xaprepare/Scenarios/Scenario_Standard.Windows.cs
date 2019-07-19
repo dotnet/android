@@ -8,8 +8,6 @@ namespace Xamarin.Android.Prepare
 		{
 			if (beforeBundle) {
 				Steps.Add (new Step_InstallAnt ());
-			} else {
-				Steps.Add (new Step_CopyLibZip ());
 			}
 		}
 	}

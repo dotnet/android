@@ -604,21 +604,9 @@ namespace Xamarin.Android.Prepare
 		};
 
 		static readonly List<BundleItem> UnixBundleItems = new List<BundleItem> {
-			new BundleItem (
-				sourcePath: Path.Combine (Configurables.Paths.InstallMSBuildDir, "libzip.dll"),
-				shouldInclude: (Context ctx) => ctx.WindowsJitAbisEnabled
-			),
-
-			new BundleItem (
-				sourcePath: Path.Combine (Configurables.Paths.InstallMSBuildDir, "x64", "libzip.dll"),
-				shouldInclude: (Context ctx) => ctx.WindowsJitAbisEnabled
-			),
 		};
 
 		static readonly List<BundleItem> MacOSBundleItems = new List<BundleItem> {
-			new BundleItem (
-				sourcePath: Path.Combine (Configurables.Paths.InstallMSBuildDir, "libzip.5.0.dylib")
-			),
 		};
 
 		public List<BundleItem> BundleItems {

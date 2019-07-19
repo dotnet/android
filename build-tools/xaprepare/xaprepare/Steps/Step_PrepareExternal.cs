@@ -24,18 +24,9 @@ namespace Xamarin.Android.Prepare
 			}
 
 			var msbuild = new MSBuildRunner (context);
-			string slnPath = Path.Combine (Configurables.Paths.ExternalDir, "LibZipSharp", "libZipSharp.sln");
-			bool result = await msbuild.Run (
-				projectPath: slnPath,
-				logTag: "libzipsharp-restore",
-				arguments: new List <string> {
-				   "/t:Restore"
-			    },
-				binlogName: "prepare-libzipsharp-restore"
-			);
 
-			slnPath = Path.Combine (Configurables.Paths.ExternalDir, "debugger-libs", "debugger-libs.sln");
-			result = await msbuild.Run (
+			string slnPath = Path.Combine (Configurables.Paths.ExternalDir, "debugger-libs", "debugger-libs.sln");
+			bool result = await msbuild.Run (
 				projectPath: slnPath,
 				logTag: "debugger-libs-restore",
 				arguments: new List <string> {

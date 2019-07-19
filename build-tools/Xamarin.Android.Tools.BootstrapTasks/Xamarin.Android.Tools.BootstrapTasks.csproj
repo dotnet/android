@@ -7,6 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
+    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
@@ -34,6 +35,12 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Mono.Posix.NETStandard">
+      <HintPath>..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
+    </Reference>
+    <Reference Include="libZipSharp">
+      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.2\lib\net45\libZipSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -70,7 +77,10 @@
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\scripts\libzip-references.projitems" />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="result-packaging.targets" />
+  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets')" />
 </Project>

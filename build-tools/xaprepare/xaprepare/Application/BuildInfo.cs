@@ -23,8 +23,6 @@ namespace Xamarin.Android.Prepare
 		public string NDKMinimumApiAvailable { get; private set; } = String.Empty;
 
 		public string VersionHash            { get; private set; } = String.Empty;
-		public string LibZipHash             { get; private set; } = String.Empty;
-		public string FullLibZipHash         { get; private set; } = String.Empty;
 		public string MonoHash               { get; private set; } = String.Empty;
 		public string FullMonoHash           { get; private set; } = String.Empty;
 
@@ -99,10 +97,6 @@ namespace Xamarin.Android.Prepare
 		void DetermineBundleHashes (Context context)
 		{
 			GitRunner git = CreateGitRunner (context);
-
-			Log.StatusLine ($"  {context.Characters.Bullet} LibZip commit hash", ConsoleColor.Gray);
-			FullLibZipHash = git.GetTopCommitHash (context.Properties.GetRequiredValue (KnownProperties.LibZipSourceFullPath), shortHash: false);
-			LibZipHash = EnsureHash ("LibZip", Utilities.ShortenGitHash (FullLibZipHash));
 
 			Log.StatusLine ($"  {context.Characters.Bullet} Mono commit hash", ConsoleColor.Gray);
 			List<ExternalGitDependency> externalDependencies = ExternalGitDependency.GetDependencies (context, Configurables.Paths.ExternalGitDepsFilePath, quiet: true);
