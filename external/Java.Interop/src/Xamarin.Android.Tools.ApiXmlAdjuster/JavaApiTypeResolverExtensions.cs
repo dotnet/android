@@ -37,9 +37,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public static JavaType FindNonGenericType (this JavaApi api, string name)
 		{
-			var ret = api.Packages
+			var ret = FindPackages (api, name)
 				.SelectMany (p => p.Types)
-				.FirstOrDefault (t => name.StartsWith (t.Parent.Name, StringComparison.Ordinal) && name == t.Parent.Name + '.' + t.Name);
+				.FirstOrDefault (t => name == t.Parent.Name + '.' + t.Name);
 			if (ret == null)
 				ret = ManagedType.DummyManagedPackages
 				                 .SelectMany (p => p.Types)
@@ -48,7 +48,24 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				throw new JavaTypeResolutionException (string.Format ("Type '{0}' was not found.", name));
 			return ret;
 		}
-		
+
+		static IEnumerable<JavaPackage> FindPackages (JavaApi api, string name)
+		{
+			// Given a type name like "java.lang.Object", return packages that could
+			// possibly contain the type so we don't search all packages, ie:
+			// - java.lang
+			// - java
+			var package_names = new List<string> ();
+			int index;
+
+			while ((index = name.LastIndexOf ('.')) >= 0) {
+				name = name.Substring (0, index);
+				package_names.Add (name);
+			}
+
+			return api.Packages.Where (p => package_names.Contains (p.Name, StringComparer.Ordinal)).ToList ();
+		}
+
 		public static void Resolve (this JavaApi api)
 		{
 			while (true) {
