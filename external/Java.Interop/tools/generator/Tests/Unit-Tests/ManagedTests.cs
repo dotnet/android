@@ -2,6 +2,7 @@ using Android.Runtime;
 using Mono.Cecil;
 using MonoDroid.Generation;
 using NUnit.Framework;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -40,6 +41,27 @@ namespace Com.Mypackage
 
 	[Register ("com/mypackage/service")]
 	public interface IService { }
+}
+
+namespace GenericTestClasses
+{
+	public class MyCollection<T> : List<T>
+	{
+		[Register ("mycollection", "()V", "")]
+		public MyCollection (List<T> p0, List<string> p1)
+		{
+		}
+
+		public List<T> field;
+
+		public Dictionary<string, T> field2;
+
+		[Register ("dostuff", "()V", "")]
+		public Dictionary<T, List<string>> DoStuff (IEnumerable<KeyValuePair<T, List<List<T>>>> p)
+		{
+			return new Dictionary<T, List<string>> ();
+		}
+	}
 }
 
 namespace generatortests
@@ -205,6 +227,28 @@ namespace generatortests
 			Assert.AreEqual ("IService", @interface.Name);
 			Assert.AreEqual ("com.mypackage.service", @interface.JavaName);
 			Assert.AreEqual ("Lcom/mypackage/service;", @interface.JniName);
+		}
+
+		[Test]
+		public void StripArity ()
+		{
+			var @class = CecilApiImporter.CreateClass (module.GetType ("GenericTestClasses.MyCollection`1"), options);
+
+			// Class (Leave Arity on types)
+			Assert.AreEqual ("GenericTestClasses.MyCollection`1", @class.FullName);
+
+			// Constructor
+			Assert.AreEqual ("System.Collections.Generic.List<T>", @class.Ctors [0].Parameters [0].RawNativeType);
+			Assert.AreEqual ("System.Collections.Generic.List<System.String>", @class.Ctors [0].Parameters [1].RawNativeType);
+
+			// Field
+			Assert.AreEqual ("System.Collections.Generic.List<T>", @class.Fields [0].TypeName);
+			Assert.AreEqual ("System.Collections.Generic.Dictionary<System.String,T>", @class.Fields [1].TypeName);
+
+			// Method
+			Assert.AreEqual ("System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<T,System.Collections.Generic.List<System.Collections.Generic.List<T>>>>", @class.Methods [0].Parameters [0].RawNativeType);
+			Assert.AreEqual ("System.Collections.Generic.Dictionary<T,System.Collections.Generic.List<System.String>>", @class.Methods [0].ReturnType);
+			Assert.AreEqual ("System.Collections.Generic.Dictionary<T,System.Collections.Generic.List<System.String>>", @class.Methods [0].ManagedReturn);
 		}
 	}
 }

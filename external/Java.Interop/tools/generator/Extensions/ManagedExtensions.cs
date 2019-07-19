@@ -45,6 +45,26 @@ namespace MonoDroid.Generation
 				yield return CecilApiImporter.CreateParameter (p, type, rawtype);
 			}
 		}
+
+		public static string StripArity (this string type)
+		{
+			if (string.IsNullOrWhiteSpace (type))
+				return type;
+
+			int tick_index;
+
+			// Need to loop for things like List`1<List`1<string>>
+			while ((tick_index = type.IndexOf ('`')) >= 0) {
+				var less_than_index = type.IndexOf ('<', tick_index);
+
+				if (less_than_index == -1)
+					return type;
+
+				type = type.Substring (0, tick_index) + type.Substring (less_than_index);
+			}
+
+			return type;
+		}
 	}
 #endif
 }

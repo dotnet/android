@@ -93,7 +93,7 @@ namespace MonoDroid.Generation
 				IsStatic = f.IsStatic,
 				JavaName = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value).Replace ('/', '.') : f.Name,
 				Name = f.Name,
-				TypeName = f.FieldType.FullNameCorrected (),
+				TypeName = f.FieldType.FullNameCorrected ().StripArity (),
 				Value = f.Constant == null ? null : f.FieldType.FullName == "System.String" ? '"' + f.Constant.ToString () + '"' : f.Constant.ToString (),
 				Visibility = f.IsPublic ? "public" : f.IsFamilyOrAssembly ? "protected internal" : f.IsFamily ? "protected" : f.IsAssembly ? "internal" : "private"
 			};
@@ -181,8 +181,8 @@ namespace MonoDroid.Generation
 				IsStatic = m.IsStatic,
 				IsVirtual = m.IsVirtual,
 				JavaName = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value) : m.Name,
-				ManagedReturn = m.ReturnType.FullNameCorrected (),
-				Return = m.ReturnType.FullNameCorrected (),
+				ManagedReturn = m.ReturnType.FullNameCorrected ().StripArity (),
+				Return = m.ReturnType.FullNameCorrected ().StripArity (),
 				Visibility = m.Visibility ()
 			};
 
@@ -211,7 +211,7 @@ namespace MonoDroid.Generation
 			// FIXME: safe to use CLR type name? assuming yes as we often use it in metadatamap.
 			// FIXME: IsSender?
 			var isEnumType = GetGeneratedEnumAttribute (p.CustomAttributes) != null;;
-			return new Parameter (SymbolTable.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected (), null, isEnumType, rawtype);
+			return new Parameter (SymbolTable.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected ().StripArity (), null, isEnumType, rawtype);
 		}
 
 		public static Parameter CreateParameter (string managedType, string javaType)
