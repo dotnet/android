@@ -53,6 +53,7 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidNdkDirectory = androidNdkDirectory,
 				AndroidAotMode = "normal",
 				AndroidApiLevel = "28",
+				EnableLLVM = true,
 				ResolvedAssemblies = new ITaskItem [0],
 				SupportedAbis = new [] { "armeabi-v7a" },
 				AotOutputDirectory = path,
