@@ -77,6 +77,21 @@ namespace Xamarin.Android.Binder
 			foreach (var reference in references) {
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (reference));
 			}
+
+			// Figure out if this is class-parse
+			string apiXmlFile = filename;
+			string apiSourceAttr = null;
+
+			using (var xr = XmlReader.Create (filename)) {
+				xr.MoveToContent ();
+				apiSourceAttr = xr.GetAttribute ("api-source");
+			}
+
+			// We don't use shallow referenced types with class-parse because the Adjuster process
+			// enumerates every ctor/method/property/field to build its model, so we will need
+			// every type to be fully populated.
+			opt.UseShallowReferencedTypes = apiSourceAttr != "class-parse";
+
 			foreach (var reference in references) {
 				try {
 					Report.Verbose (0, "resolving assembly {0}.", reference);
@@ -100,16 +115,9 @@ namespace Xamarin.Android.Binder
 			}
 
 			// For class-parse API description, transform it to jar2xml style.
-			string apiXmlFile = filename;
-
-			string apiSourceAttr = null;
-			using (var xr = XmlReader.Create (filename)) {
-				xr.MoveToContent ();
-				apiSourceAttr = xr.GetAttribute ("api-source");
-			}
 			if (apiSourceAttr == "class-parse") {
 				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				new Adjuster ().Process (filename, opt, opt.SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
+				new Adjuster ().Process (filename, opt, opt.SymbolTable.AllRegisteredSymbols (opt).OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
 			}
 			if (only_xml_adjuster)
 				return;

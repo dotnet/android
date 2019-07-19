@@ -121,6 +121,7 @@
     <Compile Include="Extensions\JavaApiDllLoaderExtensions.cs" />
     <Compile Include="ManagedTypeFinderGeneratorTypeSystem.cs" />
     <Compile Include="Extensions\GenBaseExtensions.cs" />
+    <Compile Include="Utilities\TypeNameUtilities.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

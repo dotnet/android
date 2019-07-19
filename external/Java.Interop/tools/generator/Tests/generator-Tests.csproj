@@ -78,6 +78,7 @@
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
     <Compile Include="Unit-Tests\TestExtensions.cs" />
+    <Compile Include="Unit-Tests\TypeNameUtilitiesTests.cs" />
     <Compile Include="Unit-Tests\XmlTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -111,7 +111,7 @@ namespace MonoDroid.Generation
 			if (elem.Attribute ("managedName") != null)
 				field.Name = elem.XGetAttribute ("managedName");
 			else
-				field.Name = SymbolTable.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLower ().ToUpper () != field.JavaName ? field.JavaName : field.JavaName.ToLower ());
+				field.Name = TypeNameUtilities.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLower ().ToUpper () != field.JavaName ? field.JavaName : field.JavaName.ToLower ());
 
 			return field;
 		}
@@ -264,7 +264,7 @@ namespace MonoDroid.Generation
 		public static Parameter CreateParameter (XElement elem)
 		{
 			string managedName = elem.XGetAttribute ("managedName");
-			string name = !string.IsNullOrEmpty (managedName) ? managedName : SymbolTable.MangleName (elem.XGetAttribute ("name"));
+			string name = !string.IsNullOrEmpty (managedName) ? managedName : TypeNameUtilities.MangleName (elem.XGetAttribute ("name"));
 			string java_type = elem.XGetAttribute ("type");
 			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
 			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;

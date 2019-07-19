@@ -194,14 +194,14 @@ namespace MonoDroid.Generation
 		public string GetGenericJavaObjectTypeOverride ()
 		{
 			int idx = FullName.IndexOf ('<');
-			return SymbolTable.GetGenericJavaObjectTypeOverride (
+			return TypeNameUtilities.GetGenericJavaObjectTypeOverride (
 				idx < 0 ? FullName : FullName.Substring (0, idx),
 				idx < 0 ? null : FullName.Substring (idx + 1).TrimEnd ('>'));
 		}
 
 		public string ToInteroperableJavaObject (string var_name)
 		{
-			return GetGenericJavaObjectTypeOverride () != null ? SymbolTable.GetNativeName (var_name) : var_name;
+			return GetGenericJavaObjectTypeOverride () != null ? TypeNameUtilities.GetNativeName (var_name) : var_name;
 		}
 		#endregion
 	}

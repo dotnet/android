@@ -83,7 +83,7 @@ namespace MonoDroid.Generation {
 		{
 			return new string[] {
 				string.Format ("IntPtr {0} = global::Android.Runtime.{1}Adapter.ToLocalJniHandle ({2});",
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 						base_name,
 						opt.GetSafeIdentifier (var_name)),
 			};
@@ -91,14 +91,14 @@ namespace MonoDroid.Generation {
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			return opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name));
+			return opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 		}
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[]{
 				string.Format ("JNIEnv.DeleteLocalRef ({0});",
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name))),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),
 			};
 		}
 
@@ -108,7 +108,7 @@ namespace MonoDroid.Generation {
 				string.Format ("System.IO.Stream {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
 						var_name,
 						base_name,
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 						owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer"),
 			};
 		}

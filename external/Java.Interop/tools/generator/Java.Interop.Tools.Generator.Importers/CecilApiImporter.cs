@@ -12,7 +12,8 @@ namespace MonoDroid.Generation
 		{
 			var klass = new ClassGen (CreateGenBaseSupport (t, opt)) {
 				IsAbstract = t.IsAbstract,
-				IsFinal = t.IsSealed
+				IsFinal = t.IsSealed,
+				IsShallow = opt.UseShallowReferencedTypes,
 			};
 
 			foreach (var ifaceImpl in t.Interfaces) {
@@ -25,22 +26,29 @@ namespace MonoDroid.Generation
 				klass.AddImplementedInterface (iface.FullNameCorrected ());
 			}
 
-			var implements_charsequence = t.Interfaces.Any (it => it.InterfaceType.FullName == "Java.Lang.CharSequence");
+			Action populate = () => {
+				var implements_charsequence = t.Interfaces.Any (it => it.InterfaceType.FullName == "Java.Lang.CharSequence");
 
-			foreach (var m in t.Methods) {
-				if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
-					continue;
-				if (implements_charsequence && t.Methods.Any (mm => mm.Name == m.Name + "Formatted"))
-					continue;
-				if (m.IsConstructor)
-					klass.Ctors.Add (CreateCtor (klass, m));
-				else
-					klass.AddMethod (CreateMethod (klass, m));
-			}
+				foreach (var m in t.Methods) {
+					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
+						continue;
+					if (implements_charsequence && t.Methods.Any (mm => mm.Name == m.Name + "Formatted"))
+						continue;
+					if (m.IsConstructor)
+						klass.Ctors.Add (CreateCtor (klass, m));
+					else
+						klass.AddMethod (CreateMethod (klass, m));
+				}
 
-			foreach (var f in t.Fields)
-				if (!f.IsPrivate && GetRegisterAttribute (f.CustomAttributes) == null)
-					klass.AddField (CreateField (f));
+				foreach (var f in t.Fields)
+					if (!f.IsPrivate && GetRegisterAttribute (f.CustomAttributes) == null)
+						klass.AddField (CreateField (f));
+			};
+
+			if (klass.IsShallow)
+				klass.PopulateAction = populate;
+			else
+				populate ();
 
 			TypeReference nominal_base_type;
 
@@ -125,7 +133,7 @@ namespace MonoDroid.Generation
 				Visibility = t.IsPublic || t.IsNestedPublic ? "public" : "protected internal"
 			};
 
-			support.JavaSimpleName = SymbolTable.FilterPrimitiveFullName (t.FullNameCorrected ());
+			support.JavaSimpleName = TypeNameUtilities.FilterPrimitiveFullName (t.FullNameCorrected ());
 
 			if (support.JavaSimpleName == null) {
 				support.JavaSimpleName = idx < 0 ? jn : jn.Substring (idx + 1);
@@ -145,19 +153,26 @@ namespace MonoDroid.Generation
 
 		public static InterfaceGen CreateInterface (TypeDefinition t, CodeGenerationOptions opt)
 		{
-			var reg_attr = GetRegisterAttribute (t.CustomAttributes);
-
-			var iface = new InterfaceGen (CreateGenBaseSupport (t, opt));
+			var iface = new InterfaceGen (CreateGenBaseSupport (t, opt)) {
+				IsShallow = opt.UseShallowReferencedTypes,
+			};
 
 			foreach (var ifaceImpl in t.Interfaces)
 				iface.AddImplementedInterface (ifaceImpl.InterfaceType.FullNameCorrected ());
 
-			foreach (var m in t.Methods) {
-				if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
-					continue;
+			Action populate = () => {
+				foreach (var m in t.Methods) {
+					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
+						continue;
 
-				iface.AddMethod (CecilApiImporter.CreateMethod (iface, m));
-			}
+					iface.AddMethod (CreateMethod (iface, m));
+				}
+			};
+
+			if (iface.IsShallow)
+				iface.PopulateAction = populate;
+			else
+				populate ();
 
 			iface.MayHaveManagedGenericArguments = !iface.IsAcw;
 
@@ -210,8 +225,8 @@ namespace MonoDroid.Generation
 		{
 			// FIXME: safe to use CLR type name? assuming yes as we often use it in metadatamap.
 			// FIXME: IsSender?
-			var isEnumType = GetGeneratedEnumAttribute (p.CustomAttributes) != null;;
-			return new Parameter (SymbolTable.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected ().StripArity (), null, isEnumType, rawtype);
+			var isEnumType = GetGeneratedEnumAttribute (p.CustomAttributes) != null;
+			return new Parameter (TypeNameUtilities.MangleName (p.Name), jnitype ?? p.ParameterType.FullNameCorrected ().StripArity (), null, isEnumType, rawtype);
 		}
 
 		public static Parameter CreateParameter (string managedType, string javaType)

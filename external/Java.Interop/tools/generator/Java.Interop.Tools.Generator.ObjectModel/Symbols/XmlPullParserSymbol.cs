@@ -68,7 +68,7 @@ namespace MonoDroid.Generation {
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			return opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name));
+			return opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 		}
 
 		public string[] PostCallback (CodeGenerationOptions opt, string var_name)
@@ -79,18 +79,18 @@ namespace MonoDroid.Generation {
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string []{
-				string.Format ("JNIEnv.DeleteLocalRef ({0});", opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name))),
+				string.Format ("JNIEnv.DeleteLocalRef ({0});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),
 			};
 		}
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return new string[] { String.Format ("System.Xml.XmlReader {0} = global::Android.Runtime.XmlPullParserReader.FromJniHandle ({1}, JniHandleOwnership.DoNotTransfer);", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name))) };
+			return new string[] { String.Format ("System.Xml.XmlReader {0} = global::Android.Runtime.XmlPullParserReader.FromJniHandle ({1}, JniHandleOwnership.DoNotTransfer);", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))) };
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			return new string[] { String.Format ("IntPtr {0} = global::Android.Runtime.XmlReaderPullParser.ToLocalJniHandle ({1});", opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
+			return new string[] { String.Format ("IntPtr {0} = global::Android.Runtime.XmlReaderPullParser.ToLocalJniHandle ({1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
 		}
 
 		public bool NeedsPrep { get { return true; } }

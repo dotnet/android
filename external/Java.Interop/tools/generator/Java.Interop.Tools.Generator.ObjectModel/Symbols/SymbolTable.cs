@@ -7,7 +7,12 @@ namespace MonoDroid.Generation {
 
 	public class SymbolTable {
 
+		// The symbols dictionary may contain shallow types (types that have not populated Ctors/Methods/Fields).
+		// If you make any changes to the SymbolTable class that accesses the symbols you need to keep
+		// that in mind.  Also if you add any new public methods that expose symbols from the table you must
+		// EnsurePopulated them before letting them leave this class.
 		Dictionary<string, List<ISymbol>> symbols = new Dictionary<string, List<ISymbol>> ();
+
 		ISymbol char_seq;
 		ISymbol fileinstream_sym;
 		ISymbol fileoutstream_sym;
@@ -30,8 +35,11 @@ namespace MonoDroid.Generation {
 			"void",
 		};
 
-		public IEnumerable<ISymbol> AllRegisteredSymbols ()
+		public IEnumerable<ISymbol> AllRegisteredSymbols (CodeGenerationOptions options)
 		{
+			if (options.UseShallowReferencedTypes)
+				throw new InvalidOperationException ("Not safe to retrieve all registered symbols when using shallow types.");
+
 			return symbols.Values.SelectMany (v => v);
 		}
 
@@ -147,35 +155,6 @@ namespace MonoDroid.Generation {
 					values.Add (symbol);
 			}
 		}
-		
-		public static string FilterPrimitiveFullName (string s)
-		{
-			switch (s) {
-			case "System.Boolean":
-				return "boolean";
-			case "System.Char":
-				return "char";
-			case "System.Byte":
-				return "byte";
-			case "System.SByte":
-				return "byte";
-			case "System.Int16":
-				return "short";
-			case "System.Int32":
-				return "int";
-			case "System.Int64":
-				return "long";
-			case "System.Single":
-				return "float";
-			case "System.Double":
-				return "double";
-			case "System.Void":
-				return "void";
-			case "System.String":
-				return "java.lang.String";
-			}
-			return null;
-		}
 
 		public ISymbol Lookup (string java_type, GenericParameterDefinitionList in_params)
 		{
@@ -191,7 +170,7 @@ namespace MonoDroid.Generation {
 				key = key.Substring (0, key.Length - 1);
 				break;
 			}
-			key = FilterPrimitiveFullName (key) ?? key;
+			key = TypeNameUtilities.FilterPrimitiveFullName (key) ?? key;
 
 			switch (key) {
 			case "android.content.res.XmlResourceParser":
@@ -263,12 +242,17 @@ namespace MonoDroid.Generation {
 			if (symbols.TryGetValue (key, out values)) {
 				sym = values [values.Count-1];
 			} else {
-				sym = AllRegisteredSymbols ().FirstOrDefault (v => v.FullName == key);
+				// Note we're potentially searching shallow types, but this is only looking at the type name
+				// Anything we find we will populate before returning to the user
+				sym = symbols.Values.SelectMany (v => v).FirstOrDefault (v => v.FullName == key);
 			}
 			ISymbol result;
 			if (sym != null) {
 				if (type_params.Length > 0) {
 					GenBase gen = sym as GenBase;
+
+					EnsurePopulated (gen);
+
 					if (gen != null && gen.IsGeneric)
 						result = new GenericSymbol (gen, type_params);
 					// In other case, it is still valid to derive from non-generic type.
@@ -284,6 +268,9 @@ namespace MonoDroid.Generation {
 			} else
 				return null;
 
+			if (result is GenBase gen_base)
+				EnsurePopulated (gen_base);
+
 			return result;
 		}
 		
@@ -298,84 +285,22 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		public static string GetNativeName (string name)
-		{
-			if (name.StartsWith ("@"))
-				return "native__" + name.Substring (1);
-			return "native_" + name;
-		}
+		static readonly object populate_lock = new object ();
 
-		public static string MangleName (string name)
+		void EnsurePopulated (GenBase gen)
 		{
-			switch (name) {
-			case "event":
-				return "e";
-			case "base":
-			case "bool":
-			case "byte":
-			case "callback":
-			case "checked":
-			case "decimal":
-			case "delegate":
-			case "fixed":
-			case "foreach":
-			case "in":
-			case "int":
-			case "interface":
-			case "internal":
-			case "is":
-			case "lock":
-			case "namespace":
-			case "new":
-			case "null":
-			case "object":
-			case "out":
-			case "override":
-			case "params":
-			case "readonly":
-			case "ref":
-			case "remove":
-			case "string":
-			case "where":
-				return "@" + name;
-			default:
-				return name;
-			}
-		}
+			if (gen == null || !gen.IsShallow)
+				return;
 
-		public static string StudlyCase (string name)
-		{
-			StringBuilder builder = new StringBuilder ();
-			bool raise = true;
-			foreach (char c in name) {
-				if (c == '_' || c == '-')
-					raise = true;
-				else if (raise) {
-					builder.Append (Char.ToUpper (c));
-					raise = false;
-				} else
-					builder.Append (c);
-			}
-			return builder.ToString ();
-		}
+			foreach (var nested in gen.NestedTypes)
+				EnsurePopulated (nested);
 
-		public static string GetGenericJavaObjectTypeOverride (string managed_name, string parms)
-		{
-			switch (managed_name) {
-			case "System.Collections.ICollection":
-				return "JavaCollection";
-			case "System.Collections.IDictionary":
-				return "JavaDictionary";
-			case "System.Collections.IList":
-				return "JavaList";
-			case "System.Collections.Generic.ICollection":
-				return "JavaCollection" + parms;
-			case "System.Collections.Generic.IList":
-				return "JavaList" + parms;
-			case "System.Collections.Generic.IDictionary":
-				return "JavaDictionary" + parms;
+			// We need to fully populate this shallow type
+			lock (populate_lock) {
+				gen.PopulateAction ();
+				gen.IsShallow = false;
+				gen.PopulateAction = null;
 			}
-			return null;
 		}
 	}
 }

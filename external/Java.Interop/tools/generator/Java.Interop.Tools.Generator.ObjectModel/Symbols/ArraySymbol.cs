@@ -91,20 +91,20 @@ namespace MonoDroid.Generation {
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			return opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name));
+			return opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 		}
 
 		public string[] PostCallback (CodeGenerationOptions opt, string var_name)
 		{
 			string[] result = new string [2];
 			result [0] = String.Format ("if ({0} != null)", opt.GetSafeIdentifier (var_name));
-			result [1] = String.Format ("\tJNIEnv.CopyArray ({0}, {1});", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)));
+			result [1] = String.Format ("\tJNIEnv.CopyArray ({0}, {1});", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)));
 			return result;
 		}
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
-			string native_name = opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name));
+			string native_name = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 			string[] result = new string [4];
 			result [0] = String.Format ("if ({0} != null) {{", var_name);
 			result [1] = String.Format ("\tJNIEnv.CopyArray ({0}, {1});", native_name, var_name);
@@ -115,12 +115,12 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return new string[] { String.Format ("{0}[] {1} = ({0}[]) JNIEnv.GetArray ({2}, JniHandleOwnership.DoNotTransfer, typeof ({3}));", opt.GetOutputName (ElementType), opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)), opt.GetOutputName (sym.FullName)) };
+			return new string[] { String.Format ("{0}[] {1} = ({0}[]) JNIEnv.GetArray ({2}, JniHandleOwnership.DoNotTransfer, typeof ({3}));", opt.GetOutputName (ElementType), opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetOutputName (sym.FullName)) };
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			return new string[] { String.Format ("IntPtr {0} = JNIEnv.NewArray ({1});", opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
+			return new string[] { String.Format ("IntPtr {0} = JNIEnv.NewArray ({1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
 		}
 
 		public bool NeedsPrep { get { return true; } }

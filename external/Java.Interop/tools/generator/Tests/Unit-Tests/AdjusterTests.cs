@@ -67,7 +67,7 @@ namespace generatortests
 				Xamarin.Android.Binder.CodeGenerator.ProcessReferencedType (type, options);
 			}
 
-			adjuster.Process (inputFile, options, options.SymbolTable.AllRegisteredSymbols ().OfType<GenBase> ().ToArray (), outputFile, (int)Log.LoggingLevel.Debug);
+			adjuster.Process (inputFile, options, options.SymbolTable.AllRegisteredSymbols (options).OfType<GenBase> ().ToArray (), outputFile, (int)Log.LoggingLevel.Debug);
 
 			FileAssert.Exists (outputFile);
 		}

@@ -99,7 +99,7 @@ namespace MonoDroid.Generation {
 				string.Format ("{0} {1} = global::Java.Lang.Object.GetObject<{0}> ({2}, {3});",
 						opt.GetOutputName (FullName),
 						var_name,
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 						owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer"),
 			};
 		}
@@ -114,20 +114,20 @@ namespace MonoDroid.Generation {
 		{
 			return new string[] {
 				string.Format ("IntPtr {0} = JNIEnv.ToLocalJniHandle ({1});",
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)),
 			};
 		}
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			return opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name));
+			return opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 		}
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[]{
 				string.Format ("JNIEnv.DeleteLocalRef ({0});",
-						opt.GetSafeIdentifier (SymbolTable.GetNativeName (var_name))),
+						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),
 			};
 		}
 

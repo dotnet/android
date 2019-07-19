@@ -112,7 +112,7 @@ namespace MonoDroid.Generation {
 			get {
 				if (Type == NativeType)
 					return Name;
-				return SymbolTable.GetNativeName (Name);
+				return TypeNameUtilities.GetNativeName (Name);
 			}
 		}
 
