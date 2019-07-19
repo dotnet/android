@@ -34,6 +34,9 @@ namespace Xamarin.Android.RuntimeTests
 				// ignore
 			};
 
+			// test https://github.com/xamarin/xamarin-android/issues/3263
+			edit_text.TextChanged += delegate { };
+
 			csharp_simple_fragment.AllowEnterTransitionOverlap = true;
 			csharp_partial_assembly.AllowEnterTransitionOverlap = true;
 			csharp_full_assembly.AllowEnterTransitionOverlap = true;
