@@ -728,6 +728,8 @@ when packaging Release applications.
     or not LLVM will be used when Ahead-of-Time compiling assemblies
     into native code.
 
+    Enabling this propery requires Android NDK to be installed.
+
     Support for this property was added in Xamarin.Android 5.1.
 
     This property is `False` by default.
