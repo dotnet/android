@@ -486,16 +486,16 @@ stages:
         mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
         $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
         $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        --result TestResult-BuildTests-$(XA.Build.Configuration).xml
+        --result TestResult-MSBuildTests-$(XA.Build.Configuration).xml
       displayName: run Xamarin.Android.Build.Tests
 
     - task: PublishTestResults@2
       displayName: publish test results
       inputs:
         testResultsFormat: NUnit
-        testResultsFiles: TestResult-BuildTests-$(XA.Build.Configuration).xml
-        testRunTitle: BuildTestsMac
-      condition: succeededOrFailed()
+        testResultsFiles: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildTestsMac
+      condition: always()
 
     - task: MSBuild@1
       displayName: package results
@@ -508,15 +508,15 @@ stages:
     - task: PublishPipelineArtifact@0
       displayName: upload artifacts
       inputs:
-        artifactName: mac-buildtask-testresults
+        artifactName: mac-msbuild-testresults
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
- # Check - "Xamarin.Android (Test MSBuild Devices Mac)"
+ # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild Devices Mac
+    displayName: MSBuild With Emulator Mac
     pool: $(XA.Build.Mac.Pool)
-    timeoutInMinutes: 180
+    timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -539,16 +539,17 @@ stages:
     - script: >
         mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
         $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        --result TestResult-DeviceBuildTests-$(XA.Build.Configuration).xml
+        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        --result TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
       displayName: run on-device Xamarin.Android.Build.Tests
 
     - task: PublishTestResults@2
       displayName: publish test results
       inputs:
         testResultsFormat: NUnit
-        testResultsFiles: TestResult-DeviceBuildTests-$(XA.Build.Configuration).xml
-        testRunTitle: DeviceBuildTestsMac
-      condition: succeededOrFailed()
+        testResultsFiles: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildDeviceTestsMac
+      condition: always()
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -571,7 +572,71 @@ stages:
     - task: PublishPipelineArtifact@0
       displayName: upload artifacts
       inputs:
-        artifactName: mac-devicebuildtask-testresults
+        artifactName: mac-msbuild-device-testresults
+        targetPath: $(Build.ArtifactStagingDirectory)
+      condition: always()
+
+# Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
+  - job: mac_msbuilddevice_tests
+    displayName: TimeZoneInfo With Emulator Mac
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/mac/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NUnitTestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: start emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+    - script: >
+        mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        --result TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
+      displayName: run on-device Xamarin.Android.Build.Tests
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
+        testRunTitle: TimeZoneInfoTestsMac
+      condition: always()
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - task: MSBuild@1
+      displayName: package results
+      inputs:
+        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+      condition: always()
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
+      inputs:
+        artifactName: mac-timezoneinfo-testresults
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
