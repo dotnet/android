@@ -577,7 +577,7 @@ stages:
       condition: always()
 
 # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
-  - job: mac_msbuilddevice_tests
+  - job: mac_timezonedevice_tests
     displayName: TimeZoneInfo With Emulator Mac
     pool: $(XA.Build.Mac.Pool)
     timeoutInMinutes: 240
