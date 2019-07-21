@@ -38,6 +38,11 @@ stages:
     - checkout: self
       submodules: recursive
 
+    - task: UseDotNet@2
+      displayName: install .NET Core 2.1.701
+      inputs:
+        version: 2.1.701
+
       # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
       # The 'prepare' step creates the bundle
     - script: |
@@ -90,6 +95,11 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+
+    - task: UseDotNet@2
+      displayName: install .NET Core 2.1.701
+      inputs:
+        version: 2.1.701
 
     - task: DownloadPipelineArtifact@1
       inputs:
