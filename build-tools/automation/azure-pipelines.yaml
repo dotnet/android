@@ -538,8 +538,8 @@ stages:
 
     - script: >
         mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
+        --where "cat == UsesDevice"
         --result TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
       displayName: run on-device Xamarin.Android.Build.Tests
 
@@ -549,6 +549,22 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
         testRunTitle: MSBuildDeviceTestsMac
+      condition: always()
+
+    - script: >
+        mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        --result TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
+      displayName: run on-device MSBuildDeviceIntegration tests
+      condition: succeededOrFailed()
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildDeviceIntegration
       condition: always()
 
     - task: MSBuild@1
@@ -605,7 +621,7 @@ stages:
         $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
         --result TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
-      displayName: run on-device Xamarin.Android.Build.Tests
+      displayName: run TimeZoneInfo tests
 
     - task: PublishTestResults@2
       displayName: publish test results

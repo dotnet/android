@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[Test, Category ("UsesDevice")]
 		public void HelloForms ([Values (false, true)] bool isRelease)
 		{
 			RunTest (nameof (HelloForms), "HelloForms.sln", Path.Combine ("HelloForms.Android", "HelloForms.Android.csproj"), "15.9", "ecb13a9", isRelease);
