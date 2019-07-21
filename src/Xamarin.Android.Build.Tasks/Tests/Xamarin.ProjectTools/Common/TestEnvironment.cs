@@ -53,6 +53,13 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public static bool IsRunningOnHostedAzureAgent {
+			get {
+				string agentNameValue = Environment.GetEnvironmentVariable ("AGENT_NAME");
+				return !string.IsNullOrEmpty(agentNameValue) && agentNameValue.ToUpper ().Contains ("HOSTED");
+			}
+		}
+
 		public static readonly string MacOSInstallationRoot = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
 
 		static string visualStudioDirectory;
