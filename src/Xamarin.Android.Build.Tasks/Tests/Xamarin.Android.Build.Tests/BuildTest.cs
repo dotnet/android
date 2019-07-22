@@ -3919,6 +3919,17 @@ public class MyWorker : Worker
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void NuGetizer3000 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.NuGet_Build_Packaging);
+			using (var b = CreateApkBuilder (Path.Combine ("temp", nameof (NuGetizer3000)))) {
+				b.Target = "GetPackageContents";
+				Assert.IsTrue (b.Build (proj), $"{b.Target} should have succeeded.");
+			}
+		}
 	}
 }
 
