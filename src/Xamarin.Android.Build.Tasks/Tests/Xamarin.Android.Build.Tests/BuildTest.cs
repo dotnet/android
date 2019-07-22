@@ -518,11 +518,16 @@ namespace UnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+
+				var ignoreFiles = new string [] {
+					"TemporaryGeneratedFile",
+					"FileListAbsolute.txt",
+				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile"));
+					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
 				Assert.AreEqual (0, files.Count (), "{0} should be Empty. Found {1}", proj.IntermediateOutputPath, string.Join (Environment.NewLine, files));
 				files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath), "*", SearchOption.AllDirectories)
-					.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile"));
+					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
 				Assert.AreEqual (0, files.Count (), "{0} should be Empty. Found {1}", proj.OutputPath, string.Join (Environment.NewLine, files));
 			}
 		}
