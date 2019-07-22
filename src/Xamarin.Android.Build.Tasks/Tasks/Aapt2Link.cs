@@ -142,24 +142,16 @@ namespace Xamarin.Android.Tasks {
 				cmd.AppendSwitchIfNotNull ("--custom-package ", PackageName.ToLowerInvariant ());
 			
 			if (AdditionalResourceArchives != null) {
-				foreach (var item in AdditionalResourceArchives) {
-					var flata = Path.Combine (WorkingDirectory, item.ItemSpec);
-					if (File.Exists (flata)) {
-						cmd.AppendSwitchIfNotNull ("-R ", flata);
-					} else {
-						Log.LogDebugMessage ("Archive does not exist: " + flata);
-					}
+				foreach (var dir in AdditionalResourceArchives) {
+					var flatArchive = dir.ItemSpec;
+					if (!File.Exists (flatArchive))
+						continue;
+					cmd.AppendSwitchIfNotNull ("-R ", flatArchive);
 				}
 			}
 
-			if (CompiledResourceFlatArchive != null) {
-				var flata = Path.Combine (WorkingDirectory, CompiledResourceFlatArchive.ItemSpec);
-				if (File.Exists (flata)) {
-					cmd.AppendSwitchIfNotNull ("-R ", flata);
-				} else {
-					Log.LogDebugMessage ("Archive does not exist: " + flata);
-				}
-			}
+			if (CompiledResourceFlatArchive != null && File.Exists (CompiledResourceFlatArchive.ItemSpec))
+				cmd.AppendSwitchIfNotNull ("-R ", CompiledResourceFlatArchive.ItemSpec);
 			
 			cmd.AppendSwitch ("--auto-add-overlay");
 
