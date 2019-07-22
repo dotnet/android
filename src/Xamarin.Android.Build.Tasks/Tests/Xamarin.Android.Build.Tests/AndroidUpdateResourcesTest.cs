@@ -520,7 +520,8 @@ namespace UnnamedProject
 		};
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
+		[Parallelizable (ParallelScope.Self)]
+		[TestCaseSource (nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -1514,6 +1515,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable (ParallelScope.Self)]
 		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();

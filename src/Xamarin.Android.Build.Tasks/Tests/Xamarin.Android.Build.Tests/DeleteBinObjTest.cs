@@ -6,7 +6,7 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[Parallelizable (ParallelScope.Fixtures)]
 	public class DeleteBinObjTest : BaseTest
 	{
 		const string BaseUrl = "https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/";

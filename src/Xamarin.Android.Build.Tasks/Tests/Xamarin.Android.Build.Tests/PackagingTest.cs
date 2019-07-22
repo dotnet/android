@@ -169,6 +169,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Parallelizable (ParallelScope.Self)]
 		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
