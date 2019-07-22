@@ -1323,7 +1323,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
 		Inputs="$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsCache);$(_AndroidLibraryProjectImportsCache);$(_AndroidLibraryImportsCache);"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
-		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_CreateAdditionalResourceCache;_ValidateAndroidPackageProperties">
+		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_AddAndroidDefines;_CreateAdditionalResourceCache;_ValidateAndroidPackageProperties">
 	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
