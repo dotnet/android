@@ -87,6 +87,10 @@
       <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
       <Name>TestRunner.NUnit</Name>
     </ProjectReference>
+    <ProjectReference Include="Java.Interop-Tests\Java.Interop-Tests.csproj">
+      <Project>{6CB00820-A66B-43E5-8785-ED456C6E9F39}</Project>
+      <Name>Java.Interop-Tests</Name>
+    </ProjectReference>
     <ProjectReference Include="Mono.Android-Test.Library\Mono.Android-Test.Library.csproj">
       <Project>{8CB5FF58-FF95-43B9-9064-9ACE9525866F}</Project>
       <Name>Mono.Android-Test.Library</Name>

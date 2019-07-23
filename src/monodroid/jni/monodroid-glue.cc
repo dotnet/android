@@ -932,7 +932,9 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
 	MonoImage *image = mono_assembly_get_image (assm);
 
-	for (uint32_t i = 0; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
+	uint32_t i = 0;
+
+	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
 	}
 
@@ -944,6 +946,13 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.Initialize!");
 		exit (FATAL_EXIT_MISSING_INIT);
 	}
+
+	MonoAssembly    *ji_assm    = utils.monodroid_load_assembly (domain, "Java.Interop");
+	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
+	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
+		lookup_bridge_info (domain, ji_image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+	}
+
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
 	 * so always make sure we have the freshest handle to the method.
 	 */

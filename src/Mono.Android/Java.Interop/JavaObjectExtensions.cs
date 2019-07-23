@@ -109,7 +109,7 @@ namespace Java.Interop {
 				return CastClass (instance, resultType);
 			}
 			else if (resultType.IsInterface) {
-				return Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
+				return (IJavaObject) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
 				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",

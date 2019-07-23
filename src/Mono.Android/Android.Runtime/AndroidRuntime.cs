@@ -36,14 +36,23 @@ namespace Android.Runtime {
 				.ToString ();
 		}
 
-		public override Exception GetExceptionForThrowable (ref JniObjectReference value, JniObjectReferenceOptions transfer)
+		public override Exception GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-			var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable>(value.Handle, JniHandleOwnership.DoNotTransfer);
-			JniObjectReference.Dispose (ref value, transfer);
-			var p = throwable as JavaProxyThrowable;
-			if (p != null)
-				return p.InnerException;
-			return throwable;
+			if (!reference.IsValid)
+				return null;
+			var peeked      = JNIEnv.AndroidValueManager.PeekPeer (reference);
+			var peekedExc   = peeked as Exception;
+			if (peekedExc == null) {
+				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				JniObjectReference.Dispose (ref reference, options);
+				return throwable;
+			}
+			JniObjectReference.Dispose (ref reference, options);
+			var unwrapped = JNIEnv.AndroidValueManager.UnboxException (peeked);
+			if (unwrapped != null) {
+				return unwrapped;
+			}
+			return peekedExc;
 		}
 
 		public override void RaisePendingException (Exception pendingException)
@@ -222,11 +231,12 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			var j = JNIEnv.GetJniName (type);
-			if (j == null)
+			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
+			if (j == IntPtr.Zero)
 				return base.GetSimpleReferences (type);
+			var s = Marshal.PtrToStringAnsi (j);
 			return base.GetSimpleReferences (type)
-				.Concat (Enumerable.Repeat (j, 1));
+				.Concat (new [] { s });
 		}
 
 		delegate Delegate GetCallbackHandler ();
@@ -318,17 +328,21 @@ namespace Android.Runtime {
 			}
 		}
 
-		public override void RegisterNativeMembers (JniType jniType, Type type, string methods)
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
 		{
-			if (FastRegisterNativeMembers (jniType, type, methods))
+			if (FastRegisterNativeMembers (nativeClass, type, methods))
 				return;
 
-			if (methods == null)
+			if (string.IsNullOrEmpty (methods)) {
+				base.RegisterNativeMembers (nativeClass, type, methods);
 				return;
+			}
 
 			string[] members = methods.Split ('\n');
-			if (members.Length == 0)
+			if (members.Length < 2) {
+				base.RegisterNativeMembers (nativeClass, type, methods);
 				return;
+			}
 
 			JniNativeMethodRegistration[] natives = new JniNativeMethodRegistration [members.Length-1];
 			for (int i = 0; i < members.Length; ++i) {
@@ -351,41 +365,344 @@ namespace Android.Runtime {
 				natives [i] = new JniNativeMethodRegistration (toks [0], toks [1], callback);
 			}
 
-			JniEnvironment.Types.RegisterNatives (jniType.PeerReference, natives, natives.Length);
+			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, natives.Length);
 		}
 	}
 
 	class AndroidValueManager : JniRuntime.JniValueManager {
+
+		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
 
 		public override void WaitForGCBridgeProcessing ()
 		{
 			JNIEnv.WaitForBridgeProcessing ();
 		}
 
+		public override IJavaPeerable CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		{
+			if (!reference.IsValid)
+				return null;
+
+			var peer        = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+			JniObjectReference.Dispose (ref reference, options);
+			return peer;
+		}
+
 		public override void AddPeer (IJavaPeerable value)
 		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+			if (!value.PeerReference.IsValid)
+				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
+
+			var reference       = value.PeerReference;
+			var hash            = JNIEnv.IdentityHash (reference.Handle);
+
+			AddPeer (value, reference, hash);
+		}
+
+		internal void AddPeer (IJavaPeerable value, JniObjectReference reference, IntPtr hash)
+		{
+			lock (instances) {
+				IdentityHashTargets targets;
+				if (!instances.TryGetValue (hash, out targets)) {
+					targets = new IdentityHashTargets (value);
+					instances.Add (hash, targets);
+					return;
+				}
+				bool found = false;
+				for (int i = 0; i < targets.Count; ++i) {
+					IJavaPeerable target;
+					var wref = targets [i];
+					if (ShouldReplaceMapping (wref, reference, out target)) {
+						found = true;
+						targets [i] = IdentityHashTargets.CreateWeakReference (value);
+						break;
+					}
+					if (JniEnvironment.Types.IsSameObject (value.PeerReference, target.PeerReference)) {
+						found = true;
+						if (Logger.LogGlobalRef) {
+							Logger.Log (LogLevel.Info, "monodroid-gref",
+									string.Format ("warning: not replacing previous registered handle {0} with handle {1} for key_handle 0x{2}",
+										target.PeerReference.ToString (), reference.ToString (), hash.ToString ("x")));
+						}
+					}
+				}
+				if (!found) {
+					targets.Add (value);
+				}
+			}
+		}
+
+		internal void AddPeer (IJavaPeerable value, IntPtr handle, JniHandleOwnership transfer, out IntPtr handleField)
+		{
+			if (handle == IntPtr.Zero) {
+				handleField = handle;
+				return;
+			}
+
+			var transferType = transfer & (JniHandleOwnership.DoNotTransfer | JniHandleOwnership.TransferLocalRef | JniHandleOwnership.TransferGlobalRef);
+			switch (transferType) {
+				case JniHandleOwnership.DoNotTransfer:
+					handleField = JNIEnv.NewGlobalRef (handle);
+					break;
+				case JniHandleOwnership.TransferLocalRef:
+					handleField = JNIEnv.NewGlobalRef (handle);
+					JNIEnv.DeleteLocalRef (handle);
+					break;
+				case JniHandleOwnership.TransferGlobalRef:
+					handleField = handle;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException ("transfer", transfer,
+							"Invalid `transfer` value: " + transfer + " on type " + value.GetType ());
+			}
+			if (handleField == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to allocate Global Reference for object '" + value.ToString () + "'!");
+
+			IntPtr hash = JNIEnv.IdentityHash (handleField);
+			value.SetJniIdentityHashCode ((int) hash);
+			if ((transfer & JniHandleOwnership.DoNotRegister) == 0) {
+				AddPeer (value, new JniObjectReference (handleField, JniObjectReferenceType.Global), hash);
+			}
+
+			if (Logger.LogGlobalRef) {
+				JNIEnv._monodroid_gref_log ("handle 0x" + handleField.ToString ("x") +
+						"; key_handle 0x" + hash.ToString ("x") +
+						": Java Type: `" + JNIEnv.GetClassNameFromInstance (handleField) + "`; " +
+						"MCW type: `" + value.GetType ().FullName + "`\n");
+			}
+		}
+
+		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, out IJavaPeerable target)
+		{
+			target      = null;
+
+			if (current == null)
+				return true;
+
+			// Target has been GC'd; see also FIXME, above, in finalizer
+			if (!current.TryGetTarget (out target) || target == null)
+				return true;
+
+			// It's possible that the instance was GC'd, but the finalizer
+			// hasn't executed yet, so the `instances` entry is stale.
+			if (!target.PeerReference.IsValid)
+				return true;
+
+			if (!JniEnvironment.Types.IsSameObject (target.PeerReference, reference))
+				return false;
+
+			// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
+			// When two MCW's are created for one Java instance [0],
+			// we want the 2nd MCW to replace the 1st, as the 2nd is
+			// the one the dev created; the 1st is an implicit intermediary.
+			//
+			// [0]: If Java ctor invokes overridden virtual method, we'll
+			// transition into managed code w/o a registered instance, and
+			// thus will create an "intermediary" via
+			// (IntPtr, JniHandleOwnership) .ctor.
+			if ((target.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable)
+				return true;
+
+			return false;
 		}
 
 		public override void RemovePeer (IJavaPeerable value)
 		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+			if (!value.PeerReference.IsValid)
+				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
+
+			var reference       = value.PeerReference;
+			var hash            = JNIEnv.IdentityHash (reference.Handle);
+
+			RemovePeer (value, hash);
+		}
+
+		internal void RemovePeer (IJavaPeerable value, IntPtr hash)
+		{
+			lock (instances) {
+				IdentityHashTargets targets;
+				if (!instances.TryGetValue (hash, out targets)) {
+					return;
+				}
+				for (int i = targets.Count - 1; i >= 0; i--) {
+					var wref = targets [i];
+					if (!wref.TryGetTarget (out IJavaPeerable target)) {
+						// wref is invalidated; remove it.
+						targets.RemoveAt (i);
+						continue;
+					}
+					if (!object.ReferenceEquals (target, value)) {
+						continue;
+					}
+					targets.RemoveAt (i);
+				}
+				if (targets.Count == 0) {
+					instances.Remove (hash);
+				}
+			}
 		}
 
 		public override IJavaPeerable PeekPeer (JniObjectReference reference)
 		{
-			return (IJavaPeerable) Java.Lang.Object.GetObject (reference.Handle, JniHandleOwnership.DoNotTransfer);
+			if (!reference.IsValid)
+				return null;
+
+			var hash    = JNIEnv.IdentityHash (reference.Handle);
+			lock (instances) {
+				IdentityHashTargets targets;
+				if (instances.TryGetValue (hash, out targets)) {
+					for (int i = targets.Count - 1; i >= 0; i--) {
+						var wref    = targets [i];
+						if (!wref.TryGetTarget (out var result) || !result.PeerReference.IsValid) {
+							targets.RemoveAt (i);
+							continue;
+						}
+						if (!JniEnvironment.Types.IsSameObject (reference, result.PeerReference))
+							continue;
+						return result;
+					}
+				}
+			}
+			return null;
+		}
+
+		protected override bool TryUnboxPeerObject (IJavaPeerable value, out object result)
+		{
+			var proxy = value as JavaProxyThrowable;
+			if (proxy != null) {
+				result  = proxy.InnerException;
+				return true;
+			}
+			return base.TryUnboxPeerObject (value, out result);
+		}
+
+		internal Exception UnboxException (IJavaPeerable value)
+		{
+			object r;
+			if (TryUnboxPeerObject (value, out r) && r is Exception e) {
+				return e;
+			}
+			return null;
 		}
 
 		public override void CollectPeers ()
 		{
+			GC.Collect ();
 		}
 
 		public override void FinalizePeer (IJavaPeerable value)
 		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+
+			if (Logger.LogGlobalRef) {
+				JNIEnv._monodroid_gref_log ($"Finalizing handle {value.PeerReference}\n");
+			}
+
+			// FIXME: need hash cleanup mechanism.
+			// Finalization occurs after a test of java persistence.  If the
+			// handle still contains a java reference, we can't finalize the
+			// object and should "resurrect" it.
+			if (value.PeerReference.IsValid) {
+				GC.ReRegisterForFinalize (value);
+			} else {
+				RemovePeer (value, (IntPtr) value.JniIdentityHashCode);
+				value.SetPeerReference (new JniObjectReference ());
+				value.Finalized ();
+			}
 		}
 
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
-			return null;
+			lock (instances) {
+				var surfacedPeers = new List<JniSurfacedPeerInfo> (instances.Count);
+				foreach (var e in instances) {
+					for (int i = 0; i < e.Value.Count; i++) {
+						var value = e.Value [i];
+						surfacedPeers.Add (new JniSurfacedPeerInfo (e.Key.ToInt32 (), value));
+					}
+				}
+				return surfacedPeers;
+			}
+		}
+	}
+
+	class InstancesKeyComparer : IEqualityComparer<IntPtr>
+	{
+
+		public bool Equals (IntPtr x, IntPtr y)
+		{
+			return x == y;
+		}
+
+		public int GetHashCode (IntPtr value)
+		{
+			return value.GetHashCode ();
+		}
+	}
+
+	class IdentityHashTargets {
+		WeakReference<IJavaPeerable>            first;
+		List<WeakReference<IJavaPeerable>>      rest;
+
+		public static WeakReference<IJavaPeerable> CreateWeakReference (IJavaPeerable value)
+		{
+			return new WeakReference<IJavaPeerable> (value, trackResurrection: true);
+		}
+
+		public IdentityHashTargets (IJavaPeerable value)
+		{
+			first   = CreateWeakReference (value);
+		}
+
+		public int Count => (first != null ? 1 : 0) + (rest != null ? rest.Count : 0);
+
+		public WeakReference<IJavaPeerable> this [int index] {
+			get {
+				if (index == 0)
+					return first;
+				index -= 1;
+				if (rest == null || index >= rest.Count)
+					return null;
+				return rest [index];
+			}
+			set {
+				if (index == 0) {
+					first = value;
+					return;
+				}
+				index -= 1;
+				rest [index] = value;
+			}
+		}
+
+		public void Add (IJavaPeerable value)
+		{
+			if (first == null) {
+				first   = CreateWeakReference (value);
+				return;
+			}
+			if (rest == null)
+				rest    = new List<WeakReference<IJavaPeerable>> ();
+			rest.Add (CreateWeakReference (value));
+		}
+
+		public void RemoveAt (int index)
+		{
+			if (index == 0) {
+				first   = null;
+				if (rest?.Count > 0) {
+					first   = rest [0];
+					rest.RemoveAt (0);
+				}
+				return;
+			}
+			index -= 1;
+			rest.RemoveAt (index);
 		}
 	}
 }

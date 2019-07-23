@@ -35,9 +35,9 @@ namespace Android.Runtime
 		{
 			if (handle == IntPtr.Zero)
 				return null;
-			IJavaObject inst = Java.Lang.Object.PeekObject (handle);
+			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
-				inst = Java.Interop.TypeManager.CreateInstance (handle, transfer);
+				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
 			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ());
@@ -392,9 +392,9 @@ namespace Android.Runtime
 		{
 			if (handle == IntPtr.Zero)
 				return null;
-			IJavaObject inst = Java.Lang.Object.PeekObject (handle);
+			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
-				inst = Java.Interop.TypeManager.CreateInstance (handle, transfer);
+				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
 			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ());
