@@ -34,6 +34,7 @@ namespace Xamarin.Android.Prepare
 		partial class Paths
 		{
 			static string BundleOSType                                            => "Darwin"; // Windows doesn't build the bundle
+			static string ArchiveOSType                                           => "Darwin"; // Windows need sources from there
 
 			// Windows doesn't build the bundle so we need to look in the XA framework dir as installed
 			public static string BCLAssembliesSourceDir                           => InstallBCLFrameworkDir;

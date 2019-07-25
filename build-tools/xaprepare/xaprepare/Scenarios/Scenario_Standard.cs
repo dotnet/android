@@ -21,6 +21,7 @@ namespace Xamarin.Android.Prepare
 			Steps.Add (new Step_PrepareProps ());
 			Steps.Add (new Step_PrepareExternal ());
 			Steps.Add (new Step_PrepareLocal ());
+			Steps.Add (new Step_DownloadMonoArchive ());
 			AddRequiredOSSpecificSteps (true);
 			Steps.Add (new Step_PrepareBundle ());
 			AddRequiredOSSpecificSteps (false);

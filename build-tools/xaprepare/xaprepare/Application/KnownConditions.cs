@@ -18,5 +18,11 @@ namespace Xamarin.Android.Prepare
 		///   only a single program (e.g. the UpdateMono scenario) but not the rest. Default: unset. <see cref="Scenario_UpdateMono" />
 		/// </summary>
 		IgnoreMissingPrograms,
+
+		/// <summary>
+		///   If set, will cause checkout of the commercial dependencies mentioned in the `.external` file at
+		///   the top of the repository. Default: unset
+		/// </summary>
+		IncludeCommercial,
 	}
 }

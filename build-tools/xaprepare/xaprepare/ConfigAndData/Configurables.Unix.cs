@@ -12,6 +12,7 @@ namespace Xamarin.Android.Prepare
 		partial class Paths
 		{
 			static string BundleOSType                  => Context.Instance.OS.Type;
+			static string ArchiveOSType                 => Context.Instance.OS.Type;
 
 			public static string BCLTestsSourceDir      => GetCachedPath (ref bclTestsSourceDir, () => Path.Combine (MonoProfileDir, "tests"));
 			public static string BCLAssembliesSourceDir => MonoProfileDir;

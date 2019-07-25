@@ -329,6 +329,13 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
+		/// <summary>
+		///   Set by <see cref="Step_DownloadMonoArchive"/> if the archive has been downloaded and validated, so
+		///   that the <see cref="Step_BuildMonoRuntimes"/> step doesn't have to re-download the archive, should
+		///   bundle be absent and <see cref="Step_PrepareBundle"/> fails.
+		/// </summary>
+		public bool MonoAlreadyBuilt { get; set; }
+
 		static Context ()
 		{
 			Instance = new Context ();
@@ -742,8 +749,10 @@ namespace Xamarin.Android.Prepare
 			Banner ("Updating Git submodules");
 
 			var git = new GitRunner (this);
-			if (!await git.SubmoduleUpdate ())
-				Log.WarningLine ("Failed to update Git submodules");
+			if (!await git.SubmoduleUpdate ()) {
+				Log.ErrorLine ("Failed to update Git submodules");
+				return false;
+			}
 
 			BuildInfo = new BuildInfo ();
 			await BuildInfo.GatherGitInfo (this);

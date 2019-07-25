@@ -26,7 +26,7 @@ namespace Xamarin.Android.Prepare
 	class mono_mono_mono_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSourceFullPath, "LICENSE");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "LICENSE");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/mono";
@@ -37,7 +37,7 @@ namespace Xamarin.Android.Prepare
 	class mono_mono_aspnetwebstack_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/aspnetwebstack/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSourceFullPath, "aspnetwebstack", "License.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "aspnetwebstack", "License.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/aspnetwebstack";
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Prepare
 	class mono_mono_boringssl_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/boringssl");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "boringssl", "LICENSE");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "boringssl", "LICENSE");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/boringssl";
@@ -96,7 +96,7 @@ jeroen@frijters.net
 	class mono_mono_ikvm_fork_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/ikvm-fork/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "ikvm", "LICENSE");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "ikvm", "LICENSE");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/ikvm-fork";
@@ -109,7 +109,7 @@ jeroen@frijters.net
 	class mono_mono_linker_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/linker/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "linker", "LICENSE");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "linker", "LICENSE");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/linker";
@@ -120,7 +120,7 @@ jeroen@frijters.net
 	class mono_mono_NuGet_BuildTasks_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/NuGet.BuildTasks/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "nuget-buildtasks", "LICENSE.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "nuget-buildtasks", "LICENSE.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/NuGet.BuildTasks";
@@ -133,7 +133,7 @@ jeroen@frijters.net
 	class mono_mono_NUnitLite_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/NUnitLite/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "nunit-lite", "NUnitLite-1.0.0", "LICENSE.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "nunit-lite", "NUnitLite-1.0.0", "LICENSE.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/NUnitLite";
@@ -146,7 +146,7 @@ jeroen@frijters.net
 	class mono_mono_rx_net_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/rx/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "rx", "Rx", "NET", "Source", "license.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "rx", "Rx", "NET", "Source", "license.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/rx.net";
@@ -159,7 +159,7 @@ jeroen@frijters.net
 	class mono_mono_Ix_net_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/rx/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "rx", "Ix", "NET", "license.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "rx", "Ix", "NET", "license.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/Ix.net";
@@ -186,7 +186,7 @@ jeroen@frijters.net
 	class mono_llvm_llvm_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "llvm", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm";
@@ -197,7 +197,7 @@ jeroen@frijters.net
 	class mono_llvm_google_test_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/utils/unittest/googletest/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "llvm", "utils", "unittest", "googletest", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "utils", "unittest", "googletest", "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm Google Test";
@@ -208,7 +208,7 @@ jeroen@frijters.net
 	class mono_llvm_openbsd_regex_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Support/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "llvm", "lib", "Support", "COPYRIGHT.regex");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "lib", "Support", "COPYRIGHT.regex");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm OpenBSD Regex";
@@ -219,7 +219,7 @@ jeroen@frijters.net
 	class mono_llvm_pyyaml_tests_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/test/YAMLParser/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "llvm", "test", "YAMLParser", "LICENSE.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "test", "YAMLParser", "LICENSE.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm pyyaml tests";
@@ -230,7 +230,7 @@ jeroen@frijters.net
 	class mono_llvm_arm_contributions_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Target/ARM/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoExternalFullPath, "llvm", "lib", "Target", "ARM", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "lib", "Target", "ARM", "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm ARM contributions";

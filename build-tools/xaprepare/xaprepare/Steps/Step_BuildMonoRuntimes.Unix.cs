@@ -32,27 +32,32 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			bool built = await DownloadMonoArchive (context);
-
-			if (!built) {
+			if (!context.MonoAlreadyBuilt) {
 				List<string> makeArguments = GetMakeArguments (context, enabledRuntimes);
 				if (!await BuildRuntimes (context, makeArguments)) {
 					Log.ErrorLine ("Mono runtime build failed");
 					return false;
 				}
-			} else
-				SaveAbiChoice (context);
+			}
 
 			CleanupBeforeInstall ();
 			Log.StatusLine ();
+
+			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
+			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
+			if (!await ConjureXamarinCecilAndRemapRef (context, haveManagedRuntime, managedRuntime))
+				return false;
+
 			if (!await InstallRuntimes (context, enabledRuntimes))
 				return false;
 
 			if (!InstallBCL (context))
 				return false;
 
-			if (!InstallUtilities (context))
+			if (!InstallUtilities (context, haveManagedRuntime, managedRuntime))
 				return false;
+
+			Utilities.PropagateXamarinAndroidCecil (context);
 
 			return true;
 		}
@@ -64,148 +69,70 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		bool AbiChoiceChanged (Context context)
+		async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
-			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
-			if (!File.Exists (cacheFile)) {
-				Log.DebugLine ($"Enabled ABI cache file not found at {cacheFile}");
-				return true;
-			}
-
-			var oldAbis = new HashSet<string> (StringComparer.Ordinal);
-			foreach (string l in File.ReadAllLines (cacheFile)) {
-				string line = l?.Trim ();
-				if (String.IsNullOrEmpty (line) || oldAbis.Contains (line))
-					continue;
-				oldAbis.Add (line);
-			}
-
-			HashSet<string> currentAbis = null;
-			FillCurrentAbis (context, ref currentAbis);
-
-			if (oldAbis.Count != currentAbis.Count)
-				return true;
-
-			foreach (string abi in oldAbis) {
-				if (!currentAbis.Contains (abi))
-					return true;
-			}
-
-			return false;
-		}
-
-		void SaveAbiChoice (Context context)
-		{
-			HashSet<string> currentAbis = null;
-			FillCurrentAbis (context, ref currentAbis);
-
-			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
-			Log.DebugLine ($"Writing ABI cache file {cacheFile}");
-			File.WriteAllLines (cacheFile, currentAbis);
-		}
-
-		void FillCurrentAbis (Context context, ref HashSet<string> currentAbis)
-		{
-			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Trim (), ref currentAbis);
-			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis).Trim (), ref currentAbis);
-			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedHostJitAbis).Trim (), ref currentAbis);
-		}
-
-		async Task<bool> DownloadMonoArchive (Context context)
-		{
-			if (context.ForceRuntimesBuild) {
-				Log.StatusLine ("Mono runtime rebuild forced, Mono Archive download skipped");
-				return false;
-			}
-
-			Log.StatusLine ("Checking if all runtime files are present");
-			allRuntimes = new Runtimes ();
-			if (MonoRuntimesHelpers.AllBundleItemsPresent (allRuntimes)) {
-				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
-				if (!AbiChoiceChanged (context)) {
-					Log.StatusLine ("Mono runtimes already present and complete. No need to download or build.");
-					return true;
-				}
-
-				Log.StatusLine ("Mono already present, but the choice of ABIs changed since previous build, runtime refresh is necessary");
-			}
-			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download/rebuild/reinstall forced");
-
-			bool result = await DownloadAndUpackIfNeeded (
-				context,
-				"Mono",
-				Configurables.Paths.MonoArchiveLocalPath,
-				Configurables.Paths.MonoArchiveFileName,
-				Configurables.Paths.MonoSDKSOutputDir
-			);
-
+			StatusStep (context, "Building remap-assembly-ref");
+			bool result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
 			if (!result)
 				return false;
 
-			return await DownloadAndUpackIfNeeded (
-				context,
-				"Windows Mono",
-				Configurables.Paths.MonoArchiveWindowsLocalPath,
-				Configurables.Paths.MonoArchiveWindowsFileName,
-				Configurables.Paths.BCLWindowsOutputDir
+			var msbuild = new MSBuildRunner (context);
+			StatusStep (context, "Building conjure-xamarin-android-cecil");
+			string projectPath = Path.Combine (Configurables.Paths.BuildToolsDir, "conjure-xamarin-android-cecil", "conjure-xamarin-android-cecil.csproj");
+			result = await msbuild.Run (
+				projectPath: projectPath,
+				logTag: "conjure-xamarin-android-cecil",
+				binlogName: "build-conjure-xamarin-android-cecil"
 			);
-		}
 
-		async Task<bool> DownloadAndUpackIfNeeded (Context context, string name, string localPath, string archiveFileName, string destinationDirectory)
-		{
-			if (await Utilities.VerifyArchive (localPath)) {
-				Log.StatusLine ($"{name} archive already downloaded and valid");
-			} else {
-				Utilities.DeleteFileSilent (localPath);
-
-				var url = new Uri (Configurables.Urls.MonoArchive_BaseUri, archiveFileName);
-				Log.StatusLine ($"Downloading {name} archive from {url}");
-
-				(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (url);
-				if (!success) {
-					if (status == HttpStatusCode.NotFound)
-						Log.Info ($"{name} archive URL not found");
-					else
-						Log.Info ($"Failed to obtain {name} archive size. HTTP status code: {status} ({(int)status})");
-					Log.InfoLine (". Mono runtimes will be rebuilt");
-					return false;
-				}
-
-				DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
-				Log.StatusLine ($"  {context.Characters.Link} {url}", ConsoleColor.White);
-				await Download (context, url, localPath, $"{name} Archive", archiveFileName, downloadStatus);
-
-				if (!File.Exists (localPath)) {
-					Log.InfoLine ($"Download of {name} archive from {url} failed, Mono will be rebuilt");
-					return false;
-				}
-			}
-
-			string tempDir = $"{destinationDirectory}.tmp";
-			if (!await Utilities.Unpack (localPath, tempDir, cleanDestinatioBeforeUnpacking: true)) {
-				Utilities.DeleteDirectorySilent (destinationDirectory);
-				Log.WarningLine ($"Failed to unpack {name} archive {localPath}, Mono will be rebuilt");
+			if (!result) {
+				Log.ErrorLine ("Failed to build conjure-xamarin-android-cecil");
 				return false;
 			}
 
-			Log.DebugLine ($"Moving unpacked Mono archive from {tempDir} to {destinationDirectory}");
-			try {
-				Utilities.MoveDirectoryContentsRecursively (tempDir, destinationDirectory, resetFileTimestamp: true);
-			} finally {
-				Utilities.DeleteDirectorySilent (tempDir);
+			StatusStep (context, "Conjuring Xamarin.Android.Cecil and Xamari.Android.Cecil.Mdb");
+			string conjurer = Path.Combine (Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.exe");
+			string conjurerSourceDir = Configurables.Paths.MonoProfileToolsDir;
+			string conjurerDestDir = Configurables.Paths.BuildBinDir;
+
+			result = Utilities.RunCommand (
+				haveManagedRuntime ? managedRuntime : conjurer, // command
+				BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
+				true, // ignoreEmptyArguments
+
+				// arguments
+				haveManagedRuntime ? conjurer : String.Empty,
+				Configurables.Paths.MonoProfileToolsDir, // source dir
+				Configurables.Paths.BuildBinDir // destination dir
+			);
+
+			StatusStep (context, "Re-signing Xamarin.Android.Cecil.dll");
+			var sn = new SnRunner (context);
+			string snkPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "mono.snk");
+			string assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll");
+			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil");
+			if (!result) {
+				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.dll");
+				return false;
+			}
+
+			StatusStep (context, "Re-signing Xamarin.Android.Cecil.Mdb.dll");
+			assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll");
+			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil-mdb");
+			if (!result) {
+				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.Mdb.dll");
+				return false;
 			}
 
 			return true;
 		}
 
-		bool InstallUtilities (Context context)
+		bool InstallUtilities (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
 			string destDir = MonoRuntimesHelpers.UtilitiesDestinationDir;
 
 			Utilities.CreateDirectory (destDir);
 
-			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
-			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
 			string remapper = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue (KnownProperties.RemapAssemblyRefToolExecutable));
 			string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
 
@@ -465,7 +392,7 @@ namespace Xamarin.Android.Prepare
 			if (!result)
 				return false;
 
-			SaveAbiChoice (context);
+			Utilities.SaveAbiChoice (context);
 
 			return true;
 		}

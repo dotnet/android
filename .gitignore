@@ -3,7 +3,6 @@
 bin
 Configuration.Override.props
 Configuration.OperatingSystem.props
-msfinal.pub
 obj
 packages
 .DS_Store

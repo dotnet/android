@@ -33,11 +33,13 @@ $
 		public string Name   { get; private set; }
 		public string Owner  { get; private set; }
 
-		public static List<ExternalGitDependency> GetDependencies (Context context, string externalFilePath)
+		public static List<ExternalGitDependency> GetDependencies (Context context, string externalFilePath, bool quiet = false)
 		{
-			Log.Instance.StatusLine ($"  {context.Characters.Bullet} Reading external dependencies from {Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, externalFilePath)}");
+			if (!quiet)
+				Log.Instance.StatusLine ($"  {context.Characters.Bullet} Reading external dependencies from {Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, externalFilePath)}");
 			string[] unparsedExternals = File.ReadAllLines (externalFilePath);
 			var externals = new List<ExternalGitDependency> (unparsedExternals.Length);
+			bool includeCommercial = context.CheckCondition (KnownConditions.IncludeCommercial);
 
 			foreach (string external in unparsedExternals) {
 				Match match = externalRegex.Match (external);
@@ -47,14 +49,22 @@ $
 						continue;
 					}
 
+					string owner = match.Groups["owner"].Value;
+					string repo = match.Groups["repo"].Value;
+					if (!includeCommercial && Configurables.Defaults.CommercialExternalDependencies.Contains ($"{owner}/{repo}")) {
+						Log.Instance.DebugLine ($"Ignoring external commercial dependency '{owner}/{repo}'");
+						continue;
+					}
+
 					var e = new ExternalGitDependency {
 						Branch = match.Groups["branch"].Value,
 						Commit = match.Groups["commit"].Value,
-						Name   = match.Groups["repo"].Value,
-						Owner  = match.Groups["owner"].Value,
+						Name   = repo,
+						Owner  = owner,
 					};
 					externals.Add (e);
-					Log.Instance.StatusLine ($"    {context.Characters.Bullet} {e.Owner}/{e.Name} ({e.Commit})");
+					if (!quiet)
+						Log.Instance.StatusLine ($"    {context.Characters.Bullet} {e.Owner}/{e.Name} ({e.Commit})");
 				}
 			}
 

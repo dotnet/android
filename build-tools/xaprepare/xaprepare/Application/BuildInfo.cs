@@ -105,7 +105,13 @@ namespace Xamarin.Android.Prepare
 			LibZipHash = EnsureHash ("LibZip", Utilities.ShortenGitHash (FullLibZipHash));
 
 			Log.StatusLine ($"  {context.Characters.Bullet} Mono commit hash", ConsoleColor.Gray);
-			FullMonoHash = git.GetTopCommitHash (context.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath), shortHash: false);
+			List<ExternalGitDependency> externalDependencies = ExternalGitDependency.GetDependencies (context, Configurables.Paths.ExternalGitDepsFilePath, quiet: true);
+			ExternalGitDependency mono = externalDependencies?.Where (
+				eg => eg != null &&
+				      String.Compare ("mono", eg.Owner, StringComparison.Ordinal) == 0 &&
+				      String.Compare ("mono", eg.Name, StringComparison.Ordinal) == 0).FirstOrDefault ();
+
+			FullMonoHash = mono?.Commit?.Trim ();
 			MonoHash = EnsureHash ("Mono", Utilities.ShortenGitHash (FullMonoHash));
 
 			if (Configurables.Paths.BundleVersionHashFiles == null || Configurables.Paths.BundleVersionHashFiles.Count == 0) {

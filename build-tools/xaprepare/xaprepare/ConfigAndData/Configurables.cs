@@ -72,6 +72,14 @@ namespace Xamarin.Android.Prepare
 			public static CompressionFormat DefaultCompressionFormat => CompressionFormats [SevenZipCompressionFormatName];
 
 			/// <summary>
+			///   Set of .external "submodules" to check out when the <see
+			///   cref="KnownConditions.IncludeCommercial" /> condition is set.
+			/// </summary>
+			public static HashSet<string> CommercialExternalDependencies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+				"xamarin/monodroid"
+			};
+
+			/// <summary>
 			///   Default execution mode. One of:
 			///
 			///     * CI: continuous integration (a.k.a. bot, a.k.a. dull, a.k.a. sad) mode in which no color, no fancy
@@ -326,7 +334,7 @@ namespace Xamarin.Android.Prepare
 
 			// Mono Archive
 			public static string MonoArchiveMonoHash                 => ctx.BuildInfo.FullMonoHash;
-			public static string MonoArchiveBaseFileName             => $"android-{Defaults.MonoSdksConfiguration}-{ctx.OS.Type}-{MonoArchiveMonoHash}";
+			public static string MonoArchiveBaseFileName             => $"android-{Defaults.MonoSdksConfiguration}-{ArchiveOSType}-{MonoArchiveMonoHash}";
 			public static string MonoArchiveWindowsBaseFileName      => $"android-release-Windows-{MonoArchiveMonoHash}";
 			public static string MonoArchiveFileName                 => $"{MonoArchiveBaseFileName}.7z";
 			public static string MonoArchiveWindowsFileName          => $"{MonoArchiveWindowsBaseFileName}.7z";
@@ -351,7 +359,8 @@ namespace Xamarin.Android.Prepare
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
 			public static string MonoSourceFullPath             => ctx.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath);
-			public static string MonoExternalFullPath           => Path.Combine (MonoSourceFullPath, "external");
+			public static string MonoSdksTpnPath                => GetCachedPath (ref monoSdksTpnPath, ()         => Path.Combine (MonoSDKSOutputDir, "android-tpn"));
+			public static string MonoSdksTpnExternalPath        => GetCachedPath (ref monoSdksTpnExternalPath, () => Path.Combine (MonoSdksTpnPath, "external"));
 
 			static string EnsureAndroidToolchainBinDirectories ()
 			{
@@ -409,6 +418,8 @@ namespace Xamarin.Android.Prepare
 			static string installBCLDesignerDir;
 			static string monoAndroidFrameworksRootDir;
 			static string externalJavaInteropDir;
+			static string monoSdksTpnPath;
+			static string monoSdksTpnExternalPath;
 		}
 	}
 }

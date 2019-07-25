@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
   <Import Project="..\..\..\..\packages\NUnit3TestAdapter.3.12.0\build\net35\NUnit3TestAdapter.props" Condition="Exists('..\..\..\..\packages\NUnit3TestAdapter.3.12.0\build\net35\NUnit3TestAdapter.props')" />
@@ -60,6 +60,9 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Numerics" />
+    <Reference Include="Xamarin.Android.Cecil">
+      <HintPath>..\..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -74,10 +77,6 @@
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj">
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Name>Xamarin.Android.Build.Tasks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
-      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
-      <Name>Xamarin.Android.Cecil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</Project>
