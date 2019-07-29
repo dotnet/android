@@ -83,6 +83,8 @@ namespace MonoDroid.Generation
 					ctor.Parameters.Add (CreateParameter (child));
 			}
 
+			ctor.Name = EnsureValidIdentifer (ctor.Name);
+
 			return ctor;
 		}
 
@@ -110,8 +112,10 @@ namespace MonoDroid.Generation
 
 			if (elem.Attribute ("managedName") != null)
 				field.Name = elem.XGetAttribute ("managedName");
-			else
-				field.Name = TypeNameUtilities.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLower ().ToUpper () != field.JavaName ? field.JavaName : field.JavaName.ToLower ());
+			else {
+				field.Name = TypeNameUtilities.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLowerInvariant ().ToUpperInvariant () != field.JavaName ? field.JavaName : field.JavaName.ToLowerInvariant ());
+				field.Name = EnsureValidIdentifer (field.Name);
+			}
 
 			return field;
 		}
@@ -171,7 +175,7 @@ namespace MonoDroid.Generation
 					support.Name = StringRocks.TypeToPascalCase (support.Name);
 				raw_name = support.Name;
 				support.TypeNamePrefix = isInterface ? IsPrefixableName (raw_name) ? "I" : string.Empty : string.Empty;
-				support.Name = support.TypeNamePrefix + raw_name;
+				support.Name = EnsureValidIdentifer (support.TypeNamePrefix + raw_name);
 				support.FullName = string.Format ("{0}.{1}{2}", support.Namespace, idx > 0 ? StringRocks.TypeToPascalCase (support.JavaSimpleName.Substring (0, idx + 1)) : string.Empty, support.Name);
 			}
 
@@ -256,6 +260,8 @@ namespace MonoDroid.Generation
 					method.Parameters.Add (CreateParameter (child));
 			}
 
+			method.Name = EnsureValidIdentifer (method.Name);
+
 			method.FillReturnType ();
 
 			return method;
@@ -264,7 +270,7 @@ namespace MonoDroid.Generation
 		public static Parameter CreateParameter (XElement elem)
 		{
 			string managedName = elem.XGetAttribute ("managedName");
-			string name = !string.IsNullOrEmpty (managedName) ? managedName : TypeNameUtilities.MangleName (elem.XGetAttribute ("name"));
+			string name = !string.IsNullOrEmpty (managedName) ? managedName : EnsureValidIdentifer (TypeNameUtilities.MangleName (elem.XGetAttribute ("name")));
 			string java_type = elem.XGetAttribute ("type");
 			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
 			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
@@ -281,6 +287,19 @@ namespace MonoDroid.Generation
 			string java_type = elem.XGetAttribute ("name");
 			string java_package = elem.Parent.XGetAttribute ("name");
 			return new Parameter (name, java_package + "." + java_type, null, false);
+		}
+
+		static string EnsureValidIdentifer (string name)
+		{
+			if (string.IsNullOrWhiteSpace (name))
+				return name;
+
+			name = name.Replace ('$', '_');
+
+			if (char.IsNumber (name [0]))
+				name = $"_{name}";
+
+			return name;
 		}
 
 		static int GetApiLevel (string source)
