@@ -2082,7 +2082,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
-				string multidex_path = bbuilder.RunningMSBuild ? TestEnvironment.MonoAndroidToolsDirectory : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android";
+				string multidex_path = TestEnvironment.IsRunningOnCI ? TestEnvironment.MonoAndroidToolsDirectory : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android";
 				string multidex_jar = $@"{multidex_path}\android-support-multidex.jar";
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 

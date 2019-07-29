@@ -682,7 +682,7 @@ namespace Lib2
 			return task;
 		}
 
-		[Test]
+		[Test, Parallelizable (ParallelScope.Self)]
 		public void InvalidAndroidResource ([Values (true, false)] bool useAapt2)
 		{
 			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {
