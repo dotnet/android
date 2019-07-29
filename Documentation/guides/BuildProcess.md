@@ -219,17 +219,17 @@ used by the `Install` and `SignAndroidPackage` targets.
 The [Signing Properties](#Signing_Properties) are also relevant
 when packaging Release applications.
 
--   **AndroidApkSignerAdditionalArguments** &ndash; A string property which allows
-    the developer to provide additional arguments to the `apksigner` tool.
-
-    Added in Xamarin.Android 8.2.
-
 -   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
     the digest algorithm to use with `jarsigner -digestalg`.
 
     The default value is `SHA1` for APKs and `SHA-256` for App Bundles.
 
     Added in Xamarin.Android 9.4.
+
+-   **AndroidApkSignerAdditionalArguments** &ndash; A string property which allows
+    the developer to provide additional arguments to the `apksigner` tool.
+
+    Added in Xamarin.Android 8.2.
 
 -   **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
     the signing algorithm to use with `jarsigner -sigalg`.
