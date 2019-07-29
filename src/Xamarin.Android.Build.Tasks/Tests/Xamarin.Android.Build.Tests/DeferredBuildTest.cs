@@ -38,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 					// The DTB passes down these two properties
 					"SkipCompilerExecution=true",
 					"ProvideCommandLineArgs=true",
+					// AndroidNDKDirectory should be set by _AddAndroidDefines target
+					"AndroidNDKDirectory="
 				}), "background build should have succeeded.");
 
 				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
