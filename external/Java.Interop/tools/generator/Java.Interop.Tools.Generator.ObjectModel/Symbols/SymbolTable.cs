@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace MonoDroid.Generation {
 
@@ -11,7 +12,7 @@ namespace MonoDroid.Generation {
 		// If you make any changes to the SymbolTable class that accesses the symbols you need to keep
 		// that in mind.  Also if you add any new public methods that expose symbols from the table you must
 		// EnsurePopulated them before letting them leave this class.
-		Dictionary<string, List<ISymbol>> symbols = new Dictionary<string, List<ISymbol>> ();
+		ConcurrentDictionary<string, List<ISymbol>> symbols = new ConcurrentDictionary<string, List<ISymbol>> ();
 
 		ISymbol char_seq;
 		ISymbol fileinstream_sym;
@@ -146,14 +147,21 @@ namespace MonoDroid.Generation {
 			if (!ShouldAddType (key))
 				return;
 
-			List<ISymbol> values;
-			if (!symbols.TryGetValue (key, out values)) {
-				symbols.Add (key, new List<ISymbol> { symbol });
-			}
-			else {
-				if (!values.Any (v => object.ReferenceEquals (v, symbol)))
-					values.Add (symbol);
-			}
+			symbols.AddOrUpdate (key,
+				(value) => {
+					// Key not found, add it to Dictionary
+					lock (cache_population_lock)
+						all_symbols_cache = null;
+
+					return new List<ISymbol> { symbol };
+				},
+				(value, list) => {
+					// Key already exists, add it to List
+					if (!list.Any (v => object.ReferenceEquals (v, symbol)))
+						list.Add (symbol);
+
+					return list;
+				});
 		}
 
 		public ISymbol Lookup (string java_type, GenericParameterDefinitionList in_params)
@@ -231,6 +239,9 @@ namespace MonoDroid.Generation {
 			return symbol;
 		}
 
+		ConcurrentDictionary<string, ISymbol> all_symbols_cache;
+		static object cache_population_lock = new object ();
+
 		public ISymbol Lookup (string java_type)
 		{
 			string type_params;
@@ -244,7 +255,13 @@ namespace MonoDroid.Generation {
 			} else {
 				// Note we're potentially searching shallow types, but this is only looking at the type name
 				// Anything we find we will populate before returning to the user
-				sym = symbols.Values.SelectMany (v => v).FirstOrDefault (v => v.FullName == key);
+
+				lock (cache_population_lock) {
+					if (all_symbols_cache == null)
+						all_symbols_cache = new ConcurrentDictionary<string, ISymbol> (symbols.Values.SelectMany (v => v).GroupBy (s => s.FullName).ToDictionary (s => s.Key, s => s.FirstOrDefault ()));
+
+					all_symbols_cache.TryGetValue (key, out sym);
+				}
 			}
 			ISymbol result;
 			if (sym != null) {
