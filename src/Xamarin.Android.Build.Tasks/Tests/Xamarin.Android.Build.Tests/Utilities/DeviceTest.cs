@@ -99,7 +99,9 @@ namespace Xamarin.Android.Build.Tests
 			var sb = new StringBuilder ();
 			bool result = MonitorAdbLogcat ((line) => {
 				sb.AppendLine (line);
-				return line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase) > 0 && line.Contains (activityNamespace) && line.Contains (activityName);
+				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
+				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
 			}, timeout: timeout);
 			output = sb.ToString ();
 			return result;

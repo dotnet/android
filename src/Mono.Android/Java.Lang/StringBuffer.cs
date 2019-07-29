@@ -3,9 +3,6 @@
 // It is introduced since API 26 not because of new member in StringBuffer
 // but in AbstractStringBuilder which is nonpublic and affects the generated API.
 
-#if !ANDROID_29
-// However, AbstractStringBuilder has changed in Android Q and it does not seem to be required anymore (this rather blocks build).
-
 using System;
 
 namespace Java.Lang
@@ -19,5 +16,4 @@ namespace Java.Lang
 	}
 }
 
-#endif
 #endif

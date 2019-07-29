@@ -6,11 +6,11 @@
       kept consistent with each other, lest Bad Things Happen™
       -->
     <!-- The default Android API level to bind in src/Mono.Android -->
-    <AndroidApiLevel>28</AndroidApiLevel>
+    <AndroidApiLevel>29</AndroidApiLevel>
     <!-- The Xamarin.Android $(TargetFrameworkVersion) value that corresponds to $(AndroidApiLevel) -->
-    <AndroidFrameworkVersion>v9.0</AndroidFrameworkVersion>
+    <AndroidFrameworkVersion>v10.0</AndroidFrameworkVersion>
     <!-- The default Android API "id" that corresponds to $(AndroidApiLevel) -->
-    <AndroidPlatformId>28</AndroidPlatformId>
+    <AndroidPlatformId>29</AndroidPlatformId>
 
     <!--
       Colon-separated list of ABIs to build the mono JIT for.
@@ -24,7 +24,7 @@
     <AndroidSupportedTargetJitAbis>armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
 
     <!--
-        Colon-separated list of ABIs to build AOT cross-compilers for. 
+        Colon-separated list of ABIs to build AOT cross-compilers for.
         There doesn't need to be any parity between the AOT targets and the JIT ABIs above.
         Supported targets are:
 

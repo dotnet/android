@@ -393,7 +393,7 @@
   <map package='android.media.tv' class='TvInputManager' fields='' prefix='VIDEO_UNAVAILABLE_REASON_' enum-name="VideoUnavailableReason" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvTrackInfo' fields='' prefix='TYPE_' enum-name="TvTrackInfoType" is-transient="false" api-level="21" />
   <map package='android.media.tv' class='TvView' fields='' prefix='ERROR_' enum-name="TvErrorType" is-transient="false" api-level="21" />
-  
+
   <map package='android.mtp' class='MtpConstants' fields='' prefix='ASSOCIATION_TYPE_' enum-name="AssociationType" extra-default="None" />
   <map package='android.mtp' class='MtpConstants' fields='' prefix='FORMAT_' enum-name="MtpFormat" is-transient="false" />
   <map package='android.mtp' class='MtpConstants' fields='' prefix='PROTECTION_STATUS_' enum-name="ProtectionStatus" is-transient="false" />
@@ -640,7 +640,7 @@
   <map package='android.widget' class='GridLayout' fields='HORIZONTAL VERTICAL' prefix='' enum-name="GridOrientation" />
   <map package='android.widget' class='ListPopupWindow' fields='' prefix='POSITION_PROMPT_' enum-name="PositionPrompt" />
   <map package='android.widget' class='SlidingDrawer' fields='' prefix='ORIENTATION_' enum-name="SlidingDrawerOrientation" />
-  
+
   <!-- new in API Level 16 (or later - they are mixed anymore) -->
 
   <map package="android.accessibilityservice" class="AccessibilityService" fields="" prefix="GESTURE_" enum-name="AccessibilityGesture" api-level="16" />
@@ -672,7 +672,7 @@
   <map package='android.net.nsd' class='NsdManager' fields='' prefix='PROTOCOL_' enum-name="NsdProtocol" api-level="16" />
   <map package='android.net.wifi.p2p' class='WifiP2pManager' fields='WIFI_P2P_DISCOVERY_' enum-name="WifiP2pDiscoveryState" api-level="16" />
   <map package='android.net.wifi.p2p.nsd' class='WifiP2pServiceInfo' prefix='SERVICE_TYPE_' enum-name="ServiceType" api-level="16" />
-  
+
   <map package='android.view' class='View' fields='' prefix='IMPORTANT_FOR_ACCESSIBILITY_' enum-name="ImportantForAccessibility" api-level="16" />
   <map package='android.view' class='View' fields='' prefix='SCREEN_STATE_' enum-name="ScreenState" api-level="16" />
   <map package='android.view' class='View' fields='' prefix='TEXT_ALIGNMENT_' enum-name="TextAlignment" api-level="16" />
@@ -958,7 +958,7 @@
   <map package="android.hardware" class="SensorAdditionalInfo" fields="" prefix="TYPE_" enum-name="SensorAdditionalInfoType" api-level="24" />
 
   <!-- Okay, UProperty constants won't be enumified, as they can be used like:
-  
+
     UCharacter.hasBinaryProperty(int ch, int property)
 
   This "int property" should not have overloads for every enumified enums. -->
@@ -971,7 +971,7 @@
 	property" ... which are returned by UCharacter.getPropertyEnum().
 	They need to remain ints, hence not enumified. -->
 
-  <!-- It doesn't make sense to have ROUND_constants for the same purpose in both BigInteger and MathContext... --> 
+  <!-- It doesn't make sense to have ROUND_constants for the same purpose in both BigInteger and MathContext... -->
   <map package="android.icu.math" class="BigDecimal" fields="" prefix="ROUND_" enum-name="RoundOptions" api-level="24" />
   <map package="android.icu.math" class="MathContext" fields="" prefix="ROUND_" enum-name="RoundOptionsUnused" api-level="24" />
   <map package="android.icu.math" class="MathContext" fields="ENGINEERING PLAIN SCIENTIFIC" prefix="" enum-name="MathNotationForm" api-level="24" />
@@ -1028,7 +1028,7 @@
   <map package='android.os' class='HardwarePropertiesManager' fields='' prefix='DEVICE_TEMPERATURE_' enum-name="DeviceTemperatureType" api-level="24" />
   <map package='android.os' class='HardwarePropertiesManager' fields='' prefix='TEMPERATURE_' enum-name="TemperatureSource" api-level="24" />
 
-  <!-- android.os.health.*Stats constants are all used by 
+  <!-- android.os.health.*Stats constants are all used by
   HealthStats.getStats(int key) and should be either "all in the same type"
   or "leave as int". It is quite at unsure state that whether this API is
   extensive to support other health data types or not, so we are rather
@@ -1137,5 +1137,69 @@
   <map package='android.view.textclassifier' class='TextLinks' prefix='STATUS_' enum-name="ApplyStatusCode" api-level="28" />
   <map package='android.webkit' class='TracingConfig' prefix='CATEGORIES_' enum-name="Categories" api-level="28" />
   <map package='android.webkit' class='TracingConfig' fields='RECORD_CONTINUOUSLY RECORD_UNTIL_FULL' enum-name="TracingMode" api-level="28" />
+
+
+  <map package='android.app.admin' class='DevicePolicyManager.InstallSystemUpdateCallback' prefix='UPDATE_ERROR_' enum-name="UpdateErrorCode" api-level="29" />
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='PRIVATE_DNS_MODE_' enum-name="PrivateDnsMode" api-level="29" />
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='PRIVATE_DNS_SET_' enum-name="PrivateDnsSet" api-level="29" />
+  <map package='android.app.admin' class='DevicePolicyManager' prefix='PASSWORD_COMPLEXITY_' enum-name="PasswordComplexity" api-level="29" />
+  <map package='android.app' class='AppOpsManager' prefix='WATCH_FOREGROUND_' enum-name="WatchForeground" api-level="29" />
+  <map package='android.app' class='RemoteInput' prefix='EDIT_CHOICES_' enum-name="EditChoices" api-level="29" />
+  <map package='android.content.pm' class='ServiceInfo' prefix='FOREGROUND_SERVICE_' enum-name="ForegroundService" api-level="29" />
+  <map package='android.content.pm' class='PackageInstaller.SessionInfo' prefix='STAGED_SESSION_' enum-name="StagedSession" api-level="29" />
+  <map package='android.content.pm' class='PackageManager' prefix='INSTALL_REASON_' enum-name="InstallReason" api-level="29" />
+  <map package='android.content.pm' class='PackageManager' prefix='FLAG_PERMISSION_' enum-name="FlagPermission" api-level="29" />
+  <map package='android.graphics.fonts' class='FontStyle' prefix='FONT_SLANT_' enum-name="FontSlant" api-level="29" />
+  <map package='android.graphics' class='HardwareRenderer' prefix='SYNC_' enum-name="Sync" api-level="29" />
+  <map package='android.graphics' class='Paint' prefix='CURSOR_' enum-name="Cursor" api-level="29" />
+  <map package='android.graphics.text' class='LineBreaker' prefix='BREAK_STRATEGY_' enum-name="BreakStrategy" api-level="29" />
+  <map package='android.graphics.text' class='LineBreaker' prefix='HYPHENATION_FREQUENCY_' enum-name="HyphenationFrequency" api-level="29" />
+  <map package='android.graphics.text' class='LineBreaker' prefix='JUSTIFICATION_MODE_' enum-name="JustificationMode" api-level="29" />
+  <map package='android.hardware.biometrics' class='BiometricManager' prefix='BIOMETRIC_' enum-name="BiometricCode" api-level="29" />
+  <map package='android.hardware.camera2.params' class='RecommendedStreamConfigurationMap' prefix='USECASE_' enum-name="UsecaseMode" api-level="29" />
+  <!--  <map package='android.icu.lang' class='UScript' fields="*" enum-name="UScriptCode" api-level="24" /> -->
+  <map package='android.icu.text' class='Bidi' fields="*" enum-name="BidiOptions" api-level="29" />
+  <map package='android.icu.text' class='Transliterator' fields="FORWARD REVERSE" enum-name="DirectionOptions" api-level="29" />
+  <!-- <map package='android.icu.util' class='Calendar' fields="SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY" enum-name="DayOfWeek" api-level="24" /> -->
+  <map package='android.media' class='AudioAttributes' prefix="ALLOW_CAPTURE" enum-name="CapturePolicies" api-level="29" />
+  <map package='android.media' class='MicrophoneDirection' prefix="MIC_DIRECTION_" enum-name="MicDirection" api-level="29" />
+  <map package='android.media' class='MediaDrm.SessionException' prefix="ERROR_" enum-name="ErrorCode" api-level="29" />
+  <map package='android.media' class='MediaDrm' prefix="OFFLINE_LICENSE_STATE_" enum-name="OfflineLicenseState" api-level="29" />
+  <map package='android.media' class='MediaFormat' prefix="TYPE_" enum-name="MediaFormatType" api-level="29" />
+  <map package='android.media' class='Session2Token' prefix="TYPE_" enum-name="MediaSessionType" api-level="29" />
+  <map package='android.net' class='DnsResolver' prefix="FLAG_" enum-name="DnsResolverFlag" api-level="29" />
+  <map package='android.net' class='DnsResolver' prefix="TYPE_" enum-name="DnsResolverType" api-level="29" />
+  <map package='android.net' class='SocketKeepalive' prefix="ERROR_" enum-name="ErrorCode" api-level="29" />
+  <map package='android.net.wifi.p2p' class='WifiP2pConfig' prefix="GROUP_OWNER_" enum-name="Frequency" api-level="29" />
+  <!-- <map package='android.net.wifi.p2p' class='WifiP2pManager' fields="WIFI_P2P_DISCOVERY_STARTED WIFI_P2P_DISCOVERY_STOPPED" enum-name="DiscoveryStateMode" api-level="16" /> -->
+  <map package='android.net.wifi.rtt' class='ResponderLocation' prefix="ALTITUDE_" enum-name="AltitudeType" api-level="29" />
+  <map package='android.net.wifi.rtt' class='ResponderLocation' prefix="DATUM_" enum-name="DatumType" api-level="29" />
+  <map package='android.net.wifi.rtt' class='ResponderLocation' prefix="LOCATION_" enum-name="LocationMode" api-level="29" />
+  <map package='android.net.wifi' class='WifiManager' prefix="STATUS_NETWORK_" enum-name="NetworkStatus" api-level="29" />
+  <map package='android.os' class='PowerManager' prefix="THERMAL_STATUS_" enum-name="ThermalStatus" api-level="29" />
+  <map package='android.system' class='OsConstants' prefix="PROT_" enum-name="ProtectionMode" api-level="29" />
+  <map package='android.service.notification' class='ZenPolicy' prefix="PEOPLE_TYPE_" enum-name="AudienceType" api-level="29" />
+  <map package='android.service.notification' class='ZenPolicy' prefix="STATE_" enum-name="StateType" api-level="29" />
+  <map package='android.telecom' class='Call.Details' prefix="DIRECTION_" enum-name="CallDirection" api-level="29" />
+  <map package='android.telecom' class='PhoneAccountSuggestion' prefix="REASON_" enum-name="ReasonType" api-level="29" />
+  <map package='android.telephony' class='AvailableNetworkInfo' prefix="PRIORITY_" enum-name="AvailableNetworkInfoPriority" api-level="29" />
+  <map package='android.telephony.emergency' class='EmergencyNumber' prefix="EMERGENCY_NUMBER_SOURCE_" enum-name="EmergencyNumberSource" api-level="29" />
+  <map package='android.telephony.emergency' class='EmergencyNumber' prefix="EMERGENCY_SERVICE_CATEGORY_" enum-name="EmergencyServiceCategory" api-level="29" />
+  <map package='android.telephony.emergency' class='EmergencyNumber' prefix="EMERGENCY_CALL_ROUTING_" enum-name="EmergencyCallRouting" api-level="29" />
+  <!-- <map package='android.telephony' class='AccessNetworkConstants.AccessNetworkType' fields="*" enum-name="AccessNetworkConstantsAccessNetworkType" api-level="28" /> -->
+  <map package='android.telephony' class='SubscriptionManager' prefix="SUBSCRIPTION_TYPE_" enum-name="SubscriptionType" api-level="29" />
+  <map package='android.telephony' class='TelephonyManager.CellInfoCallback' prefix="ERROR_" enum-name="TelephonyManagerErrorCode" api-level="29" />
+  <map package='android.telephony' class='TelephonyManager' prefix="MULTISIM_" enum-name="MultiSimMode" api-level="29" />
+  <map package='android.text' class='TextUtils' prefix="SAFE_STRING_FLAG_" enum-name="SafeStringFlagMode" api-level="29" />
+  <map package='android.view.accessibility' class='AccessibilityManager' prefix="FLAG_CONTENT_" enum-name="ContentMode" api-level="29" />
+  <map package='android.view.contentcapture' class='ContentCaptureCondition' fields="FLAG_IS_REGEX" extra-default='None' enum-name="ContentCaptureConditionFlags" api-level="29" />
+  <map package='android.view.contentcapture' class='DataRemovalRequest' fields="FLAG_IS_PREFIX" extra-default='None' enum-name="DataRemovalRequestFlags" api-level="29" />
+  <map package='android.view' class='MotionEvent' prefix="CLASSIFICATION_" enum-name="ClassificationMode" api-level="29" />
+  <map package='android.view.textclassifier' class='TextClassifierEvent' prefix="TYPE_" enum-name="TextClassifierEventType" api-level="29" />
+  <map package='android.view.textclassifier' class='TextClassifierEvent' prefix="CATEGORY_" enum-name="TextClassifierEventCategory" api-level="29" />
+  <map package='android.webkit' class='WebSettings' prefix="FORCE_DARK_" enum-name="ForceDarkMode" api-level="29" />
+  <!-- <map package='java.sql' class='ResultSet' fields="HOLD_CURSORS_OVER_COMMIT CLOSE_CURSORS_AT_COMMIT" enum-name="HoldabilityMode" api-level="1" /> -->
+  <!-- <map package='java.sql' class='Connection' prefix="TRANSACTION_" enum-name="TransactionMode" api-level="1" /> -->
+  <!-- <map package='java.util' class='Calendar' fields="SHORT_FORMAT SHORT_STANDALONE LONG_FORMAT LONG_STANDALONE NARROW_FORMAT NARROW_STANDALONE" enum-name="DisplayNameStyle" api-level="26" /> -->
 
 </enum-conversion-mappings>

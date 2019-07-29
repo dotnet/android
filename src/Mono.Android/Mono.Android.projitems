@@ -145,12 +145,11 @@
       <Id>28</Id>
       <Stable>True</Stable>
     </AndroidApiInfo>
-    <AndroidApiInfo Include="v9.0.99">
+    <AndroidApiInfo Include="v10.0">
       <Name>Q</Name>
       <Level>29</Level>
-      <Id>Q</Id>
-      <Stable>False</Stable>
+      <Id>29</Id>
+      <Stable>True</Stable>
     </AndroidApiInfo>
   </ItemGroup>
-
 </Project>

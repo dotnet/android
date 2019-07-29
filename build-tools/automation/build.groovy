@@ -291,7 +291,7 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('run all tests', 240, 'MINUTES', XADir, false) {   // Typically takes 1hr and 50 minutes (or 110 minutes)
+        utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {   // Typically takes 6hr
             if (skipTest) {
                 echo "Skipping 'run all tests' stage. Clear the SkipTest variable setting to build and run tests"
                 return

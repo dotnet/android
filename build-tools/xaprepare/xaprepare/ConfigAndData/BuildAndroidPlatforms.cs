@@ -37,7 +37,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiLevel: 26, platformID: "26",  framework: "v8.0"),
 			new AndroidPlatform (apiLevel: 27, platformID: "27",  framework: "v8.1"),
 			new AndroidPlatform (apiLevel: 28, platformID: "28",  framework: "v9.0"),
-			new AndroidPlatform (apiLevel: 29, platformID: "Q",   framework: "v9.0.99", stable: false),
+			new AndroidPlatform (apiLevel: 29, platformID: "29",   framework: "v10.0"),
 		};
 
 		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
