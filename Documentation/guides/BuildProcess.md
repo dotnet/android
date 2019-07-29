@@ -109,34 +109,38 @@ The following build targets are defined for Xamarin.Android projects:
 ## Build Extension Points
 
 The Xamarin.Android build system exposes a few public extension points
-for those users wanting to hook into our build process. To use these 
-extension points you will need to define your own target inside a 
-`PropertyGroup`, for example
+for users wanting to hook into our build process. To use one of these
+extension points you will need to add your custom target to the
+appropriate MSBuild property in a `PropertyGroup`. For example:
 
-   ```
-   <PropertyGroup>
-      <AfterGenerateAndroidManifest>
-         $(AfterGenerateAndroidManifest);
-         YourTarget;
-      </AfterGenerateAndroidManifest>
-   </PropertyGroup>
-   ```
+```xml
+<PropertyGroup>
+   <AfterGenerateAndroidManifest>
+      $(AfterGenerateAndroidManifest);
+      YourTarget;
+   </AfterGenerateAndroidManifest>
+</PropertyGroup>
+```
 
-A word of caution about extending the build process. If not 
-written correctly build extensions can effect your build
-performance, especially if they run on every build. It is 
-highly recommended that you read the MSBuild [documentation](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild)
+A word of caution about extending the build process: If not
+written correctly, build extensions can affect your build
+performance, especially if they run on every build. It is
+highly recommended that you read the MSBuild [documentation](https://docs.microsoft.com/visualstudio/msbuild/msbuild)
 before implementing such extensions.
 
--   **AfterGenerateAndroidManifest** &ndash; This target will run 
-    directly after the internal `_GenerateJavaStubs` target. This
-    is where the `AndroidManifest.xml` file is generated in the 
-    `$(IntermediateOutputPath)`. So you you want to make any 
-    modifications to the generated `AndroidManifest.xml` file
-    you can do this using this extension point.
+-   **AfterGenerateAndroidManifest** &ndash; Targets listed in this
+    property will run directly after the internal `_GenerateJavaStubs`
+    target. This is where the `AndroidManifest.xml` file is generated
+    in the `$(IntermediateOutputPath)`. So if you want to make any
+    modifications to the generated `AndroidManifest.xml` file, you can
+    do that using this extension point.
 
--   **BeforeGenerateAndroidManifest** &ndash; This target will
-    run directly before `_GenerateJavaStubs`.
+    Added in Xamarin.Android 9.4.
+
+-   **BeforeGenerateAndroidManifest** &ndash; Targets listed in this
+    property will run directly before `_GenerateJavaStubs`.
+
+    Added in Xamarin.Android 9.4.
 
 <a name="Build_Properties" />
 
@@ -281,7 +285,7 @@ when packaging Release applications.
 
 -   **AndroidEnableGooglePlayStoreChecks** &ndash; A bool property
     which allows developers to disable the following Google Play
-    Store checks, XA1004, XA1005 and XA1006. This is useful for
+    Store checks: XA1004, XA1005 and XA1006. This is useful for
     developers who are not targeting the Google Play Store and do
     not wish to run those checks.
 
@@ -320,12 +324,12 @@ when packaging Release applications.
     Added in Xamarin.Android 9.2.
 
 -   **AndroidEnableProfiledAot** &ndash; A boolean property that
-    determines whether or not the AOT profiles are used during the
+    determines whether or not the AOT profiles are used during
     Ahead-of-Time compilation.
 
     The profiles are listed in `AndroidAotProfile` item group. This
     ItemGroup contains default profile(s). It can be overriden by
-    removing the existing one(s) and adding own AOT profiles.
+    removing the existing one(s) and adding your own AOT profiles.
 
     Support for this property was added in Xamarin.Android 9.4.
 
@@ -546,7 +550,7 @@ when packaging Release applications.
 
 -   **AndroidPackageFormat** &ndash; An enum-style property with valid
     values of `apk` or `aab`. This indicates if you want to package
-    the Android application as an [APK file][apk], or [Android App
+    the Android application as an [APK file][apk] or [Android App
     Bundle][bundle]. App Bundles are a new format for `Release` builds
     that are intended for submission on Google Play. This value
     currently defaults to `apk`.
@@ -558,7 +562,7 @@ when packaging Release applications.
     * `$(AndroidUseApkSigner)` is `False`.
     * `$(AndroidCreatePackagePerAbi)` is `False`.
 
-[apk]: https://en.wikipedia.org/wiki/Android_application_package]
+[apk]: https://en.wikipedia.org/wiki/Android_application_package
 [bundle]: https://developer.android.com/platform/technology/app-bundle
 
 -   **AndroidR8JarPath** &ndash; The path to `r8.jar` for use with the
