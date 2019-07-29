@@ -464,9 +464,12 @@ when packaging Release applications.
         libraries only, not user's assemblies.
 
     -   **Full**: Linking will be performed on base class libraries and
-        user assemblies. **Note:** Using an `AndroidLinkMode` value of *Full* often
-        results in broken apps, particularly when Reflection is used. Avoid unless
-        you *really* know what you're doing.
+        user assemblies.
+
+        > [!NOTE]
+        > Using an `AndroidLinkMode` value of *Full* often
+        > results in broken apps, particularly when Reflection is used. Avoid unless
+        > you *really* know what you're doing.
 
     ```xml
     <AndroidLinkMode>SdkOnly</AndroidLinkMode>
