@@ -126,6 +126,7 @@ namespace Java.InteropTests {
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.GetValue (ref invalid, JniObjectReferenceOptions.CopyAndDispose));
 		}
 
+#if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 		[Test]
 		public unsafe void GetValue_FindBestMatchType ()
 		{
@@ -138,6 +139,7 @@ namespace Java.InteropTests {
 				}
 			}
 		}
+#endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 	}
 }
 

@@ -24,6 +24,18 @@ namespace Java.InteropTests
 						// Dalvik, JVM
 						e.JavaStackTrace.StartsWith ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
 				e.Dispose ();
+#if __ANDROID__
+			} catch (Java.Lang.Throwable e) {
+				Assert.IsTrue (
+						string.Equals ("this/type/had/better/not/exist", e.Message, StringComparison.OrdinalIgnoreCase) ||
+						e.Message.StartsWith ("Didn't find class \"this.type.had.better.not.exist\" on path: DexPathList"));
+				Assert.IsTrue (
+						// ART
+						e.StackTrace.Contains ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal) ||
+						// Dalvik, JVM
+						e.StackTrace.Contains ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
+				e.Dispose ();
+#endif  // __ANDROID__
 			}
 		}
 

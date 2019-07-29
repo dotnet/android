@@ -33,7 +33,11 @@ namespace Java.InteropTests
 		[Test]
 		public void Ctor_ThrowsIfTypeNotFound ()
 		{
+#if __ANDROID__
+			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
+#else   // __ANDROID__
 			Assert.Throws<JavaException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
+#endif  // __ANDROID__
 		}
 
 		[Test]
@@ -92,19 +96,17 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void IsInstanceOfType ()
+		public unsafe void IsInstanceOfType ()
 		{
-			using (var t = new JniType ("java/lang/Object"))
-			using (var b = new TestType ()) {
-				Assert.IsTrue (t.IsInstanceOfType (b.PeerReference));
-			}
-		}
-
-		[Test]
-		public void ObjectBinding ()
-		{
-			using (var b = new TestType ()) {
-				Console.WriteLine ("# ObjectBinding: {0}", b.ToString ());
+			using (var Object_class = new JniType ("java/lang/Object"))
+			using (var String_class = new JniType ("java/lang/String")) {
+				var String_ctor = String_class.GetConstructor ("()V");
+				var s           = String_class.NewObject (String_ctor, null);
+				try {
+					Assert.IsTrue (Object_class.IsInstanceOfType (s), "java.lang.String IS-NOT-A java.lang.Object?!");
+				} finally {
+					JniObjectReference.Dispose (ref s);
+				}
 			}
 		}
 
@@ -112,7 +114,11 @@ namespace Java.InteropTests
 		public void InvalidSignatureThrowsJniException ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
+#if __ANDROID__
+				Assert.Throws<Java.Lang.NoSuchMethodError> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
+#else   // __ANDROID__
 				Assert.Throws<JavaException> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
+#endif  // __ANDROID__
 			}
 		}
 
@@ -122,6 +128,7 @@ namespace Java.InteropTests
 			using (var System_class = new JniType ("java/lang/System")) {
 				var System_in = System_class.GetStaticField ("in", "Ljava/io/InputStream;");
 				Assert.IsNotNull (System_in);
+				Assert.IsTrue (System_in.ID != IntPtr.Zero);
 			}
 		}
 

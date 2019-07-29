@@ -166,7 +166,11 @@ namespace Java.InteropTests
 
 			// Note: This may break if/when JavaVM provides "default"
 			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
+#if __ANDROID__
+			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
+#else   // !__ANDROID__
 			Assert.Throws<JavaException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
+#endif  // !__ANDROID__
 		}
 
 		[Test]

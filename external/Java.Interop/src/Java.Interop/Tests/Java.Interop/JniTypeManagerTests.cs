@@ -75,7 +75,10 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>),         "[[I",                  true,   2);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>[]),       "[[[I",                 true,   3);
 
+#if !__ANDROID__
+			// Re-enable once typemap files contain `JavaObject` subclasses, not just Java.Lang.Object subclasses
 			AssertGetJniTypeInfoForType (typeof (GenericHolder<int>),       GenericHolder<int>.JniTypeName,    false,   0);
+#endif  // !__ANDROID__
 		}
 
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)

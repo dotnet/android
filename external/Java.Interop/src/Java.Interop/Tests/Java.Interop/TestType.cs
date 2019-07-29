@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
+#if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 	[JniTypeSignature (TestType.JniTypeName)]
 	public partial class TestType : JavaObject
 	{
@@ -204,5 +205,6 @@ namespace Java.InteropTests
 			return value.ToString ();
 		}
 	}
+#endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 }
 

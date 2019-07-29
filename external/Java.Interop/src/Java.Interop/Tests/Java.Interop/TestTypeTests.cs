@@ -7,18 +7,27 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
+#if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 	[TestFixture]
 	public class TestTypeTests : JavaVMFixture
 	{
 		int lrefStartCount;
 
+#if __ANDROID__
+		[TestFixtureSetUp]
+#else   // __ANDROID__
 		[OneTimeSetUp]
+#endif  // __ANDROID__
 		public void StartArrayTests ()
 		{
 			lrefStartCount  = JniEnvironment.LocalReferenceCount;
 		}
 
+#if __ANDROID__
+		[TestFixtureTearDown]
+#else   // __ANDROID__
 		[OneTimeTearDown]
+#endif  // __ANDROID__
 		public void EndArrayTests ()
 		{
 			int lref    = JniEnvironment.LocalReferenceCount;
@@ -49,6 +58,14 @@ namespace Java.InteropTests
 			using (var t = new TestType ()) {
 				t.UnregisterFromRuntime ();
 				t.RunTests ();
+			}
+		}
+
+		[Test]
+		public void ObjectBinding ()
+		{
+			using (var b = new TestType ()) {
+				Console.WriteLine ("# ObjectBinding: {0}", b.ToString ());
 			}
 		}
 
@@ -143,5 +160,6 @@ namespace Java.InteropTests
 			}
 		}
 	}
+#endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 }
 
