@@ -10,10 +10,11 @@ public class ConjureXamarinAndroidCecil
 	const string BaseNameReplacement = "Xamarin.Android.Cecil";
 	const string CecilAssemblyName = BaseNameReplacement;
 	const string CecilMdbAssemblyName = BaseNameReplacement + ".Mdb";
+	const string PublicKey = "024004800094000620002400525341310400101079159977d2d03a8e6bea7a2e74e8d1afcc93e8851974952bb480a12c9134474d462447c37ee68c080536fcf3c3fbe2ff9c979ce998475e56e8ce82dd5bf35dc1e93bf2eeecf874b2477c5081dbea7447fddafa277b22de47d6ffea449674a4f9fccf84d1506989380284dbdd35f46cdff12a1bd78e4ef065d016df";
 
 	static readonly List<string> internalsVisibleTo = new List<string> {
-		"Xamarin.Android.Cecil.Pdb, PublicKey=0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db",
-		"Xamarin.Android.Cecil.Mdb, PublicKey=0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db"
+		$"Xamarin.Android.Cecil.Pdb, PublicKey={PublicKey}",
+		$"Xamarin.Android.Cecil.Mdb, PublicKey={PublicKey}"
 	};
 
 	public static int Main (string[] args)
