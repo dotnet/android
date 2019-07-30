@@ -53,6 +53,13 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
         # -or-
         make jenkins MSBUILD=msbuild
 
+@jonathanpeppers gave a talk at [Xamarin Developer Summit
+2019][xamdevsummit] with a full walkthrough. Even though the demo was
+on Windows, many of the concepts should still apply:
+
+[![Build Xamarin.Android](https://img.youtube.com/vi/8qaQleb6Tbk/maxresdefault.jpg)][xamdevsummit]
+
+[xamdevsummit]: https://youtu.be/8qaQleb6Tbk
 
 # Creating installers
 

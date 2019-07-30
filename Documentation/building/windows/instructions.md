@@ -62,6 +62,13 @@ changes to Xamarin.Android.Build.Tasks, one way to avoid this issue is to open
 outside of the build tasks, then you might prefer to work in an editor like
 Visual Studio Code instead and build via the command-line.
 
+@jonathanpeppers gave a talk at [Xamarin Developer Summit
+2019][xamdevsummit] with a full walkthrough:
+
+[![Build Xamarin.Android](https://img.youtube.com/vi/8qaQleb6Tbk/maxresdefault.jpg)][xamdevsummit]
+
+[xamdevsummit]: https://youtu.be/8qaQleb6Tbk
+
 ## Alternatives to Developer Command Prompt
 
 The [Developer Command Prompt][developer-prompt] is not explicitly required,
