@@ -125,7 +125,7 @@ namespace Xamarin.Android.Prepare
 			/// <summary>
 			///   Version of the XA binary bundle downloaded/created by this tool.
 			/// </summary>
-			public const string XABundleVersion = "v21";
+			public const string XABundleVersion = "v22";
 
 			/// <summary>
 			///   Length to truncate the git commit hash to.
