@@ -436,14 +436,38 @@ when packaging Release applications.
     assembly-qualified type name of an `HttpMessageHandler` subclass, suitable
     for use with
     [`System.Type.GetType(string)`](https://docs.microsoft.com/dotnet/api/system.type.gettype?view=netcore-2.0#System_Type_GetType_System_String_).
+    The most common values for this property are:
 
-    The default value is `System.Net.Http.HttpClientHandler, System.Net.Http`.
+    -   `Xamarin.Android.Net.AndroidClientHandler`: Use the Android Java APIs
+        to perform network requests. This allows accessing TLS 1.2 URLs when
+        the underlying Android version supports TLS 1.2. Only Android 5.0 and
+        later reliably provide TLS 1.2 support through Java.
 
-    This may be overridden to instead contain
-    `Xamarin.Android.Net.AndroidClientHandler`, which uses the Android
-    Java APIs to perform network requests. This allows accessing TLS 1.2 URLs
-    when the underlying Android version supports TLS 1.2.  
-    Only Android 5.0 and later reliably provide TLS 1.2 support through Java.
+        This corresponds to the **Android** option in the Visual Studio
+        property pages and the **AndroidClientHandler** option in the Visual
+        Studio for Mac property pages.
+
+        The new project wizard selects this option for new projects when the
+        **Minimum Android Version** is configured to **Android 5.0
+        (Lollipop)** or higher in Visual Studio or when **Target Platforms**
+        is set to **Latest and Greatest** in Visual Studio for Mac.
+
+    -   Unset/the empty string: This is equivalent to
+        `System.Net.Http.HttpClientHandler, System.Net.Http`
+
+        This corresponds to the **Default** option in the Visual Studio
+        property pages.
+
+        The new project wizard selects this option for new projects when the
+        **Minimum Android Version** is configured to **Android 4.4.87** or
+        lower in Visual Studio or when **Target Platforms** is set to **Modern
+        Development** or **Maximum Compatibility** in Visual Studio for Mac.
+
+    -  `System.Net.Http.HttpClientHandler, System.Net.Http`: Use the managed
+       `HttpMessageHandler`.
+
+       This corresponds to the **Managed** option in the Visual Studio
+       property pages.
 
     *Note*: If TLS 1.2 support is required on Android versions prior to 5.0,
     *or* if TLS 1.2 support is required with the `System.Net.WebClient` and
@@ -601,26 +625,39 @@ when packaging Release applications.
 -   **AndroidTlsProvider** &ndash; A string value which specifies which
     TLS provider should be used in an application. Possible values are:
 
+    -   Unset/the empty string: In Xamarin.Android 7.3 and higher, this is
+        equivalent to `btls`.
+
+        In Xamarin.Android 7.1, this is equivalent to `legacy`.
+
+        This corresponds to the **Default** setting in the Visual Studio
+        property pages.
+
     -   `btls`: Use
         [Boring SSL](https://boringssl.googlesource.com/boringssl) for
         TLS communication with
         [HttpWebRequest](https://docs.microsoft.com/dotnet/api/system.net.httpwebrequest).
+
         This allows use of TLS 1.2 on all Android versions.
+
+        This corresponds to the **Native TLS 1.2+** setting in the
+        Visual Studio property pages.
 
     -   `legacy`: Use the historical managed SSL implementation for
         network interaction. This *does not* support TLS 1.2.
 
-    -   `default`: Allow *Mono* to choose the default TLS provider.
-        This is equivalent to `legacy`, even in Xamarin.Android 7.3.  
-        *Note*: This value is unlikely to appear in `.csproj` values,
-        as the IDE "Default" value results in *removal* of the
-        `$(AndroidTlsProvider)` property.
+        This corresponds to the **Managed TLS 1.0** setting in the
+        Visual Studio property pages.
 
-    -   Unset/the empty string: In Xamarin.Android 7.1,
-        this is equivalent to `legacy`.  
-        In Xamarin.Android 7.3, this is equivalent to `btls`.
+    -   `default`: This value is unlikely to be used in Xamarin.Android
+        projects. The recommended value to use instead is the empty string,
+        which corresponds to the **Default** setting in the Visual Studio
+        property pages.
 
-    The default value is the empty string.
+        The `default` value is not offered in the Visual Studio property
+        pages.
+
+        This is currently equivalent to `legacy`.
 
     Added in Xamarin.Android 7.1.
 
