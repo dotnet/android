@@ -20,7 +20,6 @@ namespace Xamarin.Android.Tasks
 		const string TargetFrameworkIdentifier = "MonoAndroid";
 		const string MonoAndroidReference = "Mono.Android";
 
-		[Required]
 		public bool DesignTimeBuild { get; set; }
 
 		public ITaskItem [] InputAssemblies { get; set; }
