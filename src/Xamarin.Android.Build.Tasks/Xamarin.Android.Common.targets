@@ -2351,28 +2351,8 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
   </ReadAndroidManifest>
   <PropertyGroup>
-    <!--NOTE: bundletool requires this, regardless of AndroidManifest.xml-->
-    <_EmbeddedDSOsEnabled Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_EmbeddedDSOsEnabled>
+    <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
-</Target>
-
-<Target Name="_SetupEmbeddedDSOs"
-    DependsOnTargets="_ReadAndroidManifest"
-    Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' "
-    Inputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    Outputs="$(IntermediateOutputPath)dsoenvironment.txt">
-  <WriteLinesToFile
-      File="$(IntermediateOutputPath)dsoenvironment.txt"
-      Lines="__XA_DSO_IN_APK=1"
-      Overwrite="True"
-  />
-  <PropertyGroup>
-    <AndroidStoreUncompressedFileExtensions>.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
-  </PropertyGroup>
-  <ItemGroup>
-    <AndroidEnvironment Include="$(IntermediateOutputPath)dsoenvironment.txt" />
-    <FileWrites         Include="$(IntermediateOutputPath)dsoenvironment.txt" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_SetupAssemblyPreload"
@@ -2397,7 +2377,7 @@ because xbuild doesn't support framework reference assemblies.
   </PrepareAbiItems>
 </Target>
 
-<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ReadAndroidManifest;_SetupEmbeddedDSOs;_SetupAssemblyPreload" />
+<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ReadAndroidManifest;_SetupAssemblyPreload" />
 
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>

@@ -19,14 +19,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public bool   uses_mono_llvm;
 			public bool   uses_mono_aot;
-			public bool   uses_embedded_dsos;
 			public bool   uses_assembly_preload;
 			public bool   is_a_bundled_app;
 			public uint   environment_variable_count;
 			public uint   system_property_count;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 8;
+		const uint ApplicationConfigFieldCount = 7;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -119,32 +118,27 @@ namespace Xamarin.Android.Build.Tests
 						ret.uses_mono_aot = ConvertFieldToBool ("uses_mono_aot", envFile, i, field [1]);
 						break;
 
-					case 2: // uses_embedded_dsos: bool / .byte
-						AssertFieldType (envFile, ".byte", field [0], i);
-						ret.uses_embedded_dsos = ConvertFieldToBool ("uses_embedded_dsos", envFile, i, field [1]);
-						break;
-
-					case 3: // uses_assembly_preload: bool / .byte
+					case 2: // uses_assembly_preload: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile, i, field [1]);
 						break;
 
-					case 4: // is_a_bundled_app: bool / .byte
+					case 3: // is_a_bundled_app: bool / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.is_a_bundled_app = ConvertFieldToBool ("is_a_bundled_app", envFile, i, field [1]);
 						break;
 
-					case 5: // environment_variable_count: uint32_t / .word | .long
+					case 4: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile, i, field [1]);
 						break;
 
-					case 6: // system_property_count: uint32_t / .word | .long
+					case 5: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
 						break;
 
-					case 7: // android_package_name: string / [pointer type]
+					case 6: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
@@ -288,7 +282,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.AreEqual (firstAppConfig.uses_mono_llvm, secondAppConfig.uses_mono_llvm, $"Field 'uses_mono_llvm' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.uses_mono_aot, secondAppConfig.uses_mono_aot, $"Field 'uses_mono_aot' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-			Assert.AreEqual (firstAppConfig.uses_embedded_dsos, secondAppConfig.uses_embedded_dsos, $"Field 'uses_embedded_dsos' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.is_a_bundled_app, secondAppConfig.is_a_bundled_app, $"Field 'is_a_bundled_app' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.environment_variable_count, secondAppConfig.environment_variable_count, $"Field 'environment_variable_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.system_property_count, secondAppConfig.system_property_count, $"Field 'system_property_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");

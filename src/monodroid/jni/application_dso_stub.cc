@@ -15,7 +15,6 @@ uint8_t mj_typemap[] = { 0 };
 ApplicationConfig application_config = {
 	.uses_mono_llvm = false,
 	.uses_mono_aot = false,
-	.uses_embedded_dsos = false,
 	.uses_assembly_preload = false,
 	.is_a_bundled_app = false,
 	.environment_variable_count = 0,

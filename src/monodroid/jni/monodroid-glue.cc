@@ -1864,11 +1864,24 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 	return domain;
 }
 
+/* !DO NOT REMOVE! Used by the Android Designer */
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 jobjectArray externalStorageDirs, jobjectArray assembliesJava, jstring packageName,
                                 jint apiLevel, jobjectArray environmentVariables)
+{
+	Java_mono_android_Runtime_initInternal (
+		env, klass, lang, runtimeApksJava, runtimeNativeLibDir, 
+		appDirs, loader, externalStorageDirs, assembliesJava, apiLevel,
+		/* embeddedDSOsEnabled */ JNI_FALSE);
+}
+
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+                                jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
+                                jobjectArray externalStorageDirs, jobjectArray assembliesJava,
+                                jint apiLevel, jboolean embeddedDSOsEnabled)
 {
 	init_logging_categories ();
 
@@ -1878,6 +1891,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	}
 
 	android_api_level = apiLevel;
+	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
 
 	TimeZone_class = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
