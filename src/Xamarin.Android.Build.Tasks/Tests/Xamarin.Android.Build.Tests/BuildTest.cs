@@ -167,6 +167,19 @@ class MemTest {
 		}
 
 		[Test]
+		public void CodeAnalysis ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+			proj.SetProperty ("RunCodeAnalysis", "True");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
