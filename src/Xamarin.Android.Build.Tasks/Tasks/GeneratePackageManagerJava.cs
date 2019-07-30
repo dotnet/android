@@ -137,7 +137,6 @@ namespace Xamarin.Android.Tasks
 
 		void AddEnvironment ()
 		{
-			bool usesEmbeddedDSOs = false;
 			bool usesMonoAOT = false;
 			bool usesAssemblyPreload = EnablePreloadAssembliesDefault;
 			uint monoAOTMode = 0;
@@ -180,10 +179,6 @@ namespace Xamarin.Android.Tasks
 						haveHttpMessageHandler = true;
 					if (lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
 						haveTlsProvider = true;
-					if (lineToWrite.StartsWith ("__XA_DSO_IN_APK", StringComparison.Ordinal)) {
-						usesEmbeddedDSOs = true;
-						continue;
-					}
 					if (lineToWrite.StartsWith ("mono.enable_assembly_preload=", StringComparison.Ordinal)) {
 						int idx = lineToWrite.IndexOf ('=');
 						uint val;
@@ -258,7 +253,6 @@ namespace Xamarin.Android.Tasks
 
 					var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, environmentVariables, systemProperties) {
 						IsBundledApp = IsBundledApplication,
-						UsesEmbeddedDSOs = usesEmbeddedDSOs,
 						UsesMonoAOT = usesMonoAOT,
 						UsesMonoLLVM = EnableLLVM,
 						UsesAssemblyPreload = usesAssemblyPreload,

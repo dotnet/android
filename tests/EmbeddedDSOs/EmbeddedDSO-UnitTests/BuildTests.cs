@@ -112,7 +112,6 @@ namespace EmbeddedDSOUnitTests
 			List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, Xamarin.Android.Tools.XABuildConfig.SupportedABIs, true);
 			EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 			Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-			Assert.That (app_config.uses_embedded_dsos, Is.True, "'uses_embedded_dsos' must be true in application_config");
 		}
 
 		[Test]

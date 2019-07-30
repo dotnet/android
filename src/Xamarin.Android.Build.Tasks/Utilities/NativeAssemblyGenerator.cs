@@ -164,6 +164,11 @@ namespace Xamarin.Android.Tasks
 				return 0;
 
 			uint nbytes = structureAlignBytes - alignment;
+			return WriteDataPadding (output, nbytes);
+		}
+
+		protected uint WriteDataPadding (StreamWriter output, uint nbytes)
+		{
 			output.WriteLine ($"{Indent}.zero{Indent}{nbytes}");
 			return nbytes;
 		}

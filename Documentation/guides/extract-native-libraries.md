@@ -42,8 +42,7 @@ Xamarin.Android build system will do the following:
     extension, causing native libraries to be stored uncompressed
     within the `.apk`.
 
- 2. The `__XA_DSO_IN_APK` environment variable will be set within the
-    created `.apk` file with the value of `1`, indicating to
-    the app that native libraries should be loaded from the `.apk`
-    itself instead of from the filesystem.
-
+At runtime we need to check `ApplicationInfo.flags` for
+`FLAG_EXTRACT_NATIVE_LIBS`. At build time, the state of
+`extractNativeLibs` is not for certain, since Android App Bundles
+change this value on a per-device basis.

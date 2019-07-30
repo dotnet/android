@@ -11,7 +11,6 @@ namespace Xamarin.Android.Tasks
 		uint stringCounter = 0;
 
 		public bool IsBundledApp { get; set; }
-		public bool UsesEmbeddedDSOs { get; set; }
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
 		public bool UsesAssemblyPreload { get; set; }
@@ -48,9 +47,6 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "uses_mono_aot");
 				size += WriteData (output, UsesMonoAOT);
 
-				WriteCommentLine (output, "uses_embedded_dsos");
-				size += WriteData (output, UsesEmbeddedDSOs);
-
 				WriteCommentLine (output, "uses_assembly_preload");
 				size += WriteData (output, UsesAssemblyPreload);
 
@@ -62,6 +58,11 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "system_property_count");
 				size += WriteData (output, systemProperties == null ? 0 : systemProperties.Count * 2);
+
+				// After uses_embedded_dsos was removed, we need padding on 64-bit
+				if (TargetProvider.Is64Bit) {
+					size += WriteDataPadding (output, 4);
+				}
 
 				WriteCommentLine (output, "android_package_name");
 				size += WritePointer (output, stringLabel);

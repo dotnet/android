@@ -151,7 +151,12 @@ namespace xamarin { namespace android { namespace internal
 
 		bool is_embedded_dso_mode_enabled () const
 		{
-			return application_config.uses_embedded_dsos;
+			return embedded_dso_mode_enabled;
+		}
+
+		void set_embedded_dso_mode_enabled (bool yesno)
+		{
+			embedded_dso_mode_enabled = yesno;
 		}
 
 		MonoAotMode get_mono_aot_mode () const
@@ -197,6 +202,7 @@ namespace xamarin { namespace android { namespace internal
 	private:
 		int max_gref_count = 0;
 		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
+		bool embedded_dso_mode_enabled = false;
 	};
 }}}
 #endif // !__ANDROID_SYSTEM_H

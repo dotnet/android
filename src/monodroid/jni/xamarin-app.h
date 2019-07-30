@@ -18,7 +18,6 @@ struct ApplicationConfig
 {
 	bool uses_mono_llvm;
 	bool uses_mono_aot;
-	bool uses_embedded_dsos;
 	bool uses_assembly_preload;
 	bool is_a_bundled_app;
 	uint32_t environment_variable_count;

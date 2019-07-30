@@ -15,6 +15,9 @@ import mono.android.Runtime;
 
 public class MonoPackageManager {
 
+	// Exists only since API23 onwards, we must define it here
+	static final int FLAG_EXTRACT_NATIVE_LIBS = 0x10000000;
+
 	static Object lock = new Object ();
 	static boolean initialized;
 
@@ -45,6 +48,7 @@ public class MonoPackageManager {
 				String externalLegacyDir = new java.io.File (
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
+				boolean embeddedDSOsEnabled = (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
 
 				// Preload DSOs libmonodroid.so depends on so that the dynamic
 				// linker can resolve them when loading monodroid. This is not
@@ -54,7 +58,7 @@ public class MonoPackageManager {
 				System.loadLibrary("xamarin-app");
 				System.loadLibrary("monodroid");
 
-				Runtime.init (
+				Runtime.initInternal (
 						language,
 						apks,
 						getNativeLibraryPath (runtimePackage),
@@ -69,9 +73,8 @@ public class MonoPackageManager {
 							externalLegacyDir
 						},
 						MonoPackageManager_Resources.Assemblies,
-						null, // unused
 						android.os.Build.VERSION.SDK_INT,
-						null // unused
+						embeddedDSOsEnabled
 					);
 				
 				mono.android.app.ApplicationRegistration.registerApplications ();
