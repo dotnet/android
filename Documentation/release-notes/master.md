@@ -1,8 +1,8 @@
-# Xamarin.Android 9.5.99 (master) draft release notes
+# Xamarin.Android 10.0.99 (master) draft release notes
 
-## What's new in Xamarin.Android 9.5.99
+## What's new in Xamarin.Android 10.0.99
 
-### Summary of what's new in Xamarin.Android 9.5.99
+### Summary of what's new in Xamarin.Android 10.0.99
 
   * [Template for new features](#template-for-new-features)
   * [Build and deployment performance](#build-and-deployment-performance)
@@ -44,7 +44,7 @@ A big ***Thank You!*** to contributors who made improvements in this release:
 
 ## OSS core
 
-Xamarin.Android 9.5.99 is based on the open-source Xamarin.Android repositories:
+Xamarin.Android 10.0.99 is based on the open-source Xamarin.Android repositories:
 
   * Core JNI interaction logic is in the [Java.Interop](https://github.com/xamarin/Java.Interop/tree/master) repo.
   * Android bindings and MSBuild tooling are in the [xamarin-android](https://github.com/xamarin/xamarin-android/tree/master) repo.

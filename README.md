@@ -39,7 +39,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 | **Commercial Xamarin.Android 9.4 (d16-2)** for macOS                                        | [Download][commercial-d16-2-macOS-x86_64]   |
 | **Commercial Xamarin.Android 9.5 (d16-3) Preview** for Windows+Visual Studio 2019 Preview   | [Download][commercial-d16-3-Windows-x86_64] |
 | **Commercial Xamarin.Android 9.5 (d16-3) Preview** for macOS                                | [Download][commercial-d16-3-macOS-x86_64]   |
-| **OSS Xamarin.Android 9.4.99 (master)** for macOS &amp; Windows+Visual Studio 2019\*        | [![Open Source Xamarin.Android 9.4.99, macOS+VS2019][oss-master-macOS-x86_64-icon]][oss-master-macOS-x86_64-artifacts] |
+| **OSS Xamarin.Android 10.0.99 (master)** for macOS &amp; Windows+Visual Studio 2019\*       | [![Open Source Xamarin.Android 10.0.99, macOS+VS2019][oss-master-macOS-x86_64-icon]][oss-master-macOS-x86_64-artifacts] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
 
