@@ -22,6 +22,11 @@ namespace Xamarin.Android.Build.Tests
 			using (var zip = ZipArchive.Open (zipPath, FileMode.Open)) {
 				builder.AutomaticNuGetRestore = false;
 
+				if (!builder.TargetFrameworkExists("v9.0"))  {
+					Assert.Ignore ("TargetFrameworkVersion=v9.0 required for this test.");
+					return;
+				}
+
 				var projectDir = Path.Combine (Root, builder.ProjectDirectory);
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, recursive: true);

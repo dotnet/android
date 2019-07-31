@@ -431,7 +431,7 @@ stages:
         solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf.binlog
       condition: succeededOrFailed()
 
@@ -441,7 +441,7 @@ stages:
         solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Aot.binlog
           /p:AotAssemblies=true
       condition: succeededOrFailed()
@@ -452,7 +452,7 @@ stages:
         solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Profiled.binlog
           /p:AndroidEnableProfiledAot=true
       condition: succeededOrFailed()
@@ -463,7 +463,7 @@ stages:
         solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,UndeployTestApks,DeployTestApks,RunTestApks,ReportComponentFailures
+          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Bundle.binlog
           /p:BundleAssemblies=true
       condition: succeededOrFailed()

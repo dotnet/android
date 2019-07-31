@@ -40,13 +40,15 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease, [Values (true, false)] bool xamarinForms)
 		{
+			// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
+			// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "0 Warning(s)"), "Should have zero MSBuild warnings.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)") || StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 			}
@@ -456,7 +458,7 @@ namespace UnamedProject
 			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
-				
+
 			};
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -583,8 +585,8 @@ namespace UnamedProject
 		public void BuildIncrementingAssemblyVersion ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") { 
-				TextContent = () => "[assembly: System.Reflection.AssemblyVersion (\"1.0.0.*\")]" 
+			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") {
+				TextContent = () => "[assembly: System.Reflection.AssemblyVersion (\"1.0.0.*\")]"
 			});
 
 			using (var b = CreateApkBuilder ("temp/BuildIncrementingAssemblyVersion")) {
@@ -3117,7 +3119,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		[Test]
 		[TestCaseSource (nameof (validateJavaVersionTestCases))]
-		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult) 
+		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");
 			string javaExe = "java";
@@ -3314,7 +3316,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 							TextContent = () => @"using System;
 
 namespace "+ libName + @" {
- 
+
 	public class " + libName + @" {
 		public static void Foo () {
 		}
@@ -3443,7 +3445,7 @@ namespace UnnamedProject {
 				WebContent = "http://repo.spring.io/libs-release/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
 			});
 			/* The source is simple:
-			 * 
+			 *
 				public class Lambda
 				{
 				    public void foo()
@@ -3803,7 +3805,7 @@ public class ApplicationRegistration { }");
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidResources = {
 					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
-						TextContent = () => 
+						TextContent = () =>
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <ScrollView
     xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -3823,7 +3825,7 @@ public class ApplicationRegistration { }");
 				FileAssert.Exists (javaStub);
 			}
 		}
-		
+
 		[Test]
 		[Category ("Commercial")]
 		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ()
@@ -3932,4 +3934,3 @@ public class MyWorker : Worker
 		}
 	}
 }
-
