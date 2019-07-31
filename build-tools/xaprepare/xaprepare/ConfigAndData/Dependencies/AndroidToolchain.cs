@@ -13,6 +13,7 @@ namespace Xamarin.Android.Prepare
 		public AndroidToolchain ()
 		{
 			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
+			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
