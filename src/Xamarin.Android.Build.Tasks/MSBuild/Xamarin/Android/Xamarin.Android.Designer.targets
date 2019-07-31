@@ -38,6 +38,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <ExtraJarLocation Include="@(_LibraryJars)">
       <Source>LibraryImport</Source>
     </ExtraJarLocation>
+    <ExtraJarLocation Include="@(AndroidJavaLibrary)">
+      <Source>FooBar</Source>
+    </ExtraJarLocation>
     <ExtraResourceLocation Include="@(_AdditionalAndroidResourcePaths->'%(Identity)\res')">
       <Source>AssemblyCache</Source>
     </ExtraResourceLocation>
