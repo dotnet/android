@@ -693,13 +693,14 @@ namespace Lib2
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.ThrowOnBuildFailure = false;
-
 				proj.OtherBuildItems.Add (invalidXml);
 				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
 
+				b.ThrowOnBuildFailure = true;
 				proj.OtherBuildItems.Remove (invalidXml);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
+				b.ThrowOnBuildFailure = false;
 				proj.OtherBuildItems.Add (invalidXml);
 				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
 			}
