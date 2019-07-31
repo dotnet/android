@@ -1,7 +1,7 @@
 topdir = ../..
 
-API_LEVEL = 28
-API_LEVEL_NAME = 28
+API_LEVEL = 29
+API_LEVEL_NAME = 29
 
 CSCOMPILE = csc -debug:portable
 
@@ -26,8 +26,8 @@ generate-const-mapping.exe: $(CONST_MAPPER_SOURCES)
 map.ext.csv: generate-const-mapping.exe enum-conversion-mappings.xml const-list-$(API_LEVEL).xml
 	mono --debug generate-const-mapping.exe enum-conversion-mappings.xml const-list-$(API_LEVEL).xml > map.ext.csv || rm map.ext.csv
 
-remaining-int-consts.txt: ../../src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw/*.cs
-	grep "const int " ../../src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw/*.cs \
+remaining-int-consts.txt: $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw/*.cs
+	find $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw -name "*.cs" | xargs grep "const int " \
 		| grep -v Javax.Microedition \
 		| grep -v Dalvik.Bytecode \
 		| grep -v Android.Resource.cs \
@@ -42,7 +42,16 @@ remaining-int-methods-filtered.txt: remaining-int-methods.txt reduction_rules.tx
 	grep "int[\[ ]" remaining-int-methods.txt > remaining-int-methods-filtered.txt
 
 remaining-int-methods.txt: $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw/*.cs
-	grep "public" $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw/*.cs | grep -v "const" | grep "int" | grep "[({]" | grep -v GLES | grep -v Android.R. | grep -v Khronos | sort | sed 's/android-[0-9]*/android-XXX/' > remaining-int-methods.txt
+	find $(topdir)/src/Mono.Android/obj/$(CONFIGURATION)/android-$(API_LEVEL)/mcw -name "*.cs" | xargs grep "public" \
+		| grep -v "const" \
+		| grep "int" \
+		| grep "[({]" \
+		| grep -v GLES \
+		| grep -v Android.R. \
+		| grep -v Khronos \
+		| sort \
+		| sed 's/android-[0-9]*/android-XXX/' \
+		> remaining-int-methods.txt
 
 clean::
 	-rm -rf tmp.xml const-list-$(API_LEVEL).xml \

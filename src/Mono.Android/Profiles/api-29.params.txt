@@ -493,6 +493,7 @@ package android.app
     onCreateView(android.view.View parent, java.lang.String name, android.content.Context context, android.util.AttributeSet attrs)
     onCreateView(java.lang.String name, android.content.Context context, android.util.AttributeSet attrs)
     onGenericMotionEvent(android.view.MotionEvent event)
+    onGetDirectActions(android.os.CancellationSignal cancellationSignal, java.util.function.Consumer<java.util.List<android.app.DirectAction>> callback)
     onKeyDown(int keyCode, android.view.KeyEvent event)
     onKeyLongPress(int keyCode, android.view.KeyEvent event)
     onKeyMultiple(int keyCode, int repeatCount, android.view.KeyEvent event)
@@ -507,6 +508,7 @@ package android.app
     onOptionsItemSelected(android.view.MenuItem item)
     onOptionsMenuClosed(android.view.Menu menu)
     onPanelClosed(int featureId, android.view.Menu menu)
+    onPerformDirectAction(java.lang.String actionId, android.os.Bundle arguments, android.os.CancellationSignal cancellationSignal, java.util.function.Consumer<android.os.Bundle> resultListener)
     onPictureInPictureModeChanged(boolean isInPictureInPictureMode)
     onPictureInPictureModeChanged(boolean isInPictureInPictureMode, android.content.res.Configuration newConfig)
     onPostCreate(android.os.Bundle savedInstanceState)
@@ -956,6 +958,13 @@ package android.app
     setStyle(int style, int theme)
     show(android.app.FragmentManager manager, java.lang.String tag)
     show(android.app.FragmentTransaction transaction, java.lang.String tag)
+  class DirectAction
+    equals(java.lang.Object other)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class DirectAction.Builder
+    #ctor(java.lang.String id)
+    setExtras(android.os.Bundle extras)
+    setLocusId(android.content.LocusId locusId)
   class DownloadManager
     addCompletedDownload(java.lang.String title, java.lang.String description, boolean isMediaScannerScannable, java.lang.String mimeType, java.lang.String path, long length, boolean showNotification)
     addCompletedDownload(java.lang.String title, java.lang.String description, boolean isMediaScannerScannable, java.lang.String mimeType, java.lang.String path, long length, boolean showNotification, android.net.Uri uri, android.net.Uri referer)
@@ -1355,7 +1364,7 @@ package android.app
     setDesiredHeightResId(int heightResId)
     setIcon(android.graphics.drawable.Icon icon)
     setIntent(android.app.PendingIntent intent)
-    setSuppressInitialNotification(boolean shouldSupressNotif)
+    setSuppressNotification(boolean shouldSupressNotif)
   class Notification.Builder
     addAction(android.app.Notification.Action action)
     addAction(int icon, java.lang.CharSequence title, android.app.PendingIntent intent)
@@ -1395,6 +1404,7 @@ package android.app
     setLargeIcon(android.graphics.drawable.Icon icon)
     setLights(int argb, int onMs, int offMs)
     setLocalOnly(boolean localOnly)
+    setLocusId(android.content.LocusId locusId)
     setNumber(int number)
     setOngoing(boolean ongoing)
     setOnlyAlertOnce(boolean onlyAlertOnce)
@@ -1717,9 +1727,11 @@ package android.app
     setNightMode(int mode)
   class VoiceInteractor
     getActiveRequest(java.lang.String name)
+    registerOnDestroyedCallback(java.util.concurrent.Executor executor, java.lang.Runnable callback)
     submitRequest(android.app.VoiceInteractor.Request request)
     submitRequest(android.app.VoiceInteractor.Request request, java.lang.String name)
     supportsCommands(java.lang.String[] commands)
+    unregisterOnDestroyedCallback(java.lang.Runnable callback)
   class VoiceInteractor.AbortVoiceRequest
     onAbortResult(android.os.Bundle result)
     #ctor(android.app.VoiceInteractor.Prompt prompt, android.os.Bundle extras)
@@ -3263,6 +3275,7 @@ package android.content
     setDataAndTypeAndNormalize(android.net.Uri data, java.lang.String type)
     setExtrasClassLoader(java.lang.ClassLoader loader)
     setFlags(int flags)
+    setIdentifier(java.lang.String identifier)
     setPackage(java.lang.String packageName)
     setSelector(android.content.Intent selector)
     setSourceBounds(android.graphics.Rect r)
@@ -3346,6 +3359,10 @@ package android.content
     onLoadCanceled(android.content.Loader<D> loader)
   interface Loader.OnLoadCompleteListener<D>
     onLoadComplete(android.content.Loader<D> loader, D data)
+  class LocusId
+    equals(java.lang.Object obj)
+    #ctor(java.lang.String id)
+    writeToParcel(android.os.Parcel parcel, int flags)
   class MutableContextWrapper
     #ctor(android.content.Context base)
     setBaseContext(android.content.Context base)
@@ -3766,6 +3783,7 @@ package android.content.pm
     setIcon(android.graphics.drawable.Icon icon)
     setIntent(android.content.Intent intent)
     setIntents(android.content.Intent[] intents)
+    setLocusId(android.content.LocusId locusId)
     setLongLabel(java.lang.CharSequence longLabel)
     setLongLived(boolean londLived)
     setPerson(android.app.Person person)
@@ -5349,8 +5367,8 @@ package android.graphics.drawable
     setHotspot(float x, float y)
     setHotspotBounds(int left, int top, int right, int bottom)
     setOpacity(int opacity)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setVisible(boolean visible, boolean restart)
     unscheduleDrawable(android.graphics.drawable.Drawable who, java.lang.Runnable what)
   interface Animatable2
@@ -5391,8 +5409,8 @@ package android.graphics.drawable
     setColorFilter(android.graphics.ColorFilter colorFilter)
     setHotspot(float x, float y)
     setHotspotBounds(int left, int top, int right, int bottom)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setVisible(boolean visible, boolean restart)
     unregisterAnimationCallback(android.graphics.drawable.Animatable2.AnimationCallback callback)
   class AnimationDrawable
@@ -5432,8 +5450,8 @@ package android.graphics.drawable
     setTileModeX(android.graphics.Shader.TileMode mode)
     setTileModeXY(android.graphics.Shader.TileMode xmode, android.graphics.Shader.TileMode ymode)
     setTileModeY(android.graphics.Shader.TileMode mode)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
   class ClipDrawable
     applyTheme(android.content.res.Resources.Theme t)
     #ctor(android.graphics.drawable.Drawable drawable, int gravity, int orientation)
@@ -5450,8 +5468,8 @@ package android.graphics.drawable
     setAlpha(int alpha)
     setColor(int color)
     setColorFilter(android.graphics.ColorFilter colorFilter)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
   class ColorStateListDrawable
     applyTheme(android.content.res.Resources.Theme t)
     #ctor(android.content.res.ColorStateList colorStateList)
@@ -5462,8 +5480,8 @@ package android.graphics.drawable
     setAlpha(int alpha)
     setColorFilter(android.graphics.ColorFilter colorFilter)
     setColorStateList(android.content.res.ColorStateList colorStateList)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     unscheduleDrawable(android.graphics.drawable.Drawable who, java.lang.Runnable what)
   class Drawable
     applyTheme(android.content.res.Resources.Theme t)
@@ -5504,8 +5522,8 @@ package android.graphics.drawable
     setLevel(int level)
     setState(int[] stateSet)
     setTint(int tintColor)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setTintMode(android.graphics.PorterDuff.Mode tintMode)
     setVisible(boolean visible, boolean restart)
     unscheduleSelf(java.lang.Runnable what)
@@ -5538,8 +5556,8 @@ package android.graphics.drawable
     setExitFadeDuration(int ms)
     setHotspot(float x, float y)
     setHotspotBounds(int left, int top, int right, int bottom)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setVisible(boolean visible, boolean restart)
     unscheduleDrawable(android.graphics.drawable.Drawable who, java.lang.Runnable what)
   class DrawableContainer.DrawableContainerState
@@ -5569,8 +5587,8 @@ package android.graphics.drawable
     setDrawable(android.graphics.drawable.Drawable dr)
     setHotspot(float x, float y)
     setHotspotBounds(int left, int top, int right, int bottom)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setVisible(boolean visible, boolean restart)
     unscheduleDrawable(android.graphics.drawable.Drawable who, java.lang.Runnable what)
   class GradientDrawable
@@ -5607,8 +5625,8 @@ package android.graphics.drawable
     setStroke(int width, int color, float dashWidth, float dashGap)
     setThickness(int thickness)
     setThicknessRatio(float thicknessRatio)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setUseLevel(boolean useLevel)
   class Icon
     createWithAdaptiveBitmap(android.graphics.Bitmap bits)
@@ -5623,8 +5641,8 @@ package android.graphics.drawable
     loadDrawableAsync(android.content.Context context, android.graphics.drawable.Icon.OnDrawableLoadedListener listener, android.os.Handler handler)
     loadDrawableAsync(android.content.Context context, android.os.Message andThen)
     setTint(int tint)
+    setTintBlendMode(android.graphics.BlendMode mode)
     setTintList(android.content.res.ColorStateList tintList)
-    setTintMode(android.graphics.BlendMode mode)
     setTintMode(android.graphics.PorterDuff.Mode mode)
     writeToParcel(android.os.Parcel dest, int flags)
   interface Icon.OnDrawableLoadedListener
@@ -5692,8 +5710,8 @@ package android.graphics.drawable
     setPadding(int left, int top, int right, int bottom)
     setPaddingMode(int mode)
     setPaddingRelative(int start, int top, int end, int bottom)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     setVisible(boolean visible, boolean restart)
     unscheduleDrawable(android.graphics.drawable.Drawable who, java.lang.Runnable what)
   class LevelListDrawable
@@ -5720,8 +5738,8 @@ package android.graphics.drawable
     setTargetDensity(android.graphics.Canvas canvas)
     setTargetDensity(android.util.DisplayMetrics metrics)
     setTargetDensity(int density)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
   class PaintDrawable
     inflateTag(java.lang.String name, android.content.res.Resources r, org.xmlpull.v1.XmlPullParser parser, android.util.AttributeSet attrs)
     #ctor(int color)
@@ -5786,8 +5804,8 @@ package android.graphics.drawable
     setPadding(int left, int top, int right, int bottom)
     setShaderFactory(android.graphics.drawable.ShapeDrawable.ShaderFactory fact)
     setShape(android.graphics.drawable.shapes.Shape s)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
     #ctor(android.graphics.drawable.shapes.Shape s)
   class ShapeDrawable.ShaderFactory
     resize(int width, int height)
@@ -5814,8 +5832,8 @@ package android.graphics.drawable
     setAlpha(int alpha)
     setAutoMirrored(boolean mirrored)
     setColorFilter(android.graphics.ColorFilter colorFilter)
+    setTintBlendMode(android.graphics.BlendMode blendMode)
     setTintList(android.content.res.ColorStateList tint)
-    setTintMode(android.graphics.BlendMode blendMode)
 
 package android.graphics.drawable.shapes
 ;---------------------------------------
@@ -8054,7 +8072,7 @@ package android.location
     setBearing(float bearing)
     setBearingAccuracyDegrees(float bearingAccuracyDegrees)
     setElapsedRealtimeNanos(long time)
-    setElapsedRealtimeUncertaintyNanos(long time)
+    setElapsedRealtimeUncertaintyNanos(double time)
     setExtras(android.os.Bundle extras)
     setLatitude(double latitude)
     setLongitude(double longitude)
@@ -8138,8 +8156,8 @@ package android.media
     setAllowedCapturePolicy(int capturePolicy)
     setContentType(int contentType)
     setFlags(int flags)
+    setHapticChannelsMuted(boolean muted)
     setLegacyStreamType(int streamType)
-    setMuteHapticChannels(boolean muted)
     setUsage(int usage)
   class AudioDeviceCallback
     onAudioDevicesAdded(android.media.AudioDeviceInfo[] addedDevices)
@@ -8355,15 +8373,6 @@ package android.media
   class CameraProfile
     getJpegEncodingQualityParameter(int quality)
     getJpegEncodingQualityParameter(int cameraId, int quality)
-  class DataSourceDesc.Builder
-    #ctor(android.media.DataSourceDesc dsd)
-    setDataSource(android.net.Uri uri)
-    setDataSource(android.net.Uri uri, java.util.Map<java.lang.String,java.lang.String> headers, java.util.List<java.net.HttpCookie> cookies)
-    setDataSource(android.os.ParcelFileDescriptor pfd)
-    setDataSource(android.os.ParcelFileDescriptor pfd, long offset, long length)
-    setEndPosition(long position)
-    setMediaId(java.lang.String mediaId)
-    setStartPosition(long position)
   class DeniedByServerException
     #ctor(java.lang.String detailMessage)
   class DrmInitData
@@ -8518,9 +8527,11 @@ package android.media
     #ctor(int kind)
   class MediaController2
     cancelSessionCommand(java.lang.Object token)
-    #ctor(android.content.Context context, android.media.Session2Token token)
-    #ctor(android.content.Context context, android.media.Session2Token token, java.util.concurrent.Executor executor, android.media.MediaController2.ControllerCallback callback)
     sendSessionCommand(android.media.Session2Command command, android.os.Bundle args)
+  class MediaController2.Builder
+    #ctor(android.content.Context context, android.media.Session2Token token)
+    setConnectionHints(android.os.Bundle connectionHints)
+    setControllerCallback(java.util.concurrent.Executor executor, android.media.MediaController2.ControllerCallback callback)
   class MediaController2.ControllerCallback
     onCommandResult(android.media.MediaController2 controller, java.lang.Object token, android.media.Session2Command command, android.media.Session2Command.Result result)
     onConnected(android.media.MediaController2 controller, android.media.Session2CommandGroup allowedCommands)
@@ -8651,13 +8662,6 @@ package android.media
     setInteger(java.lang.String name, int value)
     setLong(java.lang.String name, long value)
     setString(java.lang.String name, java.lang.String value)
-  class MediaItem2
-    setMetadata(android.media.MediaMetadata metadata)
-    writeToParcel(android.os.Parcel dest, int flags)
-  class MediaItem2.Builder
-    setEndPosition(long position)
-    setMetadata(android.media.MediaMetadata metadata)
-    setStartPosition(long position)
   class MediaMetadata
     containsKey(java.lang.String key)
     equals(java.lang.Object o)
@@ -8813,65 +8817,6 @@ package android.media
     #ctor(java.lang.String detailMessage)
   class MediaPlayer.TrackInfo
     writeToParcel(android.os.Parcel dest, int flags)
-  class MediaPlayer2
-    addOnRoutingChangedListener(android.media.AudioRouting.OnRoutingChangedListener listener, android.os.Handler handler)
-    attachAuxEffect(int effectId)
-    cancelCommand(java.lang.Object token)
-    deselectTrack(android.media.DataSourceDesc dsd, android.media.MediaPlayer2.TrackInfo trackInfo)
-    deselectTrack(android.media.MediaPlayer2.TrackInfo trackInfo)
-    getBufferedPosition(android.media.DataSourceDesc dsd)
-    getDuration(android.media.DataSourceDesc dsd)
-    getSelectedTrack(android.media.DataSourceDesc dsd, int trackType)
-    getSelectedTrack(int trackType)
-    getTrackInfo(android.media.DataSourceDesc dsd)
-    loopCurrent(boolean loop)
-    #ctor(android.content.Context context)
-    notifyWhenCommandLabelReached(java.lang.Object label)
-    registerEventCallback(java.util.concurrent.Executor executor, android.media.MediaPlayer2.EventCallback eventCallback)
-    removeOnRoutingChangedListener(android.media.AudioRouting.OnRoutingChangedListener listener)
-    seekTo(long msec)
-    seekTo(long msec, int mode)
-    selectTrack(android.media.DataSourceDesc dsd, android.media.MediaPlayer2.TrackInfo trackInfo)
-    selectTrack(android.media.MediaPlayer2.TrackInfo trackInfo)
-    setAudioAttributes(android.media.AudioAttributes attributes)
-    setAudioSessionId(int sessionId)
-    setAuxEffectSendLevel(float level)
-    setDataSource(android.media.DataSourceDesc dsd)
-    setDisplay(android.view.SurfaceHolder sh)
-    setDrmEventCallback(java.util.concurrent.Executor executor, android.media.MediaPlayer2.DrmEventCallback eventCallback)
-    setNextDataSource(android.media.DataSourceDesc dsd)
-    setNextDataSources(java.util.List<android.media.DataSourceDesc> dsds)
-    setPlaybackParams(android.media.PlaybackParams params)
-    setPlayerVolume(float volume)
-    setPreferredDevice(android.media.AudioDeviceInfo deviceInfo)
-    setScreenOnWhilePlaying(boolean screenOn)
-    setSurface(android.view.Surface surface)
-    setSyncParams(android.media.SyncParams params)
-    setWakeLock(android.os.PowerManager.WakeLock wakeLock)
-    unregisterEventCallback(android.media.MediaPlayer2.EventCallback eventCallback)
-  class MediaPlayer2.DrmEventCallback
-    onDrmConfig(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.MediaDrm drm)
-    onDrmInfo(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.MediaPlayer2.DrmInfo drmInfo)
-    onDrmKeyRequest(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.MediaDrm.KeyRequest request)
-    onDrmPrepared(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, int status, byte[] keySetId)
-  class MediaPlayer2.DrmPreparationInfo.Builder
-    #ctor(java.util.UUID uuid)
-    setInitData(byte[] initData)
-    setKeySetId(byte[] keySetId)
-    setKeyType(int keyType)
-    setMimeType(java.lang.String mimeType)
-    setOptionalParameters(java.util.Map<java.lang.String,java.lang.String> optionalParameters)
-  class MediaPlayer2.EventCallback
-    onCallCompleted(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, int what, int status)
-    onCommandLabelReached(android.media.MediaPlayer2 mp, java.lang.Object label)
-    onError(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, int what, int extra)
-    onInfo(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, int what, int extra)
-    onMediaTimeDiscontinuity(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.MediaTimestamp timestamp)
-    onSubtitleData(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.MediaPlayer2.SubtitleData data)
-    onTimedMetaDataAvailable(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.media.TimedMetaData data)
-    onVideoSizeChanged(android.media.MediaPlayer2 mp, android.media.DataSourceDesc dsd, android.util.Size size)
-  class MediaPlayer2.NoDrmSchemeException
-    #ctor(java.lang.String detailMessage)
   class MediaRecorder
     addOnRoutingChangedListener(android.media.AudioRouting.OnRoutingChangedListener listener, android.os.Handler handler)
     registerAudioRecordingCallback(java.util.concurrent.Executor executor, android.media.AudioManager.AudioRecordingCallback cb)
@@ -9013,6 +8958,7 @@ package android.media
   class MediaSession2Service
     addSession(android.media.MediaSession2 session)
     onBind(android.content.Intent intent)
+    onGetSession(android.media.MediaSession2.ControllerInfo controllerInfo)
     onUpdateNotification(android.media.MediaSession2 session)
     removeSession(android.media.MediaSession2 session)
   class MediaSession2Service.MediaNotification
@@ -9905,16 +9851,13 @@ package android.net
   class DhcpInfo
     writeToParcel(android.os.Parcel dest, int flags)
   class DnsResolver
-    <T> query(android.net.Network network, byte[] query, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.AnswerCallback<T> callback)
-    <T> query(android.net.Network network, java.lang.String domain, int nsClass, int nsType, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.AnswerCallback<T> callback)
-    query(android.net.Network network, java.lang.String domain, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.InetAddressAnswerCallback callback)
-  class DnsResolver.AnswerCallback<T>
-    #ctor(android.net.DnsResolver.AnswerParser<T> parser)
-    onAnswer(T answer)
-    onParseException(android.net.ParseException exception)
-    onQueryException(android.system.ErrnoException exception)
-  interface DnsResolver.AnswerParser<T>
-    parse(byte[] rawAnswer)
+    query(android.net.Network network, java.lang.String domain, int nsType, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.Callback<? super java.util.List<java.net.InetAddress>> callback)
+    query(android.net.Network network, java.lang.String domain, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.Callback<? super java.util.List<java.net.InetAddress>> callback)
+    rawQuery(android.net.Network network, byte[] query, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.Callback<? super byte[]> callback)
+    rawQuery(android.net.Network network, java.lang.String domain, int nsClass, int nsType, int flags, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.net.DnsResolver.Callback<? super byte[]> callback)
+  interface DnsResolver.Callback<T>
+    onAnswer(T answer, int rcode)
+    onError(android.net.DnsResolver.DnsException error)
   class InetAddresses
     isNumericAddress(java.lang.String address)
     parseNumericAddress(java.lang.String address)
@@ -10010,9 +9953,6 @@ package android.net
     removeTransportType(int transportType)
     setNetworkSpecifier(android.net.NetworkSpecifier networkSpecifier)
     setNetworkSpecifier(java.lang.String networkSpecifier)
-  class ParseException
-    #ctor(java.lang.String response)
-    #ctor(java.lang.String response, java.lang.Throwable cause)
   class Proxy
     getHost(android.content.Context ctx)
     getPort(android.content.Context ctx)
@@ -12005,8 +11945,8 @@ package android.os
     getExternalStorageState(java.io.File path)
     getStorageState(java.io.File path)
     isExternalStorageEmulated(java.io.File path)
+    isExternalStorageLegacy(java.io.File path)
     isExternalStorageRemovable(java.io.File path)
-    isExternalStorageSandboxed(java.io.File path)
   class FileObserver
     #ctor(java.io.File file)
     #ctor(java.io.File file, int mask)
@@ -12081,6 +12021,7 @@ package android.os
     get(int index)
     getFirstMatch(java.lang.String[] supportedLocales)
     indexOf(java.util.Locale locale)
+    isPseudoLocale(android.icu.util.ULocale locale)
     #ctor(java.util.Locale... list)
     setDefault(android.os.LocaleList locales)
     writeToParcel(android.os.Parcel dest, int parcelableFlags)
@@ -13063,8 +13004,8 @@ package android.provider
     onTypefaceRequestFailed(int reason)
     onTypefaceRetrieved(android.graphics.Typeface typeface)
   class MediaStore
-    getAllVolumeNames(android.content.Context context)
     getDocumentUri(android.content.Context context, android.net.Uri mediaUri)
+    getExternalVolumeNames(android.content.Context context)
     getMediaUri(android.content.Context context, android.net.Uri documentUri)
     getVersion(android.content.Context context)
     getVersion(android.content.Context context, java.lang.String volumeName)
@@ -14303,8 +14244,10 @@ package android.service.voice
     onCancelRequest(android.service.voice.VoiceInteractionSession.Request request)
     onComputeInsets(android.service.voice.VoiceInteractionSession.Insets outInsets)
     onConfigurationChanged(android.content.res.Configuration newConfig)
+    onDirectActionsInvalidated(android.service.voice.VoiceInteractionSession.ActivityId activityId)
     onGetSupportedCommands(java.lang.String[] commands)
     onHandleAssist(android.os.Bundle data, android.app.assist.AssistStructure structure, android.app.assist.AssistContent content)
+    onHandleAssist(android.service.voice.VoiceInteractionSession.AssistState state)
     onHandleAssistSecondary(android.os.Bundle data, android.app.assist.AssistStructure structure, android.app.assist.AssistContent content, int index, int count)
     onHandleScreenshot(android.graphics.Bitmap screenshot)
     onKeyDown(int keyCode, android.view.KeyEvent event)
@@ -14321,6 +14264,8 @@ package android.service.voice
     onTaskFinished(android.content.Intent intent, int taskId)
     onTaskStarted(android.content.Intent intent, int taskId)
     onTrimMemory(int level)
+    performDirectAction(android.app.DirectAction action, android.os.Bundle extras, android.os.CancellationSignal cancellationSignal, java.util.concurrent.Executor resultExecutor, java.util.function.Consumer<android.os.Bundle> resultListener)
+    requestDirectActions(android.service.voice.VoiceInteractionSession.ActivityId activityId, android.os.CancellationSignal cancellationSignal, java.util.concurrent.Executor resultExecutor, java.util.function.Consumer<java.util.List<android.app.DirectAction>> callback)
     setContentView(android.view.View view)
     setDisabledShowContext(int flags)
     setKeepAwake(boolean keepAwake)
@@ -14333,6 +14278,8 @@ package android.service.voice
     #ctor(android.content.Context context, android.os.Handler handler)
   class VoiceInteractionSession.AbortVoiceRequest
     sendAbortResult(android.os.Bundle result)
+  class VoiceInteractionSession.ActivityId
+    equals(java.lang.Object o)
   class VoiceInteractionSession.CommandRequest
     sendIntermediateResult(android.os.Bundle result)
     sendResult(android.os.Bundle result)
@@ -14660,7 +14607,7 @@ package android.telecom
     onBind(android.content.Intent intent)
     onPlaceCall(android.net.Uri handle, android.telecom.PhoneAccountHandle initialPhoneAccount, boolean allowInteractiveResponse)
     onUnbind(android.content.Intent intent)
-    redirectCall(android.net.Uri handle, android.telecom.PhoneAccountHandle targetPhoneAccount, boolean confirmFirst)
+    redirectCall(android.net.Uri gatewayUri, android.telecom.PhoneAccountHandle targetPhoneAccount, boolean confirmFirst)
   class CallScreeningService
     onBind(android.content.Intent intent)
     onScreenCall(android.telecom.Call.Details callDetails)
@@ -16861,7 +16808,6 @@ package android.util
     logEvent(int label)
     logStart(int label)
     logStop(int label)
-    write(int id, java.lang.Object... params)
   class StringBuilderPrinter
     println(java.lang.String x)
     #ctor(java.lang.StringBuilder builder)
@@ -17164,8 +17110,8 @@ package android.view
     setEnabled(boolean enabled)
     setIcon(android.graphics.drawable.Drawable icon)
     setIcon(int iconRes)
+    setIconTintBlendMode(android.graphics.BlendMode blendMode)
     setIconTintList(android.content.res.ColorStateList tint)
-    setIconTintMode(android.graphics.BlendMode blendMode)
     setIconTintMode(android.graphics.PorterDuff.Mode tintMode)
     setIntent(android.content.Intent intent)
     setNumericShortcut(char numericChar)
@@ -17594,14 +17540,15 @@ package android.view
     setBackgroundColor(int color)
     setBackgroundDrawable(android.graphics.drawable.Drawable background)
     setBackgroundResource(int resid)
+    setBackgroundTintBlendMode(android.graphics.BlendMode blendMode)
     setBackgroundTintList(android.content.res.ColorStateList tint)
-    setBackgroundTintMode(android.graphics.BlendMode blendMode)
     setBackgroundTintMode(android.graphics.PorterDuff.Mode tintMode)
     setBottom(int bottom)
     setCameraDistance(float distance)
     setClickable(boolean clickable)
     setClipBounds(android.graphics.Rect clipBounds)
     setClipToOutline(boolean clipToOutline)
+    setContentCaptureSession(android.view.contentcapture.ContentCaptureSession contentCaptureSession)
     setContentDescription(java.lang.CharSequence contentDescription)
     setContextClickable(boolean contextClickable)
     setDefaultFocusHighlightEnabled(boolean defaultFocusHighlightEnabled)
@@ -17621,8 +17568,8 @@ package android.view
     setForceDarkAllowed(boolean allow)
     setForeground(android.graphics.drawable.Drawable foreground)
     setForegroundGravity(int gravity)
+    setForegroundTintBlendMode(android.graphics.BlendMode blendMode)
     setForegroundTintList(android.content.res.ColorStateList tint)
-    setForegroundTintMode(android.graphics.BlendMode blendMode)
     setForegroundTintMode(android.graphics.PorterDuff.Mode tintMode)
     setHapticFeedbackEnabled(boolean hapticFeedbackEnabled)
     setHasTransientState(boolean hasTransientState)
@@ -18197,6 +18144,7 @@ package android.view
     setLogo(int resId)
     setMediaController(android.media.session.MediaController controller)
     setNavigationBarColor(int color)
+    setNavigationBarContrastEnforced(boolean enforceContrast)
     setNavigationBarDividerColor(int dividerColor)
     setReenterTransition(android.transition.Transition transition)
     setResizingCaptionDrawable(android.graphics.drawable.Drawable drawable)
@@ -18209,7 +18157,9 @@ package android.view
     setSharedElementsUseOverlay(boolean sharedElementsUseOverlay)
     setSoftInputMode(int mode)
     setStatusBarColor(int color)
+    setStatusBarContrastEnforced(boolean ensureContrast)
     setSustainedPerformanceMode(boolean enable)
+    setSystemGestureExclusionRects(java.util.List<android.graphics.Rect> rects)
     setTitle(java.lang.CharSequence title)
     setTitleColor(int textColor)
     setTransitionBackgroundFadeDuration(long fadeDurationMillis)
@@ -18660,6 +18610,39 @@ package android.view.autofill
     forToggle(boolean value)
     writeToParcel(android.os.Parcel parcel, int flags)
 
+package android.view.contentcapture
+;---------------------------------------
+  class ContentCaptureCondition
+    #ctor(android.content.LocusId locusId, int flags)
+    equals(java.lang.Object obj)
+    writeToParcel(android.os.Parcel parcel, int flags)
+  class ContentCaptureContext
+    forLocusId(java.lang.String id)
+    writeToParcel(android.os.Parcel parcel, int flags)
+  class ContentCaptureContext.Builder
+    #ctor(android.content.LocusId id)
+    setExtras(android.os.Bundle extras)
+  class ContentCaptureManager
+    removeData(android.view.contentcapture.DataRemovalRequest request)
+    setContentCaptureEnabled(boolean enabled)
+  class ContentCaptureSession
+    createContentCaptureSession(android.view.contentcapture.ContentCaptureContext context)
+    newAutofillId(android.view.autofill.AutofillId hostId, long virtualChildId)
+    newViewStructure(android.view.View view)
+    newVirtualViewStructure(android.view.autofill.AutofillId parentId, long virtualId)
+    notifyViewAppeared(android.view.ViewStructure node)
+    notifyViewDisappeared(android.view.autofill.AutofillId id)
+    notifyViewsDisappeared(android.view.autofill.AutofillId hostId, long[] virtualIds)
+    notifyViewTextChanged(android.view.autofill.AutofillId id, java.lang.CharSequence text)
+    setContentCaptureContext(android.view.contentcapture.ContentCaptureContext context)
+  class ContentCaptureSessionId
+    equals(java.lang.Object obj)
+    writeToParcel(android.os.Parcel parcel, int flags)
+  class DataRemovalRequest
+    writeToParcel(android.os.Parcel parcel, int flags)
+  class DataRemovalRequest.Builder
+    addLocusId(android.content.LocusId locusId, int flags)
+
 package android.view.inputmethod
 ;---------------------------------------
   class BaseInputConnection
@@ -18931,6 +18914,7 @@ package android.view.textclassifier
     writeToParcel(android.os.Parcel parcel, int flags)
   class ConversationActions.Request.Builder
     #ctor(java.util.List<android.view.textclassifier.ConversationActions.Message> conversation)
+    setExtras(android.os.Bundle bundle)
     setHints(java.util.List<java.lang.String> hints)
     setMaxSuggestions(int maxSuggestions)
     setTypeConfig(android.view.textclassifier.TextClassifier.EntityConfig typeConfig)
@@ -19002,21 +18986,30 @@ package android.view.textclassifier
     setIncludedTypes(java.util.Collection<java.lang.String> includedTypes)
   class TextClassifierEvent
     writeToParcel(android.os.Parcel dest, int flags)
-  class TextClassifierEvent.Builder
+  class TextClassifierEvent.Builder<T>
     setActionIndices(int... actionIndices)
     setEntityTypes(java.lang.String... entityTypes)
     setEventContext(android.view.textclassifier.TextClassificationContext eventContext)
     setEventIndex(int eventIndex)
-    setEventTime(long eventTime)
     setExtras(android.os.Bundle extras)
-    setLanguage(java.lang.String language)
+    setLocale(android.icu.util.ULocale locale)
+    setModelName(java.lang.String modelVersion)
+    setResultId(java.lang.String resultId)
+    setScores(float... scores)
+  class TextClassifierEvent.ConversationActionsEvent.Builder
+    #ctor(int eventType)
+  class TextClassifierEvent.LanguageDetectionEvent.Builder
+    #ctor(int eventType)
+  class TextClassifierEvent.TextLinkifyEvent.Builder
+    #ctor(int eventType)
+  class TextClassifierEvent.TextSelectionEvent
+    writeToParcel(android.os.Parcel dest, int flags)
+  class TextClassifierEvent.TextSelectionEvent.Builder
     setRelativeSuggestedWordEndIndex(int relativeSuggestedWordEndIndex)
     setRelativeSuggestedWordStartIndex(int relativeSuggestedWordStartIndex)
     setRelativeWordEndIndex(int relativeWordEndIndex)
     setRelativeWordStartIndex(int relativeWordStartIndex)
-    setResultId(java.lang.String resultId)
-    setScore(float score)
-    #ctor(int eventCategory, int eventType)
+    #ctor(int eventType)
   class TextLanguage
     getConfidenceScore(android.icu.util.ULocale locale)
     getLocale(int index)
@@ -19588,9 +19581,11 @@ package android.widget
     setSplitTrack(boolean splitTrack)
     setThumb(android.graphics.drawable.Drawable thumb)
     setThumbOffset(int thumbOffset)
+    setThumbTintBlendMode(android.graphics.BlendMode blendMode)
     setThumbTintList(android.content.res.ColorStateList tint)
     setThumbTintMode(android.graphics.PorterDuff.Mode tintMode)
     setTickMark(android.graphics.drawable.Drawable tickMark)
+    setTickMarkTintBlendMode(android.graphics.BlendMode blendMode)
     setTickMarkTintList(android.content.res.ColorStateList tint)
     setTickMarkTintMode(android.graphics.PorterDuff.Mode tintMode)
     verifyDrawable(android.graphics.drawable.Drawable who)
@@ -19839,6 +19834,7 @@ package android.widget
     setChecked(boolean checked)
     setCheckMarkDrawable(android.graphics.drawable.Drawable d)
     setCheckMarkDrawable(int resId)
+    setCheckMarkTintBlendMode(android.graphics.BlendMode tintMode)
     setCheckMarkTintList(android.content.res.ColorStateList tint)
     setCheckMarkTintMode(android.graphics.PorterDuff.Mode tintMode)
     setVisibility(int visibility)
@@ -19868,6 +19864,7 @@ package android.widget
     onRestoreInstanceState(android.os.Parcelable state)
     setButtonDrawable(android.graphics.drawable.Drawable drawable)
     setButtonDrawable(int resId)
+    setButtonTintBlendMode(android.graphics.BlendMode tintMode)
     setButtonTintList(android.content.res.ColorStateList tint)
     setButtonTintMode(android.graphics.PorterDuff.Mode tintMode)
     setChecked(boolean checked)
@@ -20256,6 +20253,7 @@ package android.widget
     setImageMatrix(android.graphics.Matrix matrix)
     setImageResource(int resId)
     setImageState(int[] state, boolean merge)
+    setImageTintBlendMode(android.graphics.BlendMode blendMode)
     setImageTintList(android.content.res.ColorStateList tint)
     setImageTintMode(android.graphics.PorterDuff.Mode tintMode)
     setImageURI(android.net.Uri uri)
@@ -20488,7 +20486,6 @@ package android.widget
     setAttachedInDecor(boolean enabled)
     setBackgroundDrawable(android.graphics.drawable.Drawable background)
     setClippingEnabled(boolean enabled)
-    setClipToScreenEnabled(boolean enabled)
     setContentView(android.view.View contentView)
     setElevation(float elevation)
     setEnterTransition(android.transition.Transition enterTransition)
@@ -20499,7 +20496,6 @@ package android.widget
     setInputMethodMode(int mode)
     setIsClippedToScreen(boolean enabled)
     setIsLaidOutInScreen(boolean enabled)
-    setLayoutInScreenEnabled(boolean enabled)
     setOnDismissListener(android.widget.PopupWindow.OnDismissListener onDismissListener)
     setOutsideTouchable(boolean touchable)
     setOverlapAnchor(boolean overlapAnchor)
@@ -20537,6 +20533,7 @@ package android.widget
     setIndeterminate(boolean indeterminate)
     setIndeterminateDrawable(android.graphics.drawable.Drawable d)
     setIndeterminateDrawableTiled(android.graphics.drawable.Drawable d)
+    setIndeterminateTintBlendMode(android.graphics.BlendMode blendMode)
     setIndeterminateTintList(android.content.res.ColorStateList tint)
     setIndeterminateTintMode(android.graphics.PorterDuff.Mode tintMode)
     setInterpolator(android.content.Context context, int resID)
@@ -20549,13 +20546,16 @@ package android.widget
     setMinWidth(int minWidth)
     setProgress(int progress)
     setProgress(int progress, boolean animate)
+    setProgressBackgroundTintBlendMode(android.graphics.BlendMode blendMode)
     setProgressBackgroundTintList(android.content.res.ColorStateList tint)
     setProgressBackgroundTintMode(android.graphics.PorterDuff.Mode tintMode)
     setProgressDrawable(android.graphics.drawable.Drawable d)
     setProgressDrawableTiled(android.graphics.drawable.Drawable d)
+    setProgressTintBlendMode(android.graphics.BlendMode blendMode)
     setProgressTintList(android.content.res.ColorStateList tint)
     setProgressTintMode(android.graphics.PorterDuff.Mode tintMode)
     setSecondaryProgress(int secondaryProgress)
+    setSecondaryProgressTintBlendMode(android.graphics.BlendMode blendMode)
     setSecondaryProgressTintList(android.content.res.ColorStateList tint)
     setSecondaryProgressTintMode(android.graphics.PorterDuff.Mode tintMode)
     verifyDrawable(android.graphics.drawable.Drawable who)
@@ -20969,10 +20969,12 @@ package android.widget
     setThumbDrawable(android.graphics.drawable.Drawable thumb)
     setThumbResource(int resId)
     setThumbTextPadding(int pixels)
+    setThumbTintBlendMode(android.graphics.BlendMode blendMode)
     setThumbTintList(android.content.res.ColorStateList tint)
     setThumbTintMode(android.graphics.PorterDuff.Mode tintMode)
     setTrackDrawable(android.graphics.drawable.Drawable track)
     setTrackResource(int resId)
+    setTrackTintBlendMode(android.graphics.BlendMode blendMode)
     setTrackTintList(android.content.res.ColorStateList tint)
     setTrackTintMode(android.graphics.PorterDuff.Mode tintMode)
     #ctor(android.content.Context context)
@@ -21151,6 +21153,7 @@ package android.widget
     setCompoundDrawablesRelativeWithIntrinsicBounds(int start, int top, int end, int bottom)
     setCompoundDrawablesWithIntrinsicBounds(android.graphics.drawable.Drawable left, android.graphics.drawable.Drawable top, android.graphics.drawable.Drawable right, android.graphics.drawable.Drawable bottom)
     setCompoundDrawablesWithIntrinsicBounds(int left, int top, int right, int bottom)
+    setCompoundDrawableTintBlendMode(android.graphics.BlendMode blendMode)
     setCompoundDrawableTintList(android.content.res.ColorStateList tint)
     setCompoundDrawableTintMode(android.graphics.PorterDuff.Mode tintMode)
     setCursorVisible(boolean visible)
@@ -26714,6 +26717,7 @@ package java.time.chrono
     with(java.time.temporal.TemporalAdjuster adjuster)
     with(java.time.temporal.TemporalField field, long newValue)
   class JapaneseEra
+    getDisplayName(java.time.format.TextStyle style, java.util.Locale locale)
     of(int japaneseEra)
     range(java.time.temporal.TemporalField field)
     valueOf(java.lang.String japaneseEra)

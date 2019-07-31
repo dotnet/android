@@ -45,13 +45,6 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.csproj">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="api-xml-adjuster.targets" />
 </Project>
