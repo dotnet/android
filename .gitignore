@@ -21,3 +21,4 @@ apk-sizes-*.txt
 src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
 *~
 external/monodroid/
+external/mono/
