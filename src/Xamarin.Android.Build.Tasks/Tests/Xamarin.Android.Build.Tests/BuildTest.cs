@@ -115,6 +115,7 @@ class MemTest {
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool usePackageReference)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2562,6 +2563,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildWithResolveAssembliesFailure ([Values (true, false)] bool usePackageReference)
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
