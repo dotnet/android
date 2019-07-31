@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -437,7 +437,7 @@ namespace Xamarin.Android.Build.Tests
 				FileSystemUtils.SetDirectoryWriteable (output);
 				Directory.Delete (output, recursive: true);
 			} else {
-				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
+				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (file, Path.GetFileName (output));
 				}
 			}

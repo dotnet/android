@@ -496,7 +496,6 @@ stages:
     - script: >
         mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
         $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
         --result TestResult-MSBuildTests-$(XA.Build.Configuration).xml
       displayName: run Xamarin.Android.Build.Tests
 
@@ -506,7 +505,22 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
         testRunTitle: MSBuildTestsMac
-      condition: always()
+      condition: succeededOrFailed()
+
+    - script: >
+        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
+        --result TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
+      displayName: run Xamarin.Android.Build.Tests.Commercial
+      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildTestsMac
+      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
 
     - task: MSBuild@1
       displayName: package results
