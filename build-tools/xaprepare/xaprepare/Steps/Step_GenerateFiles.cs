@@ -104,22 +104,6 @@ namespace Xamarin.Android.Prepare
 			);
 		}
 
-		GeneratedFile Get_XABuildPaths_cs (Context context)
-		{
-			const string OutputFileName = "XABuildPaths.cs";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@CONFIGURATION@", context.Configuration },
-				{ "@TOP_DIRECTORY@", BuildPaths.XamarinAndroidSourceRoot },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.TestBinDir, OutputFileName)
-			);
-		}
-
 		GeneratedFile Get_XABuildConfig_cs (Context context)
 		{
 			const string OutputFileName = "XABuildConfig.cs";

@@ -59,12 +59,16 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
-				var fileCount = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile")).Count ();
+				var ignoreFiles = new string [] {
+					"TemporaryGeneratedFile",
+					"FileListAbsolute.txt",
+				};
+				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
+					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
 				Assert.AreEqual (0, Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories).Length,
 					"All directories in {0} should have been removed", proj.IntermediateOutputPath);
-				Assert.AreEqual (0, fileCount,
-					"All files in {0} should have been removed", proj.IntermediateOutputPath);
+				Assert.AreEqual (0, files.Count (), "{0} should be empty. Found {1}",
+					proj.IntermediateOutputPath, string.Join (Environment.NewLine, files));
 			}
 		}
 

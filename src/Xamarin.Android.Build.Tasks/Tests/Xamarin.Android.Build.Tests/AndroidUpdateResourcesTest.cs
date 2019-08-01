@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 using System.Linq;
@@ -10,6 +10,7 @@ using Microsoft.Build.Framework;
 using System.Xml.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -519,7 +520,8 @@ namespace UnnamedProject
 		};
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
+		[Parallelizable (ParallelScope.Self)]
+		[TestCaseSource (nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -1125,7 +1127,7 @@ namespace Lib1 {
 		[NonParallelizable]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
-			int maxBuildTimeMs = 10000;
+			int maxBuildTimeMs = TestEnvironment.IsRunningOnHostedAzureAgent ? 15000 : 10000;
 			var path = Path.Combine ("temp", "BuildAppWithMRPAL");
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -1487,6 +1489,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Parallelizable (ParallelScope.Self)]
 		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();

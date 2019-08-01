@@ -34,8 +34,8 @@ namespace Xamarin.Android.Prepare
 
 			// If you change the minimum Mono version here, please change the URL as well
 			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", Configurables.Urls.MonoPackage) {
-				MinimumVersion = "5.20.1.19",
-				MaximumVersion = "5.99.0.0",
+				MinimumVersion = "6.0.0.313",
+				MaximumVersion = "6.99.0.0",
 			},
 		};
 

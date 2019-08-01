@@ -6,7 +6,7 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[Parallelizable (ParallelScope.Fixtures)]
 	public class DeleteBinObjTest : BaseTest
 	{
 		const string BaseUrl = "https://xamjenkinsartifact.azureedge.net/mono-jenkins/xamarin-android-test/";
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[Test, Category ("UsesDevice")]
 		public void HelloForms ([Values (false, true)] bool isRelease)
 		{
 			RunTest (nameof (HelloForms), "HelloForms.sln", Path.Combine ("HelloForms.Android", "HelloForms.Android.csproj"), "15.9", "ecb13a9", isRelease);

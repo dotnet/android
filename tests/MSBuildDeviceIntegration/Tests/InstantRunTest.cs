@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -39,11 +39,11 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllBytes (dexFile, apk.GetRaw (ApkContents.ClassesDex));
 				try {
 					string className = "Lcom/xamarin/forms/platform/android/FormsViewGroup;";
-					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should *not* include `{className}`!");
+					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 					className = "Lmono/MonoRuntimeProvider;";
-					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 					className = "Lmono/MonoPackageManager;";
-					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, b.AndroidSdkDirectory), $"`{dexFile}` should include `{className}`!");
+					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				} finally {
 					File.Delete (dexFile);
 				}

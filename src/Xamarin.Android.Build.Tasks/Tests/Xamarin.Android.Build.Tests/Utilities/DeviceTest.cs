@@ -13,7 +13,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.ProjectTools;
-using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.Android.Build.Tests
 {

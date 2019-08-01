@@ -173,7 +173,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
 		}
 
-		[Test]
+		[Test, Category ("UsesDevice")]
 		public void ApkSet ()
 		{
 			if (!HasDevices)

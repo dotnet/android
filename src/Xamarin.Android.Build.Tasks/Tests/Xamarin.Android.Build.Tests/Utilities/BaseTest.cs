@@ -15,7 +15,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.ProjectTools;
-using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -45,30 +44,12 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
-			public static bool IsMacOS {
-				get;
-				private set;
-			}
-
-			public static bool IsLinux {
-				get;
-				private set;
-			}
-
-			public static bool IsWindows {
-				get;
-				private set;
-			}
-
 			static SetUp ()
 			{
 				using (var builder = new Builder ()) {
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
 					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;
 				}
-				IsWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-				IsMacOS = !IsWindows && IsDarwin ();
-				IsLinux = !IsWindows && !IsMacOS;
 			}
 
 			[OneTimeSetUp]
@@ -119,36 +100,17 @@ namespace Xamarin.Android.Build.Tests
 					p.Kill ();
 			}
 
-			[DllImport ("libc")]
-			static extern int uname (IntPtr buf);
-
-			static bool IsDarwin ()
-			{
-				IntPtr buf = IntPtr.Zero;
-				try {
-					buf = Marshal.AllocHGlobal (8192);
-					if (uname (buf) == 0) {
-						string os = Marshal.PtrToStringAnsi (buf);
-						return os == "Darwin";
-					}
-				} catch {
-				} finally {
-					if (buf != IntPtr.Zero)
-						Marshal.FreeHGlobal (buf);
-				}
-				return false;
-			}
 		}
 
 		protected bool HasDevices => SetUp.HasDevices;
 
 		protected string DeviceAbi => SetUp.DeviceAbi;
 
-		protected bool IsWindows => SetUp.IsWindows;
+		protected bool IsWindows => TestEnvironment.IsWindows;
 
-		protected bool IsMacOS => SetUp.IsMacOS;
+		protected bool IsMacOS => TestEnvironment.IsMacOS;
 
-		protected bool IsLinux => SetUp.IsLinux;
+		protected bool IsLinux => TestEnvironment.IsLinux;
 
 		public string CacheRootPath {
 			get {
@@ -192,21 +154,13 @@ namespace Xamarin.Android.Build.Tests
 
 		public static string AndroidSdkPath {
 			get {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
-				if (string.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.Combine (home, "android-toolchain", "sdk");
-				return sdkPath;
+				return AndroidSdkResolver.GetAndroidSdkPath ();
 			}
 		}
 
 		public static string AndroidNdkPath {
 			get {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
-				if (string.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.Combine (home, "android-toolchain", "ndk");
-				return sdkPath;
+				return AndroidSdkResolver.GetAndroidNdkPath ();
 			}
 		}
 
@@ -483,19 +437,8 @@ namespace Xamarin.Android.Build.Tests
 				FileSystemUtils.SetDirectoryWriteable (output);
 				Directory.Delete (output, recursive: true);
 			} else {
-				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
-					TestContext.Out.WriteLine ("*************************************************************************");
-					TestContext.Out.WriteLine (file);
-					TestContext.Out.WriteLine ();
-					using (StreamReader reader = new StreamReader (file)) {
-						string line;
-						while ((line = reader.ReadLine ()) != null) {
-							TestContext.Out.WriteLine (line);
-							TestContext.Out.Flush ();
-						}
-					}
-					TestContext.Out.WriteLine ("*************************************************************************");
-					TestContext.Out.Flush ();
+				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file, Path.GetFileName (output));
 				}
 			}
 		}
