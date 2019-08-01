@@ -5,13 +5,13 @@
   </PropertyGroup>
   <!-- Classes -->
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop.__TypeRegistrations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.Object.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.BasePublicClass.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.ExtendPublicClass.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.PublicClass.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Test.PublicFinalClass.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\__NamespaceMapping__.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.BasePublicClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.ExtendPublicClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.PublicClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.PublicFinalClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)__NamespaceMapping__.cs" />
   </ItemGroup>
   <!-- Enums -->
   <ItemGroup />

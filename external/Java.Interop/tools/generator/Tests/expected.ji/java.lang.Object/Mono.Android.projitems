@@ -5,9 +5,9 @@
   </PropertyGroup>
   <!-- Classes -->
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop.__TypeRegistrations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.Object.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\__NamespaceMapping__.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)__NamespaceMapping__.cs" />
   </ItemGroup>
   <!-- Enums -->
   <ItemGroup />

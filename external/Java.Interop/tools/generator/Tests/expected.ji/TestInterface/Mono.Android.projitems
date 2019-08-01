@@ -5,18 +5,18 @@
   </PropertyGroup>
   <!-- Classes -->
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop.__TypeRegistrations.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.Object.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang.String.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.GenericImplementation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.GenericObjectPropertyImplementation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.GenericStringImplementation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.GenericStringPropertyImplementation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.IGenericInterface.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.IGenericPropertyInterface.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.ITestInterface.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Test.ME.TestInterfaceImplementation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\__NamespaceMapping__.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop.__TypeRegistrations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.String.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericObjectPropertyImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericStringImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericStringPropertyImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.IGenericInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.IGenericPropertyInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.ITestInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Test.ME.TestInterfaceImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)__NamespaceMapping__.cs" />
   </ItemGroup>
   <!-- Enums -->
   <ItemGroup />

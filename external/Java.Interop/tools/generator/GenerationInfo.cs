@@ -89,7 +89,9 @@ namespace MonoDroid.Generation {
 		XElement ToCompileElement (XName compile, string path)
 		{
 			path = path.Replace (CSharpDir, "$(MSBuildThisFileDirectory)")
-				.Replace ('/', '\\');
+				.Replace ('/', '\\')
+				.Replace ("$(MSBuildThisFileDirectory)\\", "$(MSBuildThisFileDirectory)");
+
 			return new XElement (compile, new XAttribute ("Include", path));
 		}
 	}
