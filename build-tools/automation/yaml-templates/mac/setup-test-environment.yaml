@@ -1,0 +1,43 @@
+parameters:
+  configuration: $(XA.Build.Configuration)
+
+steps:
+- task: DownloadPipelineArtifact@1
+  inputs:
+    artifactName: $(InstallerArtifactName)
+    itemPattern: "*.pkg"
+    downloadPath: $(System.DefaultWorkingDirectory)
+
+- template: ../run-installer.yaml
+
+- task: MSBuild@1
+  displayName: build xaprepare
+  inputs:
+    solution: build-tools/xaprepare/xaprepare.sln
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:Restore,Build
+
+- script: |
+    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+  displayName: install xaprepare dependencies
+
+- task: UseDotNet@2
+  displayName: install .NET Core 2.1.701
+  inputs:
+    version: 2.1.701
+
+# Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
+- task: NuGetCommand@2
+  displayName: nuget restore Xamarin.Android solutions
+  inputs:
+    restoreSolution: '**/Xamarin.Android*.sln'
+
+- task: MSBuild@1
+  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+  inputs:
+    solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+

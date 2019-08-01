@@ -15,8 +15,6 @@ using Xamarin.Android.Build.Tests;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
-using XABuildPaths = global::Xamarin.Android.Build.Paths;
-
 namespace EmbeddedDSOUnitTests
 {
 	sealed class LocalBuilder : ProjectBuilder
@@ -82,7 +80,7 @@ namespace EmbeddedDSOUnitTests
 
 			Assert.That (success, Is.True, "Should have been built");
 
-			androidSdkDir = builder.AndroidSdkDirectory;
+			androidSdkDir = AndroidSdkResolver.GetAndroidSdkPath ();
 		}
 
 		[Test]

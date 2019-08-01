@@ -52,7 +52,6 @@ namespace Xamarin.Android.Prepare
 					return new List <GeneratedFile> {
 						Get_Configuration_OperatingSystem_props (context),
 						Get_Ndk_projitems (context),
-						Get_XABuildPaths_cs (context),
 						Get_XABuildConfig_cs (context),
 						Get_mingw_32_cmake (context),
 						Get_mingw_64_cmake (context),
@@ -113,22 +112,6 @@ namespace Xamarin.Android.Prepare
 				replacements,
 				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
 				Path.Combine (BuildPaths.XamarinAndroidSourceRoot, OutputFileName)
-			);
-		}
-
-		GeneratedFile Get_XABuildPaths_cs (Context context)
-		{
-			const string OutputFileName = "XABuildPaths.cs";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@CONFIGURATION@", context.Configuration },
-				{ "@TOP_DIRECTORY@", BuildPaths.XamarinAndroidSourceRoot },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.TestBinDir, OutputFileName)
 			);
 		}
 

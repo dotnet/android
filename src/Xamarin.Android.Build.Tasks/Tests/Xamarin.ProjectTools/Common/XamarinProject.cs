@@ -7,8 +7,6 @@ using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
 
-using XABuildPaths = Xamarin.Android.Build.Paths;
-
 namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinProject 

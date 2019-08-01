@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using System;
@@ -30,9 +30,8 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		{
 			var log = new TaskLoggingHelper (engine, TestName);
 			using (var builder = new Builder ()) {
-				builder.ResolveSdks ();
-				var ndkDir = builder.AndroidNdkDirectory;
-				var sdkDir = builder.AndroidSdkDirectory;
+				var ndkDir = AndroidNdkPath;
+				var sdkDir = AndroidSdkPath;
 				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir);
 				NdkUtil.Init (log, ndkDir);
 				var platforms = NdkUtil.GetSupportedPlatforms (ndkDir);

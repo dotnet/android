@@ -5,8 +5,6 @@ using System.Linq;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 
-using XABuildPaths = Xamarin.Android.Build.Paths;
-
 namespace Xamarin.ProjectTools
 {
 	public class ProjectBuilder : Builder

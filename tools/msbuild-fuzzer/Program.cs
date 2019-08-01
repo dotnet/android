@@ -25,7 +25,7 @@ namespace MSBuild.Fuzzer
 				AutomaticNuGetRestore = false,
 				CleanupAfterSuccessfulBuild = false,
 				CleanupOnDispose = true,
-				Root = Xamarin.Android.Build.Paths.TestOutputDirectory,
+				Root = XABuildPaths.TestOutputDirectory,
 			}) {
 				directory = Path.GetFullPath (Path.Combine (builder.Root, builder.ProjectDirectory));
 				if (Directory.Exists (directory))
