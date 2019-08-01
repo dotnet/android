@@ -382,7 +382,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildPropsBreaksConvertResourcesCases ()
+		public void BuildPropsBreaksConvertResourcesCases ([Values (true, false)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidResources = {
@@ -396,6 +396,7 @@ namespace UnamedProject
 					}
 				}
 			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
