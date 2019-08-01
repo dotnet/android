@@ -3946,5 +3946,48 @@ public class MyWorker : Worker
 				Assert.IsTrue (b.Build (proj), $"{b.Target} should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void NetworkSecurityConfig ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem ("Compile", "CustomApp.cs") { TextContent = () => @"
+using System;
+using Android.App;
+using Android.Runtime;
+
+namespace UnnamedProject
+{
+	[Application(Name = ""com.xamarin.android.CustomApp"", NetworkSecurityConfig = ""@xml/network_security_config"")]
+	public class CustomApp : Application
+	{
+		public CustomApp(IntPtr handle, JniHandleOwnership ownerShip) : base(handle, ownerShip) { }
+	}
+}" });
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource (@"Resources\xml\network_security_config.xml") {
+				TextContent = () =>
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains=""true"">example.com</domain>
+        <trust-anchors>
+            <certificates src=""@raw/my_ca""/>
+        </trust-anchors>
+    </domain-config>
+</network-security-config>"
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource (@"Resources\raw\my_ca") {
+				BinaryContent = () => new byte [0], // doesn't have to be real, just *exist*
+			});
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				FileAssert.Exists (manifest);
+				var contents = File.ReadAllText (manifest);
+				StringAssert.Contains ("android:networkSecurityConfig=\"@xml/network_security_config\"", contents);
+			}
+		}
 	}
 }
