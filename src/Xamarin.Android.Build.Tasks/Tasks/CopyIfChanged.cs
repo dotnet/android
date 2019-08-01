@@ -33,22 +33,22 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("source and destination count mismatch");
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
-				var src = SourceFiles [i].ItemSpec;
-				if (!File.Exists (src))
-					continue;
-				var dest = DestinationFiles [i].ItemSpec;
-				var srcmodifiedDate = File.GetLastWriteTimeUtc (src);
-				var dstmodifiedDate = File.Exists (dest) ? File.GetLastWriteTimeUtc (dest) : srcmodifiedDate;
-				if (dstmodifiedDate > srcmodifiedDate) {
-					Log.LogDebugMessage ($"  Skipping {src} its up to date");
+				var src = new FileInfo (SourceFiles [i].ItemSpec);
+				if (!src.Exists) {
+					Log.LogDebugMessage ($"  Skipping {src} it does not exist");
 					continue;
 				}
-				if (!MonoAndroidHelper.CopyIfChanged (src, dest)) {
+				var dest = new FileInfo (DestinationFiles [i].ItemSpec);
+				if (dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && dest.Length == src.Length) {
+					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
+					continue;
+				}
+				if (!MonoAndroidHelper.CopyIfChanged (src.FullName, dest.FullName)) {
 					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
-					MonoAndroidHelper.SetWriteable (dest);
+					MonoAndroidHelper.SetWriteable (dest.FullName);
 					continue;
 				}
-				modifiedFiles.Add (new TaskItem (dest));
+				modifiedFiles.Add (new TaskItem (dest.FullName));
 			}
 
 			ModifiedFiles = modifiedFiles.ToArray ();
