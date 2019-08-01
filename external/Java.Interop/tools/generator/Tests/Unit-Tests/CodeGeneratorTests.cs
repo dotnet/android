@@ -421,7 +421,7 @@ namespace generatortests
 			generator.WriteInterfaceDeclaration (iface, string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]

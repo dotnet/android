@@ -42,7 +42,7 @@ namespace Test.ME {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']"
 	[Register ("test/me/TestInterface", "", "Test.ME.ITestInterfaceInvoker")]
-	public partial interface ITestInterface : IJavaObject {
+	public partial interface ITestInterface : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler:Test.ME.ITestInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]

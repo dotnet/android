@@ -7,7 +7,7 @@ namespace Xamarin.Test {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='Adapter']"
 	[Register ("xamarin/test/Adapter", "", "Xamarin.Test.IAdapterInvoker")]
-	public partial interface IAdapter : IJavaObject {
+	public partial interface IAdapter : IJavaObject, IJavaPeerable {
 
 	}
 

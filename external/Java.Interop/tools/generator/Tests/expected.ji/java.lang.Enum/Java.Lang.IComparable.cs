@@ -8,7 +8,7 @@ namespace Java.Lang {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='java.lang']/interface[@name='Comparable']"
 	[Register ("java/lang/Comparable", "", "Java.Lang.IComparableInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
-	public partial interface IComparable : IJavaObject {
+	public partial interface IComparable : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/interface[@name='Comparable']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='T']]"
 		[Register ("compareTo", "(Ljava/lang/Object;)I", "GetCompareTo_Ljava_lang_Object_Handler:Java.Lang.IComparableInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]

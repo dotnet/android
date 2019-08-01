@@ -8,7 +8,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm.OnEventListener']"
 	[Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", "", "Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListenerInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends com.google.android.exoplayer.drm.ExoMediaCrypto"})]
-	public partial interface IExoMediaDrmOnEventListener : IJavaObject {
+	public partial interface IExoMediaDrmOnEventListener : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm.OnEventListener']/method[@name='onEvent' and count(parameter)=5 and parameter[1][@type='com.google.android.exoplayer.drm.ExoMediaDrm&lt;T&gt;'] and parameter[2][@type='byte[]'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='byte[]']]"
 		[Register ("onEvent", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm;[BII[B)V", "GetOnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayBHandler:Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
@@ -189,7 +189,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm']"
 	[Register ("com/google/android/exoplayer/drm/ExoMediaDrm", "", "Com.Google.Android.Exoplayer.Drm.IExoMediaDrmInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends com.google.android.exoplayer.drm.ExoMediaCrypto"})]
-	public partial interface IExoMediaDrm : IJavaObject {
+	public partial interface IExoMediaDrm : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm']/method[@name='setOnEventListener' and count(parameter)=1 and parameter[1][@type='com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener&lt;T&gt;']]"
 		[Register ("setOnEventListener", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V", "GetSetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_Handler:Com.Google.Android.Exoplayer.Drm.IExoMediaDrmInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]

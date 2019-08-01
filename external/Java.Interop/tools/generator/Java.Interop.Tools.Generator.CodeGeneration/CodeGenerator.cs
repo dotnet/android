@@ -22,6 +22,8 @@ namespace MonoDroid.Generation
 			opt = options;
 		}
 
+		internal virtual string GetAllInterfaceImplements () => "IJavaObject";
+
 		internal abstract void WriteClassHandle (ClassGen type, string indent, bool requireNew);
 
 		internal abstract void WriteClassHandle (InterfaceGen type, string indent, string declaringType);
@@ -522,7 +524,7 @@ namespace MonoDroid.Generation
 			if (@interface.TypeParameters != null && @interface.TypeParameters.Any ())
 				writer.WriteLine ("{0}{1}", indent, @interface.TypeParameters.ToGeneratedAttributeString ());
 			writer.WriteLine ("{0}{1} partial interface {2}{3} {{", indent, @interface.Visibility, @interface.Name,
-				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : IJavaObject" : " : " + sb.ToString ());
+				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : " + GetAllInterfaceImplements () : " : " + sb.ToString ());
 			WriteInterfaceFields (@interface, indent + "\t");
 			writer.WriteLine ();
 			WriteInterfaceProperties (@interface, indent + "\t");

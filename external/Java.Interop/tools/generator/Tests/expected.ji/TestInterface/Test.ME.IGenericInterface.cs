@@ -8,7 +8,7 @@ namespace Test.ME {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='GenericInterface']"
 	[Register ("test/me/GenericInterface", "", "Test.ME.IGenericInterfaceInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
-	public partial interface IGenericInterface : IJavaObject {
+	public partial interface IGenericInterface : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='GenericInterface']/method[@name='SetObject' and count(parameter)=1 and parameter[1][@type='T']]"
 		[Register ("SetObject", "(Ljava/lang/Object;)V", "GetSetObject_Ljava_lang_Object_Handler:Test.ME.IGenericInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]

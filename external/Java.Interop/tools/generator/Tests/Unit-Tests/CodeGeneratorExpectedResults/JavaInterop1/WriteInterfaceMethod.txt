@@ -2,11 +2,8 @@
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
-	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyConstantField']"
-	[Register ("MyConstantField")]
-	public const int MyConstantField = (int) 7;
-
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
+	[global::Java.Interop.JavaInterfaceDefaultMethod]
 	[Register ("DoSomething", "()V", "GetDoSomethingHandler:java.code.IMyInterfaceInvoker, ")]
 	void DoSomething ();
 

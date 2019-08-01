@@ -11,7 +11,7 @@ namespace Android.Views {
 
 		// Metadata.xml XPath interface reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']"
 		[Register ("android/view/View$OnClickListener", "", "Android.Views.View/IOnClickListenerInvoker")]
-		public partial interface IOnClickListener : IJavaObject {
+		public partial interface IOnClickListener : IJavaObject, IJavaPeerable {
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']/method[@name='onClick' and count(parameter)=1 and parameter[1][@type='android.view.View']]"
 			[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, ")]

@@ -8,7 +8,7 @@ namespace Test.ME {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='GenericPropertyInterface']"
 	[Register ("test/me/GenericPropertyInterface", "", "Test.ME.IGenericPropertyInterfaceInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
-	public partial interface IGenericPropertyInterface : IJavaObject {
+	public partial interface IGenericPropertyInterface : IJavaObject, IJavaPeerable {
 
 		global::Java.Lang.Object Object {
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='GenericPropertyInterface']/method[@name='getObject' and count(parameter)=0]"

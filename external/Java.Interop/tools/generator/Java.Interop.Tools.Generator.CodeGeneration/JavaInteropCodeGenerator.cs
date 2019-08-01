@@ -23,6 +23,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 
+		internal override string GetAllInterfaceImplements () => "IJavaObject, IJavaPeerable";
 
 		internal override void WriteClassHandle (ClassGen type, string indent, bool requireNew)
 		{

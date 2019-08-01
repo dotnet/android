@@ -7,7 +7,7 @@ namespace Android.Text {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='android.text']/interface[@name='Spanned']"
 	[Register ("android/text/Spanned", "", "Android.Text.ISpannedInvoker")]
-	public partial interface ISpanned : IJavaObject {
+	public partial interface ISpanned : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.text']/interface[@name='Spanned']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[return:global::Android.Runtime.GeneratedEnum]

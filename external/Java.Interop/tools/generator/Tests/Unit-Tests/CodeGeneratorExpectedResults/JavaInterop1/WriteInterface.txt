@@ -30,7 +30,7 @@ public abstract class MyInterfaceConsts : MyInterface {
 
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
-public partial interface IMyInterface : IJavaObject {
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 	int Count {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Count' and count(parameter)=0]"

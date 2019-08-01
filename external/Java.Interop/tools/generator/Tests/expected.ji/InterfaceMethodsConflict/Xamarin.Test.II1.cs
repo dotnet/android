@@ -7,7 +7,7 @@ namespace Xamarin.Test {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='I1']"
 	[Register ("xamarin/test/I1", "", "Xamarin.Test.II1Invoker")]
-	public partial interface II1 : IJavaObject {
+	public partial interface II1 : IJavaObject, IJavaPeerable {
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I1']/method[@name='close' and count(parameter)=0]"
 		[Register ("close", "()V", "GetCloseHandler:Xamarin.Test.II1Invoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
