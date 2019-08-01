@@ -2263,7 +2263,6 @@ because xbuild doesn't support framework reference assemblies.
   <_GenerateJavaStubsDependsOnTargets>
     _SetLatestTargetFrameworkVersion;
     _PrepareNativeAssemblySources;
-    _LinkAssemblies;
     _PrepareAssemblies;
     $(_AfterPrepareAssemblies);
   </_GenerateJavaStubsDependsOnTargets>
