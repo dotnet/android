@@ -192,7 +192,7 @@
     <Compile Include="Steps\Step_BuildLibZipForWindows.Unix.cs" />
     <Compile Include="Steps\Step_CreateBundle.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
-    <Compile Include="Steps\Step_Get_Windows_GAS.Unix.cs" />
+    <Compile Include="Steps\Step_Get_Windows_Binutils.Unix.cs" />
     <Compile Include="Steps\Step_PrepareBundle.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />

@@ -16,7 +16,7 @@ namespace Xamarin.Android.Prepare
 			// We need it here (even though Scenario_Standard runs the step, because if we failed to download the
 			// bundle, the Step_BuildMonoRuntimes above will clean the destination directory and the Windows GAS
 			// executables with it.
-			AddFailureStep (new Step_Get_Windows_GAS ());
+			AddFailureStep (new Step_Get_Windows_Binutils ());
 			AddFailureStep (new Step_CreateBundle ());
 		}
 
