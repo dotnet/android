@@ -81,7 +81,7 @@ namespace Java.Lang {
 				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/lang/State", typeof (State));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/State", typeof (State));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

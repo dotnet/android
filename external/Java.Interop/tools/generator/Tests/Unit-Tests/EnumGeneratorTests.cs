@@ -7,7 +7,7 @@ using MonoDroid.Generation;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
-namespace generatortests.Unit_Tests
+namespace generatortests
 {
 	[TestFixture]
 	class EnumGeneratorTests

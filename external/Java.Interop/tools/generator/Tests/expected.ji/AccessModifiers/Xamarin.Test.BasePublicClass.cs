@@ -9,7 +9,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/BasePublicClass", DoNotGenerateAcw=true)]
 	public partial class BasePublicClass : global::Java.Lang.Object {
 
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/BasePublicClass", typeof (BasePublicClass));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/BasePublicClass", typeof (BasePublicClass));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

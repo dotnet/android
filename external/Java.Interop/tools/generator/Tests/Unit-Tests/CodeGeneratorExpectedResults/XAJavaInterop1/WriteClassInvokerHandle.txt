@@ -1,0 +1,10 @@
+internal static new readonly JniPeerMembers _members = new XAPeerMembers ("com/mypackage/foo", typeof (Com.MyPackage.Foo));
+
+public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+	get { return _members; }
+}
+
+protected override global::System.Type ThresholdType {
+	get { return _members.ManagedPeerType; }
+}
+

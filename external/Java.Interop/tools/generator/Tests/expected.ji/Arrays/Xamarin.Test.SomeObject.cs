@@ -163,7 +163,7 @@ namespace Xamarin.Test {
 				}
 			}
 		}
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

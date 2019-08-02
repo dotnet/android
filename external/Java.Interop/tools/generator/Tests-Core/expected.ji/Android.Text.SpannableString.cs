@@ -9,7 +9,7 @@ namespace Android.Text {
 	[global::Android.Runtime.Register ("android/text/SpannableString", DoNotGenerateAcw=true)]
 	public partial class SpannableString : Android.Text.SpannableStringInternal, Android.Text.ISpannable {
 
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("android/text/SpannableString", typeof (SpannableString));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableString", typeof (SpannableString));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

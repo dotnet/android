@@ -3,7 +3,7 @@ internal partial class MyClassInvoker : MyClass {
 
 	public MyClassInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-	internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/code/MyClass", typeof (MyClassInvoker));
+	internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClassInvoker));
 
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		get { return _members; }

@@ -9,7 +9,7 @@ namespace Java.IO {
 	[global::Android.Runtime.Register ("java/io/InputStream", DoNotGenerateAcw=true)]
 	public abstract partial class InputStream : global::Java.Lang.Object {
 
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/io/InputStream", typeof (InputStream));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/io/InputStream", typeof (InputStream));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -324,7 +324,7 @@ namespace Java.IO {
 
 		public InputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("java/io/InputStream", typeof (InputStreamInvoker));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/io/InputStream", typeof (InputStreamInvoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

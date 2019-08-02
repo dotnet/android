@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using generatortests.Unit_Tests;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
@@ -12,6 +11,12 @@ namespace generatortests
 	class JavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
+	}
+
+	[TestFixture]
+	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
+	{
+		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 	}
 
 	[TestFixture]

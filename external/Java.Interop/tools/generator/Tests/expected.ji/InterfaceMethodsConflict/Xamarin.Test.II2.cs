@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/I2", DoNotGenerateAcw=true)]
 	internal partial class II2Invoker : global::Java.Lang.Object, II2 {
 
-		internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
+		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
 
 		static IntPtr java_class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

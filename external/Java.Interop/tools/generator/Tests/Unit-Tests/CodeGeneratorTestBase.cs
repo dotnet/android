@@ -5,7 +5,7 @@ using System.Text;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests.Unit_Tests
+namespace generatortests
 {
 	abstract class CodeGeneratorTestBase
 	{

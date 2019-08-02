@@ -9,10 +9,7 @@ namespace MonoDroid.Generation
 		{
 		}
 
-		protected override string GetPeerMembersType ()
-		{
-			return "XAPeerMembers";
-		}
+		protected override string GetPeerMembersType () => "XAPeerMembers";
 	}
 }
 

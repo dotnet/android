@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace generatortests.Unit_Tests
+namespace generatortests
 {
 	static class TestExtensions
 	{

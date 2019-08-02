@@ -1,0 +1,4 @@
+JniArgumentValue* __args = stackalloc JniArgumentValue [3];
+__args [0] = new JniArgumentValue (value);
+__args [1] = new JniArgumentValue (native_str);
+__args [2] = new JniArgumentValue (flag);

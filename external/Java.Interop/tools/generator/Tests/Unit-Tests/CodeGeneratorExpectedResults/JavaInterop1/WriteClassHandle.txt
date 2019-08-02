@@ -1,4 +1,4 @@
-	internal            static  readonly    JniPeerMembers  _members    = new JniPeerMembers ("com/mypackage/foo", typeof (foo));
+	internal static readonly JniPeerMembers _members = new JniPeerMembers ("com/mypackage/foo", typeof (foo));
 	internal static IntPtr class_ref {
 		get {
 			return _members.JniPeerType.PeerReference.Handle;

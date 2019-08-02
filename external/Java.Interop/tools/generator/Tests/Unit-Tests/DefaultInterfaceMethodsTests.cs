@@ -1,5 +1,4 @@
 using System;
-using generatortests.Unit_Tests;
 using MonoDroid.Generation;
 using NUnit.Framework;
 

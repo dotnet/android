@@ -25,14 +25,12 @@ namespace MonoDroid.Generation {
 
 		internal override string GetAllInterfaceImplements () => "IJavaObject, IJavaPeerable";
 
+		protected virtual string GetPeerMembersType () => "JniPeerMembers";
+
 		internal override void WriteClassHandle (ClassGen type, string indent, bool requireNew)
 		{
-			writer.WriteLine ("{0}\tinternal    {1}     static  readonly    JniPeerMembers  _members    = new {2} (\"{3}\", typeof ({4}));",
-					indent,
-					requireNew ? "new" : "   ",
-					GetPeerMembersType (),
-					type.RawJniName,
-					type.Name);
+			WritePeerMembers (indent + '\t', true, requireNew, type.RawJniName, type.Name);
+
 			writer.WriteLine ("{0}\tinternal static {1}IntPtr class_ref {{", indent, requireNew ? "new " : string.Empty);
 			writer.WriteLine ("{0}\t\tget {{", indent);
 			writer.WriteLine ("{0}\t\t\treturn _members.JniPeerType.PeerReference.Handle;", indent);
@@ -55,22 +53,15 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		protected virtual string GetPeerMembersType ()
-		{
-			return "JniPeerMembers";
-		}
-
 		internal override void WriteClassHandle (InterfaceGen type, string indent, string declaringType)
 		{
-			writer.WriteLine ("{0}new static JniPeerMembers _members = new JniPeerMembers (\"{1}\", typeof ({2}));",indent, type.RawJniName, declaringType);
+			WritePeerMembers (indent, false, true, type.RawJniName, declaringType);
 		}
 
 		internal override void WriteClassInvokerHandle (ClassGen type, string indent, string declaringType)
 		{
-			writer.WriteLine ("{0}internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers (\"{1}\", typeof ({2}));",
-					indent,
-					type.RawJniName,
-					declaringType);
+			WritePeerMembers (indent, true, true, type.RawJniName, declaringType);
+
 			writer.WriteLine ();
 			writer.WriteLine ("{0}public override global::Java.Interop.JniPeerMembers JniPeerMembers {{", indent);
 			writer.WriteLine ("{0}\tget {{ return _members; }}", indent);
@@ -84,10 +75,8 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteInterfaceInvokerHandle (InterfaceGen type, string indent, string declaringType)
 		{
-			writer.WriteLine ("{0}internal    new     static  readonly    JniPeerMembers  _members    = new JniPeerMembers (\"{1}\", typeof ({2}));",
-					indent,
-					type.RawJniName,
-					declaringType);
+			WritePeerMembers (indent, true, true, type.RawJniName, declaringType);
+
 			writer.WriteLine ();
 			writer.WriteLine ("{0}static IntPtr java_class_ref {{", indent);
 			writer.WriteLine ("{0}\tget {{ return _members.JniPeerType.PeerReference.Handle; }}", indent);
@@ -271,6 +260,14 @@ namespace MonoDroid.Generation {
 				}
 			}
 			writer.WriteLine ("{0}}}", indent);
+		}
+
+		void WritePeerMembers (string indent, bool isInternal, bool isNew, string rawJniType, string declaringType)
+		{
+			var signature = $"{(isInternal ? "internal " : "")}static {(isNew ? "new " : "")}readonly JniPeerMembers _members = ";
+			var type = $"new {GetPeerMembersType ()} (\"{rawJniType}\", typeof ({declaringType}));";
+
+			writer.WriteLine ($"{indent}{signature}{type}");
 		}
 	}
 }
