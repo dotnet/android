@@ -78,6 +78,7 @@
     <Compile Include="Application\ExternalGitDependency.cs" />
     <Compile Include="Application\GeneratedFile.cs" />
     <Compile Include="Application\GeneratedMakeRulesFile.cs" />
+    <Compile Include="Application\GeneratedMonoAndroidProjitemsFile.cs" />
     <Compile Include="Application\GeneratedProfileAssembliesProjitemsFile.cs" />
     <Compile Include="Application\GeneratedPlaceholdersFile.cs" />
     <Compile Include="Application\KnownConditions.cs" />
