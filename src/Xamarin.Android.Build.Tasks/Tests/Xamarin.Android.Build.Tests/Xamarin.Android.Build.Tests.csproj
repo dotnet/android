@@ -116,6 +116,9 @@
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Expected\GenerateDesignerFileWithElevenStyleableAttributesExpected.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

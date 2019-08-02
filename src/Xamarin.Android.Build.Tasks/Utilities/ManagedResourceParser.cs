@@ -253,7 +253,7 @@ namespace Xamarin.Android.Tasks
 			var lines = System.IO.File.ReadLines (file);
 			foreach (var line in lines) {
 				var items = line.Split (new char [] { ' ' }, 4);
-				int value = items [0] != "int[]" ? Convert.ToInt32 (items [3], 16) : -1;
+				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3], 16) : -1;
 				string itemName = items [2];
 				switch (items [1]) {
 				case "anim":
@@ -316,7 +316,7 @@ namespace Xamarin.Android.Tasks
 				case "styleable":
 					switch (items [0]) {
 					case "int":
-						CreateIntField (styleable, itemName, value);
+						CreateIntField (styleable, itemName, Convert.ToInt32 (items [3], 10));
 						break;
 					case "int[]":
 						var arrayValues = items [3].Trim (new char [] { '{', '}' })
@@ -414,7 +414,8 @@ namespace Xamarin.Android.Tasks
 			};
 			if (value != -1) {
 				f.InitExpression = new CodePrimitiveExpression (value);
-				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{value.ToString ("X")}"));
+				string valueName = parentType.Name == "Styleable" ? value.ToString () : $"0x{value.ToString ("X")}";
+				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: {valueName}"));
 			}
 			parentType.Members.Add (f);
 			return f;

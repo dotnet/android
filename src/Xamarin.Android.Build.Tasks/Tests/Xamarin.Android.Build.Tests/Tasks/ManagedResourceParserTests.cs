@@ -346,5 +346,75 @@ int transition transition 0x7f0f0000
 				 $"{task.NetResgenOutputFile} and {expectedWithNewId} do not match.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		public void GenerateDesignerFileWithElevenStyleableAttributesFromRtxt ()
+		{
+			var styleable = @"<resources>
+  <declare-styleable name = ""ElevenAttributes"">
+    <attr name = ""attr00"" format=""string"" />
+    <attr name = ""attr01"" format=""string"" />
+    <attr name = ""attr02"" format=""string"" />
+    <attr name = ""attr03"" format=""string"" />
+    <attr name = ""attr04"" format=""string"" />
+    <attr name = ""attr05"" format=""string"" />
+    <attr name = ""attr06"" format=""string"" />
+    <attr name = ""attr07"" format=""string"" />
+    <attr name = ""attr08"" format=""string"" />
+    <attr name = ""attr09"" format=""string"" />
+    <attr name = ""attr10"" format=""string"" />
+  </declare-styleable>
+</resources>";
+			var rtxt = @"int attr attr00 0x7f010000
+int attr attr01 0x7f010001
+int attr attr02 0x7f010002
+int attr attr03 0x7f010003
+int attr attr04 0x7f010004
+int attr attr05 0x7f010005
+int attr attr06 0x7f010006
+int attr attr07 0x7f010007
+int attr attr08 0x7f010008
+int attr attr09 0x7f010009
+int attr attr10 0x7f01000a
+int[] styleable ElevenAttributes { 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004, 0x7f010005, 0x7f010006, 0x7f010007, 0x7f010008, 0x7f010009, 0x7f01000a }
+int styleable ElevenAttributes_attr00 0
+int styleable ElevenAttributes_attr01 1
+int styleable ElevenAttributes_attr02 2
+int styleable ElevenAttributes_attr03 3
+int styleable ElevenAttributes_attr04 4
+int styleable ElevenAttributes_attr05 5
+int styleable ElevenAttributes_attr06 6
+int styleable ElevenAttributes_attr07 7
+int styleable ElevenAttributes_attr08 8
+int styleable ElevenAttributes_attr09 9
+int styleable ElevenAttributes_attr10 10";
+
+			var path = Path.Combine ("temp", TestName);
+			Directory.CreateDirectory (Path.Combine (Root, path));
+			File.WriteAllText (Path.Combine (Root, path, "AndroidManifest.xml"), AndroidManifest);
+			Directory.CreateDirectory (Path.Combine (Root, path, "res"));
+			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
+			File.WriteAllText (Path.Combine (Root, path, "res", "values", "attrs.xml"), styleable);
+			File.WriteAllText (Path.Combine (Root, path, "R.txt"), rtxt);
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var task = new GenerateResourceDesigner {
+				BuildEngine = engine
+			};
+			task.UseManagedResourceGenerator = true;
+			task.DesignTimeBuild = true;
+			task.Namespace = "Foo.Foo";
+			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
+			task.ProjectDir = Path.Combine (Root, path);
+			task.ResourceDirectory = Path.Combine (Root, path, "res");
+			task.Resources = new TaskItem [] {};
+			task.IsApplication = true;
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
+			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
+			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
+				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }
