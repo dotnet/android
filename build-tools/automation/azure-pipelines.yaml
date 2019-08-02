@@ -507,14 +507,13 @@ stages:
         configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.Bcl-Tests
         project: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
-        testResultsFormat: xUnit
+        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
 
     - task: PublishTestResults@2
-      displayName: publish Xamarin.Android.Bcl-Tests-NUnit results
+      displayName: publish Xamarin.Android.Bcl-Tests-XUnit results
       inputs:
         testResultsFormat: NUnit
-        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
+        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
         testRunTitle: Xamarin.Android.Bcl-Tests-NUnit
       condition: succeededOrFailed()
 
