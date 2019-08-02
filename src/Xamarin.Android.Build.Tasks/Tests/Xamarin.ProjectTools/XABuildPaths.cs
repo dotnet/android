@@ -18,7 +18,7 @@ namespace Xamarin.ProjectTools
 		public static readonly string BinDirectory = Path.Combine (PrefixDirectory, "bin");
 		public static readonly string XABuildScript = Path.Combine (BinDirectory, "xabuild");
 		public static readonly string XABuildExe = Path.Combine (BinDirectory, "xabuild.exe");
-		public static readonly string TestOutputDirectory = Path.Combine (TopDirectory, "bin", "TestRelease");
+		public static readonly string TestOutputDirectory = Path.Combine (TopDirectory, "bin", $"Test{Configuration}");
 
 		static string GetTopDirRecursive (string searchDirectory, int maxSearchDepth = 5)
 		{
