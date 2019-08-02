@@ -13,7 +13,7 @@ namespace Xamarin.Android.Prepare
 				// (because they're not useful for every day work with XA) so they must be downloaded after the bundle
 				// is unpacked.
 				Log.DebugLine ("Adding Windows GAS download step (AFTER bundle)");
-				Steps.Add (new Step_Get_Windows_GAS ());
+				Steps.Add (new Step_Get_Windows_Binutils ());
 				return;
 			}
 
