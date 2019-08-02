@@ -284,10 +284,10 @@ namespace Foo.Foo
 					16842962,
 					2130903040};
 			
-			// aapt resource value: 0x0
+			// aapt resource value: 0
 			public const int CustomFonts_android_scrollX = 0;
 			
-			// aapt resource value: 0x1
+			// aapt resource value: 1
 			public const int CustomFonts_customFont = 1;
 			
 			// aapt resource value: { 0x10100B2,0x10101F8,0x7F030001,0x7F030002 }
@@ -297,16 +297,16 @@ namespace Foo.Foo
 					2130903041,
 					2130903042};
 			
-			// aapt resource value: 0x0
+			// aapt resource value: 0
 			public const int MultiSelectListPreference_android_entries = 0;
 			
-			// aapt resource value: 0x1
+			// aapt resource value: 1
 			public const int MultiSelectListPreference_android_entryValues = 1;
 			
-			// aapt resource value: 0x2
+			// aapt resource value: 2
 			public const int MultiSelectListPreference_entries = 2;
 			
-			// aapt resource value: 0x3
+			// aapt resource value: 3
 			public const int MultiSelectListPreference_entryValues = 3;
 			
 			static Styleable()
