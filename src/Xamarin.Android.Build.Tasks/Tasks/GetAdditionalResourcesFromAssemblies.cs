@@ -38,7 +38,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidSdkDirectory { get; set; }
 
-		[Required]
 		public string AndroidNdkDirectory { get; set; }
 
 		[Required]
@@ -71,8 +70,14 @@ namespace Xamarin.Android.Tasks
 			MatchEvaluator replaceEnvVar = (Match m) => {
 				var e = m.Groups [2].Value;
 				switch (e) {
-				case "ANDROID_SDK_PATH": return AndroidSdkDirectory.TrimEnd (Path.DirectorySeparatorChar);
-				case "ANDROID_NDK_PATH": return AndroidNdkDirectory.TrimEnd (Path.DirectorySeparatorChar);
+				case "ANDROID_SDK_PATH":
+					return AndroidSdkDirectory.TrimEnd (Path.DirectorySeparatorChar);
+				case "ANDROID_NDK_PATH":
+					//NOTE: AndroidNdkDirectory is not [Required]
+					if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
+						goto default;
+					}
+					return AndroidNdkDirectory.TrimEnd (Path.DirectorySeparatorChar);
 				default:
 					var v = Environment.GetEnvironmentVariable (e);
 					if (!string.IsNullOrEmpty (v))

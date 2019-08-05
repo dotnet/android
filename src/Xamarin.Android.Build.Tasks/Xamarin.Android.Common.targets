@@ -922,55 +922,17 @@ because xbuild doesn't support framework reference assemblies.
 	</GetAppSettingsDirectory>
 
 	<!-- ensure a version of paths with trailing slashes even if overridden by /p:foo=bar -->
-	<CreateProperty Value="$(AppSettingsDirectory)">
-		<Output TaskParameter="Value" PropertyName="_AppSettingsDirectory"/>
-	</CreateProperty>
-	<CreateProperty Value="$(_AppSettingsDirectory)\">
-		<Output TaskParameter="Value" PropertyName="_AppSettingsDirectory"
-			Condition="!HasTrailingSlash('$(_AppSettingsDirectory)')" />
-	</CreateProperty>
+	<PropertyGroup>
+		<_AppSettingsDirectory>$([MSBuild]::EnsureTrailingSlash($(AppSettingsDirectory)))</_AppSettingsDirectory>
+		<_ApkDebugKeyStore Condition=" '$(_ApkDebugKeyStore)' == '' ">$(_AppSettingsDirectory)debug.keystore</_ApkDebugKeyStore>
+		<_MonoAndroidToolsDirectory>$([MSBuild]::EnsureTrailingSlash($(MonoAndroidToolsDirectory)))</_MonoAndroidToolsDirectory>
+		<_AndroidNdkDirectory>$([MSBuild]::EnsureTrailingSlash($(_AndroidNdkDirectory)))</_AndroidNdkDirectory>
+		<_AndroidSdkDirectory>$([MSBuild]::EnsureTrailingSlash($(_AndroidSdkDirectory)))</_AndroidSdkDirectory>
+		<AndroidSdkBuildToolsPath>$([MSBuild]::EnsureTrailingSlash($(AndroidSdkBuildToolsPath)))</AndroidSdkBuildToolsPath>
+		<AndroidSdkBuildToolsBinPath>$([MSBuild]::EnsureTrailingSlash($(AndroidSdkBuildToolsBinPath)))</AndroidSdkBuildToolsBinPath>
+		<_JavaSdkDirectory>$([MSBuild]::EnsureTrailingSlash($(_JavaSdkDirectory)))</_JavaSdkDirectory>
+	</PropertyGroup>
 
-	<CreateProperty Value="$(_AppSettingsDirectory)debug.keystore">
-		<Output TaskParameter="Value" PropertyName="_ApkDebugKeyStore"
-			Condition="'$(_ApkDebugKeyStore)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)">
-		<Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"/>
-	</CreateProperty>
-	<CreateProperty Value="$(_MonoAndroidToolsDirectory)\">
-		<Output TaskParameter="Value" PropertyName="_MonoAndroidToolsDirectory"
-			Condition="!HasTrailingSlash('$(_MonoAndroidToolsDirectory)')" />
-	</CreateProperty>
-
-	<CreateProperty Value="$(_AndroidNdkDirectory)\">
-		<Output TaskParameter="Value" PropertyName="_AndroidNdkDirectory"
-			Condition="!HasTrailingSlash('$(_AndroidNdkDirectory)')" />
-	</CreateProperty>
-
-	<CreateProperty Value="$(_AndroidSdkDirectory)\">
-		<Output TaskParameter="Value" PropertyName="_AndroidSdkDirectory"
-			Condition="!HasTrailingSlash('$(_AndroidSdkDirectory)')" />
-	</CreateProperty>
-
-	<CreateProperty Value="$(AndroidSdkBuildToolsPath)\">
-		<Output TaskParameter="Value" PropertyName="AndroidSdkBuildToolsPath"
-				Condition="!HasTrailingSlash('$(AndroidSdkBuildToolsPath)')"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(AndroidSdkBuildToolsBinPath)\">
-		<Output TaskParameter="Value" PropertyName="AndroidSdkBuildToolsBinPath"
-				Condition="!HasTrailingSlash('$(AndroidSdkBuildToolsBinPath)')"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(_JavaSdkDirectory)\">
-		<Output TaskParameter="Value" PropertyName="_JavaSdkDirectory"
-			Condition="!HasTrailingSlash('$(_JavaSdkDirectory)')" />
-	</CreateProperty>
-	
 	<Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
 	<Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
 	<Message Text="TargetFrameworkVersion: $(TargetFrameworkVersion)"/>
