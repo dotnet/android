@@ -78,6 +78,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaMaximumHeapSize { get; set; }
 
+		public virtual string DefaultErrorCode => null;
+
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
@@ -91,7 +93,7 @@ namespace Xamarin.Android.Tasks
 						break;
 				}
 				if (foundError && errorText.Length > 0) {
-					Log.LogError (ToolName, null, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
 				}
 				return !Log.HasLoggedErrors;
 			}
@@ -111,7 +113,7 @@ namespace Xamarin.Android.Tasks
 						ToolName, GenerateCommandLineCommands ());
 					break;
 				default:
-					Log.LogError ("{0} : {1}", exception, error);
+					Log.LogCodedError (DefaultErrorCode, "{0} : {1}", exception, error);
 					break;
 			}
 		}
@@ -123,7 +125,7 @@ namespace Xamarin.Android.Tasks
 
 			if (match.Success) {
 				if (!string.IsNullOrEmpty (file)) {
-					Log.LogError (ToolName, null, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
 					errorText.Clear ();
 				}
 				file = match.Groups ["file"].Value;
@@ -149,7 +151,7 @@ namespace Xamarin.Android.Tasks
 
 				if (singleLine.StartsWith ("Note:") || singleLine.Trim ().EndsWith ("errors")) {
 					// See if we have one last error to print out
-					Log.LogError (null, null, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
+					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString ());
 					errorText.Clear ();
 					foundError = false;
 					return true;
