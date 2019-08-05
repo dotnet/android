@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Xamarin.ProjectTools
 {
@@ -10,8 +10,11 @@ namespace Xamarin.ProjectTools
 		}
 
 		public Import (Func<string> project) {
-			Project = project; 
+			Project = project;
+			Timestamp = DateTimeOffset.UtcNow;
 		}
+
+		public DateTimeOffset? Timestamp { get; set; }
 
 		public Func<string> Project { get; set; }
 		public Func<string> TextContent { get; set; }
