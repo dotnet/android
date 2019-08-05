@@ -125,13 +125,29 @@ namespace Xamarin.ProjectTools
 
 		public BuildItem GetItem (string include)
 		{
-			return ItemGroupList.SelectMany (g => g).First (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
+			return ItemGroupList.SelectMany (g => g).FirstOrDefault (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public Import GetImport (string include)
+		{
+			return Imports.FirstOrDefault (i => i.Project ().Equals (include, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public void Touch (params string [] itemPaths)
 		{
-			foreach (var item in itemPaths)
-				GetItem (item).Timestamp = DateTimeOffset.UtcNow;
+			foreach (var item in itemPaths) {
+				var buildItem = GetItem (item);
+				if (buildItem != null) {
+					buildItem.Timestamp = DateTime.UtcNow;
+					continue;
+				}
+				var import = GetImport (item);
+				if (import != null) {
+					import.Timestamp = DateTime.UtcNow;
+					continue;
+				}
+				throw new InvalidOperationException ($"Path `{item}` not found in project!");
+			}
 		}
 
 		string project_file_path;
@@ -197,6 +213,7 @@ namespace Xamarin.ProjectTools
 
 			foreach (var import in Imports)
 				list.Add (new ProjectResource () {
+					Timestamp = import.Timestamp,
 					Path = import.Project (),
 					Content = import.TextContent == null ? null : import.TextContent (),
 					Encoding = System.Text.Encoding.UTF8,
