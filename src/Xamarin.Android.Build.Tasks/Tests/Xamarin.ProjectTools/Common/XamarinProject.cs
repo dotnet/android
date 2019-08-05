@@ -313,6 +313,8 @@ namespace Xamarin.ProjectTools
 
 		}
 
+		static readonly object lockObject = new object ();
+
 		public virtual void NuGetRestore (string directory, string packagesDirectory = null)
 		{
 			if (!Packages.Any ())
@@ -328,18 +330,19 @@ namespace Xamarin.ProjectTools
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
 			};
-			//TODO: possibly remove this later?
-			psi.EnvironmentVariables.Add ("MONO_LOG_LEVEL", "debug");
-			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
-			using (var process = new Process {
-				StartInfo = psi,
-			}) {
-				process.OutputDataReceived += (sender, e) => Console.WriteLine (e.Data);
-				process.ErrorDataReceived += (sender, e) => Console.Error.WriteLine (e.Data);
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				process.WaitForExit ();
+
+			lock (lockObject) {
+				Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
+
+				using (var process = new Process ()) {
+					process.StartInfo = psi;
+					process.OutputDataReceived += (sender, e) => Console.WriteLine (e.Data);
+					process.ErrorDataReceived += (sender, e) => Console.Error.WriteLine (e.Data);
+					process.Start ();
+					process.BeginOutputReadLine ();
+					process.BeginErrorReadLine ();
+					process.WaitForExit ();
+				}
 			}
 		}
 
