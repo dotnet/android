@@ -3996,5 +3996,19 @@ namespace UnnamedProject
 				StringAssert.Contains ("android:networkSecurityConfig=\"@xml/network_security_config\"", contents);
 			}
 		}
+
+		[Test]
+		public void AbiNameInIntermediateOutputPath ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Akavache);
+			proj.OutputPath = Path.Combine ("bin", "x86", "Debug");
+			proj.IntermediateOutputPath = Path.Combine ("obj", "x86", "Debug");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var task = Akavache.BlobCache.LocalMachine.GetAllKeys();");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
+			}
+		}
 	}
 }
