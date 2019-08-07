@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, int timeout = 10)
+		protected static bool MonitorAdbLogcat (Func<string, bool> action, int timeout = 15)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
