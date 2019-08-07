@@ -62,21 +62,13 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Test. No devices available.");
 			AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
-			string activityStartLogcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, builder.ProjectDirectory, "startup-logcat.log");
-			bool didActivityStart = WaitForActivityToStart (proj.PackageName, "MainActivity", output: out string output, timeout: 15);
-			File.WriteAllText (activityStartLogcatPath, output);
-			Assert.IsTrue (didActivityStart, "Activity should have started");
-
+			WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
 			ClearAdbLogcat ();
 			ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
-			string buttonClickedLogcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, builder.ProjectDirectory, "button-logcat.log");
-			var buttonEventLogcat = new StringBuilder ();
-			bool didButtonEventFire = MonitorAdbLogcat ((line) => {
-				buttonEventLogcat.AppendLine (line);
+			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains ("Button was Clicked!");
-			});
-			File.WriteAllText (buttonClickedLogcatPath, buttonEventLogcat.ToString ());
-			Assert.IsTrue (didButtonEventFire, "Button Should have been Clicked.");
+			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
 		static object [] GetTimeZoneTestCases ()
@@ -108,19 +100,11 @@ namespace Xamarin.Android.Build.Tests
 			RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
-			string activityStartLogcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, builder.ProjectDirectory, "startup-logcat.log");
-			bool didActivityStart = WaitForActivityToStart (proj.PackageName, "MainActivity", output: out string activityStartLogcat);
-			File.WriteAllText (activityStartLogcatPath, activityStartLogcat);
-			Assert.IsTrue (didActivityStart, "Activity should have started");
-
-			string tzLogcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, builder.ProjectDirectory, "timezone-logcat.log");
-			var tzLogcat = new StringBuilder ();
-			bool didContainTimezone = MonitorAdbLogcat ((l)=> {
-				tzLogcat.AppendLine (l);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started");
+			Assert.IsTrue (MonitorAdbLogcat ((l) => {
 				return l.Contains ($"TimeZoneInfo={timeZone}");
-			});
-			File.WriteAllText (tzLogcatPath, tzLogcat.ToString ());
-			Assert.IsTrue (didContainTimezone, $"TimeZone should have been {timeZone}");
+			}, Path.Combine (Root, builder.ProjectDirectory, "timezone-logcat.log")), $"TimeZone should have been {timeZone}");
 		}
 	}
 }
