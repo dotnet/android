@@ -64,26 +64,24 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			bool didActionSucceed = false;
-			using (var proc = Process.Start (info)) {
-				var sb = new StringBuilder ();
-
-				proc.OutputDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						sb.AppendLine (e.Data);
-						if (action (e.Data)) {
-							didActionSucceed = true;
-							proc.Kill ();
+			using (var sw = File.CreateText (logcatFilePath)) {
+				using (var proc = Process.Start (info)) {
+					proc.OutputDataReceived += (sender, e) => {
+						if (e.Data != null) {
+							sw.WriteLine (e.Data);
+							if (action (e.Data)) {
+								didActionSucceed = true;
+								if (!proc.HasExited) {
+									proc.Kill ();
+								}
+							}
 						}
-					}
-				};
+					};
 
-				proc.BeginOutputReadLine ();
-				if (!proc.WaitForExit (timeout * 1000)) {
-					proc.Kill ();
+					proc.BeginOutputReadLine ();
+					proc.WaitForExit (timeout * 1000);
+					return didActionSucceed;
 				}
-
-				File.WriteAllText (logcatFilePath, sb.ToString ());
-				return didActionSucceed;
 			}
 		}
 
