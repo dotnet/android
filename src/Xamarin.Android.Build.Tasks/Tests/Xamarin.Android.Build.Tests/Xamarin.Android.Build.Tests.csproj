@@ -94,6 +94,7 @@
     <Compile Include="Tasks\CopyIfChangedTests.cs" />
     <Compile Include="Tasks\GetDependenciesTests.cs" />
     <Compile Include="Tasks\ResolveMonoAndroidSdksTests.cs" />
+    <Compile Include="Tasks\LinkerTests.cs" />
     <Compile Include="Tasks\ResolveSdksTaskTests.cs" />
     <Compile Include="Tasks\AndroidResourceTests.cs" />
     <Compile Include="Tasks\ManagedResourceParserTests.cs" />
