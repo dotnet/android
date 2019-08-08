@@ -211,7 +211,6 @@ namespace MSBuild.Fuzzer
 						 select f).ToArray ();
 			var file = files [random.Next (0, files.Length)];
 			File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-			File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
 			return true;
 		}
 

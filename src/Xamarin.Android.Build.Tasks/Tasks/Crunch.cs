@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					MonoAndroidHelper.CopyIfChanged (dest, item.ItemSpec);
 					// reset the Dates so MSBuild/xbuild doesn't think they changed.
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (item.ItemSpec, srcmodifiedDate, Log);
+					File.SetLastWriteTimeUtc (item.ItemSpec, srcmodifiedDate);
 				}
 			}
 			finally {

@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 					MonoAndroidHelper.CopyIfChanged (src, destPath);
 			}
 			MonoAndroidHelper.SetWriteable (destPath);
-			MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (destPath, cachedDate, Log);
+			File.SetLastWriteTimeUtc (destPath, cachedDate);
 		}
 	}
 

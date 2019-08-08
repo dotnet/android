@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tasks {
 							var lastModified = File.GetLastWriteTimeUtc (file);
 							if (document.SaveIfChanged (file)) {
 								Log.LogDebugMessage ($"Fixed up Custom Views in {file}");
-								MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, lastModified, Log);
+								File.SetLastWriteTimeUtc (file, lastModified);
 							}
 						}
 						processed.Add (file);
