@@ -37,7 +37,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
-    - template: security\xa-static-analysis.yml@yaml
+    - template: security\xa-static-analysis\v1.yml@yaml
       parameters:
         credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
