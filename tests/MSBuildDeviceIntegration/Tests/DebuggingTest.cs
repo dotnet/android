@@ -54,10 +54,8 @@ namespace Xamarin.Android.Build.Tests
 				else
 					AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
 
-				string logcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, b.ProjectDirectory, "logcat.log");
-				bool didActivityStart = WaitForActivityToStart (proj.PackageName, "MainActivity", output: out string logcatOutput, timeout: 30);
-				File.WriteAllText (logcatPath, logcatOutput);
-				Assert.True (didActivityStart, "Activity should have started.");
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
@@ -169,10 +167,7 @@ namespace Xamarin.Android.Build.Tests
 					"AndroidAttachDebugger=True",
 				}), "Project should have run.");
 				
-				string logcatPath = Path.Combine (XABuildPaths.TestOutputDirectory, b.ProjectDirectory, "logcat.log");
-				bool didDebuggerStart = WaitForDebuggerToStart (output: out string logcatOutput);
-				File.WriteAllText (logcatPath, logcatOutput);
-				Assert.IsTrue (didDebuggerStart, "Activity should have started");
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
