@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -692,15 +692,26 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
 
 				proj.OtherBuildItems.Add (invalidXml);
 				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
 
 				proj.OtherBuildItems.Remove (invalidXml);
+
+				//HACK: for random test failure
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (1));
+
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				proj.OtherBuildItems.Add (invalidXml);
+
+				//HACK: for random test failure
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (1));
+
 				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
 			}
 		}
