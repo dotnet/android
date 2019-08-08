@@ -38,6 +38,8 @@ stages:
     - checkout: self
       submodules: recursive
     - template: security\xa-static-analysis.yml@yaml
+      parameters:
+        credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
   # Check - "Xamarin.Android (Prepare bundle)"
   - job: create_bundle
