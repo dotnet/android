@@ -32,8 +32,12 @@
     />
     <Copy
         SourceFiles="@(MSBuildItemsUnix)"
-        DestinationFiles="@(MSBuildItemsUnix->'$(MSBuildTargetsDir)\%(RelativePath)')"
-    />
+        DestinationFiles="@(MSBuildItemsUnix->'$(MSBuildTargetsDir)\%(RelativePath)')" >
+      <Output
+          TaskParameter="CopiedFiles"
+          ItemName="CopiedMSBuildItemsUnix"
+      />
+    </Copy>
     <Copy
         SourceFiles="@(XATargetsSrcFiles)"
         DestinationFolder="$(XAFrameworkDir)\lib\xamarin.android\xbuild\Xamarin"
@@ -82,8 +86,35 @@
         Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/monodoc/MonoAndroid-lib.zip&quot; ."
     />
   </Target>
+  <Target Name="_PrepareForNotarization"
+      Condition=" '$(HostOS)' == 'Darwin' And '$(RunningOnCI)' == 'true' "
+      DependsOnTargets="_CreateSymbolicLinks" >
+    <ItemGroup>
+      <CodesignArgs Include="-s &quot;Developer ID Application: Xamarin Inc&quot;" />
+      <CodesignArgs Include="-f --timestamp"/>
+    </ItemGroup>
+    <Exec Command="dd if=&quot;%(CopiedMSBuildItemsUnix.Identity)&quot; of=&quot;%(CopiedMSBuildItemsUnix.Identity).swab&quot; conv=swab"
+        Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
+    <Exec Command="rm &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
+        Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
+    <Exec Command="codesign @(CodesignArgs, ' ') &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
+        Condition=" '%(CopiedMSBuildItemsUnix.CodeSign)' == 'True' And '%(CopiedMSBuildItemsUnix.HardenRuntime)' != 'True' " />
+    <Exec Command="codesign @(CodesignArgs, ' ') -o runtime --entitlements &quot;%(CopiedMSBuildItemsUnix.EntitlementsPath)&quot; &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
+        Condition=" '%(CopiedMSBuildItemsUnix.CodeSign)' == 'True' And '%(CopiedMSBuildItemsUnix.HardenRuntime)' == 'True' " />
+    <!-- Unpack, sign, and repack bundletool-->
+    <PropertyGroup>
+      <_BundleToolJarLocation>$([System.IO.Path]::GetFullPath('$(MSBuildTargetsDir)\bundletool.jar'))</_BundleToolJarLocation>
+      <_BundleToolExtractLocation>$(MSBuildSrcDir)\sign-bundletool</_BundleToolExtractLocation>
+    </PropertyGroup>
+    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
+    <MakeDir Directories="$(_BundleToolExtractLocation)" />
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -xvf &quot;$(_BundleToolJarLocation)&quot;" />
+    <Delete Files="$(_BundleToolJarLocation)" />
+    <Exec Command="codesign @(CodesignArgs, ' ') -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolExtractLocation)\macos\aapt2&quot;" />
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvf &quot;$(_BundleToolJarLocation)&quot; ." />
+  </Target>
   <Target Name="_FinalizePayload"
-      DependsOnTargets="_CreateSymbolicLinks">
+      DependsOnTargets="_CreateSymbolicLinks;_PrepareForNotarization">
     <ReplaceFileContents
         SourceFile="distribution.xml.in"
         DestinationFile="$(PkgDistributionDestination)"
