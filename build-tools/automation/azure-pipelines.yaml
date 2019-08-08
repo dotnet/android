@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/master
+    ref: refs/heads/pjcollins_static-analysis
     endpoint: xamarin
 
 # Global variables
@@ -21,13 +21,25 @@ variables:
   InstallerArtifactName: installers
   NUnitTestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
+  HostedWinVS2019: Hosted Windows 2019 with VS2019
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
-# Check - "Xamarin.Android (Prepare bundle)"
 stages:
 - stage: prepare
   displayName: Prepare
   jobs:
+  # Check - "Xamarin.Android (Prepare Run Code Analysis)"
+  - job: run_code_analysis
+    displayName: Run Code Analysis
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 5
+    steps:
+    - checkout: self
+      submodules: recursive
+    - template: security\xa-static-analysis.yml@yaml
+
+  # Check - "Xamarin.Android (Prepare bundle)"
   - job: create_bundle
     displayName: Bundle
     pool: $(XA.Build.Mac.Pool)
@@ -724,8 +736,7 @@ stages:
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
     displayName: Designer Windows
-    pool:
-      name: Hosted Windows 2019 with VS2019
+    pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
