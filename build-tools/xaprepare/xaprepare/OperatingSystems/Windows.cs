@@ -90,8 +90,10 @@ namespace Xamarin.Android.Prepare
 			Log.Todo ("gather dependencies here");
 
 			JavaHome = Context.Instance.Properties.GetValue ("JavaSdkDirectory")?.Trim ();
-			if (String.IsNullOrEmpty (JavaHome))
-				JavaHome  = Path.Combine (HomeDirectory, "android-toolchain", "jdk");
+			if (String.IsNullOrEmpty (JavaHome)) {
+				var androidToolchainDirectory = Context.Instance.Properties.GetValue ("AndroidToolchainDirectory")?.Trim ();
+				JavaHome  = Path.Combine (androidToolchainDirectory, "jdk");
+			}
 
 			JavaCPath = Path.Combine (JavaHome, "bin", "javac.exe");
 			JavaPath  = Path.Combine (JavaHome, "bin", "java.exe");
