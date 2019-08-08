@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Mono.Cecil;
 
@@ -163,7 +164,7 @@ namespace MonoDroid.Tuner
 				if (ifaceDef.HasGenericParameters)
 					continue;
 
-				foreach (var iMethod in ifaceDef.Methods) {
+				foreach (var iMethod in ifaceDef.Methods.Where (m => m.IsAbstract)) {
 					bool exists = false;
 
 					foreach (var tMethod in typeMethods) {
