@@ -136,18 +136,19 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aarch64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aarch64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aarch64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\arm-linux-androideabi-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\arm-linux-androideabi-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\arm-linux-androideabi-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\i686-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\i686-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\i686-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x86_64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x86_64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x86_64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\libwinpthread-1.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />
@@ -155,18 +156,18 @@
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libxamarin-app.dll" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
   <ItemGroup>
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aarch64-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aarch64-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aarch64-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\arm-linux-androideabi-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\arm-linux-androideabi-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\arm-linux-androideabi-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\i686-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\i686-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\i686-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\x86_64-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\x86_64-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\x86_64-linux-android-strip" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-as" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-ld" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-strip" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-as" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-ld" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-strip" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-as" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-ld" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-strip" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
