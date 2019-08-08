@@ -364,7 +364,7 @@ namespace Xamarin.Android.Tasks
 				int level = 0;
 				string toolPrefix = EnableLLVM
 					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
-					: $"{ToolsDirectory}{NdkUtil.GetArchDirName (arch)}-";
+					: Path.Combine (ToolsDirectory, "ndk", $"{NdkUtil.GetArchDirName (arch)}-");
 				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
 				var ldFlags = string.Empty;
 				if (EnableLLVM) {

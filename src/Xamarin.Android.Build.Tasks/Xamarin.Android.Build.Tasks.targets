@@ -171,13 +171,15 @@
 
     <PropertyGroup>
       <_NDKToolFileName>$([System.IO.Path]::GetFileName ('$(_NDKToolLocation)'))</_NDKToolFileName>
-      <_NDKToolDestinationBase>$(XAInstallPrefix)xbuild\Xamarin\Android</_NDKToolDestinationBase>
+      <_NDKToolDestinationBase Condition=" '$(HostOS)' != 'Windows' ">$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\ndk\</_NDKToolDestinationBase>
+      <_NDKToolDestinationBase Condition=" '$(HostOS)' == 'Windows' ">$(XAInstallPrefix)xbuild\Xamarin\Android\ndk\</_NDKToolDestinationBase>
     </PropertyGroup>
 
     <ItemGroup>
       <_NDKToolSource Include="$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))" />
-      <_NDKToolDestination Condition=" '$(HostOS)' != 'Windows' " Include="$(_NDKToolDestinationBase)\$(HostOS)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))'))" />
-      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)\$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))'))" />
+      <_NDKToolSource Condition=" '$(HostOS)' == 'Windows' " Include="$([System.IO.Path]::GetDirectoryName ('$(_NDKToolLocationaarch64-linux-android-as)'))\libwinpthread-1.dll" />
+      <_NDKToolDestination Include="$(_NDKToolDestinationBase)$([System.IO.Path]::GetFileName ('$(_NDKToolLocation%(_ToolchainTool.Identity)-%(_ToolchainTool.Tool))'))" />
+      <_NDKToolDestination Condition=" '$(HostOS)' == 'Windows' " Include="$(_NDKToolDestinationBase)libwinpthread-1.dll" />
     </ItemGroup>
   </Target>
 
