@@ -33,7 +33,7 @@ namespace Xamarin.Android.Prepare
 			const string Bundle_AzureJobUri_Release = "xamarin-android";
 			static string Bundle_AzureJobUri => ctx.IsDebugBuild ? Bundle_AzureJobUri_Debug : Bundle_AzureJobUri_Release;
 
-			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe");
+			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v5.2.0/nuget.exe");
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 		}
