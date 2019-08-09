@@ -78,20 +78,9 @@ stages:
         artifactName: $(BundleArtifactName)
         targetPath: $(Build.ArtifactStagingDirectory)
 
-    - task: MSBuild@1
-      displayName: package build results
-      inputs:
-        solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)/results
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
-        artifactName: prepare-build-results
-        targetPath: $(Build.ArtifactStagingDirectory)/results
-      condition: always()
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: mac-prepare-results
 
 - stage: mac_build
   displayName: Mac
@@ -191,20 +180,9 @@ stages:
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
-    - task: MSBuild@1
-      displayName: package build results
-      inputs:
-        solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
+    - template: yaml-templates/upload-results.yaml
+      parameters:
         artifactName: mac-build-results
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
 
   # Check - "Xamarin.Android (Mac Queue Vsix Signing)"
   # Actually runs on a Windows host, but the work is done in a Jenkins job. Does not run on PR builds.
@@ -311,20 +289,9 @@ stages:
         testRunTitle: xamarin-android
       condition: succeededOrFailed()
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
+    - template: yaml-templates\upload-results.yaml
+      parameters:
         artifactName: win-build-test-results
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
 
 - stage: test
   displayName: Test
@@ -481,20 +448,10 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/shutdown-emulator.binlog
       condition: always()
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    - template: yaml-templates/upload-results.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
         artifactName: mac-apk-test-results
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
 
   # Check - "Xamarin.Android (Test BCL With Emulator)"
   - job: mac_bcl_tests
@@ -541,20 +498,9 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
-        artifactName: mac-bcl-test-testresults
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: mac-bcl-test-results
 
   # Check - "Xamarin.Android (Test MSBuild Mac)"
   - job: mac_msbuild_tests
@@ -601,20 +547,9 @@ stages:
         testRunTitle: MSBuildTestsMac
       condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
-        artifactName: mac-msbuild-testresults
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: mac-msbuild-test-results
 
  # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
   - job: mac_msbuilddevice_tests
@@ -681,20 +616,9 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
-        artifactName: mac-msbuild-device-testresults
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: mac-msbuild-device-test-results
 
 # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
   - job: mac_timezonedevice_tests
@@ -745,20 +669,9 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
 
-    - task: MSBuild@1
-      displayName: package results
-      inputs:
-        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
-      condition: always()
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload artifacts
-      inputs:
-        artifactName: mac-timezoneinfo-testresults
-        targetPath: $(Build.ArtifactStagingDirectory)
-      condition: always()
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: mac-timezoneinfo-test-results
 
   # Check - "Xamarin.Android (Test Designer Mac)"
   - job: designer_integration_mac
@@ -783,12 +696,6 @@ stages:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        itemPattern: "*.pkg"
-        downloadPath: $(System.DefaultWorkingDirectory)
 
     - template: yaml-templates/run-installer.yaml
 
@@ -826,13 +733,9 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        itemPattern: "*.vsix"
-        downloadPath: $(System.DefaultWorkingDirectory)
-
     - template: yaml-templates\run-installer.yaml
+      parameters:
+        itemPattern: "*.vsix"
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:

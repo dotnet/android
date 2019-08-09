@@ -1,13 +1,16 @@
 parameters:
-  artifactDirectory: $(System.DefaultWorkingDirectory)
+  itemPattern: "*.pkg"
 
 steps:
+- task: DownloadPipelineArtifact@1
+  inputs:
+    artifactName: $(InstallerArtifactName)
+    itemPattern: ${{ parameters.itemPattern }}
+    downloadPath: $(System.DefaultWorkingDirectory)
+
 - powershell: |
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $installer = Get-ChildItem -Path "${{ parameters.artifactDirectory }}/*" -Include *.pkg -File
-    } else {
-        $installer = Get-ChildItem -Path "${{ parameters.artifactDirectory }}\*" -Include *.vsix -File
-    }
+    $searchDir = [System.IO.Path]::Combine("$(System.DefaultWorkingDirectory)", "*")
+    $installer = Get-ChildItem -Path "$searchDir" -Include "${{ parameters.itemPattern }}" -File
     if (![System.IO.File]::Exists($installer)) {
         throw [System.IO.FileNotFoundException] "Installer not found in $artifactDirectory."
     }
