@@ -90,9 +90,10 @@ namespace Xamarin.Android.Prepare
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-as.exe",
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-ld.exe",
 				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android-strip.exe",
+				$"android-ndk-r{ndkVersion}/toolchains/llvm/prebuilt/windows-x86_64/bin/libwinpthread-1.dll",
 			};
 
-			string destinationDirectory = Path.Combine (Configurables.Paths.InstallMSBuildDir);
+			string destinationDirectory = Path.Combine (Configurables.Paths.InstallMSBuildDir, "ndk");
 			int existingFiles = 0;
 			foreach (string f in neededFiles) {
 				string file = Path.Combine (destinationDirectory, Path.GetFileName (f));

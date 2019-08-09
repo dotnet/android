@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, int timeout = 10)
+		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
@@ -62,47 +62,44 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-			using (var proc = Process.Start (info)) {
-				var sw = new Stopwatch ();
-				try {
-					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (time.TotalMilliseconds > 0) {
-						sw.Start ();
-						if (action (proc.StandardOutput.ReadLine ()))
-							return true;
-						time = time.Subtract (TimeSpan.FromMilliseconds (sw.ElapsedMilliseconds));
-						sw.Reset ();
-					}
-				} finally {
-					sw.Stop ();
-					proc.Kill ();
-					proc.WaitForExit ();
+
+			bool didActionSucceed = false;
+			using (var sw = File.CreateText (logcatFilePath)) {
+				using (var proc = Process.Start (info)) {
+					proc.OutputDataReceived += (sender, e) => {
+						if (e.Data != null) {
+							sw.WriteLine (e.Data);
+							if (action (e.Data)) {
+								didActionSucceed = true;
+								if (!proc.HasExited) {
+									proc.Kill ();
+								}
+							}
+						}
+					};
+
+					proc.BeginOutputReadLine ();
+					proc.WaitForExit (timeout * 1000);
+					return didActionSucceed;
 				}
-				return false;
 			}
 		}
 
-		protected static bool WaitForDebuggerToStart (out string output, int timeout = 60)
+		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 60)
 		{
-			var sb = new StringBuilder ();
 			bool result = MonitorAdbLogcat ((line) => {
-				sb.AppendLine (line);
 				return line.IndexOf ("monodroid-debug: Trying to initialize the debugger with options", StringComparison.OrdinalIgnoreCase) > 0;
-			}, timeout: timeout);
-			output = sb.ToString ();
+			}, logcatFilePath, timeout);
 			return result;
 		}
 
-		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, out string output, int timeout = 60)
+		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 60)
 		{
-			var sb = new StringBuilder ();
 			bool result = MonitorAdbLogcat ((line) => {
-				sb.AppendLine (line);
 				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
 				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
 				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
-			}, timeout: timeout);
-			output = sb.ToString ();
+			}, logcatFilePath, timeout);
 			return result;
 		}
 

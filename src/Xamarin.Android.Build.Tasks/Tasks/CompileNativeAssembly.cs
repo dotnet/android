@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetAssemblerConfigs ()
 		{
-			string sdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
+			string sdkBinDirectory = Path.Combine (MonoAndroidHelper.GetOSBinPath (), "ndk");
 			foreach (ITaskItem item in Sources) {
 				string abi = item.GetMetadata ("abi")?.ToLowerInvariant ();
 				string prefix = String.Empty;
