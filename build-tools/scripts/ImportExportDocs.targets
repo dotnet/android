@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_TopDirImportExportDocs>$(MSBuildThisFileDirectory)..\..\</_TopDirImportExportDocs>
+    <XamarinDocsPath Condition=" '$(XamarinDocsPath)' == '' ">$(_TopDirImportExportDocs)..\xamarin-docs\</XamarinDocsPath>
+    <XamarinEngineeringDocsPath Condition=" '$(XamarinEngineeringDocsPath)' == '' ">$(_TopDirImportExportDocs)..\xamarin-engineering-docs-pr\</XamarinEngineeringDocsPath>
+    <_XamarinDocsPath>$([MSBuild]::EnsureTrailingSlash($(XamarinDocsPath)))</_XamarinDocsPath>
+    <_XamarinEngineeringDocsPath>$([MSBuild]::EnsureTrailingSlash($(XamarinEngineeringDocsPath)))</_XamarinEngineeringDocsPath>
+  </PropertyGroup>
+  <Target Name="ImportXamarinDocs">
+    <Copy
+        SourceFiles="$(_XamarinDocsPath)docs\android\deploy-test\building-apps\build-process.md"
+        DestinationFiles="$(_TopDirImportExportDocs)Documentation\guides\BuildProcess.md"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+  <Target Name="ExportXamarinDocs">
+    <Copy
+        SourceFiles="$(_TopDirImportExportDocs)Documentation\guides\BuildProcess.md"
+        DestinationFiles="$(_XamarinDocsPath)docs\android\deploy-test\building-apps\build-process.md"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+  <Target Name="ImportXamarinEngineeringDocs">
+    <ItemGroup>
+      <_MessageDocumentationFile
+          Include="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\*.md"
+          Exclude="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\TOC.md;$(XamarinEngineeringDocsPath)docs\android\errors-and-warnings\index.md"
+      />
+      <_MessageDocumentationImages
+          Include="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\images\*"
+      />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_MessageDocumentationFile)"
+        DestinationFolder="$(_TopDirImportExportDocs)Documentation\guides\messages"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_MessageDocumentationImages)"
+        DestinationFolder="$(_TopDirImportExportDocs)Documentation\guides\messages\images"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\index.md"
+        DestinationFiles="$(_TopDirImportExportDocs)Documentation\guides\messages\README.md"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+  <Target Name="ExportXamarinEngineeringDocs">
+    <ItemGroup>
+      <_MessageDocumentationFile
+          Include="$(_TopDirImportExportDocs)Documentation\guides\messages\*.md"
+          Exclude="$(_TopDirImportExportDocs)Documentation\guides\messages\README.md"
+      />
+      <_MessageDocumentationImages
+          Include="$(_TopDirImportExportDocs)Documentation\guides\messages\images\*"
+      />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_MessageDocumentationFile)"
+        DestinationFolder="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_MessageDocumentationImages)"
+        DestinationFolder="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\images"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="$(_TopDirImportExportDocs)Documentation\guides\messages\README.md"
+        DestinationFiles="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\index.md"
+        SkipUnchangedFiles="true"
+    />
+    <ReadLinesFromFile File="$(_TopDirImportExportDocs)Documentation\guides\messages\README.md">
+      <Output
+          TaskParameter="Lines"
+          ItemName="_MessageDocsReadmeLines"
+      />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_MessageDocsTocLines Include="# [Errors and Warnings](index.md)" />
+      <_MessageDocsTocLines
+          Include="$([System.Text.RegularExpressions.Regex]::Replace($([System.Text.RegularExpressions.Regex]::Replace('%(_MessageDocsReadmeLines.Identity)', '^\s*\+\s', '### ')), '\):.*', ')'))"
+          Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_MessageDocsReadmeLines.Identity)', '^\s*\+\s*\[[^\]]*\]\(.*\):|^##'))"
+      />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\TOC.md"
+        Lines="@(_MessageDocsTocLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+        Encoding="ascii"
+    />
+  </Target>
+</Project>
