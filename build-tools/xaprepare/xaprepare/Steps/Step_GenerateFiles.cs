@@ -45,7 +45,6 @@ namespace Xamarin.Android.Prepare
 				return new List <GeneratedFile> {
 					Get_Configuration_OperatingSystem_props (context),
 					Get_Ndk_projitems (context),
-					Get_XABuildPaths_cs (context),
 					Get_XABuildConfig_cs (context),
 					Get_mingw_32_cmake (context),
 					Get_mingw_64_cmake (context),
