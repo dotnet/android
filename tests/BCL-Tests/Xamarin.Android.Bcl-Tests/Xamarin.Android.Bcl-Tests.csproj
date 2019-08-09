@@ -63,7 +63,7 @@
       <HintPath>..\..\..\packages\xunit.extensibility.execution.2.4.1\lib\netstandard1.1\xunit.execution.dotnet.dll</HintPath>
     </Reference>
     <Reference Include="Xunit.NetCore.Extensions">
-      <HintPath>$(MonoSourceDirectory)\sdks\out\android-bcl\monodroid\tests\Xunit.NetCore.Extensions.dll</HintPath>
+      <HintPath>..\..\..\bin\$(Configuration)\bcl-tests\Xunit.NetCore.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="xunit.execution.desktop">
       <HintPath>..\..\..\packages\xunit.extensibility.core.2.4.1\lib\net452\xunit.execution.desktop.dll</HintPath>
