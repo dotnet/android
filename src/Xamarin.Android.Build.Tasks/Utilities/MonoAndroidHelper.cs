@@ -343,19 +343,6 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-#if MSBUILD
-		public static void SetLastAccessAndWriteTimeUtc (string source, DateTime dateUtc, TaskLoggingHelper Log)
-		{
-			try {
-				File.SetLastWriteTimeUtc (source, dateUtc);
-				File.SetLastAccessTimeUtc (source, dateUtc);
-			} catch (Exception ex) {
-				Log.LogWarning ("There was a problem setting the Last Access/Write time on file {0}", source);
-				Log.LogWarningFromException (ex);
-			}
-		}
-#endif  // MSBUILD
-
 		public static void SetWriteable (string source)
 		{
 			if (!File.Exists (source))

@@ -504,7 +504,6 @@ namespace Xamarin.Android.Prepare
 					var destFileInfo = new FileInfo (filePath);
 					if (!destFileInfo.Attributes.HasFlag (FileAttributes.ReparsePoint)) {
 						File.SetLastWriteTimeUtc (filePath, stamp);
-						File.SetLastAccessTimeUtc (filePath, stamp);
 					}
 					break;
 				} catch (Exception e) {

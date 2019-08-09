@@ -48,7 +48,6 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
 				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
 
@@ -389,7 +388,6 @@ namespace Lib2
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
 				}
 
 				//NOTE: second build, targets will run because inputs changed
@@ -447,7 +445,6 @@ namespace Lib2
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-					File.SetLastAccessTimeUtc (file, DateTime.UtcNow);
 				}
 
 				//NOTE: second build, targets will run because inputs changed
@@ -714,6 +711,27 @@ namespace Lib2
 				File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (1));
 
 				Assert.IsFalse (b.Build (proj), "Build should *not* have succeeded.");
+			}
+		}
+
+		[Test]
+		public void CasingOnJavaLangObject ()
+		{
+			var className = "Foo";
+			var proj = new XamarinAndroidApplicationProject {
+				Sources = {
+					new BuildItem ("Compile", "Foo.cs") {
+						TextContent = () => {
+							return $"public class {className} : Java.Lang.Object {{ }}";
+						}
+					},
+				}
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				className = "fOO";
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 			}
 		}
 	}

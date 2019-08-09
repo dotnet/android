@@ -453,7 +453,7 @@ namespace Xamarin.Android.Tasks
 			if (preserveTimestamp && File.Exists (path)) {
 				var timestamp = File.GetLastWriteTimeUtc (path);
 				File.WriteAllText (path, contents);
-				MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (path, timestamp, Log);
+				File.SetLastWriteTimeUtc (path, timestamp);
 			} else {
 				File.WriteAllText (path, contents);
 			}
