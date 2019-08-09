@@ -24,7 +24,9 @@ namespace Xamarin.Android.UnitTests.XUnit
 
 		protected override XUnitTestRunner CreateRunner (LogWriter logger, Bundle bundle)
 		{
-			return new XUnitTestRunner (Context, logger, bundle);
+			return new XUnitTestRunner (Context, logger, bundle) {
+				TestSuiteToRun = TestSuiteToRun,
+			};
 		}
 	}
 }
