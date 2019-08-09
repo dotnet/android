@@ -1424,14 +1424,11 @@ namespace App1
 			using (var b = CreateApkBuilder ("temp/CheckJavaError")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				if (b.IsUnix) {
-					var text = "TestMe.java(1,8):  javacerror :  error: class, interface, or enum expected";
-					if (b.RunningMSBuild)
-						text = "TestMe.java(1,8): javac error :  error: class, interface, or enum expected";
-					StringAssertEx.Contains (text, b.LastBuildOutput);
-				} else
-					StringAssertEx.Contains ("TestMe.java(1,8): javac.exe error :  error: class, interface, or enum expected", b.LastBuildOutput);
-				StringAssertEx.Contains ("TestMe2.java(1,41): error :  error: ';' expected", b.LastBuildOutput);
+				var ext = b.IsUnix ? "" : ".exe";
+				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
+				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
