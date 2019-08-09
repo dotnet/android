@@ -42,6 +42,173 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		string NewFile (string contents = null, string fileName = "")
+		{
+			if (string.IsNullOrEmpty (fileName)) {
+				fileName = Path.GetRandomFileName ();
+			}
+			var path = Path.Combine (tempDir, fileName);
+			if (!string.IsNullOrEmpty (contents)) {
+				Directory.CreateDirectory (Path.GetDirectoryName (path));
+				File.WriteAllText (path, contents);
+			}
+			return path;
+		}
+
+		Stream NewStream (string contents) => new MemoryStream (Encoding.Default.GetBytes (contents));
+
+		[Test]
+		public void CopyIfChanged_NoChanges ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("foo");
+			Assert.IsFalse (Files.CopyIfChanged (src, dest), "No change should have occurred");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void CopyIfChanged_NoExist ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ();
+			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void CopyIfChanged_Changes ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("bar");
+			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void CopyIfChanged_Readonly ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("bar");
+			File.SetAttributes (dest, FileAttributes.ReadOnly);
+			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void CopyIfChanged_CasingChange ()
+		{
+			var src = NewFile (contents: "foo");
+			var dest = NewFile (contents: "Foo", fileName: "foo");
+			dest = dest.Replace ("foo", "Foo");
+			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
+			FileAssert.AreEqual (src, dest);
+
+			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
+			Assert.AreEqual ("Foo", Path.GetFileName (files [0]));
+		}
+
+		[Test]
+		public void CopyIfStringChanged_NoChanges ()
+		{
+			var dest = NewFile ("foo");
+			Assert.IsFalse (Files.CopyIfStringChanged ("foo", dest), "No change should have occurred");
+			FileAssert.Exists (dest);
+		}
+
+		[Test]
+		public void CopyIfStringChanged_NoExist ()
+		{
+			var dest = NewFile ();
+			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
+			FileAssert.Exists (dest);
+		}
+
+		[Test]
+		public void CopyIfStringChanged_Changes ()
+		{
+			var dest = NewFile ("bar");
+			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
+			FileAssert.Exists (dest);
+		}
+
+		[Test]
+		public void CopyIfStringChanged_Readonly ()
+		{
+			var dest = NewFile ("bar");
+			File.SetAttributes (dest, FileAttributes.ReadOnly);
+			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
+			FileAssert.Exists (dest);
+		}
+
+		[Test]
+		public void CopyIfStringChanged_CasingChange ()
+		{
+			var dest = NewFile (contents: "foo", fileName: "foo");
+			dest = dest.Replace ("foo", "Foo");
+			Assert.IsTrue (Files.CopyIfStringChanged ("Foo", dest), "Changes should have occurred");
+			FileAssert.Exists (dest);
+			Assert.AreEqual ("Foo", File.ReadAllText (dest), "File contents should match");
+
+			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
+			Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_NoChanges ()
+		{
+			using (var src = NewStream ("foo")) {
+				var dest = NewFile ("foo");
+				Assert.IsFalse (Files.CopyIfStreamChanged (src, dest), "No change should have occurred");
+				FileAssert.Exists (dest);
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_NoExist ()
+		{
+			using (var src = NewStream ("foo")) {
+				var dest = NewFile ();
+				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
+				FileAssert.Exists (dest);
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_Changes ()
+		{
+			using (var src = NewStream ("foo")) {
+				var dest = NewFile ("bar");
+				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
+				FileAssert.Exists (dest);
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_Readonly ()
+		{
+			using (var src = NewStream ("foo")) {
+				var dest = NewFile ("bar");
+				File.SetAttributes (dest, FileAttributes.ReadOnly);
+				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
+				FileAssert.Exists (dest);
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_CasingChange ()
+		{
+			using (var src = NewStream ("Foo")) {
+				var dest = NewFile (contents: "foo", fileName: "foo");
+				dest = dest.Replace ("foo", "Foo");
+				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
+				FileAssert.Exists (dest);
+				Assert.AreEqual ("Foo", File.ReadAllText (dest), "File contents should match");
+
+				var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
+				Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
+			}
+		}
+
 		[Test]
 		public void ExtractAll ()
 		{

@@ -439,7 +439,6 @@ namespace UnamedProject
 				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
 				var props = b.Output.GetIntermediaryPath("build.props");
 				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
-				File.SetLastAccessTimeUtc(props, DateTime.UtcNow);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 			}
 		}
