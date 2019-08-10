@@ -59,27 +59,38 @@
     <Exec WorkingDirectory="$(MSBuildTargetsDir)\lib"
         Command="ln -fs host-$(HostOS) host"
     />
+    <!-- Side by Side Compatibility Links -->
+    <Exec WorkingDirectory="$(PayloadDir)\Library\Frameworks\Xamarin.Android.framework"
+        Command="ln -fs Versions/Current/lib Libraries"
+    />
+    <Exec WorkingDirectory="$(PayloadDir)\Library\Frameworks\Xamarin.Android.framework\Versions\$(XAVersion)\lib"
+        Command="ln -fs xamarin.android/xbuild xbuild"
+    />
+    <Exec WorkingDirectory="$(PayloadDir)\Library\Frameworks\Xamarin.Android.framework\Versions\$(XAVersion)\lib"
+        Command="ln -fs xamarin.android/xbuild-frameworks xbuild-frameworks"
+    />
+    <!-- /Library/Frameworks/Mono.Framework/External Links -->
     <MakeDir Directories="$(MonoFrameworkExternalDir)\xbuild" />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\xbuild"
-        Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/xamarin.android/xbuild/Novell&quot; ."
+        Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/xbuild/Novell&quot; ."
     />
     <MakeDir Directories="$(MonoFrameworkExternalDir)\xbuild\Xamarin" />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\xbuild\Xamarin"
-        Command="ln -fs &quot;../../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/xamarin.android/xbuild/Xamarin/Android&quot; ."
+        Command="ln -fs &quot;../../../../Xamarin.Android.framework/Libraries/xbuild/Xamarin/Android&quot; ."
     />
     <MakeDir Directories="$(MonoFrameworkExternalDir)\xbuild-frameworks" />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\xbuild-frameworks"
-        Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/xamarin.android/xbuild-frameworks/MonoAndroid&quot; ."
+        Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/xbuild-frameworks/MonoAndroid&quot; ."
     />
     <MakeDir Directories="$(MonoFrameworkExternalDir)\monodoc" />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\monodoc"
-        Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/monodoc/MonoAndroid-docs.source&quot; ."
+        Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/monodoc/MonoAndroid-docs.source&quot; ."
     />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\monodoc"
-        Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/monodoc/MonoAndroid-lib.tree&quot; ."
+        Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/monodoc/MonoAndroid-lib.tree&quot; ."
     />
     <Exec WorkingDirectory="$(MonoFrameworkExternalDir)\monodoc"
-        Command="ln -fs &quot;../../../Xamarin.Android.framework/Versions/$(XAVersion)/lib/monodoc/MonoAndroid-lib.zip&quot; ."
+        Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/monodoc/MonoAndroid-lib.zip&quot; ."
     />
   </Target>
   <Target Name="_FinalizePayload"
