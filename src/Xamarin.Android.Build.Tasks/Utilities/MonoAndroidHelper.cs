@@ -256,9 +256,12 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetNativeLibraryAbi (string lib)
 		{
-			var dirs = lib.ToLowerInvariant ().Split ('/', '\\');
-
-			return ValidAbis.Where (p => dirs.Contains (p)).FirstOrDefault ();
+			// The topmost directory the .so file is contained within
+			var dir = Path.GetFileName (Path.GetDirectoryName (lib)).ToLowerInvariant ();
+			if (ValidAbis.Contains (dir)) {
+				return dir;
+			}
+			return null;
 		}
 
 		public static string GetNativeLibraryAbi (ITaskItem lib)
