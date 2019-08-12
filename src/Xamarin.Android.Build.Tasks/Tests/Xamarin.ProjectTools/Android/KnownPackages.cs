@@ -760,6 +760,11 @@ namespace Xamarin.ProjectTools
 				}
 			},
 		};
+		public static Package Akavache = new Package {
+			Id = "akavache",
+			Version = "6.0.30",
+			TargetFramework = "netstandard2.0",
+		};
 	}
 }
 

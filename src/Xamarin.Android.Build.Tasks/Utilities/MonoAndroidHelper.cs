@@ -256,9 +256,12 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetNativeLibraryAbi (string lib)
 		{
-			var dirs = lib.ToLowerInvariant ().Split ('/', '\\');
-
-			return ValidAbis.Where (p => dirs.Contains (p)).FirstOrDefault ();
+			// The topmost directory the .so file is contained within
+			var dir = Path.GetFileName (Path.GetDirectoryName (lib)).ToLowerInvariant ();
+			if (ValidAbis.Contains (dir)) {
+				return dir;
+			}
+			return null;
 		}
 
 		public static string GetNativeLibraryAbi (ITaskItem lib)
@@ -342,19 +345,6 @@ namespace Xamarin.Android.Tasks
 			}
 			return false;
 		}
-
-#if MSBUILD
-		public static void SetLastAccessAndWriteTimeUtc (string source, DateTime dateUtc, TaskLoggingHelper Log)
-		{
-			try {
-				File.SetLastWriteTimeUtc (source, dateUtc);
-				File.SetLastAccessTimeUtc (source, dateUtc);
-			} catch (Exception ex) {
-				Log.LogWarning ("There was a problem setting the Last Access/Write time on file {0}", source);
-				Log.LogWarningFromException (ex);
-			}
-		}
-#endif  // MSBUILD
 
 		public static void SetWriteable (string source)
 		{

@@ -439,7 +439,6 @@ namespace UnamedProject
 				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
 				var props = b.Output.GetIntermediaryPath("build.props");
 				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
-				File.SetLastAccessTimeUtc(props, DateTime.UtcNow);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 			}
 		}
@@ -1448,14 +1447,11 @@ namespace App1
 			using (var b = CreateApkBuilder ("temp/CheckJavaError")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				if (b.IsUnix) {
-					var text = "TestMe.java(1,8):  javacerror :  error: class, interface, or enum expected";
-					if (b.RunningMSBuild)
-						text = "TestMe.java(1,8): javac error :  error: class, interface, or enum expected";
-					StringAssertEx.Contains (text, b.LastBuildOutput);
-				} else
-					StringAssertEx.Contains ("TestMe.java(1,8): javac.exe error :  error: class, interface, or enum expected", b.LastBuildOutput);
-				StringAssertEx.Contains ("TestMe2.java(1,41): error :  error: ';' expected", b.LastBuildOutput);
+				var ext = b.IsUnix ? "" : ".exe";
+				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
+				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -3994,6 +3990,20 @@ namespace UnnamedProject
 				FileAssert.Exists (manifest);
 				var contents = File.ReadAllText (manifest);
 				StringAssert.Contains ("android:networkSecurityConfig=\"@xml/network_security_config\"", contents);
+			}
+		}
+
+		[Test]
+		public void AbiNameInIntermediateOutputPath ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.Akavache);
+			proj.OutputPath = Path.Combine ("bin", "x86", "Debug");
+			proj.IntermediateOutputPath = Path.Combine ("obj", "x86", "Debug");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var task = Akavache.BlobCache.LocalMachine.GetAllKeys();");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
 			}
 		}
 	}

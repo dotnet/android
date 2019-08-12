@@ -357,6 +357,7 @@ namespace Xamarin.Android.Prepare
 
 			// This is referenced by monodroid_corlib_xunit-test.dll
 			new TestAssembly ("System.Runtime.CompilerServices.Unsafe.dll",                      TestAssemblyType.Reference, excludeDebugSymbols: true),
+			new TestAssembly ("Xunit.NetCore.Extensions.dll",				     TestAssemblyType.Satellite),
 
 			// Satellite assemblies
 			new TestAssembly (Path.Combine ("es-ES", "monodroid_corlib_test.resources.dll"),     TestAssemblyType.Satellite),

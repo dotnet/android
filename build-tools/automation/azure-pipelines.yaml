@@ -19,15 +19,29 @@ resources:
 variables:
   BundleArtifactName: bundle
   InstallerArtifactName: installers
-  NUnitTestAssembliesArtifactName: test-assemblies
+  TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
+  HostedWinVS2019: Hosted Windows 2019 with VS2019
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
-# Check - "Xamarin.Android (Prepare bundle)"
 stages:
 - stage: prepare
   displayName: Prepare
   jobs:
+  # Check - "Xamarin.Android (Prepare Run Code Analysis)"
+  - job: run_code_analysis
+    displayName: Run Code Analysis
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 5
+    steps:
+    - checkout: self
+      submodules: recursive
+    - template: security\xa-static-analysis\v1.yml@yaml
+      parameters:
+        credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
+
+  # Check - "Xamarin.Android (Prepare bundle)"
   - job: create_bundle
     displayName: Bundle
     pool: $(XA.Build.Mac.Pool)
@@ -127,10 +141,15 @@ stages:
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
       displayName: make jenkins
 
+    - script: |
+        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
+        cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+      displayName: copy bcl-tests assemblies
+
     - task: PublishPipelineArtifact@0
       displayName: upload test assemblies
       inputs:
-        artifactName: $(NUnitTestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)
         targetPath: bin/Test$(XA.Build.Configuration)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
@@ -477,6 +496,66 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)
       condition: always()
 
+  # Check - "Xamarin.Android (Test BCL With Emulator)"
+  - job: mac_bcl_tests
+    displayName: BCL With Emulator
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 180
+    steps:
+    - template: yaml-templates/mac/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: build remap-assembly-ref.csproj
+      inputs:
+        solution: build-tools/remap-assembly-ref/remap-assembly-ref.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Xamarin.Android.Bcl-Tests
+        project: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
+
+    - task: PublishTestResults@2
+      displayName: publish Xamarin.Android.Bcl-Tests-XUnit results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
+        testRunTitle: Xamarin.Android.Bcl-Tests-NUnit
+      condition: succeededOrFailed()
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - task: MSBuild@1
+      displayName: package results
+      inputs:
+        solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+      condition: always()
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload artifacts
+      inputs:
+        artifactName: mac-bcl-test-testresults
+        targetPath: $(Build.ArtifactStagingDirectory)
+      condition: always()
+
   # Check - "Xamarin.Android (Test MSBuild Mac)"
   - job: mac_msbuild_tests
     displayName: MSBuild Mac
@@ -490,7 +569,7 @@ stages:
 
     - task: DownloadPipelineArtifact@1
       inputs:
-        artifactName: $(NUnitTestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - script: >
@@ -550,7 +629,7 @@ stages:
 
     - task: DownloadPipelineArtifact@1
       inputs:
-        artifactName: $(NUnitTestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - task: MSBuild@1
@@ -630,7 +709,7 @@ stages:
 
     - task: DownloadPipelineArtifact@1
       inputs:
-        artifactName: $(NUnitTestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - task: MSBuild@1
@@ -724,8 +803,7 @@ stages:
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
     displayName: Designer Windows
-    pool:
-      name: Hosted Windows 2019 with VS2019
+    pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:

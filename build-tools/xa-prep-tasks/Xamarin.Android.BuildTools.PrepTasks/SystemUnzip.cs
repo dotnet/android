@@ -166,7 +166,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 					var destFileInfo = new FileInfo (dest);
 					if (!destFileInfo.Attributes.HasFlag (FileAttributes.ReparsePoint)) {
 						File.SetLastWriteTimeUtc (dest, DateTime.UtcNow);
-						File.SetLastAccessTimeUtc (dest, DateTime.UtcNow);
 					}
 				}
 			}
