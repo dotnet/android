@@ -5,7 +5,7 @@ namespace Xamarin.Android.Prepare
 	partial class LlvmRuntime : Runtime
 	{
 		public override string Flavor => "LLVM";
-		public bool InstallBinaries { get; protected set; }
+		public bool InstallBinaries { get; protected set; } = true;
 
 		public LlvmRuntime (string name, Func<Context, bool> enabledCheck)
 			: base (name, enabledCheck)
