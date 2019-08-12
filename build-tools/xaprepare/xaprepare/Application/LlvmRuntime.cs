@@ -12,8 +12,7 @@ namespace Xamarin.Android.Prepare
 		{}
 
 		public override void Init (Context context)
-		{
-			InstallBinaries = String.Compare (Name, AbiNames.Llvm.Windows64Bit, StringComparison.Ordinal) != 0;
+		{			
 			if (Context.IsLlvmWindowsAbi (Name)) {
 				ExeSuffix = Configurables.Defaults.WindowsExecutableSuffix;
 				InstallPath = Configurables.Paths.InstallMSBuildDir;
