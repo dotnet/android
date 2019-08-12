@@ -1264,7 +1264,7 @@
   <!-- android.media.AudioRouting.OnRoutingChangedListener is a new
   interface that is added to AudioRecord and AudioTrack *as a base
   interface*. It is a breaking change if it were in C#, but surprisingly
-  not in Java because the method is *implemented* in thosee derived
+  not in Java because the method is *implemented* in those derived
   interfaces as a default method(!)
 
   Problems are:
@@ -1285,21 +1285,28 @@
   types and methods so far. Offering awkward API that forces manual
   fixup to rename every descendants is no-go.
 
+  *** The description above will cover scenarios from api 24 until api 28.
+  *** On api 29, we re-evaluate the scenario and we discovered that the fix is not the correct fix and is not working as expected
+  *** We should/will not remove AudioRouting anymore so developers can take advantage and use this interface and have access to the non obsolete method.
+  *** To avoid api breakage we will manually add RoutingChangedEventArgs to AudoTrack and AudoRecord classes.
+
   -->
 
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting']" />
-  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/implements[@name='android.media.AudioRouting']" />
-  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/implements[@name='android.media.AudioRouting']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting']" api-since="24" api-until="28"/>
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/implements[@name='android.media.AudioRouting']" api-since="24" api-until="28" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/implements[@name='android.media.AudioRouting']" api-since="24" api-until="28" />
 
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting.OnRoutingChangedListener']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRouting.OnRoutingChangedListener']" api-since="24" api-until="28" />
 
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" />
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" />
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" />
-  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" api-since="24" api-until="28" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioRecord.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" api-since="24" api-until="28" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/implements[@name='android.media.AudioRouting.OnRoutingChangedListener']" api-since="24" api-until="28" />
+  <remove-node path="/api/package[@name='android.media']/interface[@name='AudioTrack.OnRoutingChangedListener']/method[@name='onRoutingChanged' and parameter[1]/@type='android.media.AudioRouting']" api-since="24" api-until="28" />
 
-  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
-  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioRecord']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" api-since="24" api-until="28" />
+  <remove-node path="/api/package[@name='android.media']/class[@name='AudioTrack']/method[@name='addOnRoutingChangedListener' and parameter[1]/@type='android.media.AudioRouting.OnRoutingChangedListener']" api-since="24" api-until="28" />
+
+  <!-- end of AudioRouting fix -->
 
   <!-- field name conflict -->
   <attr path="/api/package[@name='android.provider']/class[@name='ContactsContract.CommonDataKinds.Organization']/field[@name='PHONETIC_NAME_STYLE']" name="managedName">PhoneticNameStyleField</attr>
