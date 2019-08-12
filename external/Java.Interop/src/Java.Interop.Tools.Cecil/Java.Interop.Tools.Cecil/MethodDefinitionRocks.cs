@@ -110,7 +110,7 @@ namespace Java.Interop.Tools.Cecil {
 					return true;
 				var gpa = (GenericParameter) a;
 				foreach (var c in gpa.Constraints) {
-					if (!c.IsAssignableFrom (b))
+					if (!c.ConstraintType.IsAssignableFrom (b))
 						return false;
 				}
 				return true;
