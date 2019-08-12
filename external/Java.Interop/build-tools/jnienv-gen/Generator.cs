@@ -235,11 +235,11 @@ namespace Xamarin.Java.Interop
 				if (i >= 0) {
 					builder.Append (", ");
 					builder.AppendFormat ("{0} {1}",
-							entry.Parameters [i].Type.GetMarshalType (style, isReturn: false),
+							entry.Parameters [i].Type.GetMarshalType (style, isReturn: false, isPinvoke: true),
 							Escape (entry.Parameters [i].Name));
 				} 
 				
-				var ptype   = entry.Parameters [i].Type.GetManagedType (style, isReturn: false);
+				var ptype   = entry.Parameters [i].Type.GetManagedType (style, isReturn: false, isPinvoke: true);
 				if (ptype == "va_list")
 					return;
 				if (ptype == "char[]")
@@ -308,11 +308,11 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ();
 				o.WriteLine ("\t\t[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]");
 				o.WriteLine ("\t\tinternal static extern unsafe {0} {1} (IntPtr jnienv{2}{3}{4});",
-					entry.ReturnType.GetMarshalType (style, isReturn: true),
+					entry.ReturnType.GetMarshalType (style, isReturn: true, isPinvoke: true),
 					GetPinvokeName (entry.Name),
 					entry.Throws ? ", out IntPtr thrown" : "",
 					entry.Parameters.Length != 0 ? ", " : "",
-					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.GetMarshalType (style, isReturn: false), Escape (p.Name)))));
+					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.GetMarshalType (style, isReturn: false, isPinvoke: true), Escape (p.Name)))));
 			}
 			o.WriteLine ("\t}");
 			o.WriteLine ();
@@ -653,8 +653,8 @@ namespace Xamarin.Java.Interop
 			JniType = jniType;
 		}
 
-		public  abstract    string      GetMarshalType (HandleStyle style, bool isReturn);
-		public  abstract    string      GetManagedType (HandleStyle style, bool isReturn);
+		public  abstract    string      GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke = false);
+		public  abstract    string      GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke = false);
 
 		public  virtual     string[]    GetHandleCreationLogStatements (HandleStyle style, string method, string variable)
 		{
@@ -681,6 +681,10 @@ namespace Xamarin.Java.Interop
 
 	class BuiltinTypeInfo : TypeInfo {
 
+		/// <summary>
+		/// NOTE: .NET framework can't marshal this
+		/// </summary>
+		const string JniArgumentValue = "JniArgumentValue*";
 		string managed;
 
 		public BuiltinTypeInfo (string jni, string managed)
@@ -689,14 +693,29 @@ namespace Xamarin.Java.Interop
 			this.managed    = managed;
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
+			if (isPinvoke && managed == JniArgumentValue) {
+				return "IntPtr";
+			}
 			return managed;
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
+			if (isPinvoke && managed == JniArgumentValue) {
+				return "IntPtr";
+			}
 			return managed;
+		}
+
+		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
+		{
+			var value = base.GetManagedToMarshalExpression (style, variable);
+			if (managed == JniArgumentValue) {
+				value = "(IntPtr) " + value;
+			}
+			return value;
 		}
 
 		public override string[] VerifyParameter (HandleStyle style, string variable)
@@ -720,12 +739,12 @@ namespace Xamarin.Java.Interop
 		{
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "byte";
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "bool";
 		}
@@ -750,12 +769,12 @@ namespace Xamarin.Java.Interop
 		{
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "string";
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "string";
 		}
@@ -798,12 +817,12 @@ namespace Xamarin.Java.Interop
 		{
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "int";
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "JniReleaseArrayElementsMode";
 		}
@@ -839,12 +858,12 @@ namespace Xamarin.Java.Interop
 			this.type   = type;
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "IntPtr";
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
@@ -968,7 +987,7 @@ namespace Xamarin.Java.Interop
 			this.refType    = refType;
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
@@ -981,7 +1000,7 @@ namespace Xamarin.Java.Interop
 			return null;
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
 			case HandleStyle.SafeHandle:
@@ -1088,12 +1107,12 @@ namespace Xamarin.Java.Interop
 		{
 		}
 
-		public override string GetMarshalType (HandleStyle style, bool isReturn)
+		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "out IntPtr";
 		}
 
-		public override string GetManagedType (HandleStyle style, bool isReturn)
+		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			return "out IntPtr";
 		}

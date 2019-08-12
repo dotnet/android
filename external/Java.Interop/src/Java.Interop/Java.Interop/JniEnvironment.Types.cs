@@ -53,7 +53,7 @@ namespace Java.Interop
 				__args [0]  = new JniArgumentValue (java);
 
 				IntPtr ignoreThrown;
-				c   = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, __args);
+				c   = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
 				JniObjectReference.Dispose (ref java);
 				if (ignoreThrown == IntPtr.Zero) {
 					JniObjectReference.Dispose (ref e);

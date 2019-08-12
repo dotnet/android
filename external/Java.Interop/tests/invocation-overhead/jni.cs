@@ -304,46 +304,46 @@ namespace
 	unsafe delegate JniGlobalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference (JNIEnvPtr env, JniReferenceSafeHandle instance);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr method, IntPtr args);
 	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate JniLocalReference JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, JniReferenceSafeHandle instance, JniReferenceSafeHandle type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, JniReferenceSafeHandle value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte (JNIEnvPtr env, JniReferenceSafeHandle instance, IntPtr field, sbyte value);
@@ -1319,7 +1319,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1360,7 +1360,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1400,7 +1400,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1440,7 +1440,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1480,7 +1480,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1520,7 +1520,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1560,7 +1560,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1600,7 +1600,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1640,7 +1640,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1679,7 +1679,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, args);
+			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1723,7 +1723,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1768,7 +1768,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1812,7 +1812,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1856,7 +1856,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1900,7 +1900,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1944,7 +1944,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -1988,7 +1988,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2032,7 +2032,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2076,7 +2076,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2119,7 +2119,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, args);
+			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2240,7 +2240,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2718,7 +2718,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2759,7 +2759,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2799,7 +2799,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2839,7 +2839,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2879,7 +2879,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2919,7 +2919,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2959,7 +2959,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -2999,7 +2999,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -3039,7 +3039,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -3078,7 +3078,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, args);
+			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -5078,46 +5078,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr field, sbyte value);
@@ -6092,7 +6092,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6133,7 +6133,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6173,7 +6173,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6213,7 +6213,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6253,7 +6253,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6293,7 +6293,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6333,7 +6333,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6373,7 +6373,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6413,7 +6413,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6452,7 +6452,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, args);
+			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6496,7 +6496,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6541,7 +6541,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6585,7 +6585,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6629,7 +6629,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6673,7 +6673,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6717,7 +6717,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6761,7 +6761,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6805,7 +6805,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6849,7 +6849,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -6892,7 +6892,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, args);
+			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7013,7 +7013,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7491,7 +7491,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7532,7 +7532,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7572,7 +7572,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7612,7 +7612,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7652,7 +7652,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7692,7 +7692,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7732,7 +7732,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7772,7 +7772,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7812,7 +7812,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -7851,7 +7851,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.Handle, method.ID, args);
+			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -9910,7 +9910,7 @@ namespace
 		internal static extern unsafe jobject java_interop_jnienv_new_object (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject java_interop_jnienv_new_object_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject java_interop_jnienv_new_object_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe jobject java_interop_jnienv_get_object_class (IntPtr jnienv, jobject instance);
@@ -9925,121 +9925,121 @@ namespace
 		internal static extern unsafe jobject java_interop_jnienv_call_object_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject java_interop_jnienv_call_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject java_interop_jnienv_call_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe byte java_interop_jnienv_call_boolean_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe byte java_interop_jnienv_call_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe byte java_interop_jnienv_call_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe sbyte java_interop_jnienv_call_byte_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe sbyte java_interop_jnienv_call_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte java_interop_jnienv_call_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe char java_interop_jnienv_call_char_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe char java_interop_jnienv_call_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char java_interop_jnienv_call_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe short java_interop_jnienv_call_short_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe short java_interop_jnienv_call_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short java_interop_jnienv_call_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int java_interop_jnienv_call_int_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe int java_interop_jnienv_call_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int java_interop_jnienv_call_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe long java_interop_jnienv_call_long_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe long java_interop_jnienv_call_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long java_interop_jnienv_call_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe float java_interop_jnienv_call_float_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe float java_interop_jnienv_call_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float java_interop_jnienv_call_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe double java_interop_jnienv_call_double_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe double java_interop_jnienv_call_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double java_interop_jnienv_call_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe void java_interop_jnienv_call_void_method (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void java_interop_jnienv_call_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void java_interop_jnienv_call_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe jobject java_interop_jnienv_call_nonvirtual_object_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject java_interop_jnienv_call_nonvirtual_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject java_interop_jnienv_call_nonvirtual_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe byte java_interop_jnienv_call_nonvirtual_boolean_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe byte java_interop_jnienv_call_nonvirtual_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe byte java_interop_jnienv_call_nonvirtual_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe sbyte java_interop_jnienv_call_nonvirtual_byte_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe sbyte java_interop_jnienv_call_nonvirtual_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte java_interop_jnienv_call_nonvirtual_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe char java_interop_jnienv_call_nonvirtual_char_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe char java_interop_jnienv_call_nonvirtual_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char java_interop_jnienv_call_nonvirtual_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe short java_interop_jnienv_call_nonvirtual_short_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe short java_interop_jnienv_call_nonvirtual_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short java_interop_jnienv_call_nonvirtual_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int java_interop_jnienv_call_nonvirtual_int_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe int java_interop_jnienv_call_nonvirtual_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int java_interop_jnienv_call_nonvirtual_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe long java_interop_jnienv_call_nonvirtual_long_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe long java_interop_jnienv_call_nonvirtual_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long java_interop_jnienv_call_nonvirtual_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe float java_interop_jnienv_call_nonvirtual_float_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe float java_interop_jnienv_call_nonvirtual_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float java_interop_jnienv_call_nonvirtual_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe double java_interop_jnienv_call_nonvirtual_double_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe double java_interop_jnienv_call_nonvirtual_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double java_interop_jnienv_call_nonvirtual_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe void java_interop_jnienv_call_nonvirtual_void_method (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void java_interop_jnienv_call_nonvirtual_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void java_interop_jnienv_call_nonvirtual_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject instance, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe IntPtr java_interop_jnienv_get_field_id (IntPtr jnienv, out IntPtr thrown, jobject type, string name, string signature);
@@ -10105,61 +10105,61 @@ namespace
 		internal static extern unsafe jobject java_interop_jnienv_call_static_object_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe jobject java_interop_jnienv_call_static_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe jobject java_interop_jnienv_call_static_object_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe byte java_interop_jnienv_call_static_boolean_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe byte java_interop_jnienv_call_static_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe byte java_interop_jnienv_call_static_boolean_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe sbyte java_interop_jnienv_call_static_byte_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe sbyte java_interop_jnienv_call_static_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe sbyte java_interop_jnienv_call_static_byte_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe char java_interop_jnienv_call_static_char_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe char java_interop_jnienv_call_static_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe char java_interop_jnienv_call_static_char_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe short java_interop_jnienv_call_static_short_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe short java_interop_jnienv_call_static_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe short java_interop_jnienv_call_static_short_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe int java_interop_jnienv_call_static_int_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe int java_interop_jnienv_call_static_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe int java_interop_jnienv_call_static_int_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe long java_interop_jnienv_call_static_long_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe long java_interop_jnienv_call_static_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe long java_interop_jnienv_call_static_long_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe float java_interop_jnienv_call_static_float_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe float java_interop_jnienv_call_static_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe float java_interop_jnienv_call_static_float_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe double java_interop_jnienv_call_static_double_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe double java_interop_jnienv_call_static_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe double java_interop_jnienv_call_static_double_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe void java_interop_jnienv_call_static_void_method (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
-		internal static extern unsafe void java_interop_jnienv_call_static_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, JniArgumentValue* args);
+		internal static extern unsafe void java_interop_jnienv_call_static_void_method_a (IntPtr jnienv, out IntPtr thrown, jobject type, IntPtr method, IntPtr args);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
 		internal static extern unsafe IntPtr java_interop_jnienv_get_static_field_id (IntPtr jnienv, out IntPtr thrown, jobject type, string name, string signature);
@@ -11276,7 +11276,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11317,7 +11317,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11357,7 +11357,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11397,7 +11397,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11437,7 +11437,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11477,7 +11477,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11517,7 +11517,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11557,7 +11557,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11597,7 +11597,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11636,7 +11636,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			NativeMethods.java_interop_jnienv_call_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, args);
+			NativeMethods.java_interop_jnienv_call_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11680,7 +11680,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11725,7 +11725,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11769,7 +11769,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11813,7 +11813,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11857,7 +11857,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11901,7 +11901,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11945,7 +11945,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -11989,7 +11989,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12033,7 +12033,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12076,7 +12076,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			NativeMethods.java_interop_jnienv_call_nonvirtual_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, args);
+			NativeMethods.java_interop_jnienv_call_nonvirtual_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12193,7 +12193,7 @@ namespace
 			System.Diagnostics.Debug.Assert (!method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_new_object_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_new_object_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12642,7 +12642,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12683,7 +12683,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12723,7 +12723,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12763,7 +12763,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12803,7 +12803,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12843,7 +12843,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12883,7 +12883,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12923,7 +12923,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -12963,7 +12963,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			var tmp = NativeMethods.java_interop_jnienv_call_static_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			var tmp = NativeMethods.java_interop_jnienv_call_static_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -13002,7 +13002,7 @@ namespace
 			System.Diagnostics.Debug.Assert (method.IsStatic);
 
 			IntPtr thrown;
-			NativeMethods.java_interop_jnienv_call_static_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, args);
+			NativeMethods.java_interop_jnienv_call_static_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
@@ -13200,46 +13200,46 @@ namespace
 	unsafe delegate int JniFunc_JNIEnvPtr_int_int (JNIEnvPtr env, int capacity);
 	unsafe delegate void JniAction_JNIEnvPtr_IntPtr (JNIEnvPtr env, IntPtr instance);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate IntPtr JniFunc_JNIEnvPtr_jobject_string_string_IntPtr (JNIEnvPtr env, jobject type, string name, string signature);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr (JNIEnvPtr env, jobject instance, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, IntPtr method, IntPtr args);
 	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate jobject JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate byte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate sbyte JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate char JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate short JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate int JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate long JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate float JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate double JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method);
-	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, JniArgumentValue* args);
+	unsafe delegate void JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr (JNIEnvPtr env, jobject instance, jobject type, IntPtr method, IntPtr args);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_jobject (JNIEnvPtr env, jobject instance, IntPtr field, jobject value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_byte (JNIEnvPtr env, jobject instance, IntPtr field, byte value);
 	unsafe delegate void JniAction_JNIEnvPtr_jobject_IntPtr_sbyte (JNIEnvPtr env, jobject instance, IntPtr field, sbyte value);
@@ -14150,7 +14150,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14185,7 +14185,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14219,7 +14219,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14253,7 +14253,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14287,7 +14287,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14321,7 +14321,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14355,7 +14355,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14389,7 +14389,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14423,7 +14423,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance, method, args);
+			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14456,7 +14456,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance, method, args);
+			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14494,7 +14494,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14533,7 +14533,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14571,7 +14571,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14609,7 +14609,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14647,7 +14647,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14685,7 +14685,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14723,7 +14723,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14761,7 +14761,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14799,7 +14799,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14836,7 +14836,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance, type, method, args);
+			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -14951,7 +14951,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15359,7 +15359,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15394,7 +15394,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15428,7 +15428,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15462,7 +15462,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15496,7 +15496,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15530,7 +15530,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15564,7 +15564,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15598,7 +15598,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15632,7 +15632,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type, method, args);
+			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
@@ -15665,7 +15665,7 @@ namespace
 				throw new ArgumentException ("Handle value cannot be null.", "method");
 
 			var __info = JniEnvironment.CurrentInfo;
-			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type, method, args);
+			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
 			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)

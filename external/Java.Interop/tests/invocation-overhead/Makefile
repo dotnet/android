@@ -9,6 +9,7 @@ clean:
 
 include ../../build-tools/scripts/mono.mk
 include ../../build-tools/scripts/jdk.mk
+include ../../bin/BuildDebug/JdkInfo.mk
 include ../../build-tools/scripts/msbuild.mk
 
 $(JNIENV_GEN):
