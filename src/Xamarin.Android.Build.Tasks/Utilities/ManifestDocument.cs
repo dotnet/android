@@ -959,6 +959,23 @@ namespace Xamarin.Android.Tasks {
 			VersionCode = code.ToString ();
 		}
 
+		public bool ValidateVersionCode (out string error, out string errorCode)
+		{
+			int code;
+			error = errorCode = string.Empty;
+			if (!int.TryParse (VersionCode, out code)) {
+				error = $"VersionCode {VersionCode} is invalid. It must be an integer value.";
+				errorCode = "XA0003";
+				return false;
+			}
+			if (code > maxVersionCode || code < 0) {
+				error = $"VersionCode {code} is outside 0, {maxVersionCode} interval";
+				errorCode = "XA0004";
+				return false;
+			}
+			return true;
+		}
+
 		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
@@ -972,8 +989,13 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (!kvp.ContainsKey ("abi") && !string.IsNullOrEmpty (currentAbi))
 				kvp.Add ("abi", GetAbiCode (currentAbi));
-			if (!kvp.ContainsKey ("versionCode"))
-				kvp.Add ("versionCode", int.Parse (VersionCode));
+			if (!kvp.ContainsKey ("versionCode")) {
+				if (int.TryParse (VersionCode, out int parsedCode)) {
+					kvp.Add ("versionCode", parsedCode);
+				} else {
+					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {VersionCode} is invalid. It must be an integer value.");
+				}
+			}
 			if (!kvp.ContainsKey ("minSDK")) {
 				kvp.Add ("minSDK", int.Parse (GetMinimumSdk ()));
 			}
@@ -985,11 +1007,6 @@ namespace Xamarin.Android.Tasks {
 					continue;
 				versionCode += string.Format (format, kvp [key]);
 			}
-			int code;
-			if (!int.TryParse (versionCode, out code))
-				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
-			if (code > maxVersionCode || code < 0)
-				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
 			VersionCode = versionCode.TrimStart ('0');
 		}
 	}

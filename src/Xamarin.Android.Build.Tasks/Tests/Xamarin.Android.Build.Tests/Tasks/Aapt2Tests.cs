@@ -233,5 +233,56 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		[TestCase ("1.0", "", "XA0003")]
+		[TestCase ("-1", "", "XA0004")]
+		[TestCase ("2100000001", "", "XA0004")]
+		[TestCase ("1.0", "{abi}{versionCode:D5}", "XA0003")]
+		[TestCase ("-1", "{abi}{versionCode:D5}", "XA0004")]
+		[TestCase ("2100000001", "{abi}{versionCode:D5}", "XA0004")]
+		public void CheckForInvalidVersionCode (string versionCode, string versionCodePattern, string errorCode)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
+				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true },
+				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
+			});
+			MonoAndroidHelper.RefreshSupportedVersions (new [] {
+				Path.Combine (referencePath, "MonoAndroid"),
+			});
+			var resPath = Path.Combine (path, "res");
+			var archivePath = Path.Combine (path, "flata");
+			Directory.CreateDirectory (resPath);
+			Directory.CreateDirectory (archivePath);
+			Directory.CreateDirectory (Path.Combine (resPath, "values"));
+			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
+			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
+			File.WriteAllText (Path.Combine (resPath, "layout", "main.xml"), @"<?xml version='1.0' ?><LinearLayout xmlns:android='http://schemas.android.com/apk/res/android' />");
+			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' android:versionCode='{versionCode}' />");
+			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
+			var errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			var archives = new List<ITaskItem> ();
+			CallAapt2Compile (engine, resPath, archivePath);
+			var outputFile = Path.Combine (path, "resources.apk");
+			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
+			var task = new Aapt2Link {
+				BuildEngine = engine,
+				ToolPath = GetPathToAapt2 (),
+				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+				ManifestFiles = new ITaskItem [] { new TaskItem (manifestFile) },
+				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
+				OutputFile = outputFile,
+				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
+				VersionCodePattern = versionCodePattern,
+			};
+			Assert.False (task.Execute (), "task should have failed.");
+			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
+			Assert.AreEqual (errorCode, errors [0].Code, $"Error Code should have been {errorCode}");
+			Assert.AreEqual (manifestFile, errors [0].File, $"Error File should have been {manifestFile}");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }
