@@ -72,7 +72,7 @@ namespace MonoDroid.Generation
 				ret.Add (new GenericParameterDefinition (
 					p.FullNameCorrected (),
 					(from a in p.Constraints
-					 select a.FullNameCorrected ()).ToArray ()));
+					 select a.ConstraintType.FullNameCorrected ()).ToArray ()));
 			}
 			return ret;
 		}
