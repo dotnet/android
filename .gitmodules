@@ -9,7 +9,7 @@
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
-    branch = master
+    branch = mono-2019-08
 [submodule "external/libzip"]
     path = external/libzip
     url = https://github.com/nih-at/libzip.git
