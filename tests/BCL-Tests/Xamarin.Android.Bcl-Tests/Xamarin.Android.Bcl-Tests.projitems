@@ -16,6 +16,7 @@
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Bcl_Tests.xunit.xml</ResultsPath>
       <LogcatFilenameDistincion>.xunit</LogcatFilenameDistincion>
+      <TimeoutInMS>4500000</TimeoutInMS>
     </TestApkInstrumentation>
 
     <TestApkInstrumentation Include="xamarin.android.bcltests.NUnitInstrumentation">

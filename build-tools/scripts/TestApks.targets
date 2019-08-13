@@ -23,6 +23,12 @@
     <_AllArchives Include="@(TestAab)" />
   </ItemGroup>
 
+  <ItemDefinitionGroup>
+    <TestApkInstrumentation>
+      <TimeoutInMS>1800000</TimeoutInMS>
+    </TestApkInstrumentation>
+  </ItemDefinitionGroup>
+
   <Target Name="AcquireAndroidTarget">
     <Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget
         Condition=" '$(RequireNewEmulator)' != 'True' "
@@ -242,7 +248,7 @@
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
-        Timeout="3600000">
+        Timeout="%(TestApkInstrumentation.TimeoutInMS)">
       <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
     </RunInstrumentationTests>
     <RunUITests

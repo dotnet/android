@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_ProfAssemProjItemsPath>..\..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems</_ProfAssemProjItemsPath>
+    <_ProfAssemProjItemsPath Condition="!Exists('$(_ProfAssemProjItemsPath)')">..\..\..\bin\$(Configuration)\bcl-tests\ProfileAssemblies.projitems</_ProfAssemProjItemsPath>
+  </PropertyGroup>
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
-  <Import Project="..\..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
+  <Import Project="$(_ProfAssemProjItemsPath)" />
   <Target Name="_AddTestAssemblies"
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">
