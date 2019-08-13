@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true, InMemory = true });
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static Dictionary<string, TypeDefinition> typeMap = new Dictionary<string, TypeDefinition> ();
+		static List<string> references = new List<string> ();
 		static public bool Debug;
 		static public bool Verbose;
 		static bool keepTemporary;
@@ -97,6 +98,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "o=",
 				  "{DIRECTORY} to write updated assemblies",
 				  v => outDirectory = v },
+				{ "r|reference=",
+				  "Reference {ASSEMBLY} to use. Can be used multiple times.",
+				  v => references.Add (v)
+				},
 				{ "types=",
 				  "Generate marshaling methods only for types whose names match regex patterns listed {FILE}.\n" +
 				  "One regex pattern per line.\n" +
@@ -108,6 +113,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				{ "v|verbose",
 				  "Output information about progress during the run of the tool",
 				  v => Verbose = true },
+				new ResponseFileSource(),
 			};
 
 			var assemblies = options.Parse (args);
@@ -159,6 +165,16 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				ReadSymbols        = false,
 				ReadWrite          = true,
 			};
+
+			foreach (var r in references) {
+				try {
+					Assembly.LoadFile (Path.GetFullPath (r));
+				} catch (Exception e) {
+					Error ($"Unable to preload reference '{r}'.");
+					Environment.Exit (1);
+				}
+				resolver.SearchDirectories.Add (Path.GetDirectoryName (r));
+			}
 
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
