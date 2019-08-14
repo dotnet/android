@@ -2,12 +2,6 @@ parameters:
   configuration: $(XA.Build.Configuration)
 
 steps:
-- task: DownloadPipelineArtifact@1
-  inputs:
-    artifactName: $(InstallerArtifactName)
-    itemPattern: "*.pkg"
-    downloadPath: $(System.DefaultWorkingDirectory)
-
 - template: ../run-installer.yaml
 
 - task: MSBuild@1
