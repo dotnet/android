@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -9,11 +12,13 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class RemoveDirTests : BaseTest
 	{
+		List<BuildMessageEventArgs> messages;
 		string tempDirectory;
 
 		[SetUp]
 		public void Setup ()
 		{
+			messages = new List<BuildMessageEventArgs> ();
 			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (tempDirectory);
 		}
@@ -33,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		RemoveDirFixed CreateTask () => new RemoveDirFixed {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 			Directories = new [] { new TaskItem (tempDirectory) },
 		};
 
@@ -79,6 +84,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
+			Assert.IsTrue (StringAssertEx.ContainsText (messages.Select (m => m.Message), $"Trying long path: {Files.LongPathPrefix}"), "A long path should be encountered.");
 		}
 	}
 }
