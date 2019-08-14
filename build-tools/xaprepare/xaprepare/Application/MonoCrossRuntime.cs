@@ -18,14 +18,7 @@ namespace Xamarin.Android.Prepare
 				Strip = "strip";
 				StripFlags = "-S";
 			} else if (Context.IsWindowsCrossAotAbi (Name)) {
-				string mingwPrefix;
-
-				if (Context.Is32BitCrossAbi (Name))
-					mingwPrefix = Path.Combine (Configurables.Paths.MingwBinDir, Context.Properties.GetRequiredValue (KnownProperties.MingwCommandPrefix32));
-				else
-					mingwPrefix = Path.Combine (Configurables.Paths.MingwBinDir, Context.Properties.GetRequiredValue (KnownProperties.MingwCommandPrefix64));
-
-				Strip = $"{mingwPrefix}-strip";
+				Strip = Path.Combine (Configurables.Paths.MingwBinDir, Context.Properties.GetRequiredValue (KnownProperties.MingwCommandPrefix64) + "-strip");
 				ExeSuffix = Configurables.Defaults.WindowsExecutableSuffix;
 			} else
 				throw new InvalidOperationException ($"Unsupported cross compiler abi {Name}");
