@@ -199,7 +199,7 @@ stages:
     dependsOn: mac_build_create_installers
     pool: $(XA.Build.Win.Pool)
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-    timeoutInMinutes: 30
+    timeoutInMinutes: 45
     cancelTimeoutInMinutes: 1
     workspace:
       clean: all
@@ -215,6 +215,7 @@ stages:
           COMMIT=$(Build.SourceVersion)
           SIGN_TYPE=Real
           GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
+          ENABLE_JAR_SIGNING=true
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
