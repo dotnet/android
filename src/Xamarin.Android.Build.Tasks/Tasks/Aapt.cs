@@ -201,7 +201,8 @@ namespace Xamarin.Android.Tasks
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", ResourceOutputFile, abi) : ResourceOutputFile;
 				if (!string.IsNullOrEmpty (currentResourceOutputFile) && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
-				if (!ExecuteForAbi (GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile), currentResourceOutputFile)) {
+				string cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile);
+				if (string.IsNullOrWhiteSpace (cmd) || !ExecuteForAbi (cmd, currentResourceOutputFile)) {
 					Cancel ();
 				}
 			}
@@ -279,13 +280,20 @@ namespace Xamarin.Android.Tasks
 			manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
 			manifest.SdkVersion = AndroidSdkPlatform;
-			if (currentAbi != null) {
-				if (!string.IsNullOrEmpty (VersionCodePattern))
+			if (!string.IsNullOrEmpty (VersionCodePattern)) {
+				try {
 					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);
-				else
-					manifest.SetAbi (currentAbi);
-			} else if (!string.IsNullOrEmpty (VersionCodePattern)) {
-				manifest.CalculateVersionCode (null, VersionCodePattern, VersionCodeProperties);
+				} catch (ArgumentOutOfRangeException ex) {
+					Log.LogCodedError ("XA0003", ManifestFile, 0, ex.Message);
+					return string.Empty;
+				}
+			}
+			if (currentAbi != null && string.IsNullOrEmpty (VersionCodePattern)) {
+				manifest.SetAbi (currentAbi);
+			}
+			if (!manifest.ValidateVersionCode (out string error, out string errorCode)) {
+				Log.LogCodedError (errorCode, ManifestFile, 0, error);
+				return string.Empty;
 			}
 			manifest.ApplicationName = ApplicationName;
 			manifest.Save (manifestFile);
