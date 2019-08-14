@@ -51,6 +51,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)") || StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
+				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
+				FileAssert.DoesNotExist (lockFile);
 			}
 		}
 

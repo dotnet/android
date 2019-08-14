@@ -187,6 +187,7 @@
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
+    <Compile Include="Tasks\WriteLockFile.cs" />
     <Compile Include="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="Utilities\InvalidActivityNameException.cs" />
     <Compile Include="Utilities\JavaResourceParser.cs" />
