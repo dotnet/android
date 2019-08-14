@@ -111,7 +111,7 @@
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -xvf &quot;$(_BundleToolJarLocation)&quot;" />
     <Delete Files="$(_BundleToolJarLocation)" />
     <Exec Command="codesign @(CodesignArgs, ' ') -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolExtractLocation)\macos\aapt2&quot;" />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvf &quot;$(_BundleToolJarLocation)&quot; ." />
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_BundleToolJarLocation)&quot; ." />
   </Target>
   <Target Name="_FinalizePayload"
       DependsOnTargets="_CreateSymbolicLinks;_PrepareForNotarization">
