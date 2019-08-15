@@ -138,6 +138,13 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         targetPath: bin/Test$(XA.Build.Configuration)
 
+    - template: install-certificates.yml@yaml
+      parameters:
+        DeveloperIdApplication: $(developer-id-application)
+        DeveloperIdInstaller: $(developer-id-installer)
+        IphoneDeveloper: $(iphone-developer)
+        MacDeveloper: $(mac-developer)
+
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
 
