@@ -22,10 +22,6 @@
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
     branch = master
-[submodule "external/mxe"]
-    path = external/mxe
-    url = https://github.com/xamarin/mxe.git
-    branch = xamarin
 [submodule "external/nrefactory"]
     path = external/nrefactory
     url = git://github.com/icsharpcode/NRefactory.git
