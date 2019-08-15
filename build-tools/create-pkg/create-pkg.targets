@@ -15,6 +15,7 @@
     <PkgLicenseDestinationEn>$(PkgResourcesPath)\en.lproj</PkgLicenseDestinationEn>
     <PkgScriptsDir>$(MSBuildThisFileDirectory)scripts</PkgScriptsDir>
     <UpdateInfoGuid>d1ec039f-f3db-468b-a508-896d7c382999</UpdateInfoGuid>
+    <CodesignArgs>-s &quot;Developer ID Application: Xamarin Inc&quot; -f --timestamp</CodesignArgs>
   </PropertyGroup>
   <Target Name="Build" />
   <Target Name="_CopyFilesToPayloadDir"
@@ -89,17 +90,12 @@
   <Target Name="_PrepareForNotarization"
       Condition=" '$(HostOS)' == 'Darwin' And '$(RunningOnCI)' == 'true' "
       DependsOnTargets="_CreateSymbolicLinks" >
-    <ItemGroup>
-      <CodesignArgs Include="-s &quot;Developer ID Application: Xamarin Inc&quot;" />
-      <CodesignArgs Include="-f --timestamp"/>
-    </ItemGroup>
     <Exec Command="dd if=&quot;%(CopiedMSBuildItemsUnix.Identity)&quot; of=&quot;%(CopiedMSBuildItemsUnix.Identity).swab&quot; conv=swab"
         Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
-    <Exec Command="rm &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
-        Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
-    <Exec Command="codesign @(CodesignArgs, ' ') &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
+    <Delete Files="%(CopiedMSBuildItemsUnix.Identity)" Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
+    <Exec Command="codesign $(CodesignArgs) &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
         Condition=" '%(CopiedMSBuildItemsUnix.CodeSign)' == 'True' And '%(CopiedMSBuildItemsUnix.HardenRuntime)' != 'True' " />
-    <Exec Command="codesign @(CodesignArgs, ' ') -o runtime --entitlements &quot;%(CopiedMSBuildItemsUnix.EntitlementsPath)&quot; &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
+    <Exec Command="codesign $(CodesignArgs) -o runtime --entitlements &quot;%(CopiedMSBuildItemsUnix.EntitlementsPath)&quot; &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
         Condition=" '%(CopiedMSBuildItemsUnix.CodeSign)' == 'True' And '%(CopiedMSBuildItemsUnix.HardenRuntime)' == 'True' " />
     <!-- Unpack, sign, and repack bundletool-->
     <PropertyGroup>
@@ -110,7 +106,7 @@
     <MakeDir Directories="$(_BundleToolExtractLocation)" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -xvf &quot;$(_BundleToolJarLocation)&quot;" />
     <Delete Files="$(_BundleToolJarLocation)" />
-    <Exec Command="codesign @(CodesignArgs, ' ') -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolExtractLocation)\macos\aapt2&quot;" />
+    <Exec Command="codesign $(CodesignArgs) -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolExtractLocation)\macos\aapt2&quot;" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_BundleToolJarLocation)&quot; ." />
   </Target>
   <Target Name="_FinalizePayload"
