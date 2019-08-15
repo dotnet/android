@@ -66,6 +66,7 @@ namespace Xamarin.Android.Prepare
 
 			var steps = new List <GeneratedFile> {
 				new GeneratedProfileAssembliesProjitemsFile (Configurables.Paths.ProfileAssembliesProjitemsPath),
+				new GeneratedMonoAndroidProjitemsFile (),
 			};
 
 			AddOSSpecificSteps (context, steps);

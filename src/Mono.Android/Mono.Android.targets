@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
-  <Import Project="Mono.Android.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
@@ -134,7 +134,7 @@
   </Target>
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="_GenerateFrameworkList"
-      Inputs="$(MSBuildProjectFullPath);$(MSBuildThisFileDirectory)Mono.Android.projitems"
+      Inputs="$(MSBuildProjectFullPath);..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
       Outputs="$(OutputPath)AndroidApiInfo.xml">
    <MakeDir Directories="$(OutputPath)" />
    <ItemGroup>
