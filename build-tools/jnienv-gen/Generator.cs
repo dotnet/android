@@ -390,7 +390,7 @@ namespace Xamarin.Android.JniEnv
 				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out "))
 					o.Write ("out ");
 				if (entry.Parameters [i].Type.ManagedType == "JValue*")
-					o.Write ("(JniArgumentValue*) " + Escape (entry.Parameters [i].Name));
+					o.Write ("(IntPtr) " + Escape (entry.Parameters [i].Name));
 				else if (IsObjectReferenceType (entry.Parameters [i].Type))
 					o.Write (string.Format ("new JniObjectReference ({0})", Escape (entry.Parameters [i].Name)));
 				else if (IsMemberID (entry.Parameters [i].Type)) {
