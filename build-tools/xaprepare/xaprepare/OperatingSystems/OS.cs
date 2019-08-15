@@ -49,21 +49,21 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Path to <c>javac</c> (full or relative)
 		/// </summary>
-		public string JavaCPath      { get; set; } = "javac";
+		public string JavaCPath      { get; set; }
 
 		/// <summary>
 		///   Path to <c>jar</c> (full or relative)
 		/// </summary>
-		public string JarPath        { get; set; } = "jar";
+		public string JarPath        { get; set; }
 
 		/// <summary>
 		///   Path to <c>java</c> (full or relative)
 		/// </summary>
-		public string JavaPath       { get; set; } = "java";
+		public string JavaPath       { get; set; }
 
 		/// <summary>
-		///   Full path to Java home, defaults to contents of the <c>JAVA_HOME</c> environment variable or an empty
-		///   string if the variable isn't present.
+		///   Full path to Java home, set via the <c>$(JavaSdkDirectory)</c> MSBuild property or defaults to
+		///   <c>$(AndroidToolchainDirectory)/jdk</c>.
 		/// </summary>
 		public string JavaHome       { get; set; }
 
@@ -184,7 +184,21 @@ namespace Xamarin.Android.Prepare
 		///   Initialize base OS support properties, variables etc. Implementation should perform as little detection of
 		///   programs etc as possible
 		/// </summary>
-		protected abstract bool InitOS ();
+		protected virtual bool InitOS ()
+		{
+			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim ();
+			if (String.IsNullOrEmpty (JavaHome)) {
+				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim ();
+				JavaHome = Path.Combine (androidToolchainDirectory, "jdk");
+			}
+
+			string extension = IsWindows ? ".exe" : string.Empty;
+			JavaCPath = Path.Combine (JavaHome, "bin", $"javac{extension}");
+			JavaPath = Path.Combine (JavaHome, "bin", $"java{extension}");
+			JarPath = Path.Combine (JavaHome, "bin", $"jar{extension}");
+
+			return true;
+		}
 
 		/// <summary>
 		///   Initialize <see cref="Dependencies"/> for the host OS

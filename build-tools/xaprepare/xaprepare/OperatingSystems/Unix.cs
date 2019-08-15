@@ -20,15 +20,6 @@ namespace Xamarin.Android.Prepare
 			Architecture = Utilities.GetStringFromStdout ("uname", "-m")?.Trim ();
 		}
 
-		protected override bool InitOS ()
-		{
-			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory);
-			if (String.IsNullOrEmpty (JavaHome))
-				JavaHome = Environment.GetEnvironmentVariable ("JAVA_HOME") ?? String.Empty;
-
-			return true;
-		}
-
 		protected override void DetectCompilers ()
 		{
 			string ccVersion = Utilities.GetStringFromStdout (Configurables.Defaults.DefaultCompiler, "--version");
