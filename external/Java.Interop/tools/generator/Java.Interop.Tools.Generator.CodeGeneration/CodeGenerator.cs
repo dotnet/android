@@ -804,7 +804,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 		}
 
-		public void WriteInterfaceListenerEvent (InterfaceGen @interface, string indent, string name, string nameSpec, string methodName, string full_delegate_name, bool needs_sender, string wrefSuffix, string add, string remove)
+		public void WriteInterfaceListenerEvent (InterfaceGen @interface, string indent, string name, string nameSpec, string methodName, string full_delegate_name, bool needs_sender, string wrefSuffix, string add, string remove, bool hasHandlerArgument = false)
 		{
 			writer.WriteLine ("{0}public event {1} {2} {{", indent, opt.GetOutputName (full_delegate_name), name);
 			writer.WriteLine ("{0}\tadd {{", indent);
@@ -812,7 +812,7 @@ namespace MonoDroid.Generation
 					indent, opt.GetOutputName (@interface.FullName));
 			writer.WriteLine ("{0}\t\t\t\tref weak_implementor_{1},", indent, wrefSuffix);
 			writer.WriteLine ("{0}\t\t\t\t__Create{1}Implementor,", indent, @interface.Name);
-			writer.WriteLine ("{0}\t\t\t\t{1},", indent, add);
+			writer.WriteLine ("{0}\t\t\t\t{1},", indent, add + (hasHandlerArgument ? "_Event_With_Handler_Helper" : null));
 			writer.WriteLine ("{0}\t\t\t\t__h => __h.{1}Handler += value);", indent, nameSpec);
 			writer.WriteLine ("{0}\t}}", indent);
 			writer.WriteLine ("{0}\tremove {{", indent);
@@ -825,6 +825,14 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}\t}}", indent);
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
+
+			if (hasHandlerArgument) {
+				writer.WriteLine ("{0}void {1} ({2} value)", indent, add + "_Event_With_Handler_Helper", opt.GetOutputName (@interface.FullName));
+				writer.WriteLine ("{0}{{", indent);
+				writer.WriteLine ("{0}\t{1} (value, null);", indent, add);
+				writer.WriteLine ("{0}}}", indent);
+				writer.WriteLine ();
+			}
 		}
 
 		public void WriteInterfaceListenerEventsAndProperties (InterfaceGen @interface, string indent, ClassGen target, string name, string connector_fmt, string add, string remove)
@@ -847,7 +855,7 @@ namespace MonoDroid.Generation
 			var methods = target.Methods.Concat (target.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
 			var props = new HashSet<string> ();
 			var refs = new HashSet<string> ();
-			var eventMethods = methods.Where (m => m.IsListenerConnector && m.EventName != String.Empty && m.ListenerType == @interface).Distinct ();
+			var eventMethods = methods.Where (m => m.IsListenerConnector && m.EventName != String.Empty && m.ListenerType == @interface).OrderBy (m => m.Parameters.Count).GroupBy (m => m.Name).Select (g => g.First ()).Distinct ();
 			foreach (var method in eventMethods) {
 				string name = method.CalculateEventName (target.ContainsName);
 				if (String.IsNullOrEmpty (name)) {
@@ -914,8 +922,11 @@ namespace MonoDroid.Generation
 				if (opt.GetSafeIdentifier (name) != name) {
 					Report.Warning (0, Report.WarningInterfaceGen + 5, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", @interface.FullName, name);
 					return;
-				} else
-					WriteInterfaceListenerEvent (@interface, indent, name, nameSpec, m.AdjustedName, full_delegate_name, !m.Parameters.HasSender, connector_fmt, add, remove);
+				} else {
+					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
+					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
+					WriteInterfaceListenerEvent (@interface, indent, name, nameSpec, m.AdjustedName, full_delegate_name, !m.Parameters.HasSender, connector_fmt, add, remove, hasHandlerArgument);
+				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
 					Report.Warning (0, Report.WarningInterfaceGen + 6, "event property name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", @interface.FullName, name);

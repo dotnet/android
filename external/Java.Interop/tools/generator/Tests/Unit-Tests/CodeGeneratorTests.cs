@@ -529,6 +529,18 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteInterfaceListenerEventWithHandlerArgument ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceListenerEvent (iface, string.Empty, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", true, "MyWrefSuffix", "AddMyName", "RemoveMyName", true);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceListenerEventWithHandlerArgument)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
 		public void WriteInterfaceListenerProperty ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);

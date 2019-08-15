@@ -1,0 +1,22 @@
+public event MyFullDelegateName MyName {
+	add {
+		global::Java.Interop.EventHelper.AddEventHandler<java.code.IMyInterface, java.code.IMyInterfaceImplementor>(
+				ref weak_implementor_MyWrefSuffix,
+				__CreateIMyInterfaceImplementor,
+				AddMyName_Event_With_Handler_Helper,
+				__h => __h.MyNameSpecHandler += value);
+	}
+	remove {
+		global::Java.Interop.EventHelper.RemoveEventHandler<java.code.IMyInterface, java.code.IMyInterfaceImplementor>(
+				ref weak_implementor_MyWrefSuffix,
+				java.code.IMyInterfaceImplementor.__IsEmpty,
+				RemoveMyName,
+				__h => __h.MyNameSpecHandler -= value);
+	}
+}
+
+void AddMyName_Event_With_Handler_Helper (java.code.IMyInterface value)
+{
+	AddMyName (value, null);
+}
+

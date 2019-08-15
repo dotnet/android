@@ -64,7 +64,8 @@ namespace MonoDroid.Generation
 
 		public bool CanAdd {
 			get {
-				return Name.Length > 3 && Name.StartsWith ("Add") && Name.EndsWith ("Listener") && Parameters.Count == 1 && IsVoid &&
+				return Name.Length > 3 && Name.StartsWith ("Add") && Name.EndsWith ("Listener") &&  IsVoid &&
+					(Parameters.Count == 1 || (Parameters.Count == 2 && Parameters [1].Type == "Android.OS.Handler")) &&
 					!(Parameters [0].IsArray);
 			}
 		}

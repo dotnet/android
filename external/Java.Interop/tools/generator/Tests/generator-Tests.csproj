@@ -503,6 +503,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceListenerEvent.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceListenerEventWithHandlerArgument.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceListenerProperty.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
