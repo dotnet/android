@@ -151,6 +151,9 @@ namespace UnnamedProject
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 			};
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
+				WebContent = "http://central.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
@@ -162,6 +165,7 @@ namespace UnnamedProject
 				FileAssert.Exists (resourcepathscache);
 				var expected = File.ReadAllText (resourcepathscache);
 				StringAssert.DoesNotContain ("<Jars/>", expected);
+				StringAssert.Contains ("okio-1.13.0.jar</Jar>", expected);
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 2");
 
 				// GetExtraLibraryLocationsForDesigner after SetupDependenciesForDesigner
@@ -172,6 +176,7 @@ namespace UnnamedProject
 				FileAssert.Exists (resourcepathscache);
 				var actual = File.ReadAllText (resourcepathscache);
 				StringAssert.DoesNotContain ("<Jars/>", actual);
+				StringAssert.Contains ("okio-1.13.0.jar</Jar>", expected);
 				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
 
 				// GetExtraLibraryLocationsForDesigner after Build
@@ -181,6 +186,7 @@ namespace UnnamedProject
 				FileAssert.Exists (resourcepathscache);
 				actual = File.ReadAllText (resourcepathscache);
 				StringAssert.DoesNotContain ("<Jars/>", actual);
+				StringAssert.Contains ("okio-1.13.0.jar</Jar>", expected);
 				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
 			}
 		}
