@@ -1,4 +1,4 @@
-﻿//
+//
 // RemoveDir.cs: Removes a directory.
 //
 // Author:
@@ -28,92 +28,60 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
-// The RemoveDir task that ships with Mono 2.10 doesn't work for
-// recursive directories, so we ship this one until Mono 2.12 is
-// the norm.
-namespace Xamarin.Android.Tasks {
-	public class RemoveDirFixed : Task {
-	
-		ITaskItem[]	directories;
-		ITaskItem[]	removedDirectories;
-
-		public RemoveDirFixed ()
-		{
-		}
+namespace Xamarin.Android.Tasks
+{
+	public class RemoveDirFixed : Task
+	{
 
 		public override bool Execute ()
 		{
-			if (directories.Length == 0)
-				return true;
+			var temporaryRemovedDirectories = new List<ITaskItem> (Directories.Length);
 
-			List <ITaskItem> temporaryRemovedDirectories = new List <ITaskItem> ();
-			
-			foreach (ITaskItem directory in directories) {
+			foreach (var directory in Directories) {
+				var fullPath = directory.GetMetadata ("FullPath");
+				if (!Directory.Exists (fullPath)) {
+					Log.LogDebugMessage ($"Directory did not exist: {fullPath}");
+					continue;
+				}
 				try {
-					try {
-						// try to do a normal "fast" delete of the directory.
-						Directory.Delete (directory.GetMetadata ("FullPath"), true);
+					// try to do a normal "fast" delete of the directory.
+					Directory.Delete (fullPath, true);
+					temporaryRemovedDirectories.Add (directory);
+				} catch (UnauthorizedAccessException) {
+					// if that fails we probably have readonly files (or locked files)
+					// so try to make them writable and try again.
+					MonoAndroidHelper.SetDirectoryWriteable (fullPath);
+					Directory.Delete (fullPath, true);
+					temporaryRemovedDirectories.Add (directory);
+				} catch (DirectoryNotFoundException ex) {
+					// This could be a file inside the directory over MAX_PATH, we can attempt using the \\?\ syntax
+					if (OS.IsWindows) {
+						fullPath = Files.ToLongPath (fullPath);
+						Log.LogDebugMessage ("Trying long path: " + fullPath);
+						Directory.Delete (fullPath, true);
 						temporaryRemovedDirectories.Add (directory);
-					} catch {
-						// if that fails we probably have readonly files (or locked files)
-						// so try to make them writable and try again.
-						MonoAndroidHelper.SetDirectoryWriteable (directory.GetMetadata ("FullPath"));
-						Directory.Delete (directory.GetMetadata ("FullPath"), true);
-						temporaryRemovedDirectories.Add (directory);
+						continue;
 					}
-				}
-				catch (DirectoryNotFoundException ex) {
 					Log.LogErrorFromException (ex);
-				}
-				catch (PathTooLongException ex) {
-					Log.LogErrorFromException (ex);
-				}
-				catch (ArgumentNullException ex) {
-					Log.LogErrorFromException (ex);
-				}
-				catch (ArgumentException ex) {
-					Log.LogErrorFromException (ex);
-				}
-				catch (IOException ex) {
-					Log.LogErrorFromException (ex);
-				}
-				catch (SecurityException ex) {
-					Log.LogErrorFromException (ex);
-				}
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					Log.LogErrorFromException (ex);
 				}
 			}
-			
-			removedDirectories = temporaryRemovedDirectories.ToArray ();
 
+			RemovedDirectories = temporaryRemovedDirectories.ToArray ();
 			Log.LogDebugTaskItems ("  RemovedDirectories: ", RemovedDirectories);
-			
+
 			return true;
 		}
-		
+
 		[Required]
-		public ITaskItem[] Directories {
-			get {
-				return directories;
-			}
-			set {
-				directories = value;
-			}
-		}
+		public ITaskItem [] Directories { get; set; }
 
 		[Output]
-		public ITaskItem[] RemovedDirectories {
-			get {
-				return removedDirectories;
-			}
-			set {
-				removedDirectories = value;
-			}
-		}
+		public ITaskItem [] RemovedDirectories { get; set; }
 	}
 }

@@ -15,6 +15,30 @@ namespace Xamarin.Android.Tools {
 
 	static class Files {
 
+		/// <summary>
+		/// Windows has a MAX_PATH limit of 260 characters
+		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+		/// </summary>
+		public const int MaxPath = 260;
+
+		/// <summary>
+		/// On Windows, we can opt into a long path with this prefix
+		/// </summary>
+		public const string LongPathPrefix = @"\\?\";
+
+		/// <summary>
+		/// Converts a full path to a \\?\ prefixed path that works on all Windows machines when over 260 characters
+		/// NOTE: requires a *full path*, use sparingly
+		/// </summary>
+		public static string ToLongPath (string fullPath)
+		{
+			// On non-Windows platforms, return the path unchanged
+			if (Path.DirectorySeparatorChar != '\\') {
+				return fullPath;
+			}
+			return LongPathPrefix + fullPath;
+		}
+
 		public static bool Archive (string target, Action<string> archiver)
 		{
 			string newTarget = target + ".new";

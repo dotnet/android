@@ -2571,7 +2571,7 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(IntermediateOutputPath)_javac.stamp">
 
   <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
-  <RemoveDir Directories="$(IntermediateOutputPath)android\bin\classes" />
+  <RemoveDirFixed Directories="$(IntermediateOutputPath)android\bin\classes" />
   <Delete Files="$(IntermediateOutputPath)android\bin\classes.zip" />
 
   <!-- Compile java code -->
