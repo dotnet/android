@@ -82,9 +82,22 @@ of `libmonosgen-2.0.so` for a published Xamarin.Android version:
     click the link to the open-source build.
 
  3. Navigate to **Azure Artifacts** in the left sidebar and download the
-    `xamarin-android/xamarin-android/bin/Release/bundle*.zip` file.
+    `xamarin-android/xamarin-android/bin/Release/bundle*.7z` file.  For the
+    `d16-2` branch and earlier, the file extension will be `.zip` instead of
+    `.7z`.
 
- 4. Extract the `libmonosgen-2.0.d.so` files from the bundle.  For example, run:
+ 4. Extract the `libmonosgen-2.0.d.so` files from the bundle.  For example, if
+    you have `brew` installed, run:
+
+        $ brew install p7zip
+        $ 7z x -r bundle*.7z libmonosgen-2.0.d.so
+
+    On Windows, Visual Studio includes the `7z.exe` executable when the **Mobile
+    development with .NET** workload is installed, so you can use that:
+
+        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\Extensions\Xamarin.VisualStudio\7-Zip\7z.exe" x -r bundle*.7z libmonosgen-2.0.d.so
+
+    For `d16-2` and earlier, use `unzip` instead:
 
         $ unzip bundle*.zip '**libmonosgen-2.0.d.so'
 
