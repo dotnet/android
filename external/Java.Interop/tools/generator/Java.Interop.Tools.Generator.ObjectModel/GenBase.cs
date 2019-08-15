@@ -94,7 +94,7 @@ namespace MonoDroid.Generation
 					string prop_name = m.PropertyName;
 					if (m.CanSet || prop_name == string.Empty || Name == prop_name || m.Name == "GetHashCode" || HasNestedType (prop_name) || IsInfrastructural (prop_name))
 						unmatched.Add (m);
-					else if (BaseGen != null && !BaseGen.prop_hash.ContainsKey (prop_name) && BaseGen.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches(m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters)))
+					else if (BaseGen != null && !BaseGen.prop_hash.ContainsKey (prop_name) && BaseGen.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches (m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters)))
 						// this is to filter out those method that was *not* a property
 						// in the base type for some reason (e.g. name overlap).
 						// For example, android.graphics.drawable.BitmapDrawable#getConstantState()
@@ -129,7 +129,7 @@ namespace MonoDroid.Generation
 					continue;
 				}
 
-				if (Ancestors ().All (a => !a.prop_hash.ContainsKey (m.PropertyName)) && Ancestors ().Any (a => a.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches(m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters))))
+				if (Ancestors ().All (a => !a.prop_hash.ContainsKey (m.PropertyName)) && Ancestors ().Any (a => a.Methods.Any (mm => mm.Name == m.Name && ReturnTypeMatches (m, mm) && ParameterList.Equals (mm.Parameters, m.Parameters))))
 					unmatched.Add (m); // base setter exists, and it was not a property.
 				else if (prop_hash.ContainsKey (m.PropertyName)) {
 					Property baseProp = BaseGen?.Properties.FirstOrDefault (p => p.Name == m.PropertyName);
@@ -574,6 +574,8 @@ namespace MonoDroid.Generation
 
 			return false;
 		}
+
+		public IEnumerable<string> ImplementedInterfaces => implemented_interfaces;
 
 		public bool IsValid { get; set; } = true;
 

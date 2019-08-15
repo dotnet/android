@@ -54,7 +54,7 @@ namespace MonoDroid.Generation
 			foreach (ISymbol isym in @class.Interfaces) {
 				GenericSymbol gs = isym as GenericSymbol;
 				InterfaceGen gen = (gs == null ? isym : gs.Gen) as InterfaceGen;
-				if (gen != null && gen.IsConstSugar)
+				if (gen != null && (gen.IsConstSugar || gen.RawVisibility != "public"))
 					continue;
 				if (sb.Length > 0)
 					sb.Append (", ");
@@ -506,7 +506,7 @@ namespace MonoDroid.Generation
 			StringBuilder sb = new StringBuilder ();
 			foreach (ISymbol isym in @interface.Interfaces) {
 				InterfaceGen igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
-				if (igen.IsConstSugar)
+				if (igen.IsConstSugar || igen.RawVisibility != "public")
 					continue;
 				if (sb.Length > 0)
 					sb.Append (", ");

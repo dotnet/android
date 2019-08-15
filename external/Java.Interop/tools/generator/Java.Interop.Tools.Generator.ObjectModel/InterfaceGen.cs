@@ -43,6 +43,30 @@ namespace MonoDroid.Generation
 			*/
 		}
 
+		public override void FixupAccessModifiers (CodeGenerationOptions opt)
+		{
+			if (!IsAnnotation) {
+				foreach (var implementedInterface in ImplementedInterfaces) { 
+					if (string.IsNullOrEmpty (implementedInterface)) {
+						System.Diagnostics.Debug.Assert (false, "BUGBUG - We should never have an empty or null string added on the implemented interface list.");
+						continue;
+					}
+
+					var baseType = opt.SymbolTable.Lookup (implementedInterface);
+					if (baseType is InterfaceGen interfaceGen && interfaceGen.RawVisibility != "public") {
+						// Copy over "private" methods
+						interfaceGen.Methods.Where (m => !Methods.Contains (m)).ToList ().ForEach (Methods.Add);
+
+					} else {
+						break;
+					}
+				}
+			}
+			
+
+			base.FixupAccessModifiers (opt);
+		}
+
 		public override void Generate (CodeGenerationOptions opt, GenerationInfo gen_info)
 		{
 			using (var sw = gen_info.OpenStream (opt.GetFileName (FullName))) {

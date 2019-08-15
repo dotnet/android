@@ -78,5 +78,35 @@
 			<method abstract="false" deprecated="not deprecated" final="false" name="publicMethod" native="false" return="void" static="false" synchronized="false" visibility="public">
 			</method>
 		</class>
+    <!-- 
+      interface BaseInterface {
+        public void baseMethod();
+      }
+    -->
+     <interface abstract="true" deprecated="not deprecated" final="false" name="BaseInterface" static="false" visibility="">
+      <method abstract="true" deprecated="not deprecated" final="false" name="baseMethod" native="false" return="void" static="false" synchronized="false" synthetic="false" visibility="public" />
+    </interface>
+    <!--
+      public interface ExtendedInterface extends BaseInterface {
+        public void publicMethod2();
+      }
+    -->
+    <interface abstract="true" deprecated="not deprecated" final="false" name="ExtendedInterface" static="false" visibility="public">
+      <implements name="xamarin.test.BaseInterface" name-generic-aware="xamarin.test.BaseInterface" />>
+      <method abstract="true" deprecated="not deprecated" final="false" name="extendedMethod" native="false" return="void" static="false" synchronized="false" synthetic="false" visibility="public" />>
+    </interface>
+    <!--
+      public class TestClass implements BaseInterface {
+
+        @Override
+        public void baseMethod() {
+        }
+      }
+    -->
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="TestClass" static="false" visibility="public">
+      <implements name="xamarin.test.BaseInterface" name-generic-aware="xamarin.test.BaseInterface" />>
+      <constructor deprecated="not deprecated" final="false" name="TestClass" jni-signature="()V" bridge="false" static="false" type="xamarin.test.TestClass" synthetic="false" visibility="public" />
+      <method abstract="false" deprecated="not deprecated" final="false" name="baseMethod" native="false" return="void" static="false" synchronized="false" synthetic="false" visibility="public" />
+    </class>
 	</package>
 </api>
