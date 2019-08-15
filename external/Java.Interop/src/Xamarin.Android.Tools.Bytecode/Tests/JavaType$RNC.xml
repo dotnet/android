@@ -12,6 +12,7 @@
       final="false"
       name="JavaType.RNC"
       jni-signature="Lcom/xamarin/JavaType$RNC;"
+      source-file-name="JavaType.java"
       static="false"
       visibility="protected">
       <typeParameters>

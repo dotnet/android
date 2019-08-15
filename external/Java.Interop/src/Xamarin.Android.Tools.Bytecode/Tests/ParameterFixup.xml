@@ -9,6 +9,7 @@
       final="false"
       name="IParameterInterface"
       jni-signature="Lcom/xamarin/IParameterInterface;"
+      source-file-name="IParameterInterface.java"
       static="false"
       visibility="">
       <method
@@ -90,6 +91,7 @@
       final="false"
       name="ParameterAbstractClass"
       jni-signature="Lcom/xamarin/ParameterAbstractClass;"
+      source-file-name="ParameterAbstractClass.java"
       static="false"
       visibility="public">
       <implements
@@ -184,6 +186,7 @@
       final="false"
       name="ParameterClass"
       jni-signature="Lcom/xamarin/ParameterClass;"
+      source-file-name="ParameterClass.java"
       static="false"
       visibility="public">
       <constructor
@@ -247,6 +250,7 @@
       final="false"
       name="ParameterClass2"
       jni-signature="Lcom/xamarin/ParameterClass2;"
+      source-file-name="ParameterClass2.java"
       static="false"
       visibility="public">
       <constructor

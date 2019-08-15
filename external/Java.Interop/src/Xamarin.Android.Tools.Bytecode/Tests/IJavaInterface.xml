@@ -9,6 +9,7 @@
       final="false"
       name="IJavaInterface"
       jni-signature="Lcom/xamarin/IJavaInterface;"
+      source-file-name="IJavaInterface.java"
       static="false"
       visibility="">
       <typeParameters>

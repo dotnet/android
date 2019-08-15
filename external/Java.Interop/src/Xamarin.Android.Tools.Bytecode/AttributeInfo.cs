@@ -40,10 +40,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  const   string  ConstantValue           = "ConstantValue";
 		public  const   string  Deprecated              = "Deprecated";
 		public  const   string  Exceptions              = "Exceptions";
+		public  const   string  EnclosingMethod         = "EnclosingMethod";
 		public  const   string  InnerClasses            = "InnerClasses";
 		public  const   string  LocalVariableTable      = "LocalVariableTable";
 		public  const   string  MethodParameters        = "MethodParameters";
 		public  const   string  Signature               = "Signature";
+		public  const   string  SourceFile              = "SourceFile";
 		public  const   string  StackMapTable           = "StackMapTable";
 
 		ushort          nameIndex;
@@ -69,11 +71,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 			{ typeof (CodeAttribute),                   Code },
 			{ typeof (ConstantValueAttribute),          ConstantValue },
 			{ typeof (DeprecatedAttribute),             Deprecated },
+			{ typeof (EnclosingMethodAttribute),        EnclosingMethod },
 			{ typeof (ExceptionsAttribute),             Exceptions },
 			{ typeof (InnerClassesAttribute),           InnerClasses },
 			{ typeof (LocalVariableTableAttribute),     LocalVariableTable },
 			{ typeof (MethodParametersAttribute),       MethodParameters },
 			{ typeof (SignatureAttribute),              Signature },
+			{ typeof (SourceFileAttribute),             SourceFile },
 			{ typeof (StackMapTableAttribute),          StackMapTable },
 		};
 
@@ -100,11 +104,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case Code:                  return new CodeAttribute (constantPool, nameIndex, stream);
 			case ConstantValue:         return new ConstantValueAttribute (constantPool, nameIndex, stream);
 			case Deprecated:            return new DeprecatedAttribute (constantPool, nameIndex, stream);
+			case EnclosingMethod:       return new EnclosingMethodAttribute (constantPool, nameIndex, stream);
 			case Exceptions:            return new ExceptionsAttribute (constantPool, nameIndex, stream);
 			case InnerClasses:          return new InnerClassesAttribute (constantPool, nameIndex, stream);
 			case LocalVariableTable:    return new LocalVariableTableAttribute (constantPool, nameIndex, stream);
 			case MethodParameters:      return new MethodParametersAttribute (constantPool, nameIndex, stream);
 			case Signature:             return new SignatureAttribute (constantPool, nameIndex, stream);
+			case SourceFile:            return new SourceFileAttribute (constantPool, nameIndex, stream);
 			case StackMapTable:         return new StackMapTableAttribute (constantPool, nameIndex, stream);
 			default:                    return new UnknownAttribute (constantPool, nameIndex, stream);
 			}
@@ -218,6 +224,33 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			return "Deprecated";
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.7
+	public sealed class EnclosingMethodAttribute : AttributeInfo {
+
+		ushort classIndex, methodIndex;
+
+		public ConstantPoolClassItem            Class {
+			get {return (ConstantPoolClassItem) ConstantPool [classIndex];}
+		}
+
+		public ConstantPoolNameAndTypeItem      Method {
+			get {return methodIndex == 0 ? null : (ConstantPoolNameAndTypeItem) ConstantPool [methodIndex];}
+		}
+
+		public EnclosingMethodAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length      = stream.ReadNetworkUInt32 ();
+			classIndex      = stream.ReadNetworkUInt16 ();
+			methodIndex     = stream.ReadNetworkUInt16 ();
+		}
+
+		public override string ToString ()
+		{
+			return $"EnclosingMethod({Class}, {Method})";
 		}
 	}
 
@@ -482,6 +515,29 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return string.Format ("Signature({0})", Value);
 		}
 	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.10
+	public sealed class SourceFileAttribute : AttributeInfo {
+
+		ushort sourceFileIndex;
+
+		public  string          FileName {
+			get {return ((ConstantPoolUtf8Item) ConstantPool [sourceFileIndex]).Value;}
+		}
+
+		public SourceFileAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length      = stream.ReadNetworkUInt32 ();
+			sourceFileIndex = stream.ReadNetworkUInt16 ();
+		}
+
+		public override string ToString ()
+		{
+			return $"SourceFile('{FileName}')";
+		}
+	}
+
 
 	// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.4
 	public sealed class StackMapTableAttribute : AttributeInfo {

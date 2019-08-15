@@ -12,6 +12,7 @@
       final="false"
       name="JavaType.PSC"
       jni-signature="Lcom/xamarin/JavaType$PSC;"
+      source-file-name="JavaType.java"
       static="true"
       visibility="public">
       <constructor

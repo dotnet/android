@@ -9,6 +9,7 @@
       final="false"
       name="JavaAnnotation"
       jni-signature="Lcom/xamarin/JavaAnnotation;"
+      source-file-name="JavaAnnotation.java"
       static="false"
       visibility="public">
       <implements

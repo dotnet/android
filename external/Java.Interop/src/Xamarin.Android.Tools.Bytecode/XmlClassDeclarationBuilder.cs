@@ -34,11 +34,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return new XElement (GetElementName (),
 					new XAttribute ("abstract",                 (classFile.AccessFlags & ClassAccessFlags.Abstract) != 0),
 					new XAttribute ("deprecated",               GetDeprecatedValue (classFile.Attributes)),
+					GetEnclosingMethod (),
 					GetExtends (),
 					GetExtendsGenericAware (),
 					new XAttribute ("final",                    (classFile.AccessFlags & ClassAccessFlags.Final) != 0),
 					new XAttribute ("name",                     GetThisClassName ()),
 					new XAttribute ("jni-signature",            "L" + classFile.ThisClass.Name.Value + ";"),
+					GetSourceFile (),
 					new XAttribute ("static",                   classFile.IsStatic),
 					new XAttribute ("visibility",               GetVisibility (classFile.Visibility)),
 					GetTypeParmeters (signature == null ? null : signature.TypeParameters),
@@ -61,6 +63,19 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (attributes.Get<DeprecatedAttribute> () == null)
 				return "not deprecated";
 			return "deprecated";
+		}
+
+		XAttribute[] GetEnclosingMethod ()
+		{
+			string declaringClass, declaringMethod, declaringDescriptor;
+			if (!classFile.TryGetEnclosingMethodInfo (out declaringClass, out declaringMethod, out declaringDescriptor)) {
+				return null;
+			}
+			return new []{
+				new XAttribute ("enclosing-method-jni-type",    "L" + declaringClass + ";"),
+				new XAttribute ("enclosing-method-name",        declaringMethod),
+				new XAttribute ("enclosing-method-signature",   declaringDescriptor),
+			};
 		}
 
 		XAttribute[] GetExtends ()
@@ -252,6 +267,14 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case 'Z':   index++;    return "boolean";
 			}
 			return null;
+		}
+
+		XAttribute GetSourceFile ()
+		{
+			var sourceFile  = classFile.SourceFileName;
+			if (sourceFile == null)
+				return null;
+			return new XAttribute ("source-file-name", sourceFile);
 		}
 
 		XElement GetTypeParmeters (TypeParameterInfoCollection typeParameters)

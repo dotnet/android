@@ -12,6 +12,7 @@
       final="true"
       name="JavaEnum"
       jni-signature="Lcom/xamarin/JavaEnum;"
+      source-file-name="JavaType.java"
       static="false"
       visibility="">
       <method

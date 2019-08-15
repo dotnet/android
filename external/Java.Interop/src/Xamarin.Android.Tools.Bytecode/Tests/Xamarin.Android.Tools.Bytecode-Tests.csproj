@@ -49,6 +49,7 @@
     <Compile Include="JavaAnnotationTests.cs" />
     <Compile Include="JavaEnumTests.cs" />
     <Compile Include="JavaTypeTests.cs" />
+    <Compile Include="JavaType.1Tests.cs" />
     <Compile Include="JavaType.ASCTests.cs" />
     <Compile Include="JavaType.RNCTests.cs" />
     <Compile Include="JavaType.RNC.RPNCTests.cs" />
@@ -81,6 +82,9 @@
     <EmbeddedResource Include="JavaType.xml">
       <LogicalName>JavaType.xml</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="JavaType%241.xml">
+      <LogicalName>JavaType$1.xml</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="IJavaInterface.xml">
       <LogicalName>IJavaInterface.xml</LogicalName>
     </EmbeddedResource>
@@ -101,6 +105,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType.class">
       <LogicalName>JavaType.class</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241.class">
+      <LogicalName>JavaType$1.class</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class">
       <LogicalName>JavaType$ASC.class</LogicalName>

@@ -1,0 +1,41 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      enclosing-method-jni-type="Lcom/xamarin/JavaType;"
+      enclosing-method-name="action"
+      enclosing-method-signature="(Ljava/lang/Object;)V"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="false"
+      name="JavaType.1"
+      jni-signature="Lcom/xamarin/JavaType$1;"
+      source-file-name="JavaType.java"
+      static="false"
+      visibility="">
+      <implements
+        name="java.lang.Runnable"
+        name-generic-aware="java.lang.Runnable"
+        jni-type="Ljava/lang/Runnable;" />
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="run"
+        native="false"
+        return="void"
+        jni-return="V"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="()V" />
+    </class>
+  </package>
+</api>

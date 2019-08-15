@@ -9,6 +9,7 @@
       final="false"
       name="NestedInterface.DnsSdTxtRecordListener"
       jni-signature="Lcom/xamarin/NestedInterface$DnsSdTxtRecordListener;"
+      source-file-name="NestedInterface.java"
       static="true"
       visibility="public">
       <method

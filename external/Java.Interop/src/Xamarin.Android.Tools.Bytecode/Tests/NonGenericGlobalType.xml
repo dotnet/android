@@ -12,6 +12,7 @@
       final="false"
       name="NonGenericGlobalType"
       jni-signature="LNonGenericGlobalType;"
+      source-file-name="NonGenericGlobalType.java"
       static="false"
       visibility="" />
   </package>

@@ -33,9 +33,9 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 			NAssert.AreEqual (Deprecated,   classDeclaration.Attributes.Get<DeprecatedAttribute> () != null,    FullName + " Deprecated");
 
-			NAssert.AreEqual (Interfaces.Count,         classDeclaration.Interfaces.Count);
+			NAssert.AreEqual (Interfaces.Count,         classDeclaration.Interfaces.Count,      $"{FullName} Interfaces Count");
 			for (int i = 0; i < Interfaces.Count; ++i) {
-				NAssert.AreEqual (Interfaces [i].BinaryName,    classDeclaration.Interfaces [i].Name.Value);
+				NAssert.AreEqual (Interfaces [i].BinaryName,    classDeclaration.Interfaces [i].Name.Value,     $"{FullName} Interface {i}");
 			}
 
 			var innerClasses    = classDeclaration.InnerClasses;
@@ -45,8 +45,8 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 			var interfaces  = classDeclaration.GetInterfaces ();
 			for (int i = 0; i < Interfaces.Count; ++i) {
-				NAssert.AreEqual (Interfaces [i].BinaryName,    interfaces [i].BinaryName,      FullName + " Interfaces");
-				NAssert.AreEqual (Interfaces [i].TypeSignature, interfaces [i].TypeSignature,   FullName + " Interfaces");
+				NAssert.AreEqual (Interfaces [i].BinaryName,    interfaces [i].BinaryName,      FullName + " Interfaces BinaryName");
+				NAssert.AreEqual (Interfaces [i].TypeSignature, interfaces [i].TypeSignature,   FullName + " Interfaces TypeSignature");
 			}
 
 			var signature   = classDeclaration.GetSignature ();

@@ -12,6 +12,7 @@
       final="false"
       name="JavaType"
       jni-signature="Lcom/xamarin/JavaType;"
+      source-file-name="JavaType.java"
       static="false"
       visibility="public">
       <typeParameters>

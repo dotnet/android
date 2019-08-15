@@ -12,6 +12,7 @@
       final="false"
       name="JavaType.ASC"
       jni-signature="Lcom/xamarin/JavaType$ASC;"
+      source-file-name="JavaType.java"
       static="true"
       visibility="" />
   </package>

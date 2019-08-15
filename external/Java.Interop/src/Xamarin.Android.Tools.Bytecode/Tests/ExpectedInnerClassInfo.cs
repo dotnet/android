@@ -15,10 +15,10 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 		public void Assert (InnerClassInfo info)
 		{
-			NAssert.AreEqual (InnerClassName,   info.InnerClass.Name.Value);
-			NAssert.AreEqual (OuterClassName,   info.OuterClass.Name.Value);
-			NAssert.AreEqual (InnerName,        info.InnerName);
-			NAssert.AreEqual (AccessFlags,      info.InnerClassAccessFlags);
+			NAssert.AreEqual (InnerClassName,   info.InnerClass?.Name?.Value,   $"InnerClassName");
+			NAssert.AreEqual (OuterClassName,   info.OuterClass?.Name?.Value,   $"OuterClassName");
+			NAssert.AreEqual (InnerName,        info.InnerName,                 $"InnerName");
+			NAssert.AreEqual (AccessFlags,      info.InnerClassAccessFlags,     $"InnerClassAccessFlags");
 		}
 	}
 }

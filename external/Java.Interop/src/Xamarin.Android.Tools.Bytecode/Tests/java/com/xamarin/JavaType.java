@@ -107,9 +107,15 @@ public class JavaType<E>
 
 	@Deprecated
 	public void action (Object value) {
-	    Object local = new Object ();
-	    local.toString ();
-	    int i = 42;
+		Object local = new Object ();
+		local.toString ();
+		int i = 42;
+		Runnable r = new Runnable () {
+			public void run() {
+				System.out.println ("foo");
+			}
+		};
+		r.run();
 	}
 
 	public java.lang.Integer func (String[] values) {

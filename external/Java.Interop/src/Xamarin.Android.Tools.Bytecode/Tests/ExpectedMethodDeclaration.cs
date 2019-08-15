@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}
 
 			var parameters  = method.GetParameters ();
-			NAssert.AreEqual (Parameters.Count, parameters.Length);
+			NAssert.AreEqual (Parameters.Count, parameters.Length,  $"Method {Name} Parameter Count");
 			for (int i = 0; i < Parameters.Count; ++i) {
 				NAssert.AreEqual (Parameters [i].Name,                  parameters [i].Name,                message);
 				NAssert.AreEqual (i,                                    parameters [i].Position,            message);

@@ -9,6 +9,7 @@
       final="false"
       name="Collection"
       jni-signature="Ljava/util/Collection;"
+      source-file-name="Collection.java"
       static="false"
       visibility="public">
       <typeParameters>

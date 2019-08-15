@@ -98,6 +98,28 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
+		public string SourceFileName {
+			get {
+				var sourceFile  = Attributes.Get<SourceFileAttribute> ();
+				return sourceFile == null ? null : sourceFile.FileName;
+			}
+		}
+
+		public bool TryGetEnclosingMethodInfo (out string declaringClass, out string declaringMethod, out string declaringDescriptor)
+		{
+			declaringClass = declaringMethod = declaringDescriptor = null;
+
+			var enclosingMethod     = Attributes.Get<EnclosingMethodAttribute> ();
+			if (enclosingMethod == null) {
+				return false;
+			}
+
+			declaringClass          = enclosingMethod.Class.Name.Value;
+			declaringMethod         = enclosingMethod.Method.Name.Value;
+			declaringDescriptor     = enclosingMethod.Method.Descriptor.Value;
+			return true;
+		}
+
 		public ClassSignature GetSignature ()
 		{
 			if (this.signature != null)
