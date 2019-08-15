@@ -16,6 +16,22 @@ namespace Android.Media
 		{
 		}
 #endif
+
+#if ANDROID_29
+		[Obsolete ("Please do not use Android.Media.AudioTrack.RoutingChangedEventArgs since it was wrongly generated and it is not used internally.", error: true)]
+		public partial class RoutingChangedEventArgs : global::System.EventArgs {
+
+			public RoutingChangedEventArgs (Android.Media.AudioTrack audioTrack)
+			{
+				this.audioTrack = audioTrack;
+			}
+
+			Android.Media.AudioTrack audioTrack;
+			public Android.Media.AudioTrack AudioTrack {
+				get { return audioTrack; }
+			}
+		}
+#endif  // ANDROID_29
 	}
 }
 
