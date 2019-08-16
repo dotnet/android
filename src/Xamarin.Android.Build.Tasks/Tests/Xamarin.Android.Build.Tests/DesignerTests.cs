@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.IO;
 using System.Text;
-using System.Xml;
+using System.Linq;
 using System.Xml.Linq;
 using Xamarin.ProjectTools;
 
@@ -126,6 +126,26 @@ namespace UnnamedProject
 					"UnnamedProject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
 					"unnamedproject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+			}
+		}
+
+		[Test]
+		public void IncrementalDesignTimeBuild ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Target = "SetupDependenciesForDesigner";
+				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"{b.Target} should have succeeded.");
+
+				// Change a layout, DTB
+				proj.LayoutMain = proj.LayoutMain.Replace ("@string/hello", "hello");
+				proj.Touch ("Resources\\layout\\Main.axml");
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+
+				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
+				FileAssert.Exists (resourcepathscache);
+				var doc = XDocument.Load (resourcepathscache);
+				Assert.AreEqual (40, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
 			}
 		}
 
