@@ -46,7 +46,13 @@ BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/
 
 all: $(DEPENDENCIES) $(TESTS)
 
-run-all-tests: run-tests run-test-jnimarshal run-test-generator-core run-ptests
+run-all-tests:
+	r=0; \
+	$(MAKE) run-tests                 || r=1 ; \
+	$(MAKE) run-test-jnimarshal       || r=1 ; \
+	$(MAKE) run-test-generator-core   || r=1 ; \
+	$(MAKE) run-ptests                || r=1 ; \
+	exit $$r;
 
 include build-tools/scripts/msbuild.mk
 
@@ -145,14 +151,18 @@ shell:
 
 # $(call RUN_TEST,filename,log-lref?)
 define RUN_TEST
-	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/RunNUnitTests.targets /p:TestAssembly=$(1) ;
+	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/RunNUnitTests.targets /p:TestAssembly=$(1) || r=1;
 endef
 
 run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
-	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1))
+	r=0; \
+	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1)) \
+	exit $$r;
 
 run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
-	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t)))
+	r=0; \
+	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t))) \
+	exit $$r;
 
 bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	cp $< $@

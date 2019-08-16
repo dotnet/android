@@ -601,7 +601,7 @@ namespace Java.InteropTests {
 		}}
 		else
 		{{
-			return {value}_ref = {value}.PeerReference;
+			return {value}_ref = (IJavaPeerable){value}.PeerReference;
 		}}
 		{value}_rtn = References.NewReturnToJniRef({value}_ref);
 		return {pret.Name};
