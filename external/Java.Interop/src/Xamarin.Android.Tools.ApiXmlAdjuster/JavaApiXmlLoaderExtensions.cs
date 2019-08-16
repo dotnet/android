@@ -84,11 +84,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		static readonly string [] expected_type_attributes = new String [] {
 			"abstract",
 			"deprecated",
+			"enclosing-method-jni-type",
+			"enclosing-method-name",
+			"enclosing-method-signature",
 			"final",
+			"jni-signature",
 			"name",
+			"source-file-name",
 			"static",
 			"visibility",
-			"jni-signature",
 		};
 
 		internal static void LoadTypeAttributes (this JavaType type, XmlReader reader, params string [] otherAllowedAttributes)

@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			if (reader.NodeType != XmlNodeType.Attribute)
 				throw new ArgumentException (string.Format ("Internal error: XmlReader should be positioned on attribute, but it is on {0}", reader.NodeType));
-			return new Exception (string.Format ("{0}: Element '{1}' has an unexpected attribute: '{2}'. Expected attributes are: {2}",
+			return new Exception (string.Format ("{0}: Element '{1}' has an unexpected attribute: '{2}'. Expected attributes are: {3}",
 				GetLocation (reader), elementName, reader.LocalName, string.Join (", ", expected)));
 		}
 
