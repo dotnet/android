@@ -82,10 +82,6 @@ namespace Xamarin.Android.Prepare
 		{
 			const string OutputFileName = "Configuration.OperatingSystem.props";
 
-			string javaSdkDirectory = context.Properties.GetValue ("JavaSdkDirectory");
-			if (String.IsNullOrEmpty (javaSdkDirectory))
-				javaSdkDirectory = context.OS.JavaHome;
-
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@OS_NAME@",              context.OS.Name ?? String.Empty },
 				{ "@HOST_OS_FLAVOR@",       context.OS.Flavor ?? String.Empty },
@@ -102,7 +98,7 @@ namespace Xamarin.Android.Prepare
 				{ "@HOST_CXX32@",           context.OS.CXX32 ?? String.Empty },
 				{ "@HOST_CXX64@",           context.OS.CXX64 ?? String.Empty },
 				{ "@HOST_HOMEBREW_PREFIX@", context.OS.HomebrewPrefix ?? String.Empty },
-				{ "@JavaSdkDirectory@",     javaSdkDirectory ?? String.Empty },
+				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
