@@ -26,7 +26,7 @@
 
 #include <dlfcn.h>
 
-#if defined (ANDROID)
+#if defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO)
 using namespace xamarin::android;
 #endif
 
