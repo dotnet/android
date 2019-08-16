@@ -19,6 +19,9 @@ namespace Xamarin.Android.Prepare
 
 		public static partial class Urls
 		{
+			// Keep the trailing slash here - OS-specific code assumes it's there.
+			public const string Corretto_BaseUri = "https://d3pxv6yz143wms.cloudfront.net/";
+
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
 			/// </summary>
@@ -110,7 +113,6 @@ namespace Xamarin.Android.Prepare
 			///   The maximum JDK version we support. Note: this will probably go away with Corretto
 			/// </summary>
 			public const int MaxJDKVersion = 8;
-			public static readonly Version CorrettoVersion = Version.Parse ("8.212.04.2");
 
 			/// <summary>
 			///   Prefix for all the log files created by the bootstrapper.
