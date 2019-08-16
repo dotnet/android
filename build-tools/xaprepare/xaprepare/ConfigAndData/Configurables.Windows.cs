@@ -5,12 +5,15 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
+		const string CorrettoDistVersion = "8.222.10.3";
+		const string CorrettoUrlPathVersion = "8.222.10.1";
+
 		partial class Urls
 		{
 			public static Uri Corretto => GetWindowsCorrettoUrl ();
 
-			public static readonly Uri Corretto64 = new Uri ("https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-windows-x64-jdk.zip");
-			public static readonly Uri Corretto32 = new Uri ("https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-windows-x86-jdk.zip");
+			public static readonly Uri Corretto64 = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-windows-x64-jdk.zip");
+			public static readonly Uri Corretto32 = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-windows-x86-jdk.zip");
 
 			/// <summary>
 			///   Base URL for the Ant tool download. Used in <see cref ="AndroidToolchain"/>
@@ -29,6 +32,7 @@ namespace Xamarin.Android.Prepare
 		partial class Defaults
 		{
 			public const string NativeLibraryExtension = ".dll";
+			public static readonly Version CorrettoVersion = Version.Parse (CorrettoDistVersion);
 		}
 
 		partial class Paths
