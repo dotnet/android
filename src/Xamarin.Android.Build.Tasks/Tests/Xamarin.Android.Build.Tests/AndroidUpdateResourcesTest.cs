@@ -1127,7 +1127,7 @@ namespace Lib1 {
 		[NonParallelizable]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
-			int maxBuildTimeMs = TestEnvironment.IsRunningOnHostedAzureAgent ? 15000 : 10000;
+			int maxBuildTimeMs = 10000;
 			var path = Path.Combine ("temp", "BuildAppWithMRPAL");
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -1169,9 +1169,12 @@ namespace Lib1 {
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
-				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				libBuilder.AutomaticNuGetRestore = false;
+				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
 				libBuilder.ThrowOnBuildFailure = false;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.AutomaticNuGetRestore = false;
+					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
 					Assert.IsTrue (libBuilder.DesignTimeBuild (libProj), "Library project should have built");
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
