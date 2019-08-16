@@ -94,7 +94,7 @@ stages:
     variables:
     - group: Xamarin Notarization
     - name: JAVA_HOME
-      value: '/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/'
+      value: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
@@ -117,14 +117,6 @@ stages:
       condition: eq(variables['XA.Commercial.Build'], 'true')
       env:
         GH_AUTH_SECRET: $(Github.Token)
-
-    - task: provisionator@2
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-      inputs:
-        provisionator_uri: $(provisionator-uri)
-        github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/external/monodroid/build-tools/provisionator/profile.csx
-        provisioning_extra_args: -vv
 
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
       displayName: make jenkins

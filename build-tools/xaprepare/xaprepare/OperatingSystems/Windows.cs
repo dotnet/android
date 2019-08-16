@@ -87,15 +87,8 @@ namespace Xamarin.Android.Prepare
 
 		protected override bool InitOS ()
 		{
+			base.InitOS ();
 			Log.Todo ("gather dependencies here");
-
-			JavaHome = Context.Instance.Properties.GetValue ("JavaSdkDirectory")?.Trim ();
-			if (String.IsNullOrEmpty (JavaHome))
-				JavaHome  = Path.Combine (HomeDirectory, "android-toolchain", "jdk");
-
-			JavaCPath = Path.Combine (JavaHome, "bin", "javac.exe");
-			JavaPath  = Path.Combine (JavaHome, "bin", "java.exe");
-			JarPath   = Path.Combine (JavaHome, "bin", "jar.exe");
 
 			// This is required by Android SDK which uses a utility to locate Java on Windows
 			// ($SDK_ROOT/tools/lib/find_java.bat) and that utility, in turn, looks at JAVA_HOME
