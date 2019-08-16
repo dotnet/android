@@ -1,8 +1,10 @@
-﻿using NUnit.Framework;
+using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Linq;
 using System.Xml.Linq;
+using NUnit.Framework;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -171,6 +173,15 @@ namespace UnnamedProject
 					KnownPackages.SupportV7AppCompat_25_4_0_1,
 				},
 			};
+			string jar = "gson-2.7.jar";
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", jar) {
+				WebContent = $"http://central.maven.org/maven2/com/google/code/gson/gson/2.7/{jar}"
+			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAarLibrary ("android-crop-1.0.1.aar") {
+				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+			});
+			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
+			int libraryProjectImportsJars = proj.Packages.Count + 1;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
@@ -180,29 +191,54 @@ namespace UnnamedProject
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
-				var expected = File.ReadAllText (resourcepathscache);
-				StringAssert.DoesNotContain ("<Jars/>", expected);
+				var expected = XDocument.Load (resourcepathscache);
+				Assert.AreEqual (libraryProjectImportsJars, expected.Root.Element ("Jars").Elements ("Jar").Count ());
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 2");
+				AssertJarInBuildOutput (b, "ExtraJarLocation", jar);
 
 				// GetExtraLibraryLocationsForDesigner after SetupDependenciesForDesigner
 				var setup = "SetupDependenciesForDesigner";
 				Assert.IsTrue (b.RunTarget (proj, setup, parameters: DesignerParameters),  $"build should have succeeded for target `{setup}`");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 3");
+				AssertJarInBuildOutput (b, "ExtraJarLocation", jar);
 				FileAssert.Exists (resourcepathscache);
-				var actual = File.ReadAllText (resourcepathscache);
-				StringAssert.DoesNotContain ("<Jars/>", actual);
-				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
+				var actual = XDocument.Load (resourcepathscache);
+				Assert.AreEqual (libraryProjectImportsJars, actual.Root.Element ("Jars").Elements ("Jar").Count ());
+				Assert.AreEqual (expected.ToString (), actual.ToString (), "libraryprojectimports.cache should not change!");
 
 				// GetExtraLibraryLocationsForDesigner after Build
 				Assert.IsTrue (b.Build (proj), "build should have succeeded");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 4");
+				AssertJarInBuildOutput (b, "ExtraJarLocation", jar);
 				FileAssert.Exists (resourcepathscache);
-				actual = File.ReadAllText (resourcepathscache);
-				StringAssert.DoesNotContain ("<Jars/>", actual);
-				Assert.AreEqual (expected, actual, "libraryprojectimports.cache should not change!");
+				actual = XDocument.Load (resourcepathscache);
+				Assert.AreEqual (libraryProjectImportsJars, actual.Root.Element ("Jars").Elements ("Jar").Count ());
+				Assert.AreEqual (expected.ToString (), actual.ToString (), "libraryprojectimports.cache should not change!");
 			}
+		}
+
+		void AssertJarInBuildOutput (ProjectBuilder builder, string itemGroup, string jar)
+		{
+			bool added = false, inItemGroup = false;
+			foreach (var line in builder.LastBuildOutput) {
+				if (line.Contains ("Added Item(s)")) {
+					added = true;
+				} else if (added && line.Contains (itemGroup)) {
+					inItemGroup = true;
+				} else if (added && inItemGroup) {
+					var jarPath = line.Trim ();
+					if (jarPath.EndsWith (".jar", StringComparison.OrdinalIgnoreCase) && Path.GetFileName (jarPath) == jar) {
+						Assert.IsTrue (Path.IsPathRooted (jarPath), $"{jarPath} should be a full path!");
+						return;
+					}
+				} else {
+					added = false;
+					inItemGroup = false;
+				}
+			}
+			Assert.Fail ($"Did not find {jar} in {itemGroup}!");
 		}
 
 		[Test]
