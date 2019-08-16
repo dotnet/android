@@ -621,7 +621,7 @@ namespace Java.Interop
 					Expression.IfThenElse (
 						test:       Expression.Equal (Expression.Constant (null), sourceValue),
 						ifTrue:     Expression.Assign (r, Expression.New (typeof (JniObjectReference))),
-						ifFalse:    Expression.Assign (r, Expression.Property (sourceValue, "PeerReference"))));
+						ifFalse:    Expression.Assign (r, Expression.Property (Expression.Convert (sourceValue, typeof (IJavaPeerable)), "PeerReference"))));
 
 			return r;
 		}

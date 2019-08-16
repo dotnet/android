@@ -107,6 +107,11 @@ namespace Java.InteropTests
 		}
 	}
 
+	public interface MyInterface : IJavaPeerable
+	{
+		void MyMethod ();
+	}
+
 	public class MyColorValueMarshaler : JniValueMarshaler<MyColor> {
 
 		public override Type MarshalType {

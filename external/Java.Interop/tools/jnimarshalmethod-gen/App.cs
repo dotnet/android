@@ -330,7 +330,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 						continue;
 				}
 
-				if (type.IsGenericType || type.IsGenericTypeDefinition)
+				if (type.IsInterface || type.IsGenericType || type.IsGenericTypeDefinition)
 					continue;
 
 				var td = FindType (type);

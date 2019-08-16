@@ -465,7 +465,7 @@ namespace Java.InteropTests
 		}
 		else
 		{
-			return __mret_ref = __mret.PeerReference;
+			return __mret_ref = (IJavaPeerable)__mret.PeerReference;
 		}
 		__mret_rtn = References.NewReturnToJniRef(__mret_ref);
 		return __mret_rtn;
