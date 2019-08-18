@@ -65,17 +65,18 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return "deprecated";
 		}
 
-		XAttribute[] GetEnclosingMethod ()
+		IEnumerable<XAttribute> GetEnclosingMethod ()
 		{
 			string declaringClass, declaringMethod, declaringDescriptor;
 			if (!classFile.TryGetEnclosingMethodInfo (out declaringClass, out declaringMethod, out declaringDescriptor)) {
-				return null;
+				yield break;
 			}
-			return new []{
-				new XAttribute ("enclosing-method-jni-type",    "L" + declaringClass + ";"),
-				new XAttribute ("enclosing-method-name",        declaringMethod),
-				new XAttribute ("enclosing-method-signature",   declaringDescriptor),
-			};
+			if (declaringClass != null)
+				yield return new XAttribute ("enclosing-method-jni-type",    "L" + declaringClass + ";");
+			if (declaringMethod != null)
+				yield return new XAttribute ("enclosing-method-name",        declaringMethod);
+			if (declaringDescriptor != null)
+				yield return new XAttribute ("enclosing-method-signature",   declaringDescriptor);
 		}
 
 		XAttribute[] GetExtends ()

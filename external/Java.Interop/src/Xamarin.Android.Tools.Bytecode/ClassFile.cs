@@ -115,8 +115,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 
 			declaringClass          = enclosingMethod.Class.Name.Value;
-			declaringMethod         = enclosingMethod.Method.Name.Value;
-			declaringDescriptor     = enclosingMethod.Method.Descriptor.Value;
+			declaringMethod         = enclosingMethod.Method?.Name.Value;
+			declaringDescriptor     = enclosingMethod.Method?.Descriptor.Value;
 			return true;
 		}
 
