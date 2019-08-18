@@ -35,7 +35,6 @@
   <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      BuildJnienvGen;
       BuildJniEnvironment_g_cs;
       BuildInteropJar;
       $(BuildDependsOn)
@@ -61,5 +60,10 @@
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
     <None Include="Documentation\Java.Interop\JniEnvironment.References.xml" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
+      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
+      <Name>jnienv-gen</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 </Project>

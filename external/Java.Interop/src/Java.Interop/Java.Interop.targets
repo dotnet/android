@@ -14,16 +14,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Target Name="BuildJnienvGen"
-      Inputs="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
-      Outputs="$(JNIEnvGenPath)\jnienv-gen.exe">
-    <MSBuild
-        Projects="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
-    />
-  </Target>
   <Target Name="BuildJniEnvironment_g_cs"
       BeforeTargets="BeforeCompile"
-      DependsOnTargets="BuildJnienvGen"
       Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
       Outputs="Java.Interop\JniEnvironment.g.cs;$(IntermediateOutputPath)\jni.c">
     <MakeDir Directories="$(IntermediateOutputPath)" />
