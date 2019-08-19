@@ -76,7 +76,6 @@
   <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
-      BuildJnienvGen;
       BuildJniEnvironment_g_cs;
       BuildInteropJar;
       $(BuildDependsOn)
