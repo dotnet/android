@@ -49,9 +49,24 @@ namespace Xamarin.Android.Build
 		public string MSBuildBin { get; private set; }
 
 		/// <summary>
+		/// Temporary directory used for MSBUILD_EXE_PATH
+		/// </summary>
+		public string MSBuildTempPath { get; private set; }
+
+		/// <summary>
 		/// Temporary file used for MSBUILD_EXE_PATH
 		/// </summary>
 		public string MSBuildExeTempPath { get; private set; }
+
+		/// <summary>
+		/// Config file needed for Microsoft.Build.NuGetSdkResolver.dll to work
+		/// </summary>
+		public string SdkResolverConfigPath { get; private set; }
+
+		/// <summary>
+		/// Full path to the system Microsoft.Build.NuGetSdkResolver.dll
+		/// </summary>
+		public string NuGetSdkResolverPath { get; private set; }
 
 		/// <summary>
 		/// Path to MSBuild's App.config file
@@ -140,7 +155,9 @@ namespace Xamarin.Android.Build
 				}
 				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
 				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
-				NuGetRestoreTargets      = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet", "NuGet.targets");
+				var nugetDirectory       = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet");
+				NuGetRestoreTargets      = Path.Combine (nugetDirectory, "NuGet.targets");
+				NuGetSdkResolverPath     = Path.Combine (nugetDirectory, "Microsoft.Build.NuGetSdkResolver.dll");
 			} else {
 				string[] vsVersions       = new [] {"Current", "15.0"};
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
@@ -180,15 +197,19 @@ namespace Xamarin.Android.Build
 					NuGetProps   = Path.Combine (nuget, "Microsoft.NuGet.props");
 				}
 				NuGetRestoreTargets = Path.Combine (MSBuildBin, "NuGet.targets");
+				NuGetSdkResolverPath = Path.Combine (MSBuildBin, "Microsoft.Build.NuGetSdkResolver.dll");
 				if (!File.Exists (NuGetRestoreTargets) && !string.IsNullOrEmpty (DotNetSdkPath)) {
 					NuGetRestoreTargets = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
+					NuGetSdkResolverPath = Path.Combine (DotNetSdkPath, "..", "Microsoft.Build.NuGetSdkResolver.dll");
 				}
 			}
 
 			FrameworksDirectory       = Path.Combine (prefix, "xbuild-frameworks");
 			MSBuildExtensionsPath     = Path.Combine (prefix, "xbuild");
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
-			MSBuildExeTempPath        = Path.GetTempFileName ();
+			MSBuildTempPath           = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			MSBuildExeTempPath        = Path.Combine (MSBuildTempPath, Path.GetRandomFileName ());
+			SdkResolverConfigPath     = Path.Combine (MSBuildTempPath, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver", "Microsoft.Build.NuGetSdkResolver.xml");
 			XABuildConfig             = MSBuildExeTempPath + ".config";
 
 			var roslyn = Path.Combine (MSBuildBin, "Roslyn");
