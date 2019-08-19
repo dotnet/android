@@ -2056,7 +2056,7 @@ because xbuild doesn't support framework reference assemblies.
 
     <PropertyGroup>
       <_MainAssembly Condition=" '$(AndroidGenerateJniMarshalMethods)' != 'True' ">$(TargetPath)</_MainAssembly>
-      <_MainAssembly Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">$(_JniMarshalMethodsInputDir)$(TargetFileName)</_MainAssembly>
+      <_MainAssembly Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">$(_JniMarshalMethodsOutputDir)$(TargetFileName)</_MainAssembly>
     </PropertyGroup>
     <ItemGroup Condition=" '$(AndroidGenerateJniMarshalMethods)' != 'True' ">
       <_AssembliesToLink Include="@(ResolvedAssemblies)" />
