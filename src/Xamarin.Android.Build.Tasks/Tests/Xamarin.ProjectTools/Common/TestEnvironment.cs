@@ -56,9 +56,9 @@ namespace Xamarin.ProjectTools
 		public static bool IsRunningOnHostedAzureAgent {
 			get {
 				string agentNameValue = Environment.GetEnvironmentVariable ("AGENT_NAME");
-				bool hasHostedAgentName = !string.IsNullOrEmpty (agentNameValue) && agentNameValue.ToUpper ().Contains ("AZURE PIPELINES");
+				bool hasHostedAgentName = !string.IsNullOrEmpty (agentNameValue) && agentNameValue.ToUpperInvariant ().Contains ("AZURE PIPELINES");
 				string serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
-				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpper ().Contains ("HOSTED");
+				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpperInvariant ().Contains ("HOSTED");
 				return hasHostedAgentName || isHostedServerType;
 			}
 		}
