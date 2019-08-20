@@ -153,17 +153,17 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		{
 			CreateJavaVM (jvmDllPath);
 
-			var readWriteParameters    = new ReaderParameters {
+			var readerParameters = new ReaderParameters {
 				AssemblyResolver   = resolver,
 				InMemory           = true,
 				ReadSymbols        = true,
-				ReadWrite          = true,
+				ReadWrite          = string.IsNullOrEmpty (outDirectory),
 			};
-			var readWriteParametersNoSymbols    = new ReaderParameters {
+			var readerParametersNoSymbols = new ReaderParameters {
 				AssemblyResolver   = resolver,
 				InMemory           = true,
 				ReadSymbols        = false,
-				ReadWrite          = true,
+				ReadWrite          = string.IsNullOrEmpty (outDirectory),
 			};
 
 			foreach (var r in references) {
@@ -185,12 +185,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
 				AssemblyDefinition ad;
 				try {
-					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParameters);
+					ad = AssemblyDefinition.ReadAssembly (assembly, readerParameters);
 					resolver.AddToCache (ad);
 				} catch (Exception) {
 					if (Verbose)
 						Warning ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
-					ad = AssemblyDefinition.ReadAssembly (assembly, readWriteParametersNoSymbols);
+					ad = AssemblyDefinition.ReadAssembly (assembly, readerParametersNoSymbols);
 					resolver.AddToCache (ad);
 				}
 
