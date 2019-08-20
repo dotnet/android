@@ -2552,6 +2552,7 @@ because xbuild doesn't support framework reference assemblies.
   <Javac
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
     TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
     StubSourceDirectory="$(IntermediateOutputPath)android\src"
     JavaSourceFiles="@(AndroidJavaSource)"
