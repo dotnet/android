@@ -1684,20 +1684,27 @@ namespace App1
 
 #pragma warning disable 414
 		static object [] AndroidStoreKeyTests = new object [] {
-						// isRelease, AndroidKeyStore, ExpectedResult
-			new object[] { false    , "False"        , "debug.keystore"},
-			new object[] { true     , "False"        , "debug.keystore"},
-			new object[] { false    , "True"         , "-keystore test.keystore"},
-			new object[] { true     , "True"         , "-keystore test.keystore"},
-			new object[] { false    , ""             , "debug.keystore"},
-			new object[] { true     , ""             , "debug.keystore"},
+				// isRelease, AndroidKeyStore, password, ExpectedResult
+			new object[] { false    , "False"        , "android",      "debug.keystore"},
+			new object[] { true     , "False"        , "android",      "debug.keystore"},
+			new object[] { false    , "True"         , "android",      "-keystore test.keystore"},
+			new object[] { true     , "True"         , "android",      "-keystore test.keystore"},
+			new object[] { false    , ""             , "android",      "debug.keystore"},
+			new object[] { true     , ""             , "android",      "debug.keystore"},
+			new object[] { false    , "True"         , "env:android",  "-keystore test.keystore"},
+			new object[] { true     , "True"         , "env:android",  "-keystore test.keystore"},
+			new object[] { false    , "True"         , "file:android", "-keystore test.keystore"},
+			new object[] { true     , "True"         , "file:android", "-keystore test.keystore"},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof (AndroidStoreKeyTests))]
-		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string expected)
+		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string password, string expected)
 		{
+			string path = Path.Combine ("temp", TestName);
+			string storepassfile = Path.Combine (Root, path, "storepass.txt");
+			string keypassfile = Path.Combine (Root, path, "keypass.txt");
 			byte [] data;
 			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
 				data = new byte [stream.Length];
@@ -1706,17 +1713,35 @@ namespace App1
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease
 			};
+			Dictionary<string, string> envVar = new Dictionary<string, string> ();
+			if (password.StartsWith ("env:", StringComparison.Ordinal)) {
+				envVar.Add ("_MYPASSWORD", password.Replace ("env:", string.Empty));
+				proj.SetProperty ("AndroidSigningStorePass", "env:_MYPASSWORD");
+				proj.SetProperty ("AndroidSigningKeyPass", "env:_MYPASSWORD");
+			} else if (password.StartsWith ("file:", StringComparison.Ordinal)) {
+				proj.SetProperty ("AndroidSigningStorePass", $"file:{storepassfile}");
+				proj.SetProperty ("AndroidSigningKeyPass", $"file:{keypassfile}");
+			} else {
+				proj.SetProperty ("AndroidSigningStorePass", password);
+				proj.SetProperty ("AndroidSigningKeyPass", password);
+			}
 			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
 			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
-			proj.SetProperty ("AndroidSigningStorePass", "android");
 			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
-			proj.SetProperty ("AndroidSigningKeyPass", "android");
 			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
 				BinaryContent = () => data
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "storepass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "keypass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+			using (var b = CreateApkBuilder (path, false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
 				StringAssertEx.Contains (expected, b.LastBuildOutput,
 					"The Wrong keystore was used to sign the apk");
 			}
