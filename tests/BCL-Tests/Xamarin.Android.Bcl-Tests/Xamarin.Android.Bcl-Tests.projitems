@@ -23,6 +23,7 @@
       <Package>Xamarin.Android.Bcl_Tests</Package>
       <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.Bcl_Tests.nunit.xml</ResultsPath>
       <LogcatFilenameDistincion>.nunit</LogcatFilenameDistincion>
+      <TimeoutInMS>3600000</TimeoutInMS>
     </TestApkInstrumentation>
 
     <TestApkPermission Include="READ_PHONE_STATE">

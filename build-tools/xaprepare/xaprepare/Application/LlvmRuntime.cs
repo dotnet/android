@@ -12,7 +12,7 @@ namespace Xamarin.Android.Prepare
 		{}
 
 		public override void Init (Context context)
-		{			
+		{
 			if (Context.IsLlvmWindowsAbi (Name)) {
 				ExeSuffix = Configurables.Defaults.WindowsExecutableSuffix;
 				InstallPath = Configurables.Paths.InstallMSBuildDir;

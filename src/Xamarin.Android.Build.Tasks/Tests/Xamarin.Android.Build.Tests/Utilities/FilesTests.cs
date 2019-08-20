@@ -7,7 +7,7 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	public class FilesTests
+	public class FilesTests : BaseTest
 	{
 		static readonly Encoding encoding = Encoding.UTF8;
 		string tempDir;
@@ -24,8 +24,10 @@ namespace Xamarin.Android.Build.Tests
 		public void TearDown ()
 		{
 			stream.Dispose ();
-			if (Directory.Exists (tempDir))
-				Directory.Delete (tempDir, recursive: true);
+
+			var dir = Files.ToLongPath (tempDir);
+			if (Directory.Exists (dir))
+				Directory.Delete (dir, recursive: true);
 		}
 
 		void AssertFile (string path, string contents)
@@ -50,7 +52,11 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine (tempDir, fileName);
 			if (!string.IsNullOrEmpty (contents)) {
 				Directory.CreateDirectory (Path.GetDirectoryName (path));
-				File.WriteAllText (path, contents);
+				if (IsWindows && path.Length >= Files.MaxPath) {
+					File.WriteAllText (Files.ToLongPath (path), contents);
+				} else {
+					File.WriteAllText (path, contents);
+				}
 			}
 			return path;
 		}
@@ -71,6 +77,16 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ();
+			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void CopyIfChanged_LongPath ()
+		{
+			var src = NewFile (contents: "foo");
+			var dest = NewFile (contents: "bar", fileName: "bar".PadRight (250, 'N'));
+			dest = Files.ToLongPath (dest);
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
 			FileAssert.AreEqual (src, dest);
 		}
@@ -124,6 +140,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CopyIfStringChanged_LongPath ()
+		{
+			var dest = NewFile (fileName: "bar".PadRight (250, 'N'));
+			dest = Files.ToLongPath (dest);
+			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
+			FileAssert.Exists (dest);
+		}
+
+		[Test]
 		public void CopyIfStringChanged_Changes ()
 		{
 			var dest = NewFile ("bar");
@@ -159,6 +184,17 @@ namespace Xamarin.Android.Build.Tests
 			using (var src = NewStream ("foo")) {
 				var dest = NewFile ("foo");
 				Assert.IsFalse (Files.CopyIfStreamChanged (src, dest), "No change should have occurred");
+				FileAssert.Exists (dest);
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_LongPath ()
+		{
+			using (var src = NewStream ("foo")) {
+				var dest = NewFile (fileName: "bar".PadRight (250, 'N'));
+				dest = Files.ToLongPath (dest);
+				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
 				FileAssert.Exists (dest);
 			}
 		}

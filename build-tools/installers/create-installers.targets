@@ -2,13 +2,14 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
-  <Import Project="..\..\src\Mono.Android\Mono.Android.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <RootBuildDir>$(XamarinAndroidSourcePath)\bin\$(Configuration)\</RootBuildDir>
     <FrameworkSrcDir>$(RootBuildDir)\lib\xamarin.android\xbuild-frameworks\MonoAndroid</FrameworkSrcDir>
     <MSBuildSrcDir>$(RootBuildDir)\lib\xamarin.android\xbuild\Xamarin\Android</MSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
+    <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
     <FirstInstallerFrameworkVersion Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">$(AndroidFirstFrameworkVersion)</FirstInstallerFrameworkVersion>
     <FirstInstallerFrameworkVersion Condition="'$(FirstInstallerFrameworkVersion)' == ''">$(AndroidLatestStableFrameworkVersion)</FirstInstallerFrameworkVersion>
     <BclFrameworkVersion>v1.0</BclFrameworkVersion>
@@ -155,34 +156,47 @@
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmonosgen-2.0.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libxamarin-app.dll" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <_MSBuildFilesUnixSign>
+      <CodeSign>True</CodeSign>
+    </_MSBuildFilesUnixSign>
+    <_MSBuildFilesUnixSignAndHarden>
+      <CodeSign>True</CodeSign>
+      <HardenRuntime>True</HardenRuntime>
+      <EntitlementsPath>$(DefaultRuntimeEntitlementsPath)</EntitlementsPath>
+    </_MSBuildFilesUnixSignAndHarden>
+    <_MSBuildFilesUnixSwab>
+      <SwabFile>True</SwabFile>
+    </_MSBuildFilesUnixSwab>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-as" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-ld" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-strip" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-as" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-ld" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-strip" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-as" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-ld" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-strip" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
+    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-aot.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-log.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\libzip.5.0.$(LibExtension)" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-aot.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-log.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.5.0.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->
@@ -193,12 +207,12 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\cross-x86_64.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\llc.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\opt.exe" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\cross-arm" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\cross-arm64" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\cross-x86" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\cross-x86_64" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\llc" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\opt" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\cross-arm" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\cross-arm64" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\cross-x86" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\cross-x86_64" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\llc" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\opt" />
   </ItemGroup>
   <ItemGroup>
     <XATargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\..\Xamarin.Android.Sdk.props" />
@@ -298,7 +312,7 @@
       <MSBuildItemsWin Include="@(_DesignerFilesWin)">
         <RelativePath>bcl\%(RecursiveDir)\%(Filename)%(Extension)</RelativePath>
       </MSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">

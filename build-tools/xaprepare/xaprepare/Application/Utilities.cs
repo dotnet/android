@@ -13,6 +13,7 @@ namespace Xamarin.Android.Prepare
 	static partial class Utilities
 	{
 		static readonly TimeSpan IOExceptionRetryInitialDelay = TimeSpan.FromMilliseconds (250);
+		static readonly TimeSpan WebRequestTimeout = TimeSpan.FromMinutes (60);
 		static readonly int IOExceptionRetries = 5;
 
 		const string MSBuildPropertyListSeparator = ":";
@@ -442,6 +443,7 @@ namespace Xamarin.Android.Prepare
 		public static async Task<(bool success, ulong size, HttpStatusCode status)> GetDownloadSizeWithStatus (Uri url)
 		{
 			using (var httpClient = new HttpClient ()) {
+				httpClient.Timeout = WebRequestTimeout;
 				var req = new HttpRequestMessage (HttpMethod.Head, url);
 				req.Headers.ConnectionClose = true;
 
@@ -463,6 +465,7 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (status));
 
 			using (var httpClient = new HttpClient ()) {
+				httpClient.Timeout = WebRequestTimeout;
 				HttpResponseMessage resp;
 				try {
 					Log.DebugLine ("Calling GetAsync");

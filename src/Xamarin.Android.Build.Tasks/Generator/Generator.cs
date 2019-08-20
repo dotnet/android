@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -52,6 +53,13 @@ namespace Xamarin.Android.Tasks
 								message: xae.MessageWithoutCode,
 								messageArgs: new object [0]
 						);
+					} catch (DirectoryNotFoundException ex) {
+						ok = false;
+						if (OS.IsWindows) {
+							Diagnostic.Error (5301, "Failed to create JavaTypeInfo for class: {0} due to MAX_PATH: {1}", t.FullName, ex);
+						} else {
+							Diagnostic.Error (4209, "Failed to create JavaTypeInfo for class: {0} due to {1}", t.FullName, ex);
+						}
 					} catch (Exception ex) {
 						ok = false;
 						Diagnostic.Error (4209, "Failed to create JavaTypeInfo for class: {0} due to {1}", t.FullName, ex);
