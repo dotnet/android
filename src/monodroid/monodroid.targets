@@ -25,12 +25,13 @@
   </Target>
 
   <Target Name="RunStaticAnalysis"
-          Condition=" '$(HostOS)' != 'Windows' "
-          Inputs="jni\*.cc;jni\**\*.c"
-          Outputs="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt')">
+      Condition=" '$(HostOS)' != 'Windows' "
+      Inputs="jni\*.cc;jni\**\*.c"
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt')">
     <Exec
         Command="clang-check -analyze -p=$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug jni\*.cc jni\**\*.c > @(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt 2>&amp;1')"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
   </Target>
 
   <Target Name="_ConfigureHostRuntimes"
