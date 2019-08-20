@@ -15,6 +15,7 @@
 #include "monodroid-glue.h"
 #include "debug.h"
 #include "util.h"
+#include "globals.h"
 
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
 	va_start ((_args_), (_format_));									                        \
@@ -132,7 +133,7 @@ init_logging_categories ()
 	if (monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, &value) == 0)
 		return;
 
-	args = monodroid_strsplit (value, ",", -1);
+	args = utils.monodroid_strsplit (value, ",", 0);
 	free (value);
 	value = NULL;
 

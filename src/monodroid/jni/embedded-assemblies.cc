@@ -1,3 +1,5 @@
+#include <host-config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,7 +67,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	const char *culture = monoFunctions.assembly_name_get_culture (aname);
 	const char *asmname = monoFunctions.assembly_name_get_name (aname);
 
-	int name_len = culture == nullptr ? 0 : strlen (culture) + 1;
+	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
 	name_len += sizeof (".exe");
 	name_len += strlen (asmname);
 	char *name = new char [name_len + 1];
@@ -83,7 +85,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 		MonoBundledAssembly **p;
 
 		*ename = '\0';
-		strcat (ename, suffixes [si]);
+		strcat (name, suffixes [si]);
 
 		log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
 
@@ -148,7 +150,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java)
 #if defined (DEBUG) || !defined (ANDROID)
 	for (TypeMappingInfo *info = java_to_managed_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, java); */
-		const char *e = reinterpret_cast<const char*> (bsearch (java, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
+		const char *e = reinterpret_cast<const char*> (bsearch (java, info->mapping, static_cast<size_t>(info->num_entries), static_cast<size_t>(info->entry_length), TypeMappingInfo_compare_key));
 		if (e == nullptr)
 			continue;
 		return e + info->value_offset;
@@ -163,7 +165,7 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed)
 #if defined (DEBUG) || !defined (ANDROID)
 	for (TypeMappingInfo *info = managed_to_java_maps; info != nullptr; info = info->next) {
 		/* log_warn (LOG_DEFAULT, "# jonp: checking file: %s!%s for type '%s'", info->source_apk, info->source_entry, managed); */
-		const char *e = reinterpret_cast <const char*> (bsearch (managed, info->mapping, info->num_entries, info->entry_length, TypeMappingInfo_compare_key));
+		const char *e = reinterpret_cast <const char*> (bsearch (managed, info->mapping, static_cast<size_t>(info->num_entries), static_cast<size_t>(info->entry_length), TypeMappingInfo_compare_key));
 		if (e == nullptr)
 			continue;
 		return e + info->value_offset;
@@ -223,6 +225,7 @@ EmbeddedAssemblies::add_type_mapping (TypeMappingInfo **info, const char *source
 
 	extract_int (&data, source_apk, source_entry, "version",   &version);
 	if (version != 1) {
+		delete p;
 		log_warn (LOG_DEFAULT, "Unsupported version '%i' within type mapping file '%s!%s'. Ignoring...", version, source_apk, source_entry);
 		return false;
 	}
@@ -238,7 +241,7 @@ EmbeddedAssemblies::add_type_mapping (TypeMappingInfo **info, const char *source
 			(p->value_offset >= p->entry_length) ||
 			(p->mapping == nullptr)) {
 		log_warn (LOG_DEFAULT, "Could not read type mapping file '%s!%s'. Ignoring...", source_apk, source_entry);
-		free (p);
+		delete p;
 		return false;
 	}
 
@@ -258,26 +261,26 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uLong offset, uLong size, const ch
 {
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
-	
-	int pageSize          = monodroid_getpagesize();
-	uLong offsetFromPage  = offset % pageSize;
+
+	size_t pageSize       = static_cast<size_t>(monodroid_getpagesize());
+	uLong offsetFromPage  = static_cast<uLong>(offset % pageSize);
 	uLong offsetPage      = offset - offsetFromPage;
 	uLong offsetSize      = size + offsetFromPage;
-	
-	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, offsetPage);
+
+	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 	if (mmap_info.area == MAP_FAILED) {
 		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
 	}
-	
+
 	mmap_info.size  = offsetSize;
 	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
 	file_info.size  = size;
-	
-	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s", 
+
+	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s",
 			mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
 			file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
-	
+
 	return file_info;
 }
 
@@ -293,7 +296,7 @@ uLong
 EmbeddedAssemblies::md_mmap_read_file (void *opaque, UNUSED_ARG void *stream, void *buf, uLong size)
 {
 	int fd = *reinterpret_cast<int*>(opaque);
-	return read (fd, buf, size);
+	return static_cast<uLong>(read (fd, buf, size));
 }
 
 long
@@ -304,9 +307,10 @@ EmbeddedAssemblies::md_mmap_tell_file (void *opaque, UNUSED_ARG void *stream)
 }
 
 long
-EmbeddedAssemblies::md_mmap_seek_file (void *opaque, UNUSED_ARG void *stream, uLong offset, int origin)
+EmbeddedAssemblies::md_mmap_seek_file (void *opaque, UNUSED_ARG void *stream, uLong __offset, int origin)
 {
 	int fd = *reinterpret_cast<int*>(opaque);
+	off_t offset = static_cast<off_t>(__offset);
 
 	switch (origin) {
 	case ZLIB_FILEFUNC_SEEK_END:
@@ -347,9 +351,9 @@ EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name,
 		const char *eb_ext  = strrchr (entry_basename, '.');
 		if (eb_ext == nullptr)
 			return false;
-		int basename_len    = eb_ext - entry_basename;
+		off_t basename_len    = static_cast<off_t>(eb_ext - entry_basename);
 		assert (basename_len > 0 && "basename must have a length!");
-		if (strncmp (assembly->name, entry_basename, basename_len) != 0)
+		if (strncmp (assembly->name, entry_basename, static_cast<size_t>(basename_len)) != 0)
 			return false;
 	}
 
@@ -432,7 +436,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				if (register_debug_symbols_for_assembly (cur_entry_name, (bundled_assemblies) [bundled_assemblies_count - 1],
 						(const mono_byte*)map_info.area,
-						info.uncompressed_size))
+				        static_cast<int>(info.uncompressed_size)))
 					continue;
 			}
 
@@ -440,7 +444,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 				char *assembly_name = strdup (basename (cur_entry_name));
 				// Remove '.config' suffix
 				*strrchr (assembly_name, '.') = '\0';
-				
+
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
 				monoFunctions.register_config_for_assembly (assembly_name, (const char*)map_info.area);
 
@@ -463,7 +467,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 
 			// MonoBundledAssembly::size is const?!
 			psize = (unsigned int*) &cur->size;
-			*psize = info.uncompressed_size;
+			*psize = static_cast<unsigned int>(info.uncompressed_size);
 
 			if (utils.should_log (LOG_ASSEMBLY)) {
 				const char *p = (const char*) cur->data;
@@ -482,7 +486,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 		} while (unzGoToNextFile (file) == UNZ_OK);
 		unzClose (file);
 	}
-	
+
 	close(fd);
 
 	return true;
@@ -508,8 +512,8 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		return;
 	}
 
-	monodroid_dirent_t b, *e;
-	while (androidSystem.readdir (dir, &b, &e) == 0 && e) {
+	monodroid_dirent_t *e;
+	while ((e = androidSystem.readdir (dir)) != nullptr) {
 #if WINDOWS
 		char *file_name = utils.utf16_to_utf8 (e->d_name);
 #else   /* def WINDOWS */
@@ -518,7 +522,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		char *file_path = utils.path_combine (dir_path, file_name);
 		if (utils.monodroid_dirent_hasextension (e, ".mj") || utils.monodroid_dirent_hasextension (e, ".jm")) {
 			char *val = nullptr;
-			int len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
+			size_t len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
 			if (len > 0 && val != nullptr) {
 				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
 					if (!add_type_mapping (&managed_to_java_maps, file_path, override_typemap_entry_name, ((const char*)val)))
@@ -539,7 +543,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
 {
-	int prev  = bundled_assemblies_count;
+	size_t prev  = bundled_assemblies_count;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 

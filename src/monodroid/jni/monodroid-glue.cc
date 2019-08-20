@@ -84,7 +84,7 @@ static int sdb_fd;
 static int profiler_configured;
 static int profiler_fd;
 static char *profiler_description;
-#if DEBUG
+#if DEBUG && !defined (WINDOWS)
 static int config_timedout;
 static struct timeval wait_tv;
 static struct timespec wait_ts;
@@ -232,7 +232,8 @@ setup_bundled_app (const char *dso_name)
 			return;
 		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path);
 		libapp = androidSystem.load_dso (bundle_path, dlopen_flags, TRUE);
-		free (bundle_path);
+		if (needs_free)
+			delete[] bundle_path;
 	}
 
 	if (libapp == nullptr) {
@@ -274,7 +275,7 @@ static constexpr bool is_running_on_desktop =
 MONO_API int
 _monodroid_max_gref_get (void)
 {
-	return androidSystem.get_max_gref_count ();
+	return static_cast<int>(androidSystem.get_max_gref_count ());
 }
 
 MONO_API int
@@ -383,7 +384,7 @@ log_jit_event (MonoMethod *method, const char *event_name)
 	char* name = monoFunctions.method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%lu::%lu\n", event_name, name, diff.sec, diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, diff.sec, diff.ms, diff.ns);
 
 	free (name);
 }
@@ -410,14 +411,13 @@ jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
 MonoAssembly*
 open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data)
 {
-	int fi, oi;
 	MonoAssembly *result = nullptr;
 	int found = 0;
 	const char *culture = reinterpret_cast<const char*> (monoFunctions.assembly_name_get_culture (aname));
 	const char *name    = reinterpret_cast<const char*> (monoFunctions.assembly_name_get_name (aname));
 	char *pname;
 
-	for (oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi)
+	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi)
 		if (androidSystem.get_override_dir (oi) != nullptr && utils.directory_exists (androidSystem.get_override_dir (oi)))
 			found = 1;
 	if (!found)
@@ -434,8 +434,8 @@ open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *use
 		"%s" MONODROID_PATH_SEPARATOR "%s.exe",
 	};
 
-	for (fi = 0; fi < sizeof (formats)/sizeof (formats [0]) && result == nullptr; ++fi) {
-		for (oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
+	for (size_t fi = 0; fi < sizeof (formats)/sizeof (formats [0]) && result == nullptr; ++fi) {
+		for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
 			char *fullpath;
 			if (androidSystem.get_override_dir (oi) == nullptr || !utils.directory_exists (androidSystem.get_override_dir (oi)))
 				continue;
@@ -481,7 +481,7 @@ should_register_file (const char *filename)
 }
 
 static void
-gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, int *out_user_assemblies_count)
+gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, size_t *out_user_assemblies_count)
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
@@ -493,10 +493,10 @@ gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool
 	}
 #endif
 
-	int prev_num_assemblies = 0;
-	for (int32_t i = runtimeApks.get_length () - 1; i >= 0; --i) {
+	size_t prev_num_assemblies = 0;
+	for (int64_t i = static_cast<int64_t>(runtimeApks.get_length () - 1); i >= 0; --i) {
 		size_t           cur_num_assemblies;
-		jstring_wrapper &apk_file = runtimeApks [i];
+		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
 
 		cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
 
@@ -558,7 +558,8 @@ int
 monodroid_debug_accept (int sock, struct sockaddr_in addr)
 {
 	char handshake_msg [128];
-	int res, accepted;
+	ssize_t res;
+	int accepted;
 
 	res = bind (sock, (struct sockaddr *) &addr, sizeof (addr));
 	if (res < 0)
@@ -631,13 +632,13 @@ parse_gdb_options (void)
 	delete[] val;
 }
 
-#if DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 typedef struct {
 	int debug;
 	int loglevel;
 	int64_t timeout_time;
 	char *host;
-	int sdb_port, out_port;
+	uint16_t sdb_port, out_port;
 	mono_bool server;
 } RuntimeOptions;
 
@@ -651,7 +652,7 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 
 	options->timeout_time = 0;
 
-	args = utils.monodroid_strsplit (runtime_args, ",", -1);
+	args = utils.monodroid_strsplit (runtime_args, ",", 0);
 
 	for (ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
@@ -667,10 +668,11 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 
 				arg += 6;
 				sep = strchr (arg, ':');
-				if (sep) {
-					host = new char [sep-arg+1];
-					memset (host, 0x00, sep-arg+1);
-					strncpy (host, arg, sep-arg);
+				if (sep != nullptr) {
+					size_t arg_len = static_cast<size_t>(sep - arg);
+					host = new char [arg_len + 1];
+					memset (host, 0x00, arg_len + 1);
+					strncpy (host, arg, arg_len);
 					arg = sep+1;
 
 					sdb_port = (int) strtol (arg, const_cast<char**> (&endp), 10);
@@ -697,9 +699,19 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 			if (!host)
 				host = utils.strdup_new ("10.0.2.2");
 
+			if (sdb_port < 0 || sdb_port > USHRT_MAX) {
+				log_error (LOG_DEFAULT, "Invalid SDB port value %d", sdb_port);
+				continue;
+			}
+
+			if (out_port > USHRT_MAX) {
+				log_error (LOG_DEFAULT, "Invalid output port value %d", out_port);
+				continue;
+			}
+
 			options->host = host;
-			options->sdb_port = sdb_port;
-			options->out_port = out_port;
+			options->sdb_port = static_cast<uint16_t>(sdb_port);
+			options->out_port = out_port == -1 ? 0 : static_cast<uint16_t>(out_port);
 		} else if (!strncmp (arg, "timeout=", 8)) {
 			char *endp;
 
@@ -716,7 +728,7 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 			char *endp;
 
 			arg += sizeof ("loglevel");
-			options->loglevel = strtoll (arg, &endp, 10);
+			options->loglevel = static_cast<int>(strtol (arg, &endp, 10));
 			if ((endp == arg) || (*endp != '\0'))
 				log_error (LOG_DEFAULT, "Invalid --loglevel argument.");
 		} else {
@@ -728,7 +740,7 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 	utils.monodroid_strfreev (args);
 	return 1;
 }
-#endif  // def DEBUG
+#endif  // def DEBUG && !WINDOWS
 
 static void
 set_debug_options (void)
@@ -779,11 +791,11 @@ enable_soft_breakpoints (void)
 		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	}
 	delete[] value;
-	return 1;
+	return ret;
 }
 #endif /* DEBUG */
 #else  /* !defined (ANDROID) */
-#ifdef DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 #ifndef enable_soft_breakpoints
 static int
 enable_soft_breakpoints (void)
@@ -797,13 +809,11 @@ enable_soft_breakpoints (void)
 static void
 mono_runtime_init (char *runtime_args)
 {
-#if DEBUG
-	RuntimeOptions options;
-	int64_t cur_time;
-#endif
 	char *prop_val;
 
 #if defined (DEBUG) && !defined (WINDOWS)
+	RuntimeOptions options;
+	int64_t cur_time;
 	memset(&options, 0, sizeof (options));
 
 	cur_time = time (nullptr);
@@ -919,7 +929,7 @@ mono_runtime_init (char *runtime_args)
 
 		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val);
 
-		args = utils.monodroid_strsplit (prop_val, " ", -1);
+		args = utils.monodroid_strsplit (prop_val, " ", 0);
 		argc = 0;
 		delete[] prop_val;
 
@@ -966,7 +976,7 @@ static MonoDomain*
 create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobject loader, bool is_root_domain)
 {
 	MonoDomain *domain;
-	int user_assemblies_count   = 0;;
+	size_t user_assemblies_count   = 0;;
 
 	gather_bundled_assemblies (env, runtimeApks, embeddedAssemblies.get_register_debug_symbols (), &user_assemblies_count);
 
@@ -1150,7 +1160,6 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobj
 	MonoImage *image;
 	MonoMethod *method;
 	jclass lrefLoaderClass;
-	int i;
 
 	struct JnienvInitializeArgs init    = {};
 	void *args [1];
@@ -1165,7 +1174,7 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobj
 	init.isRunningOnDesktop     = is_running_on_desktop;
 
 	// GC threshold is 90% of the max GREF count
-	init.grefGcThreshold        = androidSystem.get_gref_gc_threshold ();
+	init.grefGcThreshold        = static_cast<int>(androidSystem.get_gref_gc_threshold ());
 
 	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
@@ -1176,7 +1185,7 @@ init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobj
 	assm  = utils.monodroid_load_assembly (domain, "Mono.Android");
 	image = monoFunctions.assembly_get_image  (assm);
 
-	for (i = 0; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
+	for (uint32_t i = 0; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
 	}
 
@@ -1361,7 +1370,7 @@ monodroid_dlsym (void *handle, const char *name, char **err, void *user_data)
 }
 
 static void
-set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value, bool createDirectory, int mode )
+set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode )
 {
 	if (createDirectory) {
 		int rv = utils.create_directory (value.get_cstr (), mode);
@@ -1412,7 +1421,7 @@ set_debug_env_vars (void)
 	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_ENV_PROPERTY, &value) == 0)
 		return;
 
-	char **args = utils.monodroid_strsplit (value, "|", -1);
+	char **args = utils.monodroid_strsplit (value, "|", 0);
 	delete[] value;
 
 	for (char **ptr = args; ptr && *ptr; ptr++) {
@@ -1493,9 +1502,10 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 	char *mname;
 
 	if (col != nullptr) {
-		mname = new char [col - desc + 1];
-		strncpy (mname, desc, col - desc);
-		mname [col - desc] = 0;
+		size_t name_len = static_cast<size_t>(col - desc);
+		mname = new char [name_len + 1];
+		strncpy (mname, desc, name_len);
+		mname [name_len] = 0;
 	} else {
 		mname = utils.strdup_new (desc);
 	}
@@ -1539,7 +1549,7 @@ set_profile_options (JNIEnv *env)
 		return;
 
 	char *output = nullptr;
-	char **args = utils.monodroid_strsplit (value, ",", -1);
+	char **args = utils.monodroid_strsplit (value, ",", 0);
 	for (char **ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
 		if (!strncmp (arg, "output=", sizeof ("output=")-1)) {
@@ -1557,12 +1567,12 @@ set_profile_options (JNIEnv *env)
 		char *ovalue;
 		char *extension;
 
-		if ((col && !strncmp (value, "log:", 4)) || !strcmp (value, "log"))
+		if ((col != nullptr && !strncmp (value, "log:", 4)) || !strcmp (value, "log"))
 			extension = utils.strdup_new ("mlpd");
-		else if ((col && !strncmp (value, "aot:", 4)) || !strcmp (value, "aot"))
+		else if ((col != nullptr && !strncmp (value, "aot:", 4)) || !strcmp (value, "aot"))
 			extension = utils.strdup_new ("aotprofile");
 		else {
-			int len = col ? col - value : strlen (value);
+			size_t len = col != nullptr ? static_cast<size_t>(col - value) : strlen (value);
 			extension = new char [len + 1];
 			strncpy (extension, value, len);
 			extension [len] = '\0';
@@ -1606,8 +1616,8 @@ set_profile_options (JNIEnv *env)
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value);
 	monodroid_profiler_load (runtime_libdir, value, output);
 
-	free (value);
-	free (output);
+	delete[] value;
+	delete[] output;
 }
 
 static FILE* counters;
@@ -1685,7 +1695,7 @@ process_cmd (int fd, char *cmd)
 	return FALSE;
 }
 
-#ifdef DEBUG
+#if defined (DEBUG) && !defined (WINDOWS)
 
 static void
 start_debugging (void)
@@ -1740,7 +1750,7 @@ start_profiling (void)
 	monodroid_profiler_load (runtime_libdir, profiler_description, nullptr);
 }
 
-#endif  // def DEBUG
+#endif  // def DEBUG && !WINDOWS
 
 /*
 Disable LLVM signal handlers.
@@ -1785,7 +1795,7 @@ _monodroid_counters_dump (const char *format, ...)
 
 	fprintf (counters, "\n");
 
-	monoFunctions.counters_dump (XA_LOG_COUNTERS, counters);
+	monoFunctions.counters_dump (static_cast<int>(XA_LOG_COUNTERS), counters);
 }
 
 static void
@@ -1872,7 +1882,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
                                 jint apiLevel, jobjectArray environmentVariables)
 {
 	Java_mono_android_Runtime_initInternal (
-		env, klass, lang, runtimeApksJava, runtimeNativeLibDir, 
+		env, klass, lang, runtimeApksJava, runtimeNativeLibDir,
 		appDirs, loader, externalStorageDirs, assembliesJava, apiLevel,
 		/* embeddedDSOsEnabled */ JNI_FALSE);
 }
@@ -1983,7 +1993,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	androidSystem.setup_process_args (env, runtimeApks);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
-		monoFunctions.counters_enable (XA_LOG_COUNTERS);
+		monoFunctions.counters_enable (static_cast<int>(XA_LOG_COUNTERS));
 		char *counters_path = utils.path_combine (androidSystem.get_override_dir (0), "counters.txt");
 		log_info_nocheck (LOG_TIMING, "counters path: %s", counters_path);
 		counters = utils.monodroid_fopen (counters_path, "a");
