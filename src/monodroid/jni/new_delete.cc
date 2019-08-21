@@ -22,7 +22,7 @@ operator new (size_t size)
 }
 
 void*
-operator new (size_t size, const std::nothrow_t&) noexcept
+operator new (size_t size, const std::nothrow_t&)
 {
 	return do_alloc (size);
 }
@@ -34,7 +34,7 @@ operator new[] (size_t size)
 }
 
 void*
-operator new[] (size_t size, const std::nothrow_t&) noexcept
+operator new[] (size_t size, const std::nothrow_t&)
 {
 	return do_alloc (size);
 }

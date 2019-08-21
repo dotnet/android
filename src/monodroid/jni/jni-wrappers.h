@@ -134,7 +134,7 @@ namespace xamarin { namespace android
 		{
 			assert (env);
 			assert (arr);
-			len = env->GetArrayLength (arr);
+			len = static_cast<size_t>(env->GetArrayLength (arr));
 			if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))
 				wrappers = new jstring_wrapper [len];
 			else
@@ -159,7 +159,7 @@ namespace xamarin { namespace android
 
 			if (wrappers [index].env == nullptr) {
 				wrappers [index].env = env;
-				wrappers [index].jstr = reinterpret_cast <jstring> (env->GetObjectArrayElement (arr, index));
+				wrappers [index].jstr = reinterpret_cast <jstring> (env->GetObjectArrayElement (arr, static_cast<jsize>(index)));
 			}
 
 			return wrappers [index];

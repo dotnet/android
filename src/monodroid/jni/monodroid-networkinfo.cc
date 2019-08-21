@@ -155,7 +155,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	char    prop_name[] = "net.dnsX";
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
-		len = monodroid_get_system_property (prop_name, &dns);
+		len = static_cast<size_t>(monodroid_get_system_property (prop_name, &dns));
 		if (len == 0) {
 			dns_servers [i] = nullptr;
 			continue;
@@ -167,7 +167,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	if (count <= 0)
 		return 0;
 
-	char **ret = (char**)malloc (sizeof (char*) * count);
+	char **ret = (char**)malloc (sizeof (char*) * static_cast<size_t>(count));
 	char **p = ret;
 	for (int i = 0; i < 8; i++) {
 		if (!dns_servers [i])
@@ -178,4 +178,3 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	*dns_servers_array = (void*)ret;
 	return count;
 }
-

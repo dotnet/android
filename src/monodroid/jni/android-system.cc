@@ -33,7 +33,7 @@ namespace xamarin { namespace android { namespace internal {
 	struct BundledProperty {
 		char     *name;
 		char     *value;
-		uint32_t  value_len;
+		size_t    value_len;
 		struct BundledProperty *next;
 	};
 }}}
@@ -92,7 +92,7 @@ AndroidSystem::lookup_system_property (const char *name)
 #endif // DEBUG || !ANDROID
 
 const char*
-AndroidSystem::lookup_system_property (const char *name, uint32_t &value_len)
+AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
 {
 	value_len = 0;
 #if defined (DEBUG) || !defined (ANDROID)
@@ -148,7 +148,7 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 		return;
 	}
 
-	int name_len  = strlen (name);
+	size_t name_len  = strlen (name);
 	p = reinterpret_cast<BundledProperty*> (malloc (sizeof ( BundledProperty) + name_len + 1));
 	if (p == nullptr)
 		return;
@@ -203,10 +203,20 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 	if (env_value_len >= sp_value_len)
 		log_warn (LOG_DEFAULT, "System property buffer size too small by %u bytes", env_value_len == sp_value_len ? 1 : env_value_len - sp_value_len);
 
-	strncpy (sp_value, env_value, sp_value_len);
+	//
+	// sp_value_len includes the terminating nul, avoid a mingw g++ warning about string truncation
+	// by making the amount of data copied one less than the indicated length. The warning reported
+	// is:
+	//
+	//  In function ‘int xamarin::android::internal::AndroidSystem::_monodroid__system_property_get(const char*, char*, size_t)’,
+	//    inlined from ‘int xamarin::android::internal::AndroidSystem::monodroid_get_system_property(const char*, char**)’ at ../../../jni/android-system.cc:243:44:
+	//    ../../../jni/android-system.cc(206,10): warning G20816D19: ‘char* strncpy(char*, const char*, size_t)’ specified bound 93 equals destination size [-Wstringop-truncation] [/home/grendel/vc/xamarin/xamarin-android-worktrees/code-quality-improvements/src/monodroid/monodroid.csproj]
+	//    strncpy (sp_value, env_value, sp_value_len);
+	//
+	strncpy (sp_value, env_value, sp_value_len - 1);
 	sp_value[sp_value_len] = '\0';
 
-	return strlen (sp_value);
+	return static_cast<int>(strlen (sp_value));
 }
 #else
 int
@@ -243,7 +253,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 	int len = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
 
 	if (len <= 0) {
-		uint32_t plen;
+		size_t plen;
 		const char *v = lookup_system_property (name, plen);
 		if (v != nullptr) {
 			pvalue  = const_cast<char*> (v);
@@ -252,20 +262,20 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 	}
 
 	if (len >= 0 && value) {
-		*value = new char [len+1];
+		*value = new char [static_cast<size_t>(len) + 1];
 		if (*value == nullptr)
 			return -len;
 		if (len > 0)
-			memcpy (*value, pvalue, len);
+			memcpy (*value, pvalue, static_cast<size_t>(len));
 		(*value)[len] = '\0';
 	}
 	return len;
 }
 
-int
+size_t
 AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 {
-	int r = 0;
+	size_t r = 0;
 	if (value) {
 		*value = nullptr;
 	}
@@ -273,9 +283,9 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 	if (fp != nullptr) {
 		struct stat fileStat;
 		if (fstat (fileno (fp), &fileStat) == 0) {
-			r = fileStat.st_size+1;
+			r = static_cast<size_t>(fileStat.st_size) + 1;
 			if (value && (*value = new char[r])) {
-				fread (*value, 1, fileStat.st_size, fp);
+				fread (*value, 1, static_cast<size_t>(fileStat.st_size), fp);
 			}
 		}
 		fclose (fp);
@@ -284,7 +294,7 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
-int
+size_t
 AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
 {
 	if (value)
@@ -300,20 +310,21 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 		return 0;
 	}
 
+	size_t file_size = static_cast<size_t>(fileStat.st_size);
 	if (!value) {
 		fclose (fp);
-		return fileStat.st_size+1;
+		return file_size + 1;
 	}
 
-	*value = new char[fileStat.st_size+1];
+	*value = new char[file_size + 1];
 	if (!(*value)) {
 		fclose (fp);
-		return fileStat.st_size+1;
+		return file_size + 1;
 	}
 
-	ssize_t len = fread (*value, 1, fileStat.st_size, fp);
+	size_t len = fread (*value, 1, file_size, fp);
 	fclose (fp);
-	for (size_t i = 0; i < fileStat.st_size+1; ++i) {
+	for (size_t i = 0; i < file_size + 1; ++i) {
 		if ((*value) [i] != '\n' && (*value) [i] != '\r')
 			continue;
 		(*value) [i] = 0;
@@ -323,11 +334,11 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 }
 #endif
 
-int
+size_t
 AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, char ** value)
 {
 #if defined (DEBUG) || !defined (ANDROID)
-	int result = -1;
+	size_t result = 0;
 
 	for (size_t oi = 0; oi < MAX_OVERRIDES; ++oi) {
 		if (override_dirs [oi]) {
@@ -335,7 +346,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, c
 			log_info (LOG_DEFAULT, "Trying to get property from %s", overide_file);
 			result = _monodroid_get_system_property_from_file (overide_file, value);
 			free (overide_file);
-			if (result <= 0 || value == nullptr || (*value) == nullptr || strlen (*value) == 0) {
+			if (result == 0 || value == nullptr || (*value) == nullptr || strlen (*value) == 0) {
 				continue;
 			}
 			log_info (LOG_DEFAULT, "Property '%s' from  %s has value '%s'.", name, override_dirs [oi], *value);
@@ -373,7 +384,7 @@ AndroidSystem::create_update_dir (char *override_dir)
 		log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);	\
 		if (utils.file_exists (libmonoso)) \
 			return libmonoso; \
-		free (libmonoso); \
+		delete[] libmonoso; \
 	}
 
 #ifndef RELEASE
@@ -382,24 +393,24 @@ AndroidSystem::copy_native_libraries_to_internal_location ()
 {
 	for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
 		monodroid_dir_t *dir;
-		monodroid_dirent_t b, *e;
+		monodroid_dirent_t *e;
 
 		char *dir_path = utils.path_combine (override_dirs [i], "lib");
 		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
 
 		if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
 			log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
-			free (dir_path);
+			delete[] dir_path;
 			continue;
 		}
 
 		if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
 			log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
-			free (dir_path);
+			delete[] dir_path;
 			continue;
 		}
 
-		while (readdir_r (dir, &b, &e) == 0 && e) {
+		while ((e = readdir (dir)) != nullptr) {
 			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
 			if (utils.monodroid_dirent_hasextension (e, ".so")) {
 #if WINDOWS
@@ -414,7 +425,7 @@ AndroidSystem::copy_native_libraries_to_internal_location ()
 			}
 		}
 		utils.monodroid_closedir (dir);
-		free (dir_path);
+		delete[] dir_path;
 	}
 }
 #endif
@@ -428,7 +439,7 @@ inline bool AndroidSystem::try_load_libmonosgen (const char *dir, char*& libmono
 	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);
 	if (utils.file_exists (libmonoso))
 		return true;
-	free (libmonoso);
+	delete[] libmonoso;
 	libmonoso = nullptr;
 
 	return false;
@@ -475,7 +486,7 @@ AndroidSystem::get_libmonosgen_path ()
 				utils.create_public_directory (primary_override_dir);
 			utils.create_public_directory (links_dir);
 		}
-		free (links_dir);
+		delete[] links_dir;
 		if (!utils.file_exists (link)) {
 			int result = symlink (libmonoso, link);
 			if (result != 0 && errno == EEXIST) {
@@ -486,14 +497,14 @@ AndroidSystem::get_libmonosgen_path ()
 			if (result != 0)
 				log_warn (LOG_DEFAULT, "symlink failed with errno=%i %s", errno, strerror (errno));
 		}
-		free (libmonoso);
+		delete[] libmonoso;
 		libmonoso = link;
 	}
 
 	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);
 	if (libmonoso != nullptr && utils.file_exists (libmonoso))
 		return libmonoso;
-	free (libmonoso);
+	delete[] libmonoso;
 
 #ifdef WINDOWS
 	if (try_load_libmonosgen (get_libmonoandroid_directory_path (), libmonoso))
@@ -560,7 +571,7 @@ AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
 }
 
 void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, int num_entries, const char *dso_name, int dl_flags)
+AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags)
 {
 	assert (directories != nullptr);
 	if (dso_name == nullptr)
@@ -572,7 +583,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, int num_e
 		full_path = get_full_dso_path (directories [i], dso_name, &needs_free);
 		void *handle = load_dso (full_path, dl_flags, false);
 		if (needs_free)
-			free (full_path);
+			delete[] full_path;
 		if (handle != nullptr)
 			return handle;
 	}
@@ -616,20 +627,8 @@ AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *
 		return dso_path;
 
 	*needs_free = false;
-	free (dso_path);
+	delete[] dso_path;
 	return nullptr;
-}
-
-void
-AndroidSystem::dso_alloc_cleanup (char **dso_path, bool *needs_free)
-{
-	assert (needs_free != nullptr);
-	if (dso_path != nullptr) {
-		if (*needs_free)
-			free (*dso_path);
-		*dso_path = nullptr;
-	}
-	*needs_free = false;
 }
 
 char*
@@ -649,14 +648,12 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, bool *needs_free
 		dso_path = get_existing_dso_path_on_disk (AndroidSystem::override_dirs [i], dso_name, needs_free);
 		if (dso_path != nullptr)
 			return dso_path;
-		dso_alloc_cleanup (&dso_path, needs_free);
 	}
 #endif
 	for (size_t i = 0; i < app_lib_directories_size; i++) {
 		dso_path = get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, needs_free);
 		if (dso_path != nullptr)
 			return dso_path;
-		dso_alloc_cleanup (&dso_path, needs_free);
 	}
 
 	return nullptr;
@@ -669,7 +666,7 @@ AndroidSystem::count_override_assemblies (void)
 
 	for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
 		monodroid_dir_t *dir;
-		monodroid_dirent_t b, *e;
+		monodroid_dirent_t *e;
 
 		const char *dir_path = override_dirs [i];
 
@@ -679,7 +676,7 @@ AndroidSystem::count_override_assemblies (void)
 		if ((dir = utils.monodroid_opendir (dir_path)) == nullptr)
 			continue;
 
-		while (readdir_r (dir, &b, &e) == 0 && e) {
+		while ((e = readdir (dir)) != nullptr && e) {
 			if (utils.monodroid_dirent_hasextension (e, ".dll"))
 				++c;
 		}
@@ -689,13 +686,13 @@ AndroidSystem::count_override_assemblies (void)
 	return c;
 }
 
-int
+long
 AndroidSystem::get_max_gref_count_from_system (void)
 {
 	constexpr char HARDWARE_TYPE[] = "ro.hardware";
 	constexpr char HARDWARE_EMULATOR[] = "goldfish";
 
-	int max;
+	long max;
 	char value [PROP_VALUE_MAX+1];
 	char *override;
 
@@ -762,8 +759,8 @@ AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, cha
 		utils.set_user_executable (to_file);
 	} while (0);
 
-	free (from_file);
-	free (to_file);
+	delete[] from_file;
+	delete[] to_file;
 }
 #else  /* !defined (ANDROID) */
 void
@@ -772,7 +769,7 @@ AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, cha
 }
 #endif /* defined (ANDROID) */
 
-int
+long
 AndroidSystem::get_gref_gc_threshold ()
 {
 	if (max_gref_count == INT_MAX)
@@ -815,17 +812,18 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 		return;
 	}
 
-	char    *buf = new char [sbuf.st_size];
-	ssize_t  nread = 0;
+	size_t   file_size = static_cast<size_t>(sbuf.st_size);
+	char    *buf = new char [file_size];
+	size_t   nread = 0;
 	ssize_t  r;
 	do {
-		int i = nread;
-		r = read (fd, buf + i, sbuf.st_size - i);
+		size_t i = nread;
+		r = read (fd, buf + i, file_size - i);
 		if (r > 0)
-			nread += r;
+			nread += static_cast<size_t>(r);
 	} while (r < 0 && errno == EINTR);
 
-	if (nread < 0) {
+	if (nread == 0) {
 		log_warn (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (errno));
 		delete[] buf;
 		return;
@@ -869,13 +867,13 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 	}
 
 	uint64_t data_width = name_width + value_width;
-	if (data_width > sbuf.st_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (sbuf.st_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
+	if (data_width > file_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (file_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
 		log_warn (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
 		delete[] buf;
 		return;
 	}
 
-	uint64_t data_size = sbuf.st_size;
+	uint64_t data_size = static_cast<uint64_t>(file_size);
 	char *name = buf + OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
 	while (data_size > 0 && data_size >= data_width) {
 		if (*name == '\0') {
@@ -961,7 +959,7 @@ AndroidSystem::setup_environment ()
 }
 
 void
-AndroidSystem::for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, void (AndroidSystem::*handler) (const char *apk, int index, int apk_count, void *user_data), void *user_data)
+AndroidSystem::for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, void (AndroidSystem::*handler) (const char *apk, size_t index, size_t apk_count, void *user_data), void *user_data)
 {
 	size_t apksLength = runtimeApks.get_length ();
 	for (size_t i = 0; i < apksLength; ++i) {
@@ -972,7 +970,7 @@ AndroidSystem::for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, vo
 }
 
 void
-AndroidSystem::setup_process_args_apk (const char *apk, int index, int apk_count, void *user_data)
+AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, void *user_data)
 {
 	if (apk == nullptr || index != apk_count - 1)
 		return;
@@ -988,7 +986,7 @@ AndroidSystem::setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeAp
 }
 
 void
-AndroidSystem::add_apk_libdir (const char *apk, int index, int apk_count, void *user_data)
+AndroidSystem::add_apk_libdir (const char *apk, size_t index, size_t apk_count, void *user_data)
 {
 	assert (user_data != nullptr);
 	assert (index >= 0 && index < app_lib_directories_size);
@@ -1002,26 +1000,30 @@ AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu
 	for_each_apk (env, runtimeApks, &AndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
 }
 
-int AndroidSystem::readdir (monodroid_dir_t *dir, monodroid_dirent_t *b, monodroid_dirent_t **e)
+monodroid_dirent_t*
+AndroidSystem::readdir (monodroid_dir_t *dir)
 {
-	return readdir_r (dir, b, e);
+#if defined (WINDOWS)
+	return readdir_windows (dir);
+#else
+	return ::readdir (dir);
+#endif
 }
 
 #if defined (WINDOWS)
-int
-AndroidSystem::readdir_r (_WDIR *dirp, struct _wdirent *entry, struct _wdirent **result)
+struct _wdirent*
+AndroidSystem::readdir_windows (_WDIR *dirp)
 {
 	int error_code = 0;
 
 	std::lock_guard<std::mutex> lock (readdir_mutex);
 	errno = 0;
-	entry = _wreaddir (dirp);
-	*result = entry;
+	struct _wdirent *entry = _wreaddir (dirp);
 
 	if (entry == nullptr && errno != 0)
-		error_code = -1;
+		return nullptr;
 
-	return error_code;
+	return entry;
 }
 
 // Returns the directory in which this library was loaded from
@@ -1064,4 +1066,5 @@ AndroidSystem::symlink (const char *target, const char *linkpath)
 {
 	return utils.file_copy (target, linkpath);
 }
+#else
 #endif
