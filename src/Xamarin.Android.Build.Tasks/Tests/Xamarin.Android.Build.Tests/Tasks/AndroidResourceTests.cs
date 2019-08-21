@@ -14,6 +14,37 @@ namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidResourceTests : BaseTest {
 		[Test]
+		public void HeaderLayout ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var layoutDir = Path.Combine (path, "res", "layout");
+			var menuDir = Path.Combine (path, "res", "menu");
+			Directory.CreateDirectory (layoutDir);
+			Directory.CreateDirectory (menuDir);
+			var main = Path.Combine (layoutDir, "main.xml");
+			File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	xmlns:app=""http://schemas.android.com/apk/res-auto""
+	android:orientation = ""horizontal""
+	android:layout_width = ""match_parent""
+	android:layout_height = ""match_parent""
+	app:headerLayout=""@layout/headerLayout""
+	>
+</LinearLayout>");
+
+			var headerLayout = Path.Combine (layoutDir, "headerlayout.xml");
+			File.WriteAllText (headerLayout, @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout>
+</LinearLayout>
+");
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, new Dictionary<string, string> (), null);
+			var mainText = File.ReadAllText (main);
+			Assert.True (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
+			Directory.Delete (path, recursive: true);
+		}
+
+		[Test]
 		public void MenuActionLayout ()
 		{
 			var path = Path.Combine (Root, "temp", "MenuActionLayout");
