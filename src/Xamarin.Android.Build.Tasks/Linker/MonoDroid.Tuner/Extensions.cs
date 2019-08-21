@@ -120,14 +120,14 @@ namespace MonoDroid.Tuner {
 			return true;
 		}
 
-		public static bool TryGetRegisterAttribute (this MethodDefinition method, out CustomAttribute register)
+		static bool TryGetRegisterAttribute (ICustomAttributeProvider provider, out CustomAttribute register)
 		{
 			register = null;
 
-			if (!method.HasCustomAttributes)
+			if (!provider.HasCustomAttributes)
 				return false;
 
-			foreach (CustomAttribute attribute in method.CustomAttributes) {
+			foreach (CustomAttribute attribute in provider.CustomAttributes) {
 				if (!IsRegisterAttribute (attribute))
 					continue;
 
@@ -136,6 +136,25 @@ namespace MonoDroid.Tuner {
 			}
 
 			return false;
+		}
+
+		public static bool TryGetRegisterAdapter (this TypeDefinition td, out string adapter)
+		{
+		       CustomAttribute register;
+		       adapter = null;
+
+		       if (!TryGetRegisterAttribute (td, out register))
+			       return false;
+
+		       if (register.ConstructorArguments.Count != 3)
+			       return false;
+
+		       adapter = (string) register.ConstructorArguments [2].Value;
+
+		       if (string.IsNullOrEmpty (adapter))
+			       return false;
+
+		       return true;
 		}
 
 		public static bool TryGetRegisterMember (this MethodDefinition md, out string method)
@@ -150,7 +169,7 @@ namespace MonoDroid.Tuner {
 			nativeMethod = null;
 			signature = null;
 
-			if (!md.TryGetRegisterAttribute (out register))
+			if (!TryGetRegisterAttribute (md, out register))
 				return false;
 
 			if (register.ConstructorArguments.Count != 3)
