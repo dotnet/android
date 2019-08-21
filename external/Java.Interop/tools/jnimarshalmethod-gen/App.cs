@@ -287,7 +287,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			var baseName        = Path.GetFileNameWithoutExtension (path);
 			var assemblyName    = new AssemblyName (baseName + "-JniMarshalMethods");
-			var destPath        = assemblyName.Name + ".dll";
+			var fileName        = assemblyName.Name + ".dll";
+			var destDir         = string.IsNullOrEmpty (outDirectory) ? Path.GetDirectoryName (path) : outDirectory;
 			var builder         = CreateExportedMemberBuilder ();
 			var matchType       = typeNameRegexes.Count > 0;
 
@@ -297,9 +298,9 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var da = AppDomain.CurrentDomain.DefineDynamicAssembly (
 					assemblyName,
 					AssemblyBuilderAccess.Save,
-					Path.GetDirectoryName (path));
+					destDir);
 
-			var dm = da.DefineDynamicModule ("<default>", destPath);
+			var dm = da.DefineDynamicModule ("<default>", fileName);
 
 			var ad = resolver.GetAssembly (path);
 
@@ -428,12 +429,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			foreach (var tb in definedTypes)
 				tb.Value.CreateType ();
 
-			da.Save (destPath);
+			da.Save (fileName);
 
 			if (Verbose)
 				ColorWriteLine ($"Marshal method assembly '{assemblyName}' created", ConsoleColor.Cyan);
 
-			var dstAssembly = resolver.GetAssembly (destPath);
+			resolver.SearchDirectories.Add (destDir);
+			var dstAssembly = resolver.GetAssembly (fileName);
 
 			if (!string.IsNullOrEmpty (outDirectory))
 				path = Path.Combine (outDirectory, Path.GetFileName (path));
