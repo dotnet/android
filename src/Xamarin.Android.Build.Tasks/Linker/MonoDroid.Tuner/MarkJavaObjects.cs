@@ -192,8 +192,6 @@ namespace MonoDroid.Tuner {
 			if (invoker == null)
 				return;
 
-			Annotations.Mark (invoker);
-
 			PreserveIntPtrConstructor (invoker);
 			PreserveInterfaceMethods (type, invoker);
 		}
