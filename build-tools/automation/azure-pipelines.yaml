@@ -95,8 +95,9 @@ stages:
     workspace:
       clean: all
     variables:
-      group: Xamarin Notarization
-      JAVA_HOME: /Users/vsts/Library/Android/jdk/
+    - group: Xamarin Notarization
+    - name: JAVA_HOME
+      value: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
