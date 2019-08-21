@@ -14,6 +14,11 @@
     <AssemblyName>Xamarin.Android.McwGen-Tests</AssemblyName>
     <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AndroidClassParser>class-parse</AndroidClassParser>
+    <_JavacSourceVersion>1.8</_JavacSourceVersion>
+    <_JavacTargetVersion>1.8</_JavacTargetVersion>
+    <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
+    <LangVersion>preview</LangVersion>
+    <_EnableInterfaceMembers>True</_EnableInterfaceMembers>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
@@ -111,6 +116,21 @@
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>
     <TestJarEntry Include="java\com\xamarin\android\Bxc37706Throwable.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\DefaultMethodsInterface.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\EmptyOverrideClass.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\ImplementedOverrideClass.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\ImplementedChainOverrideClass.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\StaticMethodsInterface.java">
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>
   </ItemGroup>
