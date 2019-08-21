@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -122,6 +122,10 @@ namespace Xamarin.Android.Build.Tests {
 				"classlibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
 			});
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully");
+			if (IsWindows) {
+				// Causes an NRE
+				resPath = resPath.ToUpperInvariant ();
+			}
 			var custom = new ConvertCustomView () {
 				BuildEngine = engine,
 				CustomViewMapFile = task.CustomViewMapFile,
