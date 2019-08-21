@@ -95,6 +95,7 @@ stages:
     workspace:
       clean: all
     variables:
+      group: Xamarin Notarization
       JAVA_HOME: /Users/vsts/Library/Android/jdk/
     steps:
     - checkout: self
@@ -165,6 +166,13 @@ stages:
     - template: productsign-pkg.yml@yaml
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
+    
+    - script: |
+        cd $(Build.SourcesDirectory)/..
+        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
+        cd release-scripts
+        ruby notarize.rb $(Build.SourcesDirectory)/md-addins/*.dmg $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+      displayName: Notarize DMG
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
