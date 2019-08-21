@@ -171,7 +171,7 @@ stages:
         cd $(Build.SourcesDirectory)/..
         git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
         cd release-scripts
-        ruby notarize.rb $(Build.SourcesDirectory)/md-addins/*.dmg $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize DMG
 
     - task: PublishPipelineArtifact@0
