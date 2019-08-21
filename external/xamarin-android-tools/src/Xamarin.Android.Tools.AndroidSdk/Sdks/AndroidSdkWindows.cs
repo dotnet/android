@@ -241,7 +241,8 @@ namespace Xamarin.Android.Tools
 			string ndk;
 
 			var sdks = GetAllAvailableAndroidSdks().ToList();
-			sdks.Add(AndroidSdkPath);
+			if (!string.IsNullOrEmpty(AndroidSdkPath))
+				sdks.Add(AndroidSdkPath);
 	
 			foreach(var sdk in sdks.Distinct())
 				if (Directory.Exists(ndk = Path.Combine(sdk, "ndk-bundle")))
