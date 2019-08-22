@@ -174,7 +174,7 @@ stages:
         cd release-scripts
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
-      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/master' ), startsWith(variables['Build.SourceBranch'], 'refs/heads/release' )))
+      condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
