@@ -127,6 +127,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\Linker.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\Aapt.cs" />

@@ -66,8 +66,7 @@ namespace Xamarin.Android.Build.Tests
 				var allFilesInArchive = Directory.GetFiles (archivePath, "*", SearchOption.AllDirectories);
 				string extension = "dll";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				//NOTE: Windows is still generating mdb files here
-				extension = IsWindows ? "dll.mdb" : "pdb";
+				extension = "pdb";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
 
 				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
