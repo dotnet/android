@@ -1823,9 +1823,9 @@ namespace App1
 			else
 				proj.RemoveProperty (proj.ActiveConfigurationProperties, "Optimize");
 			if (embedassebmlies.HasValue)
-				proj.SetProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk", embedassebmlies.Value);
+				proj.SetProperty (proj.ActiveConfigurationProperties, KnownProperties.EmbedAssembliesIntoApk, embedassebmlies.Value);
 			else
-				proj.RemoveProperty (proj.ActiveConfigurationProperties, "EmbedAssembliesIntoApk");
+				proj.RemoveProperty (proj.ActiveConfigurationProperties, KnownProperties.EmbedAssembliesIntoApk);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -2844,10 +2844,11 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void BuildBasicApplicationCheckPdb ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				EmbedAssembliesIntoApk = true,
+				AndroidUseSharedRuntime = false,
+			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
-			proj.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
-			proj.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
@@ -3615,10 +3616,11 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+			};
 			proj.SetProperty ("_XASupportsFastDev", "True");
-			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "True");
-			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", "False");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//NOTE: build will fail, due to $(_XASupportsFastDev)
 				b.ThrowOnBuildFailure = false;

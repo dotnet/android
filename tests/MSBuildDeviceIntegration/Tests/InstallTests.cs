@@ -231,9 +231,10 @@ namespace Xamarin.Android.Build.Tests
 
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", false);
-			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", true);
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = false,
+				EmbedAssembliesIntoApk = true,
+			};
 			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidSupportedAbis, abi);
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
@@ -256,9 +257,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Test Skipped no devices or emulators found.");
 			}
 
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", true);
-			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+			};
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -278,8 +280,8 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 
 				//Now toggle FastDev to OFF
-				proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", false);
-				proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", true);
+				proj.AndroidUseSharedRuntime = false;
+				proj.EmbedAssembliesIntoApk = true;
 				var abis = new string [] { "armeabi-v7a", "x86" };
 				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 
