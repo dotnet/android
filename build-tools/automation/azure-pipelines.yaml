@@ -173,7 +173,8 @@ stages:
         git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
         cd release-scripts
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
-      displayName: Notarize DMG
+      displayName: Notarize PKG
+      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/master' ), startsWith(variables['Build.SourceBranch'], 'refs/heads/release' )))
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
