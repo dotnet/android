@@ -62,7 +62,7 @@ namespace MonoDroid.Tuner
 
 			if (options.LinkNone) {
 				pipeline.AppendStep (new FixAbstractMethodsStep ());
-				pipeline.AppendStep (new OutputStep ());
+				pipeline.AppendStep (new OutputStepWithTimestamps ());
 				return pipeline;
 			}
 
@@ -117,7 +117,7 @@ namespace MonoDroid.Tuner
 			pipeline.AppendStep (new StripEmbeddedLibraries ());
 			// end monodroid specific
 			pipeline.AppendStep (new RegenerateGuidStep ());
-			pipeline.AppendStep (new OutputStep ());
+			pipeline.AppendStep (new OutputStepWithTimestamps ());
 
 			return pipeline;
 		}
