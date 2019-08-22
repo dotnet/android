@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="$(OutDir)\Xamarin.Android.Tools.AndroidSdk.dll">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>Microsoft400</Authenticode>
     </FilesToSign>
   </ItemGroup>
   <ItemGroup>
