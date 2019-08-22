@@ -92,7 +92,9 @@ stages:
     workspace:
       clean: all
     variables:
-      JAVA_HOME: /Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/
+    - group: Xamarin Notarization
+    - name: JAVA_HOME
+      value: '/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/'
     steps:
     - checkout: self
       submodules: recursive
@@ -170,6 +172,14 @@ stages:
     - template: productsign-pkg.yml@yaml
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
+    
+    - script: |
+        cd $(Build.SourcesDirectory)/..
+        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
+        cd release-scripts
+        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+      displayName: Notarize PKG
+      condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
