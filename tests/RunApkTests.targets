@@ -105,7 +105,7 @@
   </Target>
 
   <ItemGroup>
-    <_ApkPerfTests Include="Xamarin.Android.Locale_Tests;Xamarin.Forms_Performance_Integration">
+    <_ApkPerfTests Include="Mono.Android_Tests;Xamarin.Android.Locale_Tests;Xamarin.Forms_Performance_Integration">
       <Package>%(Identity)</Package>
     </_ApkPerfTests>
   </ItemGroup>
