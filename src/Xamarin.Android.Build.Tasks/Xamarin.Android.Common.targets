@@ -1382,7 +1382,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ResolveLibraryProjectImports"
 		DependsOnTargets="$(CoreResolveReferencesDependsOn)"
-		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);$(_AndroidBuildPropertiesCache)"
+		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
@@ -2552,6 +2552,7 @@ because xbuild doesn't support framework reference assemblies.
   <Javac
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
     ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
     TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
     StubSourceDirectory="$(IntermediateOutputPath)android\src"
     JavaSourceFiles="@(AndroidJavaSource)"

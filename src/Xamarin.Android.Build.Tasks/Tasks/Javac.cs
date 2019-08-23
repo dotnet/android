@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
+		public string ClassesZip { get; set; }
+
 		public string JavaPlatformJarPath { get; set; }
 
 		public string JavacTargetVersion { get; set; }
@@ -31,8 +33,11 @@ namespace Xamarin.Android.Tasks
 			if (!result)
 				return result;
 			// compress all the class files
-			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"), FileMode.OpenOrCreate))
-				zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
+			if (!string.IsNullOrEmpty (ClassesZip)) {
+				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
+					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
+				}
+			}
 			return result;
 		}
 

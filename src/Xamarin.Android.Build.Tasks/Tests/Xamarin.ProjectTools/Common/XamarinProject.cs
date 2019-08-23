@@ -169,22 +169,26 @@ namespace Xamarin.ProjectTools
 			return new BuildOutput (this) { Builder = builder };
 		}
 
-		string project_file_contents;
+		ProjectResource project;
 		string packages_config_contents;
 
 		public virtual List<ProjectResource> Save (bool saveProject = true)
 		{
 			var list = new List<ProjectResource> ();
 			if (saveProject) {
+				if (project == null) {
+					project = new ProjectResource {
+						Path = ProjectFilePath,
+						Encoding = System.Text.Encoding.UTF8,
+					};
+				}
+				// Clear the Timestamp if the project changed
 				var contents = SaveProject ();
-				var timestamp = contents != project_file_contents ? default (DateTimeOffset?) : 
-					ItemGroupList.SelectMany (ig => ig).Where (i => i.Timestamp != null).Select (i => (DateTimeOffset)i.Timestamp).Max ();
-				list.Add (new ProjectResource () {
-					Timestamp = timestamp,
-					Path = ProjectFilePath,
-					Content = project_file_contents = contents,
-					Encoding = System.Text.Encoding.UTF8,
-				});
+				if (contents != project.Content) {
+					project.Timestamp = null;
+					project.Content = contents;
+				}
+				list.Add (project);
 			}
 
 			if (Packages.Any ()) {
