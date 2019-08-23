@@ -66,6 +66,7 @@ namespace Xamarin.Android.Binder
 				UseShortFileNames     = options.UseShortFileNames,
 				ProductVersion        = options.ProductVersion,
 				SupportInterfaceConstants = options.SupportInterfaceConstants,
+				SupportDefaultInterfaceMethods = options.SupportDefaultInterfaceMethods,
 			};
 
 			// Load reference libraries
@@ -143,7 +144,7 @@ namespace Xamarin.Android.Binder
 			// disable interface default methods here, especially before validation.
 			gens = gens.Where (g => !g.IsObfuscated && g.Visibility != "private").ToList ();
 			foreach (var gen in gens) {
-				gen.StripNonBindables ();
+				gen.StripNonBindables (opt);
 				if (gen.IsGeneratable)
 					AddTypeToTable (opt, gen);
 			}

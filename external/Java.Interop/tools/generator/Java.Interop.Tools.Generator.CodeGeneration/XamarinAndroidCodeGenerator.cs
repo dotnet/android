@@ -123,7 +123,7 @@ namespace MonoDroid.Generation {
 				writer.WriteLine ("{0}return {1};", indent, method.RetVal.FromNative (opt, call, true));
 		}
 
-		internal override void WriteMethodBody (Method method, string indent)
+		internal override void WriteMethodBody (Method method, string indent, GenBase type)
 		{
 			writer.WriteLine ("{0}if ({1} == IntPtr.Zero)", indent, method.EscapedIdName);
 			writer.WriteLine ("{0}\t{1} = JNIEnv.Get{2}MethodID (class_ref, \"{3}\", \"{4}\");", indent, method.EscapedIdName, method.IsStatic ? "Static" : String.Empty, method.JavaName, method.JniSignature);

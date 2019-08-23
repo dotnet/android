@@ -13,6 +13,7 @@ namespace MonoDroid.Generation
 		public const int ErrorParser = 0x4200;
 		public const int ErrorApiFixup = 0x4300;
 		public const int ErrorCodeGenerator = 0x4400;
+		public const int ErrorInvalidArgument = 0x4500;
 		public const int WarningClassGen = 0x8100;
 		public const int WarningCodeGenerator = 0x8200;
 		public const int WarningCtor = 0x8300;

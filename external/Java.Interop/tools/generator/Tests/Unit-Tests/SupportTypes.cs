@@ -155,6 +155,15 @@ namespace generatortests
 			IsReturnEnumified = true;
 			return this;
 		}
+
+		public TestMethod SetDefaultInterfaceMethod ()
+		{
+			IsAbstract = false;
+			IsStatic = false;
+			IsInterfaceDefaultMethod = true;
+
+			return this;
+		}
 	}
 
 	class TestCtor : Ctor

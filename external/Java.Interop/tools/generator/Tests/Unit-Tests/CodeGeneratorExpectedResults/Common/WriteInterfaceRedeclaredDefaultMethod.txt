@@ -1,0 +1,10 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface2']"
+[Register ("java/code/IMyInterface2", "", "java.code.IMyInterface2Invoker")]
+public partial interface IMyInterface2 : java.code.IMyInterface {
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
+	[Register ("DoSomething", "()V", "GetDoSomethingHandler:java.code.IMyInterface2Invoker, MyAssembly")]
+	void DoSomething ();
+
+}
+

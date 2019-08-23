@@ -134,7 +134,7 @@ namespace MonoDroid.Generation {
 			// No method id_ field required; it's now an `id` constant in the binding.
 		}
 
-		internal override void WriteMethodBody (Method method, string indent)
+		internal override void WriteMethodBody (Method method, string indent, GenBase type)
 		{
 			writer.WriteLine ("{0}const string __id = \"{1}.{2}\";", indent, method.JavaName, method.JniSignature);
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
@@ -159,7 +159,7 @@ namespace MonoDroid.Generation {
 				writer.WriteLine ("_members.InstanceMethods.InvokeNonvirtual{0}Method (__id, this{1});",
 						invokeType,
 						method.Parameters.GetCallArgs (opt, invoker: false));
-			} else if (method.IsVirtual && !method.IsAbstract) {
+			} else if ((method.IsVirtual && !method.IsAbstract) || method.IsInterfaceDefaultMethod) {
 				writer.WriteLine ("_members.InstanceMethods.InvokeVirtual{0}Method (__id, this{1});",
 						invokeType,
 						method.Parameters.GetCallArgs (opt, invoker: false));

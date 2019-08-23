@@ -74,6 +74,8 @@
     <Compile Include="Unit-Tests\AdjusterTests.cs" />
     <Compile Include="Unit-Tests\DefaultInterfaceMethodsTests.cs" />
     <Compile Include="Unit-Tests\EnumGeneratorTests.cs" />
+    <Compile Include="Unit-Tests\InterfaceConstantsTests.cs" />
+    <Compile Include="Unit-Tests\InterfaceTests.cs" />
     <Compile Include="Unit-Tests\ManagedExtensionsTests.cs" />
     <Compile Include="Unit-Tests\ManagedTests.cs" />
     <Compile Include="Unit-Tests\SupportTypes.cs" />
@@ -176,6 +178,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteCharSequenceEnumerator.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\Common\WriteInterfaceRedeclaredDefaultMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteClass.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -215,6 +220,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteConstSugarInterfaceFields.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteDefaultInterfaceMethodInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteFieldConstant.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -240,6 +248,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceDefaultMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceDefaultProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceDefaultPropertyGetterOnly.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteInterfaceFields.txt">
@@ -323,6 +340,9 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteCtorWithStringOverload.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteDefaultInterfaceMethodInvoker.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteFieldConstant.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -351,6 +371,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteInterfaceDeclaration.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteInterfaceDefaultMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteInterfaceDefaultProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteInterfaceDefaultPropertyGetterOnly.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteInterfaceInvoker.txt">

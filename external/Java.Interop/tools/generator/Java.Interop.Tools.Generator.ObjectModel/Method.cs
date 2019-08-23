@@ -20,7 +20,7 @@ namespace MonoDroid.Generation
 		public bool IsAbstract { get; set; }
 		public bool IsFinal { get; set; }
 		public bool IsInterfaceDefaultMethod { get; set; }
-		public bool IsInterfaceDefaultMethodOverride { get; set; }
+		public Method OverriddenInterfaceMethod { get; set; }
 		public bool IsReturnEnumified { get; set; }
 		public bool IsStatic { get; set; }
 		public bool IsVirtual { get; set; }
@@ -122,6 +122,9 @@ namespace MonoDroid.Generation
 				return adapter + ", " + opt.AssemblyName;
 			return adapter + AssemblyName;
 		}
+
+		// Connectors for DIM are defined on the interface, not the implementing type
+		public string GetConnectorNameFull (CodeGenerationOptions opt) => ConnectorName + (opt.SupportDefaultInterfaceMethods && IsInterfaceDefaultMethod ? $":{DeclaringType.FullName}, " + (AssemblyName ?? opt.AssemblyName) : string.Empty);
 
 		internal string GetDelegateType ()
 		{

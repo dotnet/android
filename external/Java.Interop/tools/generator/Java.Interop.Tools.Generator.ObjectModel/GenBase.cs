@@ -290,7 +290,7 @@ namespace MonoDroid.Generation
 
 		public void FixupMethodOverrides (CodeGenerationOptions opt)
 		{
-			foreach (var m in Methods.Where (m => !m.IsInterfaceDefaultMethod)) {
+			foreach (var m in Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
 				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
 					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && mm.Visibility == m.Visibility && ParameterList.Equals (mm.Parameters, m.Parameters));
 					if (bm != null && bm.RetVal.FullName == m.RetVal.FullName) { // if return type is different, it could be still "new", not "override".
@@ -301,11 +301,22 @@ namespace MonoDroid.Generation
 			}
 
 			// Interface default methods can be overriden. We want to process them differently.
-			foreach (var m in Methods.Where (m => m.IsInterfaceDefaultMethod)) {
-				foreach (var bt in GetAllDerivedInterfaces ()) {
-					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && ParameterList.Equals (mm.Parameters, m.Parameters));
+			var checkDimOverrideTargets = opt.SupportDefaultInterfaceMethods ? Methods : Methods.Where (m => m.IsInterfaceDefaultMethod);
+
+			// We need to check all the implemented interfaces of all the base types.
+			var allIfaces = new List<InterfaceGen> ();
+
+			for (var gen = this; gen != null; gen = gen.BaseGen)
+				gen.GetAllDerivedInterfaces (allIfaces);
+
+			foreach (var m in checkDimOverrideTargets.Where (m => !m.IsStatic)) {
+				foreach (var bt in allIfaces.Distinct ()) {
+					// We mark a method as an override if (1) it is a DIM, or (2) if the base method is DIM
+					// (i.e. we don't mark as override if a class method "implements" normal iface method.)
+					var bm = bt.Methods.FirstOrDefault (mm => (m.IsInterfaceDefaultMethod || !mm.IsAbstract) && mm.Name == m.Name && ParameterList.Equals (mm.Parameters, m.Parameters));
+
 					if (bm != null) {
-						m.IsInterfaceDefaultMethodOverride = true;
+						m.OverriddenInterfaceMethod = bm;
 						break;
 					}
 				}
@@ -411,7 +422,7 @@ namespace MonoDroid.Generation
 		}
 
 		public IEnumerable<Method> GetAllMethods () =>
-			Methods.Concat (Properties.Select (p => p.Getter)).Concat (Properties.Select (p => p.Setter).Where (m => m != null));
+			Methods.Concat (Properties.Select (p => p.Getter)).Concat (Properties.Select (p => p.Setter)).Where (m => m != null);
 
 		GenBase GetBaseGen (CodeGenerationOptions opt)
 		{
@@ -661,9 +672,12 @@ namespace MonoDroid.Generation
 			}
 			Fields = valid_fields;
 
-			int method_cnt = Methods.Count;
+			// If we can't validate a default interface method it's ok to ignore it and still bind the interface
+			var method_cnt = Methods.Where (m => !m.IsInterfaceDefaultMethod).Count ();
+
 			Methods = Methods.Where (m => ValidateMethod (opt, m, context)).ToList ();
-			MethodValidationFailed = method_cnt != Methods.Count;
+			MethodValidationFailed = method_cnt != Methods.Where (m => !m.IsInterfaceDefaultMethod).Count ();
+
 			foreach (Method m in Methods) {
 				if (m.IsVirtual)
 					HasVirtualMethods = true;
@@ -736,15 +750,16 @@ namespace MonoDroid.Generation
 
 		public bool ShouldGenerateAnnotationAttribute => IsAnnotation;
 
-		public void StripNonBindables ()
+		public void StripNonBindables (CodeGenerationOptions opt)
 		{
-			// As of now, if we generate bindings for interface default methods, that means users will
-			// have to "implement" those methods because they are declared and you have to implement
-			// any declared methods in C#. That is going to be problematic a lot.
-			Methods = Methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+			// Strip out default interface methods if not desired
+			if (!opt.SupportDefaultInterfaceMethods)
+				Methods = Methods.Where (m => !m.IsInterfaceDefaultMethod).ToList ();
+
 			NestedTypes = NestedTypes.Where (n => !n.IsObfuscated && n.Visibility != "private").ToList ();
+
 			foreach (var n in NestedTypes)
-				n.StripNonBindables ();
+				n.StripNonBindables (opt);
 		}
 
 		static readonly HashSet<string> ThrowableRequiresNew = new HashSet<string> (

@@ -1,0 +1,77 @@
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+
+	internal static new readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+
+	static IntPtr java_class_ref {
+		get { return _members.JniPeerType.PeerReference.Handle; }
+	}
+
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+
+	IntPtr class_ref;
+
+	public static IMyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
+	}
+
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
+						JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
+		return handle;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+
+	static Delegate cb_DoDeclaration;
+#pragma warning disable 0169
+	static Delegate GetDoDeclarationHandler ()
+	{
+		if (cb_DoDeclaration == null)
+			cb_DoDeclaration = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_DoDeclaration);
+		return cb_DoDeclaration;
+	}
+
+	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.DoDeclaration ();
+	}
+#pragma warning restore 0169
+
+	IntPtr id_DoDeclaration;
+	public unsafe void DoDeclaration ()
+	{
+		if (id_DoDeclaration == IntPtr.Zero)
+			id_DoDeclaration = JNIEnv.GetMethodID (class_ref, "DoDeclaration", "()V");
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_DoDeclaration);
+	}
+
+}
+

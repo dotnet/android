@@ -44,7 +44,7 @@ namespace Java.Interop {
 				JniPeerMembers.AssertSelf (self);
 
 				var declaringType   = DeclaringType;
-				if (Members.ShouldUseVirtualDispatch (self, declaringType)) {
+				if (Members.UsesVirtualDispatch (self, declaringType)) {
 					var m   = GetMethodInfo (encodedMember);
 					<#= returnType.ReturnType != "void" ? "return " : "" #>JniEnvironment.InstanceMethods.Call<#= returnType.JniCallType #>Method (self.PeerReference, m, parameters);
 					<#= returnType.ReturnType == "void" ? "return;" : "" #>

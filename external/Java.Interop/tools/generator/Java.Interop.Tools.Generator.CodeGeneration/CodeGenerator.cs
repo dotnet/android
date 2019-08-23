@@ -35,7 +35,7 @@ namespace MonoDroid.Generation
 		internal abstract void WriteConstructorBody (Ctor ctor, string indent, StringCollection call_cleanup);
 
 		internal abstract void WriteMethodIdField (Method method, string indent);
-		internal abstract void WriteMethodBody (Method method, string indent);
+		internal abstract void WriteMethodBody (Method method, string indent, GenBase type);
 
 		internal abstract void WriteFieldIdField (Field field, string indent);
 		internal abstract void WriteFieldGetBody (Field field, string indent, GenBase type);
@@ -139,7 +139,7 @@ namespace MonoDroid.Generation
 
 			WriteClassConstructors (@class, indent + "\t");
 
-			WriteClassProperties (@class, indent + "\t");
+			WriteImplementedProperties (@class.Properties, indent + "\t", @class.IsFinal, @class);
 			WriteClassMethods (@class, indent + "\t");
 
 			if (@class.IsAbstract)
@@ -245,7 +245,7 @@ namespace MonoDroid.Generation
 				//				if (iface.IsGeneric)
 				//					continue;
 				WriteClassPropertyInvokers (@class, iface.Properties.Where (p => !@class.ContainsProperty (p.Name, false, false)), indent, members);
-				WriteClassMethodInvokers (@class, iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !@class.ContainsMethod (m, false, false) && !@class.IsCovariantMethod (m) && !@class.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), indent, members, iface);
+				WriteClassMethodInvokers (@class, iface.Methods.Where (m => (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod) && !@class.ContainsMethod (m, false, false) && !@class.IsCovariantMethod (m) && !@class.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), indent, members, iface);
 			}
 
 			if (@class.BaseGen != null && @class.BaseGen.FullName != "Java.Lang.Object")
@@ -275,6 +275,8 @@ namespace MonoDroid.Generation
 
 		public void WriteClassMethods (ClassGen @class, string indent)
 		{
+			var methodsToDeclare = @class.Methods.AsEnumerable ();
+
 			// This does not exclude overrides (unlike virtual methods) because we're not sure
 			// if calling the base interface default method via JNI expectedly dispatches to
 			// the derived method.
@@ -282,15 +284,17 @@ namespace MonoDroid.Generation
 				.SelectMany (i => i.Methods)
 				.Where (m => m.IsInterfaceDefaultMethod)
 				.Where (m => !@class.ContainsMethod (m, false, false));
-			var overrides = defaultMethods.Where (m => m.IsInterfaceDefaultMethodOverride);
+			var overrides = defaultMethods.Where (m => m.OverriddenInterfaceMethod != null);
 
 			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
 				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
 
-			foreach (Method m in @class.Methods.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable)) {
+			methodsToDeclare = opt.SupportDefaultInterfaceMethods ? methodsToDeclare : methodsToDeclare.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable);
+
+			foreach (var m in methodsToDeclare) {
 				bool virt = m.IsVirtual;
 				m.IsVirtual = !@class.IsFinal && virt;
-				if (m.IsAbstract && !m.IsInterfaceDefaultMethodOverride && !m.IsInterfaceDefaultMethod)
+				if (m.IsAbstract && m.OverriddenInterfaceMethod == null && (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod))
 					WriteMethodAbstractDeclaration (m, indent, null, @class);
 				else
 					WriteMethod (m, indent, @class, true);
@@ -306,18 +310,18 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public void WriteClassProperties (ClassGen @class, string indent)
+		public void WriteImplementedProperties (IEnumerable<Property> targetProperties, string indent, bool isFinal, GenBase gen)
 		{
-			foreach (Property prop in @class.Properties) {
+			foreach (var prop in targetProperties) {
 				bool get_virt = prop.Getter.IsVirtual;
 				bool set_virt = prop.Setter == null ? false : prop.Setter.IsVirtual;
-				prop.Getter.IsVirtual = !@class.IsFinal && get_virt;
+				prop.Getter.IsVirtual = !isFinal && get_virt;
 				if (prop.Setter != null)
-					prop.Setter.IsVirtual = !@class.IsFinal && set_virt;
+					prop.Setter.IsVirtual = !isFinal && set_virt;
 				if (prop.Getter.IsAbstract)
-					WritePropertyAbstractDeclaration (prop, indent, @class);
+					WritePropertyAbstractDeclaration (prop, indent, gen);
 				else
-					WriteProperty (prop, @class, indent);
+					WriteProperty (prop, gen, indent);
 				prop.Getter.IsVirtual = get_virt;
 				if (prop.Setter != null)
 					prop.Setter.IsVirtual = set_virt;
@@ -476,7 +480,7 @@ namespace MonoDroid.Generation
 		// For each interface, generate either an abstract method or an explicit implementation method.
 		public void WriteInterfaceAbstractMembers (InterfaceGen @interface, ClassGen gen, string indent)
 		{
-			foreach (Method m in @interface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
+			foreach (var m in @interface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
 				bool mapped = false;
 				string sig = m.GetSignature ();
 				if (Context.ContextGeneratedMethods.Any (_ => _.Name == m.Name && _.JniSignature == m.JniSignature))
@@ -494,7 +498,7 @@ namespace MonoDroid.Generation
 					WriteMethodAbstractDeclaration (m, indent, @interface, gen);
 				Context.ContextGeneratedMethods.Add (m);
 			}
-			foreach (Property prop in @interface.Properties.Where (p => !p.Getter.IsStatic)) {
+			foreach (var prop in @interface.Properties.Where (p => !p.Getter.IsInterfaceDefaultMethod && !p.Getter.IsStatic)) {
 				if (gen.ContainsProperty (prop.Name, false))
 					continue;
 				WritePropertyAbstractDeclaration (prop, indent, gen);
@@ -525,6 +529,10 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("{0}{1}", indent, @interface.TypeParameters.ToGeneratedAttributeString ());
 			writer.WriteLine ("{0}{1} partial interface {2}{3} {{", indent, @interface.Visibility, @interface.Name,
 				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : " + GetAllInterfaceImplements () : " : " + sb.ToString ());
+
+			if (opt.SupportDefaultInterfaceMethods && @interface.HasDefaultMethods)
+				WriteClassHandle (@interface, indent + "\t", @interface.Name);
+
 			WriteInterfaceFields (@interface, indent + "\t");
 			writer.WriteLine ();
 			WriteInterfaceProperties (@interface, indent + "\t");
@@ -789,14 +797,14 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 
 			HashSet<string> members = new HashSet<string> ();
-			WriteInterfacePropertyInvokers (@interface, @interface.Properties.Where (p => !p.Getter.IsStatic), indent + "\t", members);
-			WriteInterfaceMethodInvokers (@interface, @interface.Methods.Where (m => !m.IsStatic), indent + "\t", members);
+			WriteInterfacePropertyInvokers (@interface, @interface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), indent + "\t", members);
+			WriteInterfaceMethodInvokers (@interface, @interface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod), indent + "\t", members);
 			if (@interface.FullName == "Java.Lang.ICharSequence")
 				WriteCharSequenceEnumerator (indent + "\t");
 
 			foreach (InterfaceGen iface in @interface.GetAllDerivedInterfaces ()) {
-				WriteInterfacePropertyInvokers (@interface, iface.Properties.Where (p => !p.Getter.IsStatic), indent + "\t", members);
-				WriteInterfaceMethodInvokers (@interface, iface.Methods.Where (m => !m.IsStatic && !@interface.IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), indent + "\t", members);
+				WriteInterfacePropertyInvokers (@interface, iface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), indent + "\t", members);
+				WriteInterfaceMethodInvokers (@interface, iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !@interface.IsCovariantMethod (m) && !(iface.FullName.StartsWith ("Java.Lang.ICharSequence") && m.Name.EndsWith ("Formatted"))), indent + "\t", members);
 				if (iface.FullName == "Java.Lang.ICharSequence")
 					WriteCharSequenceEnumerator (indent + "\t");
 			}
@@ -979,17 +987,23 @@ namespace MonoDroid.Generation
 
 		public void WriteInterfaceMethods (InterfaceGen @interface, string indent)
 		{
-			foreach (Method m in @interface.Methods.Where (m => !m.IsStatic)) {
+			foreach (var m in @interface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
 				if (m.Name == @interface.Name || @interface.ContainsProperty (m.Name, true))
 					m.Name = "Invoke" + m.Name;
+
 				WriteMethodDeclaration (m, indent, @interface, @interface.AssemblyQualifiedName + "Invoker");
 			}
+
+			foreach (var m in @interface.Methods.Where (m => m.IsInterfaceDefaultMethod))
+				WriteMethod (m, indent, @interface, true);
 		}
 
 		public void WriteInterfaceProperties (InterfaceGen @interface, string indent)
 		{
-			foreach (Property prop in @interface.Properties.Where (p => !p.Getter.IsStatic))
+			foreach (var prop in @interface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod))
 				WritePropertyDeclaration (prop, indent, @interface, @interface.AssemblyQualifiedName + "Invoker");
+
+			WriteImplementedProperties (@interface.Properties.Where (p => p.Getter.IsInterfaceDefaultMethod), indent, false, @interface);
 		}
 
 		public void WriteInterfacePropertyInvokers (InterfaceGen @interface, IEnumerable<Property> properties, string indent, HashSet<string> members)
@@ -1074,7 +1088,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}unsafe {1} {2}.{3} ({4})",
 				indent, opt.GetOutputName (method.RetVal.FullName), opt.GetOutputName (iface.FullName), method.Name, method.GetSignature (opt));
 			writer.WriteLine ("{0}{{", indent);
-			WriteMethodBody (method, indent + "\t");
+			WriteMethodBody (method, indent + "\t", iface);
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
 		}
@@ -1266,13 +1280,22 @@ namespace MonoDroid.Generation
 
 			string ret = opt.GetOutputName (method.RetVal.FullName.Replace ("Java.Lang.ICharSequence", "string"));
 			writer.WriteLine ();
-			writer.WriteLine ("{0}public static {1} {2} (this {3} self, {4})",
-				indent, ret, method.Name, selfType,
-			    method.GetSignature (opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+
+			var parameters = method.GetSignature (opt).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string");
+			writer.WriteLine ("{0}public static {1} {2} (this {3} self{4}{5})", indent, ret, method.Name, selfType, parameters.Length > 0 ? ", " : "", parameters);
+
 			writer.WriteLine ("{0}{{", indent);
 			WriteMethodStringOverloadBody (method, indent + "\t", true);
 			writer.WriteLine ("{0}}}", indent);
 		}
+
+		static string GetDeclaringTypeOfExplicitInterfaceMethod (Method method)
+		{
+			return method.OverriddenInterfaceMethod != null ?
+				     GetDeclaringTypeOfExplicitInterfaceMethod (method.OverriddenInterfaceMethod) :
+				     method.DeclaringType.FullName;
+		}
+
 
 		public void WriteMethodAsyncWrapper (Method method, string indent)
 		{
@@ -1326,11 +1349,20 @@ namespace MonoDroid.Generation
 			bool gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !type.ContainsMethod (name_and_jnisig);
 
 			string static_arg = method.IsStatic ? " static" : String.Empty;
-			string virt_ov = method.IsOverride ? " override" : method.IsVirtual ? " virtual" : String.Empty;
+
+			var is_explicit = opt.SupportDefaultInterfaceMethods && type is InterfaceGen && method.OverriddenInterfaceMethod != null;
+			var virt_ov = is_explicit ? string.Empty : method.IsOverride ? (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null ? " virtual" : " override") : method.IsVirtual ? " virtual" : string.Empty;
+			string seal = method.IsOverride && method.IsFinal ? " sealed" : null;
+
+			// When using DIM, don't generate "virtual sealed" methods, remove both modifiers instead
+			if (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && virt_ov == " virtual" && seal == " sealed") {
+				virt_ov = string.Empty;
+				seal = string.Empty;
+			}
+
 			if ((string.IsNullOrEmpty (virt_ov) || virt_ov == " virtual") && type.RequiresNew (method.AdjustedName)) {
 				virt_ov = " new" + virt_ov;
 			}
-			string seal = method.IsOverride && method.IsFinal ? " sealed" : null;
 			string ret = opt.GetOutputName (method.RetVal.FullName);
 			WriteMethodIdField (method, indent);
 			if (method.DeclaringType.IsGeneratable)
@@ -1340,11 +1372,24 @@ namespace MonoDroid.Generation
 			if (method.IsReturnEnumified)
 				writer.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
 			writer.WriteLine ("{0}[Register (\"{1}\", \"{2}\", \"{3}\"{4})]",
-			    indent, method.JavaName, method.JniSignature, method.IsVirtual ? method.ConnectorName : String.Empty, method.AdditionalAttributeString ());
+			    indent, method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : String.Empty, method.AdditionalAttributeString ());
 			WriteMethodCustomAttributes (method, indent);
-			writer.WriteLine ("{0}{1}{2}{3}{4} unsafe {5} {6} ({7})", indent, method.Visibility, static_arg, virt_ov, seal, ret, method.AdjustedName, method.GetSignature (opt));
+
+			var visibility = type is InterfaceGen && !method.IsStatic ? string.Empty : method.Visibility;
+
+			writer.WriteLine ("{0}{1}{2}{3}{4} unsafe {5} {6}{7} ({8})",
+				indent,
+				visibility,
+				static_arg,
+				virt_ov,
+				seal,
+				ret,
+				is_explicit ? GetDeclaringTypeOfExplicitInterfaceMethod (method.OverriddenInterfaceMethod) + '.' : string.Empty,
+				method.AdjustedName,
+				method.GetSignature (opt));
+
 			writer.WriteLine ("{0}{{", indent);
-			WriteMethodBody (method, indent + "\t");
+			WriteMethodBody (method, indent + "\t", type);
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();
 
@@ -1429,7 +1474,7 @@ namespace MonoDroid.Generation
 			WriteMethodIdField (property.Getter, indent);
 			if (property.Setter != null)
 				WriteMethodIdField (property.Setter, indent);
-			string visibility = property.Getter.IsAbstract && property.Getter.RetVal.IsGeneric ? "protected" : (property.Setter ?? property.Getter).Visibility;
+			string visibility = gen is InterfaceGen ? string.Empty : property.Getter.IsAbstract && property.Getter.RetVal.IsGeneric ? "protected" : (property.Setter ?? property.Getter).Visibility;
 			// Unlike [Register], mcs does not allow applying [Obsolete] on property accessors, so we can apply them only under limited condition...
 			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null))
 				writer.WriteLine ("{0}[Obsolete (@\"{1}\")]", indent, property.Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null));
@@ -1437,19 +1482,19 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}{1}{2} unsafe {3} {4} {{", indent, visibility, virtual_override, opt.GetOutputName (property.Getter.ReturnType), decl_name);
 			if (gen.IsGeneratable)
 				writer.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, property.Getter.JavaName, property.Getter.Parameters.GetMethodXPathPredicate ());
-			writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, property.Getter.JavaName, property.Getter.JniSignature, property.Getter.ConnectorName, property.Getter.AdditionalAttributeString ());
+			writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, property.Getter.JavaName, property.Getter.JniSignature, property.Getter.GetConnectorNameFull (opt), property.Getter.AdditionalAttributeString ());
 			writer.WriteLine ("{0}\tget {{", indent);
-			WriteMethodBody (property.Getter, indent + "\t\t");
+			WriteMethodBody (property.Getter, indent + "\t\t", gen);
 			writer.WriteLine ("{0}\t}}", indent);
 			if (property.Setter != null) {
 				if (gen.IsGeneratable)
 					writer.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, property.Setter.JavaName, property.Setter.Parameters.GetMethodXPathPredicate ());
 				WriteMethodCustomAttributes (property.Setter, indent);
-				writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, property.Setter.JavaName, property.Setter.JniSignature, property.Setter.ConnectorName, property.Setter.AdditionalAttributeString ());
+				writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})]", indent, property.Setter.JavaName, property.Setter.JniSignature, property.Setter.GetConnectorNameFull (opt), property.Setter.AdditionalAttributeString ());
 				writer.WriteLine ("{0}\tset {{", indent);
 				string pname = property.Setter.Parameters [0].Name;
 				property.Setter.Parameters [0].Name = "value";
-				WriteMethodBody (property.Setter, indent + "\t\t");
+				WriteMethodBody (property.Setter, indent + "\t\t", gen);
 				property.Setter.Parameters [0].Name = pname;
 				writer.WriteLine ("{0}\t}}", indent);
 			} else if (property.GenerateDispatchingSetter) {
@@ -1495,12 +1540,12 @@ namespace MonoDroid.Generation
 			if (property.Getter.IsReturnEnumified)
 				writer.WriteLine ("{0}[return:global::Android.Runtime.GeneratedEnum]", indent);
 			WriteMethodCustomAttributes (property.Getter, indent);
-			writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] get;", indent, property.Getter.JavaName, property.Getter.JniSignature, property.Getter.ConnectorName, property.Getter.AdditionalAttributeString ());
+			writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] get;", indent, property.Getter.JavaName, property.Getter.JniSignature, property.Getter.GetConnectorNameFull (opt), property.Getter.AdditionalAttributeString ());
 			if (property.Setter != null) {
 				if (gen.IsGeneratable)
 					writer.WriteLine ("{0}\t// Metadata.xml XPath method reference: path=\"{1}/method[@name='{2}'{3}]\"", indent, gen.MetadataXPathReference, property.Setter.JavaName, property.Setter.Parameters.GetMethodXPathPredicate ());
 				WriteMethodCustomAttributes (property.Setter, indent);
-				writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] set;", indent, property.Setter.JavaName, property.Setter.JniSignature, property.Setter.ConnectorName, property.Setter.AdditionalAttributeString ());
+				writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}\"{4})] set;", indent, property.Setter.JavaName, property.Setter.JniSignature, property.Setter.GetConnectorNameFull (opt), property.Setter.AdditionalAttributeString ());
 			}
 			writer.WriteLine ("{0}}}", indent);
 			writer.WriteLine ();

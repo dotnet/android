@@ -1,0 +1,36 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+[Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	static new readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface));
+
+	static Delegate cb_get_Value;
+#pragma warning disable 0169
+	static Delegate Getget_ValueHandler ()
+	{
+		if (cb_get_Value == null)
+			cb_get_Value = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_Value);
+		return cb_get_Value;
+	}
+
+	static int n_get_Value (IntPtr jnienv, IntPtr native__this)
+	{
+		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.Value;
+	}
+#pragma warning restore 0169
+
+	 virtual unsafe int Value {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
+		[Register ("get_Value", "()I", "Getget_ValueHandler:java.code.IMyInterface, MyAssembly")]
+		get {
+			const string __id = "get_Value.()I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			} finally {
+			}
+		}
+	}
+
+}
+

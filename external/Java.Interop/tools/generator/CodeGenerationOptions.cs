@@ -48,6 +48,7 @@ namespace MonoDroid.Generation
 		public bool UseShortFileNames { get; set; }
 		public int ProductVersion { get; set; }
 		public bool SupportInterfaceConstants { get; set; }
+		public bool SupportDefaultInterfaceMethods { get; set; }
 		public bool UseShallowReferencedTypes { get; set; }
 
 		bool? buildingCoreAssembly;
