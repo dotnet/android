@@ -441,7 +441,7 @@ namespace MonoDroid.Tuner
 			if (base.ShouldMarkInterfaceImplementation (type, iface, resolvedInterfaceType))
 				return true;
 
-			return resolvedInterfaceType.TryGetRegisterAdapter (out _);
+			return resolvedInterfaceType.ImplementsIJavaObject () || resolvedInterfaceType.ImplementsIJavaPeerable ();
 		}
 
 		protected override void DoAdditionalTypeProcessing (TypeDefinition type)
