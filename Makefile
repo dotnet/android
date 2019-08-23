@@ -171,14 +171,14 @@ endif
 
 run-apk-tests:
 	_r=0 ; \
-	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=$$? ; \
-	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP) || _r = $$? ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=1 ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP) || _r=1 ; \
 	exit $$_r
 
 run-performance-tests:
 	_r=0 ; \
-	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=$$? ; \
-	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests || _r = $$? ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=1 ; \
+	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests || _r=1 ; \
 	exit $$_r
 
 list-nunit-tests:
