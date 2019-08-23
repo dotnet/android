@@ -140,6 +140,38 @@ class MemTest {
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void AndroidXMigration ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
+			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				// classes.dex should only have the androidx Java types
+				var className = "Landroidx/appcompat/app/AppCompatActivity;";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+				className = "Landroid/appcompat/app/AppCompatActivity;";
+				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+				// FormsAppCompatActivity should inherit the AndroidX C# type
+				var forms = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Xamarin.Forms.Platform.Android.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
+					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
+				}
+			}
+		}
+
+		[Test]
 		public void DuplicateReferences ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
