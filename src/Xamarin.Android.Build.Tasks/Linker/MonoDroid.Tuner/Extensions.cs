@@ -16,6 +16,7 @@ namespace MonoDroid.Tuner {
 
 		const string JavaObject = "Java.Lang.Object";
 		const string IJavaObject = "Android.Runtime.IJavaObject";
+		const string IJavaPeerable = "Java.Interop.IJavaPeerable";
 		const string JavaThrowable = "Java.Lang.Throwable";
 
 		public static bool IsJavaObject (this TypeDefinition type)
@@ -31,6 +32,11 @@ namespace MonoDroid.Tuner {
 		public static bool ImplementsIJavaObject (this TypeDefinition type)
 		{
 			return type.Implements (IJavaObject);
+		}
+
+		public static bool ImplementsIJavaPeerable (this TypeDefinition type)
+		{
+			return type.Implements (IJavaPeerable);
 		}
 
 		public static object GetSettableValue (this CustomAttributeArgument arg)
@@ -136,25 +142,6 @@ namespace MonoDroid.Tuner {
 			}
 
 			return false;
-		}
-
-		public static bool TryGetRegisterAdapter (this TypeDefinition td, out string adapter)
-		{
-		       CustomAttribute register;
-		       adapter = null;
-
-		       if (!TryGetRegisterAttribute (td, out register))
-			       return false;
-
-		       if (register.ConstructorArguments.Count != 3)
-			       return false;
-
-		       adapter = (string) register.ConstructorArguments [2].Value;
-
-		       if (string.IsNullOrEmpty (adapter))
-			       return false;
-
-		       return true;
 		}
 
 		public static bool TryGetRegisterMember (this MethodDefinition md, out string method)
