@@ -201,10 +201,7 @@ namespace Monodroid {
 		{
 			if (attr.Name.Namespace != res_auto)
 				return false;
-			switch (attr.Name.LocalName) {
-			case "rectLayout":
-			case "roundLayout":
-			case "actionLayout":
+			if (attr.Name.LocalName.EndsWith ("Layout", StringComparison.Ordinal)) {
 				attr.Value = attr.Value.ToLowerInvariant ();
 				return true;
 			}
