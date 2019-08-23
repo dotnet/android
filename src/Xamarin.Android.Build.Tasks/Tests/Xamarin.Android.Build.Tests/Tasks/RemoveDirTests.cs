@@ -76,10 +76,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void LongPath ()
 		{
-			if (!IsWindows) {
-				Assert.Ignore ("MAX_PATH only applies on Windows");
+			if (LongPathsSupported) {
+				Assert.Ignore ("This environment supports long paths");
 			}
-			var file = NewFile (fileName: "foo".PadRight (250, 'N'));
+			var file = NewFile (fileName: "foo".PadRight (MaxFileName, 'N'));
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
