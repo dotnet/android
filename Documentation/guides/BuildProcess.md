@@ -1073,6 +1073,15 @@ server, the following MSBuild properties can be used:
     the value entered when `keytool` asks **Enter key password for
     $(AndroidSigningKeyAlias)**.
 
+    You can use the raw password here, however if you want to hide your password in logs
+    you can use a prefix of env: or file: to point it to an Environment variable or 
+    a file. For example
+
+    ```
+        env:<PasswordEnvironentVariable>
+        file:<PasswordFile> 
+    ```
+
 -   **AndroidSigningKeyStore** &ndash; Specifies the filename of the
     keystore file created by `keytool`. This corresponds to the value
     provided to the **keytool -keystore** option.
@@ -1081,6 +1090,15 @@ server, the following MSBuild properties can be used:
     `$(AndroidSigningKeyStore)`. This is the value provided to
     `keytool` when creating the keystore file and asked **Enter
     keystore password:**.
+
+    You can use the raw password here, however if you want to hide your password in logs
+    you can use a prefix of env: or file: to point it to an Environment variable or 
+    a file. For example
+
+    ```
+        env:<PasswordEnvironentVariable>
+        file:<PasswordFile> 
+    ```
 
 For example, consider the following `keytool` invocation:
 
@@ -1108,6 +1126,26 @@ To use the keystore generated above, use the property group:
     <AndroidSigningStorePass>keystore.filename password</AndroidSigningStorePass>
     <AndroidSigningKeyAlias>keystore.alias</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>keystore.alias password</AndroidSigningKeyPass>
+</PropertyGroup>
+```
+
+To use an environment variable to store your password you can do the following
+
+```xml
+<PropertyGroup>
+    <AndroidSigningStorePass>env:SomeEnvironmentVariableWithThePassword</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>env:SomeEnvironmentVariableWithThePassword</AndroidSigningKeyPass>
+</PropertyGroup>
+```
+
+to use a file you can do the following
+
+To use an environment variable to store your password you can do the following
+
+```xml
+<PropertyGroup>
+    <AndroidSigningStorePass>file:SomeFileWithThePassword</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>file:SomeFileWithThePassword</AndroidSigningKeyPass>
 </PropertyGroup>
 ```
 

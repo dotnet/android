@@ -23,9 +23,27 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string KeyAlias { get; set; }
 
+		/// <summary>
+		/// The Password for the Key.
+		/// You can use the raw password here, however if you want to hide your password in logs
+		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// a file.
+		///
+		///   env:<PasswordEnvironentVariable>
+		///   file:<PasswordFile> 
+		/// </summary>
 		[Required]
 		public string KeyPass { get; set; }
 
+		/// <summary>
+		/// The Password for the Keystore.
+		/// You can use the raw password here, however if you want to hide your password in logs
+		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// a file.
+		///
+		///   env:<PasswordEnvironentVariable>
+		///   file:<PasswordFile> 
+		/// </summary>
 		[Required]
 		public string StorePass { get; set; }
 
@@ -39,6 +57,18 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return base.Execute ();
+		}
+
+		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
+		{
+			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} ", value);
+			}
+			else if (value.StartsWith ("file:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", value.Replace ("file:", string.Empty));
+			} else {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", value);
+			}
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -59,9 +89,9 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
-			cmd.AppendSwitchIfNotNull ("--ks-pass pass:", StorePass);
+			AddStorePass (cmd, "--ks-pass", StorePass);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
-			cmd.AppendSwitchIfNotNull ("--key-pass pass:", KeyPass);
+			AddStorePass (cmd, "--key-pass", KeyPass);
 			cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
 			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
 		
