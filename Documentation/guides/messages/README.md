@@ -8,19 +8,19 @@ ms.date: 08/08/2019
 
 ## ADBxxxx: ADB tooling
 
-+ [adb0000](adb0000.md): Generic `adb` Error/Warning.
++ [ADB0000](adb0000.md): Generic `adb` error/warning.
 
 ## ANDXXxxxx: Generic Android tooling
 
-+ [andas0000](andas0000.md): Generic `apksigner` Error/Warning.
-+ [andjs0000](andjs0000.md): Generic `jarsigner` Error/Warning.
-+ [andkt0000](andkt0000.md): Generic `keytool` Error/Warning.
-+ [andza0000](andza0000.md): Generic `zipalign` Error/Warning.
++ [ANDAS0000](andas0000.md): Generic `apksigner` error/warning.
++ [ANDJS0000](andjs0000.md): Generic `jarsigner` error/warning.
++ [ANDKT0000](andkt0000.md): Generic `keytool` error/warning.
++ [ANDZA0000](andza0000.md): Generic `zipalign` error/warning.
 
 ## APTxxxx: AAPT tooling
 
-+ [apt0000](apt0000.md): Generic `aapt` Error/Warning.
-+ [apt0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
++ [APT0000](apt0000.md): Generic `aapt` error/warning.
++ [APT0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
 
 ## XA0xxx: Environment issue or missing tooling
 
@@ -29,13 +29,11 @@ ms.date: 08/08/2019
 + [XA0002](xa0002.md): Could not find mono.android.jar
 + [XA0003](xa0003.md): Invalid `android:versionCode` value. It must be an integer value.
 + [XA0004](xa0004.md): VersionCode {code} is outside 0, {maxVersionCode} interval.
-
 + [XA0030](xa0030.md): Building with JDK Version `{versionNumber}` is not supported.
 + [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.
 + [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.
 + [XA0033](xa0033.md): Failed to get the Java SDK version as it does not appear to contain a valid version number.
-+ [XA0034](xa0034.md): Failed to get the Java SDK version. 
-
++ [XA0034](xa0034.md): Failed to get the Java SDK version.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application project. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
