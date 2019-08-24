@@ -291,25 +291,17 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('run all tests', 360, 'MINUTES', XADir, false) {   // Typically takes 6hr
+        utils.stageWithTimeout('run performance tests', 60, 'MINUTES', XADir, false) {
             if (skipTest) {
-                echo "Skipping 'run all tests' stage. Clear the SkipTest variable setting to build and run tests"
+                echo "Skipping 'run performance tests' stage. Clear the SkipTest variable setting to build and run tests"
                 return
             }
 
-            echo "running tests"
+            echo "running performance tests"
 
-            def skipNunitTests = false
-
-            if (isPr) {
-                def hasPrLabelRunTestsRelease = utils.hasPrLabel(gitRepo, env.ghprbPullId, 'run-tests-release')
-                skipNunitTests = hasPrLabelFullMonoIntegrationBuild || hasPrLabelRunTestsRelease
-                echo "Run all tests: Labels on the PR: 'full-mono-integration-build' (${hasPrLabelFullMonoIntegrationBuild}) and/or 'run-tests-release' (${hasPrLabelRunTestsRelease})"
-            }
-
-            commandStatus = sh (script: "make run-all-tests CONFIGURATION=${env.BuildFlavor} V=1" + (skipNunitTests ? " SKIP_NUNIT_TESTS=1" : ""), returnStatus: true)
+            commandStatus = sh (script: "make run-performance-tests CONFIGURATION=${env.BuildFlavor} V=1", returnStatus: true)
             if (commandStatus != 0) {
-                error "run-all-tests FAILED, status: ${commandStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
+                error "run-performance-tests FAILED, status: ${commandStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
             }
         }
 
