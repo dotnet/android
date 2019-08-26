@@ -117,7 +117,7 @@ stages:
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make prepare-external-git-dependencies
-      condition: eq(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
       env:
         GH_AUTH_SECRET: $(Github.Token)
 
