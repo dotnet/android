@@ -6,7 +6,11 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <RootBuildDir>$(XamarinAndroidSourcePath)\bin\$(Configuration)\</RootBuildDir>
-    <FrameworkSrcDir>$(RootBuildDir)\lib\xamarin.android\xbuild-frameworks\MonoAndroid</FrameworkSrcDir>
+    <FrameworkSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
+    <AndroidApiDocsPath Condition=" '$(AndroidApiDocsPath)' == '' ">$(XamarinAndroidSourcePath)external\android-api-docs\</AndroidApiDocsPath>
+    <_AndroidApiDocsPath>$([MSBuild]::EnsureTrailingSlash($(AndroidApiDocsPath)))</_AndroidApiDocsPath>
+    <_LatestStableFrameworkDir>$(FrameworkSrcDir)$(AndroidLatestStableFrameworkVersion)\</_LatestStableFrameworkDir>
+    <_MonoDocOutputPath>$(RootBuildDir)lib\monodoc\</_MonoDocOutputPath>
     <MSBuildSrcDir>$(RootBuildDir)\lib\xamarin.android\xbuild\Xamarin\Android</MSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
@@ -20,6 +24,60 @@
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
     <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">True</_HasCommercialFiles>
   </PropertyGroup>
+  <ItemGroup>
+    <_MsxDocAssembly Include="Mono.Android">
+      <SourceFolder>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceFolder>
+    </_MsxDocAssembly>
+    <_MonoDocAssembly Include="@(_MsxDocAssembly);OpenTK-1.0;Xamarin.Android.NUnitLite">
+      <SourceFolder>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceFolder>
+    </_MonoDocAssembly>
+  </ItemGroup>
+  <Target Name="_FindFrameworkDirs">
+    <ItemGroup>
+      <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)%(Identity)\')" />
+      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
+      <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_FindDocSourceFiles">
+    <ItemGroup>
+      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceFolder)**" />
+      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceFolder)**" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_GenerateMsxDocXmls"
+      DependsOnTargets="_FindFrameworkDirs;_FindDocSourceFiles"
+      Inputs="@(_MsxDocSourceFile)"
+      Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml')">
+    <Exec Command="mdoc --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceFolder)&quot;" />
+  </Target>
+  <Target Name="_GenerateMsxDocXmlRedirects"
+      DependsOnTargets="_FindFrameworkDirs"
+      Inputs="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-Mono.Android.xml.in"
+      Outputs="@(_EarlierFrameworkDir->'%(Identity)Mono.Android.xml')">
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-Mono.Android.xml.in"
+        DestinationFile="%(_EarlierFrameworkDir.Identity)Mono.Android.xml"
+        Replacements="@LAST_FRAMEWORK_VERSION@=$(AndroidLatestStableFrameworkVersion)" />
+  </Target>
+  <Target Name="_GenerateMonoAndroidLibArchive"
+      DependsOnTargets="_FindDocSourceFiles"
+      Inputs="@(_MonoDocSourceFile)"
+      Outputs="$(_MonoDocOutputPath)MonoAndroid-lib.zip;$(_MonoDocOutputPath)MonoAndroid-lib.tree">
+    <MakeDir Directories="$(_MonoDocOutputPath)" />
+    <Exec Command="mdoc --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceFolder)&quot;', ' ')" />
+  </Target>
+  <Target Name="_CopyMonoAndroidDocsSource"
+      Inputs="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
+      Outputs="$(_MonodocOutputPath)MonoAndroid-docs.source">
+    <Copy
+        SourceFiles="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
+        DestinationFolder="$(_MonoDocOutputPath)" />
+  </Target>
+  <Target
+      Name="AssembleApiDocs"
+      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_CopyMonoAndroidDocsSource"
+      Condition=" '$(HostOS)' != 'Windows' " />
   <ItemGroup>
     <_DesignerFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\bcl\**\*" />
     <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
@@ -260,9 +318,9 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.Bindings.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
-    <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-docs.source" />
-    <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-lib.tree" />
-    <MonoDocFiles Include="$(RootBuildDir)\lib\monodoc\MonoAndroid-lib.zip" />
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-docs.source" />
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.tree" />
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.zip" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.CompilerServices.SymbolWriter.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Tds.xml" />
@@ -286,10 +344,9 @@
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <Target Name="ConstructInstallerItems"
+      DependsOnTargets="_FindFrameworkDirs;AssembleApiDocs"
       Returns="@(FrameworkItemsWin);@(FrameworkItemsUnix);@(MSBuildItemsWin);@(MSBuildItemsUnix)">
     <ItemGroup>
-      <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)\%(Identity)')" />
-      <_FrameworkDirsThatExist Condition="Exists('%(Identity)')" Include="@(_FrameworkDirs)" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\AndroidApiInfo.xml')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\mono.android.dex')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.dll')" />

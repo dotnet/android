@@ -1,3 +1,7 @@
+[submodule "external/android-api-docs"]
+    path = external/android-api-docs
+    url = https://github.com/xamarin/android-api-docs
+    branch = master
 [submodule "external/debugger-libs"]
     path = external/debugger-libs
     url = git://github.com/mono/debugger-libs
