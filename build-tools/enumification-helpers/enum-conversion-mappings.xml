@@ -113,7 +113,7 @@
   <map package="android.bluetooth" class="BluetoothHealth" fields="" prefix="CHANNEL_TYPE_" enum-name="HealthChannelType" />
   <map package="android.bluetooth" class="BluetoothHealth" fields="" prefix="STATE_" enum-name="HealthState" />
   <map package="android.bluetooth" class="BluetoothHealth" fields="SINK_ROLE SOURCE_ROLE" prefix="" enum-name="RoleType" />
-  <map package="android.bluetooth" class="BluetoothProfile" fields="A2DP GATT GATT_SERVER HEADSET HEALTH HID_DEVICE SAP" prefix="" enum-name="ProfileType" />
+  <map package="android.bluetooth" class="BluetoothProfile" fields="A2DP GATT GATT_SERVER HEADSET HEALTH HID_DEVICE SAP HEARING_AID" prefix="" enum-name="ProfileType" />
   <map package="android.bluetooth" class="BluetoothProfile" fields="" prefix="STATE_" enum-name="ProfileState" is-transient="false" />
   <map package="android.bluetooth.le" class="AdvertiseCallback" fields="" prefix="ADVERTISE_FAILED_" enum-name="AdvertiseFailure" is-transient="false" api-level="21" />
   <map package="android.bluetooth.le" class="AdvertiseSettings" fields="" prefix="ADVERTISE_MODE_" enum-name="AdvertiseMode" is-transient="false" api-level="21" />
