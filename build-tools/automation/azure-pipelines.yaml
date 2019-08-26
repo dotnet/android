@@ -21,7 +21,9 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
+  DotNetCoreVersion: 2.1.701
   HostedWinVS2019: Hosted Windows 2019 with VS2019
+  VSEngWinVS2019: VSEng-MicroBuildVS2019
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -54,9 +56,9 @@ stages:
       submodules: recursive
 
     - task: UseDotNet@2
-      displayName: install .NET Core 2.1.701
+      displayName: install .NET Core $(DotNetCoreVersion)
       inputs:
-        version: 2.1.701
+        version: $(DotNetCoreVersion)
 
       # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
       # The 'prepare' step creates the bundle
@@ -103,9 +105,9 @@ stages:
       submodules: recursive
 
     - task: UseDotNet@2
-      displayName: install .NET Core 2.1.701
+      displayName: install .NET Core $(DotNetCoreVersion)
       inputs:
-        version: 2.1.701
+        version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -198,7 +200,7 @@ stages:
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
     dependsOn: mac_build_create_installers
-    pool: $(XA.Build.Win.Pool)
+    pool: $(VSEngWinVS2019)
     condition: and(eq(dependencies.mac_build_create_installers.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     timeoutInMinutes: 45
     cancelTimeoutInMinutes: 1
@@ -226,7 +228,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Test
-    pool: $(XA.Build.Win.Pool)
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     workspace:
@@ -239,6 +241,11 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
 
     - task: DownloadPipelineArtifact@1
       inputs:
