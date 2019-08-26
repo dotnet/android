@@ -12,6 +12,11 @@ namespace Android.Runtime
 			this.BaseOutputStream = stream;
 		}
 
+		public override void Close ()
+		{
+			BaseOutputStream.Close ();
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			if (disposing && BaseOutputStream != null) {

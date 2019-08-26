@@ -135,8 +135,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="SetupDependenciesForDesigner"
     DependsOnTargets="UpdateAndroidResources;_AdjustJavacVersionArguments;_GeneratePackageManagerJavaForDesigner;_GetMonoPlatformJarPath;_DetermineJavaLibrariesToCompile"
-    Inputs="$(IntermediateOutputPath)android\src\mono\MonoPackageManager.java;$(_AndroidTypeMappingJavaToManaged);$(_AndroidTypeMappingManagedToJava)"
-    Outputs="$(IntermediateOutputPath)android\bin\classes\mono\MonoPackageManager.class">
+    Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource)"
+    Outputs="$(_AndroidStampDirectory)SetupDependenciesForDesigner.stamp">
   <Javac
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
       ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
@@ -149,6 +149,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       JavacTargetVersion="$(JavacTargetVersion)"
       JavacSourceVersion="$(JavacSourceVersion)"
   />
+  <Touch Files="$(_AndroidStampDirectory)SetupDependenciesForDesigner.stamp" AlwaysCreate="true" />
 </Target>
 
 </Project>

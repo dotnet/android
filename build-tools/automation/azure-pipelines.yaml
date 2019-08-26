@@ -95,7 +95,9 @@ stages:
     workspace:
       clean: all
     variables:
-      JAVA_HOME: /Users/vsts/Library/Android/jdk/
+    - group: Xamarin Notarization
+    - name: JAVA_HOME
+      value: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
@@ -115,7 +117,7 @@ stages:
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make prepare-external-git-dependencies
-      condition: eq(variables['XA.Commercial.Build'], 'true')
+      condition: eq(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
       env:
         GH_AUTH_SECRET: $(Github.Token)
 
@@ -165,6 +167,14 @@ stages:
     - template: productsign-pkg.yml@yaml
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
+    
+    - script: |
+        cd $(Build.SourcesDirectory)/..
+        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
+        cd release-scripts
+        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+      displayName: Notarize PKG
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
@@ -177,7 +187,7 @@ stages:
         BuildPackages: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         AzureContainerName: $(Azure.Container.Name)
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-        condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+        condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -189,7 +199,7 @@ stages:
     displayName: Queue Vsix Signing
     dependsOn: mac_build_create_installers
     pool: $(XA.Build.Win.Pool)
-    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(eq(dependencies.mac_build_create_installers.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     timeoutInMinutes: 45
     cancelTimeoutInMinutes: 1
     workspace:

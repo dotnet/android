@@ -151,6 +151,49 @@ namespace UnnamedProject
 			}
 		}
 
+		[Test]
+		public void IncrementalSetupDependenciesForDesigner ()
+		{
+			var target = "SetupDependenciesForDesigner";
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "Foo.java") {
+				TextContent = () => "public class Foo { }",
+				Encoding = Encoding.ASCII
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"first `{target}` should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"second `{target}` should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+
+				// Change a java file, run SetupDependenciesForDesigner
+				proj.Touch ("Foo.java");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"third `{target}` should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+			}
+		}
+
+		[Test]
+		public void IncrementalFullBuild ()
+		{
+			var target = "SetupDependenciesForDesigner";
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Change a layout, run SetupDependenciesForDesigner
+				proj.LayoutMain = proj.LayoutMain.Replace ("@string/hello", "hello");
+				proj.Touch ("Resources\\layout\\Main.axml");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"`{target}` should have succeeded.");
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+
+				var targets = new [] { "_CompileJava", "_CompileToDalvikWithDx" };
+				foreach (var t in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (t), $"`{t}` should be skipped!");
+				}
+			}
+		}
+
 		/// <summary>
 		/// This target should work in three cases:
 		/// * Called on a clean project
