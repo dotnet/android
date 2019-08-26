@@ -32,6 +32,7 @@
 #include "monodroid.h"
 #include "monodroid-glue.h"
 #include "util.h"
+#include "globals.h"
 
 using namespace xamarin::android;
 
@@ -167,7 +168,8 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	if (count <= 0)
 		return 0;
 
-	char **ret = (char**)malloc (sizeof (char*) * static_cast<size_t>(count));
+	size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof (char*), static_cast<size_t>(count));
+	char **ret = (char**)malloc (alloc_size);
 	char **p = ret;
 	for (int i = 0; i < 8; i++) {
 		if (!dns_servers [i])

@@ -148,8 +148,9 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 		return;
 	}
 
-	size_t name_len  = strlen (name);
-	p = reinterpret_cast<BundledProperty*> (malloc (sizeof ( BundledProperty) + name_len + 1));
+	size_t name_len  = strlen (name) + 1;
+	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, sizeof (BundledProperty), name_len);
+	p = reinterpret_cast<BundledProperty*> (malloc (alloc_size));
 	if (p == nullptr)
 		return;
 
@@ -227,8 +228,9 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 
 	char *buf = nullptr;
 	if (sp_value_len < PROP_VALUE_MAX + 1) {
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, PROP_VALUE_MAX, 1);
 		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
-		buf = new char [PROP_VALUE_MAX + 1];
+		buf = new char [alloc_size];
 	}
 
 	int len = __system_property_get (name, buf ? buf : sp_value);
@@ -262,7 +264,8 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 	}
 
 	if (len >= 0 && value) {
-		*value = new char [static_cast<size_t>(len) + 1];
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(len), 1);
+		*value = new char [alloc_size];
 		if (*value == nullptr)
 			return -len;
 		if (len > 0)
@@ -283,7 +286,7 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 	if (fp != nullptr) {
 		struct stat fileStat;
 		if (fstat (fileno (fp), &fileStat) == 0) {
-			r = static_cast<size_t>(fileStat.st_size) + 1;
+			r = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(fileStat.st_size), 1);
 			if (value && (*value = new char[r])) {
 				fread (*value, 1, static_cast<size_t>(fileStat.st_size), fp);
 			}
@@ -316,7 +319,8 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 		return file_size + 1;
 	}
 
-	*value = new char[file_size + 1];
+	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, file_size, 1);
+	*value = new char[alloc_size];
 	if (!(*value)) {
 		fclose (fp);
 		return file_size + 1;

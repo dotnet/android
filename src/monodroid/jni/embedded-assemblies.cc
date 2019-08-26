@@ -70,7 +70,9 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
 	name_len += sizeof (".exe");
 	name_len += strlen (asmname);
-	char *name = new char [name_len + 1];
+
+	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+	char *name = new char [alloc_size];
 	name [0] = '\0';
 
 	if (culture != nullptr && *culture != '\0') {
@@ -457,7 +459,8 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 			if (entry_is_overridden)
 				continue;
 
-			bundled_assemblies = reinterpret_cast<MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, sizeof(void*) * (bundled_assemblies_count + 1)));
+			size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
+			bundled_assemblies = reinterpret_cast<MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
 			cur = bundled_assemblies [bundled_assemblies_count] = reinterpret_cast<MonoBundledAssembly*> (utils.xcalloc (1, sizeof (MonoBundledAssembly)));
 			++bundled_assemblies_count;
 
@@ -550,7 +553,8 @@ EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_regist
 	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, bundled_assemblies_count - prev);
 
 	if (bundled_assemblies) {
-		bundled_assemblies  = reinterpret_cast <MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, sizeof(void*)*(bundled_assemblies_count + 1)));
+		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
+		bundled_assemblies  = reinterpret_cast <MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
 		bundled_assemblies [bundled_assemblies_count] = nullptr;
 	}
 

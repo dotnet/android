@@ -182,7 +182,7 @@ init_logging_categories ()
 		}
 	}
 
-	monodroid_strfreev (args);
+	utils.monodroid_strfreev (args);
 
 #if DEBUG
 	if ((log_categories & LOG_GC) != 0)
