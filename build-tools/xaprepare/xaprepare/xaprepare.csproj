@@ -134,7 +134,6 @@
     <Compile Include="Scenarios\Scenario_Standard.cs" />
     <Compile Include="Steps\Step_Android_SDK_NDK.cs" />
     <Compile Include="Steps\Step_BuildMingwDependencies.cs" />
-    <Compile Include="Steps\Step_CopyLibZip.cs" />
     <Compile Include="Steps\Step_DownloadMonoArchive.cs" />
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
@@ -151,8 +150,6 @@
     <Compile Include="ThirdPartyNotices\aapt2.cs" />
     <Compile Include="ThirdPartyNotices\bundletool.cs" />
     <Compile Include="ThirdPartyNotices\Java.Interop.cs" />
-    <Compile Include="ThirdPartyNotices\libzip.cs" />
-    <Compile Include="ThirdPartyNotices\LibZipSharp.cs" />
     <Compile Include="ThirdPartyNotices\mono.cs" />
     <Compile Include="ThirdPartyNotices\monodroid.cs" />
     <Compile Include="ThirdPartyNotices\opentk.cs" />
@@ -183,6 +180,8 @@
     <Compile Include="ToolRunners\ToolRunner.cs" />
     <Compile Include="ToolRunners\ToolRunner.OutputSink.cs" />
     <Compile Include="Application\RefreshableComponent.cs" />
+    <Compile Include="ThirdPartyNotices\LibZipSharp.cs" />
+    <Compile Include="ThirdPartyNotices\libzip.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(OS)' == 'Unix' ">
     <Compile Include="Application\EssentialTools.Unix.cs" />
@@ -194,7 +193,6 @@
     <Compile Include="Scenarios\Scenario_Standard.Unix.cs" />
     <Compile Include="Scenarios\Scenario_UpdateMono.Unix.cs" />
     <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
-    <Compile Include="Steps\Step_BuildLibZipForWindows.Unix.cs" />
     <Compile Include="Steps\Step_CreateBundle.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
     <Compile Include="Steps\Step_Get_Windows_Binutils.Unix.cs" />
@@ -238,8 +236,6 @@
     <Compile Include="ConfigAndData\Dependencies\MacOS.cs" />
     <Compile Include="ConfigAndData\Runtimes.MacOS.cs" />
     <Compile Include="OperatingSystems\MacOS.cs" />
-    <Compile Include="Steps\Step_BuildLibZip.MacOS.cs" />
-    <Compile Include="Steps\Step_BuildLibZipForWindows.MacOS.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareBundle.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.MacOS.cs" />
@@ -283,6 +279,9 @@
     </PackageReference>
     <PackageReference Include="Mono.Options">
       <Version>5.3.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Xamarin.LibZipSharp">
+      <Version>1.0.2</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

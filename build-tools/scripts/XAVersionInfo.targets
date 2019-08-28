@@ -16,12 +16,6 @@
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/LibZipSharp">
-        <OutputPropertyName>_BuildInfo_LibZipSharpCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/libzip">
-        <OutputPropertyName>_BuildInfo_LibZipCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
       <_SubmoduleBranchInfo Include="external/proguard">
         <OutputPropertyName>_BuildInfo_ProguardCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
