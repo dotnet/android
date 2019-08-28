@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	[NonParallelizable] //These tests deploy to devices
 	[Category ("Commercial")]
-	public class InstallTests : BaseTest
+	public class InstallTests : DeviceTest
 	{
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
@@ -296,6 +296,29 @@ namespace Xamarin.Android.Build.Tests
 
 				//Deploy one last time to verify install still works without the .__override__ directory existing
 				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void BlankAdbTarget ()
+		{
+			if (!CommercialBuildAvailable) {
+				Assert.Ignore ("Not required on Open Source Builds");
+			}
+			if (!HasDevices) {
+				Assert.Ignore ("Test Skipped no devices or emulators found.");
+			}
+
+			var serial = GetAttachedDeviceSerial ();
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", true);
+			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Build (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" });
+				// Build again, no $(AdbTarget)
+				b.Build (proj);
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildApkFastDev"), "_BuildApkFastDev should be skipped!");
 			}
 		}
 	}

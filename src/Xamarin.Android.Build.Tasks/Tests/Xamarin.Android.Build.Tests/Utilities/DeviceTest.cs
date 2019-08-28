@@ -140,5 +140,29 @@ namespace Xamarin.Android.Build.Tests
 			var bounds = GetControlBounds (packageName, buttonName, buttonText);
 			RunAdbInput ("input tap", bounds.x + ((bounds.w - bounds.x) / 2), bounds.y + ((bounds.h - bounds.y) / 2));
 		}
-    }
+
+		/// <summary>
+		/// Returns the first device listed via `adb devices`
+		/// 
+		/// Output is:
+		/// > adb devices
+		/// List of devices attached
+		/// 89RY0AEFA device
+		/// </summary>
+		/// <returns></returns>
+		protected static string GetAttachedDeviceSerial ()
+		{
+			var text = RunAdbCommand ("devices");
+			var lines = text.Split ('\n');
+			if (lines.Length < 2) {
+				Assert.Fail ($"Unexpected `adb devices` output: {text}");
+			}
+			var serial = lines [1];
+			var index = serial.IndexOf ('\t');
+			if (index != -1) {
+				serial = serial.Substring (0, index);
+			}
+			return serial.Trim ();
+		}
+	}
 }
