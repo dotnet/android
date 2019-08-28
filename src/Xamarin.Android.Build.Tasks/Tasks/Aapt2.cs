@@ -164,16 +164,9 @@ namespace Xamarin.Android.Tasks {
 					foreach (var dir in ResourceDirectories) {
 						var resourceDirectory = dir.ItemSpec;
 						var resourceDirectoryFullPath = ResourceDirectoryFullPath (resourceDirectory);
-						string newfile = null;
-						if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-							newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
-						}
-						if (file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-							newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-						}
+
+						string newfile = MonoAndroidHelper.FixUpAndroidResourcePath (file, resourceDirectory, resourceDirectoryFullPath, resource_name_case_map);
 						if (!string.IsNullOrEmpty (newfile)) {
-							newfile = resource_name_case_map.ContainsKey (newfile) ? resource_name_case_map [newfile] : newfile;
-							newfile = Path.Combine ("Resources", newfile);
 							file = newfile;
 							break;
 						}

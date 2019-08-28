@@ -532,7 +532,8 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 	size_t buf_size = static_cast<size_t>(getpagesize ());
 	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
 
-	response = (unsigned char*)malloc (sizeof (*response) * buf_size);
+	size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(*response), buf_size);
+	response = (unsigned char*)malloc (alloc_size);
 	ssize_t length = 0;
 	if (!response) {
 		goto cleanup;
@@ -869,7 +870,8 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				}
 
 				if (payload_size > 0) {
-					ifa->ifa_name = (char*)malloc (payload_size + room_for_trailing_null);
+					size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, payload_size, room_for_trailing_null);
+					ifa->ifa_name = (char*)malloc (alloc_size);
 					if (!ifa->ifa_name) {
 						goto error;
 					}

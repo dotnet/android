@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks
 		const string NoFileWarningOrErrorRegExString = @"(?<type>Warning|Error):(?<text>.+)";
 		Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
 		Regex noFileWarningOrErrorRegEx = new Regex(NoFileWarningOrErrorRegExString, RegexOptions.Compiled);
+		protected Dictionary<string, string> resource_name_case_map;
 		bool matched = false;
 		string file;
 		int line;
@@ -147,6 +148,8 @@ namespace Xamarin.Android.Tasks
 			get { return OS.IsWindows ? "lint.bat" : "lint"; }
 		}
 
+		public string ResourceNameCaseMap { get; set; }
+
 		public Lint ()
 		{
 			ResourceDirectories = new ITaskItem[0];
@@ -207,6 +210,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			EnvironmentVariables = new [] { "JAVA_HOME=" + JavaSdkPath };
+
+			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			base.Execute ();
 
@@ -279,8 +284,21 @@ namespace Xamarin.Android.Tasks
 				}
 				matched = true;
 				file = match.Groups ["file"].Value;
-				if (!string.IsNullOrEmpty (file))
+				if (!string.IsNullOrEmpty (file)) {
 					file = Path.Combine (TargetDirectory, file);
+					// Try to map back to the original resource file, so when the user
+					// double clicks the error, it won't take them to the obj/Debug copy
+					if (ResourceDirectories != null) {
+						foreach (var dir in ResourceDirectories) {
+							var resourceDirectory = Path.Combine (TargetDirectory, dir.ItemSpec);
+							string newfile = MonoAndroidHelper.FixUpAndroidResourcePath (file, resourceDirectory, string.Empty, resource_name_case_map);
+							if (!string.IsNullOrEmpty (newfile)) {
+								file = newfile;
+								break;
+							}
+						}
+					}
+				}
 				line = 0;
 				int.TryParse (match.Groups ["line"].Value, out line);
 				text = match.Groups ["text"].Value.Trim ();

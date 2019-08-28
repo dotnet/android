@@ -613,5 +613,23 @@ namespace Xamarin.Android.Tasks
 			}
 			return result;
 		}
+
+		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
+		{
+			string newfile = null;
+			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
+			}
+			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
+				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
+			}
+			if (!string.IsNullOrEmpty (newfile)) {
+				if (resource_name_case_map.TryGetValue (newfile, out string value))
+					newfile = value;
+				newfile = Path.Combine ("Resources", newfile);
+				return newfile;
+			}
+			return string.Empty;
+		}
 	}
 }

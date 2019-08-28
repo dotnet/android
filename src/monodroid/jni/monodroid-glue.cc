@@ -670,8 +670,9 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 				sep = strchr (arg, ':');
 				if (sep != nullptr) {
 					size_t arg_len = static_cast<size_t>(sep - arg);
-					host = new char [arg_len + 1];
-					memset (host, 0x00, arg_len + 1);
+					size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, arg_len, 1);
+					host = new char [alloc_size];
+					memset (host, 0x00, alloc_size);
 					strncpy (host, arg, arg_len);
 					arg = sep+1;
 
@@ -1503,7 +1504,8 @@ monodroid_profiler_load (const char *libmono_path, const char *desc, const char 
 
 	if (col != nullptr) {
 		size_t name_len = static_cast<size_t>(col - desc);
-		mname = new char [name_len + 1];
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+		mname = new char [alloc_size];
 		strncpy (mname, desc, name_len);
 		mname [name_len] = 0;
 	} else {
@@ -1573,7 +1575,8 @@ set_profile_options (JNIEnv *env)
 			extension = utils.strdup_new ("aotprofile");
 		else {
 			size_t len = col != nullptr ? static_cast<size_t>(col - value) : strlen (value);
-			extension = new char [len + 1];
+			size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, len, 1);
+			extension = new char [alloc_size];
 			strncpy (extension, value, len);
 			extension [len] = '\0';
 		}

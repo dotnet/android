@@ -103,7 +103,7 @@ Util::path_combine (const char *path1, const char *path2)
 	if (path2 == nullptr)
 		return strdup_new (path1);
 
-	size_t len = strlen (path1) + strlen (path2) + 2;
+	size_t len = add_with_overflow_check<size_t> (__FILE__, __LINE__, strlen (path1), strlen (path2) + 2);
 	char *ret = new char [len];
 	*ret = '\0';
 
@@ -117,9 +117,12 @@ Util::path_combine (const char *path1, const char *path2)
 void
 Util::add_to_vector (char ***vector, size_t size, char *token)
 {
-	*vector = *vector == nullptr ?
-		(char **)xmalloc(2 * sizeof(*vector)) :
-		(char **)xrealloc(*vector, (size + 1) * sizeof(*vector));
+	if (*vector == nullptr) {
+		*vector = (char **)static_cast<char**>(xmalloc (size * sizeof(*vector)));
+	} else {
+		size_t alloc_size = multiply_with_overflow_check<size_t> (__FILE__, __LINE__, sizeof(*vector), size + 1);
+		*vector = static_cast<char**>(xrealloc (*vector, alloc_size));
+	}
 
 	(*vector)[size - 1] = token;
 }
@@ -165,7 +168,8 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 
 			if (*str) {
 				size_t toklen = static_cast<size_t>((str - c));
-				token = new char [toklen + 1];
+				size_t alloc_size = add_with_overflow_check<size_t> (__FILE__, __LINE__, toklen, 1);
+				token = new char [alloc_size];
 				strncpy (token, c, toklen);
 				token [toklen] = '\0';
 

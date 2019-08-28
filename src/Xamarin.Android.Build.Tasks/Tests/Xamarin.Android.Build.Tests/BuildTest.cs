@@ -1547,6 +1547,48 @@ namespace App1
 		}
 
 		[Test]
+		public void CheckLintResourceFileReferencesAreFixed ()
+		{
+			FixLintOnWindows ();
+
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageReferences = {
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportConstraintLayout_1_0_2_2,
+				},
+			};
+			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+				TextContent = () => {
+					return @"<?xml version=""1.0"" encoding=""utf-8""?>
+<ConstraintLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	xmlns:app=""http://schemas.android.com/apk/res-auto""
+	android:orientation=""vertical""
+	android:layout_width=""fill_parent""
+	android:layout_height=""fill_parent"">
+	<TextView android:id=""@+id/foo""
+		android:layout_width=""150dp""
+		android:layout_height=""wrap_content""
+		app:layout_constraintTop_toTopOf=""parent""
+	/>
+	<EditText
+		android:id=""@+id/phone""
+		android:layout_width=""fill_parent""
+		android:layout_height=""wrap_content""
+		android:hint=""Hint me up.""
+	/>
+ </ConstraintLayout>";
+				}
+			});
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Project should have built.");
+				StringAssertEx.Contains ("XA0102", b.LastBuildOutput, "Output should contain XA0102 warnings");
+				var errorFilePath = Path.Combine (proj.IntermediateOutputPath, "android", proj.IntermediateOutputPath, "res", "layout", "test.xml");
+				StringAssertEx.DoesNotContain (errorFilePath, b.LastBuildOutput, $"Path {errorFilePath} should have been replaced.");
+			}
+		}
+
+		[Test]
 		public void CheckLintErrorsAndWarnings ()
 		{
 			FixLintOnWindows ();
