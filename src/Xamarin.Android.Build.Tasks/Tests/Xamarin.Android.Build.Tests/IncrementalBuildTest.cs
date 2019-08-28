@@ -732,5 +732,68 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
+		{
+			var targets = new [] {
+				"_GenerateJavaStubs",
+				"_GeneratePackageManagerJava",
+				"_CompileNativeAssemblySources",
+				"_CreateApplicationSharedLibraries",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
+				TextContent = () => "Foo=Bar",
+			});
+			proj.MainActivity = proj.DefaultMainActivity;
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+				AssertAssemblyFilesInFileWrites (proj, b);
+
+				// Change C# file and AndroidEvironment file
+				proj.MainActivity += Environment.NewLine + "// comment";
+				proj.Touch ("MainActivity.cs");
+				proj.Touch ("Foo.txt");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+				AssertAssemblyFilesInFileWrites (proj, b);
+
+				// No changes
+				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+				AssertAssemblyFilesInFileWrites (proj, b);
+			}
+		}
+
+		readonly string [] ExpectedAssemblyFiles = new [] {
+			Path.Combine ("android", "environment.armeabi-v7a.o"),
+			Path.Combine ("android", "environment.armeabi-v7a.s"),
+			Path.Combine ("android", "typemap.mj.armeabi-v7a.o"),
+			Path.Combine ("android", "typemap.mj.armeabi-v7a.s"),
+			Path.Combine ("android", "typemap.jm.armeabi-v7a.o"),
+			Path.Combine ("android", "typemap.jm.armeabi-v7a.s"),
+			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
+		};
+
+		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
+		{
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
+			foreach (var file in ExpectedAssemblyFiles) {
+				var path = Path.Combine (intermediate, file);
+				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
+				FileAssert.Exists (path);
+			}
+		}
 	}
 }
