@@ -1262,7 +1262,7 @@ because xbuild doesn't support framework reference assemblies.
 			WriteOnlyWhenDifferent="true"
 	/>
 	<WriteLinesToFile
-			Condition=" '$(DesignTimeBuild)' != 'True' "
+			Condition=" '$(DesignTimeBuild)' != 'True' And ('$(AdbTarget)' != '' Or !Exists('$(_AdbPropertiesCache)')) "
 			File="$(_AdbPropertiesCache)"
 			Lines="AdbTarget=$(AdbTarget);AdbOptions=$(AdbOptions)"
 			Overwrite="true"
