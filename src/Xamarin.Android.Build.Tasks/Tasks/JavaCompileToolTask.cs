@@ -52,12 +52,18 @@ namespace Xamarin.Android.Tasks
 			return retval;
 		}
 
+		protected virtual void WriteOptionsToResponseFile (StreamWriter sw)
+		{
+		}
+
 		private void GenerateResponseFile ()
 		{
 			TemporarySourceListFile = Path.GetTempFileName ();
 
 			using (var sw = new StreamWriter (path:TemporarySourceListFile, append:false,
 						encoding:new UTF8Encoding (encoderShouldEmitUTF8Identifier:false))) {
+
+				WriteOptionsToResponseFile (sw);
 				// Include any user .java files
 				if (JavaSourceFiles != null)
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))
