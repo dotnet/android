@@ -226,9 +226,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Test
-    pool: 
-      name: $(XA.Build.Win.Pool)
-      demands: Agent.Name -equals DDMBLDW137
+    pool: $(XA.Build.Win.Pool)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     workspace:
