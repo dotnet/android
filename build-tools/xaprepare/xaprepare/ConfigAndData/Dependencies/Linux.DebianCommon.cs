@@ -17,7 +17,7 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("g++-mingw-w64"),
 			new DebianLinuxProgram ("gcc-mingw-w64"),
 			new DebianLinuxProgram ("git"),
-			new DebianLinuxProgram ("libncurses-dev"),
+			new DebianLinuxProgram ("libncurses5-dev"),
 			new DebianLinuxProgram ("libtool"),
 			new DebianLinuxProgram ("libz-mingw-w64-dev"),
 			new DebianLinuxProgram ("libzip-dev"),
