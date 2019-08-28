@@ -7,8 +7,15 @@ namespace Java.Interop {
 
 	public partial class JniPeerMembers {
 
+		private bool isInterface;
+
+		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
+			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+		{
+		}
+
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
-			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true)
+			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException ("managedPeerType");
@@ -27,7 +34,7 @@ namespace Java.Interop {
 			ManagedPeerType = managedPeerType;
 		}
 
-		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType)
+		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
 		{
 			if (jniPeerTypeName == null)
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
@@ -50,6 +57,8 @@ namespace Java.Interop {
 
 			JniPeerTypeName = jniPeerTypeName;
 			ManagedPeerType = managedPeerType;
+
+			this.isInterface = isInterface;
 
 			instanceMethods = new JniInstanceMethods (this);
 			instanceFields  = new JniInstanceFields (this);
@@ -140,7 +149,7 @@ namespace Java.Interop {
 
 		protected virtual JniPeerMembers GetPeerMembers (IJavaPeerable value)
 		{
-			return value.JniPeerMembers;
+			return isInterface ? this : value.JniPeerMembers;
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)

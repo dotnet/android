@@ -351,6 +351,7 @@ T: Java.Interop.JniInt32ArrayElements
 T: Java.Interop.JniInt64ArrayElements
 T: Java.Interop.JniLocationException
 T: Java.Interop.JniMethodInfo
+T: Java.Interop.JniPeerMembers
 T: Java.Interop.JniSByteArrayElements
 T: Java.Interop.JniSingleArrayElements
 T: Java.Interop.JniType

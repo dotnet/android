@@ -29,7 +29,7 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteClassHandle (ClassGen type, string indent, bool requireNew)
 		{
-			WritePeerMembers (indent + '\t', true, requireNew, type.RawJniName, type.Name);
+			WritePeerMembers (indent + '\t', true, requireNew, type.RawJniName, type.Name, false);
 
 			writer.WriteLine ("{0}\tinternal static {1}IntPtr class_ref {{", indent, requireNew ? "new " : string.Empty);
 			writer.WriteLine ("{0}\t\tget {{", indent);
@@ -55,12 +55,12 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteClassHandle (InterfaceGen type, string indent, string declaringType)
 		{
-			WritePeerMembers (indent, false, true, type.RawJniName, declaringType);
+			WritePeerMembers (indent, false, true, type.RawJniName, declaringType, type.Name == declaringType);
 		}
 
 		internal override void WriteClassInvokerHandle (ClassGen type, string indent, string declaringType)
 		{
-			WritePeerMembers (indent, true, true, type.RawJniName, declaringType);
+			WritePeerMembers (indent, true, true, type.RawJniName, declaringType, false);
 
 			writer.WriteLine ();
 			writer.WriteLine ("{0}public override global::Java.Interop.JniPeerMembers JniPeerMembers {{", indent);
@@ -75,7 +75,7 @@ namespace MonoDroid.Generation {
 
 		internal override void WriteInterfaceInvokerHandle (InterfaceGen type, string indent, string declaringType)
 		{
-			WritePeerMembers (indent, true, true, type.RawJniName, declaringType);
+			WritePeerMembers (indent, true, true, type.RawJniName, declaringType, false);
 
 			writer.WriteLine ();
 			writer.WriteLine ("{0}static IntPtr java_class_ref {{", indent);
@@ -262,10 +262,10 @@ namespace MonoDroid.Generation {
 			writer.WriteLine ("{0}}}", indent);
 		}
 
-		void WritePeerMembers (string indent, bool isInternal, bool isNew, string rawJniType, string declaringType)
+		void WritePeerMembers (string indent, bool isInternal, bool isNew, string rawJniType, string declaringType, bool isInterface)
 		{
 			var signature = $"{(isInternal ? "internal " : "")}static {(isNew ? "new " : "")}readonly JniPeerMembers _members = ";
-			var type = $"new {GetPeerMembersType ()} (\"{rawJniType}\", typeof ({declaringType}));";
+			var type = $"new {GetPeerMembersType ()} (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)});";
 
 			writer.WriteLine ($"{indent}{signature}{type}");
 		}
