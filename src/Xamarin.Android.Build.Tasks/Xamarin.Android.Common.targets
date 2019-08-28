@@ -3116,7 +3116,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CreateAndroidDebugSigningKey"
-		Condition="!Exists ('$(_ApkDebugKeyStore)')"
+		Condition="!Exists ('$(_ApkDebugKeyStore)') And '$(AndroidKeyStore)' != 'True' "
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)"
 	>
 	<AndroidCreateDebugKey
