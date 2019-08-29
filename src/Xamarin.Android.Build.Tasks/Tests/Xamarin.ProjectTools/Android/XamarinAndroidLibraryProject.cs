@@ -9,7 +9,7 @@ namespace Xamarin.ProjectTools
 {
 	public class XamarinAndroidLibraryProject : XamarinAndroidCommonProject
 	{
-		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+		internal const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""library_name"">${PROJECT_NAME}</string>
 </resources>
