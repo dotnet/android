@@ -506,6 +506,7 @@ namespace Xamarin.ProjectTools
 				Version latest = new Version (0,0);
 				string Sdk = null;
 				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
+					Console.WriteLine ($"Found potential .NET dir: {dir}");
 					// Preview versions such as `3.0.100-preview9-013775` will be ignored.
 					Version.TryParse (Path.GetFileName (dir), out Version version);
 					var sdksDir = Path.Combine (dir, "Sdks");
