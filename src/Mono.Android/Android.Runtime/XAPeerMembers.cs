@@ -14,6 +14,11 @@ namespace Android.Runtime {
 		{
 		}
 
+		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
+			: base (jniPeerTypeName, managedPeerType, isInterface)
+		{
+		}
+
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type declaringType)
 		{
 			var peerType  = GetThresholdType (value);
