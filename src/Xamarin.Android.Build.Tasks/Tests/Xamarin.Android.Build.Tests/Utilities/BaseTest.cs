@@ -164,6 +164,32 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		/// <summary>
+		/// Windows can only create a file of 255 characters: This type of path is composed of components separated by backslashes, each up to the value returned in the lpMaximumComponentLength parameter of the GetVolumeInformation function (this value is commonly 255 characters).
+		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+		/// </summary>
+		public const int MaxFileName = 255;
+
+		static Lazy<bool> longPaths = new Lazy<bool> (() => {
+			if (!TestEnvironment.IsWindows) {
+				return true;
+			}
+			var path = Path.Combine (Path.GetTempPath (), "foo".PadRight (MaxFileName, 'N'));
+			try {
+				File.WriteAllText (path, "");
+				return true;
+			} catch {
+				return false;
+			} finally {
+				// If the file exists, we should be able to delete it
+				if (File.Exists (path)) {
+					File.Delete (path);
+				}
+			}
+		});
+
+		public static bool LongPathsSupported => longPaths.Value;
+
 		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
