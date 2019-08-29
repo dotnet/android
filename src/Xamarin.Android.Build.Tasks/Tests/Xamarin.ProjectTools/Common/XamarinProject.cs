@@ -207,7 +207,7 @@ namespace Xamarin.ProjectTools
 			foreach (var ig in ItemGroupList)
 				list.AddRange (ig.Select (s => new ProjectResource () {
 					Timestamp = s.Timestamp,
-					Path = s.Include (),
+					Path = s.Include?.Invoke (),
 					Content = s.TextContent == null ? null : s.TextContent (),
 					BinaryContent = s.BinaryContent == null ? null : s.BinaryContent (),
 					Encoding = s.Encoding,
@@ -257,6 +257,9 @@ namespace Xamarin.ProjectTools
 				throw new InvalidOperationException ("Path '" + directory + "' does not exist.");
 
 			foreach (var p in projectFiles) {
+				// Skip empty paths or wildcards
+				if (string.IsNullOrEmpty (p.Path) || p.Path.Contains ("*"))
+					continue;
 				var path = Path.Combine (directory, p.Path.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar));
 
 				if (p.Deleted) {

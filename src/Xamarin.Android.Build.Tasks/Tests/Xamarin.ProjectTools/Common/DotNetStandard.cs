@@ -15,10 +15,12 @@ namespace Xamarin.ProjectTools
 
 		public DotNetStandard ()
 		{
+			ProjectName = "UnnamedProject";
 			Sources = new List<BuildItem> ();
 			OtherBuildItems = new List<BuildItem> ();
 			SetProperty (CommonProperties, "DebugType", "full");
 			ItemGroupList.Add (Sources);
+			ItemGroupList.Add (OtherBuildItems);
 			Language = XamarinAndroidProjectLanguage.CSharp;
 		}
 
@@ -51,32 +53,36 @@ namespace Xamarin.ProjectTools
 				}
 			}
 			sb.AppendLine ("\t</PropertyGroup>");
-			sb.AppendLine ("\t<ItemGroup>");
-			foreach (var pr in PackageReferences) {
-				sb.AppendLine ($"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
-			}
-			sb.AppendLine ("\t</ItemGroup>");
-			sb.AppendLine ("\t<ItemGroup>");
-			foreach (var bi in OtherBuildItems) {
-				sb.Append ($"\t\t<{bi.BuildAction} ");
-				if (bi.Include != null) sb.Append ($"Include=\"{bi.Include ()}\" ");
-				if (bi.Update != null) sb.Append ($"Update=\"{bi.Update ()}\" ");
-				if (bi.Remove != null) sb.Append ($"Remove=\"{bi.Remove ()}\" ");
-				if (bi.Generator != null) sb.Append ($"Generator=\"{bi.Generator ()}\" ");
-				if (bi.DependentUpon != null) sb.Append ($"DependentUpon=\"{bi.DependentUpon ()}\" ");
-				if (bi.Version != null) sb.Append ($"Version=\"{bi.Version ()}\" ");
-				if (bi.SubType != null) sb.Append ($"SubType=\"{bi.SubType ()}\" ");
-				if (bi.Metadata.Any ()) {
-					sb.AppendLine ($"\t\t/>");
-				} else {
-					sb.AppendLine ($">");
-					foreach (var kvp in bi.Metadata) {
-						sb.AppendLine ($"\t\t\t<{kvp.Key}>{kvp.Value}</{kvp.Key}>");
-					}
-					sb.AppendLine ($"\t\t</{bi.BuildAction}>");
+			if (PackageReferences.Count > 0) {
+				sb.AppendLine ("\t<ItemGroup>");
+				foreach (var pr in PackageReferences) {
+					sb.AppendLine ($"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
 				}
+				sb.AppendLine ("\t</ItemGroup>");
 			}
-			sb.AppendLine ("\t</ItemGroup>");
+			if (OtherBuildItems.Count > 0) {
+				sb.AppendLine ("\t<ItemGroup>");
+				foreach (var bi in OtherBuildItems) {
+					sb.Append ($"\t\t<{bi.BuildAction} ");
+					if (bi.Include != null) sb.Append ($"Include=\"{bi.Include ()}\" ");
+					if (bi.Update != null) sb.Append ($"Update=\"{bi.Update ()}\" ");
+					if (bi.Remove != null) sb.Append ($"Remove=\"{bi.Remove ()}\" ");
+					if (bi.Generator != null) sb.Append ($"Generator=\"{bi.Generator ()}\" ");
+					if (bi.DependentUpon != null) sb.Append ($"DependentUpon=\"{bi.DependentUpon ()}\" ");
+					if (bi.Version != null) sb.Append ($"Version=\"{bi.Version ()}\" ");
+					if (bi.SubType != null) sb.Append ($"SubType=\"{bi.SubType ()}\" ");
+					if (bi.Metadata.Any ()) {
+						sb.AppendLine ($"\t\t/>");
+					} else {
+						sb.AppendLine ($">");
+						foreach (var kvp in bi.Metadata) {
+							sb.AppendLine ($"\t\t\t<{kvp.Key}>{kvp.Value}</{kvp.Key}>");
+						}
+						sb.AppendLine ($"\t\t</{bi.BuildAction}>");
+					}
+				}
+				sb.AppendLine ("\t</ItemGroup>");
+			}
 			return $"<Project Sdk=\"{Sdk}\">\r\n{sb.ToString ()}\r\n</Project>";
 		}
 
