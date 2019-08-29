@@ -119,24 +119,25 @@ namespace Xamarin.ProjectTools
 
 		public string MicrosoftNetSdkDirectory {
 			get {
-				string path;
-				if (IsUnix) {
-					path = FindLatestDotNetSdk (frameworkSDKRoot);
-					if (!string.IsNullOrEmpty (path))
-						return path;
-	
-					return string.Empty;
-				}
-				var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
-				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
-					path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
+				string dotnetSearchPath = IsUnix ? frameworkSDKRoot
+						:  Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "dotnet");
+
+				string path = FindLatestDotNetSdk (dotnetSearchPath);
+				if (!string.IsNullOrEmpty (path))
+					return path;
+
+				if (!IsUnix) {
+					var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
+					if (!string.IsNullOrEmpty (visualStudioDirectory)) {
+						path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
+						if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
+							return path;
+					}
+					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+					path = Path.Combine (x86, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
 					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
 						return path;
 				}
-				var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-				path = Path.Combine (x86, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
-				if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-					return path;
 				return string.Empty;
 			}
 		}
@@ -505,7 +506,8 @@ namespace Xamarin.ProjectTools
 				Version latest = new Version (0,0);
 				string Sdk = null;
 				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
-					var version = GetVersionFromDirectory (dir);
+					// Preview versions such as `3.0.100-preview9-013775` will be ignored.
+					Version.TryParse (Path.GetFileName (dir), out Version version);
 					var sdksDir = Path.Combine (dir, "Sdks");
 					if (!Directory.Exists (sdksDir))
 						sdksDir = Path.Combine (dir, "bin", "Sdks");
@@ -521,12 +523,6 @@ namespace Xamarin.ProjectTools
 			return null;
 		}
 
-		static Version GetVersionFromDirectory (string dir)
-		{
-			Version v;
-			Version.TryParse (Path.GetFileName (dir), out v);
-			return v;
-		}
 	}
 }
 
