@@ -207,6 +207,8 @@ stages:
     workspace:
       clean: all
     steps:
+    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
+
     - task: JenkinsQueueJob@2
       displayName: xamarin vsix codesign - run jenkins job
       inputs:
@@ -237,10 +239,11 @@ stages:
       AndroidTargetAbiArgs: >-
         /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
         /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
-      JAVA_HOME: '%HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk'
     steps:
     - checkout: self
       submodules: recursive
+
+    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
