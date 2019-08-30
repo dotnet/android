@@ -105,11 +105,11 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidWear = new Package () {
 			Id = "Xamarin.Android.Wear",
-			Version = "1.0.0-preview7",
-			TargetFramework = "MonoAndroid4487",
+			Version = "1.0.0",
+			TargetFramework = "MonoAndroid44",
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.Wearable") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Wear.1.0.0-preview7\\lib\\MonoAndroid10\\Xamarin.Android.Wearable.dll" }
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Wear.1.0.0\\lib\\MonoAndroid44\\Xamarin.Android.Wearable.dll" }
 				}
 		};
 		public static Package AndroidWear_2_2_0 = new Package () {

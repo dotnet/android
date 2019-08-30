@@ -452,15 +452,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		WearApplicationApkPath="$(BundledWearApplicationApkPath)">
 		<Output TaskParameter="WearableApplicationDescriptionFile" ItemName="_WearableApplicationDescriptionFile" />
 		<Output TaskParameter="BundledWearApplicationApkResourceFile" ItemName="_BundledWearApplicationApkResourceFile" />
+		<Output TaskParameter="ModifiedFiles" ItemName="_ModifiedResources" />
 	</PrepareWearApplicationFiles>
-	<CreateItem Include="@(_WearableApplicationDescriptionFile)"
-		Condition="'@(_WearableApplicationDescriptionFile)' != ''">
-		<Output TaskParameter="Include" ItemName="AndroidResource" />
-	</CreateItem>
-	<CreateItem Include="@(_BundledWearApplicationApkResourceFile)"
-		Condition="'@(_BundledWearApplicationApkResourceFile)' != ''">
-		<Output TaskParameter="Include" ItemName="AndroidResource" />
-	</CreateItem>
 	<!-- in case there is no actual wear apk to be bundled, we don't generate wear_app_desc.xml and we shouldn't modify AndroidManifest.xml as if it had the apk -->
 	<CreateProperty Value=""
 		Condition="'@(_WearableApplicationDescriptionFile)' == ''">
@@ -1372,6 +1365,10 @@ because xbuild doesn't support framework reference assemblies.
 	>
 		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
 	</CopyIfChanged>
+	<!--NOTE: these two item groups are generated for Wear apps-->
+	<ItemGroup>
+		<_AndroidResourceDest Include="@(_WearableApplicationDescriptionFile);@(_BundledWearApplicationApkResourceFile)" />
+	</ItemGroup>
 	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
 		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
 	</RemoveUnknownFiles>
