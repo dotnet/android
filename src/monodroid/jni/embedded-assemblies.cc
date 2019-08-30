@@ -11,13 +11,16 @@
 #include <libgen.h>
 #include <errno.h>
 
+#include <mono/metadata/assembly.h>
+#include <mono/metadata/image.h>
+#include <mono/metadata/mono-config.h>
+
 #include "java-interop-util.h"
 
 #include "monodroid.h"
-#include "dylib-mono.h"
-#include "util.h"
-#include "embedded-assemblies.h"
-#include "globals.h"
+#include "util.hh"
+#include "embedded-assemblies.hh"
+#include "globals.hh"
 #include "monodroid-glue.h"
 #include "xamarin-app.h"
 
@@ -64,8 +67,8 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 {
-	const char *culture = monoFunctions.assembly_name_get_culture (aname);
-	const char *asmname = monoFunctions.assembly_name_get_name (aname);
+	const char *culture = mono_assembly_name_get_culture (aname);
+	const char *asmname = mono_assembly_name_get_name (aname);
 
 	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
 	name_len += sizeof (".exe");
@@ -97,9 +100,9 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 			const MonoBundledAssembly *e = *p;
 
 			if (strcmp (e->name, name) == 0 &&
-					(image  = monoFunctions.image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
-					(a      = monoFunctions.assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
-				monoFunctions.config_for_assembly (image);
+					(image  = mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
+					(a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
+				mono_config_for_assembly (image);
 				break;
 			}
 		}
@@ -127,8 +130,8 @@ EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, UNUSED_A
 void
 EmbeddedAssemblies::install_preload_hooks ()
 {
-	monoFunctions.install_assembly_preload_hook (open_from_bundles_full, nullptr);
-	monoFunctions.install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
+	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
+	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
 }
 
 int
@@ -270,6 +273,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uLong offset, uLong size, const ch
 	uLong offsetSize      = size + offsetFromPage;
 
 	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
+
 	if (mmap_info.area == MAP_FAILED) {
 		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
@@ -359,7 +363,7 @@ EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name,
 			return false;
 	}
 
-	monoFunctions.register_symfile_for_assembly (assembly->name, debug_contents, debug_size);
+	mono_register_symfile_for_assembly (assembly->name, debug_contents, debug_size);
 
 	return true;
 }
@@ -448,7 +452,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 				*strrchr (assembly_name, '.') = '\0';
 
 				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				monoFunctions.register_config_for_assembly (assembly_name, (const char*)map_info.area);
+				mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
 
 				continue;
 			}

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_CommonDefines>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')" -DMONO_PATH=$(MonoSourceFullPath) -DSGEN_BRIDGE_VERSION=$(MonoSgenBridgeVersion)</_CommonDefines>
+    <_CommonDefines>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DJDK_INCLUDE="@(JdkIncludePath->'%(Identity)', ' ')" -DMONO_PATH=$(MonoSourceFullPath)</_CommonDefines>
     <_CmakeCommonHostFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeCommonHostFlags>
 
     <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeMxeCommonFlags>

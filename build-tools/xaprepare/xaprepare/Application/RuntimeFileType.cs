@@ -5,5 +5,6 @@ namespace Xamarin.Android.Prepare
 		Other,
 		Binary,
 		StrippableBinary,
+		SdkHeader,
 	}
 }

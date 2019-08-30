@@ -12,6 +12,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.util.Log;
 import mono.android.Runtime;
+import mono.android.DebugRuntime;
+import mono.android.BuildConfig;
 
 public class MonoPackageManager {
 
@@ -49,36 +51,47 @@ public class MonoPackageManager {
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
 				boolean embeddedDSOsEnabled = (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
+				String runtimeDir = getNativeLibraryPath (runtimePackage);
+				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
+				String[] externalStorageDirs = new String[] {externalDir, externalLegacyDir};
 
+				//
 				// Preload DSOs libmonodroid.so depends on so that the dynamic
 				// linker can resolve them when loading monodroid. This is not
 				// needed in the latest Android versions but is required in at least
 				// API 16 and since there's no inherent negative effect of doing it,
 				// we can do it unconditionally.
+				//
+				// We need to use our own `BuildConfig` class to detect debug builds here because,
+				// it seems, ApplicationInfo.flags information is not reliable - in the debug builds
+				// (with `android:debuggable=true` present on the `<application>` element in the
+				// manifest) using shared runtime, the `runtimePackage.flags` field does NOT have
+				// the FLAGS_DEBUGGABLE (0x00000002) set and thus we'd revert to the `else` clause
+				// below, leading to an error locating the Mono runtime
+				//
+				if (BuildConfig.Debug) {
+					System.loadLibrary ("xamarin-debug-app-helper");
+					DebugRuntime.init (apks, runtimeDir, appDirs, externalStorageDirs, android.os.Build.VERSION.SDK_INT, embeddedDSOsEnabled);
+				} else {
+					System.loadLibrary("monosgen-2.0");
+				}
 				System.loadLibrary("xamarin-app");
 				System.loadLibrary("monodroid");
 
 				Runtime.initInternal (
 						language,
 						apks,
-						getNativeLibraryPath (runtimePackage),
-						new String[]{
-							filesDir,
-							cacheDir,
-							dataDir,
-						},
+						runtimeDir,
+						appDirs,
 						loader,
-						new String[] {
-							externalDir,
-							externalLegacyDir
-						},
+						externalStorageDirs,
 						MonoPackageManager_Resources.Assemblies,
 						android.os.Build.VERSION.SDK_INT,
 						embeddedDSOsEnabled
 					);
-				
+
 				mono.android.app.ApplicationRegistration.registerApplications ();
-				
+
 				initialized = true;
 			}
 		}
@@ -116,4 +129,3 @@ public class MonoPackageManager {
 		return MonoPackageManager_Resources.ApiPackageName;
 	}
 }
-

@@ -30,9 +30,9 @@
 #include "java-interop-util.h"
 
 #include "monodroid.h"
-#include "debug.h"
-#include "util.h"
-#include "globals.h"
+#include "debug.hh"
+#include "util.hh"
+#include "globals.hh"
 
 //
 // The communication between xs and the app works as follows:
