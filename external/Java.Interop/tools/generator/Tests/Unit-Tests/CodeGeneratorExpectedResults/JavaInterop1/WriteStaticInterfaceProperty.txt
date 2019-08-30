@@ -5,7 +5,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 	 static unsafe int Value {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
-		[Register ("get_Value", "()I", "Getget_ValueHandler")]
+		[Register ("get_Value", "()I", "")]
 		get {
 			const string __id = "get_Value.()I";
 			try {
@@ -15,7 +15,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 			}
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Value' and count(parameter)=1 and parameter[1][@type='int']]"
-		[Register ("set_Value", "(I)V", "Getset_Value_IHandler")]
+		[Register ("set_Value", "(I)V", "")]
 		set {
 			const string __id = "set_Value.(I)V";
 			try {

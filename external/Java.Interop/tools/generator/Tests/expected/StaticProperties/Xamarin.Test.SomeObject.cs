@@ -29,7 +29,7 @@ namespace Xamarin.Test {
 		static IntPtr id_setSomeInteger_I;
 		public static unsafe int SomeInteger {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
-			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")]
+			[Register ("getSomeInteger", "()I", "")]
 			get {
 				if (id_getSomeInteger == IntPtr.Zero)
 					id_getSomeInteger = JNIEnv.GetStaticMethodID (class_ref, "getSomeInteger", "()I");
@@ -39,7 +39,7 @@ namespace Xamarin.Test {
 				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
-			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")]
+			[Register ("setSomeInteger", "(I)V", "")]
 			set {
 				if (id_setSomeInteger_I == IntPtr.Zero)
 					id_setSomeInteger_I = JNIEnv.GetStaticMethodID (class_ref, "setSomeInteger", "(I)V");
@@ -56,7 +56,7 @@ namespace Xamarin.Test {
 		static IntPtr id_setSomeString_Ljava_lang_String_;
 		public static unsafe string SomeString {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
-			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")]
+			[Register ("getSomeString", "()Ljava/lang/String;", "")]
 			get {
 				if (id_getSomeString == IntPtr.Zero)
 					id_getSomeString = JNIEnv.GetStaticMethodID (class_ref, "getSomeString", "()Ljava/lang/String;");
@@ -66,7 +66,7 @@ namespace Xamarin.Test {
 				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
-			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")]
+			[Register ("setSomeString", "(Ljava/lang/String;)V", "")]
 			set {
 				if (id_setSomeString_Ljava_lang_String_ == IntPtr.Zero)
 					id_setSomeString_Ljava_lang_String_ = JNIEnv.GetStaticMethodID (class_ref, "setSomeString", "(Ljava/lang/String;)V");

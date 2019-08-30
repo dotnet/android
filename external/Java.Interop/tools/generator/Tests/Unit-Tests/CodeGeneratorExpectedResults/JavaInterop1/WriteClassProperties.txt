@@ -115,7 +115,7 @@ public virtual unsafe string Key {
 
 public static unsafe int StaticCount {
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_StaticCount' and count(parameter)=0]"
-	[Register ("get_StaticCount", "()I", "Getget_StaticCountHandler")]
+	[Register ("get_StaticCount", "()I", "")]
 	get {
 		const string __id = "get_StaticCount.()I";
 		try {
@@ -125,7 +125,7 @@ public static unsafe int StaticCount {
 		}
 	}
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
-	[Register ("set_StaticCount", "(I)V", "Getset_StaticCount_IHandler")]
+	[Register ("set_StaticCount", "(I)V", "")]
 	set {
 		const string __id = "set_StaticCount.(I)V";
 		try {

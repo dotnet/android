@@ -32,7 +32,7 @@ namespace Xamarin.Test {
 
 		public static unsafe int SomeInteger {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
-			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")]
+			[Register ("getSomeInteger", "()I", "")]
 			get {
 				const string __id = "getSomeInteger.()I";
 				try {
@@ -42,7 +42,7 @@ namespace Xamarin.Test {
 				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
-			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")]
+			[Register ("setSomeInteger", "(I)V", "")]
 			set {
 				const string __id = "setSomeInteger.(I)V";
 				try {
@@ -56,7 +56,7 @@ namespace Xamarin.Test {
 
 		public static unsafe string SomeString {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
-			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")]
+			[Register ("getSomeString", "()Ljava/lang/String;", "")]
 			get {
 				const string __id = "getSomeString.()Ljava/lang/String;";
 				try {
@@ -66,7 +66,7 @@ namespace Xamarin.Test {
 				}
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
-			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")]
+			[Register ("setSomeString", "(Ljava/lang/String;)V", "")]
 			set {
 				const string __id = "setSomeString.(Ljava/lang/String;)V";
 				IntPtr native_value = JNIEnv.NewString (value);
