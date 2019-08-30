@@ -56,12 +56,9 @@
     AfterTargets="Build"
     Inputs="@(_RuntimeOutput->'%(Identity)')"
     Outputs="@(_RuntimeOutput->'%(OutputDex)')">
-  <PropertyGroup>
-    <_JavaHome Condition=" '$(JAVA_HOME)' == '' And '$(JavaSdkDirectory)' != '' ">JAVA_HOME=$(JavaSdkDirectory)</_JavaHome>
-  </PropertyGroup>
   <Exec
       Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;%(_RuntimeOutput.OutputDex)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
-      EnvironmentVariables="$(_JavaHome)"
+      EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
   />
 </Target>
 </Project>
