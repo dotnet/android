@@ -30,6 +30,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string WorkingDirectory { get; set; }
 
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
+
 		public override bool Execute ()
 		{
 			try {
@@ -134,7 +137,6 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetAssemblerConfigs ()
 		{
-			string sdkBinDirectory = Path.Combine (MonoAndroidHelper.GetOSBinPath (), "ndk");
 			foreach (ITaskItem item in Sources) {
 				string abi = item.GetMetadata ("abi")?.ToLowerInvariant ();
 				string prefix = String.Empty;
@@ -142,24 +144,24 @@ namespace Xamarin.Android.Tasks
 
 				switch (abi) {
 					case "armeabi-v7a":
-						prefix = Path.Combine (sdkBinDirectory, "arm-linux-androideabi");
+						prefix = Path.Combine (AndroidBinUtilsDirectory, "arm-linux-androideabi");
 						arch = AndroidTargetArch.Arm;
 						break;
 
 					case "arm64":
 					case "arm64-v8a":
 					case "aarch64":
-						prefix = Path.Combine (sdkBinDirectory, "aarch64-linux-android");
+						prefix = Path.Combine (AndroidBinUtilsDirectory, "aarch64-linux-android");
 						arch = AndroidTargetArch.Arm64;
 						break;
 
 					case "x86":
-						prefix = Path.Combine (sdkBinDirectory, "i686-linux-android");
+						prefix = Path.Combine (AndroidBinUtilsDirectory, "i686-linux-android");
 						arch = AndroidTargetArch.X86;
 						break;
 
 					case "x86_64":
-						prefix = Path.Combine (sdkBinDirectory, "x86_64-linux-android");
+						prefix = Path.Combine (AndroidBinUtilsDirectory, "x86_64-linux-android");
 						arch = AndroidTargetArch.X86_64;
 						break;
 
