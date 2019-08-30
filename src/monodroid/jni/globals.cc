@@ -1,9 +1,8 @@
-#include "globals.h"
+#include "globals.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-DylibMono monoFunctions;
 Util utils;
 AndroidSystem androidSystem;
 OSBridge osBridge;

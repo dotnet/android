@@ -9,13 +9,13 @@
 #include <android/log.h>
 #endif
 
-#include "logger.h"
+#include "logger.hh"
 
 #include "monodroid.h"
 #include "monodroid-glue.h"
-#include "debug.h"
-#include "util.h"
-#include "globals.h"
+#include "debug.hh"
+#include "util.hh"
+#include "globals.hh"
 
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
 	va_start ((_args_), (_format_));									                        \
@@ -77,17 +77,17 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	}
 
 	if (!path) {
-		create_public_directory (override_dir);
-		p     = path_combine (override_dir, filename);
+		utils.create_public_directory (override_dir);
+		p     = utils.path_combine (override_dir, filename);
 		path  = p;
 	}
 
 	unlink (path);
 
-	f = monodroid_fopen (path, "a");
+	f = utils.monodroid_fopen (path, "a");
 
 	if (f) {
-		set_world_accessable (path);
+		utils.set_world_accessable (path);
 	} else {
 		log_warn (category, "Could not open path '%s' for logging: %s",
 				path, strerror (errno));

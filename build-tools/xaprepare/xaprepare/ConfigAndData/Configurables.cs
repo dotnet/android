@@ -267,6 +267,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
 			public static readonly string MxeSourceDir                     = Path.Combine (ExternalDir, "mxe");
 			public static readonly string MonoSDKSRelativeOutputDir        = Path.Combine ("sdks", "out");
+			public static readonly string MonoSDKRelativeIncludeSourceDir  = Path.Combine ("include", "mono-2.0", "mono");
 			public static readonly string RuntimeInstallRelativeLibDir     = "lib";
 			public static readonly string PackageImageDependenciesTemplate = Path.Combine (BuildToolsScriptsDir, "prepare-image-dependencies.sh.in");
 			public static readonly string PackageImageDependenciesOutput   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "prepare-image-dependencies.sh");
@@ -278,6 +279,7 @@ namespace Xamarin.Android.Prepare
 			public static string MonoSDKSOutputDir                   => GetCachedPath (ref monoSDKsOutputDir, ()                   => Path.Combine (MonoSourceFullPath, MonoSDKSRelativeOutputDir));
 			public static string MonoProfileDir                      => GetCachedPath (ref monoProfileDir, ()                      => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid"));
 			public static string MonoProfileToolsDir                 => GetCachedPath (ref monoProfileToolsDir, ()                 => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid_tools"));
+			public static string MonoSDKIncludeDestinationDir        => GetCachedPath (ref monoSDKSIncludeDestDir, ()              => Path.Combine (OutputIncludeDir, "mono-2.0", "mono"));
 
 			public static string BCLFacadeAssembliesSourceDir        => GetCachedPath (ref bclFacadeAssembliesSourceDir, ()        => Path.Combine (BCLAssembliesSourceDir, "Facades"));
 			public static string BCLHostAssembliesSourceDir          => BCLAssembliesSourceDir;
@@ -419,6 +421,7 @@ namespace Xamarin.Android.Prepare
 			static string externalJavaInteropDir;
 			static string monoSdksTpnPath;
 			static string monoSdksTpnExternalPath;
+			static string monoSDKSIncludeDestDir;
 		}
 	}
 }

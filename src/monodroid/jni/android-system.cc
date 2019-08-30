@@ -21,11 +21,11 @@
 #endif
 
 #include "unzip.h"
-#include "globals.h"
-#include "android-system.h"
+#include "globals.hh"
+#include "android-system.hh"
 #include "monodroid.h"
-#include "monodroid-glue-internal.h"
-#include "jni-wrappers.h"
+#include "monodroid-glue-internal.hh"
+#include "jni-wrappers.hh"
 #include "xamarin-app.h"
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -47,32 +47,10 @@ BundledProperty *AndroidSystem::bundled_properties = nullptr;
 constexpr char AndroidSystem::OVERRIDE_ENVIRONMENT_FILE_NAME[];
 #endif // DEBUG || !ANDROID
 
-char* AndroidSystem::override_dirs [MAX_OVERRIDES];
-const char **AndroidSystem::app_lib_directories;
-size_t AndroidSystem::app_lib_directories_size = 0;
-#if WINDOWS
-static const char *SYSTEM_LIB_PATH;
-#else
-constexpr char AndroidSystem::SYSTEM_LIB_PATH[];
-#endif
-constexpr char AndroidSystem::MONO_SGEN_SO[];
-constexpr char AndroidSystem::MONO_SGEN_ARCH_SO[];
-
 #if defined (WINDOWS)
 std::mutex AndroidSystem::readdir_mutex;
 char *AndroidSystem::libmonoandroid_directory_path = nullptr;
 #endif
-
-// Values correspond to the CPU_KIND_* macros
-const char* AndroidSystem::android_abi_names[CPU_KIND_X86_64+1] = {
-	"unknown",
-	[CPU_KIND_ARM]      = "armeabi-v7a",
-	[CPU_KIND_ARM64]    = "arm64-v8a",
-	[CPU_KIND_MIPS]     = "mips",
-	[CPU_KIND_X86]      = "x86",
-	[CPU_KIND_X86_64]   = "x86_64",
-};
-#define ANDROID_ABI_NAMES_SIZE (sizeof(android_abi_names) / sizeof (android_abi_names[0]))
 
 #if !defined (ANDROID)
 static constexpr uint32_t PROP_NAME_MAX = 32;
@@ -382,163 +360,6 @@ AndroidSystem::create_update_dir (char *override_dir)
 	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 }
 
-#define TRY_LIBMONOSGEN(dir) \
-	if (dir) { \
-		libmonoso = utils.path_combine (dir, MONO_SGEN_SO); \
-		log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);	\
-		if (utils.file_exists (libmonoso)) \
-			return libmonoso; \
-		delete[] libmonoso; \
-	}
-
-#ifndef RELEASE
-void
-AndroidSystem::copy_native_libraries_to_internal_location ()
-{
-	for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
-		monodroid_dir_t *dir;
-		monodroid_dirent_t *e;
-
-		char *dir_path = utils.path_combine (override_dirs [i], "lib");
-		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
-
-		if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
-			log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
-			delete[] dir_path;
-			continue;
-		}
-
-		if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
-			log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
-			delete[] dir_path;
-			continue;
-		}
-
-		while ((e = readdir (dir)) != nullptr) {
-			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
-			if (utils.monodroid_dirent_hasextension (e, ".so")) {
-#if WINDOWS
-				char *file_name = utils.utf16_to_utf8 (e->d_name);
-#else   /* def WINDOWS */
-				char *file_name = e->d_name;
-#endif  /* ndef WINDOWS */
-				copy_file_to_internal_location (primary_override_dir, dir_path, file_name);
-#if WINDOWS
-				free (file_name);
-#endif  /* def WINDOWS */
-			}
-		}
-		utils.monodroid_closedir (dir);
-		delete[] dir_path;
-	}
-}
-#endif
-
-inline bool AndroidSystem::try_load_libmonosgen (const char *dir, char*& libmonoso)
-{
-	if (dir == nullptr || *dir == '\0')
-		return false;
-
-	libmonoso = utils.path_combine (dir, MONO_SGEN_SO);
-	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);
-	if (utils.file_exists (libmonoso))
-		return true;
-	delete[] libmonoso;
-	libmonoso = nullptr;
-
-	return false;
-}
-
-char*
-AndroidSystem::get_libmonosgen_path ()
-{
-	char *libmonoso;
-	bool embedded_dso_mode_enabled = is_embedded_dso_mode_enabled ();
-
-#ifndef RELEASE
-	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
-	// external storage locations so we need to file copy the shared object to an internal
-	// storage location before loading it.
-	copy_native_libraries_to_internal_location ();
-
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
-			if (try_load_libmonosgen (override_dirs [i], libmonoso)) {
-				return libmonoso;
-			}
-		}
-	}
-#endif
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < app_lib_directories_size; i++) {
-			if (try_load_libmonosgen (app_lib_directories [i], libmonoso)) {
-				return libmonoso;
-			}
-		}
-	}
-
-	if (runtime_libdir != nullptr) {
-		libmonoso = utils.path_combine (runtime_libdir, MONO_SGEN_ARCH_SO);
-	} else
-		libmonoso = nullptr;
-
-	if (libmonoso != nullptr && utils.file_exists (libmonoso)) {
-		char* links_dir = utils.path_combine (primary_override_dir, "links");
-		char* link = utils.path_combine (links_dir, MONO_SGEN_SO);
-		if (!utils.directory_exists (links_dir)) {
-			if (!utils.directory_exists (primary_override_dir))
-				utils.create_public_directory (primary_override_dir);
-			utils.create_public_directory (links_dir);
-		}
-		delete[] links_dir;
-		if (!utils.file_exists (link)) {
-			int result = symlink (libmonoso, link);
-			if (result != 0 && errno == EEXIST) {
-				log_warn (LOG_DEFAULT, "symlink exists, recreating: %s -> %s", link, libmonoso);
-				unlink (link);
-				result = symlink (libmonoso, link);
-			}
-			if (result != 0)
-				log_warn (LOG_DEFAULT, "symlink failed with errno=%i %s", errno, strerror (errno));
-		}
-		delete[] libmonoso;
-		libmonoso = link;
-	}
-
-	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso);
-	if (libmonoso != nullptr && utils.file_exists (libmonoso))
-		return libmonoso;
-	delete[] libmonoso;
-
-#ifdef WINDOWS
-	if (try_load_libmonosgen (get_libmonoandroid_directory_path (), libmonoso))
-		return libmonoso;
-#endif
-
-	if (try_load_libmonosgen (SYSTEM_LIB_PATH, libmonoso))
-		return libmonoso;
-	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", MONO_SGEN_SO);
-
-#ifndef RELEASE
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
-			if (override_dirs [i] == nullptr)
-				continue;
-			log_fatal (LOG_DEFAULT, "  %s", override_dirs [i]);
-		}
-	}
-#endif
-	for (size_t i = 0; i < app_lib_directories_size; i++) {
-		log_fatal (LOG_DEFAULT, "  %s", app_lib_directories [i]);
-	}
-
-	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
-	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
-	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
-
-	return libmonoso;
-}
-
 char*
 AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, bool *needs_free)
 {
@@ -731,48 +552,6 @@ AndroidSystem::get_max_gref_count_from_system (void)
 	return max;
 }
 
-#ifdef ANDROID
-void
-AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
-{
-	char *from_file = utils.path_combine (from_dir, file);
-	char *to_file   = nullptr;
-
-	do {
-		if (!from_file || !utils.file_exists (from_file))
-			break;
-
-		log_warn (LOG_DEFAULT, "Copying file `%s` from external location `%s` to internal location `%s`",
-				file, from_dir, to_dir);
-
-		to_file = utils.path_combine (to_dir, file);
-		if (!to_file)
-			break;
-
-		int r = unlink (to_file);
-		if (r < 0 && errno != ENOENT) {
-			log_warn (LOG_DEFAULT, "Unable to delete file `%s`: %s", to_file, strerror (errno));
-			break;
-		}
-
-		if (!utils.file_copy (to_file, from_file)) {
-			log_warn (LOG_DEFAULT, "Copy failed from `%s` to `%s`: %s", from_file, to_file, strerror (errno));
-			break;
-		}
-
-		utils.set_user_executable (to_file);
-	} while (0);
-
-	delete[] from_file;
-	delete[] to_file;
-}
-#else  /* !defined (ANDROID) */
-void
-AndroidSystem::copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
-{
-}
-#endif /* defined (ANDROID) */
-
 long
 AndroidSystem::get_gref_gc_threshold ()
 {
@@ -915,11 +694,11 @@ AndroidSystem::setup_environment ()
 				break;
 
 			default:
-				aotMode = MonoAotMode::MONO_AOT_MODE_UNKNOWN;
+				aotMode = MonoAotMode::MONO_AOT_MODE_LAST;
 				break;
 		}
 
-		if (aotMode != MonoAotMode::MONO_AOT_MODE_UNKNOWN)
+		if (aotMode == MonoAotMode::MONO_AOT_MODE_LAST)
 			log_info (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
 		else
 			log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);
@@ -963,45 +742,19 @@ AndroidSystem::setup_environment ()
 }
 
 void
-AndroidSystem::for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, void (AndroidSystem::*handler) (const char *apk, size_t index, size_t apk_count, void *user_data), void *user_data)
-{
-	size_t apksLength = runtimeApks.get_length ();
-	for (size_t i = 0; i < apksLength; ++i) {
-		jstring_wrapper &e = runtimeApks [i];
-
-		(this->*handler) (e.get_cstr (), i, apksLength, user_data);
-	}
-}
-
-void
 AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, void *user_data)
 {
 	if (apk == nullptr || index != apk_count - 1)
 		return;
 
 	char *args[1] = { (char*) apk };
-	monoFunctions.runtime_set_main_args (1, args);
+	mono_runtime_set_main_args (1, args);
 }
 
 void
 AndroidSystem::setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks)
 {
-	for_each_apk (env, runtimeApks, &AndroidSystem::setup_process_args_apk, nullptr);
-}
-
-void
-AndroidSystem::add_apk_libdir (const char *apk, size_t index, size_t apk_count, void *user_data)
-{
-	assert (user_data != nullptr);
-	assert (index >= 0 && index < app_lib_directories_size);
-	app_lib_directories [index] = monodroid_strdup_printf ("%s!/lib/%s", apk, (const char*)user_data);
-}
-
-void
-AndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks)
-{
-	// Man, the cast is ugly...
-	for_each_apk (env, runtimeApks, &AndroidSystem::add_apk_libdir, const_cast <void*> (static_cast<const void*> (android_abi_names [running_on_cpu])));
+	for_each_apk (env, runtimeApks, static_cast<BasicAndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
 }
 
 monodroid_dirent_t*

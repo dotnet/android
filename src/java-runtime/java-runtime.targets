@@ -7,17 +7,17 @@
     <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>java\mono\android\debug\MultiDexLoader.java;java\mono\android\MonkeyPatcher.java;java\mono\android\ResourcePatcher.java;java\mono\android\Seppuku.java</RemoveItems>
+    <RemoveItems>java\mono\android\debug\MultiDexLoader.java;java\mono\android\MonkeyPatcher.java;java\mono\android\ResourcePatcher.java;java\mono\android\Seppuku.java;java\mono\android\debug\BuildConfig.java</RemoveItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>java\mono\android\release\MultiDexLoader.java</RemoveItems>
+    <RemoveItems>java\mono\android\release\MultiDexLoader.java;java\mono\android\release\BuildConfig.java</RemoveItems>
   </_RuntimeOutput>
 </ItemGroup>
-<Target Name="Build" 
+<Target Name="Build"
       Inputs="@(AllRuntimeSource)"
       Outputs="%(_RuntimeOutput.OutputJar)"
 >

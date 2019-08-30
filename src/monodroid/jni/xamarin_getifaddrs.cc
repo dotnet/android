@@ -31,9 +31,9 @@
 #include <android/log.h>
 #endif
 
-#include "logger.h"
+#include "logger.hh"
 
-#include "globals.h"
+#include "globals.hh"
 #include "xamarin_getifaddrs.h"
 
 /* Some of these aren't defined in android's rtnetlink.h (as of ndk 16). We define values for all of

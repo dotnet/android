@@ -3,7 +3,7 @@
 #define __OS_BRIDGE_H
 
 #include <jni.h>
-#include "dylib-mono.h"
+#include <mono/metadata/sgen-bridge.h>
 
 namespace xamarin { namespace android { namespace internal
 {
