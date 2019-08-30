@@ -15,8 +15,8 @@ namespace Xamarin.Android.Build.Tests
 		[SetUp]
 		public void Setup ()
 		{
-			if (!IsWindows) {
-				Assert.Ignore ("MAX_PATH only applies on Windows");
+			if (LongPathsSupported) {
+				Assert.Ignore ("This environment supports long paths");
 			}
 		}
 

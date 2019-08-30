@@ -75,6 +75,7 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />
@@ -133,7 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\x64\libzip.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
@@ -196,7 +197,7 @@
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)" />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.5.0.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->

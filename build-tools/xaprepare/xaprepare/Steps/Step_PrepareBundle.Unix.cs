@@ -9,9 +9,6 @@ namespace Xamarin.Android.Prepare
 			osSupportsMonoBuild = true;
 
 			AddFailureStep (new Step_BuildMonoRuntimes ());
-			AddBuildLibZipFailureStep ();
-			if (Context.Instance.WindowsJitAbisEnabled)
-				AddFailureStep (new Step_BuildLibZipForWindows ());
 
 			// We need it here (even though Scenario_Standard runs the step, because if we failed to download the
 			// bundle, the Step_BuildMonoRuntimes above will clean the destination directory and the Windows GAS
@@ -19,7 +16,5 @@ namespace Xamarin.Android.Prepare
 			AddFailureStep (new Step_Get_Windows_Binutils ());
 			AddFailureStep (new Step_CreateBundle ());
 		}
-
-		partial void AddBuildLibZipFailureStep ();
 	}
 }

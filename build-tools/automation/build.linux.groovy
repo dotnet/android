@@ -28,7 +28,7 @@ def chRootPackages = '''
     lib32z1
     libc++-dev
     libgdk-pixbuf2.0-dev
-    libncurses-dev
+    libncurses5-dev
     libsqlite3-dev
     libtinfo-dev:i386
     libtool

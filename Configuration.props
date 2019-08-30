@@ -91,8 +91,6 @@
     <MingwZlibRootDirectory32>$(MingwZlibRootDirectory)\i686-w64-mingw32</MingwZlibRootDirectory32>
     <MingwZlibRootDirectory64>$(MingwZlibRootDirectory)\x86_64-w64-mingw32</MingwZlibRootDirectory64>
     <MingwZlibLibraryName>libz.a</MingwZlibLibraryName>
-    <LibZipSourceDirectory Condition=" '$(LibZipSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libzip</LibZipSourceDirectory>
-    <LibZipSharpSourceDirectory Condition=" '$(LibZipSharpSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\LibZipSharp</LibZipSharpSourceDirectory>
     <ProGuardSourceDirectory Condition=" '$(ProGuardSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\proguard</ProGuardSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
@@ -124,8 +122,6 @@
     <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
-    <LibZipSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSourceDirectory)'))</LibZipSourceFullPath>
-    <LibZipSharpSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibZipSharpSourceDirectory)'))</LibZipSharpSourceFullPath>
     <ProGuardSourceFullPath>$([System.IO.Path]::GetFullPath ('$(ProGuardSourceDirectory)'))</ProGuardSourceFullPath>
   </PropertyGroup>
   <PropertyGroup>

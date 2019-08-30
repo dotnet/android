@@ -85,7 +85,7 @@ namespace Xamarin.Android.Build.Tests
 		public void CopyIfChanged_LongPath ()
 		{
 			var src = NewFile (contents: "foo");
-			var dest = NewFile (contents: "bar", fileName: "bar".PadRight (250, 'N'));
+			var dest = NewFile (contents: "bar", fileName: "bar".PadRight (MaxFileName, 'N'));
 			dest = Files.ToLongPath (dest);
 			Assert.IsTrue (Files.CopyIfChanged (src, dest), "Changes should have occurred");
 			FileAssert.AreEqual (src, dest);
@@ -142,7 +142,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CopyIfStringChanged_LongPath ()
 		{
-			var dest = NewFile (fileName: "bar".PadRight (250, 'N'));
+			var dest = NewFile (fileName: "bar".PadRight (MaxFileName, 'N'));
 			dest = Files.ToLongPath (dest);
 			Assert.IsTrue (Files.CopyIfStringChanged ("foo", dest), "Changes should have occurred");
 			FileAssert.Exists (dest);
@@ -192,7 +192,7 @@ namespace Xamarin.Android.Build.Tests
 		public void CopyIfStreamChanged_LongPath ()
 		{
 			using (var src = NewStream ("foo")) {
-				var dest = NewFile (fileName: "bar".PadRight (250, 'N'));
+				var dest = NewFile (fileName: "bar".PadRight (MaxFileName, 'N'));
 				dest = Files.ToLongPath (dest);
 				Assert.IsTrue (Files.CopyIfStreamChanged (src, dest), "Changes should have occurred");
 				FileAssert.Exists (dest);

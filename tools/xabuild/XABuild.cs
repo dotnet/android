@@ -33,8 +33,10 @@ namespace Xamarin.Android.Build
 					return 1;
 				}
 
-				//Create a custom xabuild.exe.config
-				var xml = CreateConfig (paths);
+				// Create a custom xabuild.exe.config
+				CreateConfig (paths);
+				// Create a Microsoft.Build.NuGetSdkResolver.xml
+				CreateSdkResolverConfig (paths);
 
 				//Symbolic links to be created: key=system, value=in-tree
 				var symbolicLinks = new Dictionary<string, string> ();
@@ -63,12 +65,8 @@ namespace Xamarin.Android.Build
 
 				return MSBuildApp.Main ();
 			} finally {
-				//NOTE: these are temporary files
-				foreach (var file in new [] { paths.MSBuildExeTempPath, paths.XABuildConfig }) {
-					if (File.Exists (file)) {
-						File.Delete (file);
-					}
-				}
+				//NOTE: this is a temporary directory
+				Directory.Delete (paths.MSBuildTempPath, recursive: true);
 			}
 		}
 
@@ -88,7 +86,7 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		static XmlDocument CreateConfig (XABuildPaths paths)
+		static void CreateConfig (XABuildPaths paths)
 		{
 			var xml = new XmlDocument ();
 			xml.Load (paths.MSBuildConfig);
@@ -120,13 +118,14 @@ namespace Xamarin.Android.Build
 				}
 			}
 
+			Directory.CreateDirectory (paths.MSBuildTempPath);
+			File.WriteAllText (paths.MSBuildExeTempPath, ""); // File just has to *exist*
 			xml.Save (paths.XABuildConfig);
 
 			if (Directory.Exists (paths.MSBuildSdksPath)) {
 				Environment.SetEnvironmentVariable ("MSBuildSDKsPath", paths.MSBuildSdksPath, EnvironmentVariableTarget.Process);
 			}
 			Environment.SetEnvironmentVariable ("MSBUILD_EXE_PATH", paths.MSBuildExeTempPath, EnvironmentVariableTarget.Process);
-			return xml;
 		}
 
 		/// <summary>
@@ -145,6 +144,21 @@ namespace Xamarin.Android.Build
 				property.SetAttribute ("name", name);
 				property.SetAttribute ("value", value);
 				toolsets.PrependChild (property);
+			}
+		}
+
+		static void CreateSdkResolverConfig (XABuildPaths paths)
+		{
+			if (string.IsNullOrEmpty (paths.SdkResolverConfigPath) || string.IsNullOrEmpty (paths.NuGetSdkResolverPath))
+				return;
+			var dir = Path.GetDirectoryName (paths.SdkResolverConfigPath);
+			Directory.CreateDirectory (dir);
+			using (var writer = File.CreateText (paths.SdkResolverConfigPath)) {
+				writer.WriteLine ("<SdkResolver>");
+				writer.Write ("\t<Path>");
+				writer.Write (paths.NuGetSdkResolverPath);
+				writer.WriteLine ("</Path>");
+				writer.WriteLine ("</SdkResolver>");
 			}
 		}
 	}

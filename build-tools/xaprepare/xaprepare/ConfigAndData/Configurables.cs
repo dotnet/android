@@ -327,11 +327,8 @@ namespace Xamarin.Android.Prepare
 			public static string CorrettoCacheDir                    => GetCachedPath (ref correttoCacheDir, ()                    => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 			public static string CorrettoInstallDir                  => GetCachedPath (ref correttoInstallDir, ()                  => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 
-			// LibZip
-			public static string LibZipOutputPath                    => InstallMSBuildDir;
-
 			// bundle
-			public static string XABundleFileName                    => $"bundle-{Defaults.XABundleVersion}-h{ctx.BuildInfo.VersionHash}-{ctx.Configuration}-{BundleOSType}-libzip={ctx.BuildInfo.LibZipHash},mono={ctx.BuildInfo.MonoHash}.{ctx.CompressionFormat.Extension}";
+			public static string XABundleFileName                    => $"bundle-{Defaults.XABundleVersion}-h{ctx.BuildInfo.VersionHash}-{ctx.Configuration}-{BundleOSType},mono={ctx.BuildInfo.MonoHash}.{ctx.CompressionFormat.Extension}";
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
 
 			// Mono Archive
