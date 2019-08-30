@@ -1,0 +1,31 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+[Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	static new readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+
+	 static unsafe int Value {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
+		[Register ("get_Value", "()I", "Getget_ValueHandler")]
+		get {
+			const string __id = "get_Value.()I";
+			try {
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Value' and count(parameter)=1 and parameter[1][@type='int']]"
+		[Register ("set_Value", "(I)V", "Getset_Value_IHandler")]
+		set {
+			const string __id = "set_Value.(I)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			} finally {
+			}
+		}
+	}
+
+}
+

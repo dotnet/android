@@ -530,7 +530,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("{0}{1} partial interface {2}{3} {{", indent, @interface.Visibility, @interface.Name,
 				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : " + GetAllInterfaceImplements () : " : " + sb.ToString ());
 
-			if (opt.SupportDefaultInterfaceMethods && @interface.HasDefaultMethods)
+			if (opt.SupportDefaultInterfaceMethods && (@interface.HasDefaultMethods || @interface.HasStaticMethods))
 				WriteClassHandle (@interface, indent + "\t", @interface.Name);
 
 			WriteInterfaceFields (@interface, indent + "\t");
@@ -994,8 +994,9 @@ namespace MonoDroid.Generation
 				WriteMethodDeclaration (m, indent, @interface, @interface.AssemblyQualifiedName + "Invoker");
 			}
 
-			foreach (var m in @interface.Methods.Where (m => m.IsInterfaceDefaultMethod))
-				WriteMethod (m, indent, @interface, true);
+			if (opt.SupportDefaultInterfaceMethods)
+				foreach (var m in @interface.Methods.Where (m => m.IsInterfaceDefaultMethod || m.IsStatic))
+					WriteMethod (m, indent, @interface, true);
 		}
 
 		public void WriteInterfaceProperties (InterfaceGen @interface, string indent)
@@ -1003,7 +1004,8 @@ namespace MonoDroid.Generation
 			foreach (var prop in @interface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod))
 				WritePropertyDeclaration (prop, indent, @interface, @interface.AssemblyQualifiedName + "Invoker");
 
-			WriteImplementedProperties (@interface.Properties.Where (p => p.Getter.IsInterfaceDefaultMethod), indent, false, @interface);
+			if (opt.SupportDefaultInterfaceMethods)
+				WriteImplementedProperties (@interface.Properties.Where (p => p.Getter.IsInterfaceDefaultMethod || p.Getter.IsStatic), indent, false, @interface);
 		}
 
 		public void WriteInterfacePropertyInvokers (InterfaceGen @interface, IEnumerable<Property> properties, string indent, HashSet<string> members)

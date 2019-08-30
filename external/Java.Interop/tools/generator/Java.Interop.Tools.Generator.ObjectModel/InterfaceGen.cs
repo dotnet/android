@@ -143,6 +143,8 @@ namespace MonoDroid.Generation
 
 		public bool HasDefaultMethods => GetAllMethods ().Any (m => m.IsInterfaceDefaultMethod);
 
+		public bool HasStaticMethods => GetAllMethods ().Any (m => m.IsStatic);
+
 		public bool IsConstSugar {
 			get {
 				if (Methods.Count > 0 || Properties.Count > 0)

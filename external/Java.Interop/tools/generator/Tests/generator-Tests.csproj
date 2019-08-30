@@ -295,6 +295,12 @@
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteMethodWithVoidReturn.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteStaticInterfaceMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\JavaInterop1\WriteStaticInterfaceProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteClass.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -425,6 +431,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteProperty.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteStaticInterfaceMethod.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XAJavaInterop1\WriteStaticInterfaceProperty.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Unit-Tests\CodeGeneratorExpectedResults\XamarinAndroid\WriteClass.txt">

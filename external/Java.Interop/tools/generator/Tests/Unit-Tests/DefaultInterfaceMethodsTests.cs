@@ -148,5 +148,40 @@ namespace generatortests
 			// The method should not be marked as 'virtual sealed'
 			Assert.False (writer.ToString ().Contains ("virtual sealed"));
 		}
+
+		[Test]
+		public void WriteStaticInterfaceMethod ()
+		{
+			// Create an interface with a static method
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");
+			iface.Methods.Add (new TestMethod (iface, "DoSomething").SetStatic ());
+
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceMethod)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteStaticInterfaceProperty ()
+		{
+			// Create an interface with a static property
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");
+			var prop = SupportTypeBuilder.CreateProperty (iface, "Value", "int", options);
+
+			prop.Getter.IsStatic = true;
+			prop.Getter.IsVirtual = false;
+			prop.Setter.IsStatic = true;
+			prop.Setter.IsVirtual = false;
+
+			iface.Properties.Add (prop);
+
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterfaceDeclaration (iface, string.Empty);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceProperty)), writer.ToString ().NormalizeLineEndings ());
+		}
 	}
 }
