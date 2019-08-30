@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
@@ -147,6 +148,48 @@ namespace generatortests
 
 			// The method should not be marked as 'virtual sealed'
 			Assert.False (writer.ToString ().Contains ("virtual sealed"));
+		}
+
+		[Test]
+		public void WriteInterfaceRedeclaredChainDefaultMethod ()
+		{
+			// Fix a case where a property declared in this hierarchy was generated as "override" instead of "virtual"
+			// public interface MyInterface { default int getValue () { return 0; } }
+			// public class MyClass implements MyInterface { }
+			// public class MySecondClass extends MyClass { @Override public int getValue () { return 1; } }
+			var gens = ParseApiDefinition (@"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='DefaultMethodsInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/DefaultMethodsInterface;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='foo' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getBar' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='setBar' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='p0' type='int' jni-type='I'></parameter>
+			      </method>
+			    </interface>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='EmptyOverrideClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/EmptyOverrideClass;'>
+			      <implements name='com.xamarin.android.DefaultMethodsInterface' name-generic-aware='com.xamarin.android.DefaultMethodsInterface' jni-type='Lcom/xamarin/android/DefaultMethodsInterface;'></implements>
+			      <constructor deprecated='not deprecated' final='false' name='EmptyOverrideClass' jni-signature='()V' bridge='false' static='false' type='com.xamarin.android.EmptyOverrideClass' synthetic='false' visibility='public'></constructor>
+			    </class>
+			    <class abstract='false' deprecated='not deprecated' extends='com.xamarin.android.EmptyOverrideClass' extends-generic-aware='com.xamarin.android.EmptyOverrideClass' jni-extends='Lcom/xamarin/android/EmptyOverrideClass;' final='false' name='ImplementedChainOverrideClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/ImplementedChainOverrideClass;'>
+			      <constructor deprecated='not deprecated' final='false' name='ImplementedChainOverrideClass' jni-signature='()V' bridge='false' static='false' type='com.xamarin.android.ImplementedChainOverrideClass' synthetic='false' visibility='public'></constructor>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getBar' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='setBar' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='p0' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>");
+
+			var klass = (ClassGen)gens.First (g => g.Name == "ImplementedChainOverrideClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteClass (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.True (writer.ToString ().Contains ("public virtual unsafe int Bar"));
 		}
 
 		[Test]

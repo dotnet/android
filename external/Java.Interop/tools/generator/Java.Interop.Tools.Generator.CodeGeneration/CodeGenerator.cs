@@ -1470,8 +1470,13 @@ namespace MonoDroid.Generation
 			if ((property.Getter ?? property.Setter).IsStatic)
 				virtual_override = " static";
 			// It should be using AdjustedName instead of Name, but ICharSequence ("Formatted") properties are not caught by this...
-			else if (gen.BaseSymbol != null && gen.BaseSymbol.GetPropertyByName (property.Name, true) != null)
-				virtual_override = " override";
+			else if (gen.BaseSymbol != null) {
+				var base_prop = gen.BaseSymbol.GetPropertyByName (property.Name, true);
+
+				// If the matching base getter we found is a DIM, we do not override it, it should stay virtual
+				if (base_prop != null && !base_prop.Getter.IsInterfaceDefaultMethod)
+					virtual_override = " override";
+			}
 
 			WriteMethodIdField (property.Getter, indent);
 			if (property.Setter != null)

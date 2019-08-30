@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -54,6 +57,26 @@ namespace generatortests
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
 
 			return File.ReadAllText (Path.Combine (root, "Unit-Tests", "CodeGeneratorExpectedResults", target, $"{testName}.txt")).NormalizeLineEndings ();
+		}
+
+		protected List<GenBase> ParseApiDefinition (string xml)
+		{
+			var doc = XDocument.Parse (xml);
+			var gens = new Parser (options).Parse (doc, Enumerable.Empty<string> (), "29", 7);
+
+			foreach (var gen in gens)
+				options.SymbolTable.AddType (gen);
+
+			foreach (var gen in gens)
+				gen.Validate (options, new GenericParameterDefinitionList (), generator.Context);
+
+			foreach (var gen in gens)
+				gen.FillProperties ();
+
+			foreach (var gen in gens)
+				gen.FixupMethodOverrides (options);
+
+			return gens;
 		}
 	}
 }
