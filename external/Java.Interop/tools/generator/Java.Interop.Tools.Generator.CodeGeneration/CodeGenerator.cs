@@ -747,7 +747,7 @@ namespace MonoDroid.Generation
 
 				if (!@interface.HasManagedName) {
 					writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
-					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This type will be removed in a future release.\")]", indent, name);
+					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This type will be removed in a future release.\", error: true)]", indent, name);
 					writer.WriteLine ("{0}public abstract class {1}Consts : {1} {{", indent, name);
 					writer.WriteLine ();
 					writer.WriteLine ("{0}\tprivate {1}Consts ()", indent, name);

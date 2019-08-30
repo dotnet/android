@@ -22,7 +22,7 @@ public abstract class MyInterface : Java.Lang.Object {
 }
 
 [Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
-[global::System.Obsolete ("Use the 'MyInterface' type. This type will be removed in a future release.")]
+[global::System.Obsolete ("Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
 public abstract class MyInterfaceConsts : MyInterface {
 
 	private MyInterfaceConsts ()

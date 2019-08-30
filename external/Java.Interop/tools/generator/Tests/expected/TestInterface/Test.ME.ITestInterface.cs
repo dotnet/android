@@ -32,7 +32,7 @@ namespace Test.ME {
 	}
 
 	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
-	[global::System.Obsolete ("Use the 'TestInterface' type. This type will be removed in a future release.")]
+	[global::System.Obsolete ("Use the 'TestInterface' type. This type will be removed in a future release.", error: true)]
 	public abstract class TestInterfaceConsts : TestInterface {
 
 		private TestInterfaceConsts ()
