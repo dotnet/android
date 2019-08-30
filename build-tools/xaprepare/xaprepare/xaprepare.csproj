@@ -125,6 +125,7 @@
     <Compile Include="ConfigAndData\Configurables.cs" />
     <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.cs" />
     <Compile Include="ConfigAndData\Runtimes.cs" />
+    <Compile Include="ConfigAndData\Runtimes.Code.cs" />
     <Compile Include="OperatingSystems\OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scenarios\Scenario_AndroidToolchain.cs" />
@@ -236,6 +237,8 @@
     <Compile Include="ConfigAndData\Dependencies\MacOS.cs" />
     <Compile Include="ConfigAndData\Runtimes.MacOS.cs" />
     <Compile Include="OperatingSystems\MacOS.cs" />
+    <Compile Include="Scenarios\Scenario_Standard.MacOS.cs" />
+    <Compile Include="Steps\Step_ChangeLibMonoSgenDylibID.MacOS.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareBundle.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.MacOS.cs" />

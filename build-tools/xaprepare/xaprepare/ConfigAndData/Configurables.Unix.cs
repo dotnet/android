@@ -21,8 +21,11 @@ namespace Xamarin.Android.Prepare
 
 			public static string BCLTestsSourceDir      => GetCachedPath (ref bclTestsSourceDir, () => Path.Combine (MonoProfileDir, "tests"));
 			public static string BCLAssembliesSourceDir => MonoProfileDir;
+			public static string HostRuntimeDir         => GetCachedPath (ref hostRuntimeDir, ()   => Path.Combine (XAInstallPrefix, "xbuild", "Xamarin", "Android", "lib", $"host-{ctx.OS.Type}"));
 
 			public static readonly string MonoRuntimeHostMingwNativeLibraryPrefix = Path.Combine ("..", "bin");
+
+			static string hostRuntimeDir;
 		}
 	}
 }

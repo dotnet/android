@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "debug.hh"
 
 using namespace xamarin::android;
 

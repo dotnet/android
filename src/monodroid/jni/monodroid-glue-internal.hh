@@ -3,9 +3,8 @@
 #define __MONODROID_GLUE_INTERNAL_H
 
 #include <jni.h>
-#include "dylib-mono.h"
-#include "android-system.h"
-#include "osbridge.h"
+#include "android-system.hh"
+#include "osbridge.hh"
 
 namespace xamarin { namespace android { namespace internal
 {
