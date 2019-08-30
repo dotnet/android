@@ -18,9 +18,9 @@ steps:
   displayName: install xaprepare dependencies
 
 - task: UseDotNet@2
-  displayName: install .NET Core 2.1.701
+  displayName: install .NET Core $(DotNetCoreVersion)
   inputs:
-    version: 2.1.701
+    version: $(DotNetCoreVersion)
 
 # Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
 - task: NuGetCommand@2
