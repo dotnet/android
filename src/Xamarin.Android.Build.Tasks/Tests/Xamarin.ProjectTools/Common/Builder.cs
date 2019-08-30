@@ -17,7 +17,6 @@ namespace Xamarin.ProjectTools
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
-		static string frameworkSDKRoot = null;
 
 		string root;
 		string buildLogFullPath;
@@ -114,31 +113,6 @@ namespace Xamarin.ProjectTools
 					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
 				}
-			}
-		}
-
-		public string MicrosoftNetSdkDirectory {
-			get {
-				string dotnetSearchPath = IsUnix ? frameworkSDKRoot
-						:  Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "dotnet", "sdk");
-
-				string path = FindLatestDotNetSdk (dotnetSearchPath);
-				if (!string.IsNullOrEmpty (path))
-					return path;
-
-				if (!IsUnix) {
-					var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
-					if (!string.IsNullOrEmpty (visualStudioDirectory)) {
-						path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
-						if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-							return path;
-					}
-					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-					path = Path.Combine (x86, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
-					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-						return path;
-				}
-				return string.Empty;
 			}
 		}
 
@@ -270,31 +244,6 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 			Console.WriteLine ($"Using {XABuildExe}");
 			Console.WriteLine ($"Using {(RunningMSBuild ? "msbuild" : "xbuild")}");
-			if (IsUnix && string.IsNullOrEmpty (frameworkSDKRoot)) {
-				var psi = new ProcessStartInfo ("msbuild") {
-					RedirectStandardOutput = true,
-					UseShellExecute = false,
-					CreateNoWindow = true,
-					WindowStyle = ProcessWindowStyle.Hidden,
-					WorkingDirectory = Root,
-					Arguments = $" {Path.Combine (Root, "FrameworkPath.targets")} /v:minimal /nologo",
-				};
-				using (var process = Process.Start (psi)) {
-					process.WaitForExit ();
-					frameworkSDKRoot = process.StandardOutput.ReadToEnd ().Trim ();
-				}
-
-				//NOTE: some machines aren't returning /msbuild/ on the end
-				//      macOS should be /Library/Frameworks/Mono.framework/Versions/5.18.0/lib/mono/msbuild/
-				var dir = Path.GetFileName (frameworkSDKRoot.TrimEnd (Path.DirectorySeparatorChar));
-				if (dir != "msbuild") {
-					var path = Path.Combine (frameworkSDKRoot, "msbuild");
-					if (Directory.Exists (path))
-						frameworkSDKRoot = path;
-				}
-			}
-			if (!string.IsNullOrEmpty (frameworkSDKRoot))
-				Console.WriteLine ($"Using $(FrameworkSDKRoot): {frameworkSDKRoot}");
 		}
 
 		public void Dispose ()
@@ -498,29 +447,6 @@ namespace Xamarin.ProjectTools
 		string QuoteFileName (string fileName)
 		{
 			return fileName.Contains (" ") ? $"\"{fileName}\"" : fileName;
-		}
-
-		string FindLatestDotNetSdk (string dotNetPath)
-		{
-			if (Directory.Exists (dotNetPath)) {
-				Version latest = new Version (0,0);
-				string Sdk = null;
-				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
-					// Preview versions such as `3.0.100-preview9-013775` will be ignored.
-					Version.TryParse (Path.GetFileName (dir), out Version version);
-					var sdksDir = Path.Combine (dir, "Sdks");
-					if (!Directory.Exists (sdksDir))
-						sdksDir = Path.Combine (dir, "bin", "Sdks");
-					if (version != null && version > latest) {
-						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
-							latest = version;
-							Sdk = Path.Combine (sdksDir, "Microsoft.NET.Sdk");
-						}
-					}
-				}
-				return Sdk;
-			}
-			return null;
 		}
 
 	}
