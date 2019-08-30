@@ -144,6 +144,11 @@ namespace Xamarin.Android.Prepare
 		public bool IgnoreMaxMonoVersion               { get; set; } = true;
 
 		/// <summary>
+		///   Do not terminate session when Mono is older than specified in the dependencies
+		/// </summary>
+		public bool IgnoreMinMonoVersion               { get; set; } = false;
+
+		/// <summary>
 		///   Current session execution mode. See <see cref="t:ExecutionMode" />
 		/// </summary>
 		public ExecutionMode ExecutionMode             { get; set; } = Configurables.Defaults.ExecutionMode;
