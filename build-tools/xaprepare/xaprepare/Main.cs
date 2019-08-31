@@ -28,6 +28,7 @@ namespace Xamarin.Android.Prepare
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
 			public bool IgnoreMaxMonoVersion   { get; set; }
+			public bool IgnoreMinMonoVersion   { get; set; }
 			public bool EnableAll              { get; set; }
 			public string XABundlePath         { get; set; }
 			public string XABundleCopyDir      { get; set; }
@@ -106,6 +107,7 @@ namespace Xamarin.Android.Prepare
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
 				{"ignore-max-mono-version=", $"Ignore the maximum supported Mono version restriction", v => parsedOptions.IgnoreMaxMonoVersion = ParseBoolean (v)},
+				{"ignore-min-mono-version=", $"Ignore the minimum supported Mono version restriction", v => parsedOptions.IgnoreMinMonoVersion = ParseBoolean (v)},
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
 			};
@@ -137,6 +139,7 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
 			Context.Instance.IgnoreMaxMonoVersion  = parsedOptions.IgnoreMaxMonoVersion;
+			Context.Instance.IgnoreMinMonoVersion  = parsedOptions.IgnoreMinMonoVersion;
 			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 

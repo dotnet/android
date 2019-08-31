@@ -19,6 +19,7 @@ namespace Xamarin.Android.Prepare
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
 		public const string IgnoreMaxMonoVersion                = "IgnoreMaxMonoVersion";
+		public const string IgnoreMinMonoVersion                = "IgnoreMinMonoVersion";
 		public const string JavaInteropFullPath                 = "JavaInteropFullPath";
 		public const string JavaSdkDirectory                    = "JavaSdkDirectory";
 		public const string LibZipSourceFullPath                = "LibZipSourceFullPath";
