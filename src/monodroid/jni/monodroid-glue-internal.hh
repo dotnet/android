@@ -6,7 +6,7 @@
 #include "android-system.hh"
 #include "osbridge.hh"
 
-namespace xamarin { namespace android { namespace internal
+namespace xamarin::android::internal
 {
 	extern char *primary_override_dir;
 	extern char *external_override_dir;
@@ -16,5 +16,5 @@ namespace xamarin { namespace android { namespace internal
 	class MonodroidRuntime
 	{
 	};
-} } }
+}
 #endif

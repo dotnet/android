@@ -29,7 +29,6 @@ void log_fatal (LogCategories category, const char *format, ...);
 
 static void copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 static void copy_native_libraries_to_internal_location ();
-static bool try_load_libmonosgen (const char *dir, char*& libmonoso);
 static char* get_libmonosgen_path ();
 
 bool maybe_load_library (const char *path);
@@ -94,22 +93,6 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 		log_fatal (LOG_DEFAULT, "Failed to dlopen Mono runtime from %s: %s", monosgen_path, dlerror ());
 		exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
 	}
-}
-
-bool
-maybe_load_library (const char *path)
-{
-	struct stat sbuf;
-
-	if (stat (path, &sbuf) != 0)
-		return false;
-
-	if (dlopen (path, RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE) != nullptr) {
-		log_info (LOG_DEFAULT, "Mono runtime loaded from %s", path);
-		return true;
-	}
-
-	return false;
 }
 
 #ifdef ANDROID

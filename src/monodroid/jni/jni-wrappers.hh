@@ -8,7 +8,7 @@
 
 #ifdef __cplusplus
 
-namespace xamarin { namespace android
+namespace xamarin::android
 {
 	class jstring_array_wrapper;
 
@@ -173,7 +173,7 @@ namespace xamarin { namespace android
 		jstring_wrapper  static_wrappers[5];
 		jstring_wrapper  invalid_wrapper;
 	};
-}}
+}
 
 #endif // __cplusplus
 #endif // __JNI_WRAPPERS_H

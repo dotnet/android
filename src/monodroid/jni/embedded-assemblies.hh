@@ -10,7 +10,7 @@
 
 struct TypeMapHeader;
 
-namespace xamarin { namespace android { namespace internal {
+namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo;
 #endif
@@ -95,7 +95,7 @@ namespace xamarin { namespace android { namespace internal {
 #endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
 	};
-}}}
+}
 
 MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */

@@ -6,7 +6,7 @@
 #include <pthread.h>
 
 #ifdef __cplusplus
-namespace xamarin { namespace android
+namespace xamarin::android
 {
 	class Debug
 	{
@@ -52,7 +52,7 @@ namespace xamarin { namespace android
 
 #endif
 	};
-} }
+}
 #else // __cplusplus
 const char *__get_debug_mono_log_property (void);
 

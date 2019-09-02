@@ -5,7 +5,7 @@
 #include <jni.h>
 #include <mono/metadata/sgen-bridge.h>
 
-namespace xamarin { namespace android { namespace internal
+namespace xamarin::android::internal
 {
 	class OSBridge
 	{
@@ -171,5 +171,5 @@ namespace xamarin { namespace android { namespace internal
 		jmethodID ArrayList_add;
 		jmethodID GCUserPeer_ctor;
 	};
-}}}
+}
 #endif // !__OS_BRIDGE_H
