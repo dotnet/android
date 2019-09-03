@@ -195,7 +195,7 @@ using System.Runtime.CompilerServices;
 			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
+				StringAssertEx.Contains (useAapt2 ? "APT0000" : "APT1144", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1281,8 +1281,8 @@ namespace Lib1 {
 				if (useAapt2) {
 					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
 				} else {
-					var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
-					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
+					var expected = builder.RunningMSBuild ? "warning APT1146: max res 26, skipping values-v27" : "warning APT1146: warning : max res 26, skipping values-v27";
+					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT1146 warning about 'max res 26, skipping values-v27'");
 				}
 			}
 		}
@@ -1309,7 +1309,7 @@ namespace Lib1 {
 			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ($"warning APT0000: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'no default translation'");
+				StringAssertEx.Contains ($"warning APT1145: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'no default translation'");
 			}
 		}
 
