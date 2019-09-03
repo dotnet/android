@@ -1,9 +1,9 @@
 ---
-title: Xamarin.Android error/warning ANDJS0000
-description: ANDJS0000 error/warning code
+title: Xamarin.Android error/warning ANDKT0000
+description: ANDKT0000 error/warning code
 ms.date: 05/04/2018
 ---
-# Xamarin.Android error/warning ANDJS0000
+# Xamarin.Android error/warning ANDKT0000
 
 ## Issue
 

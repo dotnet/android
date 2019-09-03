@@ -34,6 +34,7 @@ namespace Xamarin.Android.Prepare
 		protected override bool CheckWhetherInstalled ()
 		{
 			IgnoreMaximumVersion = Context.Instance.IgnoreMaxMonoVersion;
+			IgnoreMinimumVersion = Context.Instance.IgnoreMinMonoVersion;
 			return base.CheckWhetherInstalled ();
 		}
 

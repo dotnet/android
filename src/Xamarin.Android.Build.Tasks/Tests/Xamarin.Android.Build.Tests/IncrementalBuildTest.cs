@@ -520,6 +520,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[NonParallelizable] // /restore can fail on Mac in parallel
 		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
