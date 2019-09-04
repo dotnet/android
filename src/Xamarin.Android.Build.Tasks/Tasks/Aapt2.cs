@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
+using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
@@ -53,6 +54,7 @@ namespace Xamarin.Android.Tasks {
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				StandardOutputEncoding = Encoding.UTF8,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
