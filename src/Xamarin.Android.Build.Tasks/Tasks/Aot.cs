@@ -70,7 +70,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] Profiles { get; set; }
 
-		public string ToolsDirectory { get; set; }
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
 
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
@@ -364,7 +365,7 @@ namespace Xamarin.Android.Tasks
 				int level = 0;
 				string toolPrefix = EnableLLVM
 					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
-					: Path.Combine (ToolsDirectory, "ndk", $"{NdkUtil.GetArchDirName (arch)}-");
+					: Path.Combine (AndroidBinUtilsDirectory, $"{NdkUtil.GetArchDirName (arch)}-");
 				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
 				var ldFlags = string.Empty;
 				if (EnableLLVM) {

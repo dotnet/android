@@ -253,6 +253,16 @@ when packaging Release applications.
 
     Added in Xamarin.Android 6.1.
 
+-   **AndroidBinUtilsPath** &ndash; A path to a directory containing
+    the Android [binutils][binutils] such as `ld`, the native linker,
+    and `as`, the native assembler. These binaries a subset of the
+    Android NDK, and are bundled with the Xamarin.Android
+    installation. `$(MonoAndroidBinDirectory)\ndk\` by default.
+
+    Added in Xamarin.Android 10.0.
+
+[binutils]: https://android.googlesource.com/toolchain/binutils/
+
 -   **AndroidBuildApplicationPackage** &ndash; A boolean value that
     indicates whether to create and sign the package (.apk). Setting
     this value to `True` is equivalent to using the

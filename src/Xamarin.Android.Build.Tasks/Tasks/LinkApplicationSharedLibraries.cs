@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		public bool DebugBuild { get; set; }
 
 		[Required]
-		public string AndroidSdkBuildToolsPath { get; set; }
+		public string AndroidBinUtilsDirectory { get; set; }
 
 		public override bool Execute ()
 		{
@@ -210,9 +210,9 @@ namespace Xamarin.Android.Tasks
 					linkerArgs.Add (QuoteFileName (file));
 				}
 
-				string ld = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsPath, $"{NdkUtil.GetNdkToolchainPrefix (arch, false)}ld");
+				string ld = MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, $"{NdkUtil.GetNdkToolchainPrefix (arch, false)}ld");
 				yield return new Config {
-					LinkerPath = Path.Combine (AndroidSdkBuildToolsPath, ld),
+					LinkerPath = Path.Combine (AndroidBinUtilsDirectory, ld),
 					LinkerOptions = String.Join (" ", linkerArgs),
 					OutputSharedLibrary = inputs.OutputSharedLibrary,
 				};
