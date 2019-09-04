@@ -1013,28 +1013,30 @@ create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeA
 		free (domain_name);
 	}
 
-	if (is_running_on_desktop && is_root_domain) {
-		// Check that our corlib is coherent with the version of Mono we loaded otherwise
-		// tell the IDE that the project likely need to be recompiled.
-		char* corlib_error_message = const_cast<char*>(mono_check_corlib_version ());
-		if (corlib_error_message == nullptr) {
-			if (!androidSystem.monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
-				free (corlib_error_message);
-				corlib_error_message = nullptr;
+	if constexpr (is_running_on_desktop) {
+		if (is_root_domain) {
+			// Check that our corlib is coherent with the version of Mono we loaded otherwise
+			// tell the IDE that the project likely need to be recompiled.
+			char* corlib_error_message = const_cast<char*>(mono_check_corlib_version ());
+			if (corlib_error_message == nullptr) {
+				if (!androidSystem.monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
+					free (corlib_error_message);
+					corlib_error_message = nullptr;
+				}
 			}
-		}
-		if (corlib_error_message != nullptr) {
-			jclass ex_klass = env->FindClass ("mono/android/MonoRuntimeException");
-			env->ThrowNew (ex_klass, corlib_error_message);
-			free (corlib_error_message);
-			return nullptr;
-		}
+			if (corlib_error_message != nullptr) {
+				jclass ex_klass = env->FindClass ("mono/android/MonoRuntimeException");
+				env->ThrowNew (ex_klass, corlib_error_message);
+				free (corlib_error_message);
+				return nullptr;
+			}
 
-		// Load a basic environment for the RootDomain if run on desktop so that we can unload
-		// and reload most assemblies including Mono.Android itself
-		MonoAssemblyName *aname = mono_assembly_name_new ("System");
-		mono_assembly_load_full (aname, nullptr, nullptr, 0);
-		mono_assembly_name_free (aname);
+			// Load a basic environment for the RootDomain if run on desktop so that we can unload
+			// and reload most assemblies including Mono.Android itself
+			MonoAssemblyName *aname = mono_assembly_name_new ("System");
+			mono_assembly_load_full (aname, nullptr, nullptr, 0);
+			mono_assembly_name_free (aname);
+		}
 	}
 
 	return domain;
@@ -1886,8 +1888,11 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, loader, is_root_domain);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
-	if (is_running_on_desktop && is_root_domain)
-		return domain;
+	if constexpr (is_running_on_desktop) {
+		if (is_root_domain) {
+			return domain;
+		}
+	}
 
 #ifndef ANDROID
 	if (assembliesBytes != nullptr)
@@ -2075,7 +2080,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	delete[] runtime_args;
 
 	// Install our dummy exception handler on Desktop
-	if (is_running_on_desktop) {
+	if constexpr (is_running_on_desktop) {
 		mono_add_internal_call ("System.Diagnostics.Debugger::Mono_UnhandledException_internal(System.Exception)",
 		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
 	}
@@ -2267,8 +2272,6 @@ extern "C" int monodroid_dylib_mono_init (void *mono_imports, const char *libmon
 {
 	if (mono_imports == nullptr)
 		return FALSE;
-
-	void *libmono_handle = libmono_path ? androidSystem.load_dso_from_any_directories(libmono_path, RTLD_LAZY | RTLD_GLOBAL) : dlopen (libmono_path, RTLD_LAZY | RTLD_GLOBAL);;
 	return TRUE;
 }
 

@@ -44,7 +44,6 @@ using namespace xamarin::android::internal;
 
 #if defined (DEBUG) || !defined (ANDROID)
 BundledProperty *AndroidSystem::bundled_properties = nullptr;
-constexpr char AndroidSystem::OVERRIDE_ENVIRONMENT_FILE_NAME[];
 #endif // DEBUG || !ANDROID
 
 #if defined (WINDOWS)
@@ -126,8 +125,8 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 		return;
 	}
 
-	size_t name_len  = strlen (name) + 1;
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, sizeof (BundledProperty), name_len);
+	size_t name_len  = strlen (name);
+	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, sizeof (BundledProperty), name_len + 1);
 	p = reinterpret_cast<BundledProperty*> (malloc (alloc_size));
 	if (p == nullptr)
 		return;
@@ -266,7 +265,10 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 		if (fstat (fileno (fp), &fileStat) == 0) {
 			r = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(fileStat.st_size), 1);
 			if (value && (*value = new char[r])) {
-				fread (*value, 1, static_cast<size_t>(fileStat.st_size), fp);
+				size_t nread = fread (*value, 1, static_cast<size_t>(fileStat.st_size), fp);
+				if (nread == 0 || nread != r) {
+					log_warn(LOG_DEFAULT, "While reading file %s: expected to read %u bytes, actually read %u bytes", path, r, nread);
+				}
 			}
 		}
 		fclose (fp);
@@ -583,6 +585,11 @@ AndroidSystem::setup_environment (const char *name, const char *value)
 void
 AndroidSystem::setup_environment_from_override_file (const char *path)
 {
+#if WINDOWS
+	using read_count_type = unsigned int;
+#else
+	using read_count_type = size_t;
+#endif
 	monodroid_stat_t sbuf;
 	if (utils.monodroid_stat (path, &sbuf) < 0) {
 		log_warn (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, strerror (errno));
@@ -595,13 +602,13 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 		return;
 	}
 
-	size_t   file_size = static_cast<size_t>(sbuf.st_size);
-	char    *buf = new char [file_size];
+	auto     file_size = static_cast<size_t>(sbuf.st_size);
+	auto    *buf = new char [file_size];
 	size_t   nread = 0;
 	ssize_t  r;
 	do {
-		size_t i = nread;
-		r = read (fd, buf + i, file_size - i);
+		auto read_count = static_cast<read_count_type>(file_size - nread);
+		r = read (fd, buf + nread, read_count);
 		if (r > 0)
 			nread += static_cast<size_t>(r);
 	} while (r < 0 && errno == EINTR);
@@ -771,8 +778,6 @@ AndroidSystem::readdir (monodroid_dir_t *dir)
 struct _wdirent*
 AndroidSystem::readdir_windows (_WDIR *dirp)
 {
-	int error_code = 0;
-
 	std::lock_guard<std::mutex> lock (readdir_mutex);
 	errno = 0;
 	struct _wdirent *entry = _wreaddir (dirp);

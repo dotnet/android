@@ -213,7 +213,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 	if (value)
 		*value = nullptr;
 
-	if (strlen (package_property_suffix) > 0) {
+	if (package_property_suffix[0] != '\0') {
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
 		char *propname;
 #if WINDOWS
@@ -229,11 +229,11 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 #endif
 	}
 
-	if (result <= 0 || !local_value)
+	if (result <= 0 || local_value == nullptr)
 		result = androidSystem.monodroid_get_system_property (name, &local_value);
 
 	if (result > 0) {
-		if (strlen (local_value) == 0) {
+		if (local_value != nullptr && local_value[0] == '\0') {
 			delete[] local_value;
 			return 0;
 		}
