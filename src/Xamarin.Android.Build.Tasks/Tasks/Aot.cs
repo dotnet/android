@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -70,7 +71,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] Profiles { get; set; }
 
-		public string ToolsDirectory { get; set; }
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
 
 		[Output]
 		public string[] NativeLibrariesReferences { get; set; }
@@ -171,14 +173,6 @@ namespace Xamarin.Android.Tasks
 		static string GetNdkToolchainLibraryDir (string binDir, AndroidTargetArch arch)
 		{
 			return GetNdkToolchainLibraryDir (binDir, NdkUtil.GetArchDirName (arch));
-		}
-
-		static string GetShortPath (string path)
-		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				return QuoteFileName (path);
-			var shortPath = KernelEx.GetShortPathName (Path.GetDirectoryName (path));
-			return Path.Combine (shortPath, Path.GetFileName (path));
 		}
 
 		static string QuoteFileName(string fileName)
@@ -282,11 +276,13 @@ namespace Xamarin.Android.Tasks
 							return;
 						}
 
-						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath)) {
+						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, config.ResponseFile)) {
 							LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
 							Cancel ();
 							return;
 						}
+
+						File.Delete (config.ResponseFile);
 
 						lock (nativeLibs)
 							nativeLibs.Add (config.OutputFile);
@@ -361,10 +357,15 @@ namespace Xamarin.Android.Tasks
 				if (!Directory.Exists (outdir))
 					Directory.CreateDirectory (outdir);
 
+				// dont use a full path if the outdir is withing the WorkingDirectory.
+				if (outdir.StartsWith (WorkingDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+					outdir = outdir.Replace (WorkingDirectory + Path.DirectorySeparatorChar, string.Empty);
+				}
+
 				int level = 0;
 				string toolPrefix = EnableLLVM
 					? NdkUtil.GetNdkToolPrefix (AndroidNdkDirectory, arch, level = GetNdkApiLevel (AndroidNdkDirectory, AndroidApiLevel, arch))
-					: Path.Combine (ToolsDirectory, "ndk", $"{NdkUtil.GetArchDirName (arch)}-");
+					: Path.Combine (AndroidBinUtilsDirectory, $"{NdkUtil.GetArchDirName (arch)}-");
 				var toolchainPath = toolPrefix.Substring(0, toolPrefix.LastIndexOf(Path.DirectorySeparatorChar));
 				var ldFlags = string.Empty;
 				if (EnableLLVM) {
@@ -388,19 +389,19 @@ namespace Xamarin.Android.Tasks
 
 					var libs = new List<string>();
 					if (NdkUtil.UsingClangNDK) {
-						libs.Add ($"-L{GetShortPath (toolchainLibDir)}");
-						libs.Add ($"-L{GetShortPath (androidLibPath)}");
+						libs.Add ($"-L{toolchainLibDir}");
+						libs.Add ($"-L{androidLibPath}");
 
 						if (arch == AndroidTargetArch.Arm) {
 							// Needed for -lunwind to work
 							string compilerLibDir = Path.Combine (toolchainPath, "..", "sysroot", "usr", "lib", NdkUtil.GetArchDirName (arch));
-							libs.Add ($"-L{GetShortPath (compilerLibDir)}");
+							libs.Add ($"-L{compilerLibDir}");
 						}
 					}
 
-					libs.Add (GetShortPath (Path.Combine (toolchainLibDir, "libgcc.a")));
-					libs.Add (GetShortPath (Path.Combine (androidLibPath, "libc.so")));
-					libs.Add (GetShortPath (Path.Combine (androidLibPath, "libm.so")));
+					libs.Add (Path.Combine (toolchainLibDir, "libgcc.a"));
+					libs.Add (Path.Combine (androidLibPath, "libc.so"));
+					libs.Add (Path.Combine (androidLibPath, "libm.so"));
 
 					ldFlags = string.Join(";", libs);
 				}
@@ -422,25 +423,28 @@ namespace Xamarin.Android.Tasks
 						aotOptions.Add ("profile-only");
 						foreach (var p in Profiles) {
 							var fp = Path.GetFullPath (p.ItemSpec);
-							aotOptions.Add ($"profile={GetShortPath (fp)}");
+							aotOptions.Add ($"profile={fp}");
 						}
 					}
 					if (!string.IsNullOrEmpty (AotAdditionalArguments))
 						aotOptions.Add (AotAdditionalArguments);
 					if (sequencePointsMode == SequencePointsMode.Offline)
-						aotOptions.Add ("msym-dir=" + GetShortPath (outdir));
+						aotOptions.Add ($"msym-dir={outdir}");
 					if (AotMode != AotMode.Normal)
 						aotOptions.Add (AotMode.ToString ().ToLowerInvariant ());
 
-					aotOptions.Add ("outfile="     + GetShortPath (outputFile));
+					aotOptions.Add ($"outfile={outputFile}");
 					aotOptions.Add ("asmwriter");
-					aotOptions.Add ("mtriple="     + mtriple);
-					aotOptions.Add ("tool-prefix=" + GetShortPath (toolPrefix));
-					aotOptions.Add ("ld-flags="    + ldFlags);
-					aotOptions.Add ("llvm-path="   + GetShortPath (sdkBinDirectory));
-					aotOptions.Add ("temp-path="   + GetShortPath (tempDir));
+					aotOptions.Add ($"mtriple={mtriple}");
+					aotOptions.Add ($"tool-prefix={toolPrefix}");
+					aotOptions.Add ($"ld-flags={ldFlags}");
+					aotOptions.Add ($"llvm-path={sdkBinDirectory}");
+					aotOptions.Add ($"temp-path={tempDir}");
 
-					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + "--aot=" + string.Join (",", aotOptions);
+					// we need to quote the entire --aot arguments here to make sure it is parsed
+					// on windows as one argument. Otherwise it will be split up into multiple
+					// values, which wont work.
+					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + $"\"--aot={string.Join (",", aotOptions)}\"";
 
 					if (!string.IsNullOrEmpty (ExtraAotOptions)) {
 						aotOptionsStr += (aotOptions.Count > 0 ? "," : "") + ExtraAotOptions;
@@ -460,23 +464,29 @@ namespace Xamarin.Android.Tasks
 					}
 
 					var assembliesPath = Path.GetFullPath (Path.GetDirectoryName (resolvedPath));
-					var assemblyPath = QuoteFileName (Path.GetFullPath (resolvedPath));
+					var assemblyPath = Path.GetFullPath (resolvedPath);
 
-					yield return new Config (assembliesPath, QuoteFileName (aotCompiler), aotOptionsStr, assemblyPath, outputFile);
+					yield return new Config (assembliesPath, aotCompiler, aotOptionsStr, assemblyPath, outputFile, Path.Combine (tempDir, "response.txt"));
 				}
 			}
 		}
 			
-		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly)
+		bool RunAotCompiler (string assembliesPath, string aotCompiler, string aotOptions, string assembly, string responseFile)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
+
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+				sw.WriteLine (aotOptions + " " + QuoteFileName (assembly));
+			}
+
 			var psi = new ProcessStartInfo () {
-				FileName = aotCompiler,
-				Arguments = aotOptions + " " + assembly,
+				FileName = QuoteFileName (aotCompiler),
+				Arguments = $"--response={QuoteFileName (responseFile)}",
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				StandardOutputEncoding = Encoding.UTF8,
 				CreateNoWindow=true,
 				WindowStyle=ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
@@ -536,16 +546,18 @@ namespace Xamarin.Android.Tasks
 			public string AotOptions { get; }
 			public string AssemblyPath { get; }
 			public string OutputFile { get; }
+			public string ResponseFile { get; }
 
 			public bool Valid { get; private set; }
 
-			public Config (string assembliesPath, string aotCompiler, string aotOptions, string assemblyPath, string outputFile)
+			public Config (string assembliesPath, string aotCompiler, string aotOptions, string assemblyPath, string outputFile, string responseFile)
 			{
 				AssembliesPath = assembliesPath;
 				AotCompiler = aotCompiler;
 				AotOptions = aotOptions;
 				AssemblyPath = assemblyPath;
 				OutputFile = outputFile;
+				ResponseFile = responseFile;
 				Valid = true;
 			}
 

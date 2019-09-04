@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -113,6 +114,7 @@ namespace Xamarin.Android.Tasks
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
+				StandardOutputEncoding = Encoding.UTF8,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				WorkingDirectory = WorkingDirectory,
