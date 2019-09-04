@@ -60,7 +60,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 
-namespace xamarin { namespace android
+namespace xamarin::android
 {
 	struct timing_point
 	{
@@ -139,6 +139,6 @@ namespace xamarin { namespace android
 	private:
 		char package_property_suffix[9];
 	};
-} }
+}
 #endif // __cplusplus
 #endif /* __MONODROID_UTIL_H__ */

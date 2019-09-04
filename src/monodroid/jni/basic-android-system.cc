@@ -11,8 +11,6 @@ const char **BasicAndroidSystem::app_lib_directories;
 size_t BasicAndroidSystem::app_lib_directories_size = 0;
 #if WINDOWS
 static const char *SYSTEM_LIB_PATH;
-#else
-constexpr char BasicAndroidSystem::SYSTEM_LIB_PATH[];
 #endif
 
 // Values correspond to the CPU_KIND_* macros
