@@ -732,9 +732,9 @@ namespace UnamedProject
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
-		public void BuildAotApplication (string supportedAbis, bool enableLLVM, bool expectedResult)
+		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplication_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
+			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				BundleAssemblies = false,
@@ -768,7 +768,7 @@ namespace UnamedProject
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					var rightLibc   = new Regex (@"^\s*\[AOT\].*cross-.*--llvm.*,ld-flags=.*android-16.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
+					var rightLibc   = new Regex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
 					var m           = rightLibc.Match (string.Join ("\n",b.LastBuildOutput));
 					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}
@@ -803,9 +803,9 @@ namespace UnamedProject
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor")]
-		public void BuildAotApplicationAndBundle (string supportedAbis, bool enableLLVM, bool expectedResult)
+		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
+			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				BundleAssemblies = true,
