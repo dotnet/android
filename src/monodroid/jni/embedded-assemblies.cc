@@ -52,11 +52,6 @@ const char *EmbeddedAssemblies::suffixes[] = {
 	".exe",
 };
 
-constexpr char EmbeddedAssemblies::assemblies_prefix[];
-#if defined (DEBUG) || !defined (ANDROID)
-constexpr char EmbeddedAssemblies::override_typemap_entry_name[];
-#endif
-
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)

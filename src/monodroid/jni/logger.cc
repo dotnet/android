@@ -17,6 +17,7 @@
 #include "util.hh"
 #include "globals.hh"
 
+#undef DO_LOG
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
 	va_start ((_args_), (_format_));									                        \
 	__android_log_vprint ((_level_), CATEGORY_NAME((_category_)), (_format_), (_args_)); \
