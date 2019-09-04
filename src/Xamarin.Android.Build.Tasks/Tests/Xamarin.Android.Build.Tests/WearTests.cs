@@ -32,6 +32,12 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = "IsAppExtension=True"
 			});
 
+			// Set these to be the same values
+			app.SetProperty (app.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "False");
+			app.SetProperty (app.DebugProperties, "EmbedAssembliesIntoApk", "True");
+			wear.SetProperty (wear.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "False");
+			wear.SetProperty (wear.DebugProperties, "EmbedAssembliesIntoApk", "True");
+
 			using (var wearBuilder = CreateDllBuilder (Path.Combine (path, wear.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (wearBuilder.Build (wear), "first wear build should have succeeded.");
