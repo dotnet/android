@@ -159,6 +159,7 @@
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
     <Compile Include="Tasks\GetFilesThatExist.cs" />
+    <Compile Include="Tasks\LinkAssembliesNoShrink.cs" />
     <Compile Include="Tasks\ReadAndroidManifest.cs" />
     <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
     <Compile Include="Tasks\GetMonoPlatformJar.cs" />

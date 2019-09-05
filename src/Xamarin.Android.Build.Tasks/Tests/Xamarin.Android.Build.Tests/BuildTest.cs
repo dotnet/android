@@ -1247,14 +1247,10 @@ namespace App1
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
-					var linkDst = Path.Combine (intermediate, "linkdst", "Library1.pdb");
 					var binSrc = Path.Combine (outputPath, "Library1.pdb");
 					Assert.IsTrue (
 						File.Exists (assetsPdb),
 						"Library1.pdb must be copied to Intermediate directory");
-					Assert.IsFalse (
-						File.Exists (linkDst),
-						"Library1.pdb should not be copied to linkdst directory because it has no Abstrsact methods to fix up.");
 					Assert.IsTrue (
 						File.Exists (binSrc),
 						"Library1.pdb must be copied to bin directory");
@@ -1265,18 +1261,15 @@ namespace App1
 						var filedata = File.ReadAllBytes (binSrc);
 						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", binSrc);
 					}
-					linkDst = Path.Combine (intermediate, "linkdst", "App1.pdb");
+					var androidAssets = Path.Combine (intermediate, "android", "assets", "App1.pdb");
 					binSrc = Path.Combine (outputPath, "App1.pdb");
-					Assert.IsTrue (
-						File.Exists (linkDst),
-						"App1.pdb should be copied to linkdst directory because it has Abstrsact methods to fix up.");
 					Assert.IsTrue (
 						File.Exists (binSrc),
 						"App1.pdb must be copied to bin directory");
-					FileAssert.AreEqual (binSrc, linkDst, "{0} and {1} should not differ.", binSrc, linkDst);
-					linkDst = Path.Combine (intermediate, "linkdst", "App1.dll");
+					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should not differ.", binSrc, androidAssets);
+					androidAssets = Path.Combine (intermediate, "android", "assets", "App1.dll");
 					binSrc = Path.Combine (outputPath, "App1.dll");
-					FileAssert.AreEqual (binSrc, linkDst, "{0} and {1} should match.", binSrc, linkDst);
+					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should match.", binSrc, androidAssets);
 				}
 			}
 		}

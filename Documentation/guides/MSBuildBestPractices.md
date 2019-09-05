@@ -196,6 +196,67 @@ Other times it is good to use "stamp" files:
   improvement to use a stamp file. Profile build times before and
   after to be sure.
 
+## Building Partially
+
+In addition to MSBuild targets skipping completely, there is a way for
+them to run *partially*. The concept is that your target has a 1-to-1
+mapping from a set of `Inputs` to `Outputs` and the actual work done
+in between can be performed on each file individually.
+
+Let's imagine we had a target that generates a documentation file for
+a list of `*.java` files:
+
+```xml
+<Target Name="_GenerateDocumentation"
+    Inputs="@(_JavaFiles)"
+    Outputs="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')">
+  <GenerateDocumentation
+      SourceFiles="@(_JavaFiles)"
+      DestinationFiles="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')"
+  />
+</Target>
+```
+
+This target uses a given `$(DocsDirectory)` to generate a tree of
+documentation files for each `.java` file. We use an [item group
+transform][msbuild-transforms] to get a list of files in another
+directory.
+
+So let's imagine you edited one `Foo.java` file, on the next build:
+
+- The `_GenerateDocumentation` target will run *partially*, saying
+  `Foo.java` is newer than `Foo.md`.
+- The `<GenerateDocumentation/>` MSBuild task will only receive inputs
+  of the files that changed. `SourceFiles` will have one file, and
+  `DestinationFiles` one file.
+
+We could have also used a stamp file here, but in this case it is more
+performant for incremental builds to build *partially*. When one
+`.java` file changes, we only have to generate one documentation file.
+
+Building partially also works, if you need to invalidate on additional
+files, such as:
+
+```xml
+<Target Name="_GenerateDocumentation"
+    Inputs="@(_JavaFiles);$(MSBuildAllProjects)"
+    Outputs="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')">
+<!-- ... -->
+</Target>
+```
+
+This is helpful if there is an MSBuild property that alters the output
+of `<GenerateDocumentation/>`. A change to an MSBuild project file
+will re-run the target completely. `$(MSBuildAllProjects)` is a list
+of every MSBuild file imported during a build, MSBuild automatically
+evaluates `$(MSBuildAllProjects)` since [MSBuild 16.0][allprojects].
+
+Read more about building *partially* on the [official MSBuild
+docs][msbuild-partial].
+
+[allprojects]: http://www.panopticoncentral.net/2019/07/12/msbuildallprojects-considered-harmful/
+[msbuild-partial]: https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-build-incrementally
+
 ## FileWrites and IncrementalClean
 
 Generally, the place to put intermediate files during a build is
