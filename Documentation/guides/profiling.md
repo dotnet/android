@@ -38,12 +38,11 @@ You can also run `adb logcat -c` to clear the log at any point.
 
 Before launching the app, run the `adb` command:
 
-    > adb shell setprop debug.mono.log default,timing
+    > adb shell setprop debug.mono.log timing=bare
 
 After launching the app, we get additional information:
 
     > adb logcat -d | grep monodroid-timing
-    09-04 14:44:11.966  9126  9126 I monodroid-timing: counters path: /data/user/0/com.xamarin.android.helloworld/files/.__override__/counters.txt
     09-04 14:44:11.968  9126  9126 I monodroid-timing: Runtime.init: Mono runtime init; elapsed: 0s:0::620209
     09-04 14:44:11.995  9126  9126 I monodroid-timing: Assembly load: HelloLibrary.dll preloaded; elapsed: 0s:1::92917
     09-04 14:44:11.995  9126  9126 I monodroid-timing: Finished loading assemblies: preloaded 2 assemblies; wasted time: 0s:1::111927
@@ -71,6 +70,43 @@ After launching the app, we get additional information:
 
 These are timings taken at different points during Xamarin.Android
 startup: across native and managed code.
+
+In case you have the XA build tree by hand, it is possible to process
+that information like:
+
+    > msbuild /v:d build-tools/timing/timing.csproj /t:LogcatTiming /p:PID=3011  # process id of your application
+    ...
+    Task "ProcessLogcatTiming"
+      Time:      0ms process start, application: '' PID: 3011
+      Time:     57ms Message: Runtime.init: Mono runtime init; elapsed: 0s:0::44834
+      Time:     65ms Message: Finished loading assemblies: preloaded 1 assemblies; wasted time: 0s:0::49
+      Time:     73ms Message: JNIEnv.Initialize start
+      Time:     78ms Message: JNIEnv.Initialize: Logger JIT/etc. time: elapsed 3 ms]
+      Time:    101ms Message: JNIEnv.Initialize: managed runtime init time: elapsed 22 ms]
+      Time:    113ms Message: TypeManager.cctor start: 1567669218343.18
+      Time:    116ms Message: TypeManager.cctor time: 1567669218357.74 [elapsed: 14.563 ms]
+      Time:    117ms Message: JNIEnv.Initialize: TypeManager init time: elapsed 15 ms]
+      Time:    156ms Message: JNIEnv.RegisterJniNatives ("Android.Runtime.UncaughtExceptionHandler, Mono.Android", 0xffe3c454) start: 1567669218396.28
+      Time:    163ms Message: JNIEnv.RegisterJniNatives total time: 1567669218404.38 [elapsed: 8.097 ms]
+      Time:    163ms Message: Runtime.register: end time; elapsed: 0s:8::800097
+      Time:    164ms Message: JNIEnv.RegisterJniNatives ("Java.Interop.TypeManager+JavaTypeManager, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", 0xffe3bcf4) start: 1567669218405.08
+      Time:    164ms Message: JNIEnv.RegisterJniNatives total time: 1567669218405.86 [elapsed: 0.787 ms]
+      Time:    164ms Message: Runtime.register: end time; elapsed: 0s:0::813062
+      Time:    166ms Message: JNIEnv.Initialize end: elapsed 105 ms
+      Time:    166ms Message: JNIEnv.Initialize end: elapsed 105 ms
+      Time:    166ms Message: Runtime.init: end native-to-managed transition; elapsed: 0s:100::17520
+      Time:    166ms Message: Runtime.init: end native-to-managed transition; elapsed: 0s:100::17520
+      Time:    166ms Message: Runtime.init: end, total time; elapsed: 0s:109::900001
+      Time:    173ms Message: JNIEnv.RegisterJniNatives ("xatemplateaot.MainActivity, xatemplateaot", 0xffe3cbe4) start: 1567669218414.33
+      Time:    173ms Message: JNIEnv.RegisterJniNatives total time: 1567669218414.89 [elapsed: 0.552 ms]
+      Time:    173ms Message: Runtime.register: end time; elapsed: 0s:0::594434
+      Time:    232ms Message: JNIEnv.RegisterJniNatives ("Android.Views.View+IOnClickListenerImplementor, Mono.Android", 0xffe3bb54) start: 1567669218473.37
+      Time:    232ms Message: JNIEnv.RegisterJniNatives total time: 1567669218473.59 [elapsed: 0.219 ms]
+      Time:    232ms Message: Runtime.register: end time; elapsed: 0s:0::241370
+       -- Performance summary --
+      Last timing message: 232ms
+    Done executing task "ProcessLogcatTiming".
+    ...
 
 An example of these log messages would be [this managed
 call][managed_timing] or [this native call][native_timing].
@@ -240,5 +276,9 @@ Total(ms) Self(ms)      Calls Method name
       99        0         10 Java.Interop.JniEnvironment/InstanceMethods:CallNonvirtualVoidMethod (Java.Interop.JniObjectReference,Java.Interop.JniObjectReference,Java.Interop.JniMethodInfo,Java.Interop.JniArgumentValue*)
       98        5         57 System.Linq.Enumerable:TryGetFirst<Java.Interop.JniTypeSignature> (System.Collections.Generic.IEnumerable`1<Java.Interop.JniTypeSignature>,bool&)
 ```
+
+Note: the times in the method call summary above include the time to
+JIT the method. The JIT time can be significant, for methods which are
+called just once it can be 50% of that time for example.
 
 [mono_docs]: https://www.mono-project.com/docs/debug+profile/profile/profiler/#profiler-option-documentation
