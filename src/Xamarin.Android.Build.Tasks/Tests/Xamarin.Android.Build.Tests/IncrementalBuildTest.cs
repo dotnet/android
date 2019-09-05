@@ -508,6 +508,13 @@ namespace Lib2
 					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 
+				var targetsShouldPartiallyRun = new [] {
+					"_LinkAssembliesNoShrink",
+				};
+				foreach (var target in targetsShouldPartiallyRun) {
+					Assert.IsTrue (appBuilder.Output.IsTargetPartiallyBuilt (target), $"`{target}` should *partially* run!");
+				}
+
 				var targetsShouldRun = new [] {
 					"_BuildApkEmbed",
 					"_CopyPackage",

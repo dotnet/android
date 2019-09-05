@@ -85,6 +85,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogWarningsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1196,7 +1197,6 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateAssetsDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssetsDir>
 	<MonoAndroidIntermediateAssemblyDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssemblyDir>
 	<_JniMarshalMethodsOutputDir>$(IntermediateOutputPath)jnisrc\</_JniMarshalMethodsOutputDir>
-	<MonoAndroidIntermediateAssemblyTempDir>$(IntermediateOutputPath)linkdst\</MonoAndroidIntermediateAssemblyTempDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
 	<MonoAndroidCodeBehindDir>$(MonoAndroidIntermediate)generated</MonoAndroidCodeBehindDir>
@@ -2026,29 +2026,26 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<Target Name="_LinkAssembliesNoShrinkInputs">
+  <ItemGroup>
+    <!-- We need this in its own item group so it isn't lost during a partial build -->
+    <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_LinkAssembliesNoShrink"
-  Condition="'$(AndroidLinkMode)' == 'None'"
-  Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidLinkFlag)">
-
-    <LinkAssemblies
-      UseSharedRuntime="$(AndroidUseSharedRuntime)"
-      MainAssembly="$(MonoAndroidIntermediateAssemblyDir)$(TargetFileName)"
-      OutputDirectory="$(MonoAndroidIntermediateAssemblyTempDir)"
-      OptionalDestinationDirectory="$(MonoAndroidIntermediateAssemblyDir)"
-      I18nAssemblies="$(MandroidI18n)"
-      LinkMode="$(AndroidLinkMode)"
-      LinkDescriptions="@(LinkDescription)"
-      DumpDependencies="$(LinkerDumpDependencies)"
-      LinkOnlyNewerThan="$(_AndroidLinkFlag)"
-      ResolvedAssemblies="@(ResolvedAssemblies)" />
-
-    <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
-    <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
-    <ItemGroup>
-      <FileWrites Include="$(_AndroidLinkFlag)" />
-      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
-    </ItemGroup>
+    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
+    Condition="'$(AndroidLinkMode)' == 'None'"
+    Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
+  <LinkAssembliesNoShrink
+      ResolvedAssemblies="@(_AllResolvedAssemblies)"
+      SourceFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+  />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
+  </ItemGroup>
 </Target>
 	
 <Target Name="_LinkAssembliesShrink"
@@ -3363,7 +3360,6 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)android" Condition="Exists ('$(MonoAndroidIntermediate)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)assemblies" Condition="Exists ('$(MonoAndroidIntermediate)assemblies')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)linkdst" Condition="Exists ('$(MonoAndroidIntermediate)linkdst')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)res" Condition="Exists ('$(MonoAndroidIntermediate)res')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)aidl" Condition="Exists ('$(MonoAndroidIntermediate)aidl')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)bundles" Condition="Exists ('$(MonoAndroidIntermediate)bundles')" />

@@ -61,6 +61,19 @@ namespace Xamarin.ProjectTools
 			return false;
 		}
 
+		/// <summary>
+		/// Looks for: Building target "Foo" partially, because some output files are out of date with respect to their input files.
+		/// </summary>
+		public bool IsTargetPartiallyBuilt (string target)
+		{
+			foreach (var line in Builder.LastBuildOutput) {
+				if (line.Contains ($"Building target \"{target}\" partially")) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public bool IsApkInstalled {
 			get {
 				foreach (var line in Builder.LastBuildOutput) {
