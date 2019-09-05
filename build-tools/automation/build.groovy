@@ -146,6 +146,12 @@ timestamps {
                 sh "rm -rf ${packagePath}"
             }
 
+            sh "git clean -xdff"
+            sh "git submodule foreach --recursive git clean -xdff"
+            sh "git submodule foreach --recursive git reset --hard HEAD"
+            sh "git submodule sync"
+            sh "git submodule update --recursive --init --force"
+
             sh "mkdir -p ${packagePath}"
         }
 
