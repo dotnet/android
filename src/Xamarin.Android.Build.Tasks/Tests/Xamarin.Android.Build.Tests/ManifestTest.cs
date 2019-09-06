@@ -116,7 +116,7 @@ namespace Bug12935
 				proj.TargetFrameworkVersion = "v4.0.3";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
-				StringAssertEx.Contains ("APT0000: ", builder.LastBuildOutput);
+				StringAssertEx.Contains (useAapt2 ? "APT0000: " : "APT1134: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("1 Error(s)", builder.LastBuildOutput);
 			}
 		}
