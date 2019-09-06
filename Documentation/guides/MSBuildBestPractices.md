@@ -251,6 +251,11 @@ will re-run the target completely. `$(MSBuildAllProjects)` is a list
 of every MSBuild file imported during a build, MSBuild automatically
 evaluates `$(MSBuildAllProjects)` since [MSBuild 16.0][allprojects].
 
+One pitfall, is this `_GenerateDocumentation` example *must* touch the
+timestamps on all files in `Outputs` -- regardless if they were
+actually changed. Otherwise, your target can get into a state where it
+will never be skipped again.
+
 Read more about building *partially* on the [official MSBuild
 docs][msbuild-partial].
 
