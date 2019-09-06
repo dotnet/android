@@ -17,8 +17,35 @@ Description of new feature
 
   * Description of known issue in the new feature, if applicable
 
+### Static/Default Interface Methods (Preview)
+
+With the new support for default interface methods in C# 8.0 we can now produce bindings that better match Java libraries 
+that use these features.  This includes:
+
+* Default interface methods
+* Static interface methods
+* Interface constants
+
+To enable this preview in your bindings project, add the following properties to your `.csproj`:
+
+```
+<LangVersion>preview</LangVersion>
+<_EnableInterfaceMembers>True</_EnableInterfaceMembers>
+```
+
+Note that enabling this only adds new members, it does not remove the existing alternatives previously used to expose
+these methods/fields.
+
+
 ### Build and deployment performance
 
+  * Bindings projects should now build considerably faster:
+    * [GitHub PR 440](https://github.com/xamarin/java.interop/pull/440)
+    * [GitHub PR 441](https://github.com/xamarin/java.interop/pull/441)
+    * [GitHub PR 442](https://github.com/xamarin/java.interop/pull/442)
+    * [GitHub PR 448](https://github.com/xamarin/java.interop/pull/448)
+    * [GitHub PR 449](https://github.com/xamarin/java.interop/pull/449)
+    * [GitHub PR 452](https://github.com/xamarin/java.interop/pull/452)
   * [GitHub PR nnnn](https://github.com/xamarin/xamarin-android/pull/nnnn):
     Description of improvement
 
