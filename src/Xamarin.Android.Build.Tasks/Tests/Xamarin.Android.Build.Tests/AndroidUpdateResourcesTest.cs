@@ -195,7 +195,7 @@ using System.Runtime.CompilerServices;
 			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				StringAssertEx.Contains (useAapt2 ? "APT0000" : "APT1144", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
+				StringAssertEx.Contains (useAapt2 ? "APT0003" : "APT1144", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -677,7 +677,7 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
@@ -696,7 +696,7 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2144: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
@@ -768,7 +768,9 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2222: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2261: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
 			}
 		}
@@ -1309,7 +1311,7 @@ namespace Lib1 {
 			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ($"warning APT1145: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'no default translation'");
+				StringAssertEx.Contains ($"warning APT1145: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT1145 warning about 'no default translation'");
 			}
 		}
 
