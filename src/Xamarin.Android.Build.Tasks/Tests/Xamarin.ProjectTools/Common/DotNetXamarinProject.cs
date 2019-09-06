@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Construction;
 
@@ -113,30 +114,34 @@ namespace Xamarin.ProjectTools
 
 		public override string SaveProject ()
 		{
+			XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+			var encoding = Encoding.UTF8;
 			var root = Construct ();
-			var sw = new StringWriter ();
-			root.Save (sw);
-			var document = XDocument.Parse (sw.ToString ());
-			var pn = XName.Get ("Project", "http://schemas.microsoft.com/developer/msbuild/2003");
-			var p = document.Element (pn);
-			if (p != null) {
-				//NOTE: when running tests inside VS 2019 "Current" was set here
-				p.SetAttributeValue ("ToolsVersion", "15.0");
+			XDocument document;
+			using (var stream = new MemoryStream ())
+			using (var sw = new StreamWriter (stream, encoding, 8 * 1024, leaveOpen: true)) {
+				root.Save (sw);
+				stream.Position = 0;
+				document = XDocument.Load (stream);
+				document.Declaration.Encoding = encoding.HeaderName;
+				var pn = XName.Get ("Project", ns.NamespaceName);
+				var p = document.Element (pn);
+				if (p != null) {
+					//NOTE: when running tests inside VS 2019 "Current" was set here
+					p.SetAttributeValue ("ToolsVersion", "15.0");
 
-				var referenceGroup = p.Elements ().FirstOrDefault (x => x.Name.LocalName == "ItemGroup" &&  x.HasElements && x.Elements ().Any (e => e.Name.LocalName == "Reference"));
-				if (referenceGroup != null) {
-					foreach (var pr in PackageReferences) {
-						//NOTE: without the namespace it puts xmlns=""
-						XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-						var e = XElement.Parse ($"<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
-						e.Name = ns + e.Name.LocalName;
-						referenceGroup.Add (e);
+					var referenceGroup = p.Elements ().FirstOrDefault (x => x.Name.LocalName == "ItemGroup" && x.HasElements && x.Elements ().Any (e => e.Name.LocalName == "Reference"));
+					if (referenceGroup != null) {
+						foreach (var pr in PackageReferences) {
+							//NOTE: without the namespace it puts xmlns=""
+							var e = XElement.Parse ($"<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
+							e.Name = ns + e.Name.LocalName;
+							referenceGroup.Add (e);
+						}
 					}
-					sw = new StringWriter ();
-					document.Save (sw);
 				}
+				return document.ToString ();
 			}
-			return sw.ToString ();
 		}
 	}
 }

@@ -31,5 +31,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\MockBuildEngine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\MonoAndroidHelperTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnvironmentHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WearTests.cs" />
   </ItemGroup>
 </Project>
