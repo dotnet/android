@@ -116,8 +116,7 @@ call][managed_timing] or [this native call][native_timing].
 
 ## Profiling the JIT
 
-Before launching the app, you need the `adb` command as in [Profiling
-the Runtime](#profiling-the-runtime):
+Before launching the app, run the `adb` command:
 
     > adb shell setprop debug.mono.log timing,default
 
