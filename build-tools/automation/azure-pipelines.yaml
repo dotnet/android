@@ -528,34 +528,17 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - script: >
-        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        --result TestResult-MSBuildTests-$(XA.Build.Configuration).xml
-      displayName: run Xamarin.Android.Build.Tests
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Mac
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
 
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildTestsMac
-      condition: succeededOrFailed()
-
-    - script: >
-        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        --result TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
-      displayName: run Xamarin.Android.Build.Tests.Commercial
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildTestsMac
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Mac
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
+        testResultsFile: TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -585,36 +568,19 @@ stages:
         msbuildArguments: >
           /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
-    - script: >
-        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        --where "cat == UsesDevice"
-        --result TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
-      displayName: run on-device Xamarin.Android.Build.Tests
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests On Device - Mac
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
+        nunitConsoleExtraArgs: --where "cat == UsesDevice"
+        testResultsFile: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
 
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildDeviceTestsMac
-      condition: always()
-
-    - script: >
-        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
-        --result TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-      displayName: run on-device MSBuildDeviceIntegration tests
-      condition: succeededOrFailed()
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildDeviceIntegration
-      condition: always()
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: MSBuildDeviceIntegration On Device - Mac
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -654,20 +620,12 @@ stages:
         msbuildArguments: >
           /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
-    - script: >
-        mono packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
-        --result TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
-      displayName: run TimeZoneInfo tests
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
-        testRunTitle: TimeZoneInfoTestsMac
-      condition: always()
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: TimeZoneInfoTests On Device - Mac
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -754,3 +712,37 @@ stages:
     - template: designer\android-designer-tests.yaml@yaml
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+
+  # Check - "Xamarin.Android (Test Integrated Regression Mac)"
+  - job: integrated_regression_mac
+    displayName: Integrated Regression Mac
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression Windows)"
+  - job: integrated_regression_Win
+    displayName: Integrated Regression Windows
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+
+    - template: remove-visualstudio.yml@yaml
