@@ -28,8 +28,7 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			TargetFrameworkVersion = Versions.KitkatWatch;
-			UseLatestPlatformSdk = false;
-			PackageReferences.Add (KnownPackages.AndroidSupportV13Kitkat);
+			UseLatestPlatformSdk = true;
 			PackageReferences.Add (KnownPackages.AndroidWear);
 
 			MainActivity = default_main_activity;
