@@ -62,6 +62,7 @@
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\NDKInfo.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ErrorResultsHelper.cs" />
     <Compile Include="Xamarin.Android.BuildTools.PrepTasks\CheckoutExternalGitDependency.cs" />
+    <Compile Include="Xamarin.Android.BuildTools.PrepTasks\ProcessApkSizes.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="xa-prep-tasks.targets" />

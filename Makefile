@@ -209,3 +209,9 @@ prepare-update-mono: prepare-build
 
 prepare-external-git-dependencies: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
+
+APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
+
+update-apk-sizes-reference:
+	-mkdir -p $(APK_SIZES_REFERENCE_DIR)
+	cp -v *values-$(CONFIGURATION).csv $(APK_SIZES_REFERENCE_DIR)/
