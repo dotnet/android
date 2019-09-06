@@ -45,6 +45,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string MonoAndroidFrameworkDirectories { get; set; }
 
+		public string LangVersion { get; set; }
+
+		public bool EnableInterfaceMembersPreview { get; set; }
+
 		public ITaskItem[] TransformFiles { get; set; }
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
@@ -131,6 +135,9 @@ namespace Xamarin.Android.Tasks
 			if (UseShortFileNames)
 				cmd.AppendSwitch ("--use-short-file-names");
 
+			if (EnableInterfaceMembersPreview && SupportsCSharp8)
+				cmd.AppendSwitch ("--lang-features=interface-constants,default-interface-methods");
+
 			return cmd.ToString ();
 		}
 
@@ -141,6 +148,28 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateFullPathToTool ()
 		{
 			return Path.Combine (ToolPath, ToolExe);
+		}
+
+		bool SupportsCSharp8 {
+			get {
+				// These are the values that pre-date C# 8.  We assume any
+				// new value we encounter is something that supports it.
+				switch (LangVersion) {
+					case "7.3":
+					case "7.2":
+					case "7.1":
+					case "7":
+					case "6":
+					case "5":
+					case "4":
+					case "3":
+					case "ISO-2":
+					case "ISO-1":
+						return false;
+				}
+
+				return true;
+			}
 		}
 	}
 }
