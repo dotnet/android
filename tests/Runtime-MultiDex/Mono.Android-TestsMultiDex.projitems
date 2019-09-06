@@ -12,7 +12,7 @@
       <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-$(_PackageName)-times.csv</TimingResultsFilename>
       <ApkSizesInputFilename>apk-sizes-$(_PackageName)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
       <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)apk-sizes-definitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-$(_PackageName)-values.csv</ApkSizesResultsFilename>
+      <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\TestResult-$(_PackageName)-values-$(Configuration).csv</ApkSizesResultsFilename>
     </TestApk>
   </ItemGroup>
 

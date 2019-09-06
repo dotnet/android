@@ -11,11 +11,12 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessPlotInput" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
 
   <PropertyGroup>
     <_TestImageName>XamarinAndroidTestRunner</_TestImageName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
+    <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -334,11 +335,12 @@
         Condition=" '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
         Command="unzip -l &quot;%(_AllArchives.Identity)&quot; >> &quot;$(OutputPath)%(_AllArchives.ApkSizesInputFilename)&quot;"
         ContinueOnError="ErrorAndContinue" />
-    <ProcessPlotInput
+    <ProcessApkSizes
         Condition=" '%(_AllArchives.ApkSizesDefinitionFilename)' != '' "
         InputFilename="$(OutputPath)%(_AllArchives.ApkSizesInputFilename)"
         ApplicationPackageName="%(_AllArchives.Package)"
         ResultsFilename="%(_AllArchives.ApkSizesResultsFilename)"
+        ReferenceFilename="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileName(%(_AllArchives.ApkSizesResultsFilename)))"
         DefinitionsFilename="%(_AllArchives.ApkSizesDefinitionFilename)"
         AddResults="True"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
