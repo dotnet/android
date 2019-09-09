@@ -12,6 +12,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class BuildApkSet : BundleTool
 	{
+		public override string TaskPrefix => "BAS";
+
 		[Required]
 		public string AppBundle { get; set; }
 
@@ -47,13 +49,13 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string StorePass { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			//NOTE: bundletool will not overwrite
 			if (File.Exists (Output))
 				File.Delete (Output);
 
-			base.Execute ();
+			base.RunTask ();
 
 			return !Log.HasLoggedErrors;
 		}

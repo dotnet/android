@@ -37,9 +37,11 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// ResolveSdks' job is to call RefreshAndroidSdk and setup static members of MonoAndroidHelper
 	/// </summary>
-	public class ResolveSdks : Task
+	public class ResolveSdks : AndroidTask
 	{
-		public string[] ReferenceAssemblyPaths { get; set; }
+		public override string TaskPrefix => "RSD";
+
+		public string [] ReferenceAssemblyPaths { get; set; }
 
 		[Output]
 		public string AndroidNdkPath { get; set; }
@@ -62,7 +64,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string AndroidBinUtilsPath { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android

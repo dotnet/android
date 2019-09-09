@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class CreateMultiDexMainDexClassList : JavaToolTask
 	{
+		public override string TaskPrefix => "CMD";
+
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
@@ -35,12 +37,12 @@ namespace Xamarin.Android.Tasks
 		string tempJar;
 		bool writeOutputToKeepFile = false;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			tempJar = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName () + ".jar");
 			commandlineAction = GenerateProguardCommands;
 			// run proguard first
-			var retval = base.Execute ();
+			var retval = base.RunTask ();
 			if (!retval || Log.HasLoggedErrors)
 				return false;
 
@@ -50,7 +52,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (MultiDexMainDexListFile))
 				File.WriteAllText (MultiDexMainDexListFile, string.Empty);
 
-			var result = base.Execute () && !Log.HasLoggedErrors;
+			var result = base.RunTask () && !Log.HasLoggedErrors;
 
 			if (result && CustomMainDexListFiles?.Length > 0) {
 				var content = new List<string> ();

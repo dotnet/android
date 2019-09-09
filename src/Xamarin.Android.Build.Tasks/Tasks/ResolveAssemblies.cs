@@ -17,8 +17,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ResolveAssemblies : AsyncTask
+	public class ResolveAssemblies : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "RSA";
+
 		// The user's assemblies to package
 		[Required]
 		public ITaskItem[] Assemblies { get; set; }
@@ -55,7 +57,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string[] ResolvedDoNotPackageAttributes { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
@@ -64,7 +66,7 @@ namespace Xamarin.Android.Tasks
 						Execute (resolver);
 					}
 				}, CancellationToken).ContinueWith (Complete);
-				return base.Execute ();
+				return base.RunTask ();
 			} finally {
 				Reacquire ();
 			}

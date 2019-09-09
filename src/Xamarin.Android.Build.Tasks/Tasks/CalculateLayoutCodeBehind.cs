@@ -15,8 +15,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CalculateLayoutCodeBehind : AsyncTask
+	public class CalculateLayoutCodeBehind : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "CLC";
+
 		sealed class LayoutInclude
 		{
 			public string Id;
@@ -111,7 +113,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] LayoutPartialClassFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			widgetWithId = XPathExpression.Compile ("//*[@android:id and string-length(@android:id) != 0] | //include[not(@android:id)]");
 
@@ -143,7 +145,7 @@ namespace Xamarin.Android.Tasks
 					() => this.ParallelForEach (layoutsByName, kvp => ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems))
 				).ContinueWith (t => Complete ());
 
-				base.Execute ();
+				base.RunTask ();
 
 				foreach (var kvp in layoutsByName) {
 					LayoutGroup group = kvp.Value;

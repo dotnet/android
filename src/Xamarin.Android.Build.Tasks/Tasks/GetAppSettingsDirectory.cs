@@ -8,12 +8,14 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetAppSettingsDirectory : Task
+	public class GetAppSettingsDirectory : AndroidTask
 	{
+		public override string TaskPrefix => "GAS";
+
 		[Output]
 		public string AppSettingsDirectory { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// Windows: C:\Users\Jonathan\AppData\Local\Xamarin\Mono for Android
 			var appdata_local = Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData);

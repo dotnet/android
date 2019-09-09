@@ -13,8 +13,10 @@ using System.Diagnostics;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ClassParse : Task
+	public class ClassParse : AndroidTask
 	{
+		public override string TaskPrefix => "CLP";
+
 		[Required]
 		public string OutputFile { get; set; }
 
@@ -23,7 +25,7 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] DocumentationPaths { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			using (var output = new StreamWriter (OutputFile, append: false, 
 						encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {

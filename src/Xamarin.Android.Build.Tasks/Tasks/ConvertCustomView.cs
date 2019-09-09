@@ -11,7 +11,8 @@ using Microsoft.Build.Utilities;
 using Monodroid;
 
 namespace Xamarin.Android.Tasks {
-	public class ConvertCustomView : Task {
+	public class ConvertCustomView : AndroidTask {
+		public override string TaskPrefix => "CCV";
 
 		[Required]
 		public string CustomViewMapFile { get; set; }
@@ -26,7 +27,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] Processed { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);

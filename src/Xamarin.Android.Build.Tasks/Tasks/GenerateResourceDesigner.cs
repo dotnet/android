@@ -13,8 +13,10 @@ using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GenerateResourceDesigner : Task
+	public class GenerateResourceDesigner : AndroidTask
 	{
+		public override string TaskPrefix => "GRD";
+
 		[Required]
 		public string NetResgenOutputFile { get; set; }
 
@@ -51,7 +53,7 @@ namespace Xamarin.Android.Tasks
 
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// In Xamarin Studio, if the project name isn't a valid C# identifier
 			// then $(RootNamespace) is not set, and the generated Activity is

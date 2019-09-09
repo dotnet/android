@@ -6,7 +6,9 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks {
-	public class AppendCustomMetadataToItemGroup : Task {
+	public class AppendCustomMetadataToItemGroup : AndroidTask {
+		public override string TaskPrefix => "ACM";
+
 		[Required]
 		public ITaskItem[] Inputs { get; set; }
 
@@ -16,7 +18,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem[] Output { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var output = new List<ITaskItem> ();
 			var metaData = new Dictionary<string, List<ITaskItem>> (StringComparer.InvariantCultureIgnoreCase);

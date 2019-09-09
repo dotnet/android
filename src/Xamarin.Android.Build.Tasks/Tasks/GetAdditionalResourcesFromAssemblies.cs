@@ -16,8 +16,10 @@ using Xamarin.Build;
 namespace Xamarin.Android.Tasks
 {
 
-	public class GetAdditionalResourcesFromAssemblies : AsyncTask
+	public class GetAdditionalResourcesFromAssemblies : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "GAR";
+
 		/// <summary>
 		/// Environment variable named XAMARIN_CACHEPATH that can be set 
 		/// to override the default cache path.
@@ -372,7 +374,7 @@ namespace Xamarin.Android.Tasks
 			return contentDir;
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
@@ -451,7 +453,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}, CancellationToken).ContinueWith (Complete);
 
-			var result = base.Execute ();
+			var result = base.RunTask ();
 
 			if (!result || Log.HasLoggedErrors) {
 				if (File.Exists (cacheFileFullPath))

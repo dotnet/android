@@ -14,8 +14,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ResolveLibraryProjectImports : Task
+	public class ResolveLibraryProjectImports : AndroidTask
 	{
+		public override string TaskPrefix => "RLP";
+
 		[Required]
 		public string ImportsDirectory { get; set; }
 
@@ -74,7 +76,7 @@ namespace Xamarin.Android.Tasks
 
 		// Extracts library project contents under e.g. obj/Debug/[__library_projects__/*.jar | res/*/*]
 		// Extracts library project contents under e.g. obj/Debug/[lp/*.jar | res/*/*]
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var jars                          = new Dictionary<string, ITaskItem> ();
 			var resolvedResourceDirectories   = new List<ITaskItem> ();

@@ -15,8 +15,10 @@ namespace Xamarin.Android.Tasks
 	/// * An EmbeddedResource ending with *.jar
 	/// * An EmbeddedResource beginning with __Android
 	/// </summary>
-	public class FilterAssemblies : Task
+	public class FilterAssemblies : AndroidTask
 	{
+		public override string TaskPrefix => "FLT";
+
 		const string TargetFrameworkIdentifier = "MonoAndroid";
 		const string MonoAndroidReference = "Mono.Android";
 
@@ -27,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] OutputAssemblies { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (InputAssemblies == null)
 				return true;

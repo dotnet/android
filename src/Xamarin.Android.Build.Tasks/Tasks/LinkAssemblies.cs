@@ -21,8 +21,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// This task is for Release builds, LinkMode=None now uses LinkAssembliesNoShrink
 	/// </summary>
-	public class LinkAssemblies : Task, ML.ILogger
+	public class LinkAssemblies : AndroidTask, ML.ILogger
 	{
+		public override string TaskPrefix => "LNK";
+
 		[Required]
 		public string UseSharedRuntime { get; set; }
 
@@ -66,7 +68,7 @@ namespace Xamarin.Android.Tasks
 			return retainList;
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var rp = new ReaderParameters {
 				InMemory    = true,

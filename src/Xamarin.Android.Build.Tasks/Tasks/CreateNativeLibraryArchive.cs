@@ -11,8 +11,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Creates __AndroidNativeLibraries__.zip, $(AndroidApplication) should be False!
 	/// </summary>
-	public class CreateNativeLibraryArchive : Task
+	public class CreateNativeLibraryArchive : AndroidTask
 	{
+		public override string TaskPrefix => "CNL";
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -23,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			

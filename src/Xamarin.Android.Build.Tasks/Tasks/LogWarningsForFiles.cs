@@ -4,8 +4,10 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class LogWarningsForFiles : Task
+	public class LogWarningsForFiles : AndroidTask
 	{
+		public override string TaskPrefix => "LWF";
+
 		[Required]
 		public ITaskItem[] Files { get; set; }
 
@@ -19,7 +21,7 @@ namespace Xamarin.Android.Tasks
 
 		public string HelpKeyword { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			foreach (var item in Files) {
 				Log.LogWarning (SubCategory, Code, HelpKeyword, item.ItemSpec

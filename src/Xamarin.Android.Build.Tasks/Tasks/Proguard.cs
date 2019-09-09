@@ -18,8 +18,10 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Tasks
 {
 	// See AOSP/sdk/eclipse/plugins/com.android.ide.eclipse.adt/src/com/android/ide/eclipse/adt/internal/build/BuildHelper.java
-	public class Proguard : ToolTask
+	public class Proguard : AndroidToolTask
 	{
+		public override string TaskPrefix => "PRO";
+
 		public string ProguardJarPath { get; set; }
 
 		public string ProguardToolPath { get; set; }
@@ -73,11 +75,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			EnvironmentVariables = MonoAndroidHelper.GetProguardEnvironmentVaribles (ProguardHome);
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()

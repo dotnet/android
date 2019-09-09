@@ -8,12 +8,14 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Generates a warning if LockFile exists, registers the file to be deleted at end of build
 	/// </summary>
-	public class WriteLockFile : Task
+	public class WriteLockFile : AndroidTask
 	{
+		public override string TaskPrefix => "WLF";
+
 		[Required]
 		public string LockFile { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				var path = Path.GetFullPath (LockFile);

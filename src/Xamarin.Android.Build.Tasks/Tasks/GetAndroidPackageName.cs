@@ -33,8 +33,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetAndroidPackageName : Task
+	public class GetAndroidPackageName : AndroidTask
 	{
+		public override string TaskPrefix => "GAP";
+
 		public string ManifestFile { get; set; }
 
 		[Required]
@@ -43,7 +45,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string PackageName { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// If we don't have a manifest, default to using the assembly name
 			// If the assembly doesn't have a period in it, duplicate it so it does

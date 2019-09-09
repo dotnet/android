@@ -11,8 +11,10 @@ using Monodroid;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ConvertResourcesCases : Task
+	public class ConvertResourcesCases : AndroidTask
 	{
+		public override string TaskPrefix => "CRC";
+
 		[Required]
 		public ITaskItem[] ResourceDirectories { get; set; }
 
@@ -31,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string,string> resource_name_case_map;
 		Dictionary<string, HashSet<string>> customViewMap;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);

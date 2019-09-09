@@ -11,8 +11,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetJavaPlatformJar : Task
+	public class GetJavaPlatformJar : AndroidTask
 	{
+		public override string TaskPrefix => "GJP";
+
 		private XNamespace androidNs = "http://schemas.android.com/apk/res/android";
 
 		[Required]
@@ -26,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string TargetSdkVersion    { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var platform = AndroidSdkPlatform;
 

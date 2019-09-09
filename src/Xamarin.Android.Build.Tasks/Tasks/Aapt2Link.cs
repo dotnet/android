@@ -17,6 +17,8 @@ namespace Xamarin.Android.Tasks {
 	
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
+		public override string TaskPrefix => "A2L";
+
 		[Required]
 		public ITaskItem [] ManifestFiles { get; set; }
 
@@ -75,7 +77,7 @@ namespace Xamarin.Android.Tasks {
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
@@ -83,7 +85,7 @@ namespace Xamarin.Android.Tasks {
 
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				Reacquire ();
 			}

@@ -7,7 +7,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks {
-	public class ComputeHash : Task {
+	public class ComputeHash : AndroidTask {
+		public override string TaskPrefix => "CPT";
 
 		List<ITaskItem> output = new List<ITaskItem> ();
 
@@ -19,7 +20,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] Output { get => output.ToArray (); }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			using (var sha1 = SHA1.Create ()) {
 

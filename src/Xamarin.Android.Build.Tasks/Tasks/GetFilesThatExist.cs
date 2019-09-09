@@ -10,8 +10,10 @@ namespace Xamarin.Android.Tasks
 {
 	// We have a list of files, we want to get the
 	// ones that actually exist on disk.
-	public class GetFilesThatExist : Task
+	public class GetFilesThatExist : AndroidTask
 	{
+		public override string TaskPrefix => "GFT";
+
 		[Required]
 		public ITaskItem[] Files { get; set; }
 
@@ -20,7 +22,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] FilesThatExist { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			FilesThatExist = Files.Where (p => File.Exists (p.ItemSpec) &&
 					(!IgnoreFiles?.Contains (p, TaskItemComparer.DefaultComparer) ?? true)).ToArray ();

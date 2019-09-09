@@ -8,8 +8,10 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ImportJavaDoc : ToolTask
+	public class ImportJavaDoc : AndroidToolTask
 	{
+		public override string TaskPrefix => "IJD";
+
 		public string [] JavaDocs { get; set; }
 		
 		public string [] References { get; set; }

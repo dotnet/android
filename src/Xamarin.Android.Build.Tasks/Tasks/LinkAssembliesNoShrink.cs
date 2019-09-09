@@ -11,8 +11,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// This task is for Debug builds where LinkMode=None, LinkAssemblies is for Release builds
 	/// </summary>
-	public class LinkAssembliesNoShrink : Task
+	public class LinkAssembliesNoShrink : AndroidTask
 	{
+		public override string TaskPrefix => "LNS";
+
 		/// <summary>
 		/// These are used so we have the full list of SearchDirectories
 		/// </summary>
@@ -25,7 +27,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem [] DestinationFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");

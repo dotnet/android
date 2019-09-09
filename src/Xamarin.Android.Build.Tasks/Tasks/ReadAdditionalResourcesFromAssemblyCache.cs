@@ -8,7 +8,8 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ReadAdditionalResourcesFromAssemblyCache : Task {
+	public class ReadAdditionalResourcesFromAssemblyCache : AndroidTask {
+		public override string TaskPrefix => "RAR";
 
 		[Required]
 		public string CacheFile { get; set;} 
@@ -32,7 +33,7 @@ namespace Xamarin.Android.Tasks
 			AdditionalNativeLibraryReferences = new string [0];
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!File.Exists (CacheFile)) {
 				Log.LogDebugMessage ("{0} does not exist. No Additional Resources found", CacheFile);

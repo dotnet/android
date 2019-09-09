@@ -8,8 +8,10 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetImportedLibraries : Task
+	public class GetImportedLibraries : AndroidTask
 	{
+		public override string TaskPrefix => "GIL";
+
 		static readonly string [] IgnoredManifestDirectories = new [] {
 			"bin",
 			"manifest",
@@ -30,7 +32,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ManifestDocuments { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (TargetDirectory)) {
 				Log.LogDebugMessage ("Target directory was not found");

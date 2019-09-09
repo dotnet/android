@@ -14,8 +14,10 @@ namespace Xamarin.Android.Tasks
 	// when it hasn't actually changed, the user will get a "Reload?"
 	// prompt in IDEs, so we only want to copy the file if there is
 	// an actual change.
-	public class CopyIfChanged : Task
+	public class CopyIfChanged : AndroidTask
 	{
+		public override string TaskPrefix => "CIC";
+
 		[Required]
 		public ITaskItem[] SourceFiles { get; set; }
 
@@ -27,7 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");

@@ -11,6 +11,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class D8 : JavaToolTask
 	{
+		public override string TaskPrefix => "DX8";
+
 		[Required]
 		public string JarPath { get; set; }
 

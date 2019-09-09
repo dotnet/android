@@ -7,8 +7,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CollectPdbFiles : Task
+	public class CollectPdbFiles : AndroidTask
 	{
+		public override string TaskPrefix => "CPF";
+
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
@@ -18,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] PortablePdbFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var pdbFiles = new List<ITaskItem> ();
 			var portablePdbFiles = new List<ITaskItem> ();

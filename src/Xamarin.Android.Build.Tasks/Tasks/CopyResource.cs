@@ -10,8 +10,10 @@ using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CopyResource : Task
+	public class CopyResource : AndroidTask
 	{
+		public override string TaskPrefix => "CPR";
+
 		[Required]
 		public string ResourceName { get; set; }
 
@@ -20,7 +22,7 @@ namespace Xamarin.Android.Tasks
 
 		static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			using (var from = ExecutingAssembly.GetManifestResourceStream (ResourceName)) {
 				if (from == null) {

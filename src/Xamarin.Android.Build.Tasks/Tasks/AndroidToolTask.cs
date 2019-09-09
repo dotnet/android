@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public abstract class AndroidToolTask : ToolTask
+	public abstract class AndroidRunToolTask : AndroidToolTask
 	{
 		protected static bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
