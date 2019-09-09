@@ -527,6 +527,25 @@ namespace Lib2
 		}
 
 		[Test]
+		public void LinkAssembliesNoShrink ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+
+				// Touch an assembly to a timestamp older than build.props
+				var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "FormsViewGroup.dll"));
+				File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "_LinkAssembliesNoShrink should *not* be skipped.");
+
+				// No changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "_LinkAssembliesNoShrink should be skipped.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
 		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
 		{
