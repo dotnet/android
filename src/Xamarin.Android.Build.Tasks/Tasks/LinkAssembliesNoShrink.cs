@@ -66,6 +66,9 @@ namespace Xamarin.Android.Tasks
 						Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
 					} else {
 						Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
+
+						// NOTE: We still need to update the timestamp on this file, or this target would run again
+						File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
 					}
 				}
 			}
