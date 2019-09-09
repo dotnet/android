@@ -11,7 +11,7 @@
 using namespace xamarin::android::internal;
 
 void
-EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register)
+EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, size_t total_apk_count, monodroid_should_register should_register)
 {
 	uint32_t cd_offset;
 	uint32_t cd_size;
@@ -32,9 +32,18 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
 
+	if (bundled_assemblies == nullptr) {
+		bundled_assemblies_count = 0;
+		bundled_assemblies_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, cd_entries, total_apk_count);
+		bundled_assemblies = new XamarinBundledAssembly[bundled_assemblies_size];
+	} else if (bundled_assemblies_size - bundled_assemblies_count <= cd_entries) {
+		resize_bundled_assemblies (ADD_WITH_OVERFLOW_CHECK (size_t, bundled_assemblies_size, cd_entries << 1));
+	}
+
 	// C++17 allows template parameter type inference, but alas, Apple's antiquated compiler does
 	// not support this particular part of the spec...
 	simple_pointer_guard<uint8_t[]>  buf (new uint8_t[cd_size]);
+	const char           *apk        = nullptr;
 	const char           *prefix     = get_assemblies_prefix ();
 	size_t                prefix_len = strlen (prefix);
 	size_t                buf_offset = 0;
@@ -74,20 +83,19 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		if (compression_method != 0)
 			continue;
 
-#if defined (DEBUG)
-		if (utils.ends_with (file_name, ".jm")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&java_to_managed_maps, apk_name, file_name, (const char*)map_info.area);
-			continue;
-		}
-		if (utils.ends_with (file_name, ".mj")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&managed_to_java_maps, apk_name, file_name, (const char*)map_info.area);
-			continue;
-		}
+		bool is_prefixed = strncmp (prefix, file_name, strlen (prefix)) == 0;
+		bool ignore_entry = !is_prefixed;
+#if DEBUG
+		bool is_java_to_managed_typemap = utils.ends_with (file_name, ".jm");
+		bool is_managed_to_java_typemap = !is_java_to_managed_typemap && utils.ends_with (file_name, ".mj");
+		ignore_entry &= !is_java_to_managed_typemap && !is_managed_to_java_typemap;
 #endif
-		if (strncmp (prefix, file_name, prefix_len) != 0)
+		if (ignore_entry) {
+#if DEBUG
+			log_info (LOG_ASSEMBLY, "Ignoring entry %s in apk %s", file_name, apk_name);
+#endif
 			continue;
+		}
 
 		// assemblies must be 4-byte aligned, or Bad Things happen
 		if ((data_offset & 0x3) != 0) {
@@ -96,58 +104,80 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 			exit (FATAL_EXIT_MISSING_ZIPALIGN);
 		}
 
-		bool entry_is_overridden = !should_register (strrchr (file_name, '/') + 1);
+		bool entry_is_overridden = !should_register (is_prefixed ? strrchr (file_name, '/') + 1 : file_name);
+		FileType type = FileType::Unknown;
 
-		if ((utils.ends_with (file_name, ".mdb") || utils.ends_with (file_name, ".pdb")) &&
-				register_debug_symbols &&
-				!entry_is_overridden &&
-				bundled_assemblies != nullptr) {
-			md_mmap_info map_info = md_mmap_apk_file(fd, data_offset, file_size, file_name, apk_name);
-			if (register_debug_symbols_for_assembly (file_name, (bundled_assemblies) [bundled_assemblies_count - 1], (const mono_byte*)map_info.area, static_cast<int>(file_size)))
+#if defined (DEBUG)
+		bool mmap_now = false;
+
+		if (is_java_to_managed_typemap) {
+			mmap_now = true;
+			type = FileType::JavaToManagedTypeMap;
+		} else if (is_managed_to_java_typemap) {
+			mmap_now = true;
+			type = FileType::ManagedToJavaTypeMap;
+		} else
+#endif
+		if (utils.ends_with (file_name, mdb_ext) || utils.ends_with (file_name, pdb_ext)) {
+			if (!register_debug_symbols || entry_is_overridden) {
 				continue;
-		}
+			}
 
-		if (utils.ends_with (file_name, ".config") && bundled_assemblies != nullptr) {
-			char *assembly_name = strdup (basename (file_name));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
+			type = FileType::DebugInfo;
+			bundled_assemblies_have_debug_info = true;
+		} else if (utils.ends_with (file_name, config_ext)) {
+			type = FileType::Config;
+			bundled_assemblies_have_configs = true;
+		} else if (utils.ends_with (file_name, ".dll") || utils.ends_with (file_name, ".exe")) {
+			type = FileType::Assembly;
+		} else {
 			continue;
 		}
-
-		if (!(utils.ends_with (file_name, ".dll") || utils.ends_with (file_name, ".exe")))
-			continue;
 
 		if (entry_is_overridden)
 			continue;
 
-		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
-		bundled_assemblies = reinterpret_cast<MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
-		MonoBundledAssembly *cur = bundled_assemblies [bundled_assemblies_count] = reinterpret_cast<MonoBundledAssembly*> (utils.xcalloc (1, sizeof (MonoBundledAssembly)));
-		++bundled_assemblies_count;
+		if (apk == nullptr)
+			apk = utils.strdup_new (apk_name);
 
-		md_mmap_info map_info = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-		cur->name = utils.monodroid_strdup_printf ("%s", strstr (file_name, prefix) + prefix_len);
-		cur->data = (const unsigned char*)map_info.area;
-
-		// MonoBundledAssembly::size is const?!
-		unsigned int *psize = (unsigned int*) &cur->size;
-		*psize = static_cast<unsigned int>(file_size);
-
-		if (utils.should_log (LOG_ASSEMBLY)) {
-			const char *p = (const char*) cur->data;
-
-			char header[9];
-			for (size_t i = 0; i < sizeof(header)-1; ++i)
-				header[i] = isprint (p [i]) ? p [i] : '.';
-			header [sizeof(header)-1] = '\0';
-
-			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
-			                  (int) data_offset, cur->data, cur->data + *psize, (int) file_size, file_name, cur->name, header);
+		XamarinBundledAssembly &assembly = bundled_assemblies [bundled_assemblies_count++];
+		assembly.name           = utils.strdup_new (is_prefixed ? strstr (file_name, prefix) + prefix_len : file_name);
+		assembly.apk_name       = apk;
+		assembly.apk_fd         = fd;
+		assembly.type           = type;
+		assembly.data_offset    = static_cast<off_t>(data_offset);
+		assembly.data_size      = file_size;
+		assembly.mmap_size      = 0;
+		assembly.mmap_area      = nullptr;
+		assembly.mmap_file_data = nullptr;
+#if DEBUG
+		if (!mmap_now) {
+			continue;
 		}
+
+		switch (type) {
+			case FileType::JavaToManagedTypeMap:
+				mmap_apk_file (assembly);
+				add_type_mapping (&java_to_managed_maps, assembly.apk_name, file_name, static_cast<const char*> (assembly.mmap_file_data));
+				if (bundled_assemblies_count > 0) {
+					bundled_assemblies_count--; // Save on space in `bundled_assemblies` and a bit
+					// of time when traversing the array during on-demand loads
+				}
+				break;
+
+			case FileType::ManagedToJavaTypeMap:
+				mmap_apk_file (assembly);
+				add_type_mapping (&managed_to_java_maps, assembly.apk_name, file_name, static_cast<const char*> (assembly.mmap_file_data));
+				if (bundled_assemblies_count > 0) {
+					bundled_assemblies_count--; // As above
+				}
+				break;
+
+			default:
+				log_fatal (LOG_ASSEMBLY, "Internal error: unsupported file type %f for immediate mapping", type);
+				exit (FATAL_EXIT_NO_ASSEMBLIES);
+		}
+#endif
 	}
 }
 

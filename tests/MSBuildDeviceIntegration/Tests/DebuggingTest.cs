@@ -166,7 +166,7 @@ namespace Xamarin.Android.Build.Tests
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
 				}), "Project should have run.");
-				
+
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);

@@ -494,7 +494,7 @@ should_register_file (const char *filename)
 }
 
 static void
-gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, size_t *out_user_assemblies_count)
+gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, bool register_debug_symbols, size_t *out_user_assemblies_count)
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
@@ -506,18 +506,19 @@ gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool
 	}
 #endif
 
+	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
-	for (int64_t i = static_cast<int64_t>(runtimeApks.get_length () - 1); i >= 0; --i) {
-		size_t           cur_num_assemblies;
+	for (int64_t i = static_cast<int64_t>(apk_count - 1); i >= 0; --i) {
 		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
 
-		cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
+		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr (), static_cast<size_t>(apk_count));
 
 		if (strstr (apk_file.get_cstr (), "/Mono.Android.DebugRuntime") == nullptr &&
 		    strstr (apk_file.get_cstr (), "/Mono.Android.Platform.ApiLevel_") == nullptr)
 			*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
 	}
+	embeddedAssemblies.bundled_assemblies_cleanup ();
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
@@ -759,11 +760,16 @@ parse_runtime_args (char *runtime_args, RuntimeOptions *options)
 static void
 set_debug_options (void)
 {
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
+	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0) {
+		log_warn (LOG_DEBUGGER, "set_debug_options: No debug.mono.debug property");
 		return;
+	}
 
+	log_warn (LOG_DEBUGGER, "Enabling registration of debug symbols from the APK");
 	embeddedAssemblies.set_register_debug_symbols (true);
+	log_warn (LOG_DEBUGGER, "Calling mono_debug_init");
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+	log_warn (LOG_DEBUGGER, "mono_debug_init returned");
 }
 
 #ifdef ANDROID
@@ -821,7 +827,7 @@ enable_soft_breakpoints (void)
 #endif /* defined (ANDROID) */
 
 static void
-mono_runtime_init (char *runtime_args)
+mono_runtime_init (char *runtime_args, jstring_array_wrapper &runtimeApks)
 {
 	char *prop_val;
 
@@ -840,15 +846,17 @@ mono_runtime_init (char *runtime_args)
 		char *debug_arg;
 		char *debug_options [2];
 
+		options.loglevel = 10;
 		embeddedAssemblies.set_register_debug_symbols (true);
 
 		debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1", options.loglevel, options.host, options.sdb_port,
 				options.server ? "server=y," : "");
 		debug_options[0] = debug_arg;
 
-		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
+		log_warn (LOG_DEBUGGER, "mono_runtime_init: Trying to initialize the debugger with options: %s", debug_arg);
 
 		if (options.out_port > 0) {
+			log_warn (LOG_DEBUGGER, "options.out_port == %u", options.out_port);
 			struct sockaddr_in addr;
 			int sock;
 			int r;
@@ -859,6 +867,7 @@ mono_runtime_init (char *runtime_args)
 				exit (FATAL_EXIT_DEBUGGER_CONNECT);
 			}
 
+			log_warn (LOG_DEBUGGER, "Socket created");
 			memset(&addr, 0, sizeof (addr));
 
 			addr.sin_family = AF_INET;
@@ -871,6 +880,7 @@ mono_runtime_init (char *runtime_args)
 			}
 
 			if (options.server) {
+				log_warn (LOG_DEBUGGER, "Enabling server");
 				int accepted = monodroid_debug_accept (sock, addr);
 				log_warn (LOG_DEBUGGER, "Accepted stdout connection: %d", accepted);
 				if (accepted < 0) {
@@ -882,6 +892,7 @@ mono_runtime_init (char *runtime_args)
 				dup2 (accepted, 1);
 				dup2 (accepted, 2);
 			} else {
+				log_warn (LOG_DEBUGGER, "Enabling client");
 				if (monodroid_debug_connect (sock, addr) != 1) {
 					log_fatal (LOG_DEBUGGER, "Error connecting stdout and stderr (%s:%d): %s",
 							     options.host, options.out_port, strerror (errno));
@@ -893,17 +904,25 @@ mono_runtime_init (char *runtime_args)
 			}
 		}
 
+		log_warn (LOG_DEBUGGER, "About to enable soft breakpoints");
 		if (enable_soft_breakpoints ()) {
+			log_warn (LOG_DEBUGGER, "Soft breakpoints enabled");
 			constexpr char soft_breakpoints[] = "--soft-breakpoints";
 			debug_options[1] = const_cast<char*> (soft_breakpoints);
 			mono_jit_parse_options (2, debug_options);
+			log_warn (LOG_DEBUGGER, "JIT options parsed");
 		} else {
+			log_warn (LOG_DEBUGGER, "Soft breakpoints NOT enabled");
 			mono_jit_parse_options (1, debug_options);
 		}
 
+		log_warn (LOG_DEBUGGER, "Calling mono_debug_init");
 		mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+		log_warn (LOG_DEBUGGER, "mono_debug_init returned");
 	} else {
+		log_warn (LOG_DEBUGGER, "Setting debug options");
 		set_debug_options ();
+		log_warn (LOG_DEBUGGER, "Debug options set");
 	}
 #else
 	set_debug_options ();
@@ -993,20 +1012,27 @@ create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeA
 	MonoDomain *domain;
 	size_t user_assemblies_count   = 0;;
 
-	gather_bundled_assemblies (env, runtimeApks, embeddedAssemblies.get_register_debug_symbols (), &user_assemblies_count);
+	gather_bundled_assemblies (runtimeApks, embeddedAssemblies.get_register_debug_symbols (), &user_assemblies_count);
 
+	log_warn (LOG_DEFAULT, "gather_bundled_assemblies returned, user_assemblies_count == %u", user_assemblies_count);
 	if (!mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
-
+// #if DEBUG
+// 	embeddedAssemblies.preload_assemblies ();
+// #endif
 	if (is_root_domain) {
+		log_warn (LOG_DEFAULT, "in root domain, initializing jit version");
 		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
+		log_warn (LOG_DEFAULT, "jit version initialized");
 	} else {
+		log_warn (LOG_DEFAULT, "not in root domain");
 		MonoDomain* root_domain = mono_get_root_domain ();
 		char *domain_name = utils.monodroid_strdup_printf ("MonoAndroidDomain%d", android_api_level);
+		log_warn (LOG_DEFAULT, "creating MonoAndroidDomain%d", android_api_level);
 		domain = utils.monodroid_create_appdomain (root_domain, domain_name, /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
 		free (domain_name);
 	}
@@ -1037,6 +1063,7 @@ create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeA
 		}
 	}
 
+	log_warn (LOG_DEFAULT, "returning domain: %p", domain);
 	return domain;
 }
 
@@ -1738,17 +1765,24 @@ start_debugging (void)
 	debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	debug_options[0] = debug_arg;
 
-	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
+	log_warn (LOG_DEBUGGER, "start_debugging: Trying to initialize the debugger with options: %s", debug_arg);
 
+	log_warn (LOG_DEBUGGER, "about to enable soft breakpoints");
 	if (enable_soft_breakpoints ()) {
+		log_warn (LOG_DEBUGGER, "enable_soft_breakpoints returned true");
 		constexpr char soft_breakpoints[] = "--soft-breakpoints";
 		debug_options[1] = const_cast<char*> (soft_breakpoints);
+		log_warn (LOG_DEBUGGER, "parsing jit options");
 		mono_jit_parse_options (2, debug_options);
 	} else {
+		log_warn (LOG_DEBUGGER, "enable_soft_breakpoints returned false");
+		log_warn (LOG_DEBUGGER, "parsing jit options");
 		mono_jit_parse_options (1, debug_options);
 	}
 
+	log_warn (LOG_DEBUGGER, "calling mono_debug_init");
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+	log_warn (LOG_DEBUGGER, "mono_debug_init returned");
 }
 
 static void
@@ -1874,7 +1908,7 @@ load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assembl
 	}
 }
 
-static void
+[[maybe_unused]] static void
 monodroid_Mono_UnhandledException_internal (MonoException *ex)
 {
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
@@ -1885,6 +1919,7 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 {
 	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, loader, is_root_domain);
 
+	log_warn (LOG_DEFAULT, "domain created: %p", domain);
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
@@ -1896,11 +1931,19 @@ create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wr
 	if (assembliesBytes != nullptr)
 		inMemoryAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes);
 #endif
-	if (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies))
+	if (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies)) {
+		log_warn (LOG_DEFAULT, "assembly preload enabled");
 		load_assemblies (domain, env, assemblies);
+		log_warn (LOG_DEFAULT, "assemblies preloaded");
+	}
+
+	log_warn (LOG_DEFAULT, "about to init android runtime");
 	init_android_runtime (domain, env, runtimeClass, loader);
+	log_warn (LOG_DEFAULT, "android runtime initialized");
 
 	osBridge.add_monodroid_domain (domain);
+
+	log_warn (LOG_DEFAULT, "monodroid domain added to osBridge");
 
 	return domain;
 }
@@ -2007,6 +2050,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	char *connect_args;
 	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
+	log_warn (LOG_DEBUGGER, "Debugger connect args: %s", connect_args != nullptr ? connect_args : "<null>");
 	if (connect_args != nullptr) {
 		int res = debug.start_connection (connect_args);
 		if (res != 2) {
@@ -2062,7 +2106,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		partial_time.mark_start ();
 
-	mono_runtime_init (runtime_args);
+	mono_runtime_init (runtime_args, runtimeApks);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
