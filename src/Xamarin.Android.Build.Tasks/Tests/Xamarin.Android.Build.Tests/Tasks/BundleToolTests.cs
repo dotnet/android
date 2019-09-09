@@ -11,44 +11,89 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class BundleToolTests : BaseTest
 	{
-		XamarinAndroidApplicationProject project;
-		ProjectBuilder builder;
+		XamarinAndroidLibraryProject lib;
+		XamarinAndroidApplicationProject app;
+		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
+
+		const string Resx = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<root>
+	<resheader name=""resmimetype"">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name=""version"">
+		<value>2.0</value>
+	</resheader>
+	<resheader name=""reader"">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name=""writer"">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<!--contents-->
+</root>";
 
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
 		{
-			project = new XamarinFormsMapsApplicationProject {
+			var path = Path.Combine ("temp", TestName);
+			lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			app = new XamarinFormsMapsApplicationProject {
 				IsRelease = true,
 			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
 			//NOTE: this is here to enable adb shell run-as
-			project.AndroidManifest = project.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			project.SetProperty (project.ReleaseProperties, "AndroidPackageFormat", "aab");
+			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86" };
-			project.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 
-			builder = CreateApkBuilder (Path.Combine ("temp", TestName), cleanupOnDispose: true);
-			Assert.IsTrue (builder.Build (project), "Build should have succeeded.");
+			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
+			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
+			appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: true);
+			Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 
-			var projectDir = Path.Combine (Root, builder.ProjectDirectory);
-			intermediate = Path.Combine (projectDir, project.IntermediateOutputPath);
-			bin = Path.Combine (projectDir, project.OutputPath);
+			var projectDir = Path.Combine (Root, appBuilder.ProjectDirectory);
+			intermediate = Path.Combine (projectDir, app.IntermediateOutputPath);
+			bin = Path.Combine (projectDir, app.OutputPath);
+		}
+
+		string ResxWithContents (string contents)
+		{
+			return Resx.Replace ("<!--contents-->", contents);
 		}
 
 		[TearDown]
 		public void TearDown ()
 		{
 			var status = TestContext.CurrentContext.Result.Outcome.Status;
-			if (status == NUnit.Framework.Interfaces.TestStatus.Failed && builder != null) {
-				builder.CleanupOnDispose = false;
+			if (status == NUnit.Framework.Interfaces.TestStatus.Failed) {
+				if (libBuilder != null)
+					libBuilder.CleanupOnDispose = false;
+				if (appBuilder != null)
+					appBuilder.CleanupOnDispose = false;
 			}
 		}
 
 		[OneTimeTearDown]
 		public void OneTimeTearDown ()
 		{
-			builder?.Dispose ();
+			libBuilder?.Dispose ();
+			appBuilder?.Dispose ();
 		}
 
 		string [] ListArchiveContents (string archive)
@@ -99,6 +144,8 @@ namespace Xamarin.Android.Build.Tests
 				"root/assemblies/System.Core.dll",
 				"root/assemblies/System.dll",
 				"root/assemblies/System.Runtime.Serialization.dll",
+				"root/assemblies/Localization.dll",
+				"root/assemblies/es/Localization.resources.dll",
 				"root/assemblies/UnnamedProject.dll",
 				"root/NOTICE",
 				//These are random files from Google Play Services .jar/.aar files
@@ -150,6 +197,8 @@ namespace Xamarin.Android.Build.Tests
 				"base/root/assemblies/System.Core.dll",
 				"base/root/assemblies/System.dll",
 				"base/root/assemblies/System.Runtime.Serialization.dll",
+				"base/root/assemblies/Localization.dll",
+				"base/root/assemblies/es/Localization.resources.dll",
 				"base/root/assemblies/UnnamedProject.dll",
 				"base/root/NOTICE",
 				"BundleConfig.pb",
@@ -179,7 +228,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Installation. No devices available.");
 
-			Assert.IsTrue (builder.RunTarget (project, "Install"), "App should have installed.");
+			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");
 			FileAssert.Exists (aab);
@@ -187,6 +236,20 @@ namespace Xamarin.Android.Build.Tests
 			// This are split up based on: abi, language, base, and dpi
 			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (4, contents.Length, "Expecting four APKs!");
+
+			using (var stream = new MemoryStream ())
+			using (var apkSet = ZipArchive.Open (aab, FileMode.Open)) {
+				// We have a zip inside a zip
+				var baseMaster = apkSet.ReadEntry ("splits/base-master.apk");
+				baseMaster.Extract (stream);
+
+				stream.Position = 0;
+				using (var baseApk = ZipArchive.Open (stream)) {
+					foreach (var dll in baseApk.Where (e => e.FullName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))) {
+						Assert.AreEqual (CompressionMethod.Store, dll.CompressionMethod, $"{dll.FullName} should be uncompressed!");
+					}
+				}
+			}
 		}
 	}
 }
