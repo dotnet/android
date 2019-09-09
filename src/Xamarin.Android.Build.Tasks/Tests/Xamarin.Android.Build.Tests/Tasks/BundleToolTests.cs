@@ -51,9 +51,17 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
+			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
 				IsRelease = true,
 			};
+			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
+				BinaryContent = () => bytes,
+			});
+			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.wav") {
+				BinaryContent = () => bytes,
+			});
+			app.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			//NOTE: this is here to enable adb shell run-as
@@ -244,9 +252,14 @@ namespace Xamarin.Android.Build.Tests
 				baseMaster.Extract (stream);
 
 				stream.Position = 0;
+				var uncompressed = new [] { ".dll", ".bar", ".wav" };
 				using (var baseApk = ZipArchive.Open (stream)) {
-					foreach (var dll in baseApk.Where (e => e.FullName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))) {
-						Assert.AreEqual (CompressionMethod.Store, dll.CompressionMethod, $"{dll.FullName} should be uncompressed!");
+					foreach (var file in baseApk) {
+						foreach (var ext in uncompressed) {
+							if (file.FullName.EndsWith (ext, StringComparison.OrdinalIgnoreCase)) {
+								Assert.AreEqual (CompressionMethod.Store, file.CompressionMethod, $"{file.FullName} should be uncompressed!");
+							}
+						}
 					}
 				}
 			}

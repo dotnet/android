@@ -14,6 +14,46 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class BuildAppBundle : BundleTool
 	{
+		static readonly string [] UncompressedByDefault = new [] {
+			// Xamarin.Android specific files
+			"typemap.mj",
+			"typemap.jm",
+			"assemblies/**",
+			// Android specific files, listed here:
+			// https://github.com/google/bundletool/blob/5ac94cb61e949f135c50f6ce52bbb5f00e8e959f/src/main/java/com/android/tools/build/bundletool/io/ApkSerializerHelper.java#L111-L115
+			"**/*.3g2",
+			"**/*.3gp",
+			"**/*.3gpp",
+			"**/*.3gpp2",
+			"**/*.aac",
+			"**/*.amr",
+			"**/*.awb",
+			"**/*.gif",
+			"**/*.imy",
+			"**/*.jet",
+			"**/*.jpeg",
+			"**/*.jpg",
+			"**/*.m4a",
+			"**/*.m4v",
+			"**/*.mid",
+			"**/*.midi",
+			"**/*.mkv",
+			"**/*.mp2",
+			"**/*.mp3",
+			"**/*.mp4",
+			"**/*.mpeg",
+			"**/*.mpg",
+			"**/*.ogg",
+			"**/*.png",
+			"**/*.rtttl",
+			"**/*.smf",
+			"**/*.wav",
+			"**/*.webm",
+			"**/*.wma",
+			"**/*.wmv",
+			"**/*.xmf",
+		};
+
 		[Required]
 		public string BaseZip { get; set; }
 
@@ -28,11 +68,7 @@ namespace Xamarin.Android.Tasks
 		{
 			temp = Path.GetTempFileName ();
 			try {
-				var uncompressed = new List<string> {
-					"typemap.mj",
-					"typemap.jm",
-					"assemblies/**",
-				};
+				var uncompressed = new List<string> (UncompressedByDefault);
 				if (!string.IsNullOrEmpty (UncompressedFileExtensions)) {
 					//NOTE: these are file extensions, that need converted to glob syntax
 					var split = UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
