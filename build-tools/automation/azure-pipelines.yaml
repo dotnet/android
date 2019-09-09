@@ -305,7 +305,7 @@ stages:
 
 - stage: test
   displayName: Test
-  dependsOn: mac_build
+  dependsOn: []
   jobs:
   # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
