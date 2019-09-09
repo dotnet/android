@@ -232,10 +232,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");
 			FileAssert.Exists (aab);
-			// Expecting: splits/base-arm64_v8a.apk, splits/base-en.apk, splits/base-es.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
+			// Expecting: splits/base-arm64_v8a.apk, splits/base-en.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, language, base, and dpi
 			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
-			Assert.AreEqual (5, contents.Length, "Expecting five APKs!");
+			Assert.AreEqual (4, contents.Length, "Expecting four APKs!");
 
 			using (var stream = new MemoryStream ())
 			using (var apkSet = ZipArchive.Open (aab, FileMode.Open)) {
