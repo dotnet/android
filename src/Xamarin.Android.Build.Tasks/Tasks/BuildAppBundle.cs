@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 				var uncompressed = new List<string> {
 					"typemap.mj",
 					"typemap.jm",
-					"assemblies/*",
+					"assemblies/**",
 				};
 				if (!string.IsNullOrEmpty (UncompressedFileExtensions)) {
 					//NOTE: these are file extensions, that need converted to glob syntax
