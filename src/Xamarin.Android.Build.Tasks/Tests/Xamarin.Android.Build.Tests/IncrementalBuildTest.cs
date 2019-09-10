@@ -822,5 +822,96 @@ namespace Lib2
 				FileAssert.Exists (path);
 			}
 		}
+		
+#pragma warning disable 414
+		static object [] AotChecks () => new object [] {
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "", // None, Normal, Hybrib, Full
+				/* aotAssemblies */   false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Normal", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   true,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Normal", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   true,
+				/* expectedResult */  false,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   false,
+				/* expectedResult */  false,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   true,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
+				/* aotAssemblies */   false,
+				/* expectedResult */  true,
+			},
+		};
+#pragma warning restore 414
+
+		[Test]
+		[TestCaseSource (nameof (AotChecks))]
+		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
+		{
+			var targets = new string [] {
+				"_RemoveRegisterAttribute",
+				"_BuildApkEmbed",
+			};
+			var path = Path.Combine ("temp", $"BuildAotApplication_{supportedAbis}_{androidAotMode}_{aotAssemblies}_{expectedResult}");
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				BundleAssemblies = false,
+				AotAssemblies = aotAssemblies,
+			};
+			if (!string.IsNullOrEmpty (androidAotMode))
+			    proj.SetProperty ("AndroidAotMode", androidAotMode);
+			using (var b = CreateApkBuilder (path)) {
+				if (!b.CrossCompilerAvailable (supportedAbis))
+					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
+				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
+					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
+				b.ThrowOnBuildFailure = false;
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
+				if (!expectedResult)
+					return;
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
+				}
+				
+				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
+
+				proj.Touch ("MainActivity.cs");
+
+				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on third build!");
+				}
+			}
+		}
 	}
 }
