@@ -22,6 +22,7 @@ include("../../build-tools/cmake/xa_macros.cmake")
 
 set(JAVA_INTEROP_SRC_PATH "../../external/Java.Interop/src/java-interop")
 string(REPLACE "\\" "/" TOP_DIR ${CMAKE_SOURCE_DIR})
+set(SOURCES_DIR ${TOP_DIR}/jni)
 
 if(NOT DEFINED MONO_PATH)
   message(FATAL_ERROR "Please set the MONO_PATH variable on command line (-DMONO_PATH=PATH)")
@@ -59,6 +60,7 @@ if(NOT ANDROID)
   endforeach()
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
+    ${SOURCES_DIR}/inmemory-assemblies.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
@@ -227,7 +229,6 @@ check_include_files("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
 
-set(SOURCES_DIR ${TOP_DIR}/jni)
 set(MONODROID_SOURCES
   ${MONODROID_SOURCES}
   ${SOURCES_DIR}/new_delete.cc

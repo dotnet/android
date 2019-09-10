@@ -51,7 +51,10 @@ macro(xa_common_prepare)
     fPIC
     )
 
-  if(NOT MINGW AND NOT WIN32)
+  # Using flto seems to breaks LLDB debugging as debug symbols are not properly included
+  # thus disable on desktop builds where we care less about its benefits and would rather
+  # keep debuggability
+  if(NOT MINGW AND NOT WIN32 AND NOT APPLE)
     # -flto leaves a lot of temporary files with mingw builds, turn the optimization off as we don't really need it there
     set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} flto)
   endif()
