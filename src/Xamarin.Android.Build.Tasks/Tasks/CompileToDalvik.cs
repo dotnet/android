@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks
 {
 	public class CompileToDalvik : JavaToolTask
 	{
-		public override string TaskPrefix => "CTD";
+		public override string TaskPrefix => "CTX";
 
 		public ITaskItem [] AdditionalJavaLibraryReferences { get; set; }
 
