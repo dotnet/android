@@ -285,6 +285,11 @@
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Novell.MonoDroid.CSharp.targets" />
   </ItemGroup>
   <ItemGroup>
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-docs.source" />
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.tree" />
+    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.zip" />
+  </ItemGroup>
+  <ItemGroup>
     <ThirdPartyNotice Include="$(RootBuildDir)\lib\xamarin.android\ThirdPartyNotices.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -318,9 +323,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.Bindings.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
-    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-docs.source" />
-    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.tree" />
-    <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.zip" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.CompilerServices.SymbolWriter.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Tds.xml" />
@@ -352,7 +354,7 @@
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.dll')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\mono.android.jar')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.pdb')" />
-      <_FrameworkFilesWin Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.xml')" Condition=" '$(_HasCommercialFiles)' == 'True' " />
+      <_FrameworkFilesWin Include="@(_FrameworkDirsThatExist->'%(Identity)\Mono.Android.xml')" />
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\RedistList\FrameworkList.xml')" />
       <FrameworkItemsWin Include="@(_FrameworkFiles);@(_FrameworkFilesWin)">
         <RelativePath>$([MSBuild]::MakeRelative($(FrameworkSrcDir), %(FullPath)))</RelativePath>
