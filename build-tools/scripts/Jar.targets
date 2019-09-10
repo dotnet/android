@@ -11,8 +11,20 @@
       <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac</JavaCPath>
     </PropertyGroup>
   </Target>
+  <Target Name="_GetJavaInteropJarPath">
+    <PropertyGroup>
+      <_JIJar_InTree>$([System.IO.Path]::GetFullPath ('$(XAInstallPrefix)'))\xbuild\Xamarin\Android\java-interop.jar</_JIJar_InTree>
+      <_JIJar_System Condition=" '$(_XamarinAndroidMSBuildDirectory)' != '' ">$(_XamarinAndroidMSBuildDirectory)\java-interop.jar</_JIJar_System>
+      <_JavaInteropJarPath Condition=" Exists($(_JIJar_InTree)) ">$(_JIJar_InTree)</_JavaInteropJarPath>
+      <_JavaInteropJarPath Condition=" '$(_JavaInteropJarPath)' == '' ">$(_JIJar_System)</_JavaInteropJarPath>
+    </PropertyGroup>
+    <Error
+        Condition=" '$(_JavaInteropJarPath)' == '' "
+        Text="Could not determine path to `java-interop.jar`."
+    />
+  </Target>
   <Target Name="BuildTestJarFile"
-      DependsOnTargets="_GetJavacVersions"
+      DependsOnTargets="_GetJavacVersions;_GetJavaInteropJarPath"
       Inputs="@(TestJarEntry)"
       Outputs="%(TestJarEntry.OutputFile)">
     <ItemGroup>
@@ -26,11 +38,7 @@
       <_Targets>-source $(_JavacSourceVersion) -target $(_JavacTargetVersion)</_Targets>
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
       <_AndroidJar>-bootclasspath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
-      <_JIJar_InTree>$([System.IO.Path]::GetFullPath ('$(XAInstallPrefix)'))\xbuild\Xamarin\Android\java-interop.jar</_JIJar_InTree>
-      <_JIJar_System>$(MSBuildExtensionsPath)\Xamarin\Android\java-interop.jar</_JIJar_System>
-      <_JIJar Condition=" Exists ($(_JIJar_InTree)) ">$(_JIJar_InTree)</_JIJar>
-      <_JIJar Condition=" '$(_JIJar)' == '' ">$(_JIJar_System)</_JIJar>
-      <_CP>-cp "$(_JIJar)"</_CP>
+      <_CP>-cp "$(_JavaInteropJarPath)"</_CP>
     </PropertyGroup>
     <MakeDir Directories="$(_DestDir)" />
     <Exec Command="$(_Javac) $(_Targets) -d &quot;$(_DestDir)&quot; $(_AndroidJar) $(_CP) @(_JavacSource->'&quot;%(Identity)&quot;', ' ')" />
