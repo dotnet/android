@@ -22,6 +22,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
+		[Required]
+		public ITaskItem ApkOutputPath { get; set; }
+
 		public CilStrip ()
 		{
 		}
@@ -53,11 +56,22 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (nonstripDir))
 				Directory.CreateDirectory (nonstripDir);
 
+			var timestampFileDate = File.GetLastWriteTimeUtc (ApkOutputPath.ItemSpec);
+
 			foreach (var assembly in ResolvedAssemblies) {
 				string assemblyPath = Path.GetFullPath (assembly.ItemSpec);
 				string nonstripPath = Path.Combine (nonstripDir, Path.GetFileName (assemblyPath));
 
-				File.Move (assemblyPath, nonstripPath);
+				Log.LogDebugMessage ($"Moving {assemblyPath} to {nonstripPath}");
+
+				var srcmodifiedDate = File.GetLastWriteTimeUtc (assemblyPath);
+				
+				if (srcmodifiedDate < timestampFileDate) {
+					Log.LogDebugMessage ($"Skipping strip of IL for {assembly.ItemSpec}. Assembly has already been stripped.");
+					continue;
+				}
+
+				File.Copy (assemblyPath, nonstripPath, overwrite: true);
 
 				if (!RunCilStrip (nonstripPath, assemblyPath)) {
 					Log.LogCodedError ("XA3001", "Could not strip IL of assembly: {0}", assembly.ItemSpec);
