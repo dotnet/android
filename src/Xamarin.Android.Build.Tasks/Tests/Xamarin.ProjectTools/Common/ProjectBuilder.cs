@@ -150,6 +150,11 @@ namespace Xamarin.ProjectTools
 			public string Runtime;
 			public string Abi;
 			public int Size;
+
+			public override string ToString ()
+			{
+				return $"Name={Name} Runtime={Runtime} Abi={Abi} Size={Size}";
+			}
 		}
 
 		public RuntimeInfo [] GetSupportedRuntimes ()
@@ -164,12 +169,14 @@ namespace Xamarin.ProjectTools
 				if (items.Length != 3)
 					continue;
 				var fi = new FileInfo (fullFilePath);
-				runtimeInfo.Add (new RuntimeInfo () {
+				var info = new RuntimeInfo () {
 					Name = "libmonodroid.so",
 					Runtime = items [1], // release|debug
 					Abi = parentDir.Name, // armaebi|x86|arm64-v8a
-					Size = (int)fi.Length, // int
-				});
+					Size = (int) fi.Length, // int
+				};
+				Console.WriteLine ($"Found {info}");
+				runtimeInfo.Add (info);
 			}
 			return runtimeInfo.ToArray ();
 		}

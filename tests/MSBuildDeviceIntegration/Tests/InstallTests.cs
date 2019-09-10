@@ -168,6 +168,7 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var directorylist = string.Empty;
 				foreach (var dir in overrideDirs) {
+					TestContext.Out.WriteLine ($"Checking for {dir}");
 					var listing = RunAdbCommand ($"shell ls {dir}");
 					if (!listing.Contains ("No such file or directory"))
 						directorylist += listing;
@@ -224,7 +225,12 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseSharedRuntime", false);
 			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
-			var abis = new string [] { "armeabi-v7a", "x86" };
+			string [] abis;
+			if (HasDevices) {
+				abis = new string [] { DeviceAbi };
+			} else {
+				abis = new string [] { "armeabi-v7a", "x86" };
+			}
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
@@ -235,7 +241,11 @@ namespace Xamarin.Android.Build.Tests
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
 					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
+					foreach (var file in apk) {
+						TestContext.Out.WriteLine ($"{file.FullName}");
+					}
 					foreach (var abi in abis) {
+						TestContext.Out.WriteLine ($"Checking for {abi}");
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == "debug");
 						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));

@@ -49,11 +49,13 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
+				b.BuildLogFile = "install.log";
 				Assert.True (b.Install (proj), "Project should have installed.");
 				ClearAdbLogcat ();
-				if (CommercialBuildAvailable)
+				if (CommercialBuildAvailable) {
+					b.BuildLogFile = "_run.log";
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
-				else
+				} else
 					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
@@ -305,6 +307,17 @@ namespace ${ROOT_NAMESPACE} {
 		};
 #pragma warning restore 414
 
+		SoftDebuggerSession CreateDebuggerSession (BreakpointStore breakPoints, EventHandler<TargetEventArgs> targetHitHandler)
+		{
+			var session = new SoftDebuggerSession ();
+			session.Breakpoints = breakPoints;
+			session.TargetHitBreakpoint += targetHitHandler;
+			session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
+			session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
+			session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
+			return session;
+		}
+
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (1)]
@@ -329,24 +342,26 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
+				b.BuildLogFile = "install.log";
 				Assert.True (b.Install (proj), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
 				var sw = new Stopwatch ();
-				// setup the debugger
-				var session = new SoftDebuggerSession ();
-				session.Breakpoints = new BreakpointStore {
+				BreakpointStore breakPoints = new BreakpointStore {
 					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  19 },
 					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 14 },
 					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 19 },
 					{ Path.Combine (Root, b.ProjectDirectory, "App.xaml.cs"), 12 },
 				};
-				session.TargetHitBreakpoint += (sender, e) => {
+				SoftDebuggerSession session = null;
+				// setup the debugger
+				EventHandler<TargetEventArgs> targetHit = (sender, e) => {
 					Console.WriteLine ($"BREAK {e.Type}");
 					breakcountHitCount++;
 					session.Continue ();
 				};
+				session = CreateDebuggerSession (breakPoints, targetHit);
 				var rnd = new Random ();
 				int port = rnd.Next (10000, 20000);
 				TestContext.Out.WriteLine ($"{port}");
@@ -361,7 +376,8 @@ namespace ${ROOT_NAMESPACE} {
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				Assert.True (b.RunTarget (proj, "_Run", parameters: new string [] {
+				b.BuildLogFile = "_run.log";
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
@@ -370,9 +386,6 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);
-				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
-				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
-				session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
 				session.Run (startInfo, options);
 				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
 				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
@@ -395,8 +408,56 @@ namespace ${ROOT_NAMESPACE} {
 				}
 				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 				session.Exit ();
+				WaitFor (2000);
+				Assert.IsTrue (session.HasExited);
+
+				breakcountHitCount = 0;
+				session = CreateDebuggerSession (breakPoints, targetHit);
+
+				string mainPage = Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml");
+				string mainPageText = File.ReadAllText (mainPage);
+				File.WriteAllText (mainPage, mainPageText.Replace ("Click Me", "Click Me 1"));
+
+				b.BuildLogFile = "build2.log";
+				Assert.True (b.Build (proj, doNotCleanupOnUpdate: true), "Project should have built.");
+				b.BuildLogFile = "install2.log";
+				Assert.True (b.Install (proj, doNotCleanupOnUpdate: true), "Project should have installed.");
+
+				ClearAdbLogcat ();
+				b.BuildLogFile = "_run2.log";
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
+					$"AndroidSdbTargetPort={port}",
+					$"AndroidSdbHostPort={port}",
+					"AndroidAttachDebugger=True",
+				}), "Project should have run.");
+
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat2.log")), "Activity should have started");
+				WaitFor (2000);
+				session.Run (startInfo, options);
+				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
+				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
+				// we need to wait here for a while to allow the breakpoints to hit
+				// but we need to timeout
+				timeout = TimeSpan.FromSeconds (60);
+				while (session.IsConnected && breakcountHitCount < 3) {
+					Thread.Sleep (10);
+					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
+				}
+				WaitFor (2000);
+				ClearAdbLogcat ();
+				ClickButton (proj.PackageName, "myXFButton", "CLICK ME 1");
+				while (session.IsConnected && breakcountHitCount < 4) {
+					Thread.Sleep (10);
+					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
+				}
+				expected = 4;
+				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
+				session.Exit ();
+				WaitFor (2000);
+				Assert.IsTrue (session.HasExited);
+
+				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 	}
