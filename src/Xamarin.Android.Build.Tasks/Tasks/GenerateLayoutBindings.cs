@@ -17,8 +17,10 @@ namespace Xamarin.Android.Tasks
 {
 	// TODO: add doc comments to the generated properties
 	//
-	public partial class GenerateLayoutBindings : AsyncTask
+	public partial class GenerateLayoutBindings : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "GLB";
+
 		sealed class PartialClass
 		{
 			public string Name;
@@ -77,7 +79,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] GeneratedFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (String.IsNullOrWhiteSpace (OutputLanguage))
 				OutputLanguage = DefaultOutputGenerator.Name;
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			if (Generate (generator)) {
 				Complete ();
 			} else {
-				base.Execute ();
+				base.RunTask ();
 			}
 
 			return !Log.HasLoggedErrors;

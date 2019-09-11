@@ -12,8 +12,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class BindingsGenerator : AndroidToolTask
+	public class BindingsGenerator : AndroidRunToolTask
 	{
+		public override string TaskPrefix => "BGN";
+
 		public bool OnlyRunXmlAdjuster { get; set; }
 
 		public string XmlAdjusterOutput { get; set; }
@@ -57,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Directory.CreateDirectory (OutputDirectory);
 
@@ -91,7 +93,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()

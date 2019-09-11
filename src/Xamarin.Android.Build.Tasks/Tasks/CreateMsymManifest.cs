@@ -6,8 +6,10 @@ using System.IO;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CreateMsymManifest : Task
+	public class CreateMsymManifest : AndroidTask
 	{
+		public override string TaskPrefix => "CMM";
+
 		[Required]
 		public string BuildId { get; set; }
 
@@ -17,7 +19,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputDirectory { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			XDocument doc = new XDocument (
 				new XElement ("mono-debug", new XAttribute("version", "1"),

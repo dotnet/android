@@ -16,8 +16,10 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks
 {
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
-	public class MakeBundleNativeCodeExternal : Task
+	public class MakeBundleNativeCodeExternal : AndroidTask
 	{
+		public override string TaskPrefix => "MBN";
+
 		const string BundleSharedLibraryName = "libmonodroid_bundle_app.so";
 
 		[Required]
@@ -52,7 +54,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
 				return false;

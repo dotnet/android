@@ -153,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource(typeof (AndroidRegExTestsCases))]
 		public void RegExTests(string message, bool expectedToMatch, string expectedFile, string expectedLine, string expectedLevel, string expextedMessage)
 		{
-			var regex = Xamarin.Android.Tasks.AndroidToolTask.AndroidErrorRegex;
+			var regex = Xamarin.Android.Tasks.AndroidRunToolTask.AndroidErrorRegex;
 			var result = regex.Match (message);
 			Assert.AreEqual (expectedToMatch,result.Success);
 			Assert.AreEqual (expectedFile, result.Groups["file"].Value);

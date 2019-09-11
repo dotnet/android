@@ -18,7 +18,7 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks {
 	
-	public class Aapt2 : AsyncTask {
+	public abstract class Aapt2 : AndroidAsyncTask {
 
 		protected Dictionary<string, string> resource_name_case_map;
 
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tasks {
 
 		bool IsAapt2Warning (string singleLine)
 		{
-			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
+			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 			if (match.Success) {
 				var file = match.Groups ["file"].Value;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks {
 			if (string.IsNullOrEmpty (singleLine))
 				return true;
 
-			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
+			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
 			if (match.Success) {
 				var file = match.Groups ["file"].Value;

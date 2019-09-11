@@ -13,6 +13,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class R8 : D8
 	{
+		public override string TaskPrefix => "R8S";
+
 		[Required]
 		public string AndroidSdkBuildToolsPath { get; set; }
 		[Required]
@@ -35,11 +37,11 @@ namespace Xamarin.Android.Tasks
 
 		string temp;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				temp = Path.GetTempFileName ();
-				return base.Execute ();
+				return base.RunTask ();
 			} finally {
 				if (!string.IsNullOrEmpty (temp))
 					File.Delete (temp);

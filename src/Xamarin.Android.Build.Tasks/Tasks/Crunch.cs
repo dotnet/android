@@ -13,8 +13,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Crunch : AsyncTask
+	public class Crunch : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "CRN";
+
 		// Aapt errors looks like this:
 		//   C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
 		// Look for them and convert them to MSBuild compatible errors.
@@ -68,7 +70,7 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
@@ -76,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				Reacquire ();
 			}

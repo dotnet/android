@@ -8,8 +8,10 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class MDoc : ToolTask
+	public class MDoc : AndroidToolTask
 	{
+		public override string TaskPrefix => "MDC";
+
 		public string [] References { get; set; }
 		
 		[Required]

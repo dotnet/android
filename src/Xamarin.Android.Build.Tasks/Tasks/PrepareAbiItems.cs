@@ -6,8 +6,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class PrepareAbiItems : Task
+	public class PrepareAbiItems : AndroidTask
 	{
+		public override string TaskPrefix => "PAI";
+
 		[Required]
 		public string [] BuildTargetAbis { get; set; }
 
@@ -17,7 +19,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] OutputItems { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var items = new List<ITaskItem> ();
 			foreach (string abi in BuildTargetAbis) {

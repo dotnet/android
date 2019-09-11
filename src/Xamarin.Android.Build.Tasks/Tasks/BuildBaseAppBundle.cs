@@ -8,6 +8,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class BuildBaseAppBundle : BuildApk
 	{
+		public override string TaskPrefix => "BBA";
+
 		/// <summary>
 		/// Files that need to land in the final APK need to go in `root/`
 		/// </summary>

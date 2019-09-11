@@ -23,8 +23,10 @@ namespace Xamarin.Android.Tasks
 {
 	using PackageNamingPolicyEnum   = PackageNamingPolicy;
 
-	public class GenerateJavaStubs : Task
+	public class GenerateJavaStubs : AndroidTask
 	{
+		public override string TaskPrefix => "GJS";
+
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
@@ -74,7 +76,7 @@ namespace Xamarin.Android.Tasks
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				// We're going to do 3 steps here instead of separate tasks so

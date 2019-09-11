@@ -14,7 +14,9 @@ namespace Xamarin.Android.Tasks
 {
 	public class CompileToDalvik : JavaToolTask
 	{
-		public ITaskItem[] AdditionalJavaLibraryReferences { get; set; }
+		public override string TaskPrefix => "CTX";
+
+		public ITaskItem [] AdditionalJavaLibraryReferences { get; set; }
 
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
@@ -48,7 +50,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
@@ -56,7 +58,7 @@ namespace Xamarin.Android.Tasks
 			bool ret = false;
 			inputListFile = Path.GetTempFileName ();
 			try {
-				ret = base.Execute ();
+				ret = base.RunTask ();
 			} catch (FileNotFoundException ex) {
 				Log.LogCodedError ("XA1003", ex.ToString ());
 			} finally {

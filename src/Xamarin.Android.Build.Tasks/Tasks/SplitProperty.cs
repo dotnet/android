@@ -9,8 +9,10 @@ namespace Xamarin.Android.Tasks
 	/// ; - MSBuild default
 	/// , - Historically supported by Xamarin.Android
 	/// </summary>
-	public class SplitProperty : Task
+	public class SplitProperty : AndroidTask
 	{
+		public override string TaskPrefix => "SPL";
+
 		static readonly char [] Delimiters = { ',', ';' };
 
 		public string Value { get; set; }
@@ -18,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] Output { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (Value != null) {
 				Output = Value.Split (Delimiters, StringSplitOptions.RemoveEmptyEntries);

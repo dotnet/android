@@ -17,8 +17,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Aapt : AsyncTask
+	public class Aapt : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "APT";
+
 		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; }
 
 		public string AndroidComponentResgenFlagFile { get; set; }
@@ -212,7 +214,7 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool Execute () 
+		public override bool RunTask () 
 		{
 			resourceDirectory = ResourceDirectory.TrimEnd ('\\');
 			if (!Path.IsPathRooted (resourceDirectory))
@@ -223,7 +225,7 @@ namespace Xamarin.Android.Tasks
 
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				Reacquire ();
 			}
@@ -400,7 +402,7 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (singleLine)) 
 				return;
 
-			var match = AndroidToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
+			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
 
 			if (match.Success) {
 				var file = match.Groups["file"].Value;

@@ -9,8 +9,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CilStrip : Task
+	public class CilStrip : AndroidTask
 	{
+		public override string TaskPrefix => "CIL";
+
 		[Required]
 		public string AndroidAotMode { get; set; }
 
@@ -27,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				return DoExecute ();

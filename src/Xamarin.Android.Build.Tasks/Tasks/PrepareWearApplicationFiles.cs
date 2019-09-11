@@ -7,8 +7,10 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Tasks
 {
-	public class PrepareWearApplicationFiles : Task
+	public class PrepareWearApplicationFiles : AndroidTask
 	{
+		public override string TaskPrefix => "PWA";
+
 		static readonly XNamespace androidNs = XNamespace.Get ("http://schemas.android.com/apk/res/android");
 
 		[Required]
@@ -23,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] ModifiedFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			string rawapk = "wearable_app.apk";
 			string intermediateApkPath = Path.Combine (IntermediateOutputPath, "res", "raw", rawapk);

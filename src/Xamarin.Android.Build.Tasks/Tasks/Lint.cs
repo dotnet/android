@@ -11,8 +11,10 @@ using System.Text;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Lint : ToolTask
+	public class Lint : AndroidToolTask
 	{
+		public override string TaskPrefix => "LNT";
+
 		// we need to check for lint based errors and warnings
 		// Sample Manifest Warnings note the ^ and ~ differences.... 
 		//
@@ -186,7 +188,7 @@ namespace Xamarin.Android.Tasks
 
 		static readonly Regex lintVersionRegex = new Regex (@"version[\t\s]+(?<version>[\d\.]+)", RegexOptions.Compiled);
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
 				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
@@ -213,7 +215,7 @@ namespace Xamarin.Android.Tasks
 
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
-			base.Execute ();
+			base.RunTask ();
 
 			return !Log.HasLoggedErrors;
 		}

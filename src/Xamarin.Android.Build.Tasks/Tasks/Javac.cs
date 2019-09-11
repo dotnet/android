@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class Javac : JavaCompileToolTask
 	{
+		public override string TaskPrefix => "JVC";
+
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
@@ -26,11 +28,11 @@ namespace Xamarin.Android.Tasks
 
 		public override string DefaultErrorCode => "JAVAC0000";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
-			var result = base.Execute ();
+			var result = base.RunTask ();
 			if (!result)
 				return result;
 			// compress all the class files

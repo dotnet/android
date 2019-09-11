@@ -7,8 +7,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AdjustJavacVersionArguments : Task
+	public class AdjustJavacVersionArguments : AndroidTask
 	{
+		public override string TaskPrefix => "AJV";
+
 		[Required]
 		public string JdkVersion { get; set; }
 
@@ -27,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string SourceVersion { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (JdkVersion.StartsWith ("9", StringComparison.OrdinalIgnoreCase)) {
 				TargetVersion = SourceVersion = DefaultJdkVersion;

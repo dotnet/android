@@ -9,8 +9,10 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class FindLayoutsToBind : Task
+	public class FindLayoutsToBind : AndroidTask
 	{
+		public override string TaskPrefix => "FLB";
+
 		static readonly string DirSeparator = Path.DirectorySeparatorChar == '\\' ? @"\\" : "/";
 		static readonly Regex layoutPathRegex = new Regex ($".*{DirSeparator}+layout(-?\\w+)*{DirSeparator}+.*\\.a?xml$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -26,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] LayoutsToBind { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var layouts = new Dictionary <string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			if (GenerateLayoutBindings) {

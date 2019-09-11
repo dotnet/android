@@ -8,8 +8,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetExtraPackages : Task
+	public class GetExtraPackages : AndroidTask
 	{
+		public override string TaskPrefix => "GEP";
+
 		[Required]
 		public string IntermediateOutputPath { get; set; }
 
@@ -19,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string LibraryProjectImportsDirectoryName { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var extraPackages = new List<string> ();
 			var libProjects = Path.Combine (IntermediateOutputPath, "__library_projects__");

@@ -12,8 +12,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// We used to invoke aapt/aapt2 per library (many times!), this task does the work to generate R.java for libraries without calling aapt/aapt2.
 	/// </summary>
-	public class GenerateLibraryResources : AsyncTask
+	public class GenerateLibraryResources : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "GLR";
+
 		/// <summary>
 		/// The main R.txt for the app
 		/// </summary>
@@ -36,13 +38,13 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string [] ManifestFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
 				this.RunTask (DoExecute).ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				Reacquire ();
 			}

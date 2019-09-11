@@ -12,6 +12,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class InstallApkSet : BundleTool
 	{
+		public override string TaskPrefix => "IAS";
+
 		[Required]
 		public string ApkSet { get; set; }
 

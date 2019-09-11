@@ -9,8 +9,10 @@ using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
-	public class MergeResources : Task
+	public class MergeResources : AndroidTask
 	{
+		public override string TaskPrefix => "MER";
+
 		[Required]
 		public ITaskItem[] SourceFiles { get; set; }
 
@@ -25,7 +27,7 @@ namespace Xamarin.Android.Tasks
 
 		ResourceMerger merger = null;
 			
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// ok copy all the files from Cache into dest path
 			// then copy over the App Resources

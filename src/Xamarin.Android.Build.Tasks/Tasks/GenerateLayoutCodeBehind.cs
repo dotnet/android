@@ -16,7 +16,8 @@ using System.Runtime.CompilerServices;
 
 namespace Xamarin.Android.Tasks {
 
-	public class GenerateCodeBehindForLayout : Task {
+	public class GenerateCodeBehindForLayout : AndroidTask {
+		public override string TaskPrefix => "GCB";
 
 		const string UserDataIsMainKey = "IsMain";
 		const string ChildClassParentFieldName = "__parent";
@@ -98,7 +99,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] GeneratedFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var generatedFiles = new List<ITaskItem> ();
 

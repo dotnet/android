@@ -12,8 +12,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class LinkApplicationSharedLibraries : AsyncTask
+	public class LinkApplicationSharedLibraries : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "LAS";
+
 		sealed class Config
 		{
 			public string LinkerPath;
@@ -39,7 +41,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				return DoExecute ();
@@ -62,7 +64,7 @@ namespace Xamarin.Android.Tasks
 				var task = this.RunTask ( () => RunParallelLinker ());
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 
 				if (!task.Result)
 					return false;

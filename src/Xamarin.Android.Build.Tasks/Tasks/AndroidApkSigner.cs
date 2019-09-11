@@ -8,6 +8,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class AndroidApkSigner : JavaToolTask
 	{
+		public override string TaskPrefix => "AAS";
+
 		[Required]
 		public string ApkSignerJar { get; set; }
 
@@ -49,14 +51,14 @@ namespace Xamarin.Android.Tasks
 
 		public string AdditionalArguments { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!File.Exists (GenerateFullPathToTool ())) {
 				Log.LogError ($"'{GenerateFullPathToTool ()}' does not exist. You need to install android-sdk build-tools 26.0.1 or above.");
 				return false;
 			}
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)

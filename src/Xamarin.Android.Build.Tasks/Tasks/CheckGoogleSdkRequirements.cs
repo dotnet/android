@@ -10,15 +10,17 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CheckGoogleSdkRequirements : Task 
+	public class CheckGoogleSdkRequirements : AndroidTask 
 	{
+		public override string TaskPrefix => "CGS";
+
 		[Required]
 		public string TargetFrameworkVersion { get; set; }
 
 		[Required]
 		public string ManifestFile { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
 

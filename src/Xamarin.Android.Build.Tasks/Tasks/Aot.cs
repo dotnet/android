@@ -31,8 +31,10 @@ namespace Xamarin.Android.Tasks
 	}
 
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
-	public class Aot : AsyncTask
+	public class Aot : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "AOT";
+
 		[Required]
 		public string AndroidAotMode { get; set; }
 
@@ -84,7 +86,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (EnableLLVM && !NdkUtil.Init (Log, AndroidNdkDirectory))
 				return false;
@@ -250,7 +252,7 @@ namespace Xamarin.Android.Tasks
 
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 
 				if (!task.Result)
 					return false;
