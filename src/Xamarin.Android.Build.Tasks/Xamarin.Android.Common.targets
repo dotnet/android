@@ -1189,8 +1189,9 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Resource build properties -->
 <PropertyGroup>
 	<MonoAndroidResDirIntermediate>$(IntermediateOutputPath)res\</MonoAndroidResDirIntermediate>
-	<MonoAndroidIntermediateAssetsDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssetsDir>
 	<MonoAndroidIntermediateAssemblyDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssemblyDir>
+	<!-- NOTE: This one is kept for compatibility, prefer to use $(MonoAndroidIntermediateAssemblyDir) instead -->
+	<MonoAndroidIntermediateAssetsDir>$(MonoAndroidIntermediateAssemblyDir)</MonoAndroidIntermediateAssetsDir>
 	<_JniMarshalMethodsOutputDir>$(IntermediateOutputPath)jnisrc\</_JniMarshalMethodsOutputDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
@@ -1202,7 +1203,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
-	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssetsDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
+	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<_AndroidTypeMappingJavaToManaged>$(IntermediateOutputPath)android\typemap.jm</_AndroidTypeMappingJavaToManaged>
@@ -1795,9 +1796,6 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Create our intermediate directory -->
   <MakeDir Directories="$(MonoAndroidResDirIntermediate)"      Condition=" !Exists ('$(MonoAndroidResDirIntermediate)') " />
 
-  <!-- Create directory to package from -->
-  <MakeDir Directories="$(MonoAndroidIntermediateAssetsDir)"   Condition=" !Exists ('$(MonoAndroidIntermediateAssetsDir)') " />
-
   <!-- Create our intermediate directory for assemblies -->
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
@@ -1846,7 +1844,7 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_CleanupOldStaticResources;_GetMonoPlatformJarPath">
-	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssetsDir)machine.config" />
+	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
       Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
@@ -1878,7 +1876,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java" />
-    <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)machine.config" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
     <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
@@ -2012,7 +2010,7 @@ because xbuild doesn't support framework reference assemblies.
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       MainAssembly="$(_MainAssembly)"
-      OutputDirectory="$(MonoAndroidIntermediateAssetsDir)"
+      OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
       I18nAssemblies="$(MandroidI18n)"
       LinkMode="$(AndroidLinkMode)"
       LinkSkip="$(AndroidLinkSkip)"
@@ -2029,7 +2027,7 @@ because xbuild doesn't support framework reference assemblies.
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidLinkFlag)" />
-      <FileWrites Include="$(MonoAndroidIntermediateAssetsDir)*" />
+      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
     </ItemGroup>
 </Target>
 
@@ -2051,25 +2049,25 @@ because xbuild doesn't support framework reference assemblies.
        they still exist cause linking will delete them if they aren't used -->
   <GetFilesThatExist
     Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssetsDir)%(Filename)%(Extension)')">
+    Files="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
     <Output TaskParameter="FilesThatExist" ItemName="_ResolvedAssemblies" />
   </GetFilesThatExist>
 
   <GetFilesThatExist
     Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssetsDir)%(Filename)%(Extension)')">
+    Files="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
     <Output TaskParameter="FilesThatExist" ItemName="_ResolvedSymbols" />
   </GetFilesThatExist>
 
   <GetFilesThatExist
     Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssetsDir)%(Filename)%(Extension)')">
+    Files="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
     <Output TaskParameter="FilesThatExist" ItemName="_ResolvedUserAssemblies" />
   </GetFilesThatExist>
 
   <GetFilesThatExist
     Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssetsDir)%(Filename)%(Extension)')">
+    Files="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
     <Output TaskParameter="FilesThatExist" ItemName="_ResolvedFrameworkAssemblies" />
   </GetFilesThatExist>
 
@@ -2104,7 +2102,7 @@ because xbuild doesn't support framework reference assemblies.
   </CreateItem>
 
   <CreateItem
-    Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssetsDir)shrunk\%(Filename)%(Extension)')"
+    Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')"
     Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
     <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
   </CreateItem>
@@ -2623,7 +2621,7 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
     ShrunkFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)" />
 
-  <MakeDir Directories="$(MonoAndroidIntermediateAssetsDir)shrunk" />
+  <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
   <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
 </Target>
 
