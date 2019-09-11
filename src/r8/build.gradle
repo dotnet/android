@@ -2,15 +2,18 @@ plugins {
     id 'java'
 }
 
-// See: https://r8.googlesource.com/r8/+/refs/tags/1.4.93/build.gradle#52
+// See: https://r8.googlesource.com/r8/+/refs/tags/1.5.67/build.gradle#53
 repositories {
+    maven {
+       url 'http://storage.googleapis.com/r8-deps/maven_mirror/'
+    }
     maven { url 'https://maven.google.com' }
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
     mavenCentral()
+    maven { url 'https://kotlin.bintray.com/kotlinx' }
 }
 
 dependencies {
-    compile group: 'com.android.tools', name: 'r8', version: '1.4.93'
+    compile group: 'com.android.tools', name: 'r8', version: '1.5.68'
 }
 
 jar {
