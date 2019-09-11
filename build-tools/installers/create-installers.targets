@@ -11,7 +11,7 @@
     <_AndroidApiDocsPath>$([MSBuild]::EnsureTrailingSlash($(AndroidApiDocsPath)))</_AndroidApiDocsPath>
     <_LatestStableFrameworkDir>$(FrameworkSrcDir)$(AndroidLatestStableFrameworkVersion)\</_LatestStableFrameworkDir>
     <_MonoDocOutputPath>$(RootBuildDir)lib\monodoc\</_MonoDocOutputPath>
-    <MSBuildSrcDir>$(RootBuildDir)\lib\xamarin.android\xbuild\Xamarin\Android</MSBuildSrcDir>
+    <MSBuildSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild\Xamarin\Android\</MSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
     <FirstInstallerFrameworkVersion Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">$(AndroidFirstFrameworkVersion)</FirstInstallerFrameworkVersion>
@@ -26,10 +26,10 @@
   </PropertyGroup>
   <ItemGroup>
     <_MsxDocAssembly Include="Mono.Android">
-      <SourceFolder>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceFolder>
+      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceDir>
     </_MsxDocAssembly>
     <_MonoDocAssembly Include="@(_MsxDocAssembly);OpenTK-1.0;Xamarin.Android.NUnitLite">
-      <SourceFolder>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceFolder>
+      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceDir>
     </_MonoDocAssembly>
   </ItemGroup>
   <Target Name="_FindFrameworkDirs">
@@ -41,15 +41,15 @@
   </Target>
   <Target Name="_FindDocSourceFiles">
     <ItemGroup>
-      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceFolder)**" />
-      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceFolder)**" />
+      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceDir)**" />
+      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceDir)**" />
     </ItemGroup>
   </Target>
   <Target Name="_GenerateMsxDocXmls"
       DependsOnTargets="_FindFrameworkDirs;_FindDocSourceFiles"
       Inputs="@(_MsxDocSourceFile)"
       Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml')">
-    <Exec Command="mdoc --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceFolder)&quot;" />
+    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceDir)\&quot;" />
   </Target>
   <Target Name="_GenerateMsxDocXmlRedirects"
       DependsOnTargets="_FindFrameworkDirs"
@@ -64,8 +64,8 @@
       DependsOnTargets="_FindDocSourceFiles"
       Inputs="@(_MonoDocSourceFile)"
       Outputs="$(_MonoDocOutputPath)MonoAndroid-lib.zip;$(_MonoDocOutputPath)MonoAndroid-lib.tree">
-    <MakeDir Directories="$(_MonoDocOutputPath)" />
-    <Exec Command="mdoc --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceFolder)&quot;', ' ')" />
+    <MakeDir Directories="$(_MonoDocOutputPath)"/>
+    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceDir)\&quot;', ' ')" />
   </Target>
   <Target Name="_CopyMonoAndroidDocsSource"
       Inputs="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
@@ -76,8 +76,7 @@
   </Target>
   <Target
       Name="AssembleApiDocs"
-      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_CopyMonoAndroidDocsSource"
-      Condition=" '$(HostOS)' != 'Windows' " />
+      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_CopyMonoAndroidDocsSource" />
   <ItemGroup>
     <_DesignerFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\bcl\**\*" />
     <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
@@ -106,6 +105,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Irony.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java-interop.jar" />
@@ -299,7 +299,6 @@
   </ItemGroup>
   <!-- monodroid -->
   <ItemGroup Condition=" '$(_HasCommercialFiles)' == 'True' ">
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\INIFileParser.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
