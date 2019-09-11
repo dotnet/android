@@ -18,11 +18,12 @@
   <Target Name="_DownloadBundleTool">
     <DownloadUri
         SourceUris="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
-        DestinationFiles="$(AndroidToolchainCacheDirectory)\bundletool.jar"
+        DestinationFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
     />
     <Copy
-        SourceFiles="$(AndroidToolchainCacheDirectory)\bundletool.jar"
-        DestinationFolder="$(_Destination)"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar"
+        DestinationFiles="$(_Destination)bundletool.jar"
+        SkipUnchangedFiles="True"
     />
   </Target>
 
