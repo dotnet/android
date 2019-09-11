@@ -7,8 +7,10 @@ using Pdb2Mdb;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ConvertDebuggingFiles : Task
+	public class ConvertDebuggingFiles : AndroidTask
 	{
+		public override string TaskPrefix => "CDF";
+
 		// The .pdb files we need to convert
 		[Required]
 		public ITaskItem[] Files { get; set; }
@@ -16,7 +18,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] ConvertedFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var convertedFiles = new List<ITaskItem> ();
 			foreach (var file in Files) {

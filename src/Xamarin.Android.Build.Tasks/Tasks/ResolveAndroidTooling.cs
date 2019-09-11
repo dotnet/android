@@ -15,8 +15,10 @@ namespace Xamarin.Android.Tasks
 	/// - Calculate ApiLevel and ApiLevelName
 	/// - Find the paths of various Android tooling that other tasks need to call
 	/// </summary>
-	public class ResolveAndroidTooling : Task
+	public class ResolveAndroidTooling : AndroidTask
 	{
+		public override string TaskPrefix => "RAT";
+
 		public string AndroidSdkPath { get; set; }
 
 		public string AndroidSdkBuildToolsVersion { get; set; }
@@ -78,7 +80,7 @@ namespace Xamarin.Android.Tasks
 		static readonly string Lint = IsWindows ? "lint.bat" : "lint";
 		static readonly string ApkSigner = "apksigner.jar";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);

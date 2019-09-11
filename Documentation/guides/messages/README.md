@@ -79,7 +79,150 @@
 
 ### XA6xxx Internal Tools
 
-### XA7xxx	Reserved
+## XA7xxx: Unhandled MSBuild Exceptions
+
+Exceptions that have not been gracefully handled yet.  Ideally these will be fixed or replaced with better errors in the future.
+
+These take the form of `XACCC7NNN`, where `CCC` is a 3 character code denoting the MSBuild Task that is throwing the exception,
+and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
+
+**Tasks:**
+* `A2C` - `Aapt2Compile`
+* `A2L` - `Aapt2Link`
+* `AAS` - `AndroidApkSigner`
+* `ACD` - `AndroidCreateDebugKey`
+* `ACM` - `AppendCustomMetadataToItemGroup`
+* `ADB` - `Adb`
+* `AJV` - `AdjustJavacVersionArguments`
+* `AOT` - `Aot`
+* `APT` - `Aapt`
+* `ASP` - `AndroidSignPackage`
+* `AZA` - `AndroidZipAlign`
+* `BAB` - `BuildAppBundle`
+* `BAS` - `BuildApkSet`
+* `BBA` - `BuildBaseAppBundle`
+* `BGN` - `BindingsGenerator`
+* `BLD` - `BuildApk`
+* `CAL` - `CreateAdditionalLibraryResourceCache`
+* `CAR` - `CalculateAdditionalResourceCacheDirectories`
+* `CCR` - `CopyAndConvertResources`
+* `CCV` - `ConvertCustomView`
+* `CDF` - `ConvertDebuggingFiles`
+* `CDJ` - `CheckDuplicateJavaLibraries`
+* `CFI` - `CheckForInvalidResourceFileNames`
+* `CFR` - `CheckForRemovedItems`
+* `CGJ` - `CopyGeneratedJavaResourceClasses`
+* `CGS` - `CheckGoogleSdkRequirements`
+* `CIC` - `CopyIfChanged`
+* `CIL` - `CilStrip`
+* `CLA` - `CollectLibraryAssets`
+* `CLC` - `CalculateLayoutCodeBehind`
+* `CLP` - `ClassParse`
+* `CLR` - `CreateLibraryResourceArchive`
+* `CMD` - `CreateMultiDexMainDexClassList`
+* `CML` - `CreateManagedLibraryResourceArchive`
+* `CMM` - `CreateMsymManifest`
+* `CNA` - `CompileNativeAssembly`
+* `CNE` - `CollectNonEmptyDirectories`
+* `CNL` - `CreateNativeLibraryArchive`
+* `CPD` - `CalculateProjectDependencies`
+* `CPF` - `CollectPdbFiles`
+* `CPI` - `CheckProjectItems`
+* `CPR` - `CopyResource`
+* `CPT` - `ComputeHash`
+* `CRC` - `ConvertResourcesCases`
+* `CRM` - `CreateResgenManifest`
+* `CRN` - `Crunch`
+* `CRP` - `AndroidComputeResPaths`
+* `CTD` - `CreateTemporaryDirectory`
+* `CTX` - `CompileToDalvik`
+* `DES` - `Desugar`
+* `DJL` - `DetermineJavaLibrariesToCompile`
+* `DX8` - `D8`
+* `FLB` - `FindLayoutsToBind`
+* `FLT` - `FilterAssemblies`
+* `GAD` - `GetAndroidDefineConstants`
+* `GAP` - `GetAndroidPackageName`
+* `GAR` - `GetAdditionalResourcesFromAssemblies`
+* `GAS` - `GetAppSettingsDirectory`
+* `GCB` - `GenerateCodeBehindForLayout`
+* `GCJ` - `GetConvertedJavaLibraries`
+* `GEP` - `GetExtraPackages`
+* `GFT` - `GetFilesThatExist`
+* `GIL` - `GetImportedLibraries`
+* `GJP` - `GetJavaPlatformJar`
+* `GJS` - `GenerateJavaStubs`
+* `GLB` - `GenerateLayoutBindings`
+* `GLR` - `GenerateLibraryResources`
+* `GMA` - `GenerateManagedAidlProxies`
+* `GMJ` - `GetMonoPlatformJar`
+* `GPM` - `GeneratePackageManagerJava`
+* `GRD` - `GenerateResourceDesigner`
+* `IAS` - `InstallApkSet`
+* `IJD` - `ImportJavaDoc`
+* `JDC` - `JavaDoc`
+* `JVC` - `Javac`
+* `JTX` - `JarToXml`
+* `KEY` - `KeyTool`
+* `LAS` - `LinkApplicationSharedLibraries`
+* `LEF` - `LogErrorsForFiles`
+* `LNK` - `LinkAssemblies`
+* `LNS` - `LinkAssembliesNoShrink`
+* `LNT` - `Lint`
+* `LWF` - `LogWarningsForFiles`
+* `MBN` - `MakeBundleNativeCodeExternal`
+* `MDC` - `MDoc`
+* `MER` - `MergeResources`
+* `PAI` - `PrepareAbiItems`
+* `PAW` - `ParseAndroidWearProjectAndManifest`
+* `PRO` - `Proguard`
+* `PWA` - `PrepareWearApplicationFiles`
+* `R8D` - `R8`
+* `RAM` - `ReadAndroidManifest`
+* `RAR` - `ReadAdditionalResourcesFromAssemblyCache`
+* `RAT` - `ResolveAndroidTooling`
+* `RDF` - `RemoveDirFixed`
+* `RIL` - `ReadImportedLibrariesCache`
+* `RJJ` - `ResolveJdkJvmPath`
+* `RLC` - `ReadLibraryProjectImportsCache`
+* `RLP` - `ResolveLibraryProjectImports`
+* `RRA` - `RemoveRegisterAttribute`
+* `RSA` - `ResolveAssemblies`
+* `RSD` - `ResolveSdks`
+* `RUF` - `RemoveUnknownFiles`
+* `SPL` - `SplitProperty`
+* `SVM` - `SetVsMonoAndroidRegistryKey`
+* `UNZ` - `Unzip`
+* `VJV` - `ValidateJavaVersion`
+* `WLF` - `WriteLockFile`
+
+**Exceptions:**
+
+* `7000` - Other Exception
+* `7001` - `NullReferenceException`
+* `7002` - `ArgumentOutOfRangeException`
+* `7003` - `ArgumentNullException`
+* `7004` - `ArgumentException`
+* `7005` - `FormatException`
+* `7006` - `IndexOutOfRangeException`
+* `7007` - `InvalidCastException`
+* `7008` - `ObjectDisposedException`
+* `7009` - `InvalidOperationException`
+* `7010` - `InvalidProgramException`
+* `7011` - `KeyNotFoundException`
+* `7012` - `TaskCanceledException`
+* `7013` - `OperationCanceledException`
+* `7014` - `OutOfMemoryException`
+* `7015` - `NotSupportedException`
+* `7016` - `StackOverflowException`
+* `7017` - `TimeoutException`
+* `7018` - `TypeInitializationException`
+* `7019` - `UnauthorizedAccessException`
+* `7020` - `ApplicationException`
+* `7021` - `KeyNotFoundException`
+* `7022` - `PathTooLongException`
+* `7023` - `DirectoryNotFoundException`
+* `7024` - `IOException`
 
 ### XA8xxx	Reserved
 

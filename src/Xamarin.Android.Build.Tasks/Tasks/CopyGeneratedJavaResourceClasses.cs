@@ -7,8 +7,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CopyGeneratedJavaResourceClasses : Task
+	public class CopyGeneratedJavaResourceClasses : AndroidTask
 	{
+		public override string TaskPrefix => "CGJ";
+
 		[Required]
 		public string SourceTopDirectory { get; set; }
 		public string DestinationTopDirectory { get; set; }
@@ -19,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string PrimaryJavaResgenFile { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var list = new List<string> ();
 			foreach (var pkg in GetPackages ()) {

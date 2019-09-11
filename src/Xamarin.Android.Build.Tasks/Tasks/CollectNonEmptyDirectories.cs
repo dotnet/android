@@ -7,7 +7,9 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks {
 	
-	public class CollectNonEmptyDirectories : Task {
+	public class CollectNonEmptyDirectories : AndroidTask {
+		public override string TaskPrefix => "CNE";
+
 		List<ITaskItem> output = new List<ITaskItem> ();
 
 		[Required]
@@ -16,7 +18,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem[] Output => output.ToArray ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			foreach (var directory in Directories) {
 				if (!Directory.Exists (directory.ItemSpec))

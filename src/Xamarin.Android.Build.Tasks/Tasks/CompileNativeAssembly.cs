@@ -12,8 +12,10 @@ using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CompileNativeAssembly : AsyncTask
+	public class CompileNativeAssembly : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "CNA";
+
 		sealed class Config
 		{
 			public string AssemblerPath;
@@ -33,7 +35,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				return DoExecute ();
@@ -56,7 +58,7 @@ namespace Xamarin.Android.Tasks
 				var task = this.RunTask ( () => RunParallelAssembler ());
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 
 				if (!task.Result)
 					return false;

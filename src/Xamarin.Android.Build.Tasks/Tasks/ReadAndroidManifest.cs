@@ -9,8 +9,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Since GenerateJavaStubs can get skipped on incremental builds, this task parses the merged AndroidManifest.xml for values needed later in the build.
 	/// </summary>
-	public class ReadAndroidManifest : Task
+	public class ReadAndroidManifest : AndroidTask
 	{
+		public override string TaskPrefix => "RAM";
+
 		[Required]
 		public string ManifestFile { get; set; }
 
@@ -29,7 +31,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] UsesLibraries { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
 			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);

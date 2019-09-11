@@ -12,14 +12,16 @@ using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Tasks {
-	public class CheckForInvalidResourceFileNames : Task {
+	public class CheckForInvalidResourceFileNames : AndroidTask {
+		public override string TaskPrefix => "CFI";
+
 		[Required]
 		public ITaskItem[] Resources { get; set; }
 
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			foreach (var resource in Resources) {
 				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);

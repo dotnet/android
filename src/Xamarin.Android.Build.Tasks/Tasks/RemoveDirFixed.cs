@@ -34,10 +34,11 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class RemoveDirFixed : Task
+	public class RemoveDirFixed : AndroidTask
 	{
+		public override string TaskPrefix => "RDF";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var temporaryRemovedDirectories = new List<ITaskItem> (Directories.Length);
 

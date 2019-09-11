@@ -9,8 +9,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetConvertedJavaLibraries : Task
+	public class GetConvertedJavaLibraries : AndroidTask
 	{
+		public override string TaskPrefix => "GCJ";
+
 		[Required]
 		public string Extension { get; set; }
 		public string OutputJackDirectory { get; set; }
@@ -18,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] ConvertedFilesToBeGenerated { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var md5 = MD5.Create ();
 			ConvertedFilesToBeGenerated =

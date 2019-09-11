@@ -37,11 +37,11 @@ namespace Xamarin.Android.Tasks
 
 		internal string TemporarySourceListFile;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			GenerateResponseFile ();
 
-			var retval = base.Execute ();
+			var retval = base.RunTask ();
 
 			try {
 				File.Delete (TemporarySourceListFile);

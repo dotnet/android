@@ -5,12 +5,14 @@ using System.IO;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CollectLibraryAssets : Task
+	public class CollectLibraryAssets : AndroidTask
 	{
+		public override string TaskPrefix => "CLA";
+
 		public string AssetDirectory { get; set; }
 		public string [] AdditionalAssetDirectories { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (AdditionalAssetDirectories != null)
 				foreach (var dir in AdditionalAssetDirectories)

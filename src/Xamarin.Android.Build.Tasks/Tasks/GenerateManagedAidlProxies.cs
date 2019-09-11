@@ -13,8 +13,10 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GenerateManagedAidlProxies : Task
+	public class GenerateManagedAidlProxies : AndroidTask
 	{
+		public override string TaskPrefix => "GMA";
+
 		[Required]
 		public ITaskItem[] References { get; set; }
 
@@ -32,7 +34,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (SourceAidlFiles.Length == 0) // nothing to do
 				return true;

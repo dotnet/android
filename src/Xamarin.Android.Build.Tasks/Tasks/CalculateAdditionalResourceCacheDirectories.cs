@@ -10,8 +10,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CalculateAdditionalResourceCacheDirectories : Task
+	public class CalculateAdditionalResourceCacheDirectories : AndroidTask
 	{
+		public override string TaskPrefix => "CAR";
+
 		[Required]
 		public string[] AdditionalAndroidResourcePaths { get; set; }
 
@@ -21,7 +23,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] AdditionalResourceCachePaths { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!AdditionalAndroidResourcePaths.Any ())
 				return true;

@@ -10,8 +10,10 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ParseAndroidWearProjectAndManifest : Task
+	public class ParseAndroidWearProjectAndManifest : AndroidTask
 	{
+		public override string TaskPrefix => "PAW";
+
 		static readonly XNamespace msbuildNS = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 
 		public ITaskItem [] ProjectFiles { get; set; }
@@ -20,7 +22,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string ApplicationPackageName { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (ProjectFiles.Length != 1)
 				Log.LogError ("More than one Android Wear project is specified as the paired project. It can be at most one.");

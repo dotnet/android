@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tasks
 
 	public class Desugar : JavaToolTask
 	{
+		public override string TaskPrefix => "DES";
+
 		[Required]
 		public string DesugarJarPath { get; set; }
 
@@ -34,12 +36,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] OutputJars { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (OutputDirectory))
 				Directory.CreateDirectory (OutputDirectory);
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()

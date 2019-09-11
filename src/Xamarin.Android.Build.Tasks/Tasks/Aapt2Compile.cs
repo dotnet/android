@@ -16,6 +16,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2Compile : Aapt2 {
+		public override string TaskPrefix => "A2C";
 
 		List<ITaskItem> archives = new List<ITaskItem> ();
 
@@ -28,7 +29,7 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Yield ();
 			try {
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Tasks {
 
 				task.ContinueWith (Complete);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				Reacquire ();
 			}

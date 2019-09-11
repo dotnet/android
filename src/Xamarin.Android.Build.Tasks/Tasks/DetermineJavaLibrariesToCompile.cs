@@ -8,8 +8,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class DetermineJavaLibrariesToCompile : Task
+	public class DetermineJavaLibrariesToCompile : AndroidTask
 	{
+		public override string TaskPrefix => "DJL";
+
 		[Required]
 		public ITaskItem[] MonoPlatformJarPaths { get; set; }
 
@@ -33,7 +35,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] ReferenceJavaLibraries { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var jars = new List<ITaskItem> ();
 			if (!EnableInstantRun)

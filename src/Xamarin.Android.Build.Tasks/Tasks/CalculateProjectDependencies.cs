@@ -7,8 +7,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CalculateProjectDependencies : Task
+	public class CalculateProjectDependencies : AndroidTask
 	{
+		public override string TaskPrefix => "CPD";
+
 		const int DefaultMinSDKVersion = 11;
 
 		[Required]
@@ -41,7 +43,7 @@ namespace Xamarin.Android.Tasks
 			});
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var dependencies = new List<ITaskItem> ();
 			var targetApiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);

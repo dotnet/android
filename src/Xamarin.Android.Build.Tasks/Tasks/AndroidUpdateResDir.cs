@@ -34,8 +34,10 @@ using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidComputeResPaths : Task
+	public class AndroidComputeResPaths : AndroidTask
 	{
+		public override string TaskPrefix => "CRP";
+
 		[Required]
 		public ITaskItem[] ResourceFiles { get; set; }
 		
@@ -57,7 +59,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string ResourceNameCaseMap { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var intermediateFiles = new List<ITaskItem> ();
 			var resolvedFiles = new List<ITaskItem> ();
@@ -140,8 +142,10 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 	
-	public class RemoveUnknownFiles : Task
+	public class RemoveUnknownFiles : AndroidTask
 	{
+		public override string TaskPrefix => "RUF";
+
 		static bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
 		[Required]
@@ -158,7 +162,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] RemovedDirectories { get; set; }
 		
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var absDir = Path.GetFullPath (Directory);
 			

@@ -11,8 +11,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// ValidateJavaVersion's job is to shell out to java and javac to detect their version
 	/// </summary>
-	public class ValidateJavaVersion : Task
+	public class ValidateJavaVersion : AndroidTask
 	{
+		public override string TaskPrefix => "VJV";
+
 		public string TargetFrameworkVersion { get; set; }
 
 		public string AndroidSdkBuildToolsVersion { get; set; }
@@ -33,7 +35,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string JdkVersion { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!ValidateJava (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
 				return false;

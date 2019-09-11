@@ -20,8 +20,10 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks
 {
-	public class BuildApk : Task
+	public class BuildApk : AndroidTask
 	{
+		public override string TaskPrefix => "BLD";
+
 		public string AndroidNdkDirectory { get; set; }
 
 		[Required]
@@ -201,7 +203,7 @@ namespace Xamarin.Android.Tasks
 			File.Delete (temp);
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 

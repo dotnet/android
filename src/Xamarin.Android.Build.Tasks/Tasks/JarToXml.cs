@@ -10,8 +10,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class JarToXml : ToolTask
+	public class JarToXml : AndroidToolTask
 	{
+		public override string TaskPrefix => "JTX";
+
 		[Required]
 		public string AndroidSdkDirectory { get; set; }
 		
@@ -43,7 +45,7 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaMaximumHeapSize { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (SourceJars == null || SourceJars.Count () == 0) {
 				Log.LogError ("At least one Java library is required for binding, this must be either 'EmbeddedJar', 'InputJar' (for jar), 'LibraryProjectZip' (for aar or zip) or 'LibraryProjectProperties' (project.properties) build action.");
@@ -71,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			// Ensure our output directory exists
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()

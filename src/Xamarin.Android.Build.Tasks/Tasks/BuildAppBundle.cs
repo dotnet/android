@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class BuildAppBundle : BundleTool
 	{
+		public override string TaskPrefix => "BAB";
+
 		static readonly string [] UncompressedByDefault = new [] {
 			// Xamarin.Android specific files
 			"typemap.mj",
@@ -64,7 +66,7 @@ namespace Xamarin.Android.Tasks
 
 		string temp;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			temp = Path.GetTempFileName ();
 			try {
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Tasks
 				if (File.Exists (Output))
 					File.Delete (Output);
 
-				base.Execute ();
+				base.RunTask ();
 			} finally {
 				File.Delete (temp);
 			}

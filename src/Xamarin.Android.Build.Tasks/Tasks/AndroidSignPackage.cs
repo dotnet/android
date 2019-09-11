@@ -5,8 +5,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidSignPackage : AndroidToolTask
+	public class AndroidSignPackage : AndroidRunToolTask
 	{
+		public override string TaskPrefix => "ASP";
+
 		bool hasWarnings;
 
 		[Required]

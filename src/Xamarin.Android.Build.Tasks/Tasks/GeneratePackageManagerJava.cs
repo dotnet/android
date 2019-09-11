@@ -13,8 +13,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GeneratePackageManagerJava : Task
+	public class GeneratePackageManagerJava : AndroidTask
 	{
+		public override string TaskPrefix => "GPM";
+
 		Guid buildId = Guid.NewGuid ();
 
 		[Required]
@@ -71,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			BuildId = buildId.ToString ();
 			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);

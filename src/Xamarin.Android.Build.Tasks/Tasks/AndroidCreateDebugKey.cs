@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class AndroidCreateDebugKey : KeyTool
 	{
+		public override string TaskPrefix => "ACD";
+
 		public int Validity { get; set; }
 
 		public string KeyAlgorithm { get; set; }

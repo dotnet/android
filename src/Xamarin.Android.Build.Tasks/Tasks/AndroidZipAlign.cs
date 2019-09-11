@@ -9,8 +9,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidZipAlign : AndroidToolTask
+	public class AndroidZipAlign : AndroidRunToolTask
 	{
+		public override string TaskPrefix => "AZA";
+
 		public AndroidZipAlign ()
 		{
 		}

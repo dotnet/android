@@ -11,7 +11,7 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public abstract class JavaToolTask : ToolTask
+	public abstract class JavaToolTask : AndroidToolTask
 	{
 		/*
 		Example Javac output for errors. Regex Matches on the first line, we then need to 
