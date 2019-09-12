@@ -1,0 +1,55 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Xamarin.Android Build Tasks",
+            "type": "shell",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Clean Xamarin.Android Build Tasks",
+            "type": "shell",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Build Xamarin.Android Build Test Tasks",
+            "type": "shell",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Run Xamarin.Android Build Tasks Unit Tests",
+            "type": "shell",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:RunNunitTests",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        }
+    ]
+}
