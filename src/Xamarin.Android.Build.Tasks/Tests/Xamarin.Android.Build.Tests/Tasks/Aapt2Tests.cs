@@ -13,23 +13,6 @@ using System.Security.Cryptography;
 namespace Xamarin.Android.Build.Tests {
 	public class Aapt2Tests : BaseTest {
 
-		string GetPathToAapt2 ()
-		{
-
-			var exe = IsWindows ? "aapt2.exe" : "aapt2";
-			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
-			if (File.Exists (Path.Combine (path, exe)))
-				return path;
-
-			path = Path.Combine (AndroidSdkPath, "build-tools");
-			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => x)) {
-				var aapt2 = Path.Combine (dir, exe);
-				if (File.Exists (aapt2))
-					return dir;
-			}
-			return Path.Combine (path, "25.0.2");
-		}
-
 		string GetHash (string hashInput)
 		{
 			using (var sha1 = SHA1.Create ())

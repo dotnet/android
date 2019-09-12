@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tasks
 		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
 		Dictionary<string, string> map;
 		bool app;
+		SortedDictionary<string, CodeTypeDeclaration> custom_types = new SortedDictionary<string, CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
 		Dictionary<CodeMemberField, CodeMemberField []> arrayMapping = new Dictionary<CodeMemberField, CodeMemberField []> ();
@@ -29,13 +30,18 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceFlagFile { get; set; }
 
-		void SortMembers (CodeTypeDeclaration decl)
+		void SortMembers (CodeTypeDeclaration decl, StringComparison stringComparison = StringComparison.OrdinalIgnoreCase)
 		{
 			CodeTypeMember [] members = new CodeTypeMember [decl.Members.Count];
 			decl.Members.CopyTo (members, 0);
 			decl.Members.Clear ();
-			Array.Sort (members, (x, y) => string.Compare (x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
+			Array.Sort (members, (x, y) => string.Compare (x.Name, y.Name, stringComparison));
 			decl.Members.AddRange (members);
+		}
+
+		IEnumerable<CodeTypeMember> SortedMembers (CodeTypeDeclaration decl, StringComparer comparer)
+		{
+			return decl.Members.Cast<CodeTypeMember> ().OrderBy (x => x.Name, comparer);
 		}
 
 		public CodeTypeDeclaration Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
@@ -70,31 +76,6 @@ namespace Xamarin.Android.Tasks
 			transition = CreateClass ("Transition");
 			xml = CreateClass ("Xml");
 
-			declarationIds.AddRange (new CodeTypeDeclaration [] {
-				animation,
-				animator,
-				arrays,
-				attrib,
-				boolean,
-				colors,
-				dimension,
-				drawable,
-				font,
-				ids,
-				interpolators,
-				ints,
-				layout,
-				menu,
-				mipmaps,
-				plurals,
-				raw,
-				strings,
-				style,
-				styleable,
-				transition,
-				xml,
-			});
-
 			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values", "public.xml");
 			if (File.Exists (publicXmlPath)) {
 				publicXml = XDocument.Load (publicXmlPath);
@@ -106,9 +87,12 @@ namespace Xamarin.Android.Tasks
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
 			var rTxt = Path.Combine(resourceDirectory, "..", "R.txt");
+			Log.LogDebugMessage ($"Checking {rTxt} {File.Exists (rTxt)} {File.GetLastWriteTimeUtc (rTxt)} {resModifiedDate}");
 			if (File.Exists (rTxt) && File.GetLastWriteTimeUtc (rTxt) > resModifiedDate) {
+				Log.LogDebugMessage ($"Processing File {rTxt}");
 				ProcessRtxtFile (rTxt);
 			} else {
+				Log.LogDebugMessage ($"Processing Directory {resourceDirectory}");
 				foreach (var dir in Directory.EnumerateDirectories (resourceDirectory, "*", SearchOption.TopDirectoryOnly)) {
 					foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
 						ProcessResourceFile (file);
@@ -116,6 +100,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (additionalResourceDirectories != null) {
 					foreach (var dir in additionalResourceDirectories) {
+						Log.LogDebugMessage ($"Processing Directory {dir}");
 						if (Directory.Exists (dir)) {
 							foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
 								ProcessResourceFile (file);
@@ -146,24 +131,65 @@ namespace Xamarin.Android.Tasks
 			SortMembers (plurals);
 			SortMembers (strings);
 			SortMembers (style);
-			SortMembers (styleable);
 			SortMembers (transition);
 			SortMembers (xml);
 
+			declarationIds.Add (attrib);
+			declarationIds.Add (drawable);
+			declarationIds.Add (mipmaps);
+			declarationIds.Add (font);
+			declarationIds.Add (layout);
+			declarationIds.Add (animation);
+			declarationIds.Add (animator);
+			declarationIds.Add (transition);
+			declarationIds.Add (xml);
+			declarationIds.Add (raw);
+			declarationIds.Add (dimension);
+			declarationIds.Add (strings);
+			declarationIds.Add (arrays);
+			declarationIds.Add (plurals);
+			declarationIds.Add (boolean);
+			declarationIds.Add (colors);
+			declarationIds.Add (ints);
+			declarationIds.Add (menu);
+			declarationIds.Add (ids);
+
+			foreach (var customClass in custom_types) {
+				SortMembers (customClass.Value);
+				declarationIds.Add (customClass.Value);
+			}
+
+			declarationIds.Add (interpolators);
+			declarationIds.Add (style);
+			declarationIds.Add (styleable);
+
+			declarationIds.Sort ((a, b) => {
+				return string.Compare (a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+			});
+			
 			foreach (var codeDeclaration in declarationIds) {
 				int itemid = 0;
-				foreach (var fieldDeclaration in codeDeclaration.Members) {
+				Log.LogDebugMessage ($"Processing {codeDeclaration.Name}");
+
+				// We have to get the members in a different store order here becuase
+				// aapt2 generates the ids based on an `Ordinal` order, but the
+				// field output is in an `OrdinalIgnoreCase`.
+				foreach (var fieldDeclaration in SortedMembers(codeDeclaration, StringComparer.Ordinal)) {
 					CodeMemberField field = fieldDeclaration as CodeMemberField;
 					if (field == null) {
 						continue;
 					}
 					int typeid = typeIds.IndexOf (codeDeclaration) + 1;
 					if (typeid == 0) {
+						Log.LogDebugMessage ($"Adding code declaration for {codeDeclaration.Name} {typeid}");
 						typeIds.Add (codeDeclaration);
 						typeid = typeIds.Count;
 					}
+					Log.LogDebugMessage ($"code declaration {codeDeclaration.Name} typeid = {typeid} {field.Name}");
 					if (field.InitExpression == null) {
+						Log.LogDebugMessage ($"Adding InitExpression for {field.Name}");
 						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
+						Log.LogDebugMessage ($"{itemPackageId} {id} {itemid} = {id.ToString ("X")}");
 						field.InitExpression = new CodePrimitiveExpression (id);
 						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
 						itemid++;
@@ -172,16 +198,17 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var sb = new StringBuilder ();
+			SortedDictionary<int, CodeMemberField> arrayValues = new SortedDictionary<int, CodeMemberField> ();
 			int value;
 			foreach (var kvp in arrayMapping) {
 				CodeMemberField field = kvp.Key;
 				CodeArrayCreateExpression expression = field.InitExpression as CodeArrayCreateExpression;
 				CodeMemberField [] fields = kvp.Value;
-				
+
 				int count = expression.Initializers.Count;
 				sb.Clear ();
+				arrayValues.Clear ();
 				for (int i = 0; i < count ; i++) {
-					CodePrimitiveExpression code = expression.Initializers [i] as CodePrimitiveExpression;
 					string name = fields [i].Name;
 					if (name.StartsWith ("android:", StringComparison.OrdinalIgnoreCase)) {
 						name = name.Replace ("android:", string.Empty);
@@ -192,13 +219,27 @@ namespace Xamarin.Android.Tasks
 						CodePrimitiveExpression initExpression = fields [i].InitExpression as CodePrimitiveExpression;
 						value = Convert.ToInt32 (initExpression.Value);
 					}
-					sb.Append ($"0x{value.ToString ("X")}");
+					arrayValues.Add (value, fields [i]);
+				}
+				int index = 0;
+				foreach (var arrayValue in arrayValues) {
+					value = arrayValue.Key;
+					CodeMemberField f = arrayValue.Value;
+					CodePrimitiveExpression code = expression.Initializers [index] as CodePrimitiveExpression;
 					code.Value = value;
-					if (i < count - 1)
+					CreateIntField (styleable, $"{field.Name}_{f.Name}", index);
+					sb.Append ($"0x{value.ToString ("X")}");
+					if (index < count - 1)
 						sb.Append (",");
+					index++;
 				}
 				field.Comments.Add (new CodeCommentStatement ($"aapt resource value: {{ {sb} }}"));
 			}
+
+			SortMembers (styleable);
+
+			foreach (var customClass in custom_types)
+				resources.Members.Add (customClass.Value);
 
 			if (animation.Members.Count > 1)
 				resources.Members.Add (animation);
@@ -332,6 +373,15 @@ namespace Xamarin.Android.Tasks
 					break;
 				case "xml":
 					CreateIntField (xml, itemName, value);
+					break;
+				// for custom views
+				default:
+					CodeTypeDeclaration customClass;
+					if (!custom_types.TryGetValue (items [1], out customClass)) {
+							customClass = CreateClass (items [1]);
+							custom_types.Add (items [1], customClass);
+					}
+					CreateIntField (customClass, itemName, value);
 					break;
 				}
 			}
@@ -520,6 +570,7 @@ namespace Xamarin.Android.Tasks
 			case "id":
 				CreateIntField (ids, fieldName);
 				break;
+			case "array":
 			case "integer-array":
 			case "string-array":
 				CreateIntField (arrays, fieldName);
@@ -591,7 +642,6 @@ namespace Xamarin.Android.Tasks
 						f.InitExpression = new CodePrimitiveExpression (0);
 						fields.Add (f);
 					}
-					CreateIntField (styleable, $"{topName}_{name}", i);
 				}
 				CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
 				if (c == null)
@@ -610,16 +660,32 @@ namespace Xamarin.Android.Tasks
 					if (reader.IsStartElement ()) {
 						var elementName = reader.Name;
 						if (reader.HasAttributes) {
+							CodeTypeDeclaration customClass = null;
 							string name = null;
 							string type = null;
 							string id = null;
+							string custom_id = null;
 							while (reader.MoveToNextAttribute ()) {
 								if (reader.LocalName == "name")
 									name = reader.Value;
 								if (reader.LocalName == "type")
 									type = reader.Value;
-								if (reader.LocalName == "id")
-									id = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
+								if (reader.LocalName == "id") {
+									string[] values = reader.Value.Split ('/');
+									if (values.Length != 2) {
+										id = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
+									} else {
+										if (values [0] != "@+id" && values [0] != "@id" && !values [0].Contains ("android:")) {
+											custom_id = values [0].Replace ("@", "").Replace ("+", "");
+										}
+										id = values [1];
+									}
+									
+								}
+								if (reader.LocalName == "inflatedId") {
+									string inflateId = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
+									CreateIntField (ids, inflateId);
+								}
 							}
 							if (name?.Contains ("android:") ?? false)
 								continue;
@@ -629,8 +695,12 @@ namespace Xamarin.Android.Tasks
 							reader.MoveToElement ();
 							if (!string.IsNullOrEmpty (name))
 								CreateResourceField (type ?? elementName, name, reader.ReadSubtree ());
+							if (!string.IsNullOrEmpty (custom_id) && !custom_types.TryGetValue (custom_id, out customClass)) {
+								customClass = CreateClass (custom_id);
+								custom_types.Add (custom_id, customClass);
+							}
 							if (!string.IsNullOrEmpty (id)) {
-								CreateIntField (ids, id);
+								CreateIntField (customClass ?? ids, id);
 							}
 						}
 					}
