@@ -743,10 +743,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</GetJavaPlatformJar>
 
 	<PropertyGroup>
-		<ApkFileIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apk</ApkFileIntermediate>
-		<_BaseZipIntermediate>$(MonoAndroidIntermediate)android\bin\base.zip</_BaseZipIntermediate>
-		<_AppBundleIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).aab</_AppBundleIntermediate>
-		<_ApkSetIntermediate>$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage).apks</_ApkSetIntermediate>
+		<ApkFileIntermediate>$(IntermediateOutputPath)android\bin\$(_AndroidPackage).apk</ApkFileIntermediate>
+		<_BaseZipIntermediate>$(IntermediateOutputPath)android\bin\base.zip</_BaseZipIntermediate>
+		<_AppBundleIntermediate>$(IntermediateOutputPath)android\bin\$(_AndroidPackage).aab</_AppBundleIntermediate>
+		<_ApkSetIntermediate>$(IntermediateOutputPath)android\bin\$(_AndroidPackage).apks</_ApkSetIntermediate>
 		<ApkFile>$(OutDir)$(_AndroidPackage).apk</ApkFile>
 		<ApkFileSigned>$(OutDir)$(_AndroidPackage)-Signed.apk</ApkFileSigned>
 		<_AabFileSigned>$(OutDir)$(_AndroidPackage)-Signed.aab</_AabFileSigned>
@@ -1190,13 +1190,17 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<MonoAndroidResDirIntermediate>$(IntermediateOutputPath)res\</MonoAndroidResDirIntermediate>
 	<MonoAndroidIntermediateAssemblyDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssemblyDir>
-	<!-- NOTE: This one is kept for compatibility, prefer to use $(MonoAndroidIntermediateAssemblyDir) instead -->
+	<!-- NOTE: Kept for compatibility, prefer to use $(MonoAndroidIntermediateAssemblyDir) instead -->
 	<MonoAndroidIntermediateAssetsDir>$(MonoAndroidIntermediateAssemblyDir)</MonoAndroidIntermediateAssetsDir>
 	<_JniMarshalMethodsOutputDir>$(IntermediateOutputPath)jnisrc\</_JniMarshalMethodsOutputDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
+	<!-- NOTE: Kept for compatibility, prefer to use $(IntermediateOutputPath) instead -->
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
-	<MonoAndroidCodeBehindDir>$(MonoAndroidIntermediate)generated</MonoAndroidCodeBehindDir>
+	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)generated</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
+	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
+	<_AndroidIntermediateJavaClassDirectory>$(IntermediateOutputPath)android\bin\classes\</_AndroidIntermediateJavaClassDirectory>
+	<_AndroidIntermediateClassesZip>$(IntermediateOutputPath)android\bin\classes.zip</_AndroidIntermediateClassesZip>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
@@ -1627,7 +1631,7 @@ because xbuild doesn't support framework reference assemblies.
 	<GenerateLibraryResources
 		Condition=" '$(_AndroidResourceDesignerFile)' != '' And Exists('$(IntermediateOutputPath)R.txt') "
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
-		OutputDirectory="$(IntermediateOutputPath)android\src"
+		OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
 		LibraryTextFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\..\R.txt');@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
 		ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
 	/>
@@ -1721,14 +1725,14 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateManagedAidlProxies
     SourceAidlFiles="@(AndroidInterfaceDescription)"
     References="@(_ReferencePath);@(_ReferenceDependencyPaths)"
-    IntermediateOutputDirectory="$(MonoAndroidIntermediate)"
+    IntermediateOutputDirectory="$(IntermediateOutputPath)"
     ParcelableHandlingOption="$(ManagedAidlParcelableHandling)"
     OutputNamespace="$(ManagedAidlNamespace)" />
 </Target>
 
 <Target Name="_AddManagedAidlOutputsToCompile" DependsOnTargets="_RunManagedAidlTool">
   <!-- Add the files to list of things to be compiled -->
-  <CreateItem Include="$(MonoAndroidIntermediate)aidl\\**\*.cs">
+  <CreateItem Include="$(IntermediateOutputPath)aidl\\**\*.cs">
     <Output TaskParameter="Include" ItemName="Compile" />
   </CreateItem>
 </Target>
@@ -1808,25 +1812,25 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanupOldStaticResources"
-    Condition=" Exists ('$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java') ">
+    Condition=" Exists ('$(_AndroidIntermediateJavaSourceDirectory)mono\android\app\NotifyTimeZoneChanges.java') ">
   <ItemGroup>
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MultiDexLoader.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\ResourcePatcher.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\Seppuku.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\MonoPackageManager.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\IncrementalClassLoader.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\Placeholder.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\app\NotifyTimeZoneChanges.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\src\mono\android\incrementaldeployment\MonkeyPatcher.java" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\MultiDexLoader.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\ResourcePatcher.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\Seppuku.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\MonoPackageManager_Resources.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\incrementaldeployment\Placeholder.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\app\NotifyTimeZoneChanges.class" />
-    <_OldStaticResources Include="$(MonoAndroidIntermediate)android\bin\classes\mono\android\MonkeyPatcher.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\MultiDexLoader.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\ResourcePatcher.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\Seppuku.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoPackageManager.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\IncrementalClassLoader.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\Placeholder.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\app\NotifyTimeZoneChanges.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\MonkeyPatcher.java" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\MultiDexLoader.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\ResourcePatcher.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\Seppuku.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\MonoPackageManager.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\MonoPackageManager_Resources.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\Placeholder.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\app\NotifyTimeZoneChanges.class" />
+    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\MonkeyPatcher.class" />
     <_OldStaticResources Include="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
     <_OldStaticResources Include="$(IntermediateOutputPath)_javac.stamp" />
   </ItemGroup>
@@ -1848,21 +1852,21 @@ because xbuild doesn't support framework reference assemblies.
   <CopyResource
       Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
-      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CopyResource
       Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &lt; '21' "
       ResourceName="MonoRuntimeProvider.Bundled.20.java"
-      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CopyResource
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
       ResourceName="MonoRuntimeProvider.Shared.java"
-      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CopyResource
       ResourceName="MonoRuntimeProvider.Shared.20.java"
-      OutputPath="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java"
+      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &lt; '21' "
   />
   
@@ -1875,7 +1879,7 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
 
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediate)android\src\mono\MonoRuntimeProvider.java" />
+    <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
     <FileWrites Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
@@ -2250,7 +2254,7 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     MainAssembly="$(TargetPath)"
-    OutputDirectory="$(IntermediateOutputPath)android\src\mono"
+    OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
@@ -2342,7 +2346,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
   <CopyGeneratedJavaResourceClasses
     SourceTopDirectory="$(AaptTemporaryDirectory)"
-    DestinationTopDirectory="$(IntermediateOutputPath)android\src"
+    DestinationTopDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
     PrimaryPackageName="$(_AndroidPackage)"
     ExtraPackages="$(AaptExtraPackages)">
     <Output TaskParameter="PrimaryJavaResgenFile" PropertyName="_GeneratedPrimaryJavaResgenFile" />
@@ -2359,7 +2363,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ConvertCustomView;_FixupCustomViewsForAapt2;_GenerateEnvironmentFiles;">
   <CreateItem
-    Include="$(IntermediateOutputPath)android\src\\**\*.java">
+    Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java">
     <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
     <Output TaskParameter="Include" ItemName="FileWrites" />
   </CreateItem>
@@ -2404,16 +2408,16 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(IntermediateOutputPath)_javac.stamp">
 
   <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
-  <RemoveDirFixed Directories="$(IntermediateOutputPath)android\bin\classes" />
-  <Delete Files="$(IntermediateOutputPath)android\bin\classes.zip" />
+  <RemoveDirFixed Directories="$(_AndroidIntermediateJavaClassDirectory)" />
+  <Delete Files="$(_AndroidIntermediateClassesZip)" />
 
   <!-- Compile java code -->
   <Javac
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
-    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
+    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
+    ClassesZip="$(_AndroidIntermediateClassesZip)"
     TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
-    StubSourceDirectory="$(IntermediateOutputPath)android\src"
+    StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
     JavaSourceFiles="@(AndroidJavaSource)"
     ToolPath="$(JavacToolPath)"
     ToolExe="$(JavacToolExe)"
@@ -2461,7 +2465,7 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects)
 		;@(_JavaLibrariesToCompileForApp)
 		;@(AndroidExternalJavaLibrary)
-		;$(IntermediateOutputPath)android\bin\classes.zip
+		;$(_AndroidIntermediateClassesZip)
 		;@(ProguardConfiguration)
 		;@(MultiDexMainDexList)
 		;$(_AndroidBuildPropertiesCache)
@@ -2512,7 +2516,7 @@ because xbuild doesn't support framework reference assemblies.
     ToolExe="$(ProguardToolExe)"
     UseProguard="$(UseProguard)"
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
     AcwMapFile="$(_AcwMapFile)"
     ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
     ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
@@ -2535,7 +2539,7 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
   <CreateItem
-    Include="$(IntermediateOutputPath)android\bin\classes.zip;@(_DesugaredJars)"
+    Include="$(_AndroidIntermediateClassesZip);@(_DesugaredJars)"
     Condition=" ('$(AndroidLinkTool)' != 'proguard' Or '$(_ProguardProjectConfiguration)' == '') And '$(AndroidEnableDesugar)' == 'True' ">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
@@ -2546,7 +2550,7 @@ because xbuild doesn't support framework reference assemblies.
     ToolExe="$(JavaToolExe)"
     ProguardJarPath="$(ProguardJarPath)"
     AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
-    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
+    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
     JavaLibraries="@(_JarsToProguard)"
     MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
     CustomMainDexListFiles="@(MultiDexMainDexList)"
@@ -2568,8 +2572,8 @@ because xbuild doesn't support framework reference assemblies.
     JavaToolPath="$(JavaToolPath)"
     JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
     JavaOptions="$(JavaOptions)"
-    ClassesOutputDirectory="$(IntermediateOutputPath)android\bin\classes"
-    ClassesZip="$(IntermediateOutputPath)android\bin\classes.zip"
+    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory.TrimEnd('\'))"
+    ClassesZip="$(_AndroidIntermediateClassesZip)"
     ToolPath="$(DxToolPath)"
     ToolExe="$(DxToolExe)"
     UseDx="$(UseDx)"
@@ -2943,7 +2947,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <MakeDir Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(MonoSymbolArchive)' == 'True' " />
   <Exec
-    Command="&quot;$(MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot; &quot;$(MonoAndroidIntermediate)android/assets&quot;"
+    Command="&quot;$(MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot; &quot;$(IntermediateOutputPath)android/assets&quot;"
     Condition=" '$(MonoSymbolArchive)' == 'True' "
   />
 
@@ -3062,7 +3066,7 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' " Include="$(ApkFileIntermediate)" />
 		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' == 'aab' " Include="$(_AppBundleIntermediate)" />
-		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'True' " Include="$(MonoAndroidIntermediate)android\bin\$(_AndroidPackage)*.apk" />
+		<ApkAbiFilesIntermediate Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'True' " Include="$(IntermediateOutputPath)android\bin\$(_AndroidPackage)*.apk" />
 	</ItemGroup>
 	<PropertyGroup>
 		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' != 'aab' ">-Signed-Unaligned</_JarSignerSuffix>
@@ -3218,33 +3222,33 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)android" Condition="Exists ('$(MonoAndroidIntermediate)android')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)assemblies" Condition="Exists ('$(MonoAndroidIntermediate)assemblies')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)res" Condition="Exists ('$(MonoAndroidIntermediate)res')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)aidl" Condition="Exists ('$(MonoAndroidIntermediate)aidl')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)bundles" Condition="Exists ('$(MonoAndroidIntermediate)bundles')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)__library_projects__" Condition="Exists ('$(MonoAndroidIntermediate)__library_projects__')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)res" Condition="Exists ('$(IntermediateOutputPath)res')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)aidl" Condition="Exists ('$(IntermediateOutputPath)aidl')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)bundles" Condition="Exists ('$(IntermediateOutputPath)bundles')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)__library_projects__" Condition="Exists ('$(IntermediateOutputPath)__library_projects__')" />
 	<RemoveDirFixed Directories="$(_AndroidLibrayProjectIntermediatePath)" Condition="Exists ('$(_AndroidLibrayProjectIntermediatePath)')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(MonoAndroidIntermediate)$(_LibraryProjectImportsDirectoryName)')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(MonoAndroidIntermediate)$(_NativeLibraryImportsDirectoryName)')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)assets" Condition="Exists ('$(MonoAndroidIntermediate)assets')" />
- 	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)java" Condition="Exists ('$(MonoAndroidIntermediate)java')" />
-	<RemoveDirFixed Directories="$(MonoAndroidIntermediate)proguard" Condition="Exists ('$(MonoAndroidIntermediate)proguard')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)assets" Condition="Exists ('$(IntermediateOutputPath)assets')" />
+ 	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)proguard" Condition="Exists ('$(IntermediateOutputPath)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidApplicationSharedLibraryPath)" Condition="Exists ('$(_AndroidApplicationSharedLibraryPath)')" />
- 	<Delete Files="$(MonoAndroidIntermediate)R.cs.flag" />
-	<Delete Files="$(MonoAndroidIntermediate)acw-map.txt" />
-	<Delete Files="$(MonoAndroidIntermediate)customview-map.txt" />
-	<Delete Files="$(MonoAndroidIntermediate)mergeresources.cache" />
-	<Delete Files="$(MonoAndroidIntermediate)jarlist.cache" />
-	<Delete Files="$(MonoAndroidIntermediate)resolved_assemblies.txt" />
-	<Delete Files="$(MonoAndroidIntermediate)__AndroidLibraryProjects__.zip" />
-	<Delete Files="$(MonoAndroidIntermediate)__AndroidNativeLibraries__.zip" />
-	<Delete Files="$(MonoAndroidIntermediate)stub_application_data.txt" />
+ 	<Delete Files="$(IntermediateOutputPath)R.cs.flag" />
+	<Delete Files="$(IntermediateOutputPath)acw-map.txt" />
+	<Delete Files="$(IntermediateOutputPath)customview-map.txt" />
+	<Delete Files="$(IntermediateOutputPath)mergeresources.cache" />
+	<Delete Files="$(IntermediateOutputPath)jarlist.cache" />
+	<Delete Files="$(IntermediateOutputPath)resolved_assemblies.txt" />
+	<Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+	<Delete Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+	<Delete Files="$(IntermediateOutputPath)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
