@@ -305,7 +305,7 @@ stages:
 
 - stage: test
   displayName: Test
-  dependsOn: []
+  dependsOn: mac_build
   jobs:
   # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
@@ -722,6 +722,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     workspace:
       clean: all
     steps:
@@ -736,6 +737,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
+    condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     workspace:
       clean: all
     variables:

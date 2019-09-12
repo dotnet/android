@@ -34,22 +34,7 @@ steps:
   displayName: install mono
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-#- template: run-installer.yaml
-- task: xamops.azdevex.provisionator-task.provisionator@2
-  displayName: TEST - Provision XA Master Mac
-  inputs:
-    github_token: $(GitHub.Token)
-    provisioning_script: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/3036028/master/c08c77197eea74355ee834a3d93b86dd140dd163/xamarin.android-10.0.99.108.pkg
-    provisioning_extra_args: -vv
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-- task: xamops.azdevex.provisionator-task.provisionator@2
-  displayName: TEST - Provision XA Master Win
-  inputs:
-    github_token: $(GitHub.Token)
-    provisioning_script: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/3036028/master/c08c77197eea74355ee834a3d93b86dd140dd163/signed/Xamarin.Android.Sdk-10.0.99.108.vsix
-    provisioning_extra_args: -vv
-  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+- template: run-installer.yaml
 
 - powershell: |   
     if ([Environment]::OSVersion.Platform -eq "Unix") {
