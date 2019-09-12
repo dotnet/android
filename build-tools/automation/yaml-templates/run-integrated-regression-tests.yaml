@@ -1,11 +1,7 @@
-parameters:
-  xqaConfiguration: Debug
-
 steps:
 - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
 - script: |
-    git clone -q https://github.com/xamarin/xamarin-android.git
     git clone -q https://github.com/xamarin/monodroid-samples.git
     git clone -q https://github.com/xamarin/xamarin-forms-samples.git
     git clone -q https://$(GitHub.Token)@github.com/xamarin/QualityAssurance.git
@@ -13,33 +9,30 @@ steps:
     git checkout xa-smoke-test-prs
   displayName: clone test dependencies
 
+- task: DownloadBuildArtifacts@0
+  inputs:
+    buildType: specific
+    project: 0bdbc590-a062-4c3f-b0f6-9383f67865ee
+    pipeline: 'XQA.sln'
+    buildVersionToDownload: latestFromBranch
+    branchName: refs/heads/xa-smoke-test-prs
+    downloadType: specific
+    itemPattern: |
+      XQA.Android/**
+      provisionator/**
+      NUnit.ConsoleRunner/**
+    downloadPath: $(System.DefaultWorkingDirectory)
+
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies
   inputs:
     github_token: $(GitHub.Token)
-    provisioning_script: $(System.DefaultWorkingDirectory)/QualityAssurance/Scripts/Provisionator/xamarin-android.csx
-    provisioning_extra_args: -vv DEVDIV_PACKAGES_TOKEN=$(VSTS.PackageAndCIBuilds.A)
+    provisioning_script: $(System.DefaultWorkingDirectory)/provisionator/xamarin-android.csx
+    provisioning_extra_args: -vv
 
 - script: make prepare-update-mono V=1 PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   displayName: install mono
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-- task: NuGetCommand@2
-  displayName: nuget restore Xamarin.Android.sln
-  inputs:
-    restoreSolution: Xamarin.Android.sln
-
-# Workaround Azure Pipeline NuGet credential provider issue
-- task: NuGetAuthenticate@0
-- task: NuGetToolInstaller@1
-- script: nuget restore $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.sln -NonInteractive
-  displayName: nuget restore XQA.sln
-
-- task: MSBuild@1
-  displayName: msbuild XQA.sln
-  inputs:
-    solution: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.sln
-    configuration: ${{ parameters.xqaConfiguration }}
 
 #- template: run-installer.yaml
 - task: xamops.azdevex.provisionator-task.provisionator@2
@@ -60,9 +53,9 @@ steps:
 
 - powershell: |   
     if ([Environment]::OSVersion.Platform -eq "Unix") {
-       mono $(System.DefaultWorkingDirectory)/packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
+       mono $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
     } else {
-       $(System.DefaultWorkingDirectory)\packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\QualityAssurance\Automation\XQA\XQA.Android\bin\${{ parameters.xqaConfiguration }}\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
+       $(System.DefaultWorkingDirectory)\NUnit.ConsoleRunner\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\XQA.Android\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
     }
   displayName: Test Environment Setup
   condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
@@ -71,129 +64,150 @@ steps:
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Mono.Android-Tests Debug on Device
     nunitConsoleExtraArgs: --where "cat == RuntimeTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Hello Tests on Device
     nunitConsoleExtraArgs: --where "cat == Hello"
     condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Smoke Tests on Device
     nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Smoke Tests
     nunitConsoleExtraArgs: --where "cat == RegressionTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Installer Tests
     nunitConsoleExtraArgs: --where "cat == InstallationTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Fast Deploy Tests
     nunitConsoleExtraArgs: --where "cat == FastDevTests"
     condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Debug Tests
     nunitConsoleExtraArgs: --where "cat == DebuggerTests"
     condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Incremental Build Tests
     nunitConsoleExtraArgs: --where "cat == BuildPerformance"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: AOT Tests
     nunitConsoleExtraArgs: --where "cat == AotSupport"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Linker Tests
     nunitConsoleExtraArgs: --where "cat == LinkerTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Wearable Tests
     nunitConsoleExtraArgs: --where "cat == Wearable"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Proguard Tests
     nunitConsoleExtraArgs: --where "cat == Proguard"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Multidex Tests
     nunitConsoleExtraArgs: --where "cat == Multidex"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: ExplicitCrunch Tests
     nunitConsoleExtraArgs: --where "cat == ExplicitCrunch"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: TargetFrameworkVersion Tests
     nunitConsoleExtraArgs: --where "cat == TargetFrameworkTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Resource Cache Tests
     nunitConsoleExtraArgs: --where "cat == ResourceCacheTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Property Cache Tests
     nunitConsoleExtraArgs: --where "cat == PropertyCacheTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Code Analysis Tests
     nunitConsoleExtraArgs: --where "cat == CodeAnalysisTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Networking Options Tests
     nunitConsoleExtraArgs: --where "cat == HttpClientAndTlsProviderPackageTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: AndroidApiInfo Tests
     nunitConsoleExtraArgs: --where "cat == AndroidApiInfoTests"
 
 - template: run-nunit-tests.yaml
   parameters:
-    testAssembly: $(System.DefaultWorkingDirectory)/QualityAssurance/Automation/XQA/XQA.Android/bin/${{ parameters.xqaConfiguration }}/XQA.Android.dll
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Test Environment Cleanup
     nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
