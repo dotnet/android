@@ -592,7 +592,7 @@
   </map>
   <map package='android.view' class='KeyEvent' fields='' prefix='ACTION_' enum-name="KeyEventActions" is-transient="false" />
   <map package='android.view' class='KeyEvent' fields='' prefix='FLAG_' enum-name="KeyEventFlags" is-transient="false" />
-  <map package='android.view' class='KeyEvent' fields='' prefix='META_' enum-name="MetaKeyStates" is-transient="false" />
+  <map package='android.view' class='KeyEvent' fields='' prefix='META_' enum-name="MetaKeyStates" is-transient="false" extra-default="None" />
   <map package='android.view' class='Menu' fields='' prefix='CATEGORY_' enum-name="MenuCategory" is-transient="false" />
   <map package='android.view' class='Menu' fields='' prefix='FLAG_' enum-name="MenuPerformFlags" extra-default="None" exclude="FLAG_APPEND_TO_GROUP" is-transient="false" />
   <map package='android.view' class='MenuItem' fields='' prefix='SHOW_AS_ACTION' enum-name="ShowAsAction" is-transient="false" />
