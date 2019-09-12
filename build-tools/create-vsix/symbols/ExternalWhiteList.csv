@@ -1,0 +1,10 @@
+# -------------------------------------------------------------------------------
+# This is the whitelist for all of executable files that won't be symbol archived
+# In this format:
+# [fileName|FilePattern],comment
+# It will also ignore any empty line or lines that begin with '#'
+# -------------------------------------------------------------------------------
+
+
+# Xamarin.Android 3rd party assemblies - pecolli, jopryo
+xamarin.android*\xamarin.android.*.vsixdir\*msbuild\xamarin\android\Irony.dll

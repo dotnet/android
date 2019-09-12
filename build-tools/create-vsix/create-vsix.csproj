@@ -122,6 +122,7 @@
     <DetokenizeVsixManifestFileDependsOn />
   </PropertyGroup>
   <Import Project="create-vsix.targets" />
+  <Import Project="symbols\zip-symbols.targets" />
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
       <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
