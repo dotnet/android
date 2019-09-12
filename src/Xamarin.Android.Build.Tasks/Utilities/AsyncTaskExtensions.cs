@@ -8,6 +8,44 @@ namespace Xamarin.Android.Tasks
 	static class AsyncTaskExtensions
 	{
 		/// <summary>
+		/// Creates a collection of Task with proper CancellationToken and error handling and waits via Task.WhenAll
+		/// </summary>
+		public static Task WhenAll<TSource>(this AsyncTask asyncTask, IEnumerable<TSource> source, Action<TSource> body)
+		{
+			var tasks = new List<Task> ();
+			foreach (var s in source) {
+				tasks.Add (Task.Run (() => {
+					try {
+						body (s);
+					} catch (Exception exc) {
+						LogErrorAndCancel (asyncTask, exc);
+					}
+				}, asyncTask.CancellationToken));
+			}
+			return Task.WhenAll (tasks);
+		}
+
+		/// <summary>
+		/// Creates a collection of Task with proper CancellationToken and error handling and waits via Task.WhenAll
+		/// Passes an object the inner method can use for locking. The callback is of the form: (T item, object lockObject)
+		/// </summary>
+		public static Task WhenAllWithLock<TSource> (this AsyncTask asyncTask, IEnumerable<TSource> source, Action<TSource, object> body)
+		{
+			var lockObject = new object ();
+			var tasks = new List<Task> ();
+			foreach (var s in source) {
+				tasks.Add (Task.Run (() => {
+					try {
+						body (s, lockObject);
+					} catch (Exception exc) {
+						LogErrorAndCancel (asyncTask, exc);
+					}
+				}, asyncTask.CancellationToken));
+			}
+			return Task.WhenAll (tasks);
+		}
+
+		/// <summary>
 		/// Calls Parallel.ForEach() with appropriate ParallelOptions and exception handling.
 		/// </summary>
 		public static ParallelLoopResult ParallelForEach<TSource> (this AsyncTask asyncTask, IEnumerable<TSource> source, Action<TSource> body)

@@ -82,21 +82,12 @@ namespace Xamarin.Android.Tasks
 		AotMode AotMode;
 		SequencePointsMode sequencePointsMode;
 
-		public Aot ()
-		{
-		}
-
 		public override bool RunTask ()
 		{
 			if (EnableLLVM && !NdkUtil.Init (Log, AndroidNdkDirectory))
 				return false;
 
-			try {
-				return DoExecute ();
-			} catch (Exception e) {
-				Log.LogCodedError ("XA3001", "{0}", e);
-				return false;
-			}
+			return base.RunTask ();
 		}
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
@@ -234,67 +225,42 @@ namespace Xamarin.Android.Tasks
 			return level;
 		}
 
-		bool DoExecute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
 				LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
-				return false;
+				return;
 			}
 
 			TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			var nativeLibs = new List<string> ();
 
-			Yield ();
-			try {
-				var task = this.RunTask (() => RunParallelAotCompiler (nativeLibs));
+			await this.WhenAllWithLock (GetAotConfigs (),
+				(config, lockObject) => {
+					if (!config.Valid) {
+						Cancel ();
+						return;
+					}
 
-				task.ContinueWith (Complete);
+					if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, config.ResponseFile)) {
+						LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
+						Cancel ();
+						return;
+					}
 
-				base.RunTask ();
+					File.Delete (config.ResponseFile);
 
-				if (!task.Result)
-					return false;
-			} finally {
-				Reacquire ();
-			}
+					lock (lockObject)
+						nativeLibs.Add (config.OutputFile);
+				}
+			);
 
 			NativeLibrariesReferences = nativeLibs.ToArray ();
 
 			LogDebugMessage ("Aot Outputs:");
 			LogDebugTaskItems ("  NativeLibrariesReferences: ", NativeLibrariesReferences);
-
-			return !Log.HasLoggedErrors;
-		}
-
-		bool RunParallelAotCompiler (List<string> nativeLibs)
-		{
-			try {
-				this.ParallelForEach (GetAotConfigs (),
-					config => {
-						if (!config.Valid) {
-							Cancel ();
-							return;
-						}
-
-						if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, config.ResponseFile)) {
-							LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
-							Cancel ();
-							return;
-						}
-
-						File.Delete (config.ResponseFile);
-
-						lock (nativeLibs)
-							nativeLibs.Add (config.OutputFile);
-					}
-				);
-			} catch (OperationCanceledException) {
-				return false;
-			}
-
-			return true;
 		}
 
 		IEnumerable<Config> GetAotConfigs ()

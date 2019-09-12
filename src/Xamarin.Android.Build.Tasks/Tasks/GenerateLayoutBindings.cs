@@ -79,7 +79,16 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] GeneratedFiles { get; set; }
 
-		public override bool RunTask ()
+		BindingGenerator GetBindingGenerator (string language)
+		{
+			BindingGeneratorLanguage gen;
+			if (!KnownBindingGenerators.TryGetValue (language, out gen) || gen == null)
+				return null;
+
+			return gen.Creator ();
+		}
+
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			if (String.IsNullOrWhiteSpace (OutputLanguage))
 				OutputLanguage = DefaultOutputGenerator.Name;
@@ -94,31 +103,11 @@ namespace Xamarin.Android.Tasks
 			if (generator == null) {
 				// Should "never" happen
 				Log.LogError ($"Cannot find binding generator for language {OutputLanguage} or {DefaultOutputGenerator.Name}");
-				Complete ();
-				return false;
+				return;
 			}
 
 			Log.LogDebugMessage ($"Generating {generator.LanguageName} binding sources");
-			if (Generate (generator)) {
-				Complete ();
-			} else {
-				base.RunTask ();
-			}
 
-			return !Log.HasLoggedErrors;
-		}
-
-		BindingGenerator GetBindingGenerator (string language)
-		{
-			BindingGeneratorLanguage gen;
-			if (!KnownBindingGenerators.TryGetValue (language, out gen) || gen == null)
-				return null;
-
-			return gen.Creator ();
-		}
-
-		bool Generate (BindingGenerator generator)
-		{
 			var layoutGroups = new Dictionary <string, LayoutGroup> (StringComparer.Ordinal);
 			string layoutGroupName;
 			LayoutGroup group;
@@ -128,7 +117,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutGroupMetadata, out layoutGroupName))
-					return true; // We need Complete() to be called by Execute above
+					return;
 
 				if (!layoutGroups.TryGetValue (layoutGroupName, out group) || group == null) {
 					group = new LayoutGroup {
@@ -142,19 +131,19 @@ namespace Xamarin.Android.Tasks
 			if (PartialClassFiles != null && PartialClassFiles.Length > 0) {
 				foreach (ITaskItem item in PartialClassFiles) {
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutGroupMetadata, out layoutGroupName))
-						return true;
+						return;
 					if (!layoutGroups.TryGetValue (layoutGroupName, out group) || group == null) {
 						Log.LogError ($"Partial class item without associated binding for layout group '{layoutGroupName}'");
-						return true;
+						return;
 					}
 
 					string partialClassName;
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.PartialCodeBehindClassNameMetadata, out partialClassName))
-						return true;
+						return;
 
 					string outputFileName;
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutPartialClassFileNameMetadata, out outputFileName))
-						return true;
+						return;
 
 					if (group.Classes == null)
 						group.Classes = new List<PartialClass> ();
@@ -185,29 +174,24 @@ namespace Xamarin.Android.Tasks
 			}
 
 			IEnumerable<string> generatedFilePaths = null;
-			bool needComplete = false;
 			if (ResourceFiles.Length >= CalculateLayoutCodeBehind.ParallelGenerationThreshold) {
 				// NOTE: Update the tests in $TOP_DIR/tests/CodeBehind/UnitTests/BuildTests.cs if this message
 				// is changed!
 				Log.LogDebugMessage ($"Generating binding code in parallel (threshold of {CalculateLayoutCodeBehind.ParallelGenerationThreshold} layouts met)");
 				var fileSet = new ConcurrentBag <string> ();
-				this.RunTask (
-					() => this.ParallelForEach (layoutGroups, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath)))
-				).ContinueWith (t => Complete ());
+				await this.WhenAll (layoutGroups, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath)));
 				generatedFilePaths = fileSet;
 			} else {
 				var fileSet = new List<string> ();
 				foreach (var kvp in layoutGroups)
 					GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath));
 				generatedFilePaths = fileSet;
-				needComplete = true;
 			}
 
 			GeneratedFiles = generatedFilePaths.Where (gfp => !String.IsNullOrEmpty (gfp)).Select (gfp => new TaskItem (gfp)).ToArray ();
 			if (GeneratedFiles.Length == 0)
 				Log.LogWarning ("No layout binding source files generated");
 			Log.LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
-			return needComplete;
 		}
 
 		void GenerateSourceForLayoutGroup (BindingGenerator generator, LayoutGroup group, Action <string> pathAdder)

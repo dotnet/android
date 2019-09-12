@@ -41,60 +41,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		public override bool RunTask ()
+		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			try {
-				return DoExecute ();
-			} catch (Exception e) {
-				// We don't want to present a wall of text to the end user...
-				Log.LogCodedError ("XA3001", $"Unable to link `libxamarin-app.so`: {e.Message}");
-
-				// ...but having the full stack trace available is important for us, so log it here
-				// int the way that will make it included in XA builds on bots or in verbose end user
-				// builds but not otherwise.
-				LogDebugMessage ($"Full exception: {e}");
-				return false;
-			}
+			return this.WhenAll (GetLinkerConfigs (), RunLinker);
 		}
 
-		bool DoExecute ()
-		{
-			Yield ();
-			try {
-				var task = this.RunTask ( () => RunParallelLinker ());
-				task.ContinueWith (Complete);
-
-				base.RunTask ();
-
-				if (!task.Result)
-					return false;
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		bool RunParallelLinker ()
-		{
-			try {
-				this.ParallelForEach (GetLinkerConfigs (),
-					 config => {
-						 if (RunLinker (config))
-							 return;
-						 LogCodedError ("XA3001", $"Could not link native shared library: {Path.GetFileName (config.OutputSharedLibrary)}");
-						 Cancel ();
-						 return;
-					 }
-				);
-			} catch (OperationCanceledException) {
-				return false;
-			}
-
-			return true;
-		}
-
-		bool RunLinker (Config config)
+		void RunLinker (Config config)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
@@ -142,7 +94,10 @@ namespace Xamarin.Android.Tasks
 				if (psi.RedirectStandardOutput)
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
-				return proc.ExitCode == 0;
+				if (proc.ExitCode != 0) {
+					LogCodedError ("XA3001", $"Could not link native shared library: {Path.GetFileName (config.OutputSharedLibrary)}");
+					Cancel ();
+				}
 			}
 		}
 
