@@ -64,6 +64,15 @@
 0,,,android/view/Surface.FX_SURFACE_MASK,98304
 0,,,android/view/Surface.FX_SURFACE_NORMAL,0
 
+// Manually added to preserve backwards compatibility (leave the original HearingAid const field as int)
+15,Android.Bluetooth.ProfileType,A2dp,I:android/bluetooth/BluetoothProfile.A2DP,2
+18,Android.Bluetooth.ProfileType,Gatt,I:android/bluetooth/BluetoothProfile.GATT,7
+18,Android.Bluetooth.ProfileType,GattServer,I:android/bluetooth/BluetoothProfile.GATT_SERVER,8
+15,Android.Bluetooth.ProfileType,Headset,I:android/bluetooth/BluetoothProfile.HEADSET,1
+15,Android.Bluetooth.ProfileType,Health,I:android/bluetooth/BluetoothProfile.HEALTH,3
+28,Android.Bluetooth.ProfileType,HidDevice,I:android/bluetooth/BluetoothProfile.HID_DEVICE,19
+23,Android.Bluetooth.ProfileType,Sap,I:android/bluetooth/BluetoothProfile.SAP,10
+29,Android.Bluetooth.ProfileType,HearingAid,,21
 
 
 
@@ -3852,14 +3861,6 @@
 15,Android.Bluetooth.HealthState,ChannelDisconnecting,android/bluetooth/BluetoothHealth.STATE_CHANNEL_DISCONNECTING,3
 15,Android.Bluetooth.RoleType,SinkRole,android/bluetooth/BluetoothHealth.SINK_ROLE,2
 15,Android.Bluetooth.RoleType,SourceRole,android/bluetooth/BluetoothHealth.SOURCE_ROLE,1
-15,Android.Bluetooth.ProfileType,A2dp,I:android/bluetooth/BluetoothProfile.A2DP,2
-18,Android.Bluetooth.ProfileType,Gatt,I:android/bluetooth/BluetoothProfile.GATT,7
-18,Android.Bluetooth.ProfileType,GattServer,I:android/bluetooth/BluetoothProfile.GATT_SERVER,8
-15,Android.Bluetooth.ProfileType,Headset,I:android/bluetooth/BluetoothProfile.HEADSET,1
-15,Android.Bluetooth.ProfileType,Health,I:android/bluetooth/BluetoothProfile.HEALTH,3
-28,Android.Bluetooth.ProfileType,HidDevice,I:android/bluetooth/BluetoothProfile.HID_DEVICE,19
-23,Android.Bluetooth.ProfileType,Sap,I:android/bluetooth/BluetoothProfile.SAP,10
-29,Android.Bluetooth.ProfileType,HearingAid,I:android/bluetooth/BluetoothProfile.HEARING_AID,21
 15,Android.Content.TrimMemory,Background,I:android/content/ComponentCallbacks2.TRIM_MEMORY_BACKGROUND,40
 15,Android.Content.TrimMemory,Complete,I:android/content/ComponentCallbacks2.TRIM_MEMORY_COMPLETE,80
 15,Android.Content.TrimMemory,Moderate,I:android/content/ComponentCallbacks2.TRIM_MEMORY_MODERATE,60
