@@ -702,8 +702,6 @@ stages:
         provisioning_extra_args: -vv
 
     - template: yaml-templates\run-installer.yaml
-      parameters:
-        itemPattern: "*.vsix"
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:
