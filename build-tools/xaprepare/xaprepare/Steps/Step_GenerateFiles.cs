@@ -185,7 +185,7 @@ namespace Xamarin.Android.Prepare
 			return new GeneratedPlaceholdersFile (replacements, Configurables.Paths.BundlePathTemplate, Configurables.Paths.BundlePathOutput);
 		}
 
-		GeneratedFile Get_MonoGitHash_props (Context context)
+		public GeneratedFile Get_MonoGitHash_props (Context context)
 		{
 			const string OutputFileName = "MonoGitHash.props";
 
