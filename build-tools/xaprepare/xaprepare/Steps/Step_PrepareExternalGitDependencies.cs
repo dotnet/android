@@ -28,7 +28,7 @@ namespace Xamarin.Android.Prepare
 					var genFilesStep = new Step_GenerateFiles (false, true);
 					var monogitPropsFile = genFilesStep.Get_MonoGitHash_props (context);
 					Log.Status ("Generating ");
-					Log.Status (Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, monoPropsFile.OutputPath), ConsoleColor.White);
+					Log.Status (Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, monogitPropsFile.OutputPath), ConsoleColor.White);
 					monogitPropsFile.Generate (context);
 					continue;
 				}
