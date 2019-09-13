@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <SchemaVersion>2.0</SchemaVersion>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
