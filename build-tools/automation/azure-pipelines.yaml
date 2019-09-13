@@ -722,7 +722,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     workspace:
       clean: all
     steps:
@@ -737,7 +737,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
     workspace:
       clean: all
     variables:
