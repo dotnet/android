@@ -3,7 +3,7 @@
   <Import Project="..\..\installers\create-installers.targets" />
   <PropertyGroup>
     <SymbolOutputPath>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\symbols</SymbolOutputPath>
-    <SymbolWhitelistEntryPrefix>xamarin.android*%5Cxamarin.android.*.vsixdir%5C</SymbolWhitelistEntryPrefix>
+    <SymbolWhitelistEntryPrefix>xamarin.android.sdk*%5Cxamarin.android.sdk*.vsixdir%5C</SymbolWhitelistEntryPrefix>
     <SymbolWhitelistBoilerplate>
 # -------------------------------------------------------------------------------
 # This is the whitelist for all of executable files that won't be symbol archived
@@ -11,38 +11,44 @@
 # [fileName|FilePattern],comment
 # It will also ignore any empty line or lines that begin with '#'
 # -------------------------------------------------------------------------------
+#
 # Xamarin.Android - pecolli, jopryo
     </SymbolWhitelistBoilerplate>
   </PropertyGroup>
   <ItemGroup>
     <!-- Files which fail Pdb2Pdb.exe conversion. https://github.com/dotnet/symreader-converter -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />  <!-- The PDB doesn't match debug directory record in the PE file -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\illinkanalyzer.exe" />           <!-- Specified PE file doesn't have any PDB associated with it -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\Java.Interop.dll" />             <!-- The PDB doesn't match debug directory record in the PE file -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\mdoc.exe" />                     <!-- Specified PE file doesn't have any PDB associated with it -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />                 <!-- Specified PE file doesn't have any PDB associated with it -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" />         <!-- Specified PE file doesn't have any PDB associated with it -->
-    <FailedConversionFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" />                  <!-- Specified PE file doesn't have any PDB associated with it -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)ICSharpCode.SharpZipLib.dll" />  <!-- The PDB doesn't match debug directory record in the PE file -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)illinkanalyzer.exe" />           <!-- Specified PE file doesn't have any PDB associated with it -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)Java.Interop.dll" />             <!-- The PDB doesn't match debug directory record in the PE file -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)mdoc.exe" />                     <!-- Specified PE file doesn't have any PDB associated with it -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)mkbundle.exe" />                 <!-- Specified PE file doesn't have any PDB associated with it -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)mono-symbolicate.exe" />         <!-- Specified PE file doesn't have any PDB associated with it -->
+    <FailedConversionFiles Include="$(MSBuildSrcDir)pdb2mdb.exe" />                  <!-- Specified PE file doesn't have any PDB associated with it -->
   </ItemGroup>
-
   <Target Name="CreateSymbolArchive"
-      Inputs="@(MSBuildItemsWin);$(MSBuildThisFileDirectory)\ExternalWhiteList.csv"
+      Inputs="@(FrameworkItemsWin);@(MSBuildItemsWin);$(MSBuildThisFileDirectory)\ExternalWhiteList.csv"
       Outputs="$(SymbolOutputPath)\symbols.zip;$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
       DependsOnTargets="ConstructInstallerItems" >
     <ItemGroup>
-      <SymbolFiles Include="@(MSBuildItemsWin)"
-          Condition=" Exists('%(RelativeDir)\%(Filename).pdb') And ('%(Extension)' == '.dll' Or '%(Extension)' == '.exe') "
-          Exclude="@(FailedConversionFiles)" >
+      <SymbolFiles Include="@(FrameworkItemsWin);@(MSBuildItemsWin)"
+          Condition=" Exists('%(RelativeDir)%(Filename).pdb') And ('%(Extension)' == '.dll' Or '%(Extension)' == '.exe') " >
         <RelativePath>$([MSBuild]::MakeRelative($(RootBuildDir)lib\xamarin.android, %(FullPath)))</RelativePath>
       </SymbolFiles>
-      <SymbolFiles Include="@(SymbolFiles->'%(RelativeDir)\%(Filename).pdb')" >
-        <RelativePath>$([MSBuild]::MakeRelative($(RootBuildDir)lib\xamarin.android, %(RelativeDir)\%(Filename).pdb))</RelativePath>
+      <SymbolFiles Include="@(SymbolFiles->'%(RelativeDir)%(Filename).pdb')" Exclude="@(FailedConversionFiles->'%(RelativeDir)%(Filename).pdb')" >
+        <RelativePath>$([MSBuild]::MakeRelative($(RootBuildDir)lib\xamarin.android, %(RelativeDir)%(Filename).pdb))</RelativePath>
       </SymbolFiles>
     </ItemGroup>
     <MakeDir Directories="$(SymbolOutputPath)\unzipped" />
+    <Message Text="@(FailedConversionFiles->'%(RelativeDir)\%(Filename).pdb')" />
     <Copy
         SourceFiles="@(SymbolFiles)"
         DestinationFiles="@(SymbolFiles->'$(SymbolOutputPath)\unzipped\%(RelativePath)')"
+        UseHardlinksIfPossible="True"
+    />
+    <Copy
+        SourceFiles="$(MSBuildThisFileDirectory)..\bin\$(Configuration)\Xamarin.Android.Sdk.dll;$(MSBuildThisFileDirectory)..\bin\$(Configuration)\Xamarin.Android.Sdk.pdb"
+        DestinationFolder="$(SymbolOutputPath)\unzipped"
+        UseHardlinksIfPossible="True"
     />
     <ZipDirectory
         SourceDirectory="$(SymbolOutputPath)\unzipped"
@@ -55,13 +61,15 @@
         Overwrite="true"
         Lines="$(SymbolWhitelistBoilerplate)"
     />
+    <!-- Whitelist all reference assemblies. -->
     <WriteLinesToFile
         File="$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
-        Lines="$(SymbolWhitelistEntryPrefix)*referenceassemblies%5C*, Reference assemblies for Xamarin.Android."
+        Lines="$(SymbolWhitelistEntryPrefix)*referenceassemblies%5C*, Reference assemblies."
     />
+    <!-- Whitelist files which fail Pdb2Pdb.exe conversion. -->
     <WriteLinesToFile
         File="$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
-        Lines="@(FailedConversionFiles->'$(SymbolWhitelistEntryPrefix)*msbuild%5C*%5C%(Filename)%(Extension), Fails Pdb2pdb.exe conversion.')"
+        Lines="@(FailedConversionFiles->'$(SymbolWhitelistEntryPrefix)*msbuild%5Cxamarin%5Candroid%5C%(Filename)%(Extension), Fails Pdb2Pdb.exe conversion.')"
     />
     <Copy
         SourceFiles="$(MSBuildThisFileDirectory)\ExternalWhiteList.csv"

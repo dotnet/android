@@ -10,7 +10,7 @@
     <AssemblyName>Xamarin.Android.Sdk</AssemblyName>
     <CreateVsixContainer Condition=" '$(CreateVsixContainer)' == '' ">False</CreateVsixContainer>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>False</CopyOutputSymbolsToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>True</CopyOutputSymbolsToOutputDirectory>
     <GeneratePkgDefFile>False</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
