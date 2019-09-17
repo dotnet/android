@@ -7,8 +7,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
-using System.Reflection.PortableExecutable;
 using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 namespace Xamarin.Android.Tasks
 {
@@ -217,9 +217,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ($"Refreshing {assemblyFileName}.dll");
 
 				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
-
 					var reader = pe.GetMetadataReader ();
-
 					foreach (var handle in reader.ManifestResources) {
 						var resource = reader.GetManifestResource (handle);
 						string name = reader.GetString (resource.Name);
