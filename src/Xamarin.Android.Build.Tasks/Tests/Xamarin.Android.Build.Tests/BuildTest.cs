@@ -3613,6 +3613,20 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void XA0119 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
+			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA0119"), "Output should contain XA0119 warnings");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();

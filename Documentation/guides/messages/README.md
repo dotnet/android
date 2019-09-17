@@ -62,6 +62,7 @@ ms.date: 08/23/2019
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` of name `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
++ [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 
 ## XA1xxx: Project related
 
