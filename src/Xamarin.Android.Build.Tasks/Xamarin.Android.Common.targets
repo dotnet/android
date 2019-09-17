@@ -583,6 +583,25 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
  </CreateItem>
 </Target>
 
+<Target Name="_CheckNonIdealConfigurations">
+  <Warning Code="XA0119"
+      Text="Using Fast Deployment and AOT at the same time is not recommended. Use Fast Deployment for Debug configurations and AOT for Release configurations."
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AotAssemblies)' == 'True' "
+  />
+  <Warning Code="XA0119"
+      Text="Using Fast Deployment and the Linker at the same time is not recommended. Use Fast Deployment for Debug configurations and the Linker for Release configurations."
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkMode)' != 'None' "
+  />
+  <Warning Code="XA0119"
+      Text="Using Fast Deployment and a Code Shrinker at the same time is not recommended. Use Fast Deployment for Debug configurations and a Code Shrinker for Release configurations."
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkTool)' != '' "
+  />
+  <Warning Code="XA0119"
+      Text="Using Fast Deployment and Android App Bundles at the same time is not recommended. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations."
+      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
+  />
+</Target>
+
 <Target Name="_CheckGoogleSdkRequirements"
     Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
   <CheckGoogleSdkRequirements
@@ -607,6 +626,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
   <BuildDependsOn>
     _ValidateLinkMode;
+    _CheckNonIdealConfigurations;
     _SetupDesignTimeBuildForBuild;
     _CleanIntermediateIfNuGetsChange;
     _CreatePropertiesCache;
@@ -625,6 +645,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup Condition="'$(AndroidApplication)' == '' Or !($(AndroidApplication))">
   <BuildDependsOn>
     _ValidateLinkMode;
+    _CheckNonIdealConfigurations;
      _SetupDesignTimeBuildForBuild;
     _CleanIntermediateIfNuGetsChange;
      _CreatePropertiesCache;
