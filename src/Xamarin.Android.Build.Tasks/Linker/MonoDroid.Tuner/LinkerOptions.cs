@@ -23,5 +23,6 @@ namespace MonoDroid.Tuner
 		public string HttpClientHandlerType { get; set; }
 		public string TlsProvider { get; set; }
 		public bool PreserveJniMarshalMethods { get; set; }
+		public bool DeterministicOutput { get; set; }
 	}
 }

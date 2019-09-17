@@ -1,4 +1,5 @@
 using Microsoft.Build.Framework;
+using Mono.Cecil;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -464,15 +465,15 @@ namespace Lib2
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
+				//NOTE: so _BuildApkEmbed runs in commercial tests
+				EmbedAssembliesIntoApk = true,
+				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
 					},
 				}
 			};
-			//NOTE: so _BuildApkEmbed runs in commercial tests
-			app.SetProperty ("EmbedAssembliesIntoApk", true.ToString ());
-			app.SetProperty ("AndroidUseSharedRuntime", false.ToString ());
 
 			int count = 0;
 			var lib = new DotNetStandard {
@@ -552,6 +553,9 @@ namespace Lib2
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
+				//NOTE: so _BuildApkEmbed runs in commercial tests
+				EmbedAssembliesIntoApk = true,
+				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -575,9 +579,6 @@ namespace Lib2
 			};
 			// Use a custom view
 			app.LayoutMain = app.LayoutMain.Replace ("</LinearLayout>", "<MyApp.CustomTextView android:id=\"@+id/myText\" /></LinearLayout>");
-			//NOTE: so _BuildApkEmbed runs in commercial tests
-			app.SetProperty ("EmbedAssembliesIntoApk", "True");
-			app.SetProperty ("AndroidUseSharedRuntime", "False");
 			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 
 			int count = 0;
@@ -822,7 +823,7 @@ namespace Lib2
 				FileAssert.Exists (path);
 			}
 		}
-		
+
 #pragma warning disable 414
 		static object [] AotChecks () => new object [] {
 			new object[] {
@@ -910,6 +911,42 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on third build!");
+				}
+			}
+		}
+
+		[Test]
+		public void DeterministicBuilds ([Values (true, false)] bool deterministic)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Deterministic = deterministic,
+				//NOTE: so _BuildApkEmbed runs in commercial tests
+				EmbedAssembliesIntoApk = true,
+				AndroidUseSharedRuntime = false,
+			};
+			// NOTE: Deterministic is only supported for DebugType=portable
+			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+				FileAssert.Exists (output);
+				string expectedHash = MonoAndroidHelper.HashFile (output);
+				Guid expectedMvid;
+				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
+					expectedMvid = assembly.MainModule.Mvid;
+				}
+
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				FileAssert.Exists (output);
+				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
+					if (deterministic) {
+						Assert.AreEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should match");
+						Assert.AreEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should match");
+					} else {
+						Assert.AreNotEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should *not* match");
+						Assert.AreNotEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should *not* match");
+					}
 				}
 			}
 		}

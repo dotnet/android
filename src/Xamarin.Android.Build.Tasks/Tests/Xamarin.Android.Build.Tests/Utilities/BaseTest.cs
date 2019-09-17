@@ -362,14 +362,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
+		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
+			if (string.IsNullOrEmpty (directory))
+				directory = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
-		protected ProjectBuilder CreateDllBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
+		protected ProjectBuilder CreateDllBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
+			if (string.IsNullOrEmpty (directory))
+				directory = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
