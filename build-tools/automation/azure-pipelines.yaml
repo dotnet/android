@@ -197,7 +197,7 @@ stages:
       parameters:
         artifactName: mac-build-results
 
-  # Check - "Xamarin.Android (Mac Queue Vsix Signing)"
+  # Check - "Xamarin.Android (Build Queue Vsix Signing)"
   # Actually runs on a Windows host, but the work is done in a Jenkins job. Does not run on PR builds.
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
@@ -224,14 +224,10 @@ stages:
           GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
           ENABLE_JAR_SIGNING=true
 
-# This stage ensures Windows specific build steps continue to work, and runs unit tests.
-# Check - "Xamarin.Android (Windows Build and Test)"
-- stage: win_build_test
-  displayName: Windows
-  dependsOn: prepare
-  jobs:
+  # This stage ensures Windows specific build steps continue to work, and runs a limited set of unit tests.
+  # Check - "Xamarin.Android (Build Windows)"
   - job: win_build_test
-    displayName: Build and Test
+    displayName: Windows
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -285,14 +281,6 @@ stages:
         arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
-      displayName: nunit Xamarin.Android.Build.Tests
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:RunNUnitTests /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-nunit-tests.binlog
-      timeoutInMinutes: 240
-
-    - task: MSBuild@1
       displayName: nunit Java.Interop Tests
       inputs:
         solution: Xamarin.Android.sln
@@ -314,6 +302,8 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: win-build-test-results
+
+  # TODO Check - "Xamarin.Android (Build Linux)"
 
 - stage: test
   displayName: Test
@@ -360,7 +350,7 @@ stages:
     variables:
       ApkTestConfiguration: Release
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
 
@@ -511,7 +501,7 @@ stages:
     pool: $(HostedMac)
     timeoutInMinutes: 180
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -563,7 +553,7 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -586,7 +576,56 @@ stages:
       parameters:
         artifactName: mac-msbuild-test-results
 
- # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
+  # Check - "Xamarin.Android (Test MSBuild Win)"
+  - job: win_msbuild_tests
+    displayName: MSBuild Win
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates\setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
+
+    - script: >
+        packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
+        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+        --result TestResult-WinMSBuildTests-$(XA.Build.Configuration).xml
+      displayName: run Xamarin.Android.Build.Tests
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-WinMSBuildTests-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildTestsWin
+      condition: succeededOrFailed()
+
+    - script: >
+        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
+        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
+        --result TestResult-WinMSBuildTestsCommercial-$(XA.Build.Configuration).xml
+      displayName: run Xamarin.Android.Build.Tests.Commercial
+      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-WinMSBuildTestsCommercial-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildTestsMWin
+      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: win-msbuild-test-results
+
+  # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild With Emulator Mac
     pool: $(HostedMac)
@@ -595,7 +634,7 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -638,7 +677,76 @@ stages:
       parameters:
         artifactName: mac-msbuild-device-test-results
 
-# Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
+  # Check - "Xamarin.Android (Test MSBuild With Emulator Win)"
+  - job: win_msbuilddevice_tests
+    displayName: MSBuild With Emulator Win
+    pool: $(HostedWinVS2019)
+    timeoutInMinutes: 150
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates\setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: start emulator
+      inputs:
+        solution: src\Mono.Android\Test\Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\start-emulator.binlog
+
+    - script: >
+        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
+        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+        --where "cat == UsesDevice"
+        --result TestResult-WinMSBuildDeviceTests-$(XA.Build.Configuration).xml
+      displayName: run on-device Xamarin.Android.Build.Tests
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-WinMSBuildDeviceTests-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildDeviceTestsWin
+      condition: always()
+
+    - script: >
+        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
+        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\MSBuildDeviceIntegration.dll
+        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        --result TestResult-WinMSBuildDeviceIntegration-$(XA.Build.Configuration).xml
+      displayName: run on-device MSBuildDeviceIntegration tests
+      condition: succeededOrFailed()
+
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-WinMSBuildDeviceIntegration-$(XA.Build.Configuration).xml
+        testRunTitle: MSBuildDeviceIntegration
+      condition: always()
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src\Mono.Android\Test\Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: mac-msbuild-device-test-results
+
+  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
   - job: mac_timezonedevice_tests
     displayName: TimeZoneInfo With Emulator Mac
     pool: $(HostedMac)
@@ -647,7 +755,7 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
