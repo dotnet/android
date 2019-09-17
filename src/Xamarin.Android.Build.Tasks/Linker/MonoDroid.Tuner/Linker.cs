@@ -48,6 +48,7 @@ namespace MonoDroid.Tuner
 			context.CoreAction = AssemblyAction.Link;
 			context.UserAction = AssemblyAction.Link;
 			context.LinkSymbols = true;
+			context.DeterministicOutput = options.DeterministicOutput;
 			context.SymbolReaderProvider = new DefaultSymbolReaderProvider (true);
 			context.SymbolWriterProvider = new DefaultSymbolWriterProvider ();
 			context.OutputDirectory = options.OutputDirectory;

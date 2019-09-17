@@ -1997,6 +1997,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+      Deterministic="$(Deterministic)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
@@ -2040,6 +2041,7 @@ because xbuild doesn't support framework reference assemblies.
       ProguardConfiguration="$(_ProguardProjectConfiguration)"
       PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
       EnableProguard="$(AndroidEnableProguard)"
+      Deterministic="$(Deterministic)"
       DumpDependencies="$(LinkerDumpDependencies)"
       ResolvedAssemblies="@(_AssembliesToLink)"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
@@ -2641,6 +2643,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
     Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
+    Deterministic="$(Deterministic)"
     ShrunkFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssetsDir)shrunk" />

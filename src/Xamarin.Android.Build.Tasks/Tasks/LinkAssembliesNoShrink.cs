@@ -2,7 +2,6 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 using System;
 using System.IO;
 
@@ -27,6 +26,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem [] DestinationFiles { get; set; }
 
+		public bool Deterministic { get; set; }
+
 		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Tasks
 				ReadSymbols = true,
 			};
 			var writerParameters = new WriterParameters {
-				DeterministicMvid = true,
+				DeterministicMvid = Deterministic,
 			};
 
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParameters)) {

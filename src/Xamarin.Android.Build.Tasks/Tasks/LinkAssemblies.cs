@@ -54,6 +54,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool PreserveJniMarshalMethods { get; set; }
 
+		public bool Deterministic { get; set; }
+
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
@@ -102,6 +104,7 @@ namespace Xamarin.Android.Tasks
 			options.HttpClientHandlerType = HttpClientHandlerType;
 			options.TlsProvider = TlsProvider;
 			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
+			options.DeterministicOutput = Deterministic;
 			
 			var skiplist = new List<string> ();
 

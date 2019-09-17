@@ -43,8 +43,8 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
 			SetProperty (DebugProperties, "AndroidLinkMode", "None");
 			SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
-			SetProperty (DebugProperties, "EmbedAssembliesIntoApk", "False", "'$(EmbedAssembliesIntoApk)' == ''");
-			SetProperty (ReleaseProperties, "EmbedAssembliesIntoApk", "True", "'$(EmbedAssembliesIntoApk)' == ''");
+			SetProperty (DebugProperties, KnownProperties.EmbedAssembliesIntoApk, "False", "'$(EmbedAssembliesIntoApk)' == ''");
+			SetProperty (ReleaseProperties, KnownProperties.EmbedAssembliesIntoApk, "True", "'$(EmbedAssembliesIntoApk)' == ''");
 
 			AndroidManifest = default_android_manifest;
 			LayoutMain = default_layout_main;
@@ -83,6 +83,21 @@ namespace Xamarin.ProjectTools
 		public bool EnableDesugar {
 			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
+		}
+
+		public bool Deterministic {
+			get { return string.Equals (GetProperty (KnownProperties.Deterministic), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.Deterministic, value.ToString ()); }
+		}
+
+		public bool AndroidUseSharedRuntime {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidUseSharedRuntime), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidUseSharedRuntime, value.ToString ()); }
+		}
+
+		public bool EmbedAssembliesIntoApk {
+			get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }
 		}
 
 		public string DexTool {
