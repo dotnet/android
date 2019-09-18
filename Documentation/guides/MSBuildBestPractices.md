@@ -459,6 +459,9 @@ would `Task.Execute()`:
 ```csharp
 public class MyTask : AndroidTask
 {
+    // Prefix for XAMYT0000 error codes: choose unique chars
+    public override string TaskPrefix => "MYT";
+
     public override bool RunTask ()
     {
         // Implementation
