@@ -5,11 +5,11 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Android.Runtime;
+using Java.Interop.Tools.JavaCallableWrappers;
 
 #if HAVE_CECIL
 using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.JavaCallableWrappers;
 #endif  // HAVE_CECIL
 
 namespace Java.Interop.Tools.TypeNameMappings
@@ -19,9 +19,14 @@ namespace Java.Interop.Tools.TypeNameMappings
 	public
 #endif
 	enum PackageNamingPolicy {
-		LowercaseHash,
-		Lowercase,
-		LowercaseWithAssemblyName,
+		/// <summary>
+		/// A hashed package name, currently defaults to LowercaseMD5
+		/// </summary>
+		LowercaseHash = 0,
+		Lowercase = 1,
+		LowercaseWithAssemblyName = 2,
+		LowercaseMD5 = LowercaseHash,
+		LowercaseCrc64 = 3,
 	}
 
 #if HAVE_CECIL
@@ -195,8 +200,13 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+			case PackageNamingPolicy.LowercaseCrc64:
+				using (var crc = new Crc64 ())
+					return "crc64" + ToHash (type.Namespace + ":" + assemblyName, crc);
+			case PackageNamingPolicy.LowercaseMD5:
 			default:
-				return "md5" + ToMd5 (type.Namespace + ":" + assemblyName);
+				using (var md5 = MD5.Create ())
+					return "md5" + ToHash (type.Namespace + ":" + assemblyName, md5);
 			}
 		}
 
@@ -515,8 +525,13 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (type.GetPartialAssemblyName ().Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+			case PackageNamingPolicy.LowercaseCrc64:
+				using (var crc = new Crc64 ())
+					return "crc64" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (), crc);
+			case PackageNamingPolicy.LowercaseMD5:
 			default:
-				return "md5" + ToMd5 (type.Namespace + ":" + type.GetPartialAssemblyName ());
+				using (var md5 = MD5.Create ())
+					return "md5" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (), md5);
 			}
 		}
 #endif
@@ -583,16 +598,14 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 #endif  // HAVE_CECIL
 
-		static string ToMd5 (string value)
+		static string ToHash (string value, HashAlgorithm algorithm)
 		{
 			var data = Encoding.UTF8.GetBytes (value);
-			using (var md5 = MD5.Create ()) {
-				var hash    = md5.ComputeHash (data);
-				var buf     = new StringBuilder (hash.Length * 2);
-				foreach (var b in hash)
-					buf.AppendFormat ("{0:x2}", b);
-				return buf.ToString ();
-			}
+			var hash = algorithm.ComputeHash (data);
+			var buf  = new StringBuilder (hash.Length * 2);
+			foreach (var b in hash)
+				buf.AppendFormat ("{0:x2}", b);
+			return buf.ToString ();
 		}
 
 		static string ToLowerCase (string value)

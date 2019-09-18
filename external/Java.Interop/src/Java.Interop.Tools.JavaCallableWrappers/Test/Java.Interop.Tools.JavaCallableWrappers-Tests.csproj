@@ -38,6 +38,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaCallableWrapperGeneratorTests.cs" />
+    <Compile Include="Java.Interop.Tools.JavaCallableWrappers\Crc64Tests.cs" />
+    <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaNativeTypeManagerTests.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\TypeNameMapGeneratorTests.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\SupportDeclarations.cs" />
     <Compile Include="Android.App\ActivityAttribute.cs" />
