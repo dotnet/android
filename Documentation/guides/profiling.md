@@ -114,6 +114,48 @@ call][managed_timing] or [this native call][native_timing].
 [managed_timing]: https://github.com/xamarin/xamarin-android/blob/faf2a3d7271e2e321b2fa500f85fa0f824abcf89/src/Mono.Android/Android.Runtime/JNIEnv.cs#L160
 [native_timing]: https://github.com/xamarin/xamarin-android/blob/6be4bdbcfd9f2fbe6267aceb934394bcdd0f13b4/src/monodroid/jni/monodroid-glue.cc#L2062
 
+## Profiling the AOT
+
+The application needs to be built with embedded AOT profiler. That can
+be done by using `AndroidEmbedProfilers` property, like:
+
+    > msbuild /p:AndroidEmbedProfilers=aot /t:Install <your.csproj>
+
+Before running the application, run the `adb` command to enable the
+profiler:
+
+    > adb shell setprop debug.mono.profile aot:port=9999
+
+The AOT profiler maps which methods are JIT'ed during runtime. Once
+you get to the point in time, where you would like to get the profile
+file, run `aprofutil` tool like this:
+
+    > aprofutil -s -v -f -p 9999 -o myprofile.aprof
+
+It collects the AOT profile from the device, through the forwarded tcp
+port 9999, and writes it to the `myprofile.aprof` file. The output
+should look like this:
+
+    Calling 'adb forward tcp:9999 tcp:9999'...
+    Reading from '127.0.0.1:9999'...
+    Read total 94903 bytes...
+    Summary:
+        Modules:          6
+        Types:          262
+        Methods:      1,162
+    Going to write the profile to 'myprofile.aprof'
+
+The `aprofutil` can be also used to inspect or filter the `.aprof`
+file.
+
+The profile can be used to build your app with AOT profile. Add it to
+the `AndroidAotProfile` item group in your csproj and set the
+`AndroidEnableProfiledAot` property to `true`.
+
+It is useful for scenarios like speeding up the startup of your
+application or other performance critical parts, by selectively
+AOT'ing only the methods included in the profile.
+
 ## Profiling the JIT
 
 Before launching the app, run the `adb` command:
