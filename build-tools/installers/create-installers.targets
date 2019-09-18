@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\desugar_deploy.jar" />
@@ -77,6 +78,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />
@@ -187,6 +189,7 @@
     <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
+    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aprofutil" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\mono" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
