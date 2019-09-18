@@ -341,6 +341,12 @@ stages:
         FRAMEWORK_DIR=/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
       displayName: make run-api-compatibility-tests
 
+    - powershell: |
+        $breakageReports = Get-ChildItem $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility -Filter *.html
+        foreach ($report in $breakageReports) {
+            Write-Host "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility/$report"
+        }
+
   # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
     displayName: APK Instrumentation
