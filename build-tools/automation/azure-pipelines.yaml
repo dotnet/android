@@ -197,7 +197,7 @@ stages:
       parameters:
         artifactName: mac-build-results
 
-  # Check - "Xamarin.Android (Build Queue Vsix Signing)"
+  # Check - "Xamarin.Android (Mac Queue Vsix Signing)"
   # Actually runs on a Windows host, but the work is done in a Jenkins job. Does not run on PR builds.
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
@@ -224,10 +224,14 @@ stages:
           GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
           ENABLE_JAR_SIGNING=true
 
-  # This stage ensures Windows specific build steps continue to work, and runs a limited set of unit tests.
-  # Check - "Xamarin.Android (Build Windows)"
+# This stage ensures Windows specific build steps continue to work, and runs unit tests.
+# Check - "Xamarin.Android (Windows Build and Test)"
+- stage: win_build_test
+  displayName: Windows
+  dependsOn: prepare
+  jobs:
   - job: win_build_test
-    displayName: Windows
+    displayName: Build and Test
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -281,6 +285,14 @@ stages:
         arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(AndroidTargetAbiArgs)
 
     - task: MSBuild@1
+      displayName: nunit Xamarin.Android.Build.Tests
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:RunNUnitTests /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-nunit-tests.binlog
+      timeoutInMinutes: 240
+
+    - task: MSBuild@1
       displayName: nunit Java.Interop Tests
       inputs:
         solution: Xamarin.Android.sln
@@ -312,7 +324,7 @@ stages:
   # Check - "Xamarin.Android (Test API Compatibility)"
   - job: mac_api_compat
     displayName: API Compatibility
-    pool: $(XA.Build.Mac.Pool)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     workspace:
@@ -339,9 +351,9 @@ stages:
             Write-Host "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility/$report"
         }
 
-  # Check - "Xamarin.Android (Test APK Instrumentation)"
+  # Check - "Xamarin.Android (Test APK Instrumentation - macOS)"
   - job: mac_apk_tests
-    displayName: APK Instrumentation
+    displayName: APK Instrumentation - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -495,9 +507,9 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: mac-apk-test-results
 
-  # Check - "Xamarin.Android (Test BCL With Emulator)"
+  # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
-    displayName: BCL With Emulator
+    displayName: BCL With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 180
     steps:
@@ -544,9 +556,9 @@ stages:
       parameters:
         artifactName: mac-bcl-test-results
 
-  # Check - "Xamarin.Android (Test MSBuild Mac)"
+  # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
-    displayName: MSBuild Mac
+    displayName: MSBuild - macOS
     pool: $(HostedMacMojave)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -576,9 +588,9 @@ stages:
       parameters:
         artifactName: mac-msbuild-test-results
 
-  # Check - "Xamarin.Android (Test MSBuild Win)"
+  # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
-    displayName: MSBuild Win
+    displayName: MSBuild - Windows
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -625,9 +637,9 @@ stages:
       parameters:
         artifactName: win-msbuild-test-results
 
-  # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
+  # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild With Emulator Mac
+    displayName: MSBuild With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
@@ -677,9 +689,9 @@ stages:
       parameters:
         artifactName: mac-msbuild-device-test-results
 
-  # Check - "Xamarin.Android (Test MSBuild With Emulator Win)"
+  # Check - "Xamarin.Android (Test MSBuild With Emulator - Windows)"
   - job: win_msbuilddevice_tests
-    displayName: MSBuild With Emulator Win
+    displayName: MSBuild With Emulator - Windows
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
@@ -746,9 +758,9 @@ stages:
       parameters:
         artifactName: mac-msbuild-device-test-results
 
-  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
+  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
   - job: mac_timezonedevice_tests
-    displayName: TimeZoneInfo With Emulator Mac
+    displayName: TimeZoneInfo With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -791,9 +803,9 @@ stages:
       parameters:
         artifactName: mac-timezoneinfo-test-results
 
-  # Check - "Xamarin.Android (Test Designer Mac)"
+  # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
-    displayName: Designer Mac
+    displayName: Designer - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
@@ -827,7 +839,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
-    displayName: Designer Windows
+    displayName: Designer - Windows
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
