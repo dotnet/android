@@ -448,6 +448,68 @@ specific to Xamarin.Android, and this will prevent them from
 conflicting with MSBuild properties from other products. All MSBuild
 properties are effectively "global variables"...
 
+## Xamarin.Android MSBuild Task base classes
+
+We have a few base classes to simplify error handling, `async` /
+`await` usage, etc.
+
+`AndroidTask` is a plain `Task`, override `RunTask` and use it as you
+would `Task.Execute()`:
+
+```csharp
+public class MyTask : AndroidTask
+{
+    public override bool RunTask ()
+    {
+        // Implementation
+        return !Log.HasLoggedErrors;
+    }
+}
+```
+
+The benefit here is that if an unhandled exception is thrown, `MyTask`
+will automatically generate proper error codes.
+
+`AndroidAsyncTask` has an additional override for doing work on a
+background thread:
+
+```csharp
+public async override System.Threading.Tasks.Task RunTaskAsync ()
+{
+    await DoSomethingExpensive ();
+}
+```
+
+`RunTaskAsync` is already on a background thread, and is setup to do
+the proper `Yield()`, `try`, `finally`, and `Reacquire()` calls needed
+for MSBuild.
+
+You might also leverage the `WhenAll` extension method:
+
+```csharp
+public async override System.Threading.Tasks.Task RunTaskAsync ()
+{
+    await this.WhenAll (Files, DoWork);
+}
+
+[Required]
+ITaskItem [] Files { get; set;}
+
+void DoWork (ITaskItem file)
+{
+    // The actual work done in parallel
+}
+```
+
+There are still some things to look out for with `AsyncTask`:
+
+* Use full paths on the background thread, or make use of the
+  `AsyncTask.WorkingDirectory` property. If the task is shifted to
+  another MSBuild node, `Environment.CurrentDirectory` will not be
+  what is expected.
+* Use the `AsyncTask.Log*` helper methods for logging. Calling
+  `Log.LogMessage` directly can cause hangs in the IDE.
+
 ## Stamp Files
 
 From now on, we should try to put new stamp files in
