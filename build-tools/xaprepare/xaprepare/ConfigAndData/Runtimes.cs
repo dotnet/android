@@ -381,6 +381,8 @@ namespace Xamarin.Android.Prepare
 			new MonoUtilityFile ("pdb2mdb.exe",                            remap: true),
 			new MonoUtilityFile ("ICSharpCode.SharpZipLib.dll",            remap: false),
 			new MonoUtilityFile ("Mono.CompilerServices.SymbolWriter.dll", remap: false),
+			new MonoUtilityFile ("aprofutil.exe",                          remap: false),
+			new MonoUtilityFile ("Mono.Profiler.Log.dll",                  remap: false),
 		};
 
 		/// <summary>
