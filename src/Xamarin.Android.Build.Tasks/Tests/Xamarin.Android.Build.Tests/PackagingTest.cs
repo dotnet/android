@@ -237,12 +237,15 @@ namespace Xamarin.Android.Build.Tests
 		public void ExplicitPackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
+				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
+			});
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
-				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "unnamedproject", "MainActivity.java"));
-				Assert.IsTrue (text.Contains ("package unnamedproject;"), "expected package not found in the source.");
+				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "foo", "Bar.java"));
+				Assert.IsTrue (text.Contains ("package foo;"), "expected package not found in the source.");
 			}
 		}
 

@@ -1,16 +1,13 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Security.Cryptography;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks {
-	public class ComputeHash : AndroidTask {
+namespace Xamarin.Android.Tasks
+{
+	public class ComputeHash : AndroidTask
+	{
 		public override string TaskPrefix => "CPT";
-
-		List<ITaskItem> output = new List<ITaskItem> ();
 
 		[Required]
 		public ITaskItem [] Source { get; set; }
@@ -18,34 +15,22 @@ namespace Xamarin.Android.Tasks {
 		public bool CopyMetaData { get; set; } = true;
 
 		[Output]
-		public ITaskItem [] Output { get => output.ToArray (); }
+		public ITaskItem [] Output { get; set; }
 
 		public override bool RunTask ()
 		{
-			using (var sha1 = SHA1.Create ()) {
-
-				foreach (var item in Source) {
-					var newItem = new TaskItem(item.ItemSpec, new Dictionary<string, string>() {
-						{ "Hash", HashItemSpec (sha1, item.ItemSpec) }
-					});
-					if (CopyMetaData)
-						item.CopyMetadataTo (newItem);
-					output.Add (newItem);
-				}
-				Log.LogDebugTaskItems ("Output : ", Output);
-				return !Log.HasLoggedErrors;
+			var output = new List<ITaskItem> (Source.Length);
+			foreach (var item in Source) {
+				var newItem = new TaskItem(item.ItemSpec, new Dictionary<string, string>() {
+					{ "Hash", Files.HashString (item.ItemSpec) }
+				});
+				if (CopyMetaData)
+					item.CopyMetadataTo (newItem);
+				output.Add (newItem);
 			}
-		}
-
-		string HashItemSpec (SHA1 sha1, string hashInput)
-		{
-			var hash = sha1.ComputeHash (Encoding.UTF8.GetBytes (hashInput));
-			var hashResult = new StringBuilder (hash.Length * 2);
-
-			foreach (byte b in hash) {
-				hashResult.Append (b.ToString ("x2"));
-			}
-			return hashResult.ToString ();
+			Output = output.ToArray ();
+			Log.LogDebugTaskItems ("Output : ", Output);
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

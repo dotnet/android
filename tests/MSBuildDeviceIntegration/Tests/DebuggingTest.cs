@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 				if (CommercialBuildAvailable)
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
 				else
-					AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
+					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");

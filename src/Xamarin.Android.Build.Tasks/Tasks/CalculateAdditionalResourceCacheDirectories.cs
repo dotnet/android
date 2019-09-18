@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -28,15 +26,11 @@ namespace Xamarin.Android.Tasks
 			if (!AdditionalAndroidResourcePaths.Any ())
 				return true;
 
-			var md5 = MD5.Create ();
 			Directory.CreateDirectory (CacheDirectory);
 			var directories = new List<ITaskItem> ();
 
 			foreach (var path in AdditionalAndroidResourcePaths) {
-				var cacheSubDirectory = string.Concat (md5.ComputeHash (
-									Encoding.UTF8.GetBytes (path)).Select (b => b.ToString ("X02"))
-								);
-				var targetDir = Path.Combine (CacheDirectory, cacheSubDirectory);
+				var targetDir = Path.Combine (CacheDirectory, Files.HashString (path));
 				directories.Add (new TaskItem (Path.GetFullPath (targetDir).TrimEnd (Path.DirectorySeparatorChar)));
 			}
 			AdditionalResourceCachePaths = directories.ToArray ();

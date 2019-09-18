@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
+using Java.Interop.Tools.JavaCallableWrappers;
 using Xamarin.Tools.Zip;
 
 public struct SampleDesc {
@@ -22,7 +23,7 @@ public struct SampleDesc {
 public class SampleRepository
 {
 	ZipArchive archive;
-	HashAlgorithm hasher = MD5.Create ();
+	HashAlgorithm hasher = new Crc64 ();
 	HashSet<string> validFiles = new HashSet<string> ();
 	Dictionary<string, SampleDesc> index = new Dictionary<string, SampleDesc> ();
 	Dictionary<string, string>     updates = new Dictionary<string, string> ();

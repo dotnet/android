@@ -470,6 +470,11 @@ namespace Xamarin.Android.Tasks
 			return Files.HashStream (stream);
 		}
 
+		public static bool HasFileChanged (string source, string destination)
+		{
+			return Files.HasFileChanged (source, destination);
+		}
+
 		/// <summary>
 		/// Open a file given its path and remove the 3 bytes UTF-8 BOM if there is one
 		/// </summary>
