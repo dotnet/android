@@ -1,0 +1,25 @@
+parameters:
+  nunitConsole: packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
+  testRunTitle: Xamarin Android Tests
+  testAssembly: []
+  testResultsFile: TestResult.xml
+  testResultsFormat: NUnit
+  nunitConsoleExtraArgs: ''
+  condition: succeededOrFailed()
+
+steps:
+- powershell: |
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} ${{ parameters.whereClause }} --result ${{ parameters.testResultsFile }} ${{ parameters.nunitConsoleExtraArgs }}
+    } else {
+        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} ${{ parameters.whereClause }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
+    }
+  displayName: run ${{ parameters.testRunTitle }}
+  condition: ${{ parameters.condition }}
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: ${{ parameters.testResultsFormat }}
+    testResultsFiles: ${{ parameters.testResultsFile }}
+    testRunTitle: ${{ parameters.testRunTitle }}
+  condition: ${{ parameters.condition }}
