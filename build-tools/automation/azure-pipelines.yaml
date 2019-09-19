@@ -315,8 +315,6 @@ stages:
       parameters:
         artifactName: win-build-test-results
 
-  # TODO Check - "Xamarin.Android (Build Linux)"
-
 - stage: test
   displayName: Test
   dependsOn: mac_build
@@ -591,7 +589,7 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
     displayName: MSBuild - Windows
-    pool: $(HostedWinVS2019)
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -692,7 +690,7 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild With Emulator - Windows)"
   - job: win_msbuilddevice_tests
     displayName: MSBuild With Emulator - Windows
-    pool: $(HostedWinVS2019)
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
     workspace:
