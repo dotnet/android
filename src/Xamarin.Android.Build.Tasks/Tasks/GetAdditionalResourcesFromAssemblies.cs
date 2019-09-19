@@ -374,19 +374,7 @@ namespace Xamarin.Android.Tasks
 			return contentDir;
 		}
 
-		public override bool RunTask ()
-		{
-			Yield ();
-			try {
-				DoExecute ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			if (Environment.GetEnvironmentVariable ("XA_DL_IGNORE_CERT_ERRROS") == "yesyesyes") {
 				ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
@@ -404,58 +392,54 @@ namespace Xamarin.Android.Tasks
 			if (!Path.IsPathRooted (cacheFileFullPath))
 				cacheFileFullPath = Path.Combine (WorkingDirectory, cacheFileFullPath);
 
-			System.Threading.Tasks.Task.Run (() => {
-				// The cache location can be overriden by the (to be documented) XAMARIN_CACHEPATH
-				CachePath = Environment.ExpandEnvironmentVariables (CachePathEnvironmentVar);
-				CachePath = CachePath != CachePathEnvironmentVar
+			// The cache location can be overriden by the (to be documented) XAMARIN_CACHEPATH
+			CachePath = Environment.ExpandEnvironmentVariables (CachePathEnvironmentVar);
+			CachePath = CachePath != CachePathEnvironmentVar
 				? CachePath
 				: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), CacheBaseDir);
 
-				foreach (var assemblyItem in Assemblies) {
-					if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceExtraction), out bool value) && value) {
-						LogDebugMessage ($"Skipping {assemblyItem.ItemSpec} due to 'AndroidSkipResourceExtraction' == 'true' ");
-						continue;
-					}
-					string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
-					if (DesignTimeBuild && !File.Exists (fullPath)) {
-						LogWarning ("Failed to load '{0}'. Check the file exists or the project has been built.", fullPath);
-						continue;
-					}
-					if (assemblies.Contains (fullPath)) {
-						LogDebugMessage ("  Skip assembly: {0}, it was already processed", fullPath);
-						continue;
-					}
-					// don't try to even load mscorlib it will fail.
-					if (string.Compare (Path.GetFileNameWithoutExtension (fullPath), "mscorlib", StringComparison.OrdinalIgnoreCase) == 0)
-						continue;
-					assemblies.Add (fullPath);
-					using (var pe = new PEReader (File.OpenRead (fullPath))) {
-						var reader = pe.GetMetadataReader ();
-						var assembly = reader.GetAssemblyDefinition ();
-						// Append source file name (without the Xamarin. prefix or extension) to the base folder
-						// This would help avoid potential collisions.
-						foreach (var handle in assembly.GetCustomAttributes ()) {
-							var attribute = reader.GetCustomAttribute (handle);
-							var fullName = reader.GetCustomAttributeFullName (attribute);
-							switch (fullName) {
-								case "Android.IncludeAndroidResourcesFromAttribute":
-									AddAttributeValue (androidResources, attribute.GetCustomAttributeArguments (), "XA5206", "{0}. Android resource directory {1} doesn't exist.", true, fullPath, fullName);
-									break;
-								case "Java.Interop.JavaLibraryReferenceAttribute":
-									AddAttributeValue (javaLibraries, attribute.GetCustomAttributeArguments (), "XA5207", "{0}. Java library file {1} doesn't exist.", false, fullPath, fullName);
-									break;
-								case "Android.NativeLibraryReferenceAttribute":
-									AddAttributeValue (nativeLibraries, attribute.GetCustomAttributeArguments (), "XA5210", "{0}. Native library file {1} doesn't exist.", false, fullPath, fullName);
-									break;
-							}
+			foreach (var assemblyItem in Assemblies) {
+				if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceExtraction), out bool value) && value) {
+					LogDebugMessage ($"Skipping {assemblyItem.ItemSpec} due to 'AndroidSkipResourceExtraction' == 'true' ");
+					continue;
+				}
+				string fullPath = Path.GetFullPath (assemblyItem.ItemSpec);
+				if (DesignTimeBuild && !File.Exists (fullPath)) {
+					LogWarning ("Failed to load '{0}'. Check the file exists or the project has been built.", fullPath);
+					continue;
+				}
+				if (assemblies.Contains (fullPath)) {
+					LogDebugMessage ("  Skip assembly: {0}, it was already processed", fullPath);
+					continue;
+				}
+				// don't try to even load mscorlib it will fail.
+				if (string.Compare (Path.GetFileNameWithoutExtension (fullPath), "mscorlib", StringComparison.OrdinalIgnoreCase) == 0)
+					continue;
+				assemblies.Add (fullPath);
+				using (var pe = new PEReader (File.OpenRead (fullPath))) {
+					var reader = pe.GetMetadataReader ();
+					var assembly = reader.GetAssemblyDefinition ();
+					// Append source file name (without the Xamarin. prefix or extension) to the base folder
+					// This would help avoid potential collisions.
+					foreach (var handle in assembly.GetCustomAttributes ()) {
+						var attribute = reader.GetCustomAttribute (handle);
+						var fullName = reader.GetCustomAttributeFullName (attribute);
+						switch (fullName) {
+							case "Android.IncludeAndroidResourcesFromAttribute":
+								AddAttributeValue (androidResources, attribute.GetCustomAttributeArguments (), "XA5206", "{0}. Android resource directory {1} doesn't exist.", true, fullPath, fullName);
+								break;
+							case "Java.Interop.JavaLibraryReferenceAttribute":
+								AddAttributeValue (javaLibraries, attribute.GetCustomAttributeArguments (), "XA5207", "{0}. Java library file {1} doesn't exist.", false, fullPath, fullName);
+								break;
+							case "Android.NativeLibraryReferenceAttribute":
+								AddAttributeValue (nativeLibraries, attribute.GetCustomAttributeArguments (), "XA5210", "{0}. Native library file {1} doesn't exist.", false, fullPath, fullName);
+								break;
 						}
 					}
 				}
-			}, CancellationToken).ContinueWith (Complete);
+			}
 
-			var result = base.RunTask ();
-
-			if (!result || Log.HasLoggedErrors) {
+			if (Log.HasLoggedErrors) {
 				if (File.Exists (cacheFileFullPath))
 					File.Delete (cacheFileFullPath);
 				return;

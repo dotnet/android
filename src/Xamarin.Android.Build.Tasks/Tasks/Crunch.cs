@@ -70,37 +70,17 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool RunTask ()
-		{
-			Yield ();
-			try {
-				var task = this.RunTask (DoExecute);
-
-				task.ContinueWith (Complete);
-
-				base.RunTask ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			// copy the changed files over to a temp location for processing
 			var imageFiles = SourceFiles.Where (x => string.Equals (Path.GetExtension (x.ItemSpec),".png", StringComparison.OrdinalIgnoreCase));
-
 			if (!imageFiles.Any ())
 				return;
 
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
 
-			this.ParallelForEach (imageGroups, DoExecute);
-
-			return;
+			await this.WhenAll (imageGroups, DoExecute);
 		}
-
 
 		protected string GenerateFullPathToTool ()
 		{

@@ -29,27 +29,11 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
-		public override bool RunTask ()
-		{
-			Yield ();
-			try {
-				var task = this.RunTask (DoExecute);
-
-				task.ContinueWith (Complete);
-
-				base.RunTask ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
+		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			LoadResourceCaseMap ();
 
-			this.ParallelForEachWithLock (ResourceDirectories, ProcessDirectory);
+			return this.WhenAllWithLock (ResourceDirectories, ProcessDirectory);
 		}
 
 		void ProcessDirectory (ITaskItem resourceDirectory, object lockObject)

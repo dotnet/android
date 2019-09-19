@@ -38,25 +38,11 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string [] ManifestFiles { get; set; }
 
-		public override bool RunTask ()
-		{
-			Yield ();
-			try {
-				this.RunTask (DoExecute).ContinueWith (Complete);
-
-				base.RunTask ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
 		string main_r_txt;
 		string output_directory;
 		Dictionary<string, string> r_txt_mapping;
 
-		void DoExecute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			if (LibraryTextFiles == null || LibraryTextFiles.Length == 0)
 				return;
@@ -75,7 +61,7 @@ namespace Xamarin.Android.Tasks
 			output_directory = Path.GetFullPath (OutputDirectory);
 
 			var libraries = LibraryTextFiles.Zip (ManifestFiles, (textFile, manifestFile) => new Library (textFile, manifestFile));
-			this.ParallelForEach (libraries, GenerateJava);
+			await this.WhenAll (libraries, GenerateJava);
 		}
 
 		/// <summary>

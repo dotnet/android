@@ -77,30 +77,14 @@ namespace Xamarin.Android.Tasks {
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
 
-		public override bool RunTask ()
-		{
-			Yield ();
-			try {
-				var task = this.RunTask (DoExecute);
-
-				task.ContinueWith (Complete);
-
-				base.RunTask ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			try {
 				LoadResourceCaseMap ();
 
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
-				this.ParallelForEach (ManifestFiles, ProcessManifest);
+				await this.WhenAll (ManifestFiles, ProcessManifest);
 			} finally {
 				lock (tempFiles) {
 					foreach (var temp in tempFiles) {

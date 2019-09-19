@@ -214,32 +214,17 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool RunTask () 
+		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			resourceDirectory = ResourceDirectory.TrimEnd ('\\');
 			if (!Path.IsPathRooted (resourceDirectory))
 				resourceDirectory = Path.Combine (WorkingDirectory, resourceDirectory);
-			Yield ();
-			try {
-				var task = this.RunTask (DoExecute);
 
-				task.ContinueWith (Complete);
-
-				base.RunTask ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
-		{
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
-			this.ParallelForEach (ManifestFiles, ProcessManifest);
+			return this.WhenAll (ManifestFiles, ProcessManifest);
 		}
 
 		protected string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)

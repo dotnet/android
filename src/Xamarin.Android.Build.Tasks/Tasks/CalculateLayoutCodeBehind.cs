@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] LayoutPartialClassFiles { get; set; }
 
-		public override bool RunTask ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			widgetWithId = XPathExpression.Compile ("//*[@android:id and string-length(@android:id) != 0] | //include[not(@android:id)]");
 
@@ -124,7 +124,6 @@ namespace Xamarin.Android.Tasks
 			} else
 				sourceFileExtension = OutputFileExtension;
 
-			string partialClassNames = null;
 			var layoutsByName = new Dictionary <string, LayoutGroup> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (ITaskItem item in BoundLayouts) {
@@ -141,11 +140,8 @@ namespace Xamarin.Android.Tasks
 				// is changed!
 				Log.LogDebugMessage ($"Parsing layouts in parallel (threshold of {ParallelGenerationThreshold} layouts met)");
 
-				this.RunTask (
-					() => this.ParallelForEach (layoutsByName, kvp => ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems))
-				).ContinueWith (t => Complete ());
-
-				base.RunTask ();
+				await this.WhenAll (layoutsByName, kvp =>
+					ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems));
 
 				foreach (var kvp in layoutsByName) {
 					LayoutGroup group = kvp.Value;
@@ -160,7 +156,6 @@ namespace Xamarin.Android.Tasks
 				foreach (var kvp in layoutsByName) {
 					ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref layoutBindingFiles, ref layoutPartialClassFiles);
 				}
-				Complete ();
 			}
 
 			LayoutBindingFiles = layoutBindingFiles.ToArray ();
@@ -170,8 +165,6 @@ namespace Xamarin.Android.Tasks
 
 			Log.LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles, true);
 			Log.LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles, true);
-
-			return !Log.HasLoggedErrors;
 		}
 
 		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem> items, ref List<ITaskItem> layoutBindingFiles, ref List<ITaskItem> layoutPartialClassFiles)

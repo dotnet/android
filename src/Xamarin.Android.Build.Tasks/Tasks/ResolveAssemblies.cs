@@ -57,19 +57,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string[] ResolvedDoNotPackageAttributes { get; set; }
 
-		public override bool RunTask ()
+		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			Yield ();
-			try {
-				System.Threading.Tasks.Task.Run (() => {
-					using (var resolver = new MetadataResolver ()) {
-						Execute (resolver);
-					}
-				}, CancellationToken).ContinueWith (Complete);
-				return base.RunTask ();
-			} finally {
-				Reacquire ();
+			using (var resolver = new MetadataResolver ()) {
+				Execute (resolver);
 			}
+			return Done;
 		}
 
 		void Execute (MetadataResolver resolver)
@@ -131,7 +124,7 @@ namespace Xamarin.Android.Tasks
 			var mainapiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 			foreach (var item in api_levels.Where (x => mainapiLevel < x.Value)) {
 				var itemOSVersion = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (item.Value);
-				Log.LogCodedWarning ("XA0105", ProjectFile, 0,
+				LogCodedWarning ("XA0105", ProjectFile, 0,
 					"The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for your project ({2}). " +
 					"You need to increase the $(TargetFrameworkVersion) for your project.", Path.GetFileName (item.Key), itemOSVersion, TargetFrameworkVersion);
 			}
@@ -310,7 +303,7 @@ namespace Xamarin.Android.Tasks
 												var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (version);
 												if (apiLevel != null) {
 													var assemblyName = reader.GetString (assembly.Name);
-													Log.LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
+													LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
 													api_levels [assemblyName] = apiLevel.Value;
 												}
 											}
