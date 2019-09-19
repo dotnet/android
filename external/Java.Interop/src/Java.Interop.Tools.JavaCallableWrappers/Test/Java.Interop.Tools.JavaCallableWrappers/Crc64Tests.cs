@@ -9,7 +9,11 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 	{
 		static string ToHash (string value)
 		{
-			var data = Encoding.UTF8.GetBytes (value);
+			return ToHash (Encoding.UTF8.GetBytes (value));
+		}
+
+		static string ToHash (byte[] data)
+		{
 			using (var crc = new Crc64 ()) {
 				var hash = crc.ComputeHash (data);
 				var buf = new StringBuilder (hash.Length * 2);
@@ -23,14 +27,20 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		public void Hello ()
 		{
 			var actual = ToHash ("hello");
-			Assert.AreEqual ("a27666cb10ddb0d6", actual);
+			Assert.AreEqual ("ad3d04bd697eb3c5", actual);
 		}
 
 		[Test]
 		public void XmlDocument ()
 		{
 			var actual = ToHash ("System.Xml.XmlDocument, System.Xml");
-			Assert.AreEqual ("2fbc43b3a95193ae", actual);
+			Assert.AreEqual ("348bbd9fecf1b865", actual);
+		}
+
+		[Test]
+		public void Collision ()
+		{
+			Assert.AreNotEqual (ToHash (""), ToHash (new byte [32]));
 		}
 	}
 }

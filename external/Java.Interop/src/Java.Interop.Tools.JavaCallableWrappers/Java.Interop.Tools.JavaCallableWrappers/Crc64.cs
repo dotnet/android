@@ -36,6 +36,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 	/// <summary>
 	///  CRC64 variant: crc-64-jones 64-bit
 	///  * Poly: 0xad93d23594c935a9
+	///  Changes beyond initial implementation:
+	///  * Starting Value: ulong.MaxValue
+	///  * XOR length in HashFinal()
 	/// </summary>
 	public class Crc64 : HashAlgorithm
 	{
@@ -170,7 +173,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 		    0x536fa08fdfd90e51, 0x29b7d047efec8728,
 		};
 
-		ulong crc;
+		ulong crc = ulong.MaxValue;
+		ulong length = 0;
 
 		public override void Initialize () { }
 
@@ -179,8 +183,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			for (int i = ibStart; i < cbSize; i++) {
 				crc = Table [(byte) (crc ^ array [i])] ^ (crc >> 8);
 			}
+			length += (ulong) cbSize;
 		}
 
-		protected override byte [] HashFinal () => BitConverter.GetBytes (crc);
+		protected override byte [] HashFinal () => BitConverter.GetBytes (crc ^ length);
 	}
 }
