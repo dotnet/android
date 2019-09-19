@@ -179,14 +179,14 @@ namespace Xamarin.Android.Build.Tests
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
-				while (session.IsConnected && breakcountHitCount < 3) {
+				while (session.IsConnected && breakcountHitCount < 3 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
 				WaitFor (2000);
 				ClearAdbLogcat ();
 				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
-				while (session.IsConnected && breakcountHitCount < 4) {
+				while (session.IsConnected && breakcountHitCount < 4 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
