@@ -317,6 +317,36 @@ stages:
   displayName: Test
   dependsOn: mac_build
   jobs:
+  # Check - "Xamarin.Android (Test API Compatibility)"
+  - job: mac_api_compat
+    displayName: API Compatibility
+    pool: $(XA.Build.Mac.Pool)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - template: yaml-templates/run-installer.yaml
+
+    - script: |
+        make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 V=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make prepare
+
+    - script: >
+        make run-api-compatibility-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+        FRAMEWORK_DIR=/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
+      displayName: make run-api-compatibility-tests
+
+    - powershell: |
+        $breakageReports = Get-ChildItem $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility -Filter *.html
+        foreach ($report in $breakageReports) {
+            Write-Host "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility/$report"
+        }
+
   # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
     displayName: APK Instrumentation
