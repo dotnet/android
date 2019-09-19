@@ -22,7 +22,8 @@ variables:
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
   DotNetCoreVersion: 2.1.701
-  HostedInternalMojave: Hosted Mac Internal Mojave
+  HostedMacMojave: Hosted Mac Internal Mojave
+  HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: VSEng-MicroBuildVS2019
 
@@ -47,7 +48,7 @@ stages:
   # Check - "Xamarin.Android (Prepare bundle)"
   - job: create_bundle
     displayName: Bundle
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     workspace:
@@ -92,7 +93,7 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -321,7 +322,7 @@ stages:
   # Check - "Xamarin.Android (Test APK Instrumentation)"
   - job: mac_apk_tests
     displayName: APK Instrumentation
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -477,7 +478,7 @@ stages:
   # Check - "Xamarin.Android (Test BCL With Emulator)"
   - job: mac_bcl_tests
     displayName: BCL With Emulator
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 180
     steps:
     - template: yaml-templates/mac/setup-test-environment.yaml
@@ -526,7 +527,7 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild Mac)"
   - job: mac_msbuild_tests
     displayName: MSBuild Mac
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -575,7 +576,7 @@ stages:
  # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild With Emulator Mac
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -644,7 +645,7 @@ stages:
 # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
   - job: mac_timezonedevice_tests
     displayName: TimeZoneInfo With Emulator Mac
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -697,7 +698,7 @@ stages:
   # Check - "Xamarin.Android (Test Designer Mac)"
   - job: designer_integration_mac
     displayName: Designer Mac
-    pool: $(HostedInternalMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
