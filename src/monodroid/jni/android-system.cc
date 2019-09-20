@@ -20,7 +20,6 @@
 #include <shlwapi.h>
 #endif
 
-#include "unzip.h"
 #include "globals.hh"
 #include "android-system.hh"
 #include "monodroid.h"
@@ -266,7 +265,7 @@ AndroidSystem::monodroid_read_file_into_memory (const char *path, char **value)
 			r = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(fileStat.st_size), 1);
 			if (value && (*value = new char[r])) {
 				size_t nread = fread (*value, 1, static_cast<size_t>(fileStat.st_size), fp);
-				if (nread == 0 || nread != r) {
+				if (nread == 0 || nread != static_cast<size_t>(fileStat.st_size)) {
 					log_warn(LOG_DEFAULT, "While reading file %s: expected to read %u bytes, actually read %u bytes", path, r, nread);
 				}
 			}

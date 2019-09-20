@@ -238,6 +238,7 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/embedded-assemblies.cc
+  ${SOURCES_DIR}/embedded-assemblies-zip.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/logger.cc
@@ -246,8 +247,6 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
-  ${SOURCES_DIR}/zip/ioapi.c
-  ${SOURCES_DIR}/zip/unzip.c
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc

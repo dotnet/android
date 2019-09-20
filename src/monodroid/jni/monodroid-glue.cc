@@ -66,8 +66,6 @@
 #include "util.hh"
 #include "debug.hh"
 #include "embedded-assemblies.hh"
-#include "unzip.h"
-#include "ioapi.h"
 #include "monodroid-glue.h"
 #include "mkbundle-api.h"
 #include "monodroid-glue-internal.hh"
