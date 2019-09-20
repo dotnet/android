@@ -2296,6 +2296,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (builder.DesignTimeBuild (proj), "design-time build should have succeeded");
 				Assert.IsTrue (builder.Build (proj), "build should have succeeded");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA0121"), "Output should contain XA0121 warnings");
 				var targetAar = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0",
 					"content", "m2repository", "com", "android", "support", "appcompat-v7", "23.1.1", "appcompat-v7-23.1.1.aar");
 				if (File.Exists (targetAar)) {

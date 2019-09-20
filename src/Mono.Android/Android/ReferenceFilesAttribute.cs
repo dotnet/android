@@ -1,7 +1,7 @@
 using System;
 
 namespace Android {
-
+	[Obsolete ("This attribute is deprecated and will be removed in a future release.")]
 	public abstract class ReferenceFilesAttribute : Attribute
 	{
 		internal ReferenceFilesAttribute () {}

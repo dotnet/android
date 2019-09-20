@@ -113,6 +113,9 @@ namespace Xamarin.Android.Tasks
 		void AddAttributeValue (ICollection<string> items, CustomAttributeValue<object> attributeValue, string errorCode, string errorFmt,
 			bool isDirectory, string fullPath, string attributeFullName)
 		{
+			LogCodedWarning ("XA0121",
+				$"Assembly '{Path.GetFileName (fullPath)}' is using a deprecated attribute '[assembly: {attributeFullName}]'. Use a newer version of this NuGet package or notify the library author.");
+
 			if (attributeValue.NamedArguments.Length == 0 || attributeValue.FixedArguments.Length != 1) {
 				LogCodedWarning (errorCode, "Attribute {0} doesn't have expected one constructor agrument", attributeFullName);
 				return;
