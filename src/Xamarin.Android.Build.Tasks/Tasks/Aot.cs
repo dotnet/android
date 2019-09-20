@@ -405,9 +405,9 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ("asmwriter");
 					aotOptions.Add ($"mtriple={mtriple}");
 					aotOptions.Add ($"tool-prefix={toolPrefix}");
-					aotOptions.Add ($"ld-flags={ldFlags}");
 					aotOptions.Add ($"llvm-path={sdkBinDirectory}");
 					aotOptions.Add ($"temp-path={tempDir}");
+					aotOptions.Add ($"ld-flags={ldFlags}");
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
 					// on windows as one argument. Otherwise it will be split up into multiple
