@@ -572,15 +572,15 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Mac
+        testRunTitle: Xamarin.Android.Build.Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Mac
+        testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -594,42 +594,29 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
+    variables:
+      VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
     - template: yaml-templates\setup-test-environment.yaml
+      parameters:
+        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION=$(VSINSTALLDIR)
 
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
-    - script: >
-        packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
-        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        --result TestResult-WinMSBuildTests-$(XA.Build.Configuration).xml
-      displayName: run Xamarin.Android.Build.Tests
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Windows
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
 
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-WinMSBuildTests-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildTestsWin
-      condition: succeededOrFailed()
-
-    - script: >
-        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
-        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
-        --result TestResult-WinMSBuildTestsCommercial-$(XA.Build.Configuration).xml
-      displayName: run Xamarin.Android.Build.Tests.Commercial
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-WinMSBuildTestsCommercial-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildTestsMWin
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
+        testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
 
     - template: yaml-templates\upload-results.yaml
       parameters:
@@ -661,14 +648,14 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests On Device - Mac
+        testRunTitle: Xamarin.Android.Build.Tests On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == UsesDevice"
         testResultsFile: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: MSBuildDeviceIntegration On Device - Mac
+        testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
@@ -684,75 +671,6 @@ stages:
       condition: always()
 
     - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: mac-msbuild-device-test-results
-
-  # Check - "Xamarin.Android (Test MSBuild With Emulator - Windows)"
-  - job: win_msbuilddevice_tests
-    displayName: MSBuild With Emulator - Windows
-    pool: $(VSEngWinVS2019)
-    timeoutInMinutes: 150
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates\setup-test-environment.yaml
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: src\Mono.Android\Test\Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\start-emulator.binlog
-
-    - script: >
-        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
-        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        --where "cat == UsesDevice"
-        --result TestResult-WinMSBuildDeviceTests-$(XA.Build.Configuration).xml
-      displayName: run on-device Xamarin.Android.Build.Tests
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-WinMSBuildDeviceTests-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildDeviceTestsWin
-      condition: always()
-
-    - script: >
-        packages\NUnit.ConsoleRunner.$(NUnitConsoleVersion)\tools\nunit3-console.exe
-        $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\MSBuildDeviceIntegration.dll
-        --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
-        --result TestResult-WinMSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-      displayName: run on-device MSBuildDeviceIntegration tests
-      condition: succeededOrFailed()
-
-    - task: PublishTestResults@2
-      displayName: publish test results
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: TestResult-WinMSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-        testRunTitle: MSBuildDeviceIntegration
-      condition: always()
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: src\Mono.Android\Test\Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: mac-msbuild-device-test-results
 
@@ -782,7 +700,7 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: TimeZoneInfoTests On Device - Mac
+        testRunTitle: TimeZoneInfoTests On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
         testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
@@ -871,9 +789,9 @@ stages:
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
-  # Check - "Xamarin.Android (Test Integrated Regression Mac)"
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac
-    displayName: Integrated Regression Mac
+    displayName: Integrated Regression - macOS
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -886,9 +804,9 @@ stages:
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
 
-  # Check - "Xamarin.Android (Test Integrated Regression Windows)"
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win
-    displayName: Integrated Regression Windows
+    displayName: Integrated Regression - Windows
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:

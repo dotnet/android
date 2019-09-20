@@ -1,8 +1,11 @@
 parameters:
   configuration: $(XA.Build.Configuration)
+  provisionExtraArgs: -vv
 
 steps:
 - template: run-installer.yaml
+  parameters:
+    provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
 - task: MSBuild@1
   displayName: build xaprepare
