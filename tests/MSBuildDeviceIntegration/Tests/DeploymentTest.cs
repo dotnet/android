@@ -26,6 +26,13 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void BeforeDeploymentTests ()
 		{
+			if (!HasDevices)
+				Assert.Ignore ("Skipping Test. No devices available.");
+			string debuggable = RunAdbCommand ("shell getprop ro.debuggable");
+			if (debuggable != "1") {
+				Assert.Ignore ("TimeZone tests need to use `su root` and this device does not support that feature. Try using an emulator.");
+			}
+
 			proj = new XamarinFormsAndroidApplicationProject ();
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			var mainPage = proj.Sources.First (x => x.Include () == "MainPage.xaml.cs");
@@ -50,7 +57,9 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeTearDown]
 		public void AfterDeploymentTests ()
 		{
-			RunAdbCommand ($"uninstall {proj.PackageName}");
+			if (HasDevices)
+				RunAdbCommand ($"uninstall {proj.PackageName}");
+
 			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (builder.ProjectDirectory))
 			    Directory.Delete (builder.ProjectDirectory, recursive: true);
 		}
@@ -97,14 +106,20 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Test. No devices available.");
 
-			RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
-			ClearAdbLogcat ();
-			AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started");
-			Assert.IsTrue (MonitorAdbLogcat ((l) => {
-				return l.Contains ($"TimeZoneInfo={timeZone}");
-			}, Path.Combine (Root, builder.ProjectDirectory, "timezone-logcat.log")), $"TimeZone should have been {timeZone}");
+			string currentTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+			try {
+				RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
+				ClearAdbLogcat ();
+				AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started");
+				Assert.IsTrue (MonitorAdbLogcat ((l) => {
+					return l.Contains ($"TimeZoneInfo={timeZone}");
+				}, Path.Combine (Root, builder.ProjectDirectory, "timezone-logcat.log")), $"TimeZone should have been {timeZone}");
+			} finally {
+				if (!string.IsNullOrEmpty (currentTimeZone))
+					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{currentTimeZone}\"");
+			}
 		}
 	}
 }
