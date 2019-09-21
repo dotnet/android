@@ -3293,6 +3293,18 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateItem Include="$(ApkFileIntermediate)">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
+	<CreateItem Include="$(_AabFileSigned)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(_BaseZipIntermediate)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(_AppBundleIntermediate)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(_ApkSetIntermediate)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
 	<!-- FIXME: check files exists -->
 	<CreateItem Include="@(_AndroidResourceDest)">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
