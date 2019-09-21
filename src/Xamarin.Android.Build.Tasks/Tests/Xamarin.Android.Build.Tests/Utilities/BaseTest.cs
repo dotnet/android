@@ -200,7 +200,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			return RunProcess (adb, command);
+			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			return RunProcess (adb, $"{adbTarget} {command}");
 		}
 
 		protected static string RunProcess (string exe, string args)
