@@ -367,9 +367,9 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 
-					libs.Add (Path.Combine (toolchainLibDir, "libgcc.a"));
-					libs.Add (Path.Combine (androidLibPath, "libc.so"));
-					libs.Add (Path.Combine (androidLibPath, "libm.so"));
+					libs.Add ($"\\\"{Path.Combine (toolchainLibDir, "libgcc.a")}\\\"");
+					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libc.so")}\\\"");
+					libs.Add ($"\\\"{Path.Combine (androidLibPath, "libm.so")}\\\"");
 
 					ldFlags = string.Join(";", libs);
 				}
@@ -405,9 +405,9 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ("asmwriter");
 					aotOptions.Add ($"mtriple={mtriple}");
 					aotOptions.Add ($"tool-prefix={toolPrefix}");
-					aotOptions.Add ($"ld-flags={ldFlags}");
 					aotOptions.Add ($"llvm-path={sdkBinDirectory}");
 					aotOptions.Add ($"temp-path={tempDir}");
+					aotOptions.Add ($"ld-flags={ldFlags}");
 
 					// we need to quote the entire --aot arguments here to make sure it is parsed
 					// on windows as one argument. Otherwise it will be split up into multiple
@@ -468,6 +468,9 @@ namespace Xamarin.Android.Tasks
 
 			LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
 				psi.EnvironmentVariables ["MONO_PATH"], psi.EnvironmentVariables ["MONO_ENV_OPTIONS"], psi.FileName, psi.Arguments);
+
+			if (!string.IsNullOrEmpty (responseFile))
+				LogDebugMessage ("[AOT] response file {0}: {1}", responseFile, File.ReadAllText (responseFile));
 
 			using (var proc = new Process ()) {
 				proc.OutputDataReceived += (s, e) => {

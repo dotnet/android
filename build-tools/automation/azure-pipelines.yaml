@@ -760,7 +760,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
     steps:
@@ -775,7 +775,7 @@ stages:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
     variables:
