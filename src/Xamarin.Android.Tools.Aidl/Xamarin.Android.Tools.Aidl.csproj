@@ -19,7 +19,8 @@
     <ConsolePause>False</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Portable</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
     <ErrorReport>prompt</ErrorReport>

@@ -34,12 +34,11 @@
           Condition=" Exists('%(RelativeDir)%(Filename).pdb') And ('%(Extension)' == '.dll' Or '%(Extension)' == '.exe') " >
         <RelativePath>$([MSBuild]::MakeRelative($(RootBuildDir)lib\xamarin.android, %(FullPath)))</RelativePath>
       </SymbolFiles>
-      <SymbolFiles Include="@(SymbolFiles->'%(RelativeDir)%(Filename).pdb')" Exclude="@(FailedConversionFiles->'%(RelativeDir)%(Filename).pdb')" >
+      <SymbolFiles Include="@(SymbolFiles->'%(RelativeDir)%(Filename).pdb')" >
         <RelativePath>$([MSBuild]::MakeRelative($(RootBuildDir)lib\xamarin.android, %(RelativeDir)%(Filename).pdb))</RelativePath>
       </SymbolFiles>
     </ItemGroup>
     <MakeDir Directories="$(SymbolOutputPath)\unzipped" />
-    <Message Text="@(FailedConversionFiles->'%(RelativeDir)\%(Filename).pdb')" />
     <Copy
         SourceFiles="@(SymbolFiles)"
         DestinationFiles="@(SymbolFiles->'$(SymbolOutputPath)\unzipped\%(RelativePath)')"
@@ -61,12 +60,17 @@
         Overwrite="true"
         Lines="$(SymbolWhitelistBoilerplate)"
     />
-    <!-- Whitelist all reference assemblies. -->
+    <!-- Whitelist all facade assemblies. -->
     <WriteLinesToFile
         File="$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
-        Lines="$(SymbolWhitelistEntryPrefix)*referenceassemblies%5C*, Reference assemblies."
+        Lines="$(SymbolWhitelistEntryPrefix)*referenceassemblies%5C*%5Cfacades%5C*, Facade assemblies."
     />
-    <!-- Whitelist files which fail Pdb2Pdb.exe conversion. -->
+    <!-- Whitelist 'designer profile' assemblies which are failing Pdb2Pdb.exe conversion. -->
+    <WriteLinesToFile
+        File="$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
+        Lines="$(SymbolWhitelistEntryPrefix)*msbuild%5Cxamarin%5Candroid%5Cbcl%5C*, 'Designer profile' assemblies."
+    />
+    <!-- Whitelist additional files which fail Pdb2Pdb.exe conversion. -->
     <WriteLinesToFile
         File="$(SymbolOutputPath)\SymbolArchiveWhiteList.csv"
         Lines="@(FailedConversionFiles->'$(SymbolWhitelistEntryPrefix)*msbuild%5Cxamarin%5Candroid%5C%(Filename)%(Extension), Fails Pdb2Pdb.exe conversion.')"
