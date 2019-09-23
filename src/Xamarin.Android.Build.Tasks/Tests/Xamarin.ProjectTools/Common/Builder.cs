@@ -68,7 +68,7 @@ namespace Xamarin.ProjectTools
 				xabuild = XABuildPaths.XABuildExe;
 				if (File.Exists (xabuild))
 					return xabuild;
-				return "msbuild";
+				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
 			}
 		}
 
@@ -106,9 +106,9 @@ namespace Xamarin.ProjectTools
 					if (Directory.Exists (Path.Combine (outdir, "lib")) && File.Exists (Path.Combine (outdir, libmonodroidPath)))
 						return Path.Combine (outdir, "lib", "xamarin.android");
 
-					var visualStudioDirectory = TestEnvironment.GetVisualStudioDirectory ();
-					if (!string.IsNullOrEmpty (visualStudioDirectory))
-						return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
+					var vs = TestEnvironment.GetVisualStudioInstance ();
+					if (!string.IsNullOrEmpty (vs.VisualStudioRootPath))
+						return Path.Combine (vs.VisualStudioRootPath, "MSBuild", "Xamarin", "Android");
 
 					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
