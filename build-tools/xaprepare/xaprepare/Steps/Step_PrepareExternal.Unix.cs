@@ -32,6 +32,7 @@ namespace Xamarin.Android.Prepare
 				arguments: new List <string> {
 					"prepare",
 					$"CONFIGURATION={context.Configuration}",
+					$"JAVA_HOME={context.OS.JavaHome}",
 					$"JI_MAX_JDK={Configurables.Defaults.MaxJDKVersion}",
 				}
 			);
