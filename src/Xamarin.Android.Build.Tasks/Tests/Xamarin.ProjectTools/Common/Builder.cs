@@ -72,17 +72,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public string AndroidMSBuildDirectory {
-			get {
-				var frameworkLibDir = FrameworkLibDirectory;
-				var path = Path.Combine (frameworkLibDir, "xbuild", "Xamarin", "Android");
-				if (Directory.Exists (path))
-					return path;
-				return frameworkLibDir;
-			}
-		}
-
-		public string FrameworkLibDirectory {
+		string BuildOutputDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
@@ -97,22 +87,28 @@ namespace Xamarin.ProjectTools
 					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Debug");
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
 					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Release");
-				if (IsUnix) {
-					if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-						outdir = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
-					return Path.Combine (outdir, "lib", "xamarin.android");
-				}
-				else {
-					if (Directory.Exists (Path.Combine (outdir, "lib")) && File.Exists (Path.Combine (outdir, libmonodroidPath)))
-						return Path.Combine (outdir, "lib", "xamarin.android");
 
-					var vs = TestEnvironment.GetVisualStudioInstance ();
-					if (!string.IsNullOrEmpty (vs.VisualStudioRootPath))
-						return Path.Combine (vs.VisualStudioRootPath, "MSBuild", "Xamarin", "Android");
+				return outdir;
+			}
+		}
 
-					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
-				}
+		public string AndroidMSBuildDirectory {
+			get {
+				var msbuildDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", "armeabi-v7a", "libmono-android.release.so")))
+					return msbuildDir;
+
+				return TestEnvironment.MonoAndroidToolsDirectory;
+			}
+		}
+
+		public string FrameworkLibDirectory {
+			get {
+				var frameworkLibDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
+				if (Directory.Exists (frameworkLibDir) && Directory.EnumerateDirectories (frameworkLibDir, "v*", SearchOption.TopDirectoryOnly).Any ())
+					return frameworkLibDir;
+
+				return TestEnvironment.MonoAndroidFrameworkDirectory;
 			}
 		}
 
@@ -167,12 +163,7 @@ namespace Xamarin.ProjectTools
 			Version firstVersion    = null;
 			Version lastVersion     = null;
 
-			var outdir = FrameworkLibDirectory;
-			var path = Path.Combine (outdir, "xbuild-frameworks", "MonoAndroid");
-			if (!Directory.Exists(path)) {
-				path = outdir;
-			}
-			foreach (var dir in Directory.EnumerateDirectories (path, "v*", SearchOption.TopDirectoryOnly)) {
+			foreach (var dir in Directory.EnumerateDirectories (FrameworkLibDirectory, "v*", SearchOption.TopDirectoryOnly)) {
 				// No binding assemblies in `v1.0`; don't process.
 				if (Path.GetFileName (dir) == "v1.0")
 					continue;
@@ -223,7 +214,7 @@ namespace Xamarin.ProjectTools
 
 		public bool TargetFrameworkExists (string targetFramework)
 		{
-			var path = Path.Combine (FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFramework);
+			var path = Path.Combine (FrameworkLibDirectory, targetFramework);
 			if (!Directory.Exists (path)) {
 				return false;
 			}
