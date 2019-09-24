@@ -5,20 +5,26 @@
 #include <cstring>
 #include <mono/metadata/assembly.h>
 
-#include "unzip.h"
-#include "ioapi.h"
-
 struct TypeMapHeader;
 
 namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo;
 #endif
-	struct md_mmap_info;
-
 	class EmbeddedAssemblies
 	{
+		struct md_mmap_info {
+			void   *area;
+			size_t  size;
+		};
+
 	private:
+		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
+		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
+		static constexpr char  ZIP_EOCD_MAGIC[]    = "PK\5\6";
+		static constexpr off_t ZIP_EOCD_LEN        = 22;
+		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
+		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char assemblies_prefix[] = "assemblies/";
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
@@ -59,7 +65,7 @@ namespace xamarin::android::internal {
 
 	private:
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
-		bool gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
+		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
 		void extract_int (const char **header, const char *source_apk, const char *source_entry, const char *key_name, int *value);
 #if defined (DEBUG) || !defined (ANDROID)
@@ -67,18 +73,23 @@ namespace xamarin::android::internal {
 #endif // DEBUG || !ANDROID
 		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
 
-		static md_mmap_info md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const char* apk);
-		static void* md_mmap_open_file (void *opaque, const char *filename, int mode);
-		static uLong md_mmap_read_file (void *opaque, void *stream, void *buf, uLong size);
-		static long md_mmap_tell_file (void *opaque, void *stream);
-		static long md_mmap_seek_file (void *opaque, void *stream, uLong offset, int origin);
-		static int md_mmap_close_file (void *opaque, void *stream);
-		static int md_mmap_error_file (void *opaque, void *stream);
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk);
 
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static int TypeMappingInfo_compare_key (const void *a, const void *b);
 		const char *find_entry_in_type_map (const char *name, uint8_t map[], TypeMapHeader& header);
+
+		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
+		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
+		bool zip_adjust_data_offset (int fd, size_t local_header_offset, uint32_t &data_start_offset);
+		bool zip_extract_cd_info (uint8_t* buf, size_t buf_len, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
+		bool zip_ensure_valid_params (uint8_t* buf, size_t buf_len, size_t index, size_t to_read);
+		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint16_t& u);
+		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint32_t& u);
+		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint8_t (&sig)[4]);
+		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, char*& characters);
+		bool zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, char*& file_name);
 
 		const char* get_assemblies_prefix () const
 		{
