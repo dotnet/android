@@ -14,7 +14,6 @@ The attached notices are provided for information only.
 1. bazelbuild/bazel (https://github.com/bazelbuild/bazel/)
 2. google/desugar (https://android.googlesource.com/platform/external/desugar/+/master/)
 3. nunit/nunitlite (https://github.com/nunit/nunitlite/)
-4. zLibDll/minizip (http://www.winimage.com/zLibDll/minizip.html)
 
 %% bazelbuild/bazel NOTICES AND INFORMATION BEGIN HERE
 ======================================================
@@ -458,28 +457,4 @@ THE SOFTWARE.
 
 =====================================================
 END OF nunit/nunitlite NOTICES AND INFORMATION
-
-%% zLibDll/minizip NOTICES AND INFORMATION BEGIN HERE
-=====================================================
-Copyright (C) 1998-2005 Gilles Vollant
-
-This software is provided 'as-is', without any express or implied
-warranty.  In no event will the authors be held liable for any damages
-arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
-
-1. The origin of this software must not be misrepresented; you must not
-claim that you wrote the original software. If you use this software
-in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be
-misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-
-
-=====================================================
-END OF zLibDll/minizip NOTICES AND INFORMATION
 

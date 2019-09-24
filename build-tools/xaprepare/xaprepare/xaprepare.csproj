@@ -152,7 +152,6 @@
     <Compile Include="ThirdPartyNotices\bundletool.cs" />
     <Compile Include="ThirdPartyNotices\Java.Interop.cs" />
     <Compile Include="ThirdPartyNotices\mono.cs" />
-    <Compile Include="ThirdPartyNotices\monodroid.cs" />
     <Compile Include="ThirdPartyNotices\opentk.cs" />
     <Compile Include="ThirdPartyNotices\proguard.cs" />
     <Compile Include="ThirdPartyNotices\r8.cs" />

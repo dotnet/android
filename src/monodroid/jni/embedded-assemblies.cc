@@ -36,11 +36,6 @@ namespace xamarin { namespace android { namespace internal {
 		TypeMappingInfo          *next;
 	};
 #endif // DEBUG || !ANDROID
-
-	struct md_mmap_info {
-		void   *area;
-		size_t  size;
-	};
 }}}
 
 using namespace xamarin::android;
@@ -256,16 +251,16 @@ EmbeddedAssemblies::add_type_mapping (TypeMappingInfo **info, const char *source
 }
 #endif // DEBUG || !ANDROID
 
-md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uLong offset, uLong size, const char* filename, const char* apk)
+EmbeddedAssemblies::md_mmap_info
+EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk)
 {
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
 	size_t pageSize       = static_cast<size_t>(monodroid_getpagesize());
-	uLong offsetFromPage  = static_cast<uLong>(offset % pageSize);
-	uLong offsetPage      = offset - offsetFromPage;
-	uLong offsetSize      = size + offsetFromPage;
+	uint32_t offsetFromPage  = static_cast<uint32_t>(offset % pageSize);
+	uint32_t offsetPage      = offset - offsetFromPage;
+	uint32_t offsetSize      = size + offsetFromPage;
 
 	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
@@ -283,63 +278,6 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uLong offset, uLong size, const ch
 			file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
 
 	return file_info;
-}
-
-void*
-EmbeddedAssemblies::md_mmap_open_file (UNUSED_ARG void *opaque, UNUSED_ARG const char *filename, int mode)
-{
-	if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER) == ZLIB_FILEFUNC_MODE_READ)
-		return utils.xcalloc (1, sizeof (int));
-	return nullptr;
-}
-
-uLong
-EmbeddedAssemblies::md_mmap_read_file (void *opaque, UNUSED_ARG void *stream, void *buf, uLong size)
-{
-	int fd = *reinterpret_cast<int*>(opaque);
-	return static_cast<uLong>(read (fd, buf, size));
-}
-
-long
-EmbeddedAssemblies::md_mmap_tell_file (void *opaque, UNUSED_ARG void *stream)
-{
-	int fd = *reinterpret_cast<int*>(opaque);
-	return lseek (fd, 0, SEEK_CUR);
-}
-
-long
-EmbeddedAssemblies::md_mmap_seek_file (void *opaque, UNUSED_ARG void *stream, uLong __offset, int origin)
-{
-	int fd = *reinterpret_cast<int*>(opaque);
-	off_t offset = static_cast<off_t>(__offset);
-
-	switch (origin) {
-	case ZLIB_FILEFUNC_SEEK_END:
-		lseek (fd, offset, SEEK_END);
-		break;
-	case ZLIB_FILEFUNC_SEEK_CUR:
-		lseek (fd, offset, SEEK_CUR);
-		break;
-	case ZLIB_FILEFUNC_SEEK_SET:
-		lseek (fd, offset, SEEK_SET);
-		break;
-	default:
-		return -1;
-	}
-	return 0;
-}
-
-int
-EmbeddedAssemblies::md_mmap_close_file (UNUSED_ARG void *opaque, void *stream)
-{
-	free (stream);
-	return 0;
-}
-
-int
-EmbeddedAssemblies::md_mmap_error_file (UNUSED_ARG void *opaque, UNUSED_ARG void *stream)
-{
-	return 0;
 }
 
 bool
@@ -363,135 +301,18 @@ EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name,
 	return true;
 }
 
-bool
+void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
 {
 	int fd;
-	unzFile file;
-
-	zlib_filefunc_def funcs = {
-		md_mmap_open_file,  // zopen_file,
-		md_mmap_read_file,  // zread_file,
-		nullptr,            // zwrite_file,
-		md_mmap_tell_file,  // ztell_file,
-		md_mmap_seek_file,  // zseek_file,
-		md_mmap_close_file, // zclose_file
-		md_mmap_error_file, // zerror_file
-		nullptr             // opaque
-	};
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
-		return false;
+		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
 
-	funcs.opaque = &fd;
-
-	if ((file = unzOpen2 (nullptr, &funcs)) != nullptr) {
-		do {
-			unz_file_info info;
-			uLong offset;
-			unsigned int *psize;
-			char cur_entry_name [256];
-			MonoBundledAssembly *cur;
-
-			cur_entry_name [0] = 0;
-			if (unzGetCurrentFileInfo (file, &info, cur_entry_name, sizeof (cur_entry_name)-1, nullptr, 0, nullptr, 0) != UNZ_OK ||
-					info.compression_method != 0 ||
-					unzOpenCurrentFile3 (file, nullptr, nullptr, 1, nullptr) != UNZ_OK ||
-					unzGetRawFileOffset (file, &offset) != UNZ_OK) {
-				continue;
-			}
-
-#if defined (DEBUG)
-			if (utils.ends_with (cur_entry_name, ".jm")) {
-				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				add_type_mapping (&java_to_managed_maps, apk, cur_entry_name, (const char*)map_info.area);
-				continue;
-			}
-			if (utils.ends_with (cur_entry_name, ".mj")) {
-				md_mmap_info map_info   = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, (const char*)map_info.area);
-				continue;
-			}
-#endif
-
-			const char *prefix = get_assemblies_prefix();
-			if (strncmp (prefix, cur_entry_name, strlen (prefix)) != 0)
-				continue;
-
-			// assemblies must be 4-byte aligned, or Bad Things happen
-			if ((offset & 0x3) != 0) {
-				log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", cur_entry_name,
-						offset);
-				log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (apk, '/') + 1);
-				exit (FATAL_EXIT_MISSING_ZIPALIGN);
-			}
-
-			bool entry_is_overridden = !should_register (strrchr (cur_entry_name, '/') + 1);
-
-			if ((utils.ends_with (cur_entry_name, ".mdb") || utils.ends_with (cur_entry_name, ".pdb")) &&
-					register_debug_symbols &&
-					!entry_is_overridden &&
-					bundled_assemblies != nullptr) {
-				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				if (register_debug_symbols_for_assembly (cur_entry_name, (bundled_assemblies) [bundled_assemblies_count - 1],
-						(const mono_byte*)map_info.area,
-				        static_cast<int>(info.uncompressed_size)))
-					continue;
-			}
-
-			if (utils.ends_with (cur_entry_name, ".config") && bundled_assemblies != nullptr) {
-				char *assembly_name = strdup (basename (cur_entry_name));
-				// Remove '.config' suffix
-				*strrchr (assembly_name, '.') = '\0';
-
-				md_mmap_info map_info = md_mmap_apk_file(fd, offset, info.uncompressed_size, cur_entry_name, apk);
-				mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
-				continue;
-			}
-
-			if (!(utils.ends_with (cur_entry_name, ".dll") || utils.ends_with (cur_entry_name, ".exe")))
-				continue;
-
-			if (entry_is_overridden)
-				continue;
-
-			size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
-			bundled_assemblies = reinterpret_cast<MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
-			cur = bundled_assemblies [bundled_assemblies_count] = reinterpret_cast<MonoBundledAssembly*> (utils.xcalloc (1, sizeof (MonoBundledAssembly)));
-			++bundled_assemblies_count;
-
-			md_mmap_info map_info = md_mmap_apk_file (fd, offset, info.uncompressed_size, cur_entry_name, apk);
-			cur->name = utils.monodroid_strdup_printf ("%s", strstr (cur_entry_name, prefix) + strlen (prefix));
-			cur->data = (const unsigned char*)map_info.area;
-
-			// MonoBundledAssembly::size is const?!
-			psize = (unsigned int*) &cur->size;
-			*psize = static_cast<unsigned int>(info.uncompressed_size);
-
-			if (utils.should_log (LOG_ASSEMBLY)) {
-				const char *p = (const char*) cur->data;
-
-				char header[9];
-				for (size_t i = 0; i < sizeof(header)-1; ++i)
-					header[i] = isprint (p [i]) ? p [i] : '.';
-				header [sizeof(header)-1] = '\0';
-
-				log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
-						(int) offset, cur->data, cur->data + *psize, (int) info.uncompressed_size, cur_entry_name, cur->name, header);
-			}
-
-			unzCloseCurrentFile (file);
-
-		} while (unzGoToNextFile (file) == UNZ_OK);
-		unzClose (file);
-	}
-
+	zip_load_entries (fd, utils.strdup_new (apk), should_register);
 	close(fd);
-
-	return true;
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
