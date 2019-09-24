@@ -1,23 +1,33 @@
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public class DeviceTest: BaseTest
 	{
+		[TearDown]
+		protected override void CleanupTest ()
+		{
+			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
+					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
+				string local = Path.Combine (outputDir, "screenshot.png");
+				string remote = "/data/local/tmp/screenshot.png";
+				RunAdbCommand ($"shell screencap {remote}");
+				RunAdbCommand ($"pull {remote} \"{local}\"");
+				RunAdbCommand ($"shell rm {remote}");
+				TestContext.AddTestAttachment (local);
+			}
+
+			base.CleanupTest ();
+		}
+
 		protected static void RunAdbInput (string command, params object [] args)
 		{
 			RunAdbCommand ($"shell {command} {string.Join (" ", args)}");
