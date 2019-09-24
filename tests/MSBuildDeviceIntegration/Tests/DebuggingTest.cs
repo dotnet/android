@@ -209,7 +209,7 @@ namespace ${ROOT_NAMESPACE} {
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
-				while (session.IsConnected && breakcountHitCount < 2) {
+				while (session.IsConnected && breakcountHitCount < 2 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
