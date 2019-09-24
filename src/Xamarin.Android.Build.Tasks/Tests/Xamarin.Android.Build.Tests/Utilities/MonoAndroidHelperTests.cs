@@ -98,6 +98,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CopyIfStringChanged_Readonly ()
 		{
+			if (File.Exists (temp)) {
+				File.SetAttributes (temp, FileAttributes.Normal);
+			}
 			File.WriteAllText (temp, "");
 			File.SetAttributes (temp, FileAttributes.ReadOnly);
 
@@ -109,6 +112,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CopyIfBytesChanged_Readonly ()
 		{
+			if (File.Exists (temp)) {
+				File.SetAttributes (temp, FileAttributes.Normal);
+			}
 			File.WriteAllText (temp, "");
 			File.SetAttributes (temp, FileAttributes.ReadOnly);
 
@@ -120,6 +126,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CopyIfStreamChanged_Readonly ()
 		{
+			if (File.Exists (temp)) {
+				File.SetAttributes (temp, FileAttributes.Normal);
+			}
 			File.WriteAllText (temp, "");
 			File.SetAttributes (temp, FileAttributes.ReadOnly);
 
