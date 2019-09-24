@@ -87,7 +87,9 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.pdb" />
     <_FrameworkFiles Include="@(MonoFacadeAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Identity)')" />
+    <_FrameworkFiles Include="@(MonoFacadeAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Filename).pdb')" />
     <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
+    <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Filename).pdb')" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.dll.config" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Posix.dll" />
