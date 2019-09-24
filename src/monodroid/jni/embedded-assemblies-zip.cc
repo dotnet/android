@@ -32,6 +32,16 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
 
+	if (bundled_assemblies == nullptr) {
+		bundled_assemblies_have_configs = false;
+		bundled_assemblies_have_debug_info = false;
+		bundled_assemblies_count = 0;
+		bundled_assemblies_size = cd_size;
+		bundled_assemblies = new XamarinBundledAssembly [bundled_assemblies_size] ();
+	} else if (bundled_assemblies_size - bundled_assemblies_count <= cd_entries) {
+		resize_bundled_assemblies (ADD_WITH_OVERFLOW_CHECK (size_t, bundled_assemblies_size, cd_entries << 1));
+	}
+
 	// C++17 allows template parameter type inference, but alas, Apple's antiquated compiler does
 	// not support this particular part of the spec...
 	simple_pointer_guard<uint8_t[]>  buf (new uint8_t[cd_size]);
@@ -45,7 +55,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 	char                 *entry_name;
 	char                 *file_name;
 
-	ssize_t nread = read (fd, buf.get (), cd_size);
+	ssize_t nread = ::read (fd, buf.get (), cd_size);
 	if (static_cast<size_t>(nread) != cd_size) {
 		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)", apk_name, std::strerror (errno), nread, errno);
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
@@ -56,9 +66,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		simple_pointer_guard<char> entry_name_guard = entry_name;
 		file_name = entry_name_guard.get ();
 
-#ifdef DEBUG
-		log_warn (LOG_ASSEMBLY, "%s entry: %s", apk_name, file_name);
-#endif
 		if (!result) {
 			log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", i, apk_name);
 			exit (FATAL_EXIT_NO_ASSEMBLIES);
@@ -69,20 +76,27 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 			exit (FATAL_EXIT_NO_ASSEMBLIES);
 		}
 #ifdef DEBUG
-		log_warn (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", local_header_offset, data_offset, file_size);
+		log_info (LOG_ASSEMBLY, "APK: entry name: %s; local header offset: %u; data offset: %u; file size: %u", file_name, local_header_offset, data_offset, file_size);
 #endif
 		if (compression_method != 0)
 			continue;
 
+		XamarinBundledAssembly &cur = bundled_assemblies [bundled_assemblies_count];
+
 #if defined (DEBUG)
+		cur.name = file_name;
+		cur.apk_name = apk_name;
+		cur.apk_fd = fd;
+		cur.data_offset = static_cast<off_t>(data_offset);
+		cur.data_size = file_size;
+		cur.mmap_file_data = nullptr;
+
 		if (utils.ends_with (file_name, ".jm")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&java_to_managed_maps, apk_name, file_name, (const char*)map_info.area);
+			add_type_mapping (&java_to_managed_maps, apk_name, file_name, get_mmap_file_data<const char*>(cur));
 			continue;
 		}
 		if (utils.ends_with (file_name, ".mj")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&managed_to_java_maps, apk_name, file_name, (const char*)map_info.area);
+			add_type_mapping (&managed_to_java_maps, apk_name, file_name, get_mmap_file_data<const char*>(cur));
 			continue;
 		}
 #endif
@@ -97,57 +111,42 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		}
 
 		bool entry_is_overridden = !should_register (strrchr (file_name, '/') + 1);
+		bool skip_entry = true;
 
-		if ((utils.ends_with (file_name, ".mdb") || utils.ends_with (file_name, ".pdb")) &&
-				register_debug_symbols &&
-				!entry_is_overridden &&
-				bundled_assemblies != nullptr) {
-			md_mmap_info map_info = md_mmap_apk_file(fd, data_offset, file_size, file_name, apk_name);
-			if (register_debug_symbols_for_assembly (file_name, (bundled_assemblies) [bundled_assemblies_count - 1], (const mono_byte*)map_info.area, static_cast<int>(file_size)))
+		if (utils.ends_with (file_name, ".dll") || utils.ends_with (file_name, ".exe")) {
+			if (entry_is_overridden) {
 				continue;
+			}
+
+			cur.type = FileType::Assembly;
+			cur.config_and_symbols_processed = false;
+			skip_entry = false;
+		} else if (utils.ends_with (file_name, ".pdb") || utils.ends_with (file_name, ".mdb")) {
+			if (!register_debug_symbols || entry_is_overridden) {
+				continue;
+			}
+
+			cur.type = FileType::DebugInfo;
+			bundled_assemblies_have_debug_info = true;
+			skip_entry = false;
+		} else if (utils.ends_with (file_name, ".config")) {
+			cur.type = FileType::Config;
+
+			bundled_assemblies_have_configs = true;
+			skip_entry = false;
 		}
 
-		if (utils.ends_with (file_name, ".config") && bundled_assemblies != nullptr) {
-			char *assembly_name = strdup (basename (file_name));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
+		if (skip_entry) {
 			continue;
 		}
 
-		if (!(utils.ends_with (file_name, ".dll") || utils.ends_with (file_name, ".exe")))
-			continue;
-
-		if (entry_is_overridden)
-			continue;
-
-		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
-		bundled_assemblies = reinterpret_cast<MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
-		MonoBundledAssembly *cur = bundled_assemblies [bundled_assemblies_count] = reinterpret_cast<MonoBundledAssembly*> (utils.xcalloc (1, sizeof (MonoBundledAssembly)));
-		++bundled_assemblies_count;
-
-		md_mmap_info map_info = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-		cur->name = utils.monodroid_strdup_printf ("%s", strstr (file_name, prefix) + prefix_len);
-		cur->data = (const unsigned char*)map_info.area;
-
-		// MonoBundledAssembly::size is const?!
-		unsigned int *psize = (unsigned int*) &cur->size;
-		*psize = static_cast<unsigned int>(file_size);
-
-		if (utils.should_log (LOG_ASSEMBLY)) {
-			const char *p = (const char*) cur->data;
-
-			char header[9];
-			for (size_t i = 0; i < sizeof(header)-1; ++i)
-				header[i] = isprint (p [i]) ? p [i] : '.';
-			header [sizeof(header)-1] = '\0';
-
-			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
-			                  (int) data_offset, cur->data, cur->data + *psize, (int) file_size, file_name, cur->name, header);
-		}
+		bundled_assemblies_count++;
+		cur.name = utils.strdup_new (strstr (file_name, prefix) + prefix_len);
+		cur.apk_name = apk_name;
+		cur.apk_fd = fd;
+		cur.data_offset = static_cast<off_t>(data_offset);
+		cur.data_size = file_size;
+		cur.mmap_file_data = nullptr;
 	}
 }
 
@@ -232,7 +231,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, size_t local_header_offset, 
 	uint8_t signature[4];
 
 	ssize_t nread = ::read (fd, local_header, static_cast<size_t>(ZIP_LOCAL_LEN));
-	if (nread < 0 || nread != ZIP_LOCAL_LEN) {
+	if (nread < 0 || nread != static_cast<ssize_t>(ZIP_LOCAL_LEN)) {
 		log_error (LOG_ASSEMBLY, "Failed to read local header at offset %u: %s (nread: %d; errno: %d)", local_header_offset, std::strerror (errno), nread, errno);
 		return false;
 	}
@@ -262,7 +261,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, size_t local_header_offset, 
 		return false;
 	}
 
-	data_start_offset = static_cast<uint32_t>(local_header_offset) + file_name_length + extra_field_length + ZIP_LOCAL_LEN;
+	data_start_offset = static_cast<uint32_t>(local_header_offset) + file_name_length + extra_field_length + static_cast<uint32_t>(ZIP_LOCAL_LEN);
 
 	return true;
 }

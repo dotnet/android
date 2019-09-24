@@ -41,11 +41,18 @@ namespace xamarin { namespace android { namespace internal {
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
+// Mono almost always (with the exception of the very first assembly load for the corlib which
+// passes the assembly name as `mscorlib.dll` for historical reasons) passes to the assembly preload
+// hooks just the base name of the assembly, without any extension. Since the majority of assemblies
+// we see in the APKs have the `.dll` extension, putting it first ensures that the loop in
+// `open_from_bundles` will match the assembly in APK in the first iteration, thus saving some
+// minute amout of time.
 const char *EmbeddedAssemblies::suffixes[] = {
-	"",
 	".dll",
 	".exe",
+	"",
 };
+
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
@@ -54,17 +61,143 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 	assemblies_prefix_override = prefix != nullptr ? utils.strdup_new (prefix) : nullptr;
 }
 
+void
+EmbeddedAssemblies::resize_bundled_assemblies (size_t new_size)
+{
+	if (new_size <= bundled_assemblies_count) {
+		return; // No need to raise a fuss, just ignore
+	}
+
+	auto new_array = new XamarinBundledAssembly[new_size] ();
+
+	// We can safely do this because XamarinBundledAssembly is POD (Plain Old Data) and we don't
+	// need to worry about copy constructors and destructors
+	if (bundled_assemblies_count > 0) {
+		memcpy (new_array, bundled_assemblies, bundled_assemblies_count * sizeof(XamarinBundledAssembly));
+	}
+
+	delete[] bundled_assemblies;
+	bundled_assemblies = new_array;
+	bundled_assemblies_size = new_size;
+}
+
+void
+EmbeddedAssemblies::bundled_assemblies_cleanup ()
+{
+	if (bundled_assemblies_size - bundled_assemblies_count <= BUNDLED_ASSEMBLIES_EXCESS_ITEMS_LIMIT) {
+		return;
+	}
+	resize_bundled_assemblies (bundled_assemblies_count);
+}
+
+inline void
+EmbeddedAssemblies::load_assembly_debug_info_from_bundles (const char *aname, const char *assembly_file_name)
+{
+	if (!register_debug_symbols || !bundled_assemblies_have_debug_info || aname == nullptr) {
+		return;
+	}
+
+	size_t aname_len = strlen (aname);
+	for (size_t i = 0; i < bundled_assemblies_count; i++) {
+		XamarinBundledAssembly &entry = bundled_assemblies[i];
+		if (entry.type != FileType::DebugInfo)
+			continue;
+
+		// We know the entry has one of the debug info extensions, so we can take this shortcut to
+		// avoid having to allocate memory and use string comparison in order to find a match for
+		// the `aname` assembly
+		if (strncmp (entry.name, aname, aname_len) != 0) {
+			continue;
+		}
+
+		size_t entry_name_len = strlen (entry.name);
+		if (entry_name_len < aname_len) {
+			continue;
+		}
+
+		size_t ext_len = entry_name_len - aname_len;
+		if (ext_len != 4 && ext_len != 8) { // 'Assembly.pdb' || 'Assembly.{exe,dll}.mdb'
+			continue;
+		}
+
+		log_info (LOG_ASSEMBLY, "Registering symbol file %s for %s", entry.name, assembly_file_name);
+		mono_register_symfile_for_assembly (assembly_file_name, get_mmap_file_data<const mono_byte*> (entry), static_cast<int> (entry.data_size));
+		break;
+	}
+}
+
+inline void
+EmbeddedAssemblies::load_assembly_config_from_bundles (const char *aname)
+{
+	static constexpr size_t config_ext_len = sizeof(config_ext) - 1;
+
+	if (!bundled_assemblies_have_configs || aname == nullptr) {
+	        return;
+	}
+
+	size_t aname_len = strlen (aname);
+	for (size_t i = 0; i < bundled_assemblies_count; i++) {
+		XamarinBundledAssembly &entry = bundled_assemblies[i];
+		if (entry.type != FileType::Config)
+			continue;
+
+		// We know the entry has the `.{dll,exe}.config` extension, so we can take this shortcut to
+		// avoid having to allocate memory and use string comparison in order to find a match for
+		// the `aname` assembly
+		if (strncmp (entry.name, aname, aname_len) != 0) {
+			continue;
+		}
+
+		size_t entry_name_len = strlen (entry.name);
+		if (entry_name_len < aname_len || entry_name_len - aname_len != config_ext_len) {
+			continue;
+		}
+
+		log_info (LOG_ASSEMBLY, "Registering config file %s for %s", entry.name, aname);
+		mono_register_config_for_assembly (aname, get_mmap_file_data<const char*> (entry));
+		break;
+	}
+}
+
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 {
+	if (bundled_assemblies_count == 0) {
+		return nullptr;
+	}
+
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
+
+	bool free_asmname = false;
+	size_t alloc_size;
+	if (XA_UNLIKELY (!first_assembly_load_hook_called)) {
+		static constexpr char mscorlib[] = "mscorlib.dll";
+		static constexpr size_t basename_len = 8;
+
+		// The very first thing Mono does is load the corlib using the `mscorlib.dll` name while all
+		// the other assemblies (including new calls to map `mscorlib`) are loaded (at least in the
+		// vast majority of cases) without the .dll or .exe extensions. Adjust `asmname` if this is
+		// the very first load.
+		if (strcmp (asmname, mscorlib) == 0) {
+			// Mustn't modify `asmname` as the value returned by `mono_assembly_name_get_name` comes
+			// directly from the opaque `MonoAssemblyName` structure and may be used elsewhere.
+			alloc_size = basename_len + 1;
+			auto new_name = new char[alloc_size]();
+			memcpy (new_name, asmname, basename_len);
+			asmname = new_name;
+			free_asmname = true;
+
+			log_info (LOG_ASSEMBLY, "open_from_bundles: first assembly hook invocation. Assembly name adjusted from '%s' to '%s'", mscorlib, asmname);
+		}
+		first_assembly_load_hook_called = true;
+	}
 
 	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
 	name_len += sizeof (".exe");
 	name_len += strlen (asmname);
 
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+	alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
 	char *name = new char [alloc_size];
 	name [0] = '\0';
 
@@ -77,30 +210,46 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 
 	MonoAssembly *a = nullptr;
 	for (size_t si = 0; si < sizeof (suffixes)/sizeof (suffixes [0]) && a == nullptr; ++si) {
-		MonoBundledAssembly **p;
-
 		*ename = '\0';
 		strcat (name, suffixes [si]);
 
 		log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
 
-		for (p = bundled_assemblies; p != nullptr && *p; ++p) {
-			MonoImage *image = nullptr;
-			MonoImageOpenStatus status;
-			const MonoBundledAssembly *e = *p;
+		for (size_t i = 0; i < bundled_assemblies_count; i++) {
+			XamarinBundledAssembly &assembly = bundled_assemblies[i];
 
-			if (strcmp (e->name, name) == 0 &&
-					(image  = mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
-					(a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
-				mono_config_for_assembly (image);
+			if (assembly.type != FileType::Assembly || strcmp (assembly.name, name) != 0) {
+				continue;
+			}
+
+			if (!assembly.config_and_symbols_processed) {
+				load_assembly_debug_info_from_bundles (asmname, assembly.name);
+				load_assembly_config_from_bundles (assembly.name);
+				assembly.config_and_symbols_processed = true;
+			}
+
+			MonoImage *image = mono_image_open_from_data_with_name (get_mmap_file_data<char*>(assembly), static_cast<uint32_t>(assembly.data_size), 0, nullptr, ref_only, name);
+			if (image == nullptr) {
 				break;
 			}
+
+			MonoImageOpenStatus status;
+			a = mono_assembly_load_from_full (image, name, &status, ref_only);
+			if (a == nullptr) {
+				mono_image_close (image);
+				break;
+			}
+
+			mono_config_for_assembly (image);
+			break;
 		}
 	}
 	delete[] name;
+	if (free_asmname)
+		delete[] asmname;
 
-	if (a && utils.should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
+	if (XA_UNLIKELY (a != nullptr && utils.should_log (LOG_ASSEMBLY))) {
+		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %s (%p)\n", asmname, a);
 	}
 	return a;
 }
@@ -251,54 +400,36 @@ EmbeddedAssemblies::add_type_mapping (TypeMappingInfo **info, const char *source
 }
 #endif // DEBUG || !ANDROID
 
-EmbeddedAssemblies::md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk)
+void
+EmbeddedAssemblies::md_mmap_apk_file (XamarinBundledAssembly &xba)
 {
-	md_mmap_info file_info;
-	md_mmap_info mmap_info;
+	if (xba.mmap_file_data != nullptr)
+		return;
 
-	size_t pageSize       = static_cast<size_t>(monodroid_getpagesize());
-	uint32_t offsetFromPage  = static_cast<uint32_t>(offset % pageSize);
-	uint32_t offsetPage      = offset - offsetFromPage;
-	uint32_t offsetSize      = size + offsetFromPage;
+	auto pageSize       = static_cast<size_t>(monodroid_getpagesize());
+	auto offsetFromPage = static_cast<off_t>(static_cast<size_t>(xba.data_offset) % pageSize);
+	off_t offsetPage    = xba.data_offset - offsetFromPage;
+	size_t offsetSize   = xba.data_size + static_cast<size_t>(offsetFromPage);
 
-	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
+	auto area = reinterpret_cast<uint8_t*>(mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, xba.apk_fd, static_cast<off_t>(offsetPage)));
 
-	if (mmap_info.area == MAP_FAILED) {
-		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", apk, filename, strerror (errno));
+	if (area == MAP_FAILED) {
+		log_fatal (LOG_DEFAULT, "Could not `mmap` apk `%s` entry `%s`: %s", xba.apk_name, xba.name, strerror (errno));
 		exit (FATAL_EXIT_CANNOT_FIND_APK);
 	}
 
-	mmap_info.size  = offsetSize;
-	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
-	file_info.size  = size;
+	xba.mmap_size  = offsetSize;
+	xba.mmap_file_data  = area + offsetFromPage;
 
-	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s",
-			mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
-			file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
-
-	return file_info;
-}
-
-bool
-EmbeddedAssemblies::register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size)
-{
-	const char *entry_basename  = strrchr (entry_name, '/') + 1;
-	// System.dll, System.dll.mdb case
-	if (strncmp (assembly->name, entry_basename, strlen (assembly->name)) != 0) {
-		// That failed; try for System.dll, System.pdb case
-		const char *eb_ext  = strrchr (entry_basename, '.');
-		if (eb_ext == nullptr)
-			return false;
-		off_t basename_len    = static_cast<off_t>(eb_ext - entry_basename);
-		assert (basename_len > 0 && "basename must have a length!");
-		if (strncmp (assembly->name, entry_basename, static_cast<size_t>(basename_len)) != 0)
-			return false;
-	}
-
-	mono_register_symfile_for_assembly (assembly->name, debug_contents, debug_size);
-
-	return true;
+	log_info (LOG_ASSEMBLY, "[%s] mmap_start: %08p; mmap_end: %08p; mmap_len: % 12u; file_start: %08p; file_end: %08p; file_len: % 12u; apk: %s",
+	          xba.name,
+	          area,
+	          area + xba.mmap_size,
+	          static_cast<uint32_t>(xba.mmap_size),
+	          xba.mmap_file_data,
+	          xba.mmap_file_data + xba.data_size,
+	          static_cast<uint32_t> (xba.data_size),
+	          xba.apk_name);
 }
 
 void
@@ -312,7 +443,6 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	}
 
 	zip_load_entries (fd, utils.strdup_new (apk), should_register);
-	close(fd);
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -371,12 +501,6 @@ EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_regist
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
 	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, bundled_assemblies_count - prev);
-
-	if (bundled_assemblies) {
-		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(void*), bundled_assemblies_count + 1);
-		bundled_assemblies  = reinterpret_cast <MonoBundledAssembly**> (utils.xrealloc (bundled_assemblies, alloc_size));
-		bundled_assemblies [bundled_assemblies_count] = nullptr;
-	}
 
 	return bundled_assemblies_count;
 }

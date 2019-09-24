@@ -518,6 +518,7 @@ gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool
 			*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
 	}
+	embeddedAssemblies.bundled_assemblies_cleanup ();
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)

@@ -13,19 +13,40 @@ namespace xamarin::android::internal {
 #endif
 	class EmbeddedAssemblies
 	{
-		struct md_mmap_info {
-			void   *area;
-			size_t  size;
+		enum class FileType : uint8_t
+		{
+			DebugInfo,
+			Config,
+			Assembly,
+		};
+
+		struct XamarinBundledAssembly
+		{
+			const char *name;
+			const char *apk_name;
+			int         apk_fd;
+			bool        config_and_symbols_processed;
+			FileType    type;
+			off_t       data_offset;
+			size_t      data_size;
+			size_t      mmap_size;
+			uint8_t    *mmap_file_data;
 		};
 
 	private:
+		// Amount of RAM that is allowed to be left unused ("wasted") in the `bundled_assemblies`
+		// array after all the APK assemblies are loaded. This is to avoid unnecessary `realloc`
+		// calls in order to save time.
+		static constexpr size_t BUNDLED_ASSEMBLIES_EXCESS_ITEMS_LIMIT = 256 * sizeof(XamarinBundledAssembly);
+
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
 		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
 		static constexpr char  ZIP_EOCD_MAGIC[]    = "PK\5\6";
-		static constexpr off_t ZIP_EOCD_LEN        = 22;
-		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
-		static constexpr off_t ZIP_LOCAL_LEN       = 30;
+		static constexpr size_t ZIP_EOCD_LEN        = 22;
+		static constexpr size_t ZIP_CENTRAL_LEN     = 46;
+		static constexpr size_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char assemblies_prefix[] = "assemblies/";
+		static constexpr char config_ext[]         = ".config";
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
 #endif
@@ -62,18 +83,19 @@ namespace xamarin::android::internal {
 		}
 
 		void set_assemblies_prefix (const char *prefix);
+		void bundled_assemblies_cleanup ();
 
 	private:
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
+		void load_assembly_config_from_bundles (const char *aname);
+		void load_assembly_debug_info_from_bundles (const char *aname, const char *assembly_file_name);
 		void extract_int (const char **header, const char *source_apk, const char *source_entry, const char *key_name, int *value);
 #if defined (DEBUG) || !defined (ANDROID)
 		bool add_type_mapping (TypeMappingInfo **info, const char *source_apk, const char *source_entry, const char *addr);
 #endif // DEBUG || !ANDROID
-		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
-
-		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk);
+		void md_mmap_apk_file (XamarinBundledAssembly &assembly);
 
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
@@ -96,10 +118,24 @@ namespace xamarin::android::internal {
 			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
 		}
 
+		template<typename T>
+		T get_mmap_file_data (XamarinBundledAssembly& xba)
+		{
+			if (xba.mmap_file_data == nullptr)
+				md_mmap_apk_file (xba);
+			return reinterpret_cast<T>(xba.mmap_file_data);
+		}
+
+		void resize_bundled_assemblies (size_t new_size);
+
 	private:
-		bool                   register_debug_symbols;
-		MonoBundledAssembly  **bundled_assemblies;
-		size_t                 bundled_assemblies_count;
+		bool                    register_debug_symbols;
+		XamarinBundledAssembly *bundled_assemblies = nullptr;
+		size_t                  bundled_assemblies_count;
+		size_t                  bundled_assemblies_size;
+		bool                    bundled_assemblies_have_configs;
+		bool                    bundled_assemblies_have_debug_info;
+		bool                    first_assembly_load_hook_called = false;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;

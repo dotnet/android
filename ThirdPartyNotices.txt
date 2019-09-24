@@ -12,7 +12,7 @@ bring it to our attention. Post an issue or email us:
 The attached notices are provided for information only.
 
 1. bazelbuild/bazel (https://github.com/bazelbuild/bazel/)
-2. force-net/crc32.net (https://github.com/xamarin/proguard/)
+2. force-net/crc32.net (https://github.com/force-net/Crc32.NET)
 3. google/desugar (https://android.googlesource.com/platform/external/desugar/+/master/)
 4. nunit/nunitlite (https://github.com/nunit/nunitlite/)
 
