@@ -27,6 +27,7 @@
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.binlog" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.log" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\screenshot.png" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestOutput-*.txt" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\Timing_*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)*.csv" />
