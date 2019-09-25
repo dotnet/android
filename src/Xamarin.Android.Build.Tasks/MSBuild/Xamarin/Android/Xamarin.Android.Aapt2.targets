@@ -175,6 +175,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
   />
   <ItemGroup>
     <FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" '$(_AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)R.txt') " />
@@ -239,6 +240,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
   />
 </Target>
 </Project>
