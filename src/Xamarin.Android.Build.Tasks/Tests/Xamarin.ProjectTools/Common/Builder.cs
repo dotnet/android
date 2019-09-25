@@ -72,6 +72,9 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// The top directory of a local build tree if it can be found, e.g. xamarin-android/bin/Debug.
+		/// </summary>
 		string BuildOutputDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
@@ -92,6 +95,12 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// The MonoAndroidTools directory within a local build tree, e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild/Xamarin/Android.<br/>
+		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Xamarin\Android <br/>
+		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android
+		/// </summary>
 		public string AndroidMSBuildDirectory {
 			get {
 				var msbuildDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
@@ -102,6 +111,13 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// The MonoAndroid framework (and other reference assemblies) directory within a local build tree. Contains v1.0, v9.0, etc,
+		/// e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild-frameworks/MonoAndroid.<br/>
+		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid <br/>
+		///	macOS:    Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
+		/// </summary>
 		public string FrameworkLibDirectory {
 			get {
 				var frameworkLibDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
