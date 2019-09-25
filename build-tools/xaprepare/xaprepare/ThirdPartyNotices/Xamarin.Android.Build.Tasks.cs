@@ -44,6 +44,7 @@ namespace Xamarin.Android.Prepare
 			new XamarinAndroidBuildTasks_IronyProject_Irony_TPN (),
 			new XamarinAndroidBuildTasks_JamesNK_NewtonsoftJson_TPN (),
 			new XamarinAndroidBuildTasks_NuGet_NuGetClient_TPN (),
+			new XamarinAndroidBuildTasks_android_platform_ndk_TPN (),
 		};
 	}
 
@@ -175,5 +176,15 @@ namespace Xamarin.Android.Prepare
         CONDITIONS OF ANY KIND, either express or implied. See the License for the
         specific language governing permissions and limitations under the License.
 ";
+	}
+
+	class XamarinAndroidBuildTasks_android_platform_ndk_TPN : ThirdPartyNotice {
+
+		static readonly Uri    url         = new Uri ("https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=tree;f=gas");
+
+		public override string LicenseText => null;
+		public override string LicenseFile => CommonLicenses.GPLv3Path;
+		public override string Name        => "android/platform/ndk";
+		public override Uri    SourceUrl   => url;
 	}
 }

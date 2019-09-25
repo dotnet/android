@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup Condition=" '$(TpnIncludeExternalDependencies)' == 'True' ">
-    <ThirdPartyNotice Include="google/aapt2">
-      <LicenseFile>$(MSBuildThisFileDirectory)..\build-tools\license-data\Apache-2.0.txt</LicenseFile>
-      <SourceUrl>https://mvnrepository.com/artifact/com.android.tools.build/aapt2</SourceUrl>
-    </ThirdPartyNotice>
-  </ItemGroup>
-</Project>

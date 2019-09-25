@@ -44,7 +44,7 @@ namespace Xamarin.Android.Prepare
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_boringssl_TPN : ThirdPartyNotice
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Prepare
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}
 
 	class mono_mono_ikdasm_TPN : ThirdPartyNotice
@@ -90,7 +90,7 @@ Jeroen Frijters
 jeroen@frijters.net
 ";
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_ikvm_fork_TPN : ThirdPartyNotice
@@ -103,7 +103,7 @@ jeroen@frijters.net
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_linker_TPN : ThirdPartyNotice
@@ -127,7 +127,7 @@ jeroen@frijters.net
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_NUnitLite_TPN : ThirdPartyNotice
@@ -140,7 +140,7 @@ jeroen@frijters.net
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}
 
 	class mono_mono_rx_net_TPN : ThirdPartyNotice
@@ -153,7 +153,7 @@ jeroen@frijters.net
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_Ix_net_TPN : ThirdPartyNotice
@@ -166,7 +166,7 @@ jeroen@frijters.net
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => null;
 
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_llvm_Group : ThirdPartyNoticeGroup

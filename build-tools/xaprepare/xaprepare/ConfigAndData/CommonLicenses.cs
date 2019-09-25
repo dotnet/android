@@ -9,6 +9,7 @@ namespace Xamarin.Android.Prepare
 
 		public static readonly string Apache20Path = Path.Combine (LicenseDataDir, "Apache-2.0.txt");
 		public static readonly string GPLv2Path    = Path.Combine (LicenseDataDir, "GPLv2.txt");
+		public static readonly string GPLv3Path    = Path.Combine (LicenseDataDir, "GPLv3.txt");
 		public static readonly string MonoMITPath  = Path.Combine (LicenseDataDir, "Mono-MIT.txt");
 	}
 }

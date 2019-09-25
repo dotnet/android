@@ -74,7 +74,7 @@ namespace Xamarin.Android.Prepare
         WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ";
 
-		public override bool   Include(bool includeExternalDeps, bool includeBuildDeps) => includeBuildDeps;
+		public override bool   Include(bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	// from various packages.config files in Java.Interop
