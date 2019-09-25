@@ -42,7 +42,7 @@
       <HintPath>..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
     </Reference>
     <Reference Include="libZipSharp">
-      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.2\lib\net45\libZipSharp.dll</HintPath>
+      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.5\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -83,5 +83,5 @@
   <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <Import Project="..\..\external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets')" />
 </Project>
