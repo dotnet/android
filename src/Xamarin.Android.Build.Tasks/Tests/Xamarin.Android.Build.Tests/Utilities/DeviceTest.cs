@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -12,16 +13,25 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class DeviceTest: BaseTest
 	{
+		[OneTimeSetUp]
+		public void DeviceSetup ()
+		{
+			SetAdbLogcatBufferSize (64);
+			RunAdbCommand ("logcat -c");
+		}
+
 		[TearDown]
 		protected override void CleanupTest ()
 		{
 			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
 					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
 				string local = Path.Combine (outputDir, "screenshot.png");
+				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";
 				RunAdbCommand ($"shell screencap {remote}");
 				RunAdbCommand ($"pull {remote} \"{local}\"");
 				RunAdbCommand ($"shell rm {remote}");
+				RunAdbCommand ($"logcat > {deviceLog}", timeout: 5);
 				TestContext.AddTestAttachment (local);
 			}
 
@@ -31,6 +41,11 @@ namespace Xamarin.Android.Build.Tests
 		protected static void RunAdbInput (string command, params object [] args)
 		{
 			RunAdbCommand ($"shell {command} {string.Join (" ", args)}");
+		}
+
+		protected static string SetAdbLogcatBufferSize (int sizeInMeg)
+		{
+			return RunAdbCommand ($"logcat -G {sizeInMeg}M");
 		}
 
 		protected static string ClearAdbLogcat ()
@@ -74,6 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			bool didActionSucceed = false;
+			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
 				using (var proc = Process.Start (info)) {
 					proc.OutputDataReceived += (sender, e) => {
@@ -81,15 +97,21 @@ namespace Xamarin.Android.Build.Tests
 							sw.WriteLine (e.Data);
 							if (action (e.Data)) {
 								didActionSucceed = true;
-								if (!proc.HasExited) {
-									proc.Kill ();
-								}
 							}
+						} else {
+							stdout_done.Set ();
 						}
 					};
-
 					proc.BeginOutputReadLine ();
-					proc.WaitForExit (timeout * 1000);
+					TimeSpan time = TimeSpan.FromSeconds (timeout);
+					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
+						proc.WaitForExit (100);
+						time -= TimeSpan.FromMilliseconds (100);
+					}
+					proc.Kill ();
+					proc.WaitForExit ();
+					stdout_done.Wait ();
+					sw.Flush ();
 					return didActionSucceed;
 				}
 			}
@@ -98,7 +120,7 @@ namespace Xamarin.Android.Build.Tests
 		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 60)
 		{
 			bool result = MonitorAdbLogcat ((line) => {
-				return line.IndexOf ("monodroid-debug: Trying to initialize the debugger with options", StringComparison.OrdinalIgnoreCase) > 0;
+				return line.IndexOf ("Trying to initialize the debugger with options:", StringComparison.OrdinalIgnoreCase) > 0;
 			}, logcatFilePath, timeout);
 			return result;
 		}
