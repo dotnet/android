@@ -129,6 +129,9 @@ namespace Xamarin.Android.Prepare
 			foreach (BclFile bcf in files) {
 				sw.WriteLine ($"    <{itemName} Include=\"{bcf.Name}\" />");
 			}
+			foreach (BclFile bcf in files.Where (b => !b.ExcludeDebugSymbols)) {
+				sw.WriteLine ($"    <{itemName}Symbol Include=\"{Path.GetFileName (bcf.DebugSymbolsPath)}\" />");
+			}
 			EndGroup (sw);
 		}
 

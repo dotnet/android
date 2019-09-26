@@ -125,7 +125,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			string destFile = Path.Combine (destDir, bf.Name);
-			if (bf.ExcludeDebugSymbols || String.IsNullOrEmpty (bf.DebugSymbolsPath))
+			if (bf.ExcludeDebugSymbols)
 				return (destFile, null);
 
 			return (destFile, Path.Combine (destDir, Path.GetFileName (bf.DebugSymbolsPath)));

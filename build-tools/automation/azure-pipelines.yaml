@@ -149,19 +149,11 @@ stages:
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
 
-    - task: MSBuild@1
-      displayName: create symbol artifacts
-      inputs:
-        solution: build-tools/create-vsix/create-vsix.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateSymbolArchive /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/package-symbols.binlog
-
     - script: |
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-        cp bin/Build$(XA.Build.Configuration)/symbols/* bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-      displayName: copy artifacts
+      displayName: copy unsigned installers
 
     - script: |
         VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
