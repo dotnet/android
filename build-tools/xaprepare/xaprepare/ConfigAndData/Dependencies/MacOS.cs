@@ -6,7 +6,6 @@ namespace Xamarin.Android.Prepare
 	partial class MacOS
 	{
 		static readonly List<Program> programs = new List<Program> {
-			new HomebrewProgram ("ant"),
 			new HomebrewProgram ("autoconf"),
 			new HomebrewProgram ("automake"),
 			new HomebrewProgram ("cmake"),

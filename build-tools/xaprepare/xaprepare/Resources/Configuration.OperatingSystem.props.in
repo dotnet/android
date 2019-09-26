@@ -20,6 +20,5 @@
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
         <JavaPath Condition=" '$(JavaPath)' == '' ">@java@</JavaPath>
         <HostHomebrewPrefix Condition=" '$(HostHomebrewPrefix)' == '' ">@HOST_HOMEBREW_PREFIX@</HostHomebrewPrefix>
-        <AntDirectory Condition=" '$(AntDirectory)' == '' ">@ANT_DIRECTORY@</AntDirectory>
     </PropertyGroup>
 </Project>

@@ -68,8 +68,6 @@ and re-enable it after building with the following command:
 		{
 			if (!base.InitOS ())
 				return false;
-
-			AntDirectory = "/usr";
 			return true;
 		}
 
