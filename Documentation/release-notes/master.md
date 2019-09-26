@@ -17,6 +17,16 @@ Description of new feature
 
   * Description of known issue in the new feature, if applicable
 
+### Build and deployment performance
+
+  * When **Use Fast Deployment** is enabled, cache some of the information
+    that is retrieved from the device during the first deployment so that it can
+    be reused on subsequent deployments of the same app until Visual Studio is
+    restarted.  This reduced the time for the `InstallPackageAssemblies` task
+    during the second deployment of Xamarin.Forms app where one line of a XAML
+    file was changed from about 500 milliseconds to about 375 milliseconds in a
+    test environment.
+
 ### Static/Default Interface Methods (Preview)
 
 With the new support for default interface methods in C# 8.0 we can now produce bindings that better match Java libraries 
