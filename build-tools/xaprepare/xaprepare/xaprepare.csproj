@@ -263,7 +263,6 @@
     <Compile Include="OperatingSystems\Windows.cs" />
     <Compile Include="Scenarios\Scenario_Standard.Windows.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Windows.cs" />
-    <Compile Include="Steps\Step_InstallAnt.Windows.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Windows.cs" />
     <Compile Include="Steps\Step_PrepareBundle.Windows.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Windows.cs" />

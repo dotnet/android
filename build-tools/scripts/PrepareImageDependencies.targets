@@ -10,7 +10,6 @@
     <ItemGroup>
       <_Dir Include="sdk" />
       <_Dir Include="ndk" />
-      <_Dir Include="ant" />
     </ItemGroup>
     <ItemGroup>
       <_Package
@@ -20,10 +19,6 @@
       <_Package
           Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
           Include="@(AndroidNdkItem->'$(AndroidUri)/%(RelUrl)%(Identity).zip ndk/%(DestDir)')"
-      />
-      <_Package
-          Condition=" '%(HostOS)' == '$(HostOS)' Or '%(HostOS)' == '' "
-          Include="@(AntItem->'$(AntUri)/%(RelUrl)%(Identity).zip ant/%(DestDir)')"
       />
     </ItemGroup>
     <ItemGroup>

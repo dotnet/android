@@ -4,7 +4,6 @@
 def XADir = "xamarin-android"
 def buildTarget = 'jenkins'
 def chRootPackages = '''
-    ant
     autoconf
     automake
     build-essential

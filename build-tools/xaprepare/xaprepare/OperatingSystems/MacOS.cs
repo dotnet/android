@@ -92,7 +92,6 @@ After all the issues are fixed, please re-run the bootstrapper.
 			if (String.IsNullOrEmpty (mxePath))
 				Context.Instance.Properties.Set (KnownProperties.AndroidMxeFullPath, HomebrewPrefix);
 
-			AntDirectory = HomebrewPrefix;
 			return true;
 		}
 

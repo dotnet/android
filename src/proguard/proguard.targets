@@ -1,5 +1,4 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll"  TaskName="Xamarin.Android.Tools.BootstrapTasks.Ant" />
   <PropertyGroup>
     <_OutputJar>$(OutputPath)lib\proguard.jar</_OutputJar>
     <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
@@ -12,11 +11,10 @@
   <Target Name="_BuildProGuard"
       Inputs="$(MSBuildThisFile);$(ProGuardSourceFullPath)\buildscripts\build.xml"
       Outputs="@(_Outputs)">
-    <Ant
-        Arguments="$(AntProguardBuildAdditionalArguments) -f buildscripts\build.xml proguard"
-        ToolPath="$(AntToolPath)"
-        JavaSdkDirectory="$(JavaSdkDirectory)"
-        WorkingDirectory="$(ProGuardSourceFullPath)"
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; proguardJar $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy
@@ -39,11 +37,10 @@
   </Target>
   <Target Name="Clean">
     <Delete Files="@(_Outputs)" />
-    <Ant
-        Arguments="-f buildscripts\build.xml clean"
-        ToolPath="$(AntToolPath)"
-        JavaSdkDirectory="$(JavaSdkDirectory)"
-        WorkingDirectory="$(ProGuardSourceFullPath)"
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
     />
   </Target>
   <Target Name="CoreCompile" />
