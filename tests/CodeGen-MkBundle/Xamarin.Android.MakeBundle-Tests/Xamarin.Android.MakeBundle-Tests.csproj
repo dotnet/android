@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
-    <RelativeRootPath>..\..\..\..\..\..</RelativeRootPath>
+    <RelativeRootPath>..\..\..\..\..\..\..</RelativeRootPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
