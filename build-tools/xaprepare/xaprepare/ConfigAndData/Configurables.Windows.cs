@@ -15,11 +15,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly Uri Corretto64 = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-windows-x64-jdk.zip");
 			public static readonly Uri Corretto32 = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-windows-x86-jdk.zip");
 
-			/// <summary>
-			///   Base URL for the Ant tool download. Used in <see cref ="AndroidToolchain"/>
-			/// </summary>
-			public static readonly Uri AntBaseUri = new Uri ("https://archive.apache.org/dist/ant/binaries/");
-
 			static Uri GetWindowsCorrettoUrl ()
 			{
 				if (Context.Instance.OS == null)
@@ -49,12 +44,6 @@ namespace Xamarin.Android.Prepare
 			public const string MonoCrossRuntimeInstallPath                       = "Windows";
 			public static readonly string MonoRuntimeHostMingwNativeLibraryPrefix = Path.Combine ("..", "bin");
 			public const string NdkToolchainOSTag                                 = "windows";
-			public const string AntArchiveName                                    = "apache-ant-1.10.6-bin.zip";
-			public static string AntArchivePath                                   => GetCachedPath (ref antArchivePath, () => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), AntArchiveName));
-			public static string AntInstallDir                                    => GetCachedPath (ref antInstallDir, ()  => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "ant"));
 		}
-
-		static string antArchivePath;
-		static string antInstallDir;
 	}
 }

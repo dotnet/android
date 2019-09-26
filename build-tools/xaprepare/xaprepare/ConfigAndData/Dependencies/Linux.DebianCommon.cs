@@ -5,7 +5,6 @@ namespace Xamarin.Android.Prepare
 	abstract class LinuxDebianCommon : Linux
 	{
 		static readonly List<DebianLinuxProgram> commonPackages = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("ant"),
 			new DebianLinuxProgram ("autoconf"),
 			new DebianLinuxProgram ("autotools-dev"),
 			new DebianLinuxProgram ("automake"),
