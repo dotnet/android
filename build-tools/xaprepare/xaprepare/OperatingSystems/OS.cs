@@ -42,11 +42,6 @@ namespace Xamarin.Android.Prepare
 		public Dictionary<string, string> EnvironmentVariables { get; }
 
 		/// <summary>
-		///   Path to the directory under which <c>bin/ant</c> is installed.
-		/// </summary>
-		public string AntDirectory   { get; set; }
-
-		/// <summary>
 		///   Path to <c>javac</c> (full or relative)
 		/// </summary>
 		public string JavaCPath      { get; set; }
