@@ -133,6 +133,7 @@
     <Compile Include="Scenarios\Scenario_PrepareImageDependencies.cs" />
     <Compile Include="Scenarios\Scenario_Required.cs" />
     <Compile Include="Scenarios\Scenario_Standard.cs" />
+    <Compile Include="Scenarios\Scenario_ThirdPartyNotices.cs" />
     <Compile Include="Steps\Step_Android_SDK_NDK.cs" />
     <Compile Include="Steps\Step_BuildMingwDependencies.cs" />
     <Compile Include="Steps\Step_DownloadMonoArchive.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="ThirdPartyNotices\Xamarin.Android.NunitLite.cs" />
     <Compile Include="ThirdPartyNotices\Xamarin.Android.Tools.Aidl.cs" />
     <Compile Include="ThirdPartyNotices\Xamarin.Android.Tools.JavadocImporter.cs" />
+    <Compile Include="ThirdPartyNotices\xaprepare.cs" />
     <Compile Include="ToolRunners\CMakeRunner.cs" />
     <Compile Include="ToolRunners\CMakeRunner.OutputSink.cs" />
     <Compile Include="ToolRunners\GitRunner.cs" />

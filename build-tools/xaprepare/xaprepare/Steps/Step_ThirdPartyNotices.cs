@@ -63,7 +63,7 @@ implication, estoppel or otherwise."			}
 			GenerateThirdPartyNotices (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "ThirdPartyNotices.txt"),
 			                           ThirdPartyLicenseType.Foundation,
 			                           includeExternalDeps: false,
-			                           includeBuildDeps: false);
+			                           includeBuildDeps: true);
 			Log.StatusLine ();
 			GenerateThirdPartyNotices (Path.Combine (context.XAInstallPrefix, "ThirdPartyNotices.txt"),
 			                           ThirdPartyLicenseType.MicrosoftOSS,
