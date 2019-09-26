@@ -10,7 +10,7 @@ namespace Xamarin.Android.Prepare
 			new HomebrewProgram ("automake"),
 			new HomebrewProgram ("cmake"),
 
-			new HomebrewProgram ("/usr/local/bin/git") {
+			new HomebrewProgram ("git", new Uri("https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/git.rb"), "/usr/local/bin/git") {
 				MinimumVersion = "2.20.0",
 			},
 
