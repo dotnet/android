@@ -322,7 +322,7 @@ stages:
   # Check - "Xamarin.Android (Test API Compatibility)"
   - job: mac_api_compat
     displayName: API Compatibility
-    pool: $(XA.Build.Mac.Pool)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     workspace:
@@ -349,9 +349,9 @@ stages:
             Write-Host "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility/$report"
         }
 
-  # Check - "Xamarin.Android (Test APK Instrumentation)"
+  # Check - "Xamarin.Android (Test APK Instrumentation - macOS)"
   - job: mac_apk_tests
-    displayName: APK Instrumentation
+    displayName: APK Instrumentation - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -360,7 +360,7 @@ stages:
     variables:
       ApkTestConfiguration: Release
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
 
@@ -505,13 +505,13 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: mac-apk-test-results
 
-  # Check - "Xamarin.Android (Test BCL With Emulator)"
+  # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
-    displayName: BCL With Emulator
+    displayName: BCL With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 180
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -554,16 +554,16 @@ stages:
       parameters:
         artifactName: mac-bcl-test-results
 
-  # Check - "Xamarin.Android (Test MSBuild Mac)"
+  # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
-    displayName: MSBuild Mac
+    displayName: MSBuild - macOS
     pool: $(HostedMacMojave)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -572,30 +572,66 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Mac
+        testRunTitle: Xamarin.Android.Build.Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Mac
+        testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: mac-msbuild-test-results
 
- # Check - "Xamarin.Android (Test MSBuild With Emulator Mac)"
+  # Check - "Xamarin.Android (Test MSBuild - Windows)"
+  - job: win_msbuild_tests
+    displayName: MSBuild - Windows
+    pool: $(VSEngWinVS2019)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+    steps:
+    - template: yaml-templates\setup-test-environment.yaml
+      parameters:
+        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)"
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Windows
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
+        testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: win-msbuild-test-results
+
+  # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild With Emulator Mac
+    displayName: MSBuild With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -612,14 +648,14 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests On Device - Mac
+        testRunTitle: Xamarin.Android.Build.Tests On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == UsesDevice"
         testResultsFile: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: MSBuildDeviceIntegration On Device - Mac
+        testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
@@ -638,16 +674,16 @@ stages:
       parameters:
         artifactName: mac-msbuild-device-test-results
 
-# Check - "Xamarin.Android (Test TimeZoneInfo With Emulator Mac)"
+  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
   - job: mac_timezonedevice_tests
-    displayName: TimeZoneInfo With Emulator Mac
+    displayName: TimeZoneInfo With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/mac/setup-test-environment.yaml
+    - template: yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
       inputs:
@@ -664,7 +700,7 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: TimeZoneInfoTests On Device - Mac
+        testRunTitle: TimeZoneInfoTests On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
         testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
@@ -683,9 +719,9 @@ stages:
       parameters:
         artifactName: mac-timezoneinfo-test-results
 
-  # Check - "Xamarin.Android (Test Designer Mac)"
+  # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
-    displayName: Designer Mac
+    displayName: Designer - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
@@ -719,7 +755,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
-    displayName: Designer Windows
+    displayName: Designer - Windows
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
@@ -753,9 +789,9 @@ stages:
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
-  # Check - "Xamarin.Android (Test Integrated Regression Mac)"
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac
-    displayName: Integrated Regression Mac
+    displayName: Integrated Regression - macOS
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -768,9 +804,9 @@ stages:
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
 
-  # Check - "Xamarin.Android (Test Integrated Regression Windows)"
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win
-    displayName: Integrated Regression Windows
+    displayName: Integrated Regression - Windows
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:

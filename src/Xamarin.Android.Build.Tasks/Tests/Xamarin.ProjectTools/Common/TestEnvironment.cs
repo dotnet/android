@@ -65,22 +65,21 @@ namespace Xamarin.ProjectTools
 
 		public static readonly string MacOSInstallationRoot = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
 
-		static string visualStudioDirectory;
-		public static string GetVisualStudioDirectory ()
+		static VisualStudioInstance visualStudioInstance;
+		public static VisualStudioInstance GetVisualStudioInstance ()
 		{
 			//We should cache and reuse this value, so we don't run vswhere.exe so much
-			if (!string.IsNullOrEmpty (visualStudioDirectory))
-				return visualStudioDirectory;
+			if (visualStudioInstance != null && !string.IsNullOrEmpty (visualStudioInstance.VisualStudioRootPath))
+				return visualStudioInstance;
 
-			var instance = MSBuildLocator.QueryLatest ();
-			return visualStudioDirectory = instance.VisualStudioRootPath;
+			return visualStudioInstance = MSBuildLocator.QueryLatest ();
 		}
 
 		public static string MonoAndroidFrameworkDirectory {
 			get {
 				if (IsWindows) {
-					string visualStudioDirectory = GetVisualStudioDirectory ();
-					return Path.Combine (visualStudioDirectory, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid");
+					VisualStudioInstance vs = GetVisualStudioInstance ();
+					return Path.Combine (vs.VisualStudioRootPath, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework", "MonoAndroid");
 				} else {
 					return Path.Combine (MacOSInstallationRoot, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
 				}
@@ -90,8 +89,8 @@ namespace Xamarin.ProjectTools
 		public static string MonoAndroidToolsDirectory {
 			get {
 				if (IsWindows) {
-					string visualStudioDirectory = GetVisualStudioDirectory ();
-					return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
+					VisualStudioInstance vs = GetVisualStudioInstance ();
+					return Path.Combine (vs.VisualStudioRootPath, "MSBuild", "Xamarin", "Android");
 				} else {
 					return Path.Combine (MacOSInstallationRoot, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
 				}
