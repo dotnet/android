@@ -19,7 +19,7 @@ namespace MonoDroid.Tuner
 
 		public override void ProcessMethod (MethodDefinition method)
 		{
-			if (method.Name == "GetDefaultHandler" && method.DeclaringType.FullName == "System.Net.Http.HttpClient")
+			if (method.Name == "CreateDefaultHandler" && method.DeclaringType.FullName == "System.Net.Http.HttpClient")
 				Mark ();
 		}
 
