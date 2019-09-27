@@ -387,7 +387,9 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				if (!b.TargetFrameworkExists (proj.TargetFrameworkVersion))
 					Assert.Ignore ($"Skipped as {proj.TargetFrameworkVersion} not available.");
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				var packagedResource = Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "packaged_resources");
+				string intermediateDir = TestEnvironment.IsWindows
+					? Path.Combine (proj.IntermediateOutputPath, proj.TargetFrameworkAbbreviated) : proj.IntermediateOutputPath;
+				var packagedResource = Path.Combine (b.Root, b.ProjectDirectory, intermediateDir, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packagedResource, $"{packagedResource} should have been created.");
 				var packagedResourcearm = packagedResource + "-armeabi-v7a";
 				FileAssert.Exists (packagedResourcearm, $"{packagedResourcearm} should have been created.");

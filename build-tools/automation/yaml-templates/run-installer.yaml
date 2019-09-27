@@ -1,3 +1,6 @@
+parameters:
+  provisionExtraArgs: -vv
+
 steps:
 - task: DownloadPipelineArtifact@2
   inputs:
@@ -22,4 +25,4 @@ steps:
     provisionator_uri: $(provisionator-uri)
     github_token: $(GitHub.Token)
     provisioning_script: $(XA.Provisionator.Args)
-    provisioning_extra_args: -vv
+    provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
