@@ -1,9 +1,11 @@
 using System;
+using System.IO;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Linker;
 using MonoDroid.Tuner;
 using NUnit.Framework;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -67,6 +69,23 @@ namespace Xamarin.Android.Build.Tests
 			assm.MainModule.Types.Add (ame);
 
 			return assm;
+		}
+
+		[Test]
+		public void PreserveAndroidHttpClientHandler ()
+		{
+			var handlerType = "Xamarin.Android.Net.AndroidClientHandler";
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidHttpClientHandlerType", handlerType);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar client = new System.Net.Http.HttpClient ();");
+			using (var b = CreateApkBuilder ("temp/PreserveAndroidHttpClientHandler")) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/Mono.Android.dll"))) {
+					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, "Xamarin.Android.Net.AndroidClientHandler should have been preserved by the linker.");
+				}
+			}
 		}
 	}
 }
