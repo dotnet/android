@@ -37,18 +37,63 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		static readonly object [] BuildHasNoWarningsSource = new object [] {
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  false,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  true,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  false,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  true,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  false,
+				/* packageFormat */ "aab",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  false,
+				/* packageFormat */ "aab",
+			},
+		};
+
 		[Test]
-		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease, [Values (true, false)] bool xamarinForms)
+		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
+		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, string packageFormat)
 		{
-			// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
-			// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			if (packageFormat == "aab") {
+				// Disable fast deployment for aabs, because we give:
+				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
+				proj.EmbedAssembliesIntoApk = true;
+				proj.AndroidUseSharedRuntime = false;
+			}
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)") || StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
+				if (xamarinForms) {
+					// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
+					// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
+				} else {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
