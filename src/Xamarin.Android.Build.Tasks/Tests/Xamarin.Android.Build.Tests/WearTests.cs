@@ -26,17 +26,16 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
+				AndroidUseSharedRuntime = false,
+				EmbedAssembliesIntoApk = true,
 			};
-			var wear = new XamarinAndroidWearApplicationProject ();
+			var wear = new XamarinAndroidWearApplicationProject {
+				AndroidUseSharedRuntime = false,
+				EmbedAssembliesIntoApk = true,
+			};
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{wear.ProjectName}\\{wear.ProjectName}.csproj", wear.ProjectName, wear.ProjectGuid) {
 				MetadataValues = "IsAppExtension=True"
 			});
-
-			// Set these to be the same values
-			app.SetProperty (app.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "False");
-			app.SetProperty (app.DebugProperties, "EmbedAssembliesIntoApk", "True");
-			wear.SetProperty (wear.DebugProperties, KnownProperties.AndroidUseSharedRuntime, "False");
-			wear.SetProperty (wear.DebugProperties, "EmbedAssembliesIntoApk", "True");
 
 			using (var wearBuilder = CreateDllBuilder (Path.Combine (path, wear.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {

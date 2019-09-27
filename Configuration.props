@@ -33,6 +33,7 @@
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' != 'True' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
+    <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
