@@ -27,7 +27,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType></DebugType>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>True</DebugSymbols>
     <Optimize>True</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
