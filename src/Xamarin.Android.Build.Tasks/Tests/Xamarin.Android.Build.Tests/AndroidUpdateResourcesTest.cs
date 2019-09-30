@@ -678,7 +678,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -721,7 +721,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -771,7 +771,7 @@ namespace UnnamedProject
 				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("APT2222: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("APT2261: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
