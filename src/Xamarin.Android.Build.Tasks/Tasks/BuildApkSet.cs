@@ -1,5 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System;
 using System.IO;
 using Xamarin.Android.Tools;
 
@@ -60,6 +61,17 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
+		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
+		{
+			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} ", value);
+			} else if (value.StartsWith ("file:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", value.Replace ("file:", string.Empty));
+			} else {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", value);
+			}
+		}
+
 		protected override CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var adb   = string.IsNullOrEmpty (AdbToolExe) ? AdbToolName : AdbToolExe;
@@ -74,8 +86,8 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--aapt2 ", Path.Combine (Aapt2ToolPath, aapt2));
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
-			cmd.AppendSwitchIfNotNull ("--key-pass ", $"pass:{KeyPass}");
-			cmd.AppendSwitchIfNotNull ("--ks-pass ", $"pass:{StorePass}");
+			AddStorePass (cmd, "--key-pass", KeyPass);
+			AddStorePass (cmd, "--ks-pass", StorePass);
 			return cmd;
 		}
 	}
