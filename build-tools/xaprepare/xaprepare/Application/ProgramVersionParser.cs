@@ -54,7 +54,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (!Utilities.FileExists (programPath)) {
-				Log.DebugLine ("File {fullProgramPath} does not exist, unable to obtain version");
+				Log.DebugLine ($"{fullProgramPath} does not exist, unable to obtain version");
 				return DefaultVersionString;
 			}
 
