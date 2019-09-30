@@ -7,11 +7,9 @@ using System.Net;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -52,7 +50,6 @@ namespace Xamarin.Android.Tasks
 		public string CacheFile { get; set; }
 
 		string CachePath;
-		MD5 md5 = MD5.Create ();
 
 		internal const string AndroidSkipResourceExtraction = "AndroidSkipResourceExtraction";
 
@@ -206,12 +203,22 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (sha1))
 				return true;
 
+			HashAlgorithm hashAlgorithm;
+			try {
+				hashAlgorithm = new SHA1Managed ();
+			} catch (InvalidOperationException exc) {
+				// FIPS-enabled Windows machines will fail here
+				Log.LogCodedWarning ("XA0120", $"Failed to use SHA1 hash algorithm: {exc}");
+				return true;
+			}
+
 			var hashFile = file + ".sha1";
+			using (hashAlgorithm)
 			if (File.Exists (hashFile) && string.Compare (File.ReadAllText (hashFile), sha1, StringComparison.InvariantCultureIgnoreCase) == 0)
 				return true;
-			
-			var hash = Xamarin.Android.Tools.Files.HashFile (file).Replace ("-", String.Empty);
-			LogDebugMessage ("File :{0}", file);
+
+			var hash = Files.HashFile (file, hashAlgorithm);
+			LogDebugMessage ("File : {0}", file);
 			LogDebugMessage ("SHA1 : {0}", hash);
 			LogDebugMessage ("Expected SHA1 : {0}", sha1);
 
@@ -294,7 +301,7 @@ namespace Xamarin.Android.Tasks
 			if (createDestinationDirectory)
 				Directory.CreateDirectory (destinationDir);
 
-			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
+			var hash = Files.HashString (url);
 			var uri = new Uri (url);
 
 			var extraPath = extraPaths.FirstOrDefault (x => File.Exists (Path.Combine (AndroidSdkDirectory, x, embeddedArchive ?? String.Empty)));

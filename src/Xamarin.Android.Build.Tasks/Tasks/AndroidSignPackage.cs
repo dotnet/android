@@ -53,13 +53,13 @@ namespace Xamarin.Android.Tasks
 		public string TimestampAuthorityCertificateAlias { get; set; }
 
 		/// <summary>
-		/// -sigalg switch, should be md5withRSA for APKs or SHA256withRSA for App Bundles
+		/// -sigalg switch, which is SHA256withRSA by default. Previous versions of XA was md5withRSA.
 		/// </summary>
 		[Required]
 		public string SigningAlgorithm { get; set; }
 
 		/// <summary>
-		/// -digestalg switch, should be SHA1 for APKs or SHA-256 for App Bundles
+		/// -digestalg switch, which is SHA-256 by default. Previous versions of XA was SHA1.
 		/// </summary>
 		[Required]
 		public string DigestAlgorithm { get; set; }

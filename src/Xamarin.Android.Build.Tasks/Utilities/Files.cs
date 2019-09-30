@@ -1,17 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-
-using Xamarin.Tools.Zip;
-using System.Collections.Generic;
 using System.Text;
+using Java.Interop.Tools.JavaCallableWrappers;
+using Xamarin.Tools.Zip;
+
 #if MSBUILD
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 #endif
 
-namespace Xamarin.Android.Tools {
+namespace Xamarin.Android.Tools
+{
 
 	static class Files {
 
@@ -365,15 +367,15 @@ namespace Xamarin.Android.Tools {
 
 		public static string HashBytes (byte [] bytes)
 		{
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				byte [] hash = hashAlg.ComputeHash (bytes);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
 
 		public static string HashFile (string filename)
 		{
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				return HashFile (filename, hashAlg);
 			}
 		}
@@ -382,7 +384,7 @@ namespace Xamarin.Android.Tools {
 		{
 			using (Stream file = new FileStream (filename, FileMode.Open, FileAccess.Read)) {
 				byte[] hash = hashAlg.ComputeHash (file);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
 
@@ -390,11 +392,24 @@ namespace Xamarin.Android.Tools {
 		{
 			stream.Position = 0;
 
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				byte[] hash = hashAlg.ComputeHash (stream);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
+
+		public static string ToHexString (byte[] hash)
+		{
+			char [] array = new char [hash.Length * 2];
+			for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
+				byte b = hash [i];
+				array [j] = GetHexValue (b / 16);
+				array [j + 1] = GetHexValue (b % 16);
+			}
+			return new string (array);
+		}
+
+		static char GetHexValue (int i) => (char) (i < 10 ? i + 48 : i - 10 + 65);
 
 		public static void DeleteFile (string filename, object log)
 		{

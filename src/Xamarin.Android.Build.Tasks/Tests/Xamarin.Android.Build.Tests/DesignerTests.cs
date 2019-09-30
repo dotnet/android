@@ -105,9 +105,9 @@ namespace UnnamedProject
 				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
 				var doc = XDocument.Load (customViewPath);
 				Assert.IsNotNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
-					"UnnamedProject.CustomTextView should have not been replaced with an $(MD5Hash).CustomTextView");
+					"UnnamedProject.CustomTextView should have not been replaced with a $(Hash).CustomTextView");
 				Assert.IsNotNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
-					"unnamedproject.CustomTextView should have not been replaced with an $(MD5Hash).CustomTextView");
+					"unnamedproject.CustomTextView should have not been replaced with a $(Hash).CustomTextView");
 				// Build the library project now
 				Assert.IsTrue (libb.Build (lib), "library build should have succeeded.");
 				appb.Target = "Build";
@@ -116,18 +116,18 @@ namespace UnnamedProject
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
-					"UnnamedProject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+					"UnnamedProject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
-					"unnamedproject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+					"unnamedproject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				appb.Target = target;
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("UnnamedProject.CustomTextView"),
-					"UnnamedProject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+					"UnnamedProject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
-					"unnamedproject.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+					"unnamedproject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 			}
 		}
 

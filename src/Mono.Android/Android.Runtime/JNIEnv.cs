@@ -239,6 +239,11 @@ namespace Android.Runtime {
 					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
 			}
 
+			var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
+			if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
+				JavaNativeTypeManager.PackageNamingPolicy = pnp;
+			}
+
 			if (Logger.LogTiming) {
 				totalElapsed += stopper.ElapsedMilliseconds;
 				Logger.Log (LogLevel.Info, "monodroid-timing", $"JNIEnv.Initialize end: elapsed {totalElapsed} ms");
