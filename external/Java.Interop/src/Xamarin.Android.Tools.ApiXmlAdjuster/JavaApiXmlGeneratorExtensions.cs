@@ -124,7 +124,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					// jar2xml does not emit that either.
 					var gcs = tp.GenericConstraints.GenericConstraints;
 					var gctr = gcs.Count == 1 ? gcs [0].ResolvedType : null;
-					if (gctr == null || gctr.ReferencedType.FullName != "java.lang.Object")
+					if (gctr?.ReferencedType?.FullName != "java.lang.Object")
 					{
 						writer.WriteStartElement ("genericConstraints");
 						foreach (var g in tp.GenericConstraints.GenericConstraints) {
