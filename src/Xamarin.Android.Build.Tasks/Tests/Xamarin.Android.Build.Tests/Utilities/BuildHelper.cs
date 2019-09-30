@@ -39,7 +39,6 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				}
 			}
-			Assert.IsTrue (true);
 		}
 
 		public static void Contains (string text, IEnumerable<string> collection, string message = null)
@@ -47,7 +46,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var line in collection) {
 				if (line.Contains (text))
 				{
-					Assert.IsTrue (true);
 					return;
 				}
 			}
