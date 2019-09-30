@@ -41,16 +41,16 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (context));
 
 			string programPath = String.IsNullOrEmpty (fullProgramPath) ? ProgramName : fullProgramPath;
-			if (Path.IsPathRooted (ProgramName))
-				programPath = ProgramName;
-			else if (ProgramName.IndexOf (Path.DirectorySeparatorChar) >= 0) {
-				if (ProgramName [0] == Path.DirectorySeparatorChar) { // Might be the case on Windows
-					programPath = Path.GetFullPath (ProgramName);
+			if (!Path.IsPathRooted (programPath)) {
+				if (programPath.IndexOf (Path.DirectorySeparatorChar) >= 0) {
+					if (programPath [0] == Path.DirectorySeparatorChar) { // Might be the case on Windows
+						programPath = Path.GetFullPath (programPath);
+					} else {
+						programPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, programPath);
+					}
 				} else {
-					programPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ProgramName);
+					programPath = context.OS.Which (programPath, required: false);
 				}
-			} else {
-				programPath = context.OS.Which (ProgramName, required: false);
 			}
 
 			if (!Utilities.FileExists (programPath)) {
