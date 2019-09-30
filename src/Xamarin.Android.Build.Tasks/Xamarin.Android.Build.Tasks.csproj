@@ -13,13 +13,12 @@
     <SchemaVersion>2.0</SchemaVersion>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
@@ -27,8 +26,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>True</DebugSymbols>
     <Optimize>True</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
