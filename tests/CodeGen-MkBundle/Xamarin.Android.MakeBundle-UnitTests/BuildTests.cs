@@ -64,7 +64,7 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 		static BuildTests_EmbeddedDSOBuildTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeGen-MkBundle", "Xamarin.Android.MakeBundle-Tests"));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeGen-MkBundle");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeGen-MkBundle");
 		}
 
 		[OneTimeSetUp]
