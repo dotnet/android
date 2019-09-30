@@ -1092,6 +1092,8 @@ server, the following MSBuild properties can be used:
         file:<PasswordFile> 
     ```
 
+    Note: `env:` is not supported when using `AndroidPackageFormat`=`aab`. 
+
 -   **AndroidSigningKeyStore** &ndash; Specifies the filename of the
     keystore file created by `keytool`. This corresponds to the value
     provided to the **keytool -keystore** option.
@@ -1109,6 +1111,8 @@ server, the following MSBuild properties can be used:
         env:<PasswordEnvironentVariable>
         file:<PasswordFile> 
     ```
+
+    Note: `env:` is not supported when using `AndroidPackageFormat`=`aab`. 
 
 For example, consider the following `keytool` invocation:
 
