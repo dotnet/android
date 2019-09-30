@@ -721,7 +721,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ($"{(useAapt2 ? "1" : "3")} Error(s)", b.LastBuildOutput);
 			}
 		}
 
