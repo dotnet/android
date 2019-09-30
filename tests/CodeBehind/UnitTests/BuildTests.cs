@@ -151,7 +151,7 @@ namespace CodeBehindUnitTests
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeBehind");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
 
 			generated_sources = new List <SourceFile> {
 				new SourceFile ("Binding.Main.g.cs") {
@@ -627,7 +627,7 @@ namespace CodeBehindUnitTests
 
 		string PrepareProject (string testName)
 		{
-			string tempRoot = Path.Combine (TestOutputDir, $"{testName}.build", XABuildPaths.Configuration);
+			string tempRoot = Path.Combine (TestOutputDir, testName, XABuildPaths.Configuration);
 			string temporaryProjectPath = Path.Combine (tempRoot, "project");
 
 			var ignore = new HashSet <string> {

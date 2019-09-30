@@ -25,8 +25,9 @@
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.binlog" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\**\*.log" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*">
+      <SubDirectory>temp\</SubDirectory>
+    </_TestResultFiles>
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestOutput-*.txt" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\Timing_*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)*.csv" />
@@ -70,7 +71,7 @@
     <Copy
         UseHardlinksIfPossible="True"
         SourceFiles="@(_TestResultFiles)"
-        DestinationFiles="@(_TestResultFiles->'$(TestResultZipOutputPath)\$(TestResultZipName)\%(RecursiveDir)%(Filename)%(Extension)')"
+        DestinationFiles="@(_TestResultFiles->'$(TestResultZipOutputPath)\$(TestResultZipName)\%(SubDirectory)%(RecursiveDir)%(Filename)%(Extension)')"
     />
     <ItemGroup>
       <_TestResultFilesToZip Include="$(TestResultZipOutputPath)\$(TestResultZipName)\**\*" />
