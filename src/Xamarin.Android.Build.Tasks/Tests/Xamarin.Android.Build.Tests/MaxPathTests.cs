@@ -36,15 +36,24 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		int BaseLength => Path.Combine (Root, "temp").Length + 1;
 
+		XamarinProject CreateProject (bool xamarinForms)
+		{
+			var proj = xamarinForms ?
+				new XamarinFormsAndroidApplicationProject () :
+				new XamarinAndroidApplicationProject ();
+			// Force the old MD5 naming policy, and remove [Register]
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseHash");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("Register (\"${JAVA_PACKAGENAME}.MainActivity\"), ", "");
+			return proj;
+		}
+
 		[Test]
 		[TestCaseSource (nameof (EdgeCases))]
 		public void Edge (int limit, bool xamarinForms)
 		{
 			var testName = $"{nameof (Edge)}{xamarinForms}"
 				.PadRight (Files.MaxPath - BaseLength - limit, 'N');
-			var proj = xamarinForms ?
-				new XamarinFormsAndroidApplicationProject () :
-				new XamarinAndroidApplicationProject ();
+			var proj = CreateProject (xamarinForms);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", testName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -69,9 +78,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var testName = $"{nameof (Edge)}{xamarinForms}"
 				.PadRight (Files.MaxPath - BaseLength - limit, 'N');
-			var proj = xamarinForms ?
-				new XamarinFormsAndroidApplicationProject () :
-				new XamarinAndroidApplicationProject ();
+			var proj = CreateProject (xamarinForms);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", testName))) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");

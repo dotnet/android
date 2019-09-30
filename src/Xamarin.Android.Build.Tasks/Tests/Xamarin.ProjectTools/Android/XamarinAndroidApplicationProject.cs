@@ -50,6 +50,7 @@ namespace Xamarin.ProjectTools
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
+			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 
 			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") { TextContent = () => 
 					AndroidManifest.Replace("${PROJECT_NAME}", ProjectName).
@@ -146,7 +147,8 @@ namespace Xamarin.ProjectTools
 		public string MainActivity { get; set; }
 		public string StringsXml { get; set; }
 		public string PackageName { get; set; }
-		
+		public string JavaPackageName { get; set; }
+
 		public override BuildOutput CreateBuildOutput (ProjectBuilder builder)
 		{
 			return new AndroidApplicationBuildOutput (this) { Builder = builder };
@@ -155,6 +157,14 @@ namespace Xamarin.ProjectTools
 		public void SetDefaultTargetDevice ()
 		{
 			SetProperty ("AdbTarget", Environment.GetEnvironmentVariable ("ADB_TARGET"));
+		}
+
+		public override string ProcessSourceTemplate (string source)
+		{
+			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName)
+				.Replace ("${PROJECT_NAME}", ProjectName)
+				.Replace ("${PACKAGENAME}", PackageName)
+				.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
 		}
 	}
 }

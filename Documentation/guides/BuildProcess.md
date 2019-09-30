@@ -222,7 +222,8 @@ when packaging Release applications.
 -   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
     the digest algorithm to use with `jarsigner -digestalg`.
 
-    The default value is `SHA1` for APKs and `SHA-256` for App Bundles.
+    The default value is `SHA-256`, which was `SHA1` in previous
+    versions of Xamarin.Android.
 
     Added in Xamarin.Android 9.4.
 
@@ -234,7 +235,8 @@ when packaging Release applications.
 -   **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
     the signing algorithm to use with `jarsigner -sigalg`.
 
-    The default value is `md5withRSA` for APKs and `SHA256withRSA` for App Bundles.
+    The default value is `SHA256withRSA`, which was `md5withRSA` in
+    previous versions of Xamarin.Android.
 
     Added in Xamarin.Android 8.2.
 
@@ -598,6 +600,14 @@ when packaging Release applications.
 
 [apk]: https://en.wikipedia.org/wiki/Android_application_package
 [bundle]: https://developer.android.com/platform/technology/app-bundle
+
+-   **AndroidPackageNamingPolicy** &ndash; An enum-style property for
+    specifying the Java package names of generated Java source code.
+    The default value is `LowercaseCrc64`. In previous versions of
+    Xamarin.Android, MD5-based names were used. You can restore the old
+    behavior by using `LowercaseMD5`.
+
+    Added in Xamarin.Android 10.1.
 
 -   **AndroidR8JarPath** &ndash; The path to `r8.jar` for use with the
     r8 dex-compiler and shrinker. Defaults to a path in the

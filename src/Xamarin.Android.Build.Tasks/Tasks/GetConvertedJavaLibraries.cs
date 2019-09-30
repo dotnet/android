@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -22,11 +18,10 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var md5 = MD5.Create ();
 			ConvertedFilesToBeGenerated =
 				(JarsToConvert ?? new string [0]).Select (
 					j => Path.Combine (OutputJackDirectory,
-					                   BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (j))) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
+					                   Files.HashString (j) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
 				             .ToArray ();
 			Log.LogDebugTaskItems ("  ConvertedFilesToBeGenerated:", ConvertedFilesToBeGenerated);
 			return true;

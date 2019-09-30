@@ -12,6 +12,7 @@
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">True</AndroidUseAapt2>
+		<AndroidPackageNamingPolicy Condition=" '$(AndroidPackageNamingPolicy)' == '' ">LowercaseCrc64</AndroidPackageNamingPolicy>
 		<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' And '$(OS)' != 'Windows_NT' ">False</AndroidUseManagedDesignTimeResourceGenerator>
 		<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">28.0.3</AndroidSdkBuildToolsVersion>
 		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">28.0.0</AndroidSdkPlatformToolsVersion>

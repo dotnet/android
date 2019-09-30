@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Text;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -33,8 +33,8 @@ namespace Xamarin.Android.Tasks
 			// actually different whenever the data changes. Relying on mapping header values for this
 			// purpose would not be enough since the only change to the mapping might be a single-character
 			// change in one of the type names and we must be sure the assembly is rebuilt in all cases,
-			// thus the SHA1.
-			WriteEndLine (output, $"Data SHA1: {HashToHex (dataStream.GetStreamHash ())}", false);
+			// thus the hash.
+			WriteEndLine (output, $"Data Hash: {Files.ToHexString (dataStream.GetStreamHash ())}", false);
 			base.WriteFileHeader (output, outputFileName);
 		}
 

@@ -34,14 +34,6 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		protected string HashToHex (byte[] dataHash)
-		{
-			var sb = new StringBuilder ();
-			foreach (byte b in dataHash)
-				sb.Append ($"{b:x02}");
-			return sb.ToString ();
-		}
-
 		protected void WriteEndLine (StreamWriter output, string comment = null, bool indent = true)
 		{
 			if (!String.IsNullOrEmpty (comment)) {
