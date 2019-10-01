@@ -129,13 +129,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public void Close ()
-		{
-			if (zip != null) {
-				zip.Close ();
-			}
-		}
-
 		public void Dispose ()
 		{
 			Dispose(true);
