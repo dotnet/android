@@ -36,8 +36,8 @@ namespace Xamarin.Android.Tasks
 
 			var output = new List<ITaskItem> (InputAssemblies.Length);
 			foreach (var assemblyItem in InputAssemblies) {
-				if (DesignTimeBuild && !File.Exists (assemblyItem.ItemSpec)) {
-					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}' during a design-time build.");
+				if (!File.Exists (assemblyItem.ItemSpec)) {
+					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 					continue;
 				}
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {

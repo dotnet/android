@@ -126,8 +126,8 @@ namespace Xamarin.Android.Tasks
 							Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 							continue;
 						}
-						if (DesignTimeBuild && !File.Exists (assemblyPath)) {
-							Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}' during a design-time build.");
+						if (!File.Exists (assemblyPath)) {
+							Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
 							continue;
 						}
 						assemblies.Add (resolver.Load (assemblyPath));
