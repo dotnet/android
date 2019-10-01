@@ -363,6 +363,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.AndroidSDK.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.AndroidSDK.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Build.Tasks.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
