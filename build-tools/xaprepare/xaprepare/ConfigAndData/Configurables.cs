@@ -353,7 +353,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly List<string> BundleVersionHashFiles = new List<string> {
 				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "BuildAndroidPlatforms.cs"),
 				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "Runtimes.cs"),
-				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "Runtimes.Code.cs"),
 			};
 
 			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();
