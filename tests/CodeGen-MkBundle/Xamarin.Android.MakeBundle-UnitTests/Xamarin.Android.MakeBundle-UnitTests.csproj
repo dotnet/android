@@ -35,7 +35,7 @@
       <HintPath>..\..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="libZipSharp">
-      <HintPath>..\..\..\packages\Xamarin.LibZipSharp.1.0.2\lib\net45\libZipSharp.dll</HintPath>
+      <HintPath>..\..\..\packages\Xamarin.LibZipSharp.1.0.5\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -53,5 +53,5 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="Xamarin.Android.MakeBundle-UnitTests.targets" />
-  <Import Project="..\..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\packages\Xamarin.LibZipSharp.1.0.2\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets')" />
 </Project>
