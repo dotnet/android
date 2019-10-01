@@ -59,6 +59,16 @@ namespace Xamarin.Android.Tasks
 				log.LogCodedError (prefix + "7022", ex.ToString ());
 			else if (ex is DirectoryNotFoundException)      // IOException
 				log.LogCodedError (prefix + "7023", ex.ToString ());
+			else if (ex is DriveNotFoundException)		// IOException
+				log.LogCodedError (prefix + "7025", ex.ToString ());
+			else if (ex is EndOfStreamException)		// IOException
+				log.LogCodedError (prefix + "7026", ex.ToString ());
+			else if (ex is FileLoadException)		// IOException
+				log.LogCodedError (prefix + "7027", ex.ToString ());
+			else if (ex is FileNotFoundException)		// IOException
+				log.LogCodedError (prefix + "7028", ex.ToString ());
+			else if (ex is PipeException)			// IOException
+				log.LogCodedError (prefix + "7029", ex.ToString ());
 			else if (ex is IOException) 
 				log.LogCodedError (prefix + "7024", ex.ToString ());
 

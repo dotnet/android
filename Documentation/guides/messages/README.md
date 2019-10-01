@@ -224,6 +224,11 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `7022` - `PathTooLongException`
 * `7023` - `DirectoryNotFoundException`
 * `7024` - `IOException`
+* `7025` - `DriveNotFoundException`
+* `7026` - `EndOfStreamException`
+* `7027` - `FileLoadException`
+* `7028` - `FileNotFoundException`
+* `7029` - `PipeException`
 
 ### XA8xxx	Reserved
 
