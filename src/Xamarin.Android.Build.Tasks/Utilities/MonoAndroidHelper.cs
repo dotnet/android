@@ -470,6 +470,11 @@ namespace Xamarin.Android.Tasks
 			return Files.HashStream (stream);
 		}
 
+		public static string HashBytes (byte[] bytes)
+		{
+			return Files.HashBytes (bytes);
+		}
+
 		public static bool HasFileChanged (string source, string destination)
 		{
 			return Files.HasFileChanged (source, destination);
