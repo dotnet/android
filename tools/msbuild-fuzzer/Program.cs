@@ -135,7 +135,7 @@ namespace MSBuild.Fuzzer
 			Console.WriteLine (nameof (Run));
 			string stop = Adb ($"shell am force-stop {application.PackageName}", ignoreExitCode: true);
 			Adb ("logcat -c");
-			string activity = $"{application.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity";
+			string activity = $"{application.PackageName}/{application.JavaPackageName}.MainActivity";
 			string start = Adb ($"shell am start -n {activity}");
 			Console.WriteLine (start.Trim ());
 			//Wait for the app to start

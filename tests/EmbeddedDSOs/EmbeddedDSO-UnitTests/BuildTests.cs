@@ -56,7 +56,7 @@ namespace EmbeddedDSOUnitTests
 		static BuildTests_EmbeddedDSOBuildTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "EmbeddedDSOs", "EmbeddedDSO"));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "EmbeddedDSO");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "EmbeddedDSO");
 
 			produced_binaries = new List <string> {
 				$"{ProjectAssemblyName}.dll",

@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using System.IO;
 using System.Text;
 using Xamarin.Android.Tools;
@@ -384,6 +385,14 @@ namespace Xamarin.Android.Build.Tests
 			bool changes = ExtractAll (stream);
 			Assert.IsFalse (changes, "ExtractAll should *not* report changes.");
 			DirectoryAssert.DoesNotExist (tempDir);
+		}
+
+		[Test]
+		public void ToHashString ()
+		{
+			var bytes = new byte [] { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };
+			var expected = BitConverter.ToString (bytes).Replace ("-", string.Empty);
+			Assert.AreEqual (expected, Files.ToHexString (bytes));
 		}
 	}
 }

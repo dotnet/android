@@ -1,19 +1,13 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -206,6 +200,7 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string RunProcess (string exe, string args)
 		{
+			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -379,29 +374,7 @@ namespace Xamarin.Android.Build.Tests
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
-		protected bool FileCompare (string file1, string file2)
-		{
-			if (!File.Exists (file1) || !File.Exists (file2))
-				return false;
-			using (var stream1 = File.OpenRead (file1)) {
-				using (var stream2 = File.OpenRead (file2)) {
-					return StreamCompare (stream1, stream2);
-				}
-			}
-		}
-
-		protected bool StreamCompare (Stream stream1, Stream stream2)
-		{
-			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
-			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			byte[] f1 = ReadAllBytesIgnoringLineEndings (stream1);
-			byte[] f2 = ReadAllBytesIgnoringLineEndings (stream2);
-
-			var hash = MD5.Create ();
-			var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
-			var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-			return f1hash.Equals (f2hash);
-		}
+		protected bool FileCompare (string file1, string file2) => !MonoAndroidHelper.HasFileChanged (file1, file2);
 
 		protected byte[] ReadAllBytesIgnoringLineEndings (Stream stream)
 		{

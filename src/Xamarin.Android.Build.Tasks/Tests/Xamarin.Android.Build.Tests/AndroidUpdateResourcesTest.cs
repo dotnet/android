@@ -1,15 +1,13 @@
 using System;
-using Xamarin.ProjectTools;
-using NUnit.Framework;
-using System.Linq;
-using System.IO;
-using System.Threading;
-using System.Text;
 using System.Collections.Generic;
-using Microsoft.Build.Framework;
-using System.Xml.Linq;
-using System.Security.Cryptography;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using Microsoft.Build.Framework;
+using NUnit.Framework;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -49,8 +47,7 @@ namespace Xamarin.Android.Build.Tests
 				{ "XAMARIN_CACHEPATH", cachePath },
 			};
 			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
-			var md5 = MD5.Create ();
-			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
+			var hash = Files.HashString (url);
 			var zipPath = Path.Combine (cachePath, "zips", $"{hash}.zip");
 			if (File.Exists (zipPath))
 				File.Delete (zipPath);
@@ -445,7 +442,7 @@ namespace UnnamedProject
 				var doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
-					"UnamedProject.CustomPreference should have been replaced with an $(MD5Hash).CustomPreference");
+					"UnamedProject.CustomPreference should have been replaced with an $(Hash).CustomPreference");
 				var style = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "styles.xml"); 
 				Assert.IsTrue (File.Exists (style));
 				doc = XDocument.Load (style);
@@ -487,9 +484,9 @@ namespace UnnamedProject
 			var doc = XDocument.Load (customViewPath);
 			Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
 			Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
-				"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
 			Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
-				"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
 
 			//Now check the zip
 			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
@@ -505,9 +502,9 @@ namespace UnnamedProject
 					//      Don't use `StringAssert` because `contents` make the failure message unreadable.
 					var contents = reader.ReadToEnd ();
 					Assert.IsFalse (contents.Contains ("Classlibrary1.CustomTextView"),
-							"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+							"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
 					Assert.IsFalse (contents.Contains ("classlibrary1.CustomTextView"),
-							"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+							"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
 				}
 			}
 		}
@@ -678,7 +675,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -721,7 +718,7 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ($"{(useAapt2 ? "1" : "3")} Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -771,7 +768,7 @@ namespace UnnamedProject
 				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("APT2222: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("APT2261: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 

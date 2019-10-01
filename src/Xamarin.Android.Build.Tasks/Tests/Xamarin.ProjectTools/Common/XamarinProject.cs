@@ -350,7 +350,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public string ProcessSourceTemplate (string source)
+		public virtual string ProcessSourceTemplate (string source)
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
 		}

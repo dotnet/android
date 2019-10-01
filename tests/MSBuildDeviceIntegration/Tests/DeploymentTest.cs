@@ -70,7 +70,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Test. No devices available.");
-			AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
 			ClearAdbLogcat ();
@@ -110,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
 				ClearAdbLogcat ();
-				AdbStartActivity ($"{proj.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity");
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started");
 				Assert.IsTrue (MonitorAdbLogcat ((l) => {

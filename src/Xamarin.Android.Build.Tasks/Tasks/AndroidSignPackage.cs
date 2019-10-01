@@ -53,13 +53,13 @@ namespace Xamarin.Android.Tasks
 		public string TimestampAuthorityCertificateAlias { get; set; }
 
 		/// <summary>
-		/// -sigalg switch, should be md5withRSA for APKs or SHA256withRSA for App Bundles
+		/// -sigalg switch, which is SHA256withRSA by default. Previous versions of XA was md5withRSA.
 		/// </summary>
 		[Required]
 		public string SigningAlgorithm { get; set; }
 
 		/// <summary>
-		/// -digestalg switch, should be SHA1 for APKs or SHA-256 for App Bundles
+		/// -digestalg switch, which is SHA-256 by default. Previous versions of XA was SHA1.
 		/// </summary>
 		[Required]
 		public string DigestAlgorithm { get; set; }
@@ -118,11 +118,29 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			if (hasWarnings)
+			if (hasWarnings && !IsWarningIgnored (singleLine))
 				Log.LogCodedWarning (DefaultErrorCode, GenerateFullPathToTool (), 0, singleLine);
 			else
 				Log.LogMessage (singleLine, importance);
 		}
+
+		static bool IsWarningIgnored (string singleLine)
+		{
+			foreach (var warning in IgnoredWarnings) {
+				if (singleLine.IndexOf (warning, StringComparison.OrdinalIgnoreCase) >= 0) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// See: http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/sun/security/tools/jarsigner/Resources.java
+		/// </summary>
+		static readonly string [] IgnoredWarnings = new [] {
+			"certificate is self-signed",
+			"No -tsa or -tsacert is provided",
+		};
 
 		protected override string ToolName
 		{

@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -321,6 +322,103 @@ namespace Xamarin.Android.Build.Tests
 				// Build again, no $(AdbTarget)
 				b.Build (proj);
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildApkFastDev"), "_BuildApkFastDev should be skipped!");
+			}
+		}
+
+#pragma warning disable 414
+		static object [] AndroidStoreKeyTests = new object [] {
+				// useApkSigner, isRelease, PackageFormat, AndroidKeyStore, password, ExpectedResult, ShouldInstall
+			new object[] { true,  false , "apk"     , "False"        , "android",      "debug.keystore"         , true},
+			new object[] { true,  true  , "apk"     , "False"        , "android",      "debug.keystore"         , true},
+			new object[] { true,  false , "apk"     , "True"         , "android",      "--ks test.keystore"     , true},
+			new object[] { true,  true  , "apk"     , "True"         , "android",      "--ks test.keystore"     , true},
+			new object[] { true,  false , "apk"     , ""             , "android",      "debug.keystore"         , true},
+			new object[] { true,  true  , "apk"     , ""             , "android",      "debug.keystore"         , true},
+			new object[] { true,  false , "apk"     , "True"         , "env:android",  "--ks test.keystore"     , true},
+			new object[] { true,  true  , "apk"     , "True"         , "env:android",  "--ks test.keystore"     , true},
+			new object[] { true,  false , "apk"     , "True"         , "file:android", "--ks test.keystore"     , true},
+			new object[] { true,  true  , "apk"     , "True"         , "file:android", "--ks test.keystore"     , true},
+			// dont use apksigner
+			new object[] { false, false , "apk"     , "False"        , "android",      "debug.keystore"         , true},
+			new object[] { false, true  , "apk"     , "False"        , "android",      "debug.keystore"         , true},
+			new object[] { false, false , "apk"     , "True"         , "android",      "-keystore test.keystore", true},
+			new object[] { false, true  , "apk"     , "True"         , "android",      "-keystore test.keystore", true},
+			new object[] { false, false , "apk"     , ""             , "android",      "debug.keystore"         , true},
+			new object[] { false, true  , "apk"     , ""             , "android",      "debug.keystore"         , true},
+			new object[] { false, false , "apk"     , "True"         , "env:android",  "-keystore test.keystore", true},
+			new object[] { false, true  , "apk"     , "True"         , "env:android",  "-keystore test.keystore", true},
+			new object[] { false, false , "apk"     , "True"         , "file:android", "-keystore test.keystore", true},
+			new object[] { false, true  , "apk"     , "True"         , "file:android", "-keystore test.keystore", true},
+			// aab signing tests
+			new object[] { true,  true  , "aab"     , "True"         , "android",      "-ks test.keystore"      , true},
+			new object[] { true,  true  , "aab"     , "True"         , "file:android", "-ks test.keystore"      , true},
+			new object[] { true,  true  , "aab"     , "True"         , "env:android",  "-ks test.keystore"      , false},
+		};
+#pragma warning restore 414
+
+		[Test]
+		[TestCaseSource (nameof (AndroidStoreKeyTests))]
+		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
+		{
+			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
+			string storepassfile = Path.Combine (Root, path, "storepass.txt");
+			string keypassfile = Path.Combine (Root, path, "keypass.txt");
+			byte [] data;
+			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
+				data = new byte [stream.Length];
+				stream.Read (data, 0, (int) stream.Length);
+			}
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease
+			};
+			Dictionary<string, string> envVar = new Dictionary<string, string> ();
+			if (password.StartsWith ("env:", StringComparison.Ordinal)) {
+				envVar.Add ("_MYPASSWORD", password.Replace ("env:", string.Empty));
+				proj.SetProperty ("AndroidSigningStorePass", "env:_MYPASSWORD");
+				proj.SetProperty ("AndroidSigningKeyPass", "env:_MYPASSWORD");
+			} else if (password.StartsWith ("file:", StringComparison.Ordinal)) {
+				proj.SetProperty ("AndroidSigningStorePass", $"file:{storepassfile}");
+				proj.SetProperty ("AndroidSigningKeyPass", $"file:{keypassfile}");
+			} else {
+				proj.SetProperty ("AndroidSigningStorePass", password);
+				proj.SetProperty ("AndroidSigningKeyPass", password);
+			}
+			var abis = new string [] { "armeabi-v7a", "x86" };
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
+			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
+			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("AndroidUseApkSigner", useApkSigner.ToString ());
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
+				BinaryContent = () => data
+			});
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "storepass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "keypass.txt") {
+				TextContent = () => password.Replace ("file:", string.Empty),
+				Encoding = Encoding.ASCII,
+			});
+			using (var b = CreateApkBuilder (path, false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
+				if (packageFormat == "apk") {
+					StringAssertEx.Contains (expected, b.LastBuildOutput,
+					"The Wrong keystore was used to sign the apk");
+				}
+				b.BuildLogFile = "install.log";
+				Assert.AreEqual (shouldInstall, b.Install (proj, doNotCleanupOnUpdate: true), $"Install should have {(shouldInstall ? "succeeded" : "failed")}.");
+				if (packageFormat == "aab") {
+					StringAssertEx.Contains (expected, b.LastBuildOutput,
+						"The Wrong keystore was used to sign the apk");
+				}
+				if (!shouldInstall)
+					return;
+				b.BuildLogFile = "uninstall.log";
+				Assert.IsTrue (b.Uninstall (proj, doNotCleanupOnUpdate: true), "Uninstall should have succeeded.");
 			}
 		}
 	}

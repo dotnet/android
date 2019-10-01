@@ -62,6 +62,9 @@
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>StringRocks.cs</Link>
     </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
+      <Link>Crc64.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="HTMLlat1.ent">

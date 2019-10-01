@@ -950,5 +950,27 @@ namespace Lib2
 				}
 			}
 		}
+
+		[Test]
+		public void ChangePackageNamingPolicy ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
+				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
+			});
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseMD5");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				var className = "Lmd5aaee5c01293e648941eac447719ef3fb/Bar;";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+
+				proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+				className = "Lcrc64dca3aed1e0ff8a1a/Bar;";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
+		}
 	}
 }

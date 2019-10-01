@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.IO;
 using System.Text;
+using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Xamarin.Android.Tasks
 {
@@ -25,7 +26,7 @@ namespace Xamarin.Android.Tasks
 		StreamWriter outputWriter;
 		bool firstWrite = true;
 		uint rowFieldCounter;
-		SHA1CryptoServiceProvider sha1;
+		HashAlgorithm hashAlgorithm;
 		bool hashingFinished;
 		uint byteCount = 0;
 
@@ -49,18 +50,18 @@ namespace Xamarin.Android.Tasks
 		{
 			outputStream = new MemoryStream ();
 			outputWriter = new StreamWriter (outputStream, new UTF8Encoding (false));
-			sha1 = new SHA1CryptoServiceProvider ();
-			sha1.Initialize ();
+			hashAlgorithm = new Crc64 ();
+			hashAlgorithm.Initialize ();
 		}
 
 		public byte[] GetStreamHash ()
 		{
 			if (!hashingFinished) {
-				sha1.TransformFinalBlock (new byte[0], 0, 0);
+				hashAlgorithm.TransformFinalBlock (new byte[0], 0, 0);
 				hashingFinished = true;
 			}
 
-			return sha1.Hash;
+			return hashAlgorithm.Hash;
 		}
 
 		protected override void Dispose (bool disposing)
@@ -115,7 +116,7 @@ namespace Xamarin.Android.Tasks
 				throw new ObjectDisposedException (this.GetType ().Name);
 
 			if (!hashingFinished)
-				sha1.TransformBlock (buffer, offset, count, null, 0);
+				hashAlgorithm.TransformBlock (buffer, offset, count, null, 0);
 
 			if (firstWrite) {
 				// Kind of a backward thing to do, but I wanted to avoid having to modfy (and bump the

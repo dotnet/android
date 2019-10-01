@@ -1,33 +1,17 @@
-﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using System.Text;
-using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
-using System.Security.Cryptography;
+using NUnit.Framework;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
+using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests {
-	public class Aapt2Tests : BaseTest {
-
-		string GetHash (string hashInput)
-		{
-			using (var sha1 = SHA1.Create ())
-			{
-				var hash = sha1.ComputeHash (Encoding.UTF8.GetBytes (hashInput));
-				var hashResult = new StringBuilder (hash.Length * 2);
-
-				foreach (byte b in hash)
-				{
-					hashResult.Append (b.ToString ("x2"));
-				}
-				return hashResult.ToString ();
-			}
-		}
-
+namespace Xamarin.Android.Build.Tests
+{
+	public class Aapt2Tests : BaseTest
+	{
 		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, List<ITaskItem> output = null)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
@@ -36,7 +20,7 @@ namespace Xamarin.Android.Build.Tests {
 				ToolPath = GetPathToAapt2 (),
 				ResourceDirectories = new ITaskItem [] {
 					new TaskItem(dir, new Dictionary<string, string> {
-						{ "Hash", output != null ? GetHash (dir) : "compiled" }
+						{ "Hash", output != null ? Files.HashString (dir) : "compiled" }
 					}),
 				},
 				FlatArchivesDirectory = outputPath,

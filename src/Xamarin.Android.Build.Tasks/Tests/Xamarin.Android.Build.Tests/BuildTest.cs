@@ -37,18 +37,63 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		static readonly object [] BuildHasNoWarningsSource = new object [] {
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  false,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  true,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  false,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  true,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  false,
+				/* packageFormat */ "aab",
+			},
+			new object [] {
+				/* isRelease */     true,
+				/* xamarinForms */  false,
+				/* packageFormat */ "aab",
+			},
+		};
+
 		[Test]
-		public void BuildHasNoWarnings ([Values (true, false)] bool isRelease, [Values (true, false)] bool xamarinForms)
+		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
+		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, string packageFormat)
 		{
-			// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
-			// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			if (packageFormat == "aab") {
+				// Disable fast deployment for aabs, because we give:
+				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
+				proj.EmbedAssembliesIntoApk = true;
+				proj.AndroidUseSharedRuntime = false;
+			}
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)") || StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
+				if (xamarinForms) {
+					// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
+					// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
+				} else {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -136,6 +181,38 @@ class MemTest {
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		[NonParallelizable]
+		public void AndroidXMigration ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
+			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				// classes.dex should only have the androidx Java types
+				var className = "Landroidx/appcompat/app/AppCompatActivity;";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+				className = "Landroid/appcompat/app/AppCompatActivity;";
+				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+				// FormsAppCompatActivity should inherit the AndroidX C# type
+				var forms = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Xamarin.Forms.Platform.Android.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
+					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
+					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
+				}
 			}
 		}
 
@@ -865,7 +942,7 @@ namespace UnamedProject
 				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
 					var proguardProjectPrimary = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "proguard", "proguard_project_primary.cfg");
 					FileAssert.Exists (proguardProjectPrimary);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), "-keep class md52d9cf6333b8e95e8683a477bc589eda5.MainActivity"), "`md52d9cf6333b8e95e8683a477bc589eda5.MainActivity` should exist in `proguard_project_primary.cfg`!");
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
 				}
 
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
@@ -1704,71 +1781,6 @@ namespace App1
 		}
 
 #pragma warning disable 414
-		static object [] AndroidStoreKeyTests = new object [] {
-				// isRelease, AndroidKeyStore, password, ExpectedResult
-			new object[] { false    , "False"        , "android",      "debug.keystore"},
-			new object[] { true     , "False"        , "android",      "debug.keystore"},
-			new object[] { false    , "True"         , "android",      "-keystore test.keystore"},
-			new object[] { true     , "True"         , "android",      "-keystore test.keystore"},
-			new object[] { false    , ""             , "android",      "debug.keystore"},
-			new object[] { true     , ""             , "android",      "debug.keystore"},
-			new object[] { false    , "True"         , "env:android",  "-keystore test.keystore"},
-			new object[] { true     , "True"         , "env:android",  "-keystore test.keystore"},
-			new object[] { false    , "True"         , "file:android", "-keystore test.keystore"},
-			new object[] { true     , "True"         , "file:android", "-keystore test.keystore"},
-		};
-#pragma warning restore 414
-
-		[Test]
-		[TestCaseSource (nameof (AndroidStoreKeyTests))]
-		public void TestAndroidStoreKey (bool isRelease, string androidKeyStore, string password, string expected)
-		{
-			string path = Path.Combine ("temp", TestName);
-			string storepassfile = Path.Combine (Root, path, "storepass.txt");
-			string keypassfile = Path.Combine (Root, path, "keypass.txt");
-			byte [] data;
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
-				data = new byte [stream.Length];
-				stream.Read (data, 0, (int)stream.Length);
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease
-			};
-			Dictionary<string, string> envVar = new Dictionary<string, string> ();
-			if (password.StartsWith ("env:", StringComparison.Ordinal)) {
-				envVar.Add ("_MYPASSWORD", password.Replace ("env:", string.Empty));
-				proj.SetProperty ("AndroidSigningStorePass", "env:_MYPASSWORD");
-				proj.SetProperty ("AndroidSigningKeyPass", "env:_MYPASSWORD");
-			} else if (password.StartsWith ("file:", StringComparison.Ordinal)) {
-				proj.SetProperty ("AndroidSigningStorePass", $"file:{storepassfile}");
-				proj.SetProperty ("AndroidSigningKeyPass", $"file:{keypassfile}");
-			} else {
-				proj.SetProperty ("AndroidSigningStorePass", password);
-				proj.SetProperty ("AndroidSigningKeyPass", password);
-			}
-			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
-			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
-			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
-			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
-				BinaryContent = () => data
-			});
-			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "storepass.txt") {
-				TextContent = () => password.Replace ("file:", string.Empty),
-				Encoding = Encoding.ASCII,
-			});
-			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "keypass.txt") {
-				TextContent = () => password.Replace ("file:", string.Empty),
-				Encoding = Encoding.ASCII,
-			});
-			using (var b = CreateApkBuilder (path, false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
-				StringAssertEx.Contains (expected, b.LastBuildOutput,
-					"The Wrong keystore was used to sign the apk");
-			}
-		}
-
-#pragma warning disable 414
 		static object [] BuildApplicationWithJavaSourceChecks = new object [] {
 			new object[] {
 				/* isRelease */           false,
@@ -2374,7 +2386,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", firstFrameworkVersion)))
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVerson should be {firstFrameworkVersion}");
@@ -3174,7 +3186,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFrameworkVersion)))
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, targetFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "_SetLatestTargetFrameworkVersion";
@@ -3202,7 +3214,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", "v8.1")))
+				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "v8.1")))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
@@ -3877,9 +3889,9 @@ public class ApplicationRegistration { }");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// We should have a java stub
-				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var javaStub = Path.Combine (intermediate, "android", "src", "md54908d67eb9afef4acc92753cc61471e9", "CircleImageView.java");
-				FileAssert.Exists (javaStub);
+				var javaStubDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
+				var files = Directory.GetFiles (javaStubDir, "CircleImageView.java", SearchOption.AllDirectories);
+				CollectionAssert.IsNotEmpty (files, $"{javaStubDir} should contain CircleImageView.java!");
 			}
 		}
 
@@ -4044,6 +4056,20 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
+			}
+		}
+
+		[Test]
+		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
+				FileAssert.Exists (environment);
+				Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
 			}
 		}
 	}
