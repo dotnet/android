@@ -17,6 +17,7 @@ namespace Mobile.Tuner {
 			"System.ComponentModel.DataAnnotations",
 			"System.Core",
 			"System.Data",
+			"System.Data.DataSetExtensions",
 			"System.Data.Services.Client",
 			"System.EnterpriseServices",
 			"System.IdentityModel",
