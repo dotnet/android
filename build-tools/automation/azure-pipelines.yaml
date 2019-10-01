@@ -160,69 +160,15 @@ stages:
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
       displayName: create updateinfo file
 
-    - powershell: |
-        $pkg = Get-ChildItem -Path "bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/*" -Include *.pkg -File
-        if (![System.IO.File]::Exists($pkg)) {
-            throw [System.IO.FileNotFoundException] "Pkg File not found in bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)"
-        }
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-      displayName: set variable to pkg path
-
-    - template: productsign-pkg.yml@yaml
-      parameters:
-        UnsignedPkgPath: $(XA.Unsigned.Pkg)
-    
-    - script: |
-        cd $(Build.SourcesDirectory)/..
-        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
-        cd release-scripts
-        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
-      displayName: Notarize PKG
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-
     - task: PublishPipelineArtifact@0
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
         targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
-    - template: upload-to-storage.yml@yaml
-      parameters:
-        BuildPackages: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-        AzureContainerName: $(Azure.Container.Name)
-        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-        condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: mac-build-results
-
-  # Check - "Xamarin.Android (Mac Queue Vsix Signing)"
-  # Actually runs on a Windows host, but the work is done in a Jenkins job. Does not run on PR builds.
-  - job: queue_vsix_signing
-    displayName: Queue Vsix Signing
-    dependsOn: mac_build_create_installers
-    pool: $(VSEngWinVS2019)
-    condition: and(eq(dependencies.mac_build_create_installers.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 1
-    workspace:
-      clean: all
-    steps:
-    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
-
-    - task: JenkinsQueueJob@2
-      displayName: xamarin vsix codesign - run jenkins job
-      inputs:
-        serverEndpoint: $(Signing.Endpoint)
-        jobName: $(Signing.Job)
-        isParameterizedJob: true
-        jobParameters: |
-          REPO=$(Build.Repository.Name)
-          COMMIT=$(Build.SourceVersion)
-          SIGN_TYPE=Real
-          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
-          ENABLE_JAR_SIGNING=true
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -314,6 +260,82 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: win-build-test-results
+
+- stage: finalize_installers
+  displayName: Finalize Installers
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
+  - job: notarize_pkg_upload_storage
+    displayName: Notarize and Upload to Storage
+    pool: $(HostedMacMojave)
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    steps:
+    - template: install-certificates.yml@yaml
+      parameters:
+        DeveloperIdApplication: $(developer-id-application)
+        DeveloperIdInstaller: $(developer-id-installer)
+        IphoneDeveloper: $(iphone-developer)
+        MacDeveloper: $(mac-developer)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
+      displayName: set variable to pkg path
+
+    - template: productsign-pkg.yml@yaml
+      parameters:
+        UnsignedPkgPath: $(XA.Unsigned.Pkg)
+
+    - script: |
+        cd $(System.DefaultWorkingDirectory)/..
+        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
+        cd release-scripts
+        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+      displayName: Notarize PKG
+
+    - template: upload-to-storage.yml@yaml
+      parameters:
+        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
+        AzureContainerName: $(Azure.Container.Name)
+        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+
+  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
+  - job: queue_vsix_signing
+    displayName: Queue Vsix Signing
+    dependsOn: notarize_pkg_upload_storage
+    pool: $(VSEngWinVS2019)
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    steps:
+    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
+
+    - task: JenkinsQueueJob@2
+      displayName: xamarin vsix codesign - run jenkins job
+      inputs:
+        serverEndpoint: $(Signing.Endpoint)
+        jobName: $(Signing.Job)
+        isParameterizedJob: true
+        jobParameters: |
+          REPO=$(Build.Repository.Name)
+          COMMIT=$(Build.SourceVersion)
+          SIGN_TYPE=Real
+          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
+          ENABLE_JAR_SIGNING=true
 
 - stage: test
   displayName: Test
