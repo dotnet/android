@@ -343,6 +343,9 @@ when packaging Release applications.
     ItemGroup contains default profile(s). It can be overriden by
     removing the existing one(s) and adding your own AOT profiles.
 
+    The profiles can also be added with `AndroidAotProfiles` property,
+    which should contain colon separated list of absolute paths.
+
     Support for this property was added in Xamarin.Android 9.4.
 
     This property is `False` by default.
@@ -685,6 +688,11 @@ when packaging Release applications.
     use the to the `apksigner` tool rather than the `jarsigner`.
 
     Added in Xamarin.Android 8.2.
+
+-   **AndroidUseDefaultAotProfile** &ndash; A bool property which allows
+    the developer to suppress usage of the default AOT profiles.
+
+    Added in Xamarin.Android 10.0.
 
 -   **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
     the developer to revert the versionCode calculation back to its old pre
