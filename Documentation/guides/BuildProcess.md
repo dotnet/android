@@ -692,7 +692,7 @@ when packaging Release applications.
 -   **AndroidUseDefaultAotProfile** &ndash; A bool property which allows
     the developer to suppress usage of the default AOT profiles.
 
-    Added in Xamarin.Android 10.0.
+    Added in Xamarin.Android 10.1.
 
 -   **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
     the developer to revert the versionCode calculation back to its old pre
