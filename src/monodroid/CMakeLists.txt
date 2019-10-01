@@ -236,9 +236,11 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/basic-android-system.cc
   ${SOURCES_DIR}/basic-utilities.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
+  ${SOURCES_DIR}/debug.cc
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
+  ${SOURCES_DIR}/external-api.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/logger.cc
@@ -255,7 +257,6 @@ set(MONODROID_SOURCES
 if(UNIX)
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${SOURCES_DIR}/debug.cc
     ${SOURCES_DIR}/monodroid-networkinfo.cc
     ${SOURCES_DIR}/xamarin_getifaddrs.cc
     )

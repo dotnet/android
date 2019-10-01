@@ -87,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 				"Asia/Qostanay",
 				"US/Pacific-New"
 			};
-			
+
 			foreach (var tz in NodaTime.DateTimeZoneProviders.Tzdb.Ids) {
 				if (ignore.Contains (tz))
 					continue;

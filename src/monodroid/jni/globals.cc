@@ -7,10 +7,8 @@ Util utils;
 AndroidSystem androidSystem;
 OSBridge osBridge;
 EmbeddedAssemblies embeddedAssemblies;
+MonodroidRuntime monodroidRuntime;
 #ifndef ANDROID
 InMemoryAssemblies inMemoryAssemblies;
 #endif
-
-#ifdef DEBUG
 Debug debug;
-#endif

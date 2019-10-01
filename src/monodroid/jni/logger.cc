@@ -12,7 +12,7 @@
 #include "logger.hh"
 
 #include "monodroid.h"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
 #include "debug.hh"
 #include "util.hh"
 #include "globals.hh"

@@ -19,6 +19,9 @@ typedef struct BundleMonoAPI
 #include <stdarg.h>
 #include <android/log.h>
 
+#ifdef __cplusplus
+[[maybe_unused]]
+#endif
 static void
 mkbundle_log_error (const char *format, ...)
 {

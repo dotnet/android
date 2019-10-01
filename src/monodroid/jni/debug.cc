@@ -9,19 +9,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef WINDOWS
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
-#include <sys/time.h>
+#include <sys/utsname.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#endif
+
+#include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
 #include <assert.h>
 #include <limits.h>
+#include <dlfcn.h>
+#include <mono/metadata/mono-debug.h>
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -33,6 +40,9 @@
 #include "debug.hh"
 #include "util.hh"
 #include "globals.hh"
+#include "cpp-util.hh"
+
+using namespace xamarin::android;
 
 //
 // The communication between xs and the app works as follows:
@@ -54,12 +64,80 @@ namespace xamarin { namespace android
 	void* conn_thread (void *arg);
 }}
 
-#ifdef DEBUG
-using namespace xamarin::android;
+void
+Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile)
+{
+	const char* col = strchr (desc, ':');
+	char *mname;
 
-uint16_t Debug::conn_port = 0;
-pthread_t Debug::conn_thread_id = 0;
+	if (col != nullptr) {
+		size_t name_len = static_cast<size_t>(col - desc);
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+		mname = new char [alloc_size];
+		strncpy (mname, desc, name_len);
+		mname [name_len] = 0;
+	} else {
+		mname = utils.strdup_new (desc);
+	}
 
+	int dlopen_flags = RTLD_LAZY;
+	simple_pointer_guard<char[]> libname (utils.string_concat ("libmono-profiler-", mname, ".so"));
+	bool found = false;
+	void *handle = androidSystem.load_dso_from_any_directories (libname, dlopen_flags);
+	found = load_profiler_from_handle (handle, desc, mname);
+
+	if (!found && libmono_path != nullptr) {
+		char *full_path = utils.path_combine (libmono_path, libname);
+		handle = androidSystem.load_dso (full_path, dlopen_flags, FALSE);
+		delete[] full_path;
+		found = load_profiler_from_handle (handle, desc, mname);
+	}
+
+	if (found && logfile != nullptr)
+		utils.set_world_accessable (logfile);
+
+	if (!found)
+		log_warn (LOG_DEFAULT,
+				"The '%s' profiler wasn't found in the main executable nor could it be loaded from '%s'.",
+				mname,
+		        libname.get ());
+
+	delete[] mname;
+}
+
+/* Profiler support cribbed from mono/metadata/profiler.c */
+
+typedef void (*ProfilerInitializer) (const char*);
+
+bool
+Debug::load_profiler (void *handle, const char *desc, const char *symbol)
+{
+	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (dlsym (handle, symbol));
+	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '%s'? %p", symbol, func);
+
+	if (func != nullptr) {
+		func (desc);
+		return true;
+	}
+	return false;
+}
+
+bool
+Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char *name)
+{
+	if (!dso_handle)
+		return false;
+
+	simple_pointer_guard<char[]> symbol (utils.string_concat (INITIALIZER_NAME, "_", name));
+	bool result = load_profiler (dso_handle, desc, symbol);
+
+	if (result)
+		return true;
+	dlclose (dso_handle);
+	return false;
+}
+
+#if defined (DEBUG) && !defined (WINDOWS)
 inline void
 Debug::parse_options (char *options, ConnOptions *opts)
 {
@@ -131,6 +209,31 @@ Debug::start_connection (char *options)
 	}
 
 	return 0;
+}
+
+void
+Debug::start_debugging_and_profiling ()
+{
+	char *connect_args;
+	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
+
+	if (connect_args != nullptr) {
+		int res = start_connection (connect_args);
+		if (res != 2) {
+			if (res) {
+				log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
+				exit (FATAL_EXIT_DEBUGGER_CONNECT);
+			}
+
+			/* Wait for XS to configure debugging/profiling */
+			gettimeofday(&wait_tv, nullptr);
+			wait_ts.tv_sec = wait_tv.tv_sec + 2;
+			wait_ts.tv_nsec = wait_tv.tv_usec * 1000;
+			start_debugging ();
+			start_profiling ();
+		}
+		delete[] connect_args;
+	}
 }
 
 /*
@@ -299,6 +402,192 @@ cleanup:
 	close (listen_socket);
 	return rv;
 }
+
+/*
+ * process_cmd:
+ *
+ *   Process a command received from XS through a socket connection.
+ * This is called on a separate thread.
+ * Return TRUE, if a new connection need to be opened.
+ */
+int
+Debug::process_cmd (int fd, char *cmd)
+{
+	if (!strcmp (cmd, "connect output")) {
+		dup2 (fd, 1);
+		dup2 (fd, 2);
+		return TRUE;
+	} else if (!strcmp (cmd, "connect stdout")) {
+		dup2 (fd, 1);
+		return TRUE;
+	} else if (!strcmp (cmd, "connect stderr")) {
+		dup2 (fd, 2);
+		return TRUE;
+	} else if (!strcmp (cmd, "discard")) {
+		return TRUE;
+	} else if (!strcmp (cmd, "ping")) {
+		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> ("pong")), 5))
+			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back (%s)\n", strerror (errno));
+	} else if (!strcmp (cmd, "exit process")) {
+		log_info (LOG_DEFAULT, "XS requested an exit, will exit immediately.\n");
+		fflush (stdout);
+		fflush (stderr);
+		exit (0);
+	} else if (!strncmp (cmd, "start debugger: ", 16)) {
+		const char *debugger = cmd + 16;
+		int use_fd = FALSE;
+		if (!strcmp (debugger, "no")) {
+			/* disabled */
+		} else if (!strcmp (debugger, "sdb")) {
+			sdb_fd = fd;
+			use_fd = TRUE;
+		}
+		/* Notify the main thread (start_debugging ()) */
+		debugging_configured = true;
+		pthread_mutex_lock (&process_cmd_mutex);
+		pthread_cond_signal (&process_cmd_cond);
+		pthread_mutex_unlock (&process_cmd_mutex);
+		if (use_fd)
+			return TRUE;
+	} else if (!strncmp (cmd, "start profiler: ", 16)) {
+		const char *prof = cmd + 16;
+		int use_fd = FALSE;
+
+		if (!strcmp (prof, "no")) {
+			/* disabled */
+		} else if (!strncmp (prof, "log:", 4)) {
+			use_fd = TRUE;
+			profiler_fd = fd;
+			profiler_description = utils.monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
+		} else {
+			log_error (LOG_DEFAULT, "Unknown profiler: '%s'", prof);
+		}
+		/* Notify the main thread (start_profiling ()) */
+		profiler_configured = true;
+		pthread_mutex_lock (&process_cmd_mutex);
+		pthread_cond_signal (&process_cmd_cond);
+		pthread_mutex_unlock (&process_cmd_mutex);
+		if (use_fd)
+			return TRUE;
+	} else {
+		log_error (LOG_DEFAULT, "Unsupported command: '%s'", cmd);
+	}
+
+	return FALSE;
+}
+
+#if !defined (WINDOWS)
+
+void
+Debug::start_debugging (void)
+{
+	char *debug_arg;
+	char *debug_options [2];
+
+	// wait for debugger configuration to finish
+	pthread_mutex_lock (&process_cmd_mutex);
+	while (!debugging_configured && !config_timedout) {
+		if (pthread_cond_timedwait (&process_cmd_cond, &process_cmd_mutex, &wait_ts) == ETIMEDOUT)
+			config_timedout = true;
+	}
+	pthread_mutex_unlock (&process_cmd_mutex);
+
+	if (!sdb_fd)
+		return;
+
+	embeddedAssemblies.set_register_debug_symbols (true);
+
+	debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
+	debug_options[0] = debug_arg;
+
+	// this text is used in unit tests to check the debugger started
+	// do not change it without updating the test.
+	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
+
+	if (enable_soft_breakpoints ()) {
+		constexpr char soft_breakpoints[] = "--soft-breakpoints";
+		debug_options[1] = const_cast<char*> (soft_breakpoints);
+		mono_jit_parse_options (2, debug_options);
+	} else {
+		mono_jit_parse_options (1, debug_options);
+	}
+
+	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+}
+
+void
+Debug::start_profiling ()
+{
+	// wait for profiler configuration to finish
+	pthread_mutex_lock (&process_cmd_mutex);
+	while (!profiler_configured && !config_timedout) {
+		if (pthread_cond_timedwait (&process_cmd_cond, &process_cmd_mutex, &wait_ts) == ETIMEDOUT)
+			config_timedout = TRUE;
+	}
+	pthread_mutex_unlock (&process_cmd_mutex);
+
+	if (!profiler_description)
+		return;
+
+	log_info (LOG_DEFAULT, "Loading profiler: '%s'", profiler_description);
+	monodroid_profiler_load (androidSystem.get_runtime_libdir (), profiler_description, nullptr);
+}
+
+#endif  // !def WINDOWS
+
+#ifdef ANDROID
+#ifdef DEBUG
+static const char *soft_breakpoint_kernel_list[] = {
+	"2.6.32.21-g1e30168", nullptr
+};
+
+int
+Debug::enable_soft_breakpoints (void)
+{
+	struct utsname name;
+
+	/* This check is to make debugging work on some old Samsung device which had
+	 * a patched kernel that would abort the application after several segfaults
+	 * (with the SIGSEGV being used for single-stepping in Mono)
+	*/
+	uname (&name);
+	for (const char** ptr = soft_breakpoint_kernel_list; *ptr; ptr++) {
+		if (!strcmp (name.release, *ptr)) {
+			log_info (LOG_DEBUGGER, "soft breakpoints enabled due to kernel version match (%s)", name.release);
+			return 1;
+		}
+	}
+
+	char *value;
+	/* Soft breakpoints are enabled by default */
+	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
+		return 1;
+	}
+
+	int ret;
+	if (strcmp ("0", value) == 0) {
+		ret = 0;
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+	} else {
+		ret = 1;
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+	}
+	delete[] value;
+	return ret;
+}
+#endif /* DEBUG */
+#else  /* !defined (ANDROID) */
+#if defined (DEBUG) && !defined (WINDOWS)
+#ifndef enable_soft_breakpoints
+[[maybe_unused]] int
+Debug::enable_soft_breakpoints (void)
+{
+	return 0;
+}
+#endif /* DEBUG */
+#endif // enable_soft_breakpoints
+#endif /* defined (ANDROID) */
 
 // TODO: this is less than ideal. We can't use std::function or std::bind beause we
 // don't have the C++ stdlib on Android (well, we do but including it would make the
