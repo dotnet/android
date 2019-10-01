@@ -348,8 +348,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected), 
-			 	$"{task.NetResgenOutputFile} and {expected} do not match.");
+			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -389,8 +388,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
-				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -426,8 +424,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
-				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
 			// Update the id, and force the managed parser to re-parse the output
 			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main.Replace ("@+id/textview.withperiod", "@+id/textview.withperiod2"));
 			File.SetLastWriteTimeUtc (task.ResourceFlagFile, DateTime.UtcNow);
@@ -436,8 +433,7 @@ int xml myxml 0x7f140000
 			var data = File.ReadAllText (expected);
 			var expectedWithNewId = Path.Combine (Root, path, "GenerateDesignerFileExpectedWithNewId.cs");
 			File.WriteAllText (expectedWithNewId, data.Replace ("withperiod", "withperiod2"));
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expectedWithNewId),
-				 $"{task.NetResgenOutputFile} and {expectedWithNewId} do not match.");
+			AssertFileContentsMatch (task.NetResgenOutputFile, expectedWithNewId);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -520,8 +516,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			string aapt2Designer = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			string managedDesigner = Path.Combine (Root, path, "Resource.designer.managed.cs");
-			Assert.IsTrue (FileCompare (managedDesigner, aapt2Designer),
-				 $"{managedDesigner} and {aapt2Designer} do not match.");
+			AssertFileContentsMatch (managedDesigner, aapt2Designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 
 		}
@@ -594,9 +589,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 
 			string managedDesignerRtxt = Path.Combine (Root, path, "Resource.designer.managedrtxt.cs");
-
-			Assert.IsTrue (FileCompare (managedDesignerRtxt, aaptDesigner),
-				 $"{managedDesignerRtxt} and {aaptDesigner} do not match.");
+			AssertFileContentsMatch (managedDesignerRtxt, aaptDesigner);
 
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			File.Delete (Path.Combine (Root, path, "R.txt.bak"));
@@ -717,8 +710,7 @@ int styleable ElevenAttributes_attr10 10";
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
-			Assert.IsTrue (FileCompare (task.NetResgenOutputFile, expected),
-				 $"{task.NetResgenOutputFile} and {expected} do not match.");
+			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}

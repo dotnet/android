@@ -374,9 +374,35 @@ namespace Xamarin.Android.Build.Tests
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
-		protected bool FileCompare (string file1, string file2) => !MonoAndroidHelper.HasFileChanged (file1, file2);
+		protected void AssertFileContentsMatch (string file1, string file2)
+		{
+			if (!FileCompare (file1, file2)) {
+				TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
+				TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+				Assert.Fail ($"{file1} and {file2} do not match.");
+			}
+		}
 
-		protected byte[] ReadAllBytesIgnoringLineEndings (Stream stream)
+		protected bool FileCompare (string file1, string file2)
+		{
+			FileAssert.Exists (file1);
+			FileAssert.Exists (file2);
+			using (var stream1 = File.OpenRead (file1))
+			using (var stream2 = File.OpenRead (file2)) {
+				return StreamCompare (stream1, stream2);
+			}
+		}
+
+		protected bool StreamCompare (Stream stream1, Stream stream2)
+		{
+			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
+			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
+			string hash1 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+			string hash2 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+			return hash1 == hash2;
+		}
+
+		protected byte [] ReadAllBytesIgnoringLineEndings (Stream stream)
 		{
 			using (var memoryStream = new MemoryStream ()) {
 				int readByte;
