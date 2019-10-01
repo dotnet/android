@@ -4072,5 +4072,36 @@ namespace UnnamedProject
 				Assert.AreEqual ($"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}", File.ReadAllText (environment).Trim ());
 			}
 		}
+
+		[Test]
+		public void KotlinServiceLoader ([Values ("apk", "aab")] string packageFormat)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
+				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
+				WebContent = "http://central.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+			});
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				var archive = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", $"UnnamedProject.UnnamedProject.{packageFormat}");
+				var prefix = packageFormat == "apk" ? "" : "base/root/";
+				var expectedFiles = new [] {
+					prefix + "META-INF/maven/com.google.code.gson/gson/pom.xml",
+					prefix + "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory",
+					prefix + "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler",
+				};
+				var manifest = prefix + "META-INF/MANIFEST.MF";
+				using (var zip = ZipHelper.OpenZip (archive)) {
+					Assert.IsFalse (zip.ContainsEntry (manifest, caseSensitive: true), $"{manifest} should *not* exist in {archive}");
+					foreach (var expected in expectedFiles) {
+						Assert.IsTrue (zip.ContainsEntry (expected, caseSensitive: true), $"{expected} should exist in {archive}");
+					}
+				}
+			}
+		}
 	}
 }

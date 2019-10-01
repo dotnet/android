@@ -4,6 +4,17 @@ using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
+	[TPN]
+	class XamarinAndroidBuildTasks_AOSP : ThirdPartyNotice
+	{
+		static readonly Uri    url         = new Uri ("https://android.googlesource.com/platform/tools/base/+/d41d662dbf89f9b60ca6256415a059c0107749b8/sdk-common/NOTICE");
+
+		public override string LicenseText => null;
+		public override string LicenseFile => CommonLicenses.Apache20Path;
+		public override string Name        => "android/platform/tools/base";
+		public override Uri    SourceUrl   => url;
+	}
+
 	// The contents of the following files are originally from
 	// 	https://github.com/bazelbuild/bazel/tree/master/src/tools/android/java/com/google/devtools/build/android/incrementaldeployment
 	// 	* Xamarin.Android.Build.Tasks/Resources/IncrementalClassLoader.java
