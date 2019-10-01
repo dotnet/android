@@ -340,18 +340,21 @@ namespace ${ROOT_NAMESPACE} {
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
+				int expected = 3;
 				while (session.IsConnected && breakcountHitCount < 3 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
 				WaitFor (2000);
+				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
+				breakcountHitCount = 0;
 				ClearAdbLogcat ();
 				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
-				while (session.IsConnected && breakcountHitCount < 4 && timeout >= TimeSpan.Zero) {
+				while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
-				int expected = 4;
+				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 				session.Exit ();

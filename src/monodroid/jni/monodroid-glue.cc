@@ -845,7 +845,8 @@ mono_runtime_init (char *runtime_args)
 		debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1", options.loglevel, options.host, options.sdb_port,
 				options.server ? "server=y," : "");
 		debug_options[0] = debug_arg;
-
+		// this text is used in unit tests to check the debugger started
+		// do not change it without updating the test.
 		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
 
 		if (options.out_port > 0) {
@@ -1737,7 +1738,8 @@ start_debugging (void)
 
 	debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	debug_options[0] = debug_arg;
-
+	// this text is used in unit tests to check the debugger started
+	// do not change it without updating the test.
 	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
 
 	if (enable_soft_breakpoints ()) {
