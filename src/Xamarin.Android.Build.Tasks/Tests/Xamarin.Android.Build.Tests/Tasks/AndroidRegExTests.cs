@@ -146,6 +146,22 @@ namespace Xamarin.Android.Build.Tests
 					/*expectedLevel*/	"",
 					/*expectedMessage*/	"For resource 0x0101053d, entry index(1341) is beyond type entryCount(1155)"
 				};
+				yield return new object [] {
+					/*message*/		"aapt2 W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"aapt2 W 09-17 18",
+					/*expectedMessage*/	"15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed."
+				};
+				yield return new object [] {
+					/*message*/		"aapt2.exe W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.",
+					/*expectedToMatch*/	true,
+					/*expectedFile*/	"",
+					/*expectedLine*/	"",
+					/*expectedLevel*/	"aapt2.exe W 09-17 18",
+					/*expectedMessage*/	"15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed."
+				};
 			}
 		}
 

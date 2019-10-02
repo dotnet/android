@@ -51,11 +51,16 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), @"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' />");
 			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			var warnings = new List<BuildWarningEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors, warnings);
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath);
 			CallAapt2Compile (engine, Path.Combine (libPath, "0", "res"), archivePath, archives);
 			CallAapt2Compile (engine, Path.Combine (libPath, "1", "res"), archivePath, archives);
+			int platform = 0;
+			using (var b = new Builder ()) {
+				platform = b.GetMaxInstalledPlatform ();
+			}
 			var outputFile = Path.Combine (path, "resources.apk");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
@@ -66,8 +71,11 @@ namespace Xamarin.Android.Build.Tests
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (archivePath, "compiled.flata")),
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
 			};
 			Assert.True (task.Execute (), "task should have succeeded.");
+			Assert.AreEqual (0, errors.Count, "There should be no errors.");
+			Assert.LessOrEqual (0, warnings.Count, "There should be 0 warnings.");
 			Assert.True (File.Exists (outputFile), $"{outputFile} should have been created.");
 			using (var apk = ZipHelper.OpenZip (outputFile)) {
 				Assert.AreEqual (3, apk.EntryCount, $"{outputFile} should have 3 entries.");

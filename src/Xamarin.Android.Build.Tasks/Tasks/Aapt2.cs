@@ -102,6 +102,8 @@ namespace Xamarin.Android.Tasks {
 				var file = match.Groups ["file"].Value;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
+				if (singleLine.StartsWith ($"{ToolName} W", StringComparison.OrdinalIgnoreCase))
+					return true;
 				if (file.StartsWith ("W/", StringComparison.OrdinalIgnoreCase))
 					return true;
 				if (message.Contains ("warn:"))
@@ -139,6 +141,10 @@ namespace Xamarin.Android.Tasks {
 					LogCodedError ("APT0001", $"{message}. This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.");
 					return false;
 				}
+				if (message.Contains ("in APK") && message.Contains ("is compressed.")) {
+					LogMessage (singleLine, messageImportance);
+					return true;
+				}
 				if (message.Contains ("fakeLogOpen")) {
 					LogMessage (singleLine, messageImportance);
 					return true;
@@ -155,7 +161,7 @@ namespace Xamarin.Android.Tasks {
 					LogMessage (message, messageImportance);
 					return true;
 				}
-				if (level.Contains ("warning")) {
+				if (level.Contains ("warning") || level.StartsWith ($"{ToolName} W", StringComparison.OrdinalIgnoreCase)) {
 					LogCodedWarning (GetErrorCode (singleLine), singleLine);
 					return true;
 				}
