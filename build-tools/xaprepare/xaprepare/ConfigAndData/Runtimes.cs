@@ -124,6 +124,7 @@ namespace Xamarin.Android.Prepare
 			new BclFile ("System.ComponentModel.DataAnnotations.dll",                   BclFileType.ProfileAssembly),
 			new BclFile ("System.Core.dll",                                             BclFileType.ProfileAssembly),
 			new BclFile ("System.Data.dll",                                             BclFileType.ProfileAssembly),
+			new BclFile ("System.Data.DataSetExtensions.dll",                           BclFileType.ProfileAssembly),
 			new BclFile ("System.Data.Services.Client.dll",                             BclFileType.ProfileAssembly),
 			new BclFile ("System.IdentityModel.dll",                                    BclFileType.ProfileAssembly),
 			new BclFile ("System.IO.Compression.dll",                                   BclFileType.ProfileAssembly),
