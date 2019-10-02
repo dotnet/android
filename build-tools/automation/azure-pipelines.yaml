@@ -208,7 +208,7 @@ stages:
     dependsOn: mac_build_create_installers
     pool: $(XA.Build.Win.Pool)
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-    timeoutInMinutes: 45
+    timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
       clean: all
