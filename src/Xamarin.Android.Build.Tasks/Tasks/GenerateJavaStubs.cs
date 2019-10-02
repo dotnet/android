@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks
 		void Run (DirectoryAssemblyResolver res)
 		{
 			PackageNamingPolicy pnp;
-			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseHash;
+			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 			foreach (var dir in FrameworkDirectories) {
 				if (Directory.Exists (dir.ItemSpec))

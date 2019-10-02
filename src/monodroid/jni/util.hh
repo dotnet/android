@@ -62,41 +62,6 @@ extern "C" {
 
 namespace xamarin::android
 {
-	struct timing_point
-	{
-		time_t sec;
-		uint64_t ns;
-
-		void mark ();
-	};
-
-	struct timing_period
-	{
-		timing_point start;
-		timing_point end;
-
-		void mark_start ()
-		{
-			start.mark ();
-		}
-
-		void mark_end ()
-		{
-			end.mark ();
-		}
-	};
-
-	struct timing_diff
-	{
-		static constexpr uint32_t ms_in_nsec = 1000000ULL;
-
-		time_t sec;
-		uint32_t ms;
-		uint32_t ns;
-
-		timing_diff (const timing_period &period);
-	};
-
 	class Util : public BasicUtilities
 	{
 #if defined (ANDROID) || defined (LINUX)

@@ -75,7 +75,7 @@ namespace Android.Runtime {
 
 	class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_gref_get ();
 
 		public override int GlobalReferenceCount {
@@ -305,7 +305,7 @@ namespace Android.Runtime {
 			{
 				int idx;
 
-				if (typeName == null || !typesMap.TryGetValue (typeName, out idx)) 
+				if (typeName == null || !typesMap.TryGetValue (typeName, out idx))
 					return false;
 
 				return CallRegisterMethodByIndex (arguments, idx);
@@ -344,7 +344,7 @@ namespace Android.Runtime {
 						throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
 					callback = CreateDynamicCallback (minfo);
 				} else {
-					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler), 
+					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 						toks.Length == 4 ? Type.GetType (toks [3], true) : type, toks [2]);
 					callback = connector ();
 				}

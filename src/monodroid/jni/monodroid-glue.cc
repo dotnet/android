@@ -69,6 +69,7 @@
 #include "monodroid-glue-internal.hh"
 #include "globals.hh"
 #include "xamarin-app.h"
+#include "timing.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -906,8 +907,28 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 void
 MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
 {
+	struct JnienvInitializeArgs init = {};
+	init.javaVm                 = osBridge.get_jvm ();
+	init.env                    = env;
+	init.logCategories          = log_categories;
+	init.version                = env->GetVersion ();
+	init.androidSdkVersion      = android_api_level;
+	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, runtimeClass, init.androidSdkVersion);
+	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
+	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
+	init.packageNamingPolicy    = application_config.package_naming_policy;
+
+	// GC threshold is 90% of the max GREF count
+	init.grefGcThreshold        = static_cast<int>(androidSystem.get_gref_gc_threshold ());
+
+	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
+
+	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
+	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
+
 	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
-	MonoImage *image   = mono_assembly_get_image (assm);
+	MonoImage *image = mono_assembly_get_image (assm);
 
 	for (uint32_t i = 0; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
@@ -939,28 +960,11 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	}
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);
-
-	JnienvInitializeArgs init;
-	init.javaVm               = osBridge.get_jvm ();
-	init.env                  = env;
-	init.logCategories        = log_categories;
-	init.version              = env->GetVersion ();
-	init.androidSdkVersion    = android_api_level;
-	init.localRefsAreIndirect = LocalRefsAreIndirect (env, runtimeClass, init.androidSdkVersion);
-	init.isRunningOnDesktop   = is_running_on_desktop;
-
-	// GC threshold is 90% of the max GREF count
-	init.grefGcThreshold      = static_cast<int>(androidSystem.get_gref_gc_threshold ());
-	init.grefClass            = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
-	init.Class_getName        = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
-	init.Class_forName        = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 	init.Loader_loadClass     = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-	init.grefLoader           = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
-
 	env->DeleteLocalRef (lrefLoaderClass);
 
-	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
+	init.grefLoader           = env->NewGlobalRef (loader);
+	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
 
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
@@ -977,9 +981,7 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
-
-		timing_diff diff (partial_time);
-		log_info_nocheck (LOG_TIMING, "Runtime.init: end native-to-managed transition; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+		Timing::info (partial_time, "Runtime.init: end native-to-managed transition");
 	}
 }
 
@@ -1320,9 +1322,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrappe
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
-
-		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "Assembly load: %s preloaded; elapsed: %lis:%lu::%lu", assm_name, diff.sec, diff.ms, diff.ns);
+		TIMING_LOG_INFO (total_time, "Assembly load: %s preloaded", assm_name);
 	}
 }
 
@@ -1342,8 +1342,7 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_arra
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
-		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "Finished loading assemblies: preloaded %u assemblies; wasted time: %lis:%lu::%lu", assemblies.get_length (), diff.sec, diff.ms, diff.ns);
+		TIMING_LOG_INFO (total_time, "Finished loading assemblies: preloaded %u assemblies", assemblies.get_length ());
 	}
 }
 
@@ -1384,17 +1383,19 @@ inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                                           jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                                          jint apiLevel, jboolean embeddedDSOsEnabled)
+                                                          jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
 {
 	init_logging_categories ();
 
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		timing = new Timing ();
 		total_time.mark_start ();
 	}
 
 	android_api_level = apiLevel;
 	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
+	androidSystem.set_running_in_emulator (isEmulator);
 
 	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
@@ -1509,8 +1510,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
 
-		timing_diff diff (partial_time);
-		log_info_nocheck (LOG_TIMING, "Runtime.init: Mono runtime init; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+		Timing::info (partial_time, "Runtime.init: Mono runtime init");
 	}
 
 	jstring_array_wrapper assemblies (env, assembliesJava);
@@ -1528,8 +1528,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
-		timing_diff diff (total_time);
-		log_info_nocheck (LOG_TIMING, "Runtime.init: end, total time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+		Timing::info (total_time, "Runtime.init: end, total time");
 		dump_counters ("## Runtime.init: end");
 	}
 }
@@ -1585,7 +1584,8 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		/* embeddedDSOsEnabled */ JNI_FALSE
+		/* embeddedDSOsEnabled */ JNI_FALSE,
+		/* isEmulator */ JNI_FALSE
 	);
 }
 
@@ -1593,7 +1593,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                jint apiLevel, jboolean embeddedDSOsEnabled)
+                                jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -1606,7 +1606,8 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		embeddedDSOsEnabled
+		embeddedDSOsEnabled,
+		isEmulator
 	);
 }
 
@@ -1650,14 +1651,13 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jclass klass,
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
-		timing_diff diff (total_time);
-
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		char *type = utils.strdup_new (mt_ptr);
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		log_info_nocheck (LOG_TIMING, "Runtime.register: end time; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
-		log_warn (LOG_DEFAULT, "type == %s", type == nullptr ? "<null>" : type);
+		log_info_nocheck (LOG_TIMING, "Runtime.register: registered type '%s'", type);
+		Timing::info (total_time, "Runtime.register: end time");
+
 		dump_counters ("## Runtime.register: type=%s\n", type);
 		delete[] type;
 	}
@@ -1757,6 +1757,29 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass
 	reinitialize_android_runtime_type_manager (env);
 
 	log_info (LOG_DEFAULT, "All domain cleaned up");
+}
+
+char*
+MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass)
+{
+	if (klass == nullptr || Class_getName == nullptr)
+		return nullptr;
+
+	JNIEnv *env = osBridge.ensure_jnienv ();
+	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
+	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
+	char *ret = strdup (mutf8);
+
+	env->ReleaseStringUTFChars (name, mutf8);
+	env->DeleteLocalRef (name);
+
+	char *dot = strchr (ret, '.');
+	while (dot != nullptr) {
+		*dot = '/';
+		dot = strchr (dot + 1, '.');
+	}
+
+	return ret;
 }
 
 JNIEnv*

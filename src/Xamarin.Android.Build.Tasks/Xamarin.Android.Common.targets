@@ -2313,6 +2313,7 @@ because xbuild doesn't support framework reference assemblies.
     SupportedAbis="@(_BuildTargetAbis)"
     AndroidPackageName="$(_AndroidPackage)"
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
+    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>

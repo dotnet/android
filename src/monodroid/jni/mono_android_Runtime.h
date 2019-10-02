@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_init
  * Signature: (Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;[Ljava/lang/String;[Ljava/lang/String;IZ)V
  */
 JNIEXPORT void JNICALL Java_mono_android_Runtime_initInternal
-  (JNIEnv *, jclass, jstring, jobjectArray, jstring, jobjectArray, jobject, jobjectArray, jobjectArray, jint, jboolean);
+(JNIEnv *, jclass, jstring, jobjectArray, jstring, jobjectArray, jobject, jobjectArray, jobjectArray, jint, jboolean, jboolean);
 
 /*
  * Class:     mono_android_Runtime

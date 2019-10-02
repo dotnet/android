@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Java.Interop.Tools.TypeNameMappings;
+
 namespace Xamarin.Android.Tasks
 {
 	class ApplicationConfigNativeAssemblyGenerator : NativeAssemblyGenerator
@@ -16,6 +18,8 @@ namespace Xamarin.Android.Tasks
 		public bool UsesAssemblyPreload { get; set; }
 		public string MonoAOTMode { get; set; }
 		public string AndroidPackageName { get; set; }
+		public bool BrokenExceptionTransitions { get; set; }
+		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties)
 			: base (targetProvider)
@@ -52,6 +56,12 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "is_a_bundled_app");
 				size += WriteData (output, IsBundledApp);
+
+				WriteCommentLine (output, "broken_exception_transitions");
+				size += WriteData (output, BrokenExceptionTransitions);
+
+				WriteCommentLine (output, "package_naming_policy");
+				size += WriteData (output, (uint)PackageNamingPolicy);
 
 				WriteCommentLine (output, "environment_variable_count");
 				size += WriteData (output, environmentVariables == null ? 0 : environmentVariables.Count * 2);

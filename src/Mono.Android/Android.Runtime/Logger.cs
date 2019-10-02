@@ -3,8 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Android.Runtime {
 	internal static class Logger {
-		internal static LogCategories Categories;
 		static bool hasNoLibLog;
+
+		internal static LogCategories Categories;
 
 		internal static bool LogAssembly {
 			get {return (Categories & LogCategories.Assembly) != 0;}
@@ -58,18 +59,28 @@ namespace Android.Runtime {
 					System.Console.WriteLine ("[{0}] {1}: {2}", level, appname, line);
 			}
 		}
+
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		extern static uint monodroid_get_log_categories ();
+
+		static Logger ()
+		{
+			Categories = (LogCategories) monodroid_get_log_categories ();
+		}
 	}
 
+	// Keep in sync with the LogLevel enum in
+	// monodroid/libmonodroid/logger.{c,h}
 	internal enum LogLevel {
-		Unknown,
-		Default,
-		Verbose,
-		Debug,
-		Info,
-		Warn,
-		Error,
-		Fatal,
-		Silent
+		Unknown = 0x00,
+		Default = 0x01,
+		Verbose = 0x02,
+		Debug   = 0x03,
+		Info    = 0x04,
+		Warn    = 0x05,
+		Error   = 0x06,
+		Fatal   = 0x07,
+		Silent  = 0x08
 	}
 
 	// Keep in sync with the LogCategories enum in
