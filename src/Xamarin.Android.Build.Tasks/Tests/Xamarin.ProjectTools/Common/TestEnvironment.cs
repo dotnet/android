@@ -63,6 +63,17 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public static bool IsFIPSPolicyEnabled {
+			get {
+				if (!IsWindows) {
+					return false;
+				}
+
+				int fipsEnabled = (int) Microsoft.Win32.Registry.GetValue (@"HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy", "Enabled", 0);
+				return fipsEnabled == 1;
+			}
+		}
+
 		public static readonly string MacOSInstallationRoot = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
 
 		static VisualStudioInstance visualStudioInstance;

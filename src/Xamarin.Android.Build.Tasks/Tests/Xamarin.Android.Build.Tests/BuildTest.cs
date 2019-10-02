@@ -4163,6 +4163,10 @@ namespace UnnamedProject
 		[Test]
 		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
 		{
+			if (packageNamingPolicy == "LowercaseMD5" && IsFIPSPolicyEnabled) {
+				Assert.Ignore ("This test requires MD5, ignoring due to FIPS.");
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");

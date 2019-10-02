@@ -15,6 +15,9 @@ namespace Xamarin.Android.Build.Tests
 		[SetUp]
 		public void Setup ()
 		{
+			if (IsFIPSPolicyEnabled) {
+				Assert.Ignore ("This test requires MD5, ignoring due to FIPS.");
+			}
 			if (LongPathsSupported) {
 				Assert.Ignore ("This environment supports long paths");
 			}

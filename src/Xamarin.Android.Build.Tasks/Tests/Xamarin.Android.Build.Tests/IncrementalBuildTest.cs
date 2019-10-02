@@ -954,6 +954,9 @@ namespace Lib2
 		[Test]
 		public void ChangePackageNamingPolicy ()
 		{
+			if (IsFIPSPolicyEnabled) {
+				Assert.Ignore ("This test requires MD5, ignoring due to FIPS.");
+			}
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"

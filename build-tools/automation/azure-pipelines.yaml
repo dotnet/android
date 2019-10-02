@@ -619,6 +619,7 @@ stages:
       clean: all
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+      FIPS.RegKey: 'HKLM:\System\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy'
     steps:
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
@@ -628,6 +629,10 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
+
+    - powershell: |
+        Set-ItemProperty -Path $(FIPS.RegKey) -Name Enabled -Value 1
+      displayName: Enable FIPS Policy
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
@@ -640,6 +645,11 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
         testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
+
+    - powershell: |
+        Set-ItemProperty -Path $(FIPS.RegKey) -Name Enabled -Value 0
+      displayName: Disable FIPS Policy
+      condition: always ()
 
     - template: yaml-templates\upload-results.yaml
       parameters:

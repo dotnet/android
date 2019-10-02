@@ -106,6 +106,8 @@ namespace Xamarin.Android.Build.Tests
 
 		protected bool IsLinux => TestEnvironment.IsLinux;
 
+		protected bool IsFIPSPolicyEnabled => TestEnvironment.IsFIPSPolicyEnabled;
+
 		public string CacheRootPath {
 			get {
 				return IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData)
