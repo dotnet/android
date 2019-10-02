@@ -208,7 +208,7 @@
     />
   </Target>
   <Target Name="_GenerateXACommonProps"
-      DependsOnTargets="ResolveReferences;GetXAVersionInfo"
+      DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
       Inputs="Xamarin.Android.Common.props.in;Xamarin.Android.BuildInfo.txt.in;..\..\build-tools\scripts\Ndk.targets"
       Outputs="Xamarin.Android.Common.props;Xamarin.Android.BuildInfo.txt">
