@@ -266,19 +266,8 @@ namespace Xamarin.Android.Prepare
 				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (bf);
 
 				Utilities.CopyFile (bf.SourcePath, destFilePath);
-				if (bf.ExcludeDebugSymbols)
-					continue;
-				if (debugSymbolsDestPath == null) {
-					Log.DebugLine ($"Debug symbols not found for BCL file {bf.Name} ({bf.Type})");
-					continue;
-				}
-
-				if (!File.Exists (bf.DebugSymbolsPath)) {
-					Log.DebugLine ($"Debug symbols file does not exist: {bf.DebugSymbolsPath}");
-					continue;
-				}
-
-				Utilities.CopyFile (bf.DebugSymbolsPath, debugSymbolsDestPath);
+				if (!bf.ExcludeDebugSymbols)
+					Utilities.CopyFile (bf.DebugSymbolsPath, debugSymbolsDestPath);
 			}
 		}
 
