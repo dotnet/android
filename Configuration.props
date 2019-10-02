@@ -12,7 +12,7 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ProductVersion>10.0.99</ProductVersion>
+    <ProductVersion>10.1.0</ProductVersion>
     <!-- TFV for all projects, try v4.7.2 but fallback if needed -->
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>

@@ -227,7 +227,7 @@ namespace Xamarin.Android.Prepare
 
 		List<BclFile> BclToDesigner (BclFileTarget ignoreForTarget)
 		{
-			return BclFilesToInstall.Where (bf => ShouldIncludeDesignerBcl (bf)).Select (bf => new BclFile (bf.Name, bf.Type, excludeDebugSymbols: true, version: bf.Version, target: ignoreForTarget)).ToList ();
+			return BclFilesToInstall.Where (bf => ShouldIncludeDesignerBcl (bf)).Select (bf => new BclFile (bf.Name, bf.Type, bf.ExcludeDebugSymbols, version: bf.Version, target: ignoreForTarget)).ToList ();
 
 			bool ShouldIncludeDesignerBcl (BclFile bf)
 			{
