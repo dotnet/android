@@ -204,7 +204,7 @@ stages:
     dependsOn: mac_build_create_installers
     pool: $(VSEngWinVS2019)
     condition: and(eq(dependencies.mac_build_create_installers.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
-    timeoutInMinutes: 45
+    timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
       clean: all
