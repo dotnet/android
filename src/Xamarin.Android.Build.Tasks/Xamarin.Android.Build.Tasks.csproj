@@ -202,6 +202,7 @@
     <Compile Include="Utilities\JavaResourceParser.cs" />
     <Compile Include="Utilities\MetadataResolver.cs" />
     <Compile Include="Utilities\MetadataExtensions.cs" />
+    <Compile Include="Utilities\PackagingUtils.cs" />
     <Compile Include="Utilities\ResourceParser.cs" />
     <Compile Include="Utilities\ManagedResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />

@@ -174,15 +174,21 @@ namespace Xamarin.Android.Tasks
 				count = 0;
 				foreach (var jarFile in jarFilePaths) {
 					using (var jar = ZipArchive.Open (File.OpenRead (jarFile))) {
-						foreach (var jarItem in jar.Where (ze => !ze.IsDirectory && !ze.FullName.StartsWith ("META-INF") && !ze.FullName.EndsWith (".class") && !ze.FullName.EndsWith (".java") && !ze.FullName.EndsWith ("MANIFEST.MF"))) {
+						foreach (var jarItem in jar) {
+							if (jarItem.IsDirectory)
+								continue;
+							var name = jarItem.FullName;
+							if (!PackagingUtils.CheckEntryForPackaging (name)) {
+								continue;
+							}
 							byte [] data;
 							using (var d = new System.IO.MemoryStream ()) {
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							var path = RootPath + jarItem.FullName;
+							var path = RootPath + name;
 							if (apk.Archive.Any (e => e.FullName == path))
-								Log.LogMessage ("Warning: failed to add jar entry {0} from {1}: the same file already exists in the apk", jarItem.FullName, Path.GetFileName (jarFile));
+								Log.LogMessage ("Warning: failed to add jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
 							else
 								apk.Archive.AddEntry (data, path);
 						}
