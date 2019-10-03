@@ -8,6 +8,9 @@
 # Xamarin.Android - pecolli, jopryo
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*referenceassemblies\*\facades\*, Facade assemblies.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\bcl\*, 'Designer profile' assemblies.
+xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*\System.Runtime.CompilerServices.Unsafe.dll, contains small amount of IL
+xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*\System.Windows.dll, contains only type forwarders
+xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*\System.Xml.Serialization.dll, contains only type forwarders
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\ICSharpCode.SharpZipLib.dll, Fails Pdb2Pdb.exe conversion.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\illinkanalyzer.exe, Fails Pdb2Pdb.exe conversion.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\Java.Interop.dll, Fails Pdb2Pdb.exe conversion.
