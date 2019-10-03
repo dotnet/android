@@ -99,9 +99,7 @@ stages:
     workspace:
       clean: all
     variables:
-    - group: Xamarin Notarization
-    - name: JAVA_HOME
-      value: '/Users/vsts/Library/Android/jdk/'
+      JAVA_HOME: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
@@ -274,6 +272,8 @@ stages:
     cancelTimeoutInMinutes: 1
     workspace:
       clean: all
+    variables:
+    - group: Xamarin Notarization
     steps:
     - template: install-certificates.yml@yaml
       parameters:
