@@ -11,7 +11,7 @@
 
 #include "debug.hh"
 #include "embedded-assemblies.hh"
-#include "inmemory-assemblies.hh"
+#include "designer-assemblies.hh"
 #include "monodroid-glue-internal.hh"
 #include "cppcompat.hh"
 
@@ -28,7 +28,7 @@ extern xamarin::android::internal::MonodroidRuntime monodroidRuntime;
 extern xamarin::android::Timing *timing;
 
 #ifndef ANDROID
-extern xamarin::android::internal::InMemoryAssemblies inMemoryAssemblies;
+extern xamarin::android::internal::DesignerAssemblies designerAssemblies;
 #endif
 
 #endif // !__GLOBALS_H

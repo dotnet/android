@@ -10,6 +10,6 @@ EmbeddedAssemblies embeddedAssemblies;
 MonodroidRuntime monodroidRuntime;
 Timing *timing = nullptr;
 #ifndef ANDROID
-InMemoryAssemblies inMemoryAssemblies;
+DesignerAssemblies designerAssemblies;
 #endif
 Debug debug;
