@@ -451,7 +451,7 @@ namespace Xamarin.Android.Build.Tests
 		public void FixtureSetup ()
 		{
 			// Clean the Resource Cache.
-			if (string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("BUILD_HOST")))
+			if (!TestEnvironment.IsRunningOnCI)
 				return;
 			if (Directory.Exists (CachePath)) {
 				foreach (var subDir in Directory.GetDirectories (CachePath, "*", SearchOption.TopDirectoryOnly)) {
