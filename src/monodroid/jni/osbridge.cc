@@ -181,7 +181,7 @@ OSBridge::_monodroid_gref_inc ()
 int
 OSBridge::_monodroid_gref_dec ()
 {
-	return __sync_fetch_and_sub (&gc_gref_count, 1);
+	return __sync_sub_and_fetch (&gc_gref_count, 1);
 }
 
 char*
