@@ -219,6 +219,12 @@ used by the `Install` and `SignAndroidPackage` targets.
 The [Signing Properties](#Signing_Properties) are also relevant
 when packaging Release applications.
 
+-   **AndroidAotProfiles** &ndash; A string property which allows the
+    developer to add AOT profiles from the command line. It is
+    semicolon or comma separated list of absolute paths.
+
+    Added in Xamarin.Android 10.1.
+
 -   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
     the digest algorithm to use with `jarsigner -digestalg`.
 
@@ -342,9 +348,6 @@ when packaging Release applications.
     The profiles are listed in `AndroidAotProfile` item group. This
     ItemGroup contains default profile(s). It can be overriden by
     removing the existing one(s) and adding your own AOT profiles.
-
-    The profiles can also be added with `AndroidAotProfiles` property,
-    which should contain colon separated list of absolute paths.
 
     Support for this property was added in Xamarin.Android 9.4.
 
