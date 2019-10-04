@@ -8,23 +8,28 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
   <Target Name="LogcatTiming">
     <PropertyGroup>
-      <_DefaultLogcatInputFilename>tmp-logcat-timing.log</_DefaultLogcatInputFilename>
+      <_TmpLogcatInputFilename>logcat-$([System.IO.Path]::GetRandomFileName()).txt</_TmpLogcatInputFilename>
     </PropertyGroup>
+    <Error Condition=" '$(LogcatInputFilename)' == '' And Exists($(_TmpLogcatInputFilename))" Text="Unable to create temporary file $(_TmpLogcatInputFilenam) as it already exists." />
     <Exec
         Condition=" '$(LogcatInputFilename)' == '' "
-        Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_DefaultLogcatInputFilename)"
+        Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_TmpLogcatInputFilename)"
     />
     <PropertyGroup Condition=" '$(LogcatInputFilename)' == '' ">
-      <LogcatInputFilename>$(_DefaultLogcatInputFilename)</LogcatInputFilename>
+      <LogcatInputFilename>$(_TmpLogcatInputFilename)</LogcatInputFilename>
+      <_TmpLogcatFileCreated>True</_TmpLogcatFileCreated>
     </PropertyGroup>
     <ProcessLogcatTiming
         InputFilename="$(LogcatInputFilename)"
         ApplicationPackageName="$(Package)"
         PID="$(PID)"
-        ResultsFilename="tmp-timing-results.csv"
+        ResultsFilename="$(LogcatInputFilename)-results.csv"
         DefinitionsFilename="..\scripts\TimingDefinitions.txt"
         AddResults="true"
         Activity="$(Activity)" />
+    <Delete
+	Condition=" $(_TmpLogcatFileCreated) == 'True' "
+	Files="$(_TmpLogcatInputFilename)" />
   </Target>
   <PropertyGroup>
     <_MSBuildTimingDependsOn>
