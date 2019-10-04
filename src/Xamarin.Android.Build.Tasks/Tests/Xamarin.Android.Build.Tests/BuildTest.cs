@@ -44,7 +44,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationReleaseProfiledAot")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*lib/xamarin.android/xbuild/Xamarin/Android/startup\.aotprofile", b.LastBuildOutput, "Should use default AOT profile");
 			}
@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidEnableProfiledAot = true,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile")) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.DoesNotContainRegex (@"\[aot-compiler stdout\] Using profile data file.*lib/xamarin.android/xbuild/Xamarin/Android/startup.*\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile");
 			}
