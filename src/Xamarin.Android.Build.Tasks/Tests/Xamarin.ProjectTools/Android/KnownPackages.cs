@@ -212,6 +212,15 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.AppCompat.25.4.0.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v7.AppCompat.dll" }
 			}
 		};
+		public static Package SupportCompat_24_2_1 = new Package {
+			Id = "Xamarin.Android.Support.Compat",
+			Version = "24.2.1",
+			TargetFramework = "MonoAndroid70",
+			References = {
+				new BuildItem.Reference ("Xamarin.Android.Support.Compat") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Compat.24.2.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.Compat.dll" }
+			}
+		};
 		public static Package SupportCompat_25_4_0_1 = new Package {
 			Id = "Xamarin.Android.Support.Compat",
 			Version = "25.4.0.1",
