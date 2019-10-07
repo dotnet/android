@@ -57,10 +57,10 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeTearDown]
 		public void AfterDeploymentTests ()
 		{
-			if (HasDevices)
+			if (HasDevices && proj != null)
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 
-			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (builder.ProjectDirectory))
+			if (TestContext.CurrentContext.Result.FailCount == 0 && builder != null && Directory.Exists (builder.ProjectDirectory))
 			    Directory.Delete (builder.ProjectDirectory, recursive: true);
 		}
 
