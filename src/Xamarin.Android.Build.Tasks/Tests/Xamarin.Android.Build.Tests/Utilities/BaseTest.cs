@@ -250,7 +250,7 @@ namespace Xamarin.Android.Build.Tests
 			var androidSdkBinPath = Path.Combine (androidSdkToolsPath, "bin");
 			var androidSdkPlatformToolsPath = Path.Combine (androidSdkDirectory, "platform-tools");
 			var androidSdkPlatformsPath = Path.Combine (androidSdkDirectory, "platforms");
-			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion);
+			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion ?? string.Empty);
 			Directory.CreateDirectory (androidSdkDirectory);
 			Directory.CreateDirectory (androidSdkToolsPath);
 			Directory.CreateDirectory (androidSdkBinPath);
@@ -259,8 +259,10 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (androidSdkBuildToolsPath);
 
 			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
-			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
-			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+			if (!string.IsNullOrEmpty (buildToolsVersion)) {
+				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
+				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+			}
 			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
 
 			List<ApiInfo> defaults = new List<ApiInfo> ();

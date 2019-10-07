@@ -3242,6 +3242,35 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void GetDependencyTest ()
+		{
+			var apis = new ApiInfo [] {
+			};
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
+					null, apis);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+			};
+			var parameters = new string [] {
+				$"TargetFrameworkRootPath={referencesPath}",
+				$"AndroidSdkDirectory={androidSdkPath}",
+			};
+			var envVar = new Dictionary<string, string>  {
+				{ "XBUILD_FRAMEWORK_FOLDERS_PATH", referencesPath },
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "GetAndroidDependencies";
+				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
+					string.Format ("First Build should have succeeded"));
+			}
+		}
+
+		[Test]
 		public void ValidateUseLatestAndroid ()
 		{
 			var apis = new ApiInfo [] {
