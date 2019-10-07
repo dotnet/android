@@ -15,13 +15,13 @@ namespace Xamarin.Android.Build.Tests
 		static ProjectBuilder builder;
 		static XamarinAndroidApplicationProject proj;
 
-		[OneTimeTearDown]
-		public void AfterDeploymentTests ()
+		[TearDown]
+		public void Teardown ()
 		{
 			if (HasDevices)
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 
-			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (builder.ProjectDirectory))
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed && Directory.Exists (builder.ProjectDirectory))
 				Directory.Delete (builder.ProjectDirectory, recursive: true);
 		}
 
@@ -38,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;arm64-v8a;x86");
+			} else {
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"23\" />");
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -46,7 +48,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		{{
 			Android.Util.Log.Debug (""BugzillaTests"", ""{expectedLogcatOutput}"");
 ");
-			builder = CreateApkBuilder (Path.Combine ("temp", "Bug29730"));
+			builder = CreateApkBuilder (Path.Combine ("temp", $"Bug29730-{isRelease}"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
