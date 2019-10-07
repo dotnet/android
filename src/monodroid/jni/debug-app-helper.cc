@@ -88,7 +88,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	}
 
 	char *monosgen_path = get_libmonosgen_path ();
-	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
+	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL);
 	if (monosgen == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to dlopen Mono runtime from %s: %s", monosgen_path, dlerror ());
 		exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
