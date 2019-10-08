@@ -2,8 +2,9 @@
 #ifndef __MONODROID_DEBUG_H__
 #define __MONODROID_DEBUG_H__
 
-#include <stdint.h>
+#include <cstdint>
 #include <pthread.h>
+#include <sys/time.h>
 
 #ifdef __cplusplus
 namespace xamarin::android
@@ -15,6 +16,9 @@ namespace xamarin::android
 		{
 			int64_t timeout_time;
 		};
+
+	private:
+		static constexpr char INITIALIZER_NAME[] = "mono_profiler_init";
 
 	public:
 		/* Android property containing connection information, set by XS */
@@ -37,19 +41,40 @@ namespace xamarin::android
 		explicit Debug ()
 		{}
 
-#if !defined (WINDOWS) && defined (DEBUG)
-		int start_connection (char *options);
+		void monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile);
 
 	private:
-		void parse_options (char *options, ConnOptions *opts);
-		int process_connection (int fd);
-		int handle_server_connection (void);
+		bool load_profiler (void *handle, const char *desc, const char *symbol);
+		bool load_profiler_from_handle (void *dso_handle, const char *desc, const char *name);
+
+#if !defined (WINDOWS) && defined (DEBUG)
+	public:
+		int          enable_soft_breakpoints ();
+		void         start_debugging_and_profiling ();
+
+	private:
+		int          start_connection (char *options);
+		void         parse_options (char *options, ConnOptions *opts);
+		int          process_connection (int fd);
+		int          handle_server_connection (void);
+		int          process_cmd (int fd, char *cmd);
+		void         start_debugging ();
+		void         start_profiling ();
 		friend void* conn_thread (void *arg);
 
 	private:
-		static uint16_t  conn_port;
-		static pthread_t conn_thread_id;
-
+		pthread_mutex_t  process_cmd_mutex = PTHREAD_MUTEX_INITIALIZER;
+		pthread_cond_t   process_cmd_cond  = PTHREAD_COND_INITIALIZER;
+		uint16_t         conn_port = 0;
+		pthread_t        conn_thread_id = 0;
+		bool             debugging_configured;
+		int              sdb_fd;
+		bool             profiler_configured;
+		int              profiler_fd;
+		char            *profiler_description;
+		bool             config_timedout;
+		timeval          wait_tv;
+		timespec         wait_ts;
 #endif
 	};
 }

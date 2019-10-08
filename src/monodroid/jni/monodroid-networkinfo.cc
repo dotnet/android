@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "monodroid.h"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
 
 #include "util.hh"
 #include "globals.hh"

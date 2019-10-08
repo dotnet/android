@@ -127,15 +127,12 @@ namespace xamarin::android
 		//char *monodroid_strdup_printf (const char *format, va_list vargs);
 		void  monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc);
 
-#if WINDOWS
-		void package_hash_to_hex (uint32_t hash);
-#else
 		template<typename IdxType>
 		void package_hash_to_hex (IdxType idx);
 
 		template<typename IdxType = size_t, typename ...Indices>
 		void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
-#endif
+
 	private:
 		char package_property_suffix[9];
 	};

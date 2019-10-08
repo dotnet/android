@@ -98,7 +98,7 @@ namespace xamarin::android::internal {
 
 	private:
 		bool                   register_debug_symbols;
-		MonoBundledAssembly  **bundled_assemblies;
+		MonoBundledAssembly  **bundled_assemblies = nullptr;
 		size_t                 bundled_assemblies_count;
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;

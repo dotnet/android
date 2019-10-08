@@ -21,10 +21,11 @@
 #include "util.hh"
 #include "embedded-assemblies.hh"
 #include "globals.hh"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
 #include "xamarin-app.h"
+#include "cpp-util.hh"
 
-namespace xamarin { namespace android { namespace internal {
+namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo {
 		char                     *source_apk;
@@ -36,7 +37,7 @@ namespace xamarin { namespace android { namespace internal {
 		TypeMappingInfo          *next;
 	};
 #endif // DEBUG || !ANDROID
-}}}
+}
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -139,7 +140,7 @@ EmbeddedAssemblies::find_entry_in_type_map (const char *name, uint8_t map[], Typ
 	return e + header.value_offset;
 }
 
-inline const char*
+const char*
 EmbeddedAssemblies::typemap_java_to_managed (const char *java)
 {
 #if defined (DEBUG) || !defined (ANDROID)
@@ -154,7 +155,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java)
 	return find_entry_in_type_map (java, jm_typemap, jm_typemap_header);
 }
 
-inline const char*
+const char*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed)
 {
 #if defined (DEBUG) || !defined (ANDROID)
@@ -167,18 +168,6 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed)
 	}
 #endif
 	return find_entry_in_type_map (managed, mj_typemap, mj_typemap_header);
-}
-
-MONO_API const char *
-monodroid_typemap_java_to_managed (const char *java)
-{
-	return embeddedAssemblies.typemap_java_to_managed (java);
-}
-
-MONO_API const char *
-monodroid_typemap_managed_to_java (const char *managed)
-{
-	return embeddedAssemblies.typemap_managed_to_java (managed);
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -274,8 +263,8 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, co
 	file_info.size  = size;
 
 	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk: %s  file: %s",
-			mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
-			file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
+	          mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, (unsigned int) mmap_info.size,
+	          file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, (unsigned int) file_info.size, apk, filename);
 
 	return file_info;
 }
@@ -379,10 +368,4 @@ EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_regist
 	}
 
 	return bundled_assemblies_count;
-}
-
-MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
-{
-	embeddedAssemblies.set_assemblies_prefix (prefix);
-	return 0;
 }

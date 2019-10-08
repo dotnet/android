@@ -28,7 +28,8 @@
 #include "monodroid.h"
 #include "util.hh"
 #include "globals.hh"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
+#include "cpp-util.hh"
 
 using namespace xamarin::android;
 
@@ -132,32 +133,6 @@ Util::recv_uninterrupted (int fd, void *buf, size_t len)
 	return static_cast<ssize_t>(total);
 }
 
-#if WINDOWS
-//
-// This version should be removed once MXE we have on mac can build the glorious version in the
-// #else below.
-//
-// Currently mxe fails with:
-//
-//  Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-//   Cannot export _ZN7xamarin7android4Util19package_hash_to_hexIiIiiiiiiiEEEvjT_DpT0_: symbol wrong type (4 vs 3)
-// collect2 : error : ld returned 1 exit status
-//   [/Users/builder/jenkins/workspace/xamarin-android-pr-builder-debug/xamarin-android/src/monodroid/monodroid.csproj]
-//
-void Util::package_hash_to_hex (uint32_t hash)
-{
-	for (uint32_t idx = 0; idx < 8; idx++) {
-		package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
-	}
-	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
-}
-#else
 template<typename IdxType>
 inline void
 Util::package_hash_to_hex (IdxType /* idx */)
@@ -172,7 +147,6 @@ Util::package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices)
 	package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
 	package_hash_to_hex <IdxType> (hash, indices...);
 }
-#endif
 
 void
 Util::monodroid_store_package_name (const char *name)
@@ -191,16 +165,12 @@ Util::monodroid_store_package_name (const char *name)
 	while (*ch)
 		hash = (hash << 5) - (hash + static_cast<uint32_t>(*ch++));
 
-#if WINDOWS
-	package_hash_to_hex (hash);
-#else
 	// In C++14 or newer we could use std::index_sequence, but in C++11 it's a bit too much ado
 	// for this simple case, so a manual sequence it is.
 	//
 	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
 	// that would be boring, wouldn't it? :)
 	package_hash_to_hex (hash, 0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u);
-#endif
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
@@ -215,18 +185,8 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 
 	if (package_property_suffix[0] != '\0') {
 		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
-		char *propname;
-#if WINDOWS
-		propname = monodroid_strdup_printf ("%s.%s", name, package_property_suffix);
-#else
-		propname = string_concat (name, ".", package_property_suffix);
-#endif
+		simple_pointer_guard<char[]> propname (string_concat (name, ".", package_property_suffix));
 		result = androidSystem.monodroid_get_system_property (propname, &local_value);
-#if WINDOWS
-		free (propname);
-#else
-		delete[] propname;
-#endif
 	}
 
 	if (result <= 0 || local_value == nullptr)
