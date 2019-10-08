@@ -330,6 +330,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodReferenceExtensions.cs">
       <Link>Linker\Linker\MethodReferenceExtensions.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OutputException.cs">
+      <Link>Linker\Linker\OutputException.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OverrideInformation.cs">
       <Link>Linker\Linker\OverrideInformation.cs</Link>
     </Compile>
