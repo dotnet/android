@@ -96,11 +96,12 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	if (found && logfile != nullptr)
 		utils.set_world_accessable (logfile);
 
-	if (!found)
+	if (!found) {
 		log_warn (LOG_DEFAULT,
 				"The '%s' profiler wasn't found in the main executable nor could it be loaded from '%s'.",
 				mname,
-		        libname.get ());
+				libname.get ());
+	}
 
 	delete[] mname;
 }
