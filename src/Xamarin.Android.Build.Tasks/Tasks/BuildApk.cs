@@ -119,6 +119,7 @@ namespace Xamarin.Android.Tasks
 			using (var apk = new ZipArchiveEx (temp, apkInputPath != null ? FileMode.Open : FileMode.Create )) {
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				apk.Archive.AddEntry (RootPath + "NOTICE", notice);
+				//apk.Archive.AddEntry (RootPath + "NOTICE", "Some Notice", Encoding.ASCII);
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {
@@ -132,16 +133,17 @@ namespace Xamarin.Android.Tasks
 
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
-				AddNativeLibraries (files, supportedAbis);
-				apk.Flush();
-				AddAdditionalNativeLibraries (files, supportedAbis);
-				apk.Flush();
-
+				
 				if (TypeMappings != null) {
 					foreach (ITaskItem typemap in TypeMappings) {
 						apk.Archive.AddFile (typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
 				}
+
+				apk.Flush ();
+
+				AddNativeLibraries (files, supportedAbis);
+				AddAdditionalNativeLibraries (files, supportedAbis);
 
 				int count = 0;
 				foreach (var file in files) {
@@ -158,6 +160,8 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
+
+				apk.Flush ();
 
 				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
 				if (jarFiles != null && JavaLibraries != null)
@@ -199,6 +203,7 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
+				apk.Flush ();
 				FixupArchive (apk);
 			}
 			if (MonoAndroidHelper.CopyIfZipChanged (temp, apkOutputPath)) {

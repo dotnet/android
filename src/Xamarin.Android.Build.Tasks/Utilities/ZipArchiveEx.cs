@@ -12,6 +12,8 @@ namespace Xamarin.Android.Tasks
 
 		ZipArchive zip;
 		string archive;
+		int flush = 1;
+		long count = 0;
 
 		public ZipArchive Archive {
 			get { return zip; }
@@ -24,17 +26,22 @@ namespace Xamarin.Android.Tasks
 		public ZipArchiveEx(string archive, FileMode filemode)
 		{
 			this.archive = archive;
-			zip = ZipArchive.Open(archive, filemode);
+			zip = ZipArchive.Open(archive, filemode, strictConsistencyChecks: true);
 		}
 
 		public void Flush ()
 		{
+			if (count == zip.EntryCount)
+				return;
 			if (zip != null) {
 				zip.Close ();
 				zip.Dispose ();
 				zip = null;
+				File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}{Path.GetExtension(archive)}")}", overwrite: true);
+				flush++;
 			}
-			zip = ZipArchive.Open (archive, FileMode.Open);
+			zip = ZipArchive.Open (archive, FileMode.Open, strictConsistencyChecks: true);
+			count = zip.EntryCount;
 		}
 
 		string ArchiveNameForFile (string filename, string directoryPathInZip)
@@ -115,6 +122,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public void FixupWindowsPathSeparators (Action<string, string> onRename)
 		{
+			if (zip.EntryCount == 0)
+				return;
 			bool modified = false;
 			foreach (var entry in zip) {
 				if (entry.FullName.Contains ('\\')) {
