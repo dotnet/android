@@ -213,20 +213,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var hashFile = file + ".sha1";
-			using (hashAlgorithm)
-			if (File.Exists (hashFile) && string.Compare (File.ReadAllText (hashFile), sha1, StringComparison.InvariantCultureIgnoreCase) == 0)
-				return true;
+			using (hashAlgorithm) {
+				if (File.Exists (hashFile) && string.Compare (File.ReadAllText (hashFile), sha1, StringComparison.InvariantCultureIgnoreCase) == 0)
+					return true;
 
-			var hash = Files.HashFile (file, hashAlgorithm);
-			LogDebugMessage ("File : {0}", file);
-			LogDebugMessage ("SHA1 : {0}", hash);
-			LogDebugMessage ("Expected SHA1 : {0}", sha1);
+				var hash = Files.HashFile (file, hashAlgorithm);
+				LogDebugMessage ("File : {0}", file);
+				LogDebugMessage ("SHA1 : {0}", hash);
+				LogDebugMessage ("Expected SHA1 : {0}", sha1);
 
-			var isValid = string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
-			if (isValid)
-				File.WriteAllText (hashFile, hash);
+				var isValid = string.Compare (hash, sha1, StringComparison.InvariantCultureIgnoreCase) == 0;
+				if (isValid)
+					File.WriteAllText (hashFile, hash);
 
-			return isValid;
+				return isValid;
+			}
 		}
 
 		void DoDownload (long totalBytes, long offset, Stream responseStream, Stream outputStream, Action<long, long, int> progressCallback = null)
