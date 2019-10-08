@@ -23,6 +23,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidLinkTool = "AndroidLinkTool";
 		public const string UseJackAndJill = "UseJackAndJill";
 		public const string AotAssemblies = "AotAssemblies";
+		public const string AndroidEnableProfiledAot = "AndroidEnableProfiledAot";
 
 		public const string AndroidExplicitCrunch = "AndroidExplicitCrunch";
 		public const string OutputPath = "OutputPath";

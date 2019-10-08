@@ -37,6 +37,33 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void BuildBasicApplicationReleaseProfiledAot ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AndroidEnableProfiledAot = true,
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
+			}
+		}
+
+		[Test]
+		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AndroidEnableProfiledAot = true,
+			};
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.DoesNotContainRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup.*\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
+			}
+		}
+
 		static readonly object [] BuildHasNoWarningsSource = new object [] {
 			new object [] {
 				/* isRelease */     false,
@@ -845,9 +872,7 @@ namespace UnamedProject
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					var rightLibc   = new Regex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", RegexOptions.Multiline);
-					var m           = rightLibc.Match (string.Join ("\n",b.LastBuildOutput));
-					Assert.IsTrue (m.Success, "AOT+LLVM should use libc.so from minSdkVersion!");
+					StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,

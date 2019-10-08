@@ -219,6 +219,12 @@ used by the `Install` and `SignAndroidPackage` targets.
 The [Signing Properties](#Signing_Properties) are also relevant
 when packaging Release applications.
 
+-   **AndroidAotProfiles** &ndash; A string property which allows the
+    developer to add AOT profiles from the command line. It is
+    semicolon or comma separated list of absolute paths.
+
+    Added in Xamarin.Android 10.1.
+
 -   **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
     the digest algorithm to use with `jarsigner -digestalg`.
 
@@ -685,6 +691,11 @@ when packaging Release applications.
     use the to the `apksigner` tool rather than the `jarsigner`.
 
     Added in Xamarin.Android 8.2.
+
+-   **AndroidUseDefaultAotProfile** &ndash; A bool property which allows
+    the developer to suppress usage of the default AOT profiles.
+
+    Added in Xamarin.Android 10.1.
 
 -   **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
     the developer to revert the versionCode calculation back to its old pre

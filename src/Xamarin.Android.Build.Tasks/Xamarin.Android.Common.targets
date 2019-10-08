@@ -2829,9 +2829,12 @@ because xbuild doesn't support framework reference assemblies.
     <_StartupAotProfile Condition="'%(ResolvedAssemblies.Filename)' == 'Xamarin.Forms.Platform.Android'">startup-xf.aotprofile</_StartupAotProfile>
     <_StartupAotProfile Condition="'$(_StartupAotProfile)' == ''">startup.aotprofile</_StartupAotProfile>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(AndroidUseDefaultAotProfile)' != 'False'">
     <AndroidAotProfile Include="$(MSBuildThisFileDirectory)$(_StartupAotProfile)" />
   </ItemGroup>
+  <SplitProperty Value="$(AndroidAotProfiles)" Condition="'$(AndroidAotProfiles)' != ''">
+    <Output TaskParameter="Output" ItemName="_AotProfiles" />
+  </SplitProperty>
   <ItemGroup Condition="'$(AndroidEnableProfiledAot)' == 'True'">
     <_AotProfiles Include="@(AndroidAotProfile)" />
   </ItemGroup>
