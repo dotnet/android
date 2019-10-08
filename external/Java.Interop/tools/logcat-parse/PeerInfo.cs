@@ -97,22 +97,30 @@ namespace Xamarin.Android.Tools.LogcatParse {
 
 		public static bool operator==(JniHandleInfo lhs, string rhs)
 		{
-			return lhs.Handle == rhs;
+			if (string.IsNullOrEmpty (rhs))
+				return lhs.Handle == rhs;
+			return lhs == new JniHandleInfo (rhs);
 		}
 
 		public static bool operator!=(JniHandleInfo lhs, string rhs)
 		{
-			return lhs.Handle != rhs;
+			if (string.IsNullOrEmpty (rhs))
+				return lhs.Handle != rhs;
+			return lhs != new JniHandleInfo (rhs);
 		}
 
 		public static bool operator==(string lhs, JniHandleInfo rhs)
 		{
-			return lhs == rhs.Handle;
+			if (string.IsNullOrEmpty (lhs))
+				return lhs == rhs.Handle;
+			return new JniHandleInfo (lhs) == rhs;
 		}
 
 		public static bool operator!=(string lhs, JniHandleInfo rhs)
 		{
-			return lhs != rhs.Handle;
+			if (string.IsNullOrEmpty (lhs))
+				return lhs != rhs.Handle;
+			return new JniHandleInfo (lhs) != rhs;
 		}
 	}
 
@@ -154,7 +162,9 @@ namespace Xamarin.Android.Tools.LogcatParse {
 		public string                       McwType     {get; internal set;}
 
 		public string                       KeyHandle   {get; internal set;}
-		public ISet<JniHandleInfo>          Handles     {get; private set;}
+		public IList<JniHandleInfo>         Handles     {get; private set;}
+
+		public IList<JniHandleInfo>         RemovedHandles      {get; private set;}
 
 		public string                       CreatedOnThread     { get; internal set; }
 		public string                       DestroyedOnThread   { get; internal set; }
@@ -167,8 +177,9 @@ namespace Xamarin.Android.Tools.LogcatParse {
 
 		public PeerInfo (string pid)
 		{
-			Handles   = new HashSet<JniHandleInfo> ();
+			Handles   = new List<JniHandleInfo> ();
 			KeyHandle = JniType = McwType = "";
+			RemovedHandles  = new List<JniHandleInfo> ();
 			int p;
 			if (int.TryParse (pid, NumberStyles.Integer, CultureInfo.InvariantCulture, out p))
 			    Pid = p;

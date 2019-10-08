@@ -27,10 +27,12 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual ("android/widget/ProgressBar", peer.JniType);
 				Assert.AreEqual ("Android.Widget.ProgressBar", peer.McwType);
 				Assert.AreEqual ("0x41f008f8", peer.KeyHandle);
-				Assert.AreEqual (3, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x1d20046a"));
-				Assert.IsTrue (peer.Handles.Contains ("0x1d200003"));
-				Assert.IsTrue (peer.Handles.Contains ("0x41f008f8"));
+				Assert.AreEqual (0, peer.Handles.Count);
+				Assert.AreEqual (3, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x41f008f8/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x1d20046a/G");
+				Assert.IsTrue (peer.RemovedHandles [2] == "0x1d200003/W");
+
 				Assert.AreEqual (
 						"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
 						"   at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)\n" +
@@ -60,9 +62,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual ("java/lang/String", peer.JniType);
 				Assert.AreEqual ("Java.Lang.String", peer.McwType);
 				Assert.AreEqual ("0x41e29778", peer.KeyHandle);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x1d200282"));
-				Assert.IsTrue (peer.Handles.Contains ("0x41e29778"));
+				Assert.AreEqual (0, peer.Handles.Count);
+				Assert.AreEqual (2, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x41e29778/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x1d200282/G");
 				Assert.AreEqual (
 						"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
 						"   at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)\n" +
@@ -95,11 +98,12 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual ("android/widget/LinearLayout", peer.JniType);
 				Assert.AreEqual ("Android.Widget.LinearLayout", peer.McwType);
 				Assert.AreEqual ("0x41ff8758", peer.KeyHandle);
-				Assert.AreEqual (4, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x1d200f1e"));
-				Assert.IsTrue (peer.Handles.Contains ("0x1d9000cb"));
-				Assert.IsTrue (peer.Handles.Contains ("0x1d300eea"));
-				Assert.IsTrue (peer.Handles.Contains ("0x41ff8758"));
+				Assert.AreEqual (1, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles [0] == "0x1d300eea");
+				Assert.AreEqual (3, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x41ff8758/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x1d200f1e/G");
+				Assert.IsTrue (peer.RemovedHandles [2] == "0x1d9000cb/W");
 				Assert.AreEqual (
 						"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
 						"   at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer)\n" +
@@ -130,9 +134,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.IsFalse (peer.Disposed);
 				Assert.AreEqual ("Java.Lang.Thread+RunnableImplementor.class",      peer.JniType);
 				Assert.AreEqual ("typeof(Java.Lang.Thread+RunnableImplementor)",    peer.McwType);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x1d200276"));
-				Assert.IsTrue (peer.Handles.Contains ("0x41e29370"));
+				Assert.AreEqual (0, peer.Handles.Count);
+				Assert.AreEqual (2, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x41e29370/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x1d200276/G");
 				Assert.AreEqual (
 					"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
 					"   at Android.Runtime.JNIEnv.FindClass(System.String classname)\n" +
@@ -185,10 +190,11 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.IsFalse (peer.Disposed);
 				Assert.AreEqual ("android/widget/NewButton", peer.JniType);
 				Assert.AreEqual ("Android.Widget.NewButton", peer.McwType);
-				Assert.AreEqual (3, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0xbecdf114"));
+				Assert.AreEqual (2, peer.Handles.Count);
 				Assert.IsTrue (peer.Handles.Contains ("0x100456"));
 				Assert.IsTrue (peer.Handles.Contains ("0x100472"));
+				Assert.AreEqual (1, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0xbecdf114/L");
 				Assert.AreEqual (
 					"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
 					"   at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer, IntPtr ByRef handle)\n" +
@@ -220,9 +226,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.IsFalse (peer.Disposed);
 				Assert.AreEqual ("Android.Widget.Button.class",     peer.JniType);
 				Assert.AreEqual ("typeof(Android.Widget.Button)",   peer.McwType);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x7830001d"));
-				Assert.IsTrue (peer.Handles.Contains ("0x10046a"));
+				Assert.AreEqual (1, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles [0] == "0x10046a");
+				Assert.AreEqual (1, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x7830001d/L");
 
 				Assert.AreEqual (
 					"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
@@ -250,9 +257,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.IsFalse (peer.Disposed);
 				Assert.AreEqual ("Android.Views.View+IOnClickListenerInvoker.class",    peer.JniType);
 				Assert.AreEqual ("typeof(Android.Views.View+IOnClickListenerInvoker)",  peer.McwType);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x78b0001d"));
-				Assert.IsTrue (peer.Handles.Contains ("0x100476"));
+				Assert.AreEqual (1, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles [0] == "0x100476");
+				Assert.AreEqual (1, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x78b0001d/L");
 
 
 				Assert.AreEqual (
@@ -289,9 +297,9 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.IsFalse (peer.Finalized);
 				Assert.AreEqual ("Android.Runtime.JavaList.class",      peer.JniType);
 				Assert.AreEqual ("typeof(Android.Runtime.JavaList)",    peer.McwType);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x4a00009"));
 				Assert.IsTrue (peer.Handles.Contains ("0x19004aa"));
+				Assert.AreEqual (1, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x4a00009/L");
 
 
 				Assert.AreEqual (
@@ -356,10 +364,11 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual ("'finalizer'(20660)",  peer.DestroyedOnThread);
 
 				Assert.AreEqual ("0x39bcfcb7",          peer.KeyHandle);
-				Assert.AreEqual (3, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x9500001/L"));
-				Assert.IsTrue (peer.Handles.Contains ("0x100492/G"));
-				Assert.IsTrue (peer.Handles.Contains ("0x700003/W"));
+				Assert.AreEqual (0, peer.Handles.Count);
+				Assert.AreEqual (3, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x9500001/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x100492/G");
+				Assert.IsTrue (peer.RemovedHandles [2] == "0x700003/W");
 
 				Assert.AreEqual (
 					"   at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)\n" +
@@ -420,9 +429,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual ("'(null)'(3)", peer.DestroyedOnThread);
 
 				Assert.AreEqual ("0x41e29778", peer.KeyHandle);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x4a00009/L"));
-				Assert.IsTrue (peer.Handles.Contains ("0x19004aa/G"));
+				Assert.AreEqual (0, peer.Handles.Count);
+				Assert.AreEqual (2, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x4a00009/L");
+				Assert.IsTrue (peer.RemovedHandles [1] == "0x19004aa/G");
 
 				Assert.AreEqual (
 					"  at Doesn't Matter",
@@ -439,9 +449,10 @@ namespace Xamarin.Android.Tools.LogcatParse.Tests {
 				Assert.AreEqual (null,          peer.DestroyedOnThread);
 
 				Assert.AreEqual ("0x41e29778", peer.KeyHandle);
-				Assert.AreEqual (2, peer.Handles.Count);
-				Assert.IsTrue (peer.Handles.Contains ("0x4a00009/L"));
-				Assert.IsTrue (peer.Handles.Contains ("0x19004aa/G"));
+				Assert.AreEqual (1, peer.Handles.Count);
+				Assert.IsTrue (peer.Handles [0] == "0x19004aa/G");
+				Assert.AreEqual (1, peer.RemovedHandles.Count);
+				Assert.IsTrue (peer.RemovedHandles [0] == "0x4a00009/L");
 
 				Assert.AreEqual (
 					"  at Doesn't Matter",

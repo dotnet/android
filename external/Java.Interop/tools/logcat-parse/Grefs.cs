@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 			return new Dictionary<Regex, Action<Match, int>> {
 				{ new Regex (addGm), (m, l) => {
 						var h = GetHandle (m, "ghandle");
-						var p = GetPeerInfo (m);
+						var p = GetLastOrCreatePeerInfo (m, h);
 						p.AppendStackTraceForHandle (h, m.Groups ["stack"].Value);
 						GlobalRefs.Add (h);
 						CheckCounts (m, l);
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 				} },
 				{ new Regex (addWm), (m, l) => {
 						var h = GetHandle (m, "whandle");
-						var p = GetPeerInfo (m);
+						var p = GetLastOrCreatePeerInfo (m, h);
 						p.AppendStackTraceForHandle (h, m.Groups ["stack"].Value);
 						WeakRefs.Add (h);
 						CheckCounts (m, l);
@@ -126,24 +126,47 @@ namespace Xamarin.Android.Tools.LogcatParse {
 						curHandle   = h;
 				} },
 				{ new Regex (dm), (m, l) => {
-						var p = GetPeerInfo (m);
+						var p = GetAlivePeerInfo (m);
+						if (p == null) {
+							LogWarning (GrefParseOptions.CheckAlivePeers, $"at line {l}: could not find PeerInfo for disposed handle {GetHandle (m, "handle")}");
+							return;
+						}
 						p.Disposed  = true;
 				} },
 				{ new Regex (fm), (m, l) => {
-						var p = GetPeerInfo (m);
+						var p = GetAlivePeerInfo (m);
+						if (p == null) {
+							LogWarning (GrefParseOptions.CheckAlivePeers, $"at line {l}: could not find PeerInfo for finalized handle {GetHandle (m, "handle")}");
+							return;
+						}
 						p.Finalized = true;
 				} },
 				{ new Regex (hm), (m, l) => {
-						var p = GetPeerInfo (m);
+						var p = GetAlivePeerInfo (m);
+						if (p == null) {
+							LogWarning (GrefParseOptions.CheckAlivePeers, $"at line {l}: could not find PeerInfo for handle {GetHandle (m, "handle")}");
+							return;
+						}
+						if (!string.IsNullOrEmpty (p.KeyHandle)) {
+							LogWarning (GrefParseOptions.CheckAlivePeers, $"at line {l}: Attempting to re-set p.KeyHandle {p.KeyHandle} for `{p.JniType}` to {m.Groups ["key_handle"].Value} for {m.Groups ["jtype"].Value}");
+							return;
+						}
 						p.KeyHandle = m.Groups ["key_handle"].Value;
 						p.JniType   = m.Groups ["jtype"].Value;
 						p.McwType   = m.Groups ["mtype"].Value;
 				} },
 				{ new Regex (remGm), (m, l) => {
 						var h = GetHandle (m, "handle");
-						var p = GetPeerInfo (m);
+						var p = GetAlivePeerInfo (m);
+						if (p == null) {
+							LogWarning (GrefParseOptions.CheckAlivePeers, $"at line {l}: could not find PeerInfo to remove gref for handle {h}");
+						}
 						GlobalRefs.Remove (h);
-						if (!WeakRefs.Any (w => p.Handles.Contains (w))) {
+						if (p != null) {
+							p.Handles.Remove (h);
+							p.RemovedHandles.Add (h);
+						}
+						if (p != null && !WeakRefs.Any (w => p.Handles.Contains (w))) {
 							p.Collected = true;
 							p.DestroyedOnThread = m.Groups ["thread"].Value;
 							alive.Remove (p);
@@ -155,12 +178,18 @@ namespace Xamarin.Android.Tools.LogcatParse {
 				} },
 				{ new Regex (remWm), (m, l) => {
 						var h = GetHandle (m, "handle");
-						var p = GetPeerInfo (m);
+						var p = GetAlivePeerInfo (m);
 						WeakRefs.Remove (h);
-						if (!GlobalRefs.Any (g => p.Handles.Contains (g))) {
-							p.Collected = true;
-							p.DestroyedOnThread = m.Groups ["thread"].Value;
-							alive.Remove (p);
+						if (p == null) {
+							// Means that the instance has been collected; this is fine.
+						} else {
+							p.Handles.Remove (h);
+							p.RemovedHandles.Add (h);
+							if (!GlobalRefs.Any (g => p.Handles.Contains (g))) {
+								p.Collected = true;
+								p.DestroyedOnThread = m.Groups ["thread"].Value;
+								alive.Remove (p);
+							}
 						}
 						CheckCounts (m, l);
 
@@ -188,27 +217,42 @@ namespace Xamarin.Android.Tools.LogcatParse {
 
 		void CheckCounts (Match m, int lineNumber)
 		{
-			if ((ParseOptions & GrefParseOptions.CheckCounts) == 0 &&
-					(ParseOptions & GrefParseOptions.ThrowOnCountMismatch) == 0)
+			if ((ParseOptions & GrefParseOptions.CheckCounts) == 0)
 				return;
 			string message = null;
 			int gc;
 			if (int.TryParse (m.Groups ["gcount"].Value, out gc) && gc != GrefCount) {
 				message = string.Format (" grefc mismatch at line {0}: expected {1,5}, actual {2,5}; line: {3}",
-						lineNumber, GrefCount, gc, m.Groups [0]);
+						lineNumber, GrefCount, gc, m.Groups[0]);
 			}
 			if (int.TryParse (m.Groups ["wgcount"].Value, out gc) && gc != WeakGrefCount) {
 				message = string.Format ("wgrefc mismatch at line {0}; expected {1,5}, actual {2,5}; line: {3}",
-						lineNumber, WeakGrefCount, gc, m.Groups [0]);
+						lineNumber, WeakGrefCount, gc, m.Groups[0]);
 			}
 			if (message != null) {
-				Console.WriteLine ("Warning: {0}", message);
-				if ((ParseOptions & GrefParseOptions.ThrowOnCountMismatch) != 0)
-					throw new InvalidOperationException (message);
+				LogWarning (GrefParseOptions.CheckCounts, message);
 			}
 		}
 
-		PeerInfo GetPeerInfo (Match m)
+		void LogWarning (GrefParseOptions type, string message)
+		{
+			Console.WriteLine ("Warning: {0}", message);
+
+			GrefParseOptions shouldThrow    = type | GrefParseOptions.ThrowExceptionOnMismatch;
+			if ((ParseOptions & shouldThrow) == shouldThrow)
+				throw new InvalidOperationException (message);
+		}
+
+		PeerInfo GetAlivePeerInfo (Match m)
+		{
+			var h = GetHandle (m, "handle");
+			var i = alive.FindLastIndex (p => p.Handles.Contains(h));
+			if (i >= 0)
+				return alive [i];
+			return null;
+		}
+
+		PeerInfo GetLastOrCreatePeerInfo (Match m, JniHandleInfo newHandle)
 		{
 			var h = GetHandle (m, "handle");
 			var i = alive.FindLastIndex (p => p.Handles.Contains (h));
@@ -218,6 +262,10 @@ namespace Xamarin.Android.Tools.LogcatParse {
 			var peer = new PeerInfo (pid) {
 				CreatedOnThread = m.Groups ["thread"].Value,
 				Handles = {
+					newHandle,
+				},
+				// Not *technically* removed, but `h` can't appear in Handles either, because of possible handle "reuse"
+				RemovedHandles = {
 					h,
 				},
 			};
