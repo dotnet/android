@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation
@@ -105,7 +106,7 @@ namespace MonoDroid.Generation
 
 		public string ConnectorName => $"Get{Name}{IDSignature}Handler";
 
-		public string EscapedCallbackName => $"cb_{JavaName}{IDSignature}";
+		public string EscapedCallbackName => IdentifierValidator.CreateValidIdentifier ($"cb_{JavaName}{IDSignature}", true);
 
 		public string EscapedIdName => "id_" + JavaName.Replace ("<", "_x60_").Replace (">", "_x62_") + IDSignature;
 

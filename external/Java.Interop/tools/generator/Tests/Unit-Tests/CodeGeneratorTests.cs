@@ -844,5 +844,23 @@ namespace generatortests
 
 			Assert.AreEqual (GetExpected (nameof (WritePropertyInvoker)), writer.ToString ().NormalizeLineEndings ());
 		}
+
+		[Test]
+		public void WriteMethodWithInvalidJavaName ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "has-hyp$hen");
+
+			method.Name = "nohyphen";
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
+			generator.WriteMethod (method, string.Empty, @class, true);
+
+			var result = writer.ToString ().NormalizeLineEndings ();
+
+			// Ensure we escape hyphens/dollar signs in callback names
+			Assert.False (result.Contains ("cb_has-hyp$hen"));
+			Assert.True (result.Contains ("cb_has_x45_hyp_x36_hen"));
+		}
 	}
 }

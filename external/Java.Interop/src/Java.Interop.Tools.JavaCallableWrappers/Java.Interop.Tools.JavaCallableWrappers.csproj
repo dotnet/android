@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\Crc64.cs" />
+    <Compile Include="Java.Interop.Tools.JavaCallableWrappers\IdentifierValidator.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaCallableWrapperGenerator.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\JavaTypeScanner.cs" />
     <Compile Include="Java.Interop.Tools.JavaCallableWrappers\TypeNameMapGenerator.cs" />
