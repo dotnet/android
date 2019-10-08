@@ -76,6 +76,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AotAssemblies, value.ToString ()); }
 		}
 
+		public bool AndroidEnableProfiledAot {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableProfiledAot), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableProfiledAot, value.ToString ()); }
+		}
+
 		public bool EnableProguard {
 			get { return string.Equals (GetProperty (KnownProperties.EnableProguard), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.EnableProguard, value.ToString ()); }

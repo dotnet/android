@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
@@ -50,6 +51,23 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 			Assert.Fail (message ?? $"String did not contain '{text}'!");
+		}
+
+		public static bool ContainsRegex (string pattern, IEnumerable<string> collection, RegexOptions additionalOptions = 0)
+		{
+			var regex = new Regex (pattern, RegexOptions.Multiline | additionalOptions);
+
+			return regex.Match (string.Join ("\n", collection)).Success;
+		}
+
+		public static void ContainsRegex (string pattern, IEnumerable<string> collection, string message = null, RegexOptions additionalOptions = 0)
+		{
+			Assert.IsTrue (ContainsRegex (pattern, collection, additionalOptions), message);
+		}
+
+		public static void DoesNotContainRegex (string pattern, IEnumerable<string> collection, string message = null, RegexOptions additionalOptions = 0)
+		{
+			Assert.IsFalse (ContainsRegex (pattern, collection, additionalOptions), message);
 		}
 
 		public static bool ContainsText (this IEnumerable<string> collection, string expected) {
