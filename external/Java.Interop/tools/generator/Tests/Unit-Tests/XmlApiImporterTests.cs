@@ -81,6 +81,15 @@ namespace generatortests
 		}
 
 		[Test]
+		public void CreateMethod_EnsureValidNameHyphen ()
+		{
+			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"-3\" /></class></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
+
+			Assert.AreEqual ("_3", klass.Methods [0].Name);
+		}
+
+		[Test]
 		public void CreateParameter_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<parameter name=\"$3\" />");

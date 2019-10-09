@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Utils;
 using Xamarin.Android.Tools;
 
@@ -270,7 +271,7 @@ namespace MonoDroid.Generation
 		public static Parameter CreateParameter (XElement elem)
 		{
 			string managedName = elem.XGetAttribute ("managedName");
-			string name = !string.IsNullOrEmpty (managedName) ? managedName : EnsureValidIdentifer (TypeNameUtilities.MangleName (elem.XGetAttribute ("name")));
+			string name = !string.IsNullOrEmpty (managedName) ? managedName : TypeNameUtilities.MangleName (EnsureValidIdentifer (elem.XGetAttribute ("name")));
 			string java_type = elem.XGetAttribute ("type");
 			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
 			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
@@ -294,7 +295,7 @@ namespace MonoDroid.Generation
 			if (string.IsNullOrWhiteSpace (name))
 				return name;
 
-			name = name.Replace ('$', '_');
+			name = IdentifierValidator.CreateValidIdentifier (name);
 
 			if (char.IsNumber (name [0]))
 				name = $"_{name}";
