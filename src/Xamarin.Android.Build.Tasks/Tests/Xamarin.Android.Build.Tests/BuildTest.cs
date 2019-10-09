@@ -1768,6 +1768,7 @@ namespace App1
 		}
 
 		[Test]
+		[NonParallelizable]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
