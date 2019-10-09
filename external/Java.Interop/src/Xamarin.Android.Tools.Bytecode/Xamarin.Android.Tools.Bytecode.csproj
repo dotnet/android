@@ -37,6 +37,8 @@
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Annotation.cs" />
+    <Compile Include="AnnotationElementValue.cs" />
     <Compile Include="ClassFile.cs" />
     <Compile Include="ConstantPool.cs" />
     <Compile Include="StreamCoda.cs" />
