@@ -80,6 +80,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 			add_type_mapping (&java_to_managed_maps, apk_name, file_name, (const char*)map_info.area);
 			continue;
 		}
+
 		if (utils.ends_with (file_name, ".mj")) {
 			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
 			add_type_mapping (&managed_to_java_maps, apk_name, file_name, (const char*)map_info.area);
@@ -98,7 +99,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 
 		bool entry_is_overridden = !should_register (strrchr (file_name, '/') + 1);
 
-		if ((utils.ends_with (file_name, ".mdb") || utils.ends_with (file_name, ".pdb")) &&
+		if ((utils.ends_with (file_name, ".pdb") || utils.ends_with (file_name, ".mdb")) &&
 				register_debug_symbols &&
 				!entry_is_overridden &&
 				bundled_assemblies != nullptr) {
@@ -154,6 +155,11 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 bool
 EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries)
 {
+#if defined (WINDOWS)
+	using read_count_type = unsigned int;
+#else
+	using read_count_type = size_t;
+#endif
 	// The simplest case - no file comment
 	off_t ret = ::lseek (fd, -ZIP_EOCD_LEN, SEEK_END);
 	if (ret < 0) {
@@ -162,7 +168,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	}
 
 	uint8_t eocd[ZIP_EOCD_LEN];
-	ssize_t nread = ::read (fd, eocd, static_cast<size_t>(ZIP_EOCD_LEN));
+	ssize_t nread = ::read (fd, eocd, static_cast<read_count_type>(ZIP_EOCD_LEN));
 	if (nread < 0 || nread != ZIP_EOCD_LEN) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD from the APK: %s (nread: %d; errno: %d)", std::strerror (errno), nread, errno);
 		return false;
@@ -189,7 +195,11 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	}
 
 	auto buf = new uint8_t[alloc_size];
-	nread = ::read (fd, buf, alloc_size);
+	// The cast removes warning on mingw:
+	//
+	//   warning: conversion from ‘size_t’ {aka ‘long long unsigned int’} to ‘unsigned int’ may change value [-Wconversion]
+	//
+	nread = ::read (fd, buf, static_cast<read_count_type>(alloc_size));
 
 	if (nread < 0 || static_cast<size_t>(nread) != alloc_size) {
 		log_error (LOG_ASSEMBLY, "Failed to read EOCD and comment from the APK: %s (nread: %d; errno: %d)", std::strerror (errno), nread, errno);
@@ -262,7 +272,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, size_t local_header_offset, 
 		return false;
 	}
 
-	data_start_offset = static_cast<uint32_t>(local_header_offset) + file_name_length + extra_field_length + ZIP_LOCAL_LEN;
+	data_start_offset = static_cast<uint32_t>(local_header_offset) + file_name_length + extra_field_length + static_cast<uint32_t>(ZIP_LOCAL_LEN);
 
 	return true;
 }

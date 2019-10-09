@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #ifdef WINDOWS
@@ -8,18 +9,9 @@
 
 #include "basic-utilities.hh"
 #include "logger.hh"
+#include "cpp-util.hh"
 
 using namespace xamarin::android;
-
-int
-BasicUtilities::ends_with (const char *str, const char *end)
-{
-	char *p;
-
-	p = const_cast<char*> (strstr (str, end));
-
-	return p != nullptr && p [strlen (end)] == 0;
-}
 
 char*
 BasicUtilities::path_combine (const char *path1, const char *path2)
@@ -73,7 +65,7 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 	mode_t oldumask;
 #endif
 	oldumask = umask (022);
-	char *path = strdup_new (pathname);
+	simple_pointer_guard<char[]> path (strdup_new (pathname));
 	int rv, ret = 0;
 	for (char *d = path; *d; ++d) {
 		if (*d != '/')
@@ -88,7 +80,7 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 		}
 		*d = '/';
 	}
-	delete[] path;
+
 	if (ret == 0)
 		ret = make_directory (pathname, mode);
 	umask (oldumask);
@@ -247,10 +239,10 @@ int
 BasicUtilities::monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension)
 {
 #ifndef WINDOWS
-	return ends_with (e->d_name, extension);
+	return ends_with_slow (e->d_name, extension);
 #else
 	char *mb_dname = utf16_to_utf8 (e->d_name);
-	int result = ends_with (mb_dname, extension);
+	int result = ends_with_slow (mb_dname, extension);
 	free (mb_dname);
 	return result;
 #endif

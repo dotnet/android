@@ -49,15 +49,15 @@ namespace xamarin::android
 
 #if !defined (WINDOWS) && defined (DEBUG)
 	public:
-		int          enable_soft_breakpoints ();
+		bool         enable_soft_breakpoints ();
 		void         start_debugging_and_profiling ();
 
 	private:
 		int          start_connection (char *options);
 		void         parse_options (char *options, ConnOptions *opts);
-		int          process_connection (int fd);
+		bool         process_connection (int fd);
 		int          handle_server_connection (void);
-		int          process_cmd (int fd, char *cmd);
+		bool         process_cmd (int fd, char *cmd);
 		void         start_debugging ();
 		void         start_profiling ();
 		friend void* conn_thread (void *arg);

@@ -57,53 +57,48 @@ using namespace xamarin::android;
 //
 //
 
-// monodroid-glue.c
-extern int process_cmd (int fd, char *cmd);
-namespace xamarin { namespace android
+namespace xamarin::android
 {
 	void* conn_thread (void *arg);
-}}
+}
 
 void
 Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, const char *logfile)
 {
 	const char* col = strchr (desc, ':');
-	char *mname;
+	char *mname_ptr;
 
 	if (col != nullptr) {
 		size_t name_len = static_cast<size_t>(col - desc);
 		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
-		mname = new char [alloc_size];
-		strncpy (mname, desc, name_len);
-		mname [name_len] = 0;
+		mname_ptr = new char [alloc_size];
+		strncpy (mname_ptr, desc, name_len);
+		mname_ptr [name_len] = 0;
 	} else {
-		mname = utils.strdup_new (desc);
+		mname_ptr = utils.strdup_new (desc);
 	}
+	simple_pointer_guard<char[]> mname (mname_ptr);
 
 	int dlopen_flags = RTLD_LAZY;
-	simple_pointer_guard<char[]> libname (utils.string_concat ("libmono-profiler-", mname, ".so"));
+	simple_pointer_guard<char[]> libname (utils.string_concat ("libmono-profiler-", mname.get (), ".so"));
 	bool found = false;
 	void *handle = androidSystem.load_dso_from_any_directories (libname, dlopen_flags);
 	found = load_profiler_from_handle (handle, desc, mname);
 
 	if (!found && libmono_path != nullptr) {
-		char *full_path = utils.path_combine (libmono_path, libname);
+		simple_pointer_guard<char[]> full_path (utils.path_combine (libmono_path, libname));
 		handle = androidSystem.load_dso (full_path, dlopen_flags, FALSE);
-		delete[] full_path;
 		found = load_profiler_from_handle (handle, desc, mname);
 	}
 
 	if (found && logfile != nullptr)
 		utils.set_world_accessable (logfile);
 
-	if (!found) {
+	if (!found)
 		log_warn (LOG_DEFAULT,
 				"The '%s' profiler wasn't found in the main executable nor could it be loaded from '%s'.",
-				mname,
-				libname.get ());
-	}
-
-	delete[] mname;
+		        mname.get (),
+		        libname.get ());
 }
 
 /* Profiler support cribbed from mono/metadata/profiler.c */
@@ -243,31 +238,30 @@ Debug::start_debugging_and_profiling ()
  * Handle communication on the socket FD. Return TRUE if its neccessary to create more connections to handle more data.
  * Call process_cmd () with each command received.
  */
-inline int
+inline bool
 Debug::process_connection (int fd)
 {
 	// make sure the fd/socket blocks on reads/writes
 	fcntl (fd, F_SETFL, fcntl (fd, F_GETFL, nullptr) & ~O_NONBLOCK);
 
-	while (TRUE) {
+	while (true) {
 		char command [257];
-		ssize_t rv;
-		unsigned char cmd_len;
+		uint8_t cmd_len;
 
-		rv = utils.recv_uninterrupted (fd, &cmd_len, 1);
+		ssize_t rv = utils.recv_uninterrupted (fd, &cmd_len, sizeof(cmd_len));
 		if (rv == 0) {
 			log_info (LOG_DEFAULT, "EOF on socket.\n");
-			return FALSE;
+			return false;
 		}
 		if (rv <= 0) {
 			log_info (LOG_DEFAULT, "Error while receiving command from XS (%s)\n", strerror (errno));
-			return FALSE;
+			return false;
 		}
 
 		rv = utils.recv_uninterrupted (fd, command, cmd_len);
 		if (rv <= 0) {
 			log_info (LOG_DEFAULT, "Error while receiving command from XS (%s)\n", strerror (errno));
-			return FALSE;
+			return false;
 		}
 
 		// null-terminate
@@ -275,40 +269,31 @@ Debug::process_connection (int fd)
 
 		log_info (LOG_DEFAULT, "Received cmd: '%s'.", command);
 
-		rv = process_cmd (fd, command);
-		if (rv)
-			return TRUE;
+		if (process_cmd (fd, command))
+			return true;
 	}
 }
 
 inline int
 Debug::handle_server_connection (void)
 {
-	uint16_t listen_port = conn_port;
-	struct sockaddr_in listen_addr;
-	int listen_socket;
-	socklen_t len;
-	fd_set rset;
-	struct timeval tv;
-	struct timeval start;
-	struct timeval now;
-	int rv, flags, fd;
-	int need_new_conn;
-
-	listen_socket = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	int listen_socket = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_socket == -1) {
 		log_info (LOG_DEFAULT, "Could not create socket for XS to connect to: %s", strerror (errno));
 		return 1;
 	}
 
-	flags = 1;
-	rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
+	int flags = 1;
+	int rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
 	if (rv == -1 && utils.should_log (LOG_DEFAULT)) {
 		log_info_nocheck (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket (%s)", strerror (errno));
 		// not a fatal failure
 	}
 
 	// Bind
+	bool need_new_conn = true;
+	uint16_t listen_port = conn_port;
+	sockaddr_in listen_addr;
 	memset (&listen_addr, 0, sizeof (listen_addr));
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_port = htons (listen_port);
@@ -333,14 +318,20 @@ Debug::handle_server_connection (void)
 	}
 
 	// Wait for connections
+	timeval start;
 	start.tv_sec = 0;
 	start.tv_usec = 0;
-	need_new_conn = TRUE;
+
 	while (need_new_conn) {
+		fd_set rset;
+
 		FD_ZERO (&rset);
 		FD_SET (listen_socket, &rset);
 
 		do {
+			timeval tv;
+			timeval now;
+
 			// Calculate how long we can wait if we can only work for 2s since we started
 			gettimeofday (&now, nullptr);
 			if (start.tv_sec == 0) {
@@ -376,8 +367,8 @@ Debug::handle_server_connection (void)
 			goto cleanup;
 		}
 
-		len = sizeof (struct sockaddr_in);
-		fd = accept (listen_socket, (struct sockaddr *) &listen_addr, &len);
+		socklen_t len = sizeof (struct sockaddr_in);
+		int fd = accept (listen_socket, (struct sockaddr *) &listen_addr, &len);
 		if (fd == -1) {
 			log_info (LOG_DEFAULT, "Failed to accept connection from XS: %s", strerror (errno));
 			rv = 3;
@@ -409,55 +400,83 @@ cleanup:
  *
  *   Process a command received from XS through a socket connection.
  * This is called on a separate thread.
- * Return TRUE, if a new connection need to be opened.
+ * Return true, if a new connection need to be opened.
  */
-int
+bool
 Debug::process_cmd (int fd, char *cmd)
 {
-	if (!strcmp (cmd, "connect output")) {
+	static constexpr char CONNECT_OUTPUT_CMD[] = "connect output";
+	if (strcmp (cmd, CONNECT_OUTPUT_CMD) == 0) {
 		dup2 (fd, 1);
 		dup2 (fd, 2);
-		return TRUE;
-	} else if (!strcmp (cmd, "connect stdout")) {
+		return true;
+	}
+
+	static constexpr char CONNECT_STDOUT_CMD[] = "connect stdout";
+	if (strcmp (cmd, CONNECT_STDOUT_CMD) == 0) {
 		dup2 (fd, 1);
-		return TRUE;
-	} else if (!strcmp (cmd, "connect stderr")) {
+		return true;
+	}
+
+	static constexpr char CONNECT_STDERR_CMD[] = "connect stderr";
+	if (strcmp (cmd, CONNECT_STDERR_CMD) == 0) {
 		dup2 (fd, 2);
-		return TRUE;
-	} else if (!strcmp (cmd, "discard")) {
-		return TRUE;
-	} else if (!strcmp (cmd, "ping")) {
+		return true;
+	}
+
+	static constexpr char DISCARD_CMD[] = "discard";
+	if (strcmp (cmd, DISCARD_CMD) == 0) {
+		return true;
+	}
+
+	static constexpr char PING_CMD[] = "ping";
+	if (strcmp (cmd, PING_CMD) == 0) {
 		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> ("pong")), 5))
 			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back (%s)\n", strerror (errno));
-	} else if (!strcmp (cmd, "exit process")) {
-		log_info (LOG_DEFAULT, "XS requested an exit, will exit immediately.\n");
+		return false;
+	}
+
+	static constexpr char EXIT_PROCESS_CMD[] = "exit process";
+	if (strcmp (cmd, EXIT_PROCESS_CMD) == 0) {
+		log_info (LOG_DEFAULT, "Debugger requested an exit, will exit immediately.\n");
 		fflush (stdout);
 		fflush (stderr);
 		exit (0);
-	} else if (!strncmp (cmd, "start debugger: ", 16)) {
-		const char *debugger = cmd + 16;
-		int use_fd = FALSE;
-		if (!strcmp (debugger, "no")) {
+	}
+
+	bool use_fd = false;
+	static constexpr char START_DEBUGGER_CMD[] = "start debugger: ";
+	static constexpr size_t START_DEBUGGER_CMD_LEN = sizeof(START_DEBUGGER_CMD) - 1;
+	static constexpr char VALUE_NO[] = "no";
+	if (strncmp (cmd, START_DEBUGGER_CMD, START_DEBUGGER_CMD_LEN) == 0) {
+		const char *debugger = cmd + START_DEBUGGER_CMD_LEN;
+
+		static constexpr char DEBUGGER_SDB[] = "sdb";
+		if (strcmp (debugger, VALUE_NO) == 0) {
 			/* disabled */
-		} else if (!strcmp (debugger, "sdb")) {
+		} else if (strcmp (debugger, DEBUGGER_SDB) == 0) {
 			sdb_fd = fd;
-			use_fd = TRUE;
+			use_fd = true;
 		}
 		/* Notify the main thread (start_debugging ()) */
 		debugging_configured = true;
 		pthread_mutex_lock (&process_cmd_mutex);
 		pthread_cond_signal (&process_cmd_cond);
 		pthread_mutex_unlock (&process_cmd_mutex);
-		if (use_fd)
-			return TRUE;
-	} else if (!strncmp (cmd, "start profiler: ", 16)) {
-		const char *prof = cmd + 16;
-		int use_fd = FALSE;
+		return use_fd;
+	}
 
-		if (!strcmp (prof, "no")) {
+	static constexpr char START_PROFILER_CMD[] = "start profiler: ";
+	static constexpr size_t START_PROFILER_CMD_LEN = sizeof(START_PROFILER_CMD) - 1;
+	if (strncmp (cmd, START_PROFILER_CMD, START_PROFILER_CMD_LEN) == 0) {
+		const char *prof = cmd + START_PROFILER_CMD_LEN;
+
+		static constexpr char PROFILER_LOG[] = "log:";
+		static constexpr size_t PROFILER_LOG_LEN = sizeof(PROFILER_LOG) - 1;
+		if (strcmp (prof, VALUE_NO) == 0) {
 			/* disabled */
-		} else if (!strncmp (prof, "log:", 4)) {
-			use_fd = TRUE;
+		} else if (strncmp (prof, PROFILER_LOG, PROFILER_LOG_LEN) == 0) {
+			use_fd = true;
 			profiler_fd = fd;
 			profiler_description = utils.monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
 		} else {
@@ -468,13 +487,12 @@ Debug::process_cmd (int fd, char *cmd)
 		pthread_mutex_lock (&process_cmd_mutex);
 		pthread_cond_signal (&process_cmd_cond);
 		pthread_mutex_unlock (&process_cmd_mutex);
-		if (use_fd)
-			return TRUE;
+		return use_fd;
 	} else {
 		log_error (LOG_DEFAULT, "Unsupported command: '%s'", cmd);
 	}
 
-	return FALSE;
+	return false;
 }
 
 #if !defined (WINDOWS)
@@ -482,9 +500,6 @@ Debug::process_cmd (int fd, char *cmd)
 void
 Debug::start_debugging (void)
 {
-	char *debug_arg;
-	char *debug_options [2];
-
 	// wait for debugger configuration to finish
 	pthread_mutex_lock (&process_cmd_mutex);
 	while (!debugging_configured && !config_timedout) {
@@ -493,13 +508,16 @@ Debug::start_debugging (void)
 	}
 	pthread_mutex_unlock (&process_cmd_mutex);
 
-	if (!sdb_fd)
+	if (sdb_fd == 0)
 		return;
 
 	embeddedAssemblies.set_register_debug_symbols (true);
 
-	debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
-	debug_options[0] = debug_arg;
+	char *debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
+	char *debug_options[] = {
+		debug_arg,
+		nullptr
+	};
 
 	// this text is used in unit tests to check the debugger started
 	// do not change it without updating the test.
@@ -542,10 +560,10 @@ static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", nullptr
 };
 
-int
+bool
 Debug::enable_soft_breakpoints (void)
 {
-	struct utsname name;
+	utsname name;
 
 	/* This check is to make debugging work on some old Samsung device which had
 	 * a patched kernel that would abort the application after several segfaults
@@ -553,7 +571,7 @@ Debug::enable_soft_breakpoints (void)
 	*/
 	uname (&name);
 	for (const char** ptr = soft_breakpoint_kernel_list; *ptr; ptr++) {
-		if (!strcmp (name.release, *ptr)) {
+		if (strcmp (name.release, *ptr) == 0) {
 			log_info (LOG_DEBUGGER, "soft breakpoints enabled due to kernel version match (%s)", name.release);
 			return 1;
 		}
@@ -566,12 +584,12 @@ Debug::enable_soft_breakpoints (void)
 		return 1;
 	}
 
-	int ret;
+	bool ret;
 	if (strcmp ("0", value) == 0) {
-		ret = 0;
+		ret = false;
 		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	} else {
-		ret = 1;
+		ret = true;
 		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
 	}
 	delete[] value;
@@ -581,10 +599,10 @@ Debug::enable_soft_breakpoints (void)
 #else  /* !defined (ANDROID) */
 #if defined (DEBUG) && !defined (WINDOWS)
 #ifndef enable_soft_breakpoints
-[[maybe_unused]] int
+[[maybe_unused]] bool
 Debug::enable_soft_breakpoints (void)
 {
-	return 0;
+	return false;
 }
 #endif /* DEBUG */
 #endif // enable_soft_breakpoints

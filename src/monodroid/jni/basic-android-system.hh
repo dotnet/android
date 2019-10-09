@@ -15,7 +15,16 @@ namespace xamarin::android::internal
 		using ForEachApkHandler = void (BasicAndroidSystem::*) (const char *apk, size_t index, size_t apk_count, void *user_data);
 
 	private:
-		static const char* android_abi_names[CPU_KIND_X86_64+1];
+		// Values correspond to the CPU_KIND_* macros
+		static constexpr const char* android_abi_names[CPU_KIND_X86_64+1] = {
+			"unknown",
+			[CPU_KIND_ARM]      = "armeabi-v7a",
+			[CPU_KIND_ARM64]    = "arm64-v8a",
+			[CPU_KIND_MIPS]     = "mips",
+			[CPU_KIND_X86]      = "x86",
+			[CPU_KIND_X86_64]   = "x86_64",
+		};
+		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
 
 	public:
 #ifdef ANDROID64

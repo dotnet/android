@@ -9,7 +9,7 @@ extern "C" {
 #include "java-interop-util.h"
 }
 
-namespace xamarin::android::internal {
+using namespace xamarin::android::internal;
 
 void
 InMemoryAssemblies::add_or_update_from_java (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies, jobjectArray assembliesBytes)
@@ -157,6 +157,4 @@ InMemoryAssemblies::InMemoryAssemblyEntry::~InMemoryAssemblyEntry ()
 	delete[] names;
 	delete[] assemblies_bytes;
 	delete[] assemblies_bytes_len;
-}
-
 }

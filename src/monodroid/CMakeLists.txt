@@ -275,6 +275,10 @@ if(NOT WIN32 AND NOT MINGW)
 	${SOURCES_DIR}/shared-constants.cc
 	)
   add_library(xamarin-debug-app-helper SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
+  target_compile_definitions(
+	xamarin-debug-app-helper
+	PUBLIC -DDEBUG_APP_HELPER
+	)
 endif()
 
 set(SOURCES_FRAGMENT_FILE "sources.projitems")

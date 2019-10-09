@@ -39,8 +39,6 @@ using timestruct = timespec;
 using timestruct = timeval;
 #endif
 
-static const char hex_chars [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
 void timing_point::mark ()
 {
 	int ret;
@@ -114,16 +112,18 @@ Util::send_uninterrupted (int fd, void *buf, size_t len)
 ssize_t
 Util::recv_uninterrupted (int fd, void *buf, size_t len)
 {
+#if defined (WINDOWS)
+	using nbytes_type = int;
+#else
+	using nbytes_type = size_t;
+#endif
 	ssize_t res;
 	size_t total = 0;
 	int flags = 0;
-#ifdef WINDOWS
-	int nbytes;
-#else
-	size_t nbytes;
-#endif
+	nbytes_type nbytes;
+
 	do {
-		nbytes = len - total;
+		nbytes = static_cast<nbytes_type>(len - total);
 		res = recv (fd, (char *) buf + total, nbytes, flags);
 
 		if (res > 0)
@@ -200,7 +200,7 @@ Util::monodroid_get_namespaced_system_property (const char *name, char **value)
 
 		log_info (LOG_DEFAULT, "Property '%s' has value '%s'.", name, local_value);
 
-		if (value)
+		if (value != nullptr)
 			*value = local_value;
 		else
 			delete[] local_value;
@@ -241,27 +241,28 @@ MonoObject *
 Util::monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc)
 {
 	MonoDomain *current = mono_domain_get ();
-	if (domain != current) {
-		mono_domain_set (domain, FALSE);
-		MonoObject *r = mono_runtime_invoke (method, obj, params, exc);
-		mono_domain_set (current, FALSE);
-		return r;
-	} else {
+	if (domain == current) {
 		return mono_runtime_invoke (method, obj, params, exc);
 	}
+
+	mono_domain_set (domain, FALSE);
+	MonoObject *r = mono_runtime_invoke (method, obj, params, exc);
+	mono_domain_set (current, FALSE);
+	return r;
 }
 
 void
 Util::monodroid_property_set (MonoDomain *domain, MonoProperty *property, void *obj, void **params, MonoObject **exc)
 {
 	MonoDomain *current = mono_domain_get ();
-	if (domain != current) {
-		mono_domain_set (domain, FALSE);
+	if (domain == current) {
 		mono_property_set_value (property, obj, params, exc);
-		mono_domain_set (current, FALSE);
-	} else {
-		mono_property_set_value (property, obj, params, exc);
+		return;
 	}
+
+	mono_domain_set (domain, FALSE);
+	mono_property_set_value (property, obj, params, exc);
+	mono_domain_set (current, FALSE);
 }
 
 MonoDomain*
@@ -293,20 +294,19 @@ Util::monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendl
 MonoClass*
 Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type)
 {
-	MonoAssembly *assm = nullptr;
-	MonoImage *image = nullptr;
-	MonoClass *result = nullptr;
-	MonoAssemblyName *aname = mono_assembly_name_new (assembly);
 	MonoDomain *current = mono_domain_get ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
 
-	assm = mono_assembly_loaded (aname);
+	MonoClass *result;
+	MonoAssemblyName *aname = mono_assembly_name_new (assembly);
+	MonoAssembly *assm = mono_assembly_loaded (aname);
 	if (assm != nullptr) {
-		image = mono_assembly_get_image (assm);
+		MonoImage *image = mono_assembly_get_image (assm);
 		result = mono_class_from_name (image, _namespace, type);
-	}
+	} else
+		result = nullptr;
 
 	if (domain != current)
 		mono_domain_set (current, FALSE);
@@ -319,13 +319,12 @@ Util::monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, c
 MonoClass*
 Util::monodroid_get_class_from_image (MonoDomain *domain, MonoImage *image, const char *_namespace, const char *type)
 {
-	MonoClass *result = nullptr;
 	MonoDomain *current = mono_domain_get ();
 
 	if (domain != current)
 		mono_domain_set (domain, FALSE);
 
-	result = mono_class_from_name (image, _namespace, type);
+	MonoClass *result = mono_class_from_name (image, _namespace, type);
 
 	if (domain != current)
 		mono_domain_set (current, FALSE);
@@ -347,80 +346,4 @@ Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *nam
 		return nullptr;
 
 	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
-}
-
-extern "C" void
-monodroid_strfreev (char **str_array)
-{
-	utils.monodroid_strfreev (str_array);
-}
-
-extern "C" char**
-monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
-{
-	return utils.monodroid_strsplit (str, delimiter, max_tokens);
-}
-
-extern "C" char*
-monodroid_strdup_printf (const char *format, ...)
-{
-	va_list args;
-
-	va_start (args, format);
-	char *ret = utils.monodroid_strdup_vprintf (format, args);
-	va_end (args);
-
-	return ret;
-}
-
-extern "C" void
-monodroid_store_package_name (const char *name)
-{
-	utils.monodroid_store_package_name (name);
-}
-
-extern "C" int
-monodroid_get_namespaced_system_property (const char *name, char **value)
-{
-	return static_cast<int>(utils.monodroid_get_namespaced_system_property (name, value));
-}
-
-extern "C" FILE*
-monodroid_fopen (const char* filename, const char* mode)
-{
-	return utils.monodroid_fopen (filename, mode);
-}
-
-extern "C" int
-send_uninterrupted (int fd, void *buf, int len)
-{
-	if (len < 0)
-		len = 0;
-	return utils.send_uninterrupted (fd, buf, static_cast<size_t>(len));
-}
-
-extern "C" int
-recv_uninterrupted (int fd, void *buf, int len)
-{
-	if (len < 0)
-		len = 0;
-	return static_cast<int>(utils.recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
-}
-
-extern "C" void
-set_world_accessable (const char *path)
-{
-	utils.set_world_accessable (path);
-}
-
-extern "C" void
-create_public_directory (const char *dir)
-{
-	utils.create_public_directory (dir);
-}
-
-extern "C" char*
-path_combine (const char *path1, const char *path2)
-{
-	return utils.path_combine (path1, path2);
 }
