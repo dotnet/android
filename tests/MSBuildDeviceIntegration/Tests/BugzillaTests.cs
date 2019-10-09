@@ -18,10 +18,11 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		public void Teardown ()
 		{
-			if (HasDevices)
+			if (HasDevices && proj != null)
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed && Directory.Exists (builder.ProjectDirectory))
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed
+				&& builder != null && Directory.Exists (builder.ProjectDirectory))
 				Directory.Delete (builder.ProjectDirectory, recursive: true);
 		}
 
