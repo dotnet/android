@@ -476,6 +476,7 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2259", "is incompatible with attribute"),
 			Tuple.Create ("APT2260", "not found"),
 			Tuple.Create ("APT2261", "file failed to compile"),
+			Tuple.Create ("APT2262", "unexpected element <activity> found in <manifest>"),
 		};
 	}
 }
