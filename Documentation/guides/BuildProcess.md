@@ -1136,7 +1136,7 @@ server, the following MSBuild properties can be used:
     Note: `env:` is not supported when using `AndroidPackageFormat`=`aab`. 
 
 -   **JarsignerTimestampAuthorityUrl** &ndash; This property
-    allows you to specify a Url to a timestamp authority
+    allows you to specify a URL to a timestamp authority
     service. This can be used to make sure your `.apk` signature
     includes a timestamp.
     See the Java [Signature Timestamp Support](https://docs.oracle.com/javase/8/docs/technotes/guides/security/time-of-signing.html) documentation for more details.
