@@ -3242,7 +3242,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void GetDependencyTest ()
+		public void GetDependencyWhenBuildToolsAreMissingTest ()
 		{
 			var apis = new ApiInfo [] {
 			};
@@ -3259,14 +3259,44 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				$"TargetFrameworkRootPath={referencesPath}",
 				$"AndroidSdkDirectory={androidSdkPath}",
 			};
-			var envVar = new Dictionary<string, string>  {
-				{ "XBUILD_FRAMEWORK_FOLDERS_PATH", referencesPath },
-			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
-				Assert.True (builder.Build (proj, parameters: parameters, environmentVariables: envVar),
+				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
+				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
+			}
+		}
+
+		[Test]
+		public void GetDependencyWhenSDKIsMissingTest ()
+		{
+			var apis = new ApiInfo [] {
+			};
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = Path.Combine (path, "android-sdk");
+			Directory.CreateDirectory (androidSdkPath);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+			};
+			var parameters = new string [] {
+				$"TargetFrameworkRootPath={referencesPath}",
+				$"AndroidSdkDirectory={androidSdkPath}",
+			};
+
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "GetAndroidDependencies";
+				Assert.True (builder.Build (proj, parameters: parameters),
+					string.Format ("First Build should have succeeded"));
+				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
 			}
 		}
 
