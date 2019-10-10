@@ -8,7 +8,9 @@
 #endif
 
 #include "globals.hh"
+#include "timing.hh"
 
+using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
 /* Invoked by System.Core.dll!System.IO.MemoryMappedFiles.MemoryMapImpl.getpagesize */
@@ -172,6 +174,40 @@ MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *pr
 {
 	embeddedAssemblies.set_assemblies_prefix (prefix);
 	return 0;
+}
+
+MONO_API managed_timing_sequence*
+monodroid_timing_start (const char *message)
+{
+	if (timing == nullptr)
+		return nullptr;
+
+	managed_timing_sequence *ret = timing->get_available_sequence ();
+	if (message != nullptr) {
+		log_info (LOG_TIMING, message);
+	}
+	ret->period.mark_start ();
+
+	return ret;
+}
+
+MONO_API void
+monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
+{
+	static constexpr const char DEFAULT_MESSAGE[] = "Managed Timing";
+
+	if (sequence == nullptr)
+		return;
+
+	sequence->period.mark_end ();
+	Timing::info (sequence->period, message == nullptr ? DEFAULT_MESSAGE : message);
+	timing->release_sequence (sequence);
+}
+
+MONO_API char*
+monodroid_TypeManager_get_java_class_name (jclass klass)
+{
+	return monodroidRuntime.get_java_class_name_for_TypeManager (klass);
 }
 
 extern "C" void* monodroid_dylib_mono_new (const char *libmono_path)

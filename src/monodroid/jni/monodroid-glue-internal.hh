@@ -5,6 +5,7 @@
 #include <jni.h>
 #include "android-system.hh"
 #include "osbridge.hh"
+#include "timing.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -32,13 +33,14 @@ namespace xamarin::android::internal
 			jclass          grefClass;
 			jmethodID       Class_forName;
 			unsigned int    logCategories;
-			jmethodID       Class_getName;
 			int             version;
 			int             androidSdkVersion;
 			int             localRefsAreIndirect;
 			int             grefGcThreshold;
 			jobject         grefIGCUserPeer;
 			int             isRunningOnDesktop;
+			uint8_t         brokenExceptionTransitions;
+			int             packageNamingPolicy;
 		};
 
 	private:
@@ -59,7 +61,7 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
 		                                             jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-		                                             jint apiLevel, jboolean embeddedDSOsEnabled);
+		                                             jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator);
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobject loader, jboolean force_preload_assemblies);
 		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID);
@@ -112,10 +114,11 @@ namespace xamarin::android::internal
 		// in turn is internally defined by clang to be `char*`
 		//
 		// Desktop builds (using both clang++ and g++) do NOT appear to have this issue, so it might be a problem in the
-		// NDK. More investigation would be required, but for now lets work around the issue by not overloading the 
+		// NDK. More investigation would be required, but for now lets work around the issue by not overloading the
 		// function
 		void dump_counters (const char *format, ...);
 		void dump_counters_v (const char *format, va_list args);
+		char*	get_java_class_name_for_TypeManager (jclass klass);
 
 	private:
 		int convert_dl_flags (int flags);
@@ -186,6 +189,7 @@ namespace xamarin::android::internal
 		volatile bool       monodroid_gdb_wait    = true;
 		jclass              java_System;
 		jmethodID           java_System_identityHashCode;
+		jmethodID           Class_getName;
 		jclass              java_TimeZone;
 		timing_period       jit_time;
 		FILE               *jit_log;

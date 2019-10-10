@@ -515,15 +515,10 @@ AndroidSystem::count_override_assemblies (void)
 long
 AndroidSystem::get_max_gref_count_from_system (void)
 {
-	constexpr char HARDWARE_TYPE[] = "ro.hardware";
-	constexpr char HARDWARE_EMULATOR[] = "goldfish";
-
 	long max;
-	char value [PROP_VALUE_MAX+1];
 	char *override;
 
-	int len = _monodroid__system_property_get (HARDWARE_TYPE, value, sizeof (value));
-	if (len > 0 && strcmp (value, HARDWARE_EMULATOR) == 0) {
+	if (running_in_emulator) {
 		max = 2000;
 	} else {
 		max = 51200;

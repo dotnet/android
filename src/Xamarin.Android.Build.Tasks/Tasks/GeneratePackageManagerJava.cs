@@ -9,10 +9,13 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
+using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
+	using PackageNamingPolicyEnum   = PackageNamingPolicy;
+
 	public class GeneratePackageManagerJava : AndroidTask
 	{
 		public override string TaskPrefix => "GPM";
@@ -55,6 +58,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		public string PackageNamingPolicy { get; set; }
 		public string Debug { get; set; }
 		public ITaskItem[] Environments { get; set; }
 		public string AndroidAotMode { get; set; }
@@ -141,10 +145,15 @@ namespace Xamarin.Android.Tasks
 		{
 			bool usesMonoAOT = false;
 			bool usesAssemblyPreload = EnablePreloadAssembliesDefault;
+			bool brokenExceptionTransitions = false;
 			uint monoAOTMode = 0;
 			string androidPackageName = null;
 			var environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 			var systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
+
+			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
+				pnp = PackageNamingPolicyEnum.LowercaseCrc64;
+			}
 
 			AotMode aotMode;
 			if (AndroidAotMode != null && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode)) {
@@ -187,6 +196,10 @@ namespace Xamarin.Android.Tasks
 						if (idx < lineToWrite.Length - 1 && UInt32.TryParse (lineToWrite.Substring (idx + 1), out val)) {
 							usesAssemblyPreload = idx == 1;
 						}
+						continue;
+					}
+					if (lineToWrite.StartsWith ("XA_BROKEN_EXCEPTION_TRANSITIONS=")) {
+						brokenExceptionTransitions = true;
 						continue;
 					}
 
@@ -260,6 +273,8 @@ namespace Xamarin.Android.Tasks
 						UsesAssemblyPreload = usesAssemblyPreload,
 						MonoAOTMode = monoAOTMode.ToString ().ToLowerInvariant (),
 						AndroidPackageName = AndroidPackageName,
+						BrokenExceptionTransitions = brokenExceptionTransitions,
+						PackageNamingPolicy = pnp,
 					};
 
 					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {

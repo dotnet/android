@@ -8,21 +8,19 @@ namespace Java.Interop {
 
 	public static class Runtime {
 
-		internal static	  IntPtr  grefIGCUserPeer_class;
-
 		public static List<WeakReference> GetSurfacedObjects ()
 		{
 			return Java.Lang.Object.GetSurfacedObjects_ForDiagnosticsOnly ();
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_max_gref_get ();
 
 		public static int MaxGlobalReferenceCount {
 			get {return _monodroid_max_gref_get ();}
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_gref_get ();
 
 		public static int GlobalReferenceCount {
@@ -46,10 +44,7 @@ namespace Java.Interop {
 
 		public static bool IsGCUserPeer (IntPtr value)
 		{
-			if (value == IntPtr.Zero)
-				return false;
-
-			return JNIEnv.IsInstanceOf (value, grefIGCUserPeer_class);
+			return JNIEnv.IsGCUserPeer (value);
 		}
 	}
 }

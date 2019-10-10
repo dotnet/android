@@ -8,6 +8,7 @@ AndroidSystem androidSystem;
 OSBridge osBridge;
 EmbeddedAssemblies embeddedAssemblies;
 MonodroidRuntime monodroidRuntime;
+Timing *timing = nullptr;
 #ifndef ANDROID
 InMemoryAssemblies inMemoryAssemblies;
 #endif
