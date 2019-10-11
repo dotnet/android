@@ -3279,6 +3279,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var androidSdkPath = Path.Combine (path, "android-sdk");
 			if (createSdkDirectory)
 				Directory.CreateDirectory (androidSdkPath);
+			else if (Directory.Exists (androidSdkPath))
+				Directory.Delete (androidSdkPath, recursive: true);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
