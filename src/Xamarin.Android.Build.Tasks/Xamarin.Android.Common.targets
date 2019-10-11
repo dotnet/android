@@ -834,9 +834,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
-  <PropertyGroup>
-      <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
-  </PropertyGroup>
+	<PropertyGroup>
+			<_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+	</PropertyGroup>
 	<ResolveSdks
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
@@ -883,7 +883,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			ProjectFilePath="$(MSBuildProjectFullPath)"			
 			LintToolPath="$(LintToolPath)"
-      ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
 		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
@@ -3445,7 +3445,7 @@ because xbuild doesn't support framework reference assemblies.
 <!-- SDK Management Targets -->
 <Target Name="_BeforeGetAndroidDependencies">
     <PropertyGroup>
-      <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
+        <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
     </PropertyGroup>
 </Target> 
  

@@ -3271,13 +3271,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ()
+		public void GetDependencyWhenSDKIsMissingTest ([Values (true, false)] bool createSdkDirectory)
 		{
 			var apis = new ApiInfo [] {
 			};
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = Path.Combine (path, "android-sdk");
-			Directory.CreateDirectory (androidSdkPath);
+			if (createSdkDirectory)
+				Directory.CreateDirectory (androidSdkPath);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
