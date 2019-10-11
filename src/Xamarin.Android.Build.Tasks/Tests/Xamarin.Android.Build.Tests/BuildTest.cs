@@ -3443,6 +3443,34 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void ProguardBOMError ([Values ("dx")] string dexTool, [Values ("proguard")] string linkTool)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				EnableDesugar = true, //It is certain this test would fail without desugar
+				DexTool = dexTool,
+				LinkTool = linkTool,
+			};
+			if (!string.IsNullOrEmpty (linkTool)) {
+				var rules = new List<string> {
+					"-dontwarn com.google.devtools.build.android.desugar.**",
+					"-dontwarn javax.annotation.**",
+					"-dontwarn org.codehaus.mojo.animal_sniffer.*",
+				};
+				var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: true);
+				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+					TextContent = () => string.Join (Environment.NewLine, rules),
+					Encoding = encoding,
+				});
+			}
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				StringAssertEx.Contains ($"error XA4307", builder.LastBuildOutput, "Error should be XA4307");
+			}
+		}
+
+		[Test]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
