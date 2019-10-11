@@ -18,6 +18,8 @@ namespace xamarin::android
 
 		T& operator= (simple_pointer_guard_type &other) = delete;
 		T& operator= (const simple_pointer_guard_type &other) = delete;
+		T* operator= (T* ptr) = delete;
+		const T* operator= (const T* ptr) = delete;
 
 		T* get () const noexcept
 		{
@@ -39,11 +41,32 @@ namespace xamarin::android
 			return tp != nullptr;
 		}
 
+		operator T* () const noexcept
+		{
+			return tp;
+		}
+
+		operator T const* () const noexcept
+		{
+			return tp;
+		}
+
+	protected:
+		void set_pointer (T* ptr) noexcept
+		{
+			tp = ptr;
+		}
+
+		void set_pointer (const T* ptr) noexcept
+		{
+			tp = ptr;
+		}
+
 	private:
-		T *tp;
+		T *tp = nullptr;
 	};
 
-	template <typename T>
+	template <typename T, bool uses_cpp_alloc = true>
 	class simple_pointer_guard : public simple_pointer_guard_type<T>
 	{
 	public:
@@ -56,15 +79,22 @@ namespace xamarin::android
 
 		~simple_pointer_guard ()
 		{
-			delete simple_pointer_guard_type<T>::get ();
+			T *ptr = simple_pointer_guard_type<T>::get ();
+			if constexpr (uses_cpp_alloc) {
+				delete ptr;
+			} else {
+				free (ptr);
+			}
 		}
 
 		T& operator= (simple_pointer_guard &other) = delete;
 		T& operator= (const simple_pointer_guard &other) = delete;
+		T* operator= (T* ptr) = delete;
+		const T* operator= (const T* ptr) = delete;
 	};
 
-	template <typename T>
-	class simple_pointer_guard<T[]> : public simple_pointer_guard_type<T>
+	template <typename T, bool uses_cpp_alloc>
+	class simple_pointer_guard<T[], uses_cpp_alloc> : public simple_pointer_guard_type<T>
 	{
 	public:
 		simple_pointer_guard () = default;
@@ -76,11 +106,19 @@ namespace xamarin::android
 
 		~simple_pointer_guard ()
 		{
-			delete[] simple_pointer_guard_type<T>::get ();
+			T *ptr = simple_pointer_guard_type<T>::get ();
+
+			if constexpr (uses_cpp_alloc) {
+				delete[] ptr;
+			} else {
+				free (ptr);
+			}
 		}
 
 		T& operator= (simple_pointer_guard &other) = delete;
 		T& operator= (const simple_pointer_guard &other) = delete;
+		const T* operator= (const T (ptr)[]) = delete;
+		T* operator= (T (ptr)[]) = delete;
 	};
 }
 #endif // !def __CPP_UTIL_HH

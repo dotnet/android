@@ -89,18 +89,29 @@ namespace xamarin::android
 			return ::xcalloc (nmemb, size);
 		}
 
-		char *strdup_new (const char* s)
+		char *strdup_new (const char* s, size_t len)
 		{
-			assert (s != nullptr);
+			if (XA_UNLIKELY (len == 0 || s == nullptr)) {
+				return nullptr;
+			}
 
-			size_t slen = strlen (s);
-			char *ret = new char [slen + 1];
-			memcpy (ret, s, slen);
-			ret[slen] = '\0';
+			size_t alloc_size = add_with_overflow_check<size_t>(__FILE__, __LINE__, len, 1);
+			auto ret = new char[alloc_size];
+			memcpy (ret, s, len);
+			ret[len] = '\0';
 
 			return ret;
 		}
-#if !defined (WINDOWS)
+
+		char *strdup_new (const char* s)
+		{
+			if (XA_UNLIKELY (s == nullptr)) {
+				return nullptr;
+			}
+
+			return strdup_new (s, strlen (s));
+		}
+
 		// Without <type_traits> it's a little bit open for abuse (bad stuff will happen if
 		// a type different than `char*` is used to specialize the function and we can't
 		// assert this condition on compile time), but we can take that risk since it's
@@ -117,7 +128,7 @@ namespace xamarin::android
 
 			return ret;
 		}
-#else // def WINDOWS
+#if defined (WINDOWS)
 		/* Those two conversion functions are only properly implemented on Windows
 		 * because that's the only place where they should be useful.
 		 */
@@ -130,7 +141,7 @@ namespace xamarin::android
 		{
 			return ::utf8_to_utf16 (mbstr);
 		}
-#endif // !def WINDOWS
+#endif // def WINDOWS
 		bool            is_path_rooted (const char *path);
 
 		template<typename Ret, typename P1, typename P2>
@@ -173,7 +184,6 @@ namespace xamarin::android
 		}
 
 	protected:
-#if !defined (WINDOWS)
 		template<typename StringType = const char*, typename ...Strings>
 		void concatenate_strings_into (UNUSED_ARG size_t len, UNUSED_ARG char *dest)
 		{}
@@ -196,7 +206,7 @@ namespace xamarin::android
 		{
 			return strlen (s1) + calculate_length (strings...);
 		}
-#endif
+
 		int make_directory (const char *path, mode_t mode)
 		{
 #if WINDOWS

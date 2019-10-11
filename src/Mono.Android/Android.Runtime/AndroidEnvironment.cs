@@ -231,7 +231,7 @@ namespace Android.Runtime {
 			x_dpi = metrics.Xdpi;
 			y_dpi = metrics.Ydpi;
 		}
-		
+
 		// This is invoked by
 		// System.Core!System.AndroidPlatform.GetDefaultTimeZone ()
 		// DO NOT REMOVE
@@ -241,15 +241,12 @@ namespace Android.Runtime {
 			try {
 				return Marshal.PtrToStringAnsi (id);
 			} finally {
-				monodroid_free (id);
+				JNIEnv.monodroid_free (id);
 			}
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr _monodroid_timezone_get_default_id ();
-
-		[DllImport ("__Internal")]
-		static extern void monodroid_free (IntPtr ptr);
 
 		// This is invoked by
 		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
@@ -265,18 +262,18 @@ namespace Android.Runtime {
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.getifaddrs
 		// DO NOT REMOVE
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_getifaddrs (out IntPtr ifap);
 
 		static int GetInterfaceAddresses (out IntPtr ifap)
 		{
 			return _monodroid_getifaddrs (out ifap);
 		}
-		
+
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.freeifaddrs
 		// DO NOT REMOVE
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
                 static extern void _monodroid_freeifaddrs (IntPtr ifap);
 
 		static void FreeInterfaceAddresses (IntPtr ifap)
@@ -284,7 +281,7 @@ namespace Android.Runtime {
 			_monodroid_freeifaddrs (ifap);
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);
 
 		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)

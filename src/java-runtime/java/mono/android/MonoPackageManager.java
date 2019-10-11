@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
+import android.os.Build;
 import android.util.Log;
 import mono.android.Runtime;
 import mono.android.DebugRuntime;
@@ -78,6 +79,7 @@ public class MonoPackageManager {
 				System.loadLibrary("xamarin-app");
 				System.loadLibrary("monodroid");
 
+
 				Runtime.initInternal (
 						language,
 						apks,
@@ -86,8 +88,9 @@ public class MonoPackageManager {
 						loader,
 						externalStorageDirs,
 						MonoPackageManager_Resources.Assemblies,
-						android.os.Build.VERSION.SDK_INT,
-						embeddedDSOsEnabled
+						Build.VERSION.SDK_INT,
+						embeddedDSOsEnabled,
+						isEmulator ()
 					);
 
 				mono.android.app.ApplicationRegistration.registerApplications ();
@@ -95,6 +98,22 @@ public class MonoPackageManager {
 				initialized = true;
 			}
 		}
+	}
+
+	// We need to detect the emulator in order to determine the maximum gref count.
+	// The official Android emulator requires a much lower maximum than actual
+	// devices. Hopefully other emulators don't need the treatment. If they do, we
+	// can add their detection here. We should perform the absolute minimum of
+	// checking in order to save time.
+	static boolean isEmulator()
+	{
+		String val = Build.HARDWARE;
+
+		// This detects the official Android emulator
+		if (val.contains ("ranchu") || val.contains ("goldfish"))
+			return true;
+
+		return false;
 	}
 
 	public static void setContext (Context context)

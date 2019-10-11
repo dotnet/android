@@ -93,6 +93,7 @@ ms.date: 08/23/2019
 + [XA4304](xa4304.md): Proguard configuration file '{file}' was not found.
 + [XA4305](xa4305.md): MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.
 + [XA4306](xa4306.md): R8 does not support \`@(MultiDexMainDexList)\` files when android:minSdkVersion >= 21
++ [XA4307](xa4307.md): Invalid ProGuard configuration file.
 
 ## XA5xxx: GCC and toolchain
 

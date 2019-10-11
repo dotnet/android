@@ -15,7 +15,7 @@
 #include "debug.hh"
 #include "embedded-assemblies.hh"
 #include "util.hh"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
 #include "globals.hh"
 
 using namespace xamarin::android;

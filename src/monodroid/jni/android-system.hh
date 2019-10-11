@@ -87,6 +87,11 @@ namespace xamarin { namespace android { namespace internal
 			return aotMode;
 		}
 
+		void set_running_in_emulator (bool yesno)
+		{
+			running_in_emulator = yesno;
+		}
+
 	private:
 #if defined (DEBUG) || !defined (ANDROID)
 		void add_system_property (const char *name, const char *value);
@@ -120,6 +125,7 @@ namespace xamarin { namespace android { namespace internal
 	private:
 		long max_gref_count = 0;
 		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
+		bool running_in_emulator = false;
 	};
 }}}
 #endif // !__ANDROID_SYSTEM_H

@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
@@ -20,6 +21,10 @@ namespace Xamarin.Android.Tasks
 	// See AOSP/sdk/eclipse/plugins/com.android.ide.eclipse.adt/src/com/android/ide/eclipse/adt/internal/build/BuildHelper.java
 	public class Proguard : AndroidToolTask
 	{
+		bool foundError = false;
+		List<string> errorLines = new List<string> ();
+		StringBuilder errorText = new StringBuilder ();
+
 		public override string TaskPrefix => "PRO";
 
 		public string ProguardJarPath { get; set; }
@@ -175,6 +180,33 @@ namespace Xamarin.Android.Tasks
 
 		string ProguardHome {
 			get { return UseProguard ? ProguardToolPath : Path.GetDirectoryName (Path.GetDirectoryName (ProguardJarPath)); }
+		}
+
+		protected override bool HandleTaskExecutionErrors ()
+		{
+			if (foundError) {
+				errorText.Clear ();
+				foreach (var line in errorLines)
+					errorText.Append (line);
+				Log.LogCodedError ($"XA4307", $"Invalid ProGuard configuration file. {errorText}");
+				return !Log.HasLoggedErrors;
+			}
+			return base.HandleTaskExecutionErrors ();
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			if (singleLine.Contains ("proguard.ParseException")) {
+				Log.LogMessage (MessageImportance.High, singleLine);
+				foundError = true;
+				errorLines.Add (singleLine.Replace ("proguard.ParseException:", string.Empty));
+				return;
+			} else if (foundError) {
+				Log.LogMessage (MessageImportance.High, singleLine);
+				errorLines.Add (singleLine);
+				return;
+			}
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }

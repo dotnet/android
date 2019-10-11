@@ -373,7 +373,7 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr monodroid_typemap_java_to_managed (string java);
 
 		[Test]
@@ -385,7 +385,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (IntPtr.Zero, m);
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr monodroid_typemap_managed_to_java (string java);
 
 		string GetTypeName (Type type)

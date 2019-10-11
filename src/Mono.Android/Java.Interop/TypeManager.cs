@@ -9,48 +9,51 @@ using Android.Runtime;
 
 namespace Java.Interop {
 
-	public static partial class TypeManager {
+	static class TypeManagerMapDictionaries
+	{
+		static Dictionary<string, Type> _jniToManaged;
+		static Dictionary<Type, string> _managedToJni;
 
-		// Make this internal so that JNIEnv.Initialize can trigger the static
-		// constructor so that JNIEnv.RegisterJNINatives() doesn't include 
-		// the static constructor execution.
+		public static readonly object AccessLock = new object ();
 
-		// Lock on jniToManaged before accessing EITHER jniToManaged or managedToJni.
-		internal static Dictionary<string, Type> jniToManaged = new Dictionary<string, Type> ();
-		static Dictionary<Type, string> managedToJni = new Dictionary<Type, string> ();
-
-		internal static IntPtr id_Class_getName;
-
-		static TypeManager ()
-		{
-			var start = new DateTime ();
-			if (Logger.LogTiming) {
-				start = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"TypeManager.cctor start: " + (start - new DateTime (1970, 1, 1)).TotalMilliseconds);
-			}
-
-			__TypeRegistrations.RegisterPackages ();
-
-			if (Logger.LogTiming) {
-				var end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"TypeManager.cctor time: " + (end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (end - start).TotalMilliseconds + " ms]");
+		//
+		// Access to both properties MUST be done after taking lock on accessLock!
+		//
+		public static Dictionary<string, Type> JniToManaged {
+			get {
+				if (_jniToManaged == null)
+					_jniToManaged = new Dictionary<string, Type> ();
+				return _jniToManaged;
 			}
 		}
 
+		public static Dictionary<Type, string> ManagedToJni {
+			get {
+				if (_managedToJni == null)
+					_managedToJni = new Dictionary<Type, string> ();
+				return _managedToJni;
+			}
+		}
+	}
+
+	public static partial class TypeManager {
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		extern static IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
+
 		internal static string GetClassName (IntPtr class_ptr)
 		{
-			return JNIEnv.GetString (JNIEnv.CallObjectMethod (class_ptr, JNIEnv.mid_Class_getName), JniHandleOwnership.TransferLocalRef).Replace (".", "/");
+			IntPtr ptr = monodroid_TypeManager_get_java_class_name (class_ptr);
+			string ret = Marshal.PtrToStringAnsi (ptr);
+			JNIEnv.monodroid_free (ptr);
+
+			return ret;
 		}
 
 		internal static string GetJniTypeName (Type type)
 		{
 			string jni;
-			lock (jniToManaged) {
-				if (managedToJni.TryGetValue (type, out jni))
+			lock (TypeManagerMapDictionaries.AccessLock) {
+				if (TypeManagerMapDictionaries.ManagedToJni.TryGetValue (type, out jni))
 					return jni;
 			}
 			return null;
@@ -200,7 +203,7 @@ namespace Java.Interop {
 				return new JavaLocationException (loc.ToString ());
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern IntPtr monodroid_typemap_java_to_managed (string java);
 
 		internal static Type GetJavaToManagedType (string class_name)
@@ -212,6 +215,8 @@ namespace Java.Interop {
 			if (!JNIEnv.IsRunningOnDesktop) {
 				return null;
 			}
+
+			__TypeRegistrations.RegisterPackages ();
 
 			var type    = (Type) null;
 			int ls      = class_name.LastIndexOf ('/');
@@ -241,12 +246,12 @@ namespace Java.Interop {
 			Type type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string class_name = GetClassName (class_ptr);
-			lock (jniToManaged) {
-				while (class_ptr != IntPtr.Zero && !jniToManaged.TryGetValue (class_name, out type)) {
+			lock (TypeManagerMapDictionaries.AccessLock) {
+				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
 					type = GetJavaToManagedType (class_name);
 					if (type != null) {
-						jniToManaged.Add (class_name, type);
+						TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 						break;
 					}
 
@@ -256,7 +261,7 @@ namespace Java.Interop {
 					class_name = GetClassName (class_ptr);
 				}
 			}
-				
+
 			JNIEnv.DeleteLocalRef (class_ptr);
 
 			if (type == null) {
@@ -269,7 +274,7 @@ namespace Java.Interop {
 
 			if (targetType != null && !targetType.IsAssignableFrom (type))
 				type = targetType;
-				
+
 			if (type.IsInterface || type.IsAbstract) {
 				var invokerType = JavaObjectExtensions.GetHelperType (type, "Invoker");
 				if (invokerType == null)
@@ -314,12 +319,12 @@ namespace Java.Interop {
 		public static void RegisterType (string java_class, Type t)
 		{
 			string jniFromType = JNIEnv.GetJniName (t);
-			lock (jniToManaged) {
+			lock (TypeManagerMapDictionaries.AccessLock) {
 				Type lookup;
-				if (!jniToManaged.TryGetValue (java_class, out lookup)) {
-					jniToManaged.Add (java_class, t);
-					if (jniFromType != java_class) {
-						managedToJni.Add (t, java_class);
+				if (!TypeManagerMapDictionaries.JniToManaged.TryGetValue (java_class, out lookup)) {
+					TypeManagerMapDictionaries.JniToManaged.Add (java_class, t);
+					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
+						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
 					}
 				} else if (!JNIEnv.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning

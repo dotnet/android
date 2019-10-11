@@ -12,7 +12,7 @@
 #include "logger.hh"
 
 #include "monodroid.h"
-#include "monodroid-glue.h"
+#include "monodroid-glue.hh"
 #include "debug.hh"
 #include "util.hh"
 #include "globals.hh"
@@ -39,6 +39,20 @@ static const char* log_names[] = {
 	"monodroid-network",
 	"monodroid-netlink",
 	"*error*",
+};
+
+// Keep in sync with LogLevel defined in JNIEnv.cs
+enum class LogLevel : unsigned int
+{
+	Unknown = 0x00,
+	Default = 0x01,
+	Verbose = 0x02,
+	Debug   = 0x03,
+	Info    = 0x04,
+	Warn    = 0x05,
+	Error   = 0x06,
+	Fatal   = 0x07,
+	Silent  = 0x08
 };
 
 #if defined(__i386__) && defined(__GNUC__)
@@ -235,4 +249,50 @@ log_debug_nocheck (LogCategories category, const char *format, ...)
 		return;
 
 	DO_LOG (ANDROID_LOG_DEBUG, category, format, args);
+}
+
+//
+// DO NOT REMOVE: used by Android.Runtime.Logger
+//
+MONO_API unsigned int
+monodroid_get_log_categories ()
+{
+	return log_categories;
+}
+
+//
+// DO NOT REMOVE: used by Android.Runtime.JNIEnv
+//
+MONO_API void
+monodroid_log (LogLevel level, LogCategories category, const char *message)
+{
+	switch (level) {
+		case LogLevel::Verbose:
+		case LogLevel::Debug:
+			log_debug_nocheck (category, message);
+			break;
+
+		case LogLevel::Info:
+			log_info_nocheck (category, message);
+			break;
+
+		case LogLevel::Warn:
+		case LogLevel::Silent: // warn is always printed
+			log_warn (category, message);
+			break;
+
+		case LogLevel::Error:
+			log_error (category, message);
+			break;
+
+		case LogLevel::Fatal:
+			log_fatal (category, message);
+			break;
+
+		default:
+		case LogLevel::Unknown:
+		case LogLevel::Default:
+			log_info_nocheck (category, message);
+			break;
+	}
 }

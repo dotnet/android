@@ -133,6 +133,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[NonParallelizable]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
