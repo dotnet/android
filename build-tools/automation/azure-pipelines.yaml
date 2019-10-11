@@ -312,6 +312,15 @@ stages:
         AzureContainerName: $(Azure.Container.Name)
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
 
+    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
+      displayName: copy notarized pkg
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload notarized pkg
+      inputs:
+        artifactName: notarized-pkg
+        targetPath: $(Build.ArtifactStagingDirectory)
+
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
