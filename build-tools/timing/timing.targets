@@ -28,8 +28,9 @@
         AddResults="true"
         Activity="$(Activity)" />
     <Delete
-	Condition=" $(_TmpLogcatFileCreated) == 'True' "
-	Files="$(_TmpLogcatInputFilename)" />
+        Condition=" '$(_TmpLogcatFileCreated)' == 'True' "
+        Files="$(_TmpLogcatInputFilename)"
+    />
   </Target>
   <PropertyGroup>
     <_MSBuildTimingDependsOn>
