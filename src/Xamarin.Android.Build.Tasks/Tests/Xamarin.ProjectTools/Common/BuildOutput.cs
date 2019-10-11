@@ -8,6 +8,8 @@ namespace Xamarin.ProjectTools
 {
 	public class BuildOutput
 	{
+		Regex regex = new Regex (@"\s+(?<time>\d+)\s+(ms)\s+(" + targetOrTask + @")\s+(?<calls>\d+)\scalls", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
 		internal BuildOutput (XamarinProject project)
 		{
 			Project = project;
@@ -82,7 +84,6 @@ namespace Xamarin.ProjectTools
 		/// <returns>The time it took as a TimeSpan. Or Zero if the data could not be found.</returns>
 		public TimeSpan GetTargetOrTaskTime (string targetOrTask)
 		{
-			var regex = new Regex (@"\s+(?<time>\d+)\s+(ms)\s+(" + targetOrTask + @")\s+(?<calls>\d+)\scalls", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 			foreach (var line in Builder.LastBuildOutput) {
 				var match = regex.Match (line);
 				if (match.Success) {
