@@ -364,6 +364,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
 		{
+			if (!HasDevices) {
+				Assert.Ignore ("Test Skipped no devices or emulators found.");
+			}
+
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
