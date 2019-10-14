@@ -835,7 +835,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
 	<PropertyGroup>
-			<_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+    <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
 	</PropertyGroup>
 	<ResolveSdks
 			AndroidSdkPath="$(AndroidSdkDirectory)"
@@ -871,6 +871,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
 	</ValidateJavaVersion>
 	<ResolveAndroidTooling
+			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidApiLevel="$(AndroidApiLevel)"
 			AndroidApplication="$(AndroidApplication)"
@@ -883,7 +884,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			SequencePointsMode="$(_AndroidSequencePointsMode)"
 			ProjectFilePath="$(MSBuildProjectFullPath)"			
 			LintToolPath="$(LintToolPath)"
-			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
 			ZipAlignPath="$(ZipAlignToolPath)">
 		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
 		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
@@ -3444,9 +3444,9 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- SDK Management Targets -->
 <Target Name="_BeforeGetAndroidDependencies">
-    <PropertyGroup>
-        <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
-    </PropertyGroup>
+  <PropertyGroup>
+    <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
+  </PropertyGroup>
 </Target> 
  
 <Target Name="GetAndroidDependencies" DependsOnTargets="_BeforeGetAndroidDependencies;_SetLatestTargetFrameworkVersion;$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
