@@ -98,11 +98,12 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      JAVA_HOME: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
+
+    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
+      displayName: set JAVA_HOME
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
