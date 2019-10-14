@@ -211,7 +211,7 @@ void
 Debug::start_debugging_and_profiling ()
 {
 	char *connect_args;
-	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
+	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
 	if (connect_args != nullptr) {
 		int res = start_connection (connect_args);
@@ -579,7 +579,7 @@ Debug::enable_soft_breakpoints (void)
 
 	char *value;
 	/* Soft breakpoints are enabled by default */
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
 		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
 		return 1;
 	}

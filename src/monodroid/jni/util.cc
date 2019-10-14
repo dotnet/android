@@ -174,42 +174,6 @@ Util::monodroid_store_package_name (const char *name)
 	log_info (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
 }
 
-size_t
-Util::monodroid_get_namespaced_system_property (const char *name, char **value)
-{
-	char *local_value = nullptr;
-	ssize_t result = 0;
-
-	if (value)
-		*value = nullptr;
-
-	if (package_property_suffix[0] != '\0') {
-		log_info (LOG_DEFAULT, "Trying to get property %s.%s", name, package_property_suffix);
-		simple_pointer_guard<char[]> propname (string_concat (name, ".", package_property_suffix));
-		result = androidSystem.monodroid_get_system_property (propname, &local_value);
-	}
-
-	if (result <= 0 || local_value == nullptr)
-		result = androidSystem.monodroid_get_system_property (name, &local_value);
-
-	if (result > 0) {
-		if (local_value != nullptr && local_value[0] == '\0') {
-			delete[] local_value;
-			return 0;
-		}
-
-		log_info (LOG_DEFAULT, "Property '%s' has value '%s'.", name, local_value);
-
-		if (value != nullptr)
-			*value = local_value;
-		else
-			delete[] local_value;
-		return static_cast<size_t>(result);
-	}
-
-	return androidSystem.monodroid_get_system_property_from_overrides (name, value);
-}
-
 MonoAssembly *
 Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 {

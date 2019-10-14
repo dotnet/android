@@ -243,7 +243,7 @@ monodroid_store_package_name (const char *name)
 MONO_API int
 monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	return static_cast<int>(utils.monodroid_get_namespaced_system_property (name, value));
+	return static_cast<int>(androidSystem.monodroid_get_system_property (name, value));
 }
 
 MONO_API FILE*

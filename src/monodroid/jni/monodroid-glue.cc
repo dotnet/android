@@ -465,7 +465,7 @@ MonodroidRuntime::parse_gdb_options ()
 {
 	char *val;
 
-	if (!(utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, &val) > 0))
+	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, &val) > 0))
 		return;
 
 	if (strstr (val, "wait:") == val) {
@@ -599,7 +599,7 @@ MonodroidRuntime::parse_runtime_args (char *runtime_args, RuntimeOptions *option
 inline void
 MonodroidRuntime::set_debug_options (void)
 {
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
 		return;
 
 	embeddedAssemblies.set_register_debug_symbols (true);
@@ -728,7 +728,7 @@ MonodroidRuntime::mono_runtime_init (char *runtime_args)
 
 	char *prop_val;
 	/* Additional runtime arguments passed to mono_jit_parse_options () */
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, &prop_val) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, &prop_val) > 0) {
 		char **ptr;
 
 		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val);
@@ -1022,7 +1022,7 @@ MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env,
 static void
 setup_gc_logging (void)
 {
-	gc_spew_enabled = utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_GC_PROPERTY, nullptr) > 0;
+	gc_spew_enabled = androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GC_PROPERTY, nullptr) > 0;
 	if (gc_spew_enabled) {
 		log_categories |= LOG_GC;
 	}
@@ -1147,7 +1147,7 @@ MonodroidRuntime::set_debug_env_vars (void)
 {
 	char *value;
 
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_ENV_PROPERTY, &value) == 0)
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_ENV_PROPERTY, &value) == 0)
 		return;
 
 	char **args = utils.monodroid_strsplit (value, "|", 0);
@@ -1175,7 +1175,7 @@ MonodroidRuntime::set_trace_options (void)
 {
 	char *value;
 
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_TRACE_PROPERTY, &value) == 0)
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_TRACE_PROPERTY, &value) == 0)
 		return;
 
 	mono_jit_set_trace_options (value);
@@ -1192,7 +1192,7 @@ MonodroidRuntime::set_profile_options (JNIEnv *env)
 	constexpr const size_t output_arg_len = sizeof(output_arg) - 1;
 
 	char *value;
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, &value) == 0)
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, &value) == 0)
 		return;
 
 	char *output = nullptr;
@@ -1496,7 +1496,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	char *runtime_args = nullptr;
-	utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_EXTRA_PROPERTY, &runtime_args);
+	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_EXTRA_PROPERTY, &runtime_args);
+
 #if TRACE
 	__android_log_print (ANDROID_LOG_INFO, "*jonp*", "debug.mono.extra=%s", runtime_args);
 #endif
@@ -1537,7 +1538,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 void
 MonodroidRuntime::dump_counters (const char *format, ...)
 {
-	log_warn (LOG_DEFAULT, "%s called (counters == %p)", __PRETTY_FUNCTION__, counters);
 	if (counters == nullptr)
 		return;
 
