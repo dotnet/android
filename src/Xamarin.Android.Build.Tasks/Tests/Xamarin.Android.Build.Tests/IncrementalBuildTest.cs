@@ -1021,5 +1021,23 @@ namespace Lib2
 				Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void AaptError ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Sources = {
+					new BuildItem.Source ("TestActivity.cs") {
+						TextContent = () => @"using Android.App; [Activity(Theme = ""@style/DoesNotExist"")] class TestActivity : Activity { }"
+					}
+				}
+			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
+				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the second build.");
+			}
+		}
 	}
 }
