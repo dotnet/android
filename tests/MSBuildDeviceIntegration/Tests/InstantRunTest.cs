@@ -117,7 +117,9 @@ namespace Xamarin.Android.Build.Tests
 			if (useManagedResourceGenerator) {
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was skipped");
 				// CoreCompile should be built.
-				Assert.AreEqual (!b.RunningMSBuild, b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was skipped");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
+				//bool e = !b.RunningMSBuild;
+				//Assert.AreEqual (e, b.Output.IsTargetSkipped ("CoreCompile"), $"5 CoreCompile was {(e ? " not " : "")} skipped");
 			} else {
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was not skipped");
 				// CoreCompile should not be built.
