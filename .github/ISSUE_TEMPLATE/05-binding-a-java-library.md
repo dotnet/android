@@ -1,6 +1,6 @@
 ---
-name: "☕ Binding a Java Library"
-about: Issues trying to bind a Java library using an Android Bindings project.
+name: "☕ Binding an Android Library"
+about: Issues trying to bind an Android library using an Android Bindings project.
 title: ''
 labels: 'Area: Bindings'
 assignees: 'jpobst'

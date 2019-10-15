@@ -2,47 +2,22 @@
 name: "⚙ IDE"
 about: Issues with Visual Studio for Windows or Mac, or the Android Designer.
 title: ''
-labels: 'Area: IDE'
+labels: ''
 assignees: ''
 
 ---
 
-### Steps to Reproduce
+Issues with IDE components in Visual Studio for Windows or Mac and the Android
+designer are tracked in Visual Studio Developer Community. Filing issues
+there will help ensure they make it to the correct team.
 
-1. 
-2. 
-3. 
+The easiest way to access this is from within Visual Studio.
 
-<!--
-If you have a repro project, you may drag & drop the .zip/etc. onto the issue editor to attach it.
--->
+Visual Studio 2019:
+Help -> Send Feedback
 
-### Expected Behavior
+Visual Studio for Mac:
+Help -> Report a Problem
 
-### Actual Behavior
-
-### Version Information
-
-<!--
-1. On macOS and within Visual Studio, select Visual Studio > About Visual Studio, then click the Show Details button, then click the Copy Information button.
-
-2. Paste below this comment block.
--->
-
-### Log File
-
-<!--
-1. On macOS and within Visual Studio:
-    a. Click **Tools** > **SDK Command Prompt**.
-    b. Within the launched `Terminal.app` window, run:
-
-            adb logcat -d | pbcopy
-
-2. Paste below this comment block
--->
-
-
-
-<!--
-Switch to the "Preview" tab to ensure your issue renders correctly.
--->
+Direct link:
+https://developercommunity.visualstudio.com

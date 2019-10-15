@@ -1,11 +1,25 @@
 ---
-name: "\U0001F916 Mono.Android API"
+name: "\U0001F916 Android API"
 about: Issues with the Android API exposed in Mono.Android.
 title: ''
 labels: 'Area: Mono.Android'
 assignees: ''
 
 ---
+
+<!--
+
+Issues with the Android API not working as documented are tracked
+here.
+
+If you are not sure how to use an API or how to accomplish you task,
+better support is available from our community of application
+writers, available in several forms:
+
+[Xamarin Forums](https://forums.xamarin.com)
+[Stack Overflow](https://stackoverflow.com)
+
+-->
 
 ### Steps to Reproduce
 

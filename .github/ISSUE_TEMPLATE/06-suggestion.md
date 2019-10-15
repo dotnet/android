@@ -1,5 +1,5 @@
 ---
-name: "\U0001F4A1 Suggestion"
+name: "\U0001F4A1 Feature Request"
 about: Have an idea to make Xamarin Android better?
 title: ''
 labels: 'feature-request'
@@ -7,14 +7,8 @@ assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+Feature requests are tracked on Visual Studio Developer Community because
+it provides good prioritization features like voting. Filing there will
+help ensure new features are properly considered.
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
-
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
+https://developercommunity.visualstudio.com
