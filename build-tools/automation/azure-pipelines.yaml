@@ -306,6 +306,9 @@ stages:
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
+    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
+      displayName: validate notarized pkg
+
     - template: upload-to-storage.yml@yaml
       parameters:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
