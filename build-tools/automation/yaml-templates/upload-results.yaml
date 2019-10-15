@@ -3,6 +3,11 @@ parameters:
   artifactName: results
 
 steps:
+
+- task: xamops.azdevex.lingering-process-task.lingering-process-task@1
+  displayName: kill lingering processes
+  condition: and(always(), eq(variables['agent.os'], 'Windows_NT'))
+
 - task: MSBuild@1
   displayName: package build and test results
   inputs:

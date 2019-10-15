@@ -191,6 +191,7 @@ stages:
       submodules: recursive
 
     - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
+      displayName: kill lingering processes
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
