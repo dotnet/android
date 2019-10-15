@@ -11,6 +11,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +32,13 @@
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="System.IO.Compression" />
@@ -41,6 +48,13 @@
     <Compile Include="AnnotationElementValue.cs" />
     <Compile Include="ClassFile.cs" />
     <Compile Include="ConstantPool.cs" />
+    <Compile Include="Kotlin\JvmNameResolver.cs" />
+    <Compile Include="Kotlin\KotlinBitEncoding.cs" />
+    <Compile Include="Kotlin\KotlinClassMetadata.cs" />
+    <Compile Include="Kotlin\KotlinFixups.cs" />
+    <Compile Include="Kotlin\KotlinMetadata.cs" />
+    <Compile Include="Kotlin\KotlinProtobufDefinition.cs" />
+    <Compile Include="Kotlin\PartialStream.cs" />
     <Compile Include="StreamCoda.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Fields.cs" />
@@ -52,6 +66,9 @@
     <Compile Include="ClassPath.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="JavaParameterNamesLoader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

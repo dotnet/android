@@ -8,6 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Text;
+using Xamarin.Android.Tools.Bytecode.Kotlin;
 
 namespace Xamarin.Android.Tools.Bytecode {
 
@@ -298,6 +299,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 			// This optional behavior is to bring compatibility with old behavior.
 			if (AutoRename)
 				FixUpParametersFromClasses ();
+
+			KotlinFixups.Fixup (classFiles);
+
 			var packagesDictionary = GetPackages ();
 			var api = new XElement ("api",
 					GetApiSource (),

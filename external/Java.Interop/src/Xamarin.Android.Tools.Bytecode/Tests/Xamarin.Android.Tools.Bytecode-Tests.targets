@@ -3,6 +3,7 @@
   <ItemGroup>
     <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
     <TestJarNoParameters Include="java\java\util\Collection.java" />
+    <TestKotlinJar Include="kotlin\**\*.kt" />
   </ItemGroup>
   <Target Name="BuildClasses"
       Inputs="@(TestJar)"
@@ -13,6 +14,20 @@
     />
     <Exec
         Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')"
+    />
+  </Target>
+  
+  <!-- 
+      If the Kotlin compiler is available this step will compile .kt files into .class
+      files. Useful for writing new tests. It is not used by CI, you must commit the
+      resulting .class files.  
+  -->
+  <Target Name="BuildKotlinClasses"
+      Inputs="@(TestKotlinJar)"
+      Outputs="@(TestKotlinJar->'%(RecursiveDir)%(Filename).class')"
+      Condition=" '$(KotlinCPath)' != '' ">
+    <Exec
+        Command="&quot;$(KotlinCPath)&quot; @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;"
     />
   </Target>
 </Project>

@@ -13,8 +13,13 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 		protected static ClassFile LoadClassFile (string resource)
 		{
-			using (var s = Assembly.GetExecutingAssembly ().GetManifestResourceStream (resource)) {
-				return new ClassFile (s);
+			// Look for resources that end with our name, this allows us to
+			// avoid the LogicalName stuff
+			var assembly = Assembly.GetExecutingAssembly ();
+			var name = assembly.GetManifestResourceNames ().FirstOrDefault (n => n.EndsWith (resource, StringComparison.OrdinalIgnoreCase)) ?? resource;
+
+			using (var stream = assembly.GetManifestResourceStream (name)) {
+				return new ClassFile (stream);
 			}
 		}
 
