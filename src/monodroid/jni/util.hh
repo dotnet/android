@@ -64,6 +64,8 @@ namespace xamarin::android
 {
 	class Util : public BasicUtilities
 	{
+		static constexpr const char hex_chars [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
 #if defined (ANDROID) || defined (LINUX)
 		using timestruct = timespec;
 #else

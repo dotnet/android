@@ -15,12 +15,12 @@
 
 #include <mono/jit/jit.h>
 
-namespace xamarin { namespace android {
+namespace xamarin::android {
 	class jstring_wrapper;
 	class jstring_array_wrapper;
-}}
+}
 
-namespace xamarin { namespace android { namespace internal
+namespace xamarin::android::internal
 {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct BundledProperty;
@@ -45,13 +45,13 @@ namespace xamarin { namespace android { namespace internal
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
-		size_t monodroid_read_file_into_memory (const char *path, char **value);
+		size_t monodroid_read_file_into_memory (const char *path, char *&value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
 		long  get_gref_gc_threshold ();
 		void* load_dso (const char *path, int dl_flags, bool skip_exists_check);
 		void* load_dso_from_any_directories (const char *name, int dl_flags);
-		char* get_full_dso_path_on_disk (const char *dso_name, bool *needs_free);
+		char* get_full_dso_path_on_disk (const char *dso_name, bool &needs_free);
 		monodroid_dirent_t* readdir (monodroid_dir_t *dir);
 
 		long get_max_gref_count () const
@@ -106,11 +106,11 @@ namespace xamarin { namespace android { namespace internal
 #if defined (DEBUG) || !defined (ANDROID)
 		size_t  _monodroid_get_system_property_from_file (const char *path, char **value);
 #endif
-		char* get_full_dso_path (const char *base_dir, const char *dso_path, bool *needs_free);
+		char* get_full_dso_path (const char *base_dir, const char *dso_path, bool &needs_free);
 		void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags);
 		void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
 		void* load_dso_from_override_dirs (const char *name, int dl_flags);
-		char* get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, bool *needs_free);
+		char* get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, bool &needs_free);
 
 #if defined (WINDOWS)
 		struct _wdirent* readdir_windows (_WDIR *dirp);
@@ -127,5 +127,5 @@ namespace xamarin { namespace android { namespace internal
 		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
 		bool running_in_emulator = false;
 	};
-}}}
+}
 #endif // !__ANDROID_SYSTEM_H

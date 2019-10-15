@@ -152,7 +152,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	} else {
 		bool needs_free = false;
 		log_info (LOG_DEFAULT, "bundle app: normal mode");
-		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, &needs_free);
+		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, needs_free);
 		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<nullptr>");
 		if (bundle_path == nullptr)
 			return;
@@ -226,7 +226,7 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 	char* name = mono_method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, diff.sec, diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long int>(diff.sec), diff.ms, diff.ns);
 
 	free (name);
 }

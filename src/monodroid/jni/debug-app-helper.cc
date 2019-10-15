@@ -27,8 +27,10 @@ void log_warn (LogCategories category, const char *format, ...);
 void log_error (LogCategories category, const char *format, ...);
 void log_fatal (LogCategories category, const char *format, ...);
 
+#if !defined (RELEASE)
 static void copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 static void copy_native_libraries_to_internal_location ();
+#endif
 static char* get_libmonosgen_path ();
 
 bool maybe_load_library (const char *path);
@@ -95,7 +97,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	}
 }
 
-#ifdef ANDROID
+#if defined (ANDROID) && !defined (RELEASE)
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 {
@@ -130,7 +132,7 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 	delete[] from_file;
 	delete[] to_file;
 }
-#else  /* !defined (ANDROID) */
+#elif !defined (RELEASE)  /* !defined (ANDROID) */
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
 {

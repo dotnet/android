@@ -42,12 +42,6 @@ namespace xamarin::android::internal {
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-const char *EmbeddedAssemblies::suffixes[] = {
-	"",
-	".dll",
-	".exe",
-};
-
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)
@@ -77,7 +71,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	char *ename = name + strlen (name);
 
 	MonoAssembly *a = nullptr;
-	for (size_t si = 0; si < sizeof (suffixes)/sizeof (suffixes [0]) && a == nullptr; ++si) {
+	for (size_t si = 0; si < SUFFIXES_SIZE && a == nullptr; ++si) {
 		MonoBundledAssembly **p;
 
 		*ename = '\0';
@@ -334,7 +328,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		char *file_path = utils.path_combine (dir_path, file_name);
 		if (utils.monodroid_dirent_hasextension (e, ".mj") || utils.monodroid_dirent_hasextension (e, ".jm")) {
 			char *val = nullptr;
-			size_t len = androidSystem.monodroid_read_file_into_memory (file_path, &val);
+			size_t len = androidSystem.monodroid_read_file_into_memory (file_path, val);
 			if (len > 0 && val != nullptr) {
 				if (utils.monodroid_dirent_hasextension (e, ".mj")) {
 					if (!add_type_mapping (&managed_to_java_maps, file_path, override_typemap_entry_name, ((const char*)val)))

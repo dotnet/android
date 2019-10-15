@@ -29,7 +29,12 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
 #endif
-		static const char *suffixes[];
+		static constexpr const char *suffixes[] = {
+			"",
+			".dll",
+			".exe",
+		};
+		static constexpr size_t SUFFIXES_SIZE = sizeof(suffixes) / sizeof (suffixes[0]);
 
 	public:
 		/* filename is e.g. System.dll, System.dll.mdb, System.pdb */

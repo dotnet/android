@@ -64,7 +64,6 @@ namespace xamarin::android
 		char           **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 		char            *monodroid_strdup_printf (const char *format, ...);
 		char            *monodroid_strdup_vprintf (const char *format, va_list vargs);
-		int              ends_with (const char *str, const char *end);
 		char*            path_combine(const char *path1, const char *path2);
 		void             create_public_directory (const char *dir);
 		int              create_directory (const char *pathname, mode_t mode);
@@ -73,6 +72,19 @@ namespace xamarin::android
 		bool             file_exists (const char *file);
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
+
+		bool ends_with_slow (const char *str, const char *end)
+		{
+			char *p = const_cast<char*> (strstr (str, end));
+			return p != nullptr && p [strlen (end)] == '\0';
+		}
+
+		template<size_t N>
+		bool ends_with (const char *str, const char (&end)[N])
+		{
+			char *p = const_cast<char*> (strstr (str, end));
+			return p != nullptr && p [N - 1] == '\0';
+		}
 
 		void *xmalloc (size_t size)
 		{
