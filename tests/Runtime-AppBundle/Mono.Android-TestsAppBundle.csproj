@@ -106,6 +106,7 @@
     <AndroidAsset Include="$(_MonoAndroidTest)Assets\subfolder\accept_request.png">
       <Link>Assets\subfolder\accept_request.png</Link>
     </AndroidAsset>
+    <AndroidEnvironment Include="Environment.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Mono.Android-TestsAppBundle.targets" />

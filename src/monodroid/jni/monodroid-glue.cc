@@ -1058,6 +1058,9 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 {
+	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
+	log_warn (LOG_DEFAULT, "  name == %s; flags == 0x%X", name == nullptr ? "<null>" : name, flags);
+
 	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
 
