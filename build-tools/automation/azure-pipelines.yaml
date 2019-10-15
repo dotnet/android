@@ -22,6 +22,7 @@ variables:
   NUnitConsoleVersion: 3.9.0
   DotNetCoreVersion: 2.1.701
   HostedMacMojave: Hosted Mac Internal Mojave
+  OnPremMacMojave: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: VSEng-MicroBuildVS2019
@@ -51,7 +52,7 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(HostedMacMojave)
+    pool: $(OnPremMacMojave)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -233,7 +234,7 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(HostedMacMojave)
+    pool: $(OnPremMacMojave)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
