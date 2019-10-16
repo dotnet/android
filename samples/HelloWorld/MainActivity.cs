@@ -5,10 +5,10 @@ using Android.OS;
 namespace HelloWorld
 {
 	[Activity (
-		Icon            = "@mipmap/icon",
-		Label           = "HelloWorld",
-		MainLauncher    = true,
-		Name            = "example.MainActivity")]
+		Icon           	 = "@mipmap/icon",
+		Label          	 = "HelloWorld",
+		MainLauncher   	 = true,
+		Name           	 = "example.MainActivity")]
 	public class MainActivity : Activity
 	{
 		int count = 1;
