@@ -93,11 +93,12 @@ stages:
       clean: all
     variables:
     - group: Xamarin Notarization
-    - name: JAVA_HOME
-      value: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
+
+    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
+      displayName: set JAVA_HOME
 
     - task: UseDotNet@2
       displayName: install .NET Core 2.1.701
