@@ -231,6 +231,9 @@
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Common.Before.targets" />
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.DefaultOutputPaths.targets" />
   </ItemGroup>
+  <ItemGroup Condition=" '$(_HasCommercialFiles)' != 'True' ">
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Device.targets" />
+  </ItemGroup>
   <ItemGroup>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
