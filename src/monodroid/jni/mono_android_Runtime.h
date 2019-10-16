@@ -50,10 +50,10 @@ JNIEXPORT jint JNICALL Java_mono_android_Runtime_createNewContext
 /*
  * Class:     mono_android_Runtime
  * Method:    createNewContextWithData
- * Signature: ([Ljava/lang/String;[Ljava/lang/String;[[BLjava/lang/ClassLoader;Z)I
+ * Signature: ([Ljava/lang/String;[Ljava/lang/String;[[BL[Ljava/lang/String;java/lang/ClassLoader;Z)I
  */
 JNIEXPORT jint JNICALL Java_mono_android_Runtime_createNewContextWithData
-  (JNIEnv *, jclass, jobjectArray, jobjectArray, jobjectArray, jobject, jboolean);
+  (JNIEnv *, jclass, jobjectArray, jobjectArray, jobjectArray, jobjectArray, jobject, jboolean);
 
 /*
  * Class:     mono_android_Runtime

@@ -60,7 +60,7 @@ if(NOT ANDROID)
   endforeach()
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${SOURCES_DIR}/inmemory-assemblies.cc
+    ${SOURCES_DIR}/designer-assemblies.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
