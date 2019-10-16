@@ -3224,6 +3224,68 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void GetDependencyWhenBuildToolsAreMissingTest ()
+		{
+			var apis = new ApiInfo [] {
+			};
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
+					null, apis);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+			};
+			var parameters = new string [] {
+				$"TargetFrameworkRootPath={referencesPath}",
+				$"AndroidSdkDirectory={androidSdkPath}",
+			};
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "GetAndroidDependencies";
+				Assert.True (builder.Build (proj, parameters: parameters),
+					string.Format ("First Build should have succeeded"));
+				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
+			}
+		}
+
+		[Test]
+		public void GetDependencyWhenSDKIsMissingTest ([Values (true, false)] bool createSdkDirectory)
+		{
+			var apis = new ApiInfo [] {
+			};
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = Path.Combine (path, "android-sdk");
+			if (createSdkDirectory)
+				Directory.CreateDirectory (androidSdkPath);
+			else if (Directory.Exists (androidSdkPath))
+				Directory.Delete (androidSdkPath, recursive: true);
+			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				TargetFrameworkVersion = "v8.0",
+				UseLatestPlatformSdk = false,
+			};
+			var parameters = new string [] {
+				$"TargetFrameworkRootPath={referencesPath}",
+				$"AndroidSdkDirectory={androidSdkPath}",
+			};
+
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "GetAndroidDependencies";
+				Assert.True (builder.Build (proj, parameters: parameters),
+					string.Format ("First Build should have succeeded"));
+				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
+			}
+		}
+
+		[Test]
 		public void ValidateUseLatestAndroid ()
 		{
 			var apis = new ApiInfo [] {
