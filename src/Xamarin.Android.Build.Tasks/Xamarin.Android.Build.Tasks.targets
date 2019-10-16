@@ -82,6 +82,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Aapt2.targets</Link>
     </None>
+    <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Device.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Device.targets</Link>
+    </None>
     <None Include="Xamarin.Android.Analysis.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
