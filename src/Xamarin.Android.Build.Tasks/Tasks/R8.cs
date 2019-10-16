@@ -35,16 +35,16 @@ namespace Xamarin.Android.Tasks
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 
-		string temp;
+		readonly List<string> tempFiles = new List<string> ();
 
 		public override bool RunTask ()
 		{
 			try {
-				temp = Path.GetTempFileName ();
 				return base.RunTask ();
 			} finally {
-				if (!string.IsNullOrEmpty (temp))
+				foreach (var temp in tempFiles) {
 					File.Delete (temp);
+				}
 			}
 		}
 
@@ -61,6 +61,8 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedWarning ("XA4305", $"MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.");
 				} else {
 					var content = new List<string> ();
+					var temp = Path.GetTempFileName ();
+					tempFiles.Add (temp);
 					if (CustomMainDexListFiles != null) {
 						foreach (var file in CustomMainDexListFiles) {
 							if (File.Exists (file.ItemSpec)) {
@@ -117,6 +119,15 @@ namespace Xamarin.Android.Tasks
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				cmd.AppendSwitch ("--no-tree-shaking");
 				cmd.AppendSwitch ("--no-minification");
+				// Rules to turn off optimizations
+				var temp = Path.GetTempFileName ();
+				File.WriteAllLines (temp, new [] {
+					"-dontoptimize",
+					"-dontpreverify",
+					"-keepattributes **"
+				});
+				tempFiles.Add (temp);
+				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
 			}
 
 			return cmd;
