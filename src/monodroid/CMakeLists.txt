@@ -140,6 +140,12 @@ if(ENABLE_NDK)
 
   link_directories("${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
 else()
+  set(CMAKE_REQUIRED_DEFINITIONS "-D__USE_GNU")
+  check_cxx_symbol_exists(gettid unistd.h HAVE_GETTID_IN_UNISTD_H)
+  if(HAVE_GETTID_IN_UNISTD_H)
+	add_definitions("-DHAVE_GETTID_IN_UNISTD_H")
+  endif()
+
   # MinGW needs it for {v,a}sprintf
   add_definitions("-D_GNU_SOURCE")
   if(APPLE)
