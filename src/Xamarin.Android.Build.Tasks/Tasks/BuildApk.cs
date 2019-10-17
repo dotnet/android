@@ -115,11 +115,15 @@ namespace Xamarin.Android.Tasks
 			ArchiveFileList files = new ArchiveFileList ();
 			if (apkInputPath != null)
 				File.Copy (apkInputPath, temp, overwrite: true);
-			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"))
+			string noticeText = string.Empty;
+			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt")) {
+				byte [] data = new byte [notice.Length];
+				notice.Read (data, 0, data.Length);
+				noticeText = Encoding.ASCII.GetString (data);
+			}
 			using (var apk = new ZipArchiveEx (temp, apkInputPath != null ? FileMode.Open : FileMode.Create )) {
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
-				apk.Archive.AddEntry (RootPath + "NOTICE", notice);
-				//apk.Archive.AddEntry (RootPath + "NOTICE", "Some Notice", Encoding.ASCII);
+				apk.Archive.AddEntry (RootPath + "NOTICE", noticeText, Encoding.ASCII);
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {

@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks
 		ZipArchive zip;
 		string archive;
 		int flush = 1;
-		long count = 0;
+		long entryCount = 0;
 
 		public ZipArchive Archive {
 			get { return zip; }
@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Flush ()
 		{
-			if (count == zip.EntryCount)
+			if (entryCount == zip.EntryCount)
 				return;
 			if (zip != null) {
 				zip.Close ();
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 				flush++;
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open, strictConsistencyChecks: true);
-			count = zip.EntryCount;
+			entryCount = zip.EntryCount;
 		}
 
 		string ArchiveNameForFile (string filename, string directoryPathInZip)
