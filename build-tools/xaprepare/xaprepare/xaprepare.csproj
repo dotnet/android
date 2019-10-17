@@ -183,6 +183,7 @@
     <Compile Include="Application\RefreshableComponent.cs" />
     <Compile Include="ThirdPartyNotices\LibZipSharp.cs" />
     <Compile Include="ThirdPartyNotices\libzip.cs" />
+    <Compile Include="Steps\Step_CloneMonoIfNeeded.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(OS)' == 'Unix' ">
     <Compile Include="Application\EssentialTools.Unix.cs" />
