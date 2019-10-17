@@ -230,6 +230,7 @@
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
+    <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
     <Compile Include="Android.Runtime\UncaughtExceptionHandler.cs" />
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
