@@ -98,11 +98,12 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      JAVA_HOME: '/Users/vsts/Library/Android/jdk/'
     steps:
     - checkout: self
       submodules: recursive
+
+    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
+      displayName: set JAVA_HOME
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
@@ -306,11 +307,23 @@ stages:
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
+    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
+      displayName: validate notarized pkg
+
     - template: upload-to-storage.yml@yaml
       parameters:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
         AzureContainerName: $(Azure.Container.Name)
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+
+    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
+      displayName: copy notarized pkg
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload notarized pkg
+      inputs:
+        artifactName: notarized-pkg
+        targetPath: $(Build.ArtifactStagingDirectory)
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing

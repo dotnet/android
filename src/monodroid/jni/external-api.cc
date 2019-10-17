@@ -204,18 +204,96 @@ monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 	timing->release_sequence (sequence);
 }
 
+MONO_API void
+monodroid_strfreev (char **str_array)
+{
+	utils.monodroid_strfreev (str_array);
+}
+
+MONO_API char**
+monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
+{
+	return utils.monodroid_strsplit (str, delimiter, max_tokens);
+}
+
+MONO_API char*
+monodroid_strdup_printf (const char *format, ...)
+{
+	va_list args;
+
+	va_start (args, format);
+	char *ret = utils.monodroid_strdup_vprintf (format, args);
+	va_end (args);
+
+	return ret;
+}
+
 MONO_API char*
 monodroid_TypeManager_get_java_class_name (jclass klass)
 {
 	return monodroidRuntime.get_java_class_name_for_TypeManager (klass);
 }
 
-extern "C" void* monodroid_dylib_mono_new (const char *libmono_path)
+MONO_API void
+monodroid_store_package_name (const char *name)
+{
+	utils.monodroid_store_package_name (name);
+}
+
+MONO_API int
+monodroid_get_namespaced_system_property (const char *name, char **value)
+{
+	return static_cast<int>(utils.monodroid_get_namespaced_system_property (name, value));
+}
+
+MONO_API FILE*
+monodroid_fopen (const char* filename, const char* mode)
+{
+	return utils.monodroid_fopen (filename, mode);
+}
+
+MONO_API int
+send_uninterrupted (int fd, void *buf, int len)
+{
+	if (len < 0)
+		len = 0;
+	return utils.send_uninterrupted (fd, buf, static_cast<size_t>(len));
+}
+
+MONO_API int
+recv_uninterrupted (int fd, void *buf, int len)
+{
+	if (len < 0)
+		len = 0;
+	return static_cast<int>(utils.recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
+}
+
+MONO_API void
+set_world_accessable (const char *path)
+{
+	utils.set_world_accessable (path);
+}
+
+MONO_API void
+create_public_directory (const char *dir)
+{
+	utils.create_public_directory (dir);
+}
+
+MONO_API char*
+path_combine (const char *path1, const char *path2)
+{
+	return utils.path_combine (path1, path2);
+}
+
+MONO_API void*
+monodroid_dylib_mono_new (const char *libmono_path)
 {
 	return nullptr;
 }
 
-extern "C" void monodroid_dylib_mono_free (void *mono_imports)
+MONO_API void
+monodroid_dylib_mono_free (void *mono_imports)
 {
 	// no-op
 }
@@ -226,14 +304,16 @@ extern "C" void monodroid_dylib_mono_free (void *mono_imports)
 
   it should also accept libmono_path = nullptr parameter
 */
-extern "C" int monodroid_dylib_mono_init (void *mono_imports, const char *libmono_path)
+MONO_API int
+monodroid_dylib_mono_init (void *mono_imports, const char *libmono_path)
 {
 	if (mono_imports == nullptr)
 		return FALSE;
 	return TRUE;
 }
 
-extern "C" void*  monodroid_get_dylib (void)
+MONO_API void*
+monodroid_get_dylib (void)
 {
 	return nullptr;
 }

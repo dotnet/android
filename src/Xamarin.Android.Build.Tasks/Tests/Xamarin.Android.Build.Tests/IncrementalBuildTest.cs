@@ -972,5 +972,72 @@ namespace Lib2
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
+
+		[Test]
+		public void MissingProjectReference ()
+		{
+			var path = Path.Combine ("temp", TestName);
+
+			var bar = "public class Bar { }";
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => bar
+					},
+				}
+			};
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				}
+			};
+			var reference = $"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj";
+			app.References.Add (new BuildItem.ProjectReference (reference, lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				libBuilder.ThrowOnBuildFailure =
+					appBuilder.ThrowOnBuildFailure = false;
+
+				// Build app before library is built
+				Assert.IsFalse (appBuilder.Build (app), "app build should have failed.");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"The referenced project '{reference.Replace ('\\', Path.DirectorySeparatorChar)}' does not exist."));
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Warning(s)"), "Should receive 1 Warning");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "error CS0246"), "Should receive CS0246");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Error(s)"), "Should receive 1 Error");
+
+				// Successful build
+				Assert.IsTrue (libBuilder.Build (lib), "lib build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
+
+				// Create compiler error in library, the app will still be able to build
+				bar += "}";
+				lib.Touch ("Bar.cs");
+				Assert.IsFalse (libBuilder.Build (lib), "lib build should have failed.");
+				Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void AaptError ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Sources = {
+					new BuildItem.Source ("TestActivity.cs") {
+						TextContent = () => @"using Android.App; [Activity(Theme = ""@style/DoesNotExist"")] class TestActivity : Activity { }"
+					}
+				}
+			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
+				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the second build.");
+			}
+		}
 	}
 }

@@ -152,7 +152,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	} else {
 		bool needs_free = false;
 		log_info (LOG_DEFAULT, "bundle app: normal mode");
-		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, &needs_free);
+		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, needs_free);
 		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<nullptr>");
 		if (bundle_path == nullptr)
 			return;
@@ -226,7 +226,7 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 	char* name = mono_method_full_name (method, 1);
 
 	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, diff.sec, diff.ms, diff.ns);
+	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long int>(diff.sec), diff.ms, diff.ns);
 
 	free (name);
 }
@@ -257,9 +257,9 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, char **assembli
 
 #ifndef ANDROID
 	// First check if there are any in-memory assemblies
-	if (inMemoryAssemblies.has_assemblies ()) {
+	if (designerAssemblies.has_assemblies ()) {
 		MonoDomain *domain = mono_domain_get ();
-		result = inMemoryAssemblies.load_assembly_from_memory (domain, aname);
+		result = designerAssemblies.try_load_assembly (domain, aname);
 		if (result != nullptr) {
 			log_debug (LOG_ASSEMBLY, "Loaded assembly %s from memory in domain %d", mono_assembly_name_get_name (aname), mono_domain_get_id (domain));
 			return result;
@@ -1305,8 +1305,8 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrappe
 	aname = mono_assembly_name_new (assm_name);
 
 #ifndef ANDROID
-	if (inMemoryAssemblies.has_assemblies () && inMemoryAssemblies.load_assembly_from_memory (domain, aname) != nullptr) {
-		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s from memory", mono_assembly_name_get_name (aname));
+	if (designerAssemblies.has_assemblies () && designerAssemblies.try_load_assembly (domain, aname) != nullptr) {
+		log_debug (LOG_ASSEMBLY, "Dynamically opened assembly %s", mono_assembly_name_get_name (aname));
 	} else
 #endif
 	if (domain != mono_domain_get ()) {
@@ -1354,7 +1354,7 @@ monodroid_Mono_UnhandledException_internal (MonoException *ex)
 
 MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
-                                                jstring_array_wrapper &assemblies, jobjectArray assembliesBytes,
+                                                jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
                                                 jobject loader, bool is_root_domain, bool force_preload_assemblies)
 {
 	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, loader, is_root_domain);
@@ -1368,7 +1368,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 
 #ifndef ANDROID
 	if (assembliesBytes != nullptr)
-		inMemoryAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes);
+		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	if (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies))
 		load_assemblies (domain, env, assemblies);
@@ -1514,8 +1514,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	jstring_array_wrapper assemblies (env, assembliesJava);
+	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false);
+	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false);
 
 	delete[] runtime_args;
 
@@ -1685,7 +1686,7 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 
 inline jint
 MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
-                                                                      jobjectArray assembliesBytes, jobject loader, jboolean force_preload_assemblies)
+                                                                      jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies)
 {
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
@@ -1694,7 +1695,8 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	jstring_array_wrapper assemblies (env, assembliesJava);
-	MonoDomain *domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, assembliesBytes, loader, /*is_root_domain:*/ false, force_preload_assemblies);
+	jstring_array_wrapper assembliePaths (env, assembliesPaths);
+	MonoDomain *domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, assembliesBytes, assembliePaths, loader, /*is_root_domain:*/ false, force_preload_assemblies);
 	mono_domain_set (domain, FALSE);
 	int domain_id = mono_domain_get_id (domain);
 	current_context_id = domain_id;
@@ -1737,7 +1739,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass
 		shutdown_android_runtime (domain);
 		osBridge.remove_monodroid_domain (domain);
 #ifndef ANDROID
-		inMemoryAssemblies.clear_for_domain (domain);
+		designerAssemblies.clear_for_domain (domain);
 #endif
 	}
 	osBridge.on_destroy_contexts ();
@@ -1789,7 +1791,7 @@ get_jnienv (void)
 }
 
 JNIEXPORT jint
-JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobjectArray assembliesBytes, jobject loader, jboolean force_preload_assemblies)
+JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava, jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies)
 {
 	return monodroidRuntime.Java_mono_android_Runtime_createNewContextWithData (
 		env,
@@ -1797,6 +1799,7 @@ JNICALL Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass 
 		runtimeApksJava,
 		assembliesJava,
 		assembliesBytes,
+		assembliesPaths,
 		loader,
 		force_preload_assemblies
 	);
@@ -1812,6 +1815,7 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 		runtimeApksJava,
 		assembliesJava,
 		nullptr, // assembliesBytes
+		nullptr, // assembliesPaths
 		loader,
 		false    // force_preload_assemblies
 	);

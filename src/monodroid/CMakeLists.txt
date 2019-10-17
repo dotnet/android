@@ -60,7 +60,7 @@ if(NOT ANDROID)
   endforeach()
   set(MONODROID_SOURCES
     ${MONODROID_SOURCES}
-    ${SOURCES_DIR}/inmemory-assemblies.cc
+    ${SOURCES_DIR}/designer-assemblies.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
@@ -275,6 +275,10 @@ if(NOT WIN32 AND NOT MINGW)
 	${SOURCES_DIR}/shared-constants.cc
 	)
   add_library(xamarin-debug-app-helper SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
+  target_compile_definitions(
+	xamarin-debug-app-helper
+	PUBLIC -DDEBUG_APP_HELPER
+	)
 endif()
 
 set(SOURCES_FRAGMENT_FILE "sources.projitems")

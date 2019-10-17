@@ -63,7 +63,7 @@ namespace xamarin::android::internal
 		                                             jobjectArray externalStorageDirs, jobjectArray assembliesJava,
 		                                             jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator);
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
-		                                                         jobjectArray assembliesBytes, jobject loader, jboolean force_preload_assemblies);
+		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
 		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID);
 		void Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array);
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
@@ -153,7 +153,7 @@ namespace xamarin::android::internal
 		void shutdown_android_runtime (MonoDomain *domain);
 		MonoDomain*	create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobject loader, bool is_root_domain);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
-		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes,
+		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
 		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies);
 
 		void gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks,

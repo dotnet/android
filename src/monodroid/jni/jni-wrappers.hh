@@ -45,8 +45,15 @@ namespace xamarin::android
 
 		jstring_wrapper& operator=(const jstring_wrapper&) = delete;
 
+		bool hasValue () noexcept
+		{
+			return jstr != nullptr;
+		}
+
 		const char* get_cstr () noexcept
 		{
+			if (jstr == nullptr)
+				return nullptr;
 			if (cstr == nullptr && env != nullptr)
 				cstr = env->GetStringUTFChars (jstr, nullptr);
 
@@ -121,11 +128,8 @@ namespace xamarin::android
 	{
 	public:
 		explicit jstring_array_wrapper (JNIEnv *env) noexcept
-			: env (env),
-			  arr (nullptr),
-			  len (0)
+			: jstring_array_wrapper(env, nullptr)
 		{
-			assert (env);
 		}
 
 		explicit jstring_array_wrapper (JNIEnv *env, jobjectArray arr)
@@ -133,12 +137,16 @@ namespace xamarin::android
 			  arr (arr)
 		{
 			assert (env);
-			assert (arr);
-			len = static_cast<size_t>(env->GetArrayLength (arr));
-			if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))
-				wrappers = new jstring_wrapper [len];
-			else
-				wrappers = static_wrappers;
+			if (arr != nullptr) {
+				len = static_cast<size_t>(env->GetArrayLength (arr));
+				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))
+					wrappers = new jstring_wrapper [len];
+				else
+					wrappers = static_wrappers;
+			} else {
+				len = 0;
+				wrappers = nullptr;
+			}
 		}
 
 		~jstring_array_wrapper () noexcept

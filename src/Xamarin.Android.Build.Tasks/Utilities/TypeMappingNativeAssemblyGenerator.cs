@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 			this.mappingFieldName = mappingFieldName;
 		}
 
+		public bool EmbedAssemblies { get; set; }
+
 		protected override void WriteFileHeader (StreamWriter output, string outputFileName)
 		{
 			// The hash is written to make sure the assembly file which includes the data one is
@@ -43,7 +45,9 @@ namespace Xamarin.Android.Tasks
 			WriteMappingHeader (output, dataStream, mappingFieldName);
 			WriteCommentLine (output, "Mapping data");
 			WriteSymbol (output, mappingFieldName, dataSize, isGlobal: true, isObject: true, alwaysWriteSize: true);
-			output.WriteLine ($"{Indent}.include{Indent}\"{dataFileName}\"");
+			if (EmbedAssemblies) {
+				output.WriteLine ($"{Indent}.include{Indent}\"{dataFileName}\"");
+			}
 		}
 
 		void WriteMappingHeader (StreamWriter output, NativeAssemblyDataStream dataStream, string mappingFieldName)

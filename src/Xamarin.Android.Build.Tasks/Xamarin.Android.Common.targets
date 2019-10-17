@@ -834,6 +834,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
+	<PropertyGroup>
+    <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+	</PropertyGroup>
 	<ResolveSdks
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
@@ -868,6 +871,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
 	</ValidateJavaVersion>
 	<ResolveAndroidTooling
+			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidApiLevel="$(AndroidApiLevel)"
 			AndroidApplication="$(AndroidApplication)"
@@ -2712,6 +2716,7 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-native.so"  />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' "/>
+    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libmono-native.so" />
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
   </ItemGroup>
 </Target>
@@ -3439,7 +3444,13 @@ because xbuild doesn't support framework reference assemblies.
 
 
 <!-- SDK Management Targets -->
-<Target Name="GetAndroidDependencies" DependsOnTargets="_SetLatestTargetFrameworkVersion;$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
+<Target Name="_BeforeGetAndroidDependencies">
+  <PropertyGroup>
+    <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
+  </PropertyGroup>
+</Target> 
+ 
+<Target Name="GetAndroidDependencies" DependsOnTargets="_BeforeGetAndroidDependencies;_SetLatestTargetFrameworkVersion;$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
     <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(AotAssemblies)' == 'True'">true</_NdkRequired>
