@@ -325,7 +325,7 @@ namespace Xamarin.Android.Tasks
 
 		void UpdateWhenChanged (string path, string type, MemoryStream ms, Action<Stream> generator)
 		{
-			if (InstantRunEnabled) {
+			if (!EmbedAssemblies) {
 				ms.SetLength (0);
 				generator (ms);
 				MonoAndroidHelper.CopyIfStreamChanged (ms, path);
@@ -333,9 +333,13 @@ namespace Xamarin.Android.Tasks
 
 			string dataFilePath = $"{path}.inc";
 			using (var stream = new NativeAssemblyDataStream ()) {
-				generator (stream);
-				stream.EndOfFile ();
-				MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
+				if (EmbedAssemblies) {
+					generator (stream);
+					stream.EndOfFile ();
+					MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
+				} else {
+					stream.EmptyFile ();
+				}
 
 				var generatedFiles = new List <ITaskItem> ();
 				string mappingFieldName = $"{type}_typemap";
@@ -366,6 +370,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					var asmgen = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, stream, dataFileName, stream.MapByteCount, mappingFieldName);
+					asmgen.EmbedAssemblies = EmbedAssemblies;
 					string asmFileName = $"{path}.{abi.Trim ()}.s";
 					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
 						asmgen.Write (sw, dataFileName);

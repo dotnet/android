@@ -81,6 +81,14 @@ namespace Xamarin.Android.Tasks
 			Flush ();
 		}
 
+		public void EmptyFile ()
+		{
+			MapVersion = 1;
+			MapEntryCount = 0;
+			MapEntryLength = 0;
+			MapValueOffset = 0;
+		}
+
 		public override void Flush ()
 		{
 			outputWriter.Flush ();
