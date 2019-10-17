@@ -61,10 +61,10 @@ namespace Android.Runtime {
 		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		extern static IntPtr monodroid_timing_start (string message);
+		internal extern static IntPtr monodroid_timing_start (string message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		extern static void monodroid_timing_stop (IntPtr sequence, string message);
+		internal extern static void monodroid_timing_stop (IntPtr sequence, string message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_free (IntPtr ptr);

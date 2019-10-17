@@ -418,15 +418,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected string GetPathToAapt2 ()
+		protected string GetPathToLatestBuildTools (string exe)
 		{
-
-			var exe = IsWindows ? "aapt2.exe" : "aapt2";
-			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
-			if (File.Exists (Path.Combine (path, exe)))
-				return path;
-
-			path = Path.Combine (AndroidSdkPath, "build-tools");
+			var path = Path.Combine (AndroidSdkPath, "build-tools");
 			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => new Version (Path.GetFileName (x)))) {
 				var aapt2 = Path.Combine (dir, exe);
 				if (File.Exists (aapt2))
@@ -435,18 +429,19 @@ namespace Xamarin.Android.Build.Tests
 			return Path.Combine (path, "25.0.2");
 		}
 
+		protected string GetPathToAapt2 ()
+		{
+			var exe = IsWindows ? "aapt2.exe" : "aapt2";
+			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
+			if (File.Exists (Path.Combine (path, exe)))
+				return path;
+			return GetPathToLatestBuildTools (exe);
+		}
+
 		protected string GetPathToAapt ()
 		{
-
 			var exe = IsWindows ? "aapt.exe" : "aapt";
-
-			var path = Path.Combine (AndroidSdkPath, "build-tools");
-			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => new Version (Path.GetFileName (x)))) {
-				var aapt2 = Path.Combine (dir, exe);
-				if (File.Exists (aapt2))
-					return dir;
-			}
-			return Path.Combine (path, "25.0.2");
+			return GetPathToLatestBuildTools (exe);
 		}
 
 		[OneTimeSetUp]

@@ -966,7 +966,7 @@ OSBridge::platform_supports_weak_refs (void)
 		free (value);
 	}
 
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
 		int use_weak_refs = 0;
 		if (!strcmp ("jni", value))
 			use_weak_refs = 1;
@@ -990,14 +990,14 @@ OSBridge::platform_supports_weak_refs (void)
 			return use_weak_refs;
 	}
 
-	if (utils.monodroid_get_namespaced_system_property ("persist.sys.dalvik.vm.lib", &value) > 0) {
+	if (androidSystem.monodroid_get_system_property ("persist.sys.dalvik.vm.lib", &value) > 0) {
 		int art = 0;
 		if (!strcmp ("libart.so", value))
 			art = 1;
 		free (value);
 		if (art) {
 			int use_java = 0;
-			if (utils.monodroid_get_namespaced_system_property ("ro.build.version.release", &value) > 0) {
+			if (androidSystem.monodroid_get_system_property ("ro.build.version.release", &value) > 0) {
 				// Android 4.x ART is busted; see https://code.google.com/p/android/issues/detail?id=63929
 				if (value [0] != 0 && value [0] == '4' && value [1] != 0 && value [1] == '.') {
 					use_java = 1;

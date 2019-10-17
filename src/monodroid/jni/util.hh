@@ -75,7 +75,6 @@ namespace xamarin::android
 
 	public:
 		void             monodroid_store_package_name (const char *name);
-		size_t           monodroid_get_namespaced_system_property (const char *name, char **value);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);

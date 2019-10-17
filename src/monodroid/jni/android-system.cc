@@ -343,7 +343,7 @@ AndroidSystem::create_update_dir (char *override_dir)
 	 * However, if any logging is enabled (which should _not_ happen with
 	 * pre-loaded apps!), we need the .__override__ directory...
 	 */
-	if (log_categories == 0 && utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
+	if (log_categories == 0 && monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
 		return;
 	}
 #endif
@@ -509,7 +509,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 	}
 
 	char *override;
-	if (utils.monodroid_get_namespaced_system_property (Debug::DEBUG_MONO_MAX_GREFC, &override) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, &override) > 0) {
 		char *e;
 		max       = strtol (override, &e, 10);
 		switch (*e) {
