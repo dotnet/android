@@ -165,10 +165,6 @@ stages:
         artifactName: $(InstallerArtifactName)
         targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: mac-build-results
-
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
@@ -263,7 +259,7 @@ stages:
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+  condition: eq(dependencies.mac_build.result, 'Succeeded')
   jobs:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
@@ -302,28 +298,13 @@ stages:
 
     - script: |
         cd $(System.DefaultWorkingDirectory)/..
-        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
+        git clone -b dev/trevors/fixnull https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
         cd release-scripts
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
     - script: xcrun stapler validate $(XA.Unsigned.Pkg)
       displayName: validate notarized pkg
-
-    - template: upload-to-storage.yml@yaml
-      parameters:
-        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
-        AzureContainerName: $(Azure.Container.Name)
-        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-
-    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
-      displayName: copy notarized pkg
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload notarized pkg
-      inputs:
-        artifactName: notarized-pkg
-        targetPath: $(Build.ArtifactStagingDirectory)
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
