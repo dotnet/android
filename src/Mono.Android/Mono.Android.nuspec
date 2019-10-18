@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Xamarin.Android</id>
+    <version>0.0.1</version>
+    <authors>Xamarin</authors>
+    <owners>Xamarin</owners>
+    <projectUrl>https://github.com/xamarin/xamarin-android</projectUrl>
+    <description>C# Bindings of the Android SDK</description>
+    <releaseNotes>Initial NuGet Pacakge</releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>Xamarin Android</tags>
+  </metadata>
+  <files>
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0\**"      target="lib\monoandroid10" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v4.4\**"      target="lib\monoandroid44" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v4.4.87\**"   target="lib\monoandroid4487" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v5.0\**"      target="lib\monoandroid50" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v5.1\**"      target="lib\monoandroid51" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v6.0\**"      target="lib\monoandroid60" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v7.0\**"      target="lib\monoandroid70" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v7.1\**"      target="lib\monoandroid71" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v8.0\**"      target="lib\monoandroid80" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v8.1\**"      target="lib\monoandroid81" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v9.0\**"      target="lib\monoandroid90" />
+    <file src="..\..\bin\$Configuration$\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v10.0\**"     target="lib\monoandroid100" />
+</files>
+</package>

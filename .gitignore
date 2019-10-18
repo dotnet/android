@@ -7,6 +7,7 @@ obj
 packages
 .DS_Store
 .nuget
+*.nupkg
 TestResult.xml
 TestResult-*.xml
 TestResult-*.csv

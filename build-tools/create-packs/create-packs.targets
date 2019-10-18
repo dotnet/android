@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\installers\create-installers.targets" />
+
+  <PropertyGroup>
+    <RootPacksDirectory>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\packs</RootPacksDirectory>
+    <UtilityPackDirectory>$(RootPacksDirectory)\packs</UtilityPackDirectory>
+
+  </PropertyGroup>
+  
+  <Target Name="PackUtilities" >
+    <RemoveDir Directories="$(UtilityPackDirectory)" />
+    <Copy
+        SourceFiles="@(MSBuildItemsWin)"
+        DestinationFiles="@(@(MSBuildItemsWin)->'$(UtilityPackDirectory)\tools\win\%(RelativePath)')"
+    />
+  </Target>
+
+</Project>

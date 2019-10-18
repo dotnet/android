@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\targets\Xamarin.Android.Sdk.props"  />  
+
+</Project>
