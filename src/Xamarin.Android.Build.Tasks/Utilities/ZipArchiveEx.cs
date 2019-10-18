@@ -29,16 +29,17 @@ namespace Xamarin.Android.Tasks
 			zip = ZipArchive.Open(archive, filemode, strictConsistencyChecks: true);
 		}
 
-		public void Flush ()
+		public void Flush (bool force = false)
 		{
-			if (entryCount == zip.EntryCount)
+			if (entryCount == zip.EntryCount && !force)
 				return;
 			if (zip != null) {
 				zip.Close ();
 				zip.Dispose ();
 				zip = null;
-				File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}{Path.GetExtension(archive)}")}", overwrite: true);
-				flush++;
+				//File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}{Path.GetExtension(archive)}")}", overwrite: true);
+				//flush++;
+				GC.Collect ();
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open, strictConsistencyChecks: true);
 			entryCount = zip.EntryCount;
@@ -134,7 +135,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			if (modified) {
-				Flush ();
+				Flush (force: true);
 			}
 		}
 
@@ -150,6 +151,7 @@ namespace Xamarin.Android.Tasks
 					zip.Close ();
 					zip.Dispose ();
 					zip = null;
+					GC.Collect ();
 				}
 			}	
 		}
