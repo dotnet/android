@@ -780,6 +780,31 @@ namespace UnamedProject
 		}
 
 		[Test]
+		public void CSharp8Features ([Values (true, false)] bool bindingProject)
+		{
+			XamarinAndroidProject proj;
+			if (bindingProject) {
+				proj = new XamarinAndroidBindingProject {
+					AndroidClassParser = "class-parse",
+					Jars = {
+						new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
+							WebContentFileNameFromAzure = "javaBindingIssue.jar"
+						}
+					}
+				};
+			} else {
+				proj = new XamarinAndroidApplicationProject ();
+			}
+
+			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => "class A { void B () { using var s = new System.IO.MemoryStream (); } }",
+			});
+			using (var b = bindingProject ? CreateDllBuilder () : CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildMkBundleApplicationRelease ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };

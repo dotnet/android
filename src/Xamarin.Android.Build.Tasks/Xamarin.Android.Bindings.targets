@@ -63,6 +63,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <MonoAndroidVersion>v5.0</MonoAndroidVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v4.4</TargetFrameworkVersion>
+    <MaxSupportedLangVersion Condition=" '$(MaxSupportedLangVersion)' == '' ">8.0</MaxSupportedLangVersion>
     <UseShortFileNames Condition="'$(UseShortFileNames)' == ''">True</UseShortFileNames>
     <UseShortGeneratorFileNames Condition="'$(UseShortGeneratorFileNames)' == ''">False</UseShortGeneratorFileNames>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
