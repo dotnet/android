@@ -6,6 +6,14 @@
 #include <sys/syscall.h>
 #endif
 
+#if defined (HAVE_GETTID_IN_UNISTD_H)
+#if !defined __USE_GNU
+#define __USE_GNU
+#endif // !def __USE_GNU
+#endif // def HAVE_GETTID_IN_UNISTD_H
+
+#include <unistd.h>
+
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/threads.h>
@@ -69,12 +77,12 @@ gc_cross_references_cb (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, Mon
 }
 
 #ifdef WINDOWS
-typedef int tid_type;
+using tid_type = int;
 #else
-typedef pid_t tid_type;
+using tid_type = pid_t;
 #endif
 // glibc does *not* have a wrapper for the gettid syscall, Android NDK has it
-#if !defined (ANDROID)
+#if !defined (ANDROID) && !defined (HAVE_GETTID_IN_UNISTD_H)
 static tid_type gettid ()
 {
 #ifdef WINDOWS
