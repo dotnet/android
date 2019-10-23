@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
