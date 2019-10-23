@@ -119,6 +119,7 @@ stages:
         DeveloperIdInstaller: $(developer-id-installer)
         IphoneDeveloper: $(iphone-developer)
         MacDeveloper: $(mac-developer)
+        HostedMacKeychainPassword: $(RedmondPoolKeyChainPassword)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
@@ -291,6 +292,10 @@ stages:
       inputs:
         artifactName: notarized-pkg
         targetPath: $(Build.ArtifactStagingDirectory)
+
+    - template: uninstall-certificates\v1.yml@yaml
+      parameters:
+        HostedMacKeychainPassword: $(RedmondPoolKeyChainPassword)
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
