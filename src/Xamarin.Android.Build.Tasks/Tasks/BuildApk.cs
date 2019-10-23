@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 
 		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath)
 		{
-			var temp = apkOutputPath + Guid.NewGuid ().ToString ();
+			var temp = apkOutputPath + Path.GetFileNameWithoutExtension (Path.GetTempFileName ());
 			ArchiveFileList files = new ArchiveFileList ();
 			if (apkInputPath != null)
 				File.Copy (apkInputPath, temp, overwrite: true);
