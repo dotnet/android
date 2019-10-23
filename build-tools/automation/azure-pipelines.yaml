@@ -270,6 +270,7 @@ stages:
         cd $(System.DefaultWorkingDirectory)/..
         git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
         cd release-scripts
+        sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
