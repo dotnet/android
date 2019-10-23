@@ -2740,6 +2740,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			// androidTlsProvider, isRelease, extpected
 			new object[] { "", true, true, },
+			new object[] { "default", true, true, },
+			new object[] { "legacy", true, true, },
 			new object[] { "btls", true, true, }
 		};
 
