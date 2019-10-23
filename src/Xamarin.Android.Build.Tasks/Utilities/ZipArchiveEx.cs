@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public void FixupWindowsPathSeparators (Action<string, string> onRename)
 		{
-			if (zip.EntryCount == 0)
+			if (zip.EntryCount == 0 || !OS.IsWindows)
 				return;
 			bool modified = false;
 			foreach (var entry in zip) {
