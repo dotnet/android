@@ -13,6 +13,7 @@ namespace SystemTests {
 	public class AppDomainTest {
 
 		[Test]
+		[Category ("HybridAotNotWorking")]
 		public void DateTime_Now_Works ()
 		{
 			new Boom().Bang();
