@@ -13,7 +13,6 @@ namespace Xamarin.Android.Tasks
 
 		ZipArchive zip;
 		string archive;
-		int flush = 1;
 		long entryCount = 0;
 
 		public ZipArchive Archive {
@@ -38,8 +37,6 @@ namespace Xamarin.Android.Tasks
 				zip.Close ();
 				zip.Dispose ();
 				zip = null;
-				//File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}{Path.GetExtension(archive)}")}", overwrite: true);
-				//flush++;
 				GC.Collect ();
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open, strictConsistencyChecks: true);
