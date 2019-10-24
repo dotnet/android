@@ -226,24 +226,30 @@ namespace Xamarin.Android.Tasks {
 		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
 		{
 			var output = new List<OutputLine> ();
-			var ret = RunAapt (cmd, output);
+			var aaptResult = RunAapt (cmd, output);
 			var success = !string.IsNullOrEmpty (currentResourceOutputFile)
 				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
-				: ret;
+				: aaptResult;
 			foreach (var line in output) {
 				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
 					break;
 			}
-			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
+			if (!string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";
 				// aapt2 might not produce an archive and we must provide
 				// and -o foo even if we don't want one.
 				if (File.Exists (tmpfile)) {
-					MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+					if (aaptResult) {
+						MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+					}
 					File.Delete (tmpfile);
 				}
+				// Delete the archive on failure
+				if (!aaptResult && File.Exists (currentResourceOutputFile)) {
+					File.Delete (currentResourceOutputFile);
+				}
 			}
-			return ret;
+			return aaptResult;
 		}
 
 		bool ManifestIsUpToDate (string manifestFile)
