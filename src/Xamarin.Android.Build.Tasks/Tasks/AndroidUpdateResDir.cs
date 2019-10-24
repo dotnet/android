@@ -125,6 +125,10 @@ namespace Xamarin.Android.Tasks
 				if (String.Compare (intermediateDirFullPath, 0, dest, 0, intermediateDirFullPath.Length, StringComparison.OrdinalIgnoreCase) != 0) {
 					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
 				}
+				if (!File.Exists (item.ItemSpec)) {
+					Log.LogCodedError ("XA2001", file: item.ItemSpec, lineNumber: 0, message: $"Source file '{item.ItemSpec}' could not be found.");
+					continue;
+				}
 				var newItem = new TaskItem (dest);
 				newItem.SetMetadata ("LogicalName", rel);
 				item.CopyMetadataTo (newItem);
@@ -138,7 +142,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  IntermediateFiles:", IntermediateFiles);
 			Log.LogDebugTaskItems ("  ResolvedResourceFiles:", ResolvedResourceFiles);
 			Log.LogDebugTaskItems ("  ResourceNameCaseMap:", ResourceNameCaseMap);
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 	}
 	
