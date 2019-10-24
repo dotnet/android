@@ -145,6 +145,10 @@ stages:
       parameters:
         artifactName: Build Results - macOS
 
+    - template: uninstall-certificates/v1.yml@yaml
+      parameters:
+        HostedMacKeychainPassword: $(RedmondPoolKeyChainPassword)
+
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
@@ -293,7 +297,7 @@ stages:
         artifactName: notarized-pkg
         targetPath: $(Build.ArtifactStagingDirectory)
 
-    - template: uninstall-certificates\v1.yml@yaml
+    - template: uninstall-certificates/v1.yml@yaml
       parameters:
         HostedMacKeychainPassword: $(RedmondPoolKeyChainPassword)
 
