@@ -48,30 +48,6 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public async Task<bool> VerifyArchive (string archivePath)
-		{
-			if (String.IsNullOrEmpty (archivePath))
-				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
-
-			ProcessRunner runner = CreateProcessRunner ("t");
-			AddStandardArguments (runner);
-			runner.AddQuotedArgument (archivePath);
-
-			try {
-				Log.StatusLine ($"Archive path: {archivePath}");
-				return await RunTool (
-					() => {
-						using (TextWriter outputSink = SetupOutputSink (runner, $"7zip-verify-archive.{Path.GetFileName (archivePath)}", "verifying archive integrity")) {
-							StartTwiddler ();
-							return runner.Run ();
-						}
-					}
-				);
-			} finally {
-				StopTwiddler ();
-			}
-		}
-
 		public async Task<bool> SevenZip (string outputArchivePath, string workingDirectory, List<string> inputFiles)
 		{
 			return await DoZip (outputArchivePath, workingDirectory, inputFiles, "7z", 9);

@@ -31,8 +31,8 @@ namespace Xamarin.Android.Prepare
 			string localPackagePath = Configurables.Paths.BundleArchivePath;
 			Log.DebugLine ($"Local bundle path: {localPackagePath}");
 
-			if (await Utilities.VerifyArchive (localPackagePath)) {
-				Log.StatusLine ("Xamarin.Android Bundle archive already downloaded and valid");
+			if (File.Exists (localPackagePath)) {
+				Log.StatusLine ("Xamarin.Android Bundle archive already downloaded");
 			} else {
 				if (!String.IsNullOrEmpty (context.XABundlePath)) {
 					// User indicated they wanted to use a specific bundle that's supposed to be on disk. It's not (or

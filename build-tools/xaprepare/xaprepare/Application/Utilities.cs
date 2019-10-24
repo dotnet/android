@@ -167,20 +167,6 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public static async Task<bool> VerifyArchive (string fullArchivePath)
-		{
-			if (String.IsNullOrEmpty (fullArchivePath))
-				throw new ArgumentNullException ("must not be null or empty", nameof (fullArchivePath));
-
-			if (!FileExists (fullArchivePath))
-				return false;
-
-			string sevenZip = Context.Instance.Tools.SevenZipPath;
-			Log.DebugLine ($"Verifying archive {fullArchivePath}");
-			var runner = new SevenZipRunner (Context.Instance);
-			return await runner.VerifyArchive (fullArchivePath);
-		}
-
 		public static async Task<bool> Unpack (string fullArchivePath, string destinationDirectory, bool cleanDestinatioBeforeUnpacking = false)
 		{
 			if (String.IsNullOrEmpty (fullArchivePath))
