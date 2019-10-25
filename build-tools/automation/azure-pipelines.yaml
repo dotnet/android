@@ -17,7 +17,6 @@ resources:
 
 # Global variables
 variables:
-  BundleArtifactName: bundle
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
@@ -68,11 +67,6 @@ stages:
       displayName: install .NET Core $(DotNetCoreVersion)
       inputs:
         version: $(DotNetCoreVersion)
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(BundleArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)
 
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make prepare-update-mono
@@ -156,24 +150,19 @@ stages:
       inputs:
         version: $(DotNetCoreVersion)
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(BundleArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)
-
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Prepare /p:AutoProvision=true $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Prepare /p:AutoProvision=true $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Build $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
