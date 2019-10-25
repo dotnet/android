@@ -378,12 +378,12 @@ namespace Xamarin.Android.Prepare
 
 		void StatusStep (Context context, string name)
 		{
-			StatusMessage (context, StatusIndent, name);;
+			StatusMessage (context, StatusIndent, name);
 		}
 
 		void StatusSubStep (Context context, string name)
 		{
-			StatusMessage (context, SubStatusIndent, name);;
+			StatusMessage (context, SubStatusIndent, name);
 		}
 
 		bool CheckFileExists (string filePath, bool required)
