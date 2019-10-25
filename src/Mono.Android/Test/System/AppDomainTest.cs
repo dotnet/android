@@ -13,6 +13,7 @@ namespace SystemTests {
 	public class AppDomainTest {
 
 		[Test]
+		[Category ("HybridAotNotWorking")] // See https://github.com/xamarin/xamarin-android/issues/1536
 		public void DateTime_Now_Works ()
 		{
 			new Boom().Bang();
