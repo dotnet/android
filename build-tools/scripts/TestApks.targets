@@ -273,6 +273,7 @@
         AddResults="true"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         Activity="%(_AllArchives.Activity)" />
+<Exec Command="adb shell run-as %(TestApkInstrumentation.Package) cat files/.__override__/grefs.txt" />
   </Target>
   <Target Name="RenameTestCases">
     <Error
