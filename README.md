@@ -40,6 +40,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 | **Commercial Xamarin.Android 10.0 (d16-3)** for Windows+Visual Studio 2019 Preview          | [Download][commercial-d16-3-Windows-x86_64] |
 | **Commercial Xamarin.Android 10.0 (d16-3)** for macOS                                       | [Download][commercial-d16-3-macOS-x86_64]   |
 | **Commercial Xamarin.Android 10.1 (d16-4) Preview** for Windows+Visual Studio 2019 Preview  | [Download][commercial-d16-4-Windows-x86_64] |
+| **Commercial Xamarin.Android 10.1 (d16-4) Preview** for macOS                               | [Download][commercial-d16-4-macOS-x86_64]   |
 | **OSS Xamarin.Android 10.0.99 (master)** for macOS &amp; Windows+Visual Studio 2019\*       | [![Open Source Xamarin.Android 10.0.99, macOS+VS2019][oss-master-macOS-x86_64-icon]][oss-master-macOS-x86_64-artifacts] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
@@ -65,6 +66,7 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-d16-3-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-3-windows
 [commercial-d16-3-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-3-macos
 [commercial-d16-4-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-4-windows
+[commercial-d16-4-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-4-macos
 [oss-master-macOS-x86_64-icon]:           https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/badge/icon
 [oss-master-macOS-x86_64-artifacts]:      https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/Azure
 
