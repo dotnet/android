@@ -271,7 +271,15 @@ class MemTest {
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
+				var targets = new [] {
+					"_CompileAndroidLibraryResources",
+					"_UpdateAndroidResgen",
+				};
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				}
 			}
 		}
 
