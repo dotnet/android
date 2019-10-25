@@ -55,7 +55,6 @@ namespace Xamarin.Android.Prepare
 						Get_XABuildConfig_cs (context),
 						Get_mingw_32_cmake (context),
 						Get_mingw_64_cmake (context),
-						Get_bundle_path_targets (context),
 						Get_MonoGitHash_props (context),
 					};
 				}
@@ -172,16 +171,6 @@ namespace Xamarin.Android.Prepare
 			};
 
 			return new GeneratedPlaceholdersFile (replacements, Path.Combine (input), Path.Combine (output));
-		}
-
-		GeneratedFile Get_bundle_path_targets (Context context)
-		{
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@XA_BUNDLE_VERSION@", Configurables.Defaults.XABundleVersion },
-				{ "@XA_BUNDLE_FILE_NAME@", Configurables.Paths.XABundleFileName },
-			};
-
-			return new GeneratedPlaceholdersFile (replacements, Configurables.Paths.BundlePathTemplate, Configurables.Paths.BundlePathOutput);
 		}
 
 		public GeneratedFile Get_MonoGitHash_props (Context context)

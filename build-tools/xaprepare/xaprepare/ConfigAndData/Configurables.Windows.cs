@@ -32,18 +32,10 @@ namespace Xamarin.Android.Prepare
 
 		partial class Paths
 		{
-			static string BundleOSType                                            => "Darwin"; // Windows doesn't build the bundle
 			static string ArchiveOSType                                           => "Darwin"; // Windows need sources from there
-
-			// Windows doesn't build the bundle so we need to look in the XA framework dir as installed
-			public static string BCLAssembliesSourceDir                           => InstallBCLFrameworkDir;
-
-			// Likewise here, there's no "source" dir for test assemblies - we need to look at the destination dir
-			public static string BCLTestsSourceDir                                => BCLTestsDestDir;
-
 			public const string MonoCrossRuntimeInstallPath                       = "Windows";
 			public static readonly string MonoRuntimeHostMingwNativeLibraryPrefix = Path.Combine ("..", "bin");
-			public const string NdkToolchainOSTag                                 = "windows";
+			public const string NdkToolchainOSTag                                 = "windows-x86_64";
 		}
 	}
 }

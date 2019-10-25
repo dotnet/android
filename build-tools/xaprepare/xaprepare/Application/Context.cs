@@ -318,28 +318,15 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Full filesystem path to the Xamarin.Android bundle *if* defined on the command line by the user, otherwise
-		///   <c>null</c>
-		/// </summary>
-		public string XABundlePath { get; set; }
-
-		/// <summary>
-		///   Full filesystem path to the directory where the downloaded bundle should be copied to. This is used by the
-		///   Azure CI bots.
-		/// </summary>
-		public string XABundleCopyDir { get; set; }
-
-		/// <summary>
 		///   Collection of programs or dependencies which should be reinstalled.
 		/// </summary>
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
 		/// <summary>
 		///   Set by <see cref="Step_DownloadMonoArchive"/> if the archive has been downloaded and validated, so
-		///   that the <see cref="Step_BuildMonoRuntimes"/> step doesn't have to re-download the archive, should
-		///   bundle be absent and <see cref="Step_PrepareBundle"/> fails.
+		///   that the <see cref="Step_InstallMonoRuntimes"/> step doesn't attempt to rebuild Mono.
 		/// </summary>
-		public bool MonoAlreadyBuilt { get; set; }
+		public bool MonoArchiveDownloaded { get; set; }
 
 		static Context ()
 		{

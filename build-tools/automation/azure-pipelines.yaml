@@ -29,10 +29,10 @@ variables:
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
-- stage: prepare
-  displayName: Prepare
+- stage: init
+  displayName: Init
   jobs:
-  # Check - "Xamarin.Android (Prepare Run Code Analysis)"
+  # Check - "Xamarin.Android (Init Run Code Analysis)"
   - job: run_code_analysis
     displayName: Run Code Analysis
     pool: $(HostedWinVS2019)
@@ -45,50 +45,9 @@ stages:
       parameters:
         credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
-  # Check - "Xamarin.Android (Prepare bundle)"
-  - job: create_bundle
-    displayName: Bundle
-    pool: $(HostedMacMojave)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
-        version: $(DotNetCoreVersion)
-
-      # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
-      # The 'prepare' step creates the bundle
-    - script: |
-        make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: create bundle
-
-    - task: CopyFiles@2
-      displayName: copy bundle
-      inputs:
-        sourceFolder: bin/$(XA.Build.Configuration)
-        contents: bundle-*.7z
-        targetFolder: $(Build.ArtifactStagingDirectory)
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload bundle
-      inputs:
-        artifactName: $(BundleArtifactName)
-        targetPath: $(Build.ArtifactStagingDirectory)
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: mac-prepare-results
-
 - stage: mac_build
   displayName: Mac
-  dependsOn: prepare
+  dependsOn: []
   jobs:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
@@ -115,7 +74,7 @@ stages:
         artifactName: $(BundleArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)
 
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make prepare-update-mono
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
@@ -124,7 +83,7 @@ stages:
       env:
         GH_AUTH_SECRET: $(Github.Token)
 
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make jenkins
 
     - script: |
@@ -173,7 +132,7 @@ stages:
 # Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
-  dependsOn: prepare
+  dependsOn: []
   jobs:
   - job: win_build_test
     displayName: Build and Test

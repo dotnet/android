@@ -11,91 +11,96 @@ namespace Xamarin.Android.Prepare
 {
 	class Step_BuildMonoRuntimes : StepWithDownloadProgress
 	{
-		const string StatusIndent    = "  ";
+		const string StatusIndent = "  ";
 		const string SubStatusIndent = "    ";
 
 		List<string> runtimeBuildMakeOptions;
 		List<string> runtimeBuildMakeTargets;
-		Runtimes     allRuntimes;
+		Runtimes allRuntimes;
 
-		public Step_BuildMonoRuntimes ()
-			: base ("Preparing Mono runtimes")
+		public Step_BuildMonoRuntimes()
+			: base("Preparing Mono runtimes")
 		{
-			Context.Instance.RuleGenerators.Add (MonoRuntime_RuleGenerator);
+			Context.Instance.RuleGenerators.Add(MonoRuntime_RuleGenerator);
 		}
 
-		protected override async Task<bool> Execute (Context context)
+		protected override async Task<bool> Execute(Context context)
 		{
-			List<Runtime> enabledRuntimes = GetEnabledRuntimes (enableLogging: false);
-			if (enabledRuntimes.Count == 0) {
-				Log.StatusLine ("No runtimes to build/install");
+			List<Runtime> enabledRuntimes = GetEnabledRuntimes(enableLogging: false);
+			if (enabledRuntimes.Count == 0)
+			{
+				Log.StatusLine("No runtimes to build/install");
 				return true;
 			}
 
-			if (!context.MonoAlreadyBuilt) {
-				List<string> makeArguments = GetMakeArguments (context, enabledRuntimes);
-				if (!await BuildRuntimes (context, makeArguments)) {
-					Log.ErrorLine ("Mono runtime build failed");
+			if (!context.MonoArchiveDownloaded)
+			{
+				List<string> makeArguments = GetMakeArguments(context, enabledRuntimes);
+				if (!await BuildRuntimes(context, makeArguments))
+				{
+					Log.ErrorLine("Mono runtime build failed");
 					return false;
 				}
 			}
 
-			CleanupBeforeInstall ();
-			Log.StatusLine ();
+			CleanupBeforeInstall();
+			Log.StatusLine();
 
-			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
-			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
-			if (!await ConjureXamarinCecilAndRemapRef (context, haveManagedRuntime, managedRuntime))
+			string managedRuntime = context.Properties.GetRequiredValue(KnownProperties.ManagedRuntime);
+			bool haveManagedRuntime = !String.IsNullOrEmpty(managedRuntime);
+			if (!await ConjureXamarinCecilAndRemapRef(context, haveManagedRuntime, managedRuntime))
 				return false;
 
-			if (!await InstallRuntimes (context, enabledRuntimes))
+			if (!await InstallRuntimes(context, enabledRuntimes))
 				return false;
 
-			if (!InstallBCL (context))
+			if (!InstallBCL(context))
 				return false;
 
-			if (!InstallUtilities (context, haveManagedRuntime, managedRuntime))
+			if (!InstallUtilities(context, haveManagedRuntime, managedRuntime))
 				return false;
 
-			Utilities.PropagateXamarinAndroidCecil (context);
+			Utilities.PropagateXamarinAndroidCecil(context);
 
 			return true;
 		}
 
-		void CleanupBeforeInstall ()
+		void CleanupBeforeInstall()
 		{
-			foreach (string dir in allRuntimes.OutputDirectories) {
-				Utilities.DeleteDirectorySilent (dir);
+			foreach (string dir in allRuntimes.OutputDirectories)
+			{
+				Utilities.DeleteDirectorySilent(dir);
 			}
 		}
 
-		async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
+		async Task<bool> ConjureXamarinCecilAndRemapRef(Context context, bool haveManagedRuntime, string managedRuntime)
 		{
-			StatusStep (context, "Building remap-assembly-ref");
-			bool result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
+			StatusStep(context, "Building remap-assembly-ref");
+			bool result = await Utilities.BuildRemapRef(context, haveManagedRuntime, managedRuntime, quiet: true);
 			if (!result)
 				return false;
 
-			var msbuild = new MSBuildRunner (context);
-			StatusStep (context, "Building conjure-xamarin-android-cecil");
-			string projectPath = Path.Combine (Configurables.Paths.BuildToolsDir, "conjure-xamarin-android-cecil", "conjure-xamarin-android-cecil.csproj");
-			result = await msbuild.Run (
+			var msbuild = new MSBuildRunner(context);
+			StatusStep(context, "Building conjure-xamarin-android-cecil");
+			string projectPath = Path.Combine(Configurables.Paths.BuildToolsDir, "conjure-xamarin-android-cecil", "conjure-xamarin-android-cecil.csproj");
+			result = await msbuild.Run(
 				projectPath: projectPath,
 				logTag: "conjure-xamarin-android-cecil",
 				binlogName: "build-conjure-xamarin-android-cecil"
 			);
 
-			if (!result) {
-				Log.ErrorLine ("Failed to build conjure-xamarin-android-cecil");
+			if (!result)
+			{
+				Log.ErrorLine("Failed to build conjure-xamarin-android-cecil");
 				return false;
 			}
 
-			StatusStep (context, "Conjuring Xamarin.Android.Cecil and Xamari.Android.Cecil.Mdb");
-			string conjurer = Path.Combine (Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.exe");
+			StatusStep(context, "Conjuring Xamarin.Android.Cecil and Xamari.Android.Cecil.Mdb");
+			string conjurer = Path.Combine(Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.exe");
 			string conjurerSourceDir = Configurables.Paths.MonoProfileToolsDir;
 			string conjurerDestDir = Configurables.Paths.BuildBinDir;
 
-			result = Utilities.RunCommand (
+			result = Utilities.RunCommand(
 				haveManagedRuntime ? managedRuntime : conjurer, // command
 				BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
 				true, // ignoreEmptyArguments
@@ -106,61 +111,68 @@ namespace Xamarin.Android.Prepare
 				Configurables.Paths.BuildBinDir // destination dir
 			);
 
-			StatusStep (context, "Re-signing Xamarin.Android.Cecil.dll");
-			var sn = new SnRunner (context);
-			string snkPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "mono.snk");
-			string assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll");
-			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil");
-			if (!result) {
-				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.dll");
+			StatusStep(context, "Re-signing Xamarin.Android.Cecil.dll");
+			var sn = new SnRunner(context);
+			string snkPath = Path.Combine(BuildPaths.XamarinAndroidSourceRoot, "mono.snk");
+			string assemblyPath = Path.Combine(Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll");
+			result = await sn.ReSign(snkPath, assemblyPath, $"sign-xamarin-android-cecil");
+			if (!result)
+			{
+				Log.ErrorLine("Failed to re-sign Xamarin.Android.Cecil.dll");
 				return false;
 			}
 
-			StatusStep (context, "Re-signing Xamarin.Android.Cecil.Mdb.dll");
-			assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll");
-			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil-mdb");
-			if (!result) {
-				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.Mdb.dll");
+			StatusStep(context, "Re-signing Xamarin.Android.Cecil.Mdb.dll");
+			assemblyPath = Path.Combine(Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll");
+			result = await sn.ReSign(snkPath, assemblyPath, $"sign-xamarin-android-cecil-mdb");
+			if (!result)
+			{
+				Log.ErrorLine("Failed to re-sign Xamarin.Android.Cecil.Mdb.dll");
 				return false;
 			}
 
 			return true;
 		}
 
-		bool InstallUtilities (Context context, bool haveManagedRuntime, string managedRuntime)
+		bool InstallUtilities(Context context, bool haveManagedRuntime, string managedRuntime)
 		{
 			string destDir = MonoRuntimesHelpers.UtilitiesDestinationDir;
 
-			Utilities.CreateDirectory (destDir);
+			Utilities.CreateDirectory(destDir);
 
-			string remapper = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue (KnownProperties.RemapAssemblyRefToolExecutable));
-			string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
+			string remapper = Utilities.GetRelativePath(BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue(KnownProperties.RemapAssemblyRefToolExecutable));
+			string targetCecil = Utilities.GetRelativePath(BuildPaths.XamarinAndroidSourceRoot, Path.Combine(Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
 
-			StatusStep (context, "Installing runtime utilities");
-			foreach (MonoUtilityFile muf in allRuntimes.UtilityFilesToInstall) {
-				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (muf);
-				Utilities.CopyFile (muf.SourcePath, destFilePath);
-				if (!muf.IgnoreDebugInfo) {
-					if (!String.IsNullOrEmpty (debugSymbolsDestPath)) {
-						Utilities.CopyFile (muf.DebugSymbolsPath, debugSymbolsDestPath);
-					} else {
-						Log.DebugLine ($"Debug symbols not found for utility file {Path.GetFileName (muf.SourcePath)}");
+			StatusStep(context, "Installing runtime utilities");
+			foreach (MonoUtilityFile muf in allRuntimes.UtilityFilesToInstall)
+			{
+				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths(muf);
+				Utilities.CopyFile(muf.SourcePath, destFilePath);
+				if (!muf.IgnoreDebugInfo)
+				{
+					if (!String.IsNullOrEmpty(debugSymbolsDestPath))
+					{
+						Utilities.CopyFile(muf.DebugSymbolsPath, debugSymbolsDestPath);
+					}
+					else
+					{
+						Log.DebugLine($"Debug symbols not found for utility file {Path.GetFileName(muf.SourcePath)}");
 					}
 				}
 
 				if (!muf.RemapCecil)
 					continue;
 
-				string relDestFilePath = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, destFilePath);
-				StatusSubStep (context, $"Remapping Cecil references for {relDestFilePath}");
-				bool result = Utilities.RunCommand (
+				string relDestFilePath = Utilities.GetRelativePath(BuildPaths.XamarinAndroidSourceRoot, destFilePath);
+				StatusSubStep(context, $"Remapping Cecil references for {relDestFilePath}");
+				bool result = Utilities.RunCommand(
 					haveManagedRuntime ? managedRuntime : remapper, // command
 					BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
 					true, // ignoreEmptyArguments
 
 					// arguments
 					haveManagedRuntime ? remapper : String.Empty,
-					Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, muf.SourcePath),
+					Utilities.GetRelativePath(BuildPaths.XamarinAndroidSourceRoot, muf.SourcePath),
 					relDestFilePath,
 					"Mono.Cecil",
 					targetCecil);
@@ -168,119 +180,125 @@ namespace Xamarin.Android.Prepare
 				if (result)
 					continue;
 
-				Log.ErrorLine ($"Failed to remap cecil reference for {destFilePath}");
+				Log.ErrorLine($"Failed to remap cecil reference for {destFilePath}");
 				return false;
 			}
 
 			return true;
 		}
 
-		bool GenerateFrameworkList (Context contex, string filePath, string bclDir, string facadesDir)
+		bool GenerateFrameworkList(Context contex, string filePath, string bclDir, string facadesDir)
 		{
-			Log.DebugLine ($"Generating {filePath}");
+			Log.DebugLine($"Generating {filePath}");
 
-			var contents = new XElement (
+			var contents = new XElement(
 				"FileList",
-				new XAttribute ("Redist", Runtimes.FrameworkListRedist),
-				new XAttribute ("Name", Runtimes.FrameworkListName),
-				allRuntimes.BclFilesToInstall.Where (f => f.Type == BclFileType.FacadeAssembly || f.Type == BclFileType.ProfileAssembly).Select (f => ToFileElement (f))
+				new XAttribute("Redist", Runtimes.FrameworkListRedist),
+				new XAttribute("Name", Runtimes.FrameworkListName),
+				allRuntimes.BclFilesToInstall.Where(f => f.Type == BclFileType.FacadeAssembly || f.Type == BclFileType.ProfileAssembly).Select(f => ToFileElement(f))
 			);
-			contents.Save (filePath);
+			contents.Save(filePath);
 			return true;
 
-			XElement ToFileElement (BclFile bcf)
+			XElement ToFileElement(BclFile bcf)
 			{
-				Log.Debug ("Writing ");
+				Log.Debug("Writing ");
 				string fullFilePath;
 
-				switch (bcf.Type) {
+				switch (bcf.Type)
+				{
 					case BclFileType.ProfileAssembly:
-						fullFilePath = Path.Combine (bclDir, bcf.Name);
-						Log.Debug ("profile");
+						fullFilePath = Path.Combine(bclDir, bcf.Name);
+						Log.Debug("profile");
 						break;
 
 					case BclFileType.FacadeAssembly:
-						Log.Debug ("facade");
-						fullFilePath = Path.Combine (facadesDir, bcf.Name);
+						Log.Debug("facade");
+						fullFilePath = Path.Combine(facadesDir, bcf.Name);
 						break;
 
 					default:
-						Log.Debug ("unsupported");
+						Log.Debug("unsupported");
 						fullFilePath = null;
 						break;
 				}
 
-				Log.DebugLine ($" BCL assembly {bcf.Name}");
-				if (String.IsNullOrEmpty (fullFilePath))
-					throw new InvalidOperationException ($"Unsupported BCL file type {bcf.Type}");
+				Log.DebugLine($" BCL assembly {bcf.Name}");
+				if (String.IsNullOrEmpty(fullFilePath))
+					throw new InvalidOperationException($"Unsupported BCL file type {bcf.Type}");
 
-				AssemblyName aname = AssemblyName.GetAssemblyName (fullFilePath);
+				AssemblyName aname = AssemblyName.GetAssemblyName(fullFilePath);
 				string version = bcf.Version;
-				if (String.IsNullOrEmpty (version) && !Runtimes.FrameworkListVersionOverrides.TryGetValue (bcf.Name, out version))
-					version = aname.Version.ToString ();
+				if (String.IsNullOrEmpty(version) && !Runtimes.FrameworkListVersionOverrides.TryGetValue(bcf.Name, out version))
+					version = aname.Version.ToString();
 
-				return new XElement (
+				return new XElement(
 					"File",
-					new XAttribute ("AssemblyName", aname.Name),
-					new XAttribute ("Version", version),
-					new XAttribute ("PublicKeyToken", String.Join (String.Empty, aname.GetPublicKeyToken ().Select (b => b.ToString ("x2")))),
-					new XAttribute ("ProcessorArchitecture", aname.ProcessorArchitecture.ToString ())
+					new XAttribute("AssemblyName", aname.Name),
+					new XAttribute("Version", version),
+					new XAttribute("PublicKeyToken", String.Join(String.Empty, aname.GetPublicKeyToken().Select(b => b.ToString("x2")))),
+					new XAttribute("ProcessorArchitecture", aname.ProcessorArchitecture.ToString())
 				);
 			}
 		}
 
-		bool InstallBCL (Context context)
+		bool InstallBCL(Context context)
 		{
 			string redistListDir = MonoRuntimesHelpers.BCLRedistListDestinationDir;
 
-			foreach (KeyValuePair<BclFileTarget, string> kvp in MonoRuntimesHelpers.BCLDestinationDirs) {
-				Utilities.CreateDirectory (kvp.Value);
+			foreach (KeyValuePair<BclFileTarget, string> kvp in MonoRuntimesHelpers.BCLDestinationDirs)
+			{
+				Utilities.CreateDirectory(kvp.Value);
 			}
 
-			foreach (KeyValuePair<BclFileTarget, string> kvp in MonoRuntimesHelpers.BCLFacadesDestinationDirs) {
-				Utilities.CreateDirectory (kvp.Value);
+			foreach (KeyValuePair<BclFileTarget, string> kvp in MonoRuntimesHelpers.BCLFacadesDestinationDirs)
+			{
+				Utilities.CreateDirectory(kvp.Value);
 			}
 
-			Utilities.CreateDirectory (redistListDir);
+			Utilities.CreateDirectory(redistListDir);
 
-			StatusStep (context, "Installing Android BCL assemblies");
-			InstallBCLFiles (allRuntimes.BclFilesToInstall);
+			StatusStep(context, "Installing Android BCL assemblies");
+			InstallBCLFiles(allRuntimes.BclFilesToInstall);
 
-			StatusStep (context, "Installing Designer Host BCL assemblies");
-			InstallBCLFiles (allRuntimes.DesignerHostBclFilesToInstall);
+			StatusStep(context, "Installing Designer Host BCL assemblies");
+			InstallBCLFiles(allRuntimes.DesignerHostBclFilesToInstall);
 
-			StatusStep (context, "Installing Designer Windows BCL assemblies");
-			InstallBCLFiles (allRuntimes.DesignerWindowsBclFilesToInstall);
+			StatusStep(context, "Installing Designer Windows BCL assemblies");
+			InstallBCLFiles(allRuntimes.DesignerWindowsBclFilesToInstall);
 
-			return GenerateFrameworkList (
+			return GenerateFrameworkList(
 				context,
 				MonoRuntimesHelpers.FrameworkListPath,
-				MonoRuntimesHelpers.BCLDestinationDirs [BclFileTarget.Android],
-				MonoRuntimesHelpers.BCLFacadesDestinationDirs [BclFileTarget.Android]
+				MonoRuntimesHelpers.BCLDestinationDirs[BclFileTarget.Android],
+				MonoRuntimesHelpers.BCLFacadesDestinationDirs[BclFileTarget.Android]
 			);
 		}
 
-		void InstallBCLFiles (List<BclFile> files)
+		void InstallBCLFiles(List<BclFile> files)
 		{
-			foreach (BclFile bf in files) {
-				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (bf);
+			foreach (BclFile bf in files)
+			{
+				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths(bf);
 
-				Utilities.CopyFile (bf.SourcePath, destFilePath);
+				Utilities.CopyFile(bf.SourcePath, destFilePath);
 				if (!bf.ExcludeDebugSymbols)
-					Utilities.CopyFile (bf.DebugSymbolsPath, debugSymbolsDestPath);
+					Utilities.CopyFile(bf.DebugSymbolsPath, debugSymbolsDestPath);
 			}
 		}
 
-		async Task<bool> InstallRuntimes (Context context, List<Runtime> enabledRuntimes)
+		async Task<bool> InstallRuntimes(Context context, List<Runtime> enabledRuntimes)
 		{
-			StatusStep (context, "Installing tests");
-			foreach (TestAssembly tasm in Runtimes.TestAssemblies) {
+			StatusStep(context, "Installing tests");
+			foreach (TestAssembly tasm in Runtimes.TestAssemblies)
+			{
 				string sourceBasePath;
 
-				switch (tasm.TestType) {
+				switch (tasm.TestType)
+				{
 					case TestAssemblyType.Reference:
 					case TestAssemblyType.TestRunner:
-						sourceBasePath = Path.Combine (Configurables.Paths.MonoProfileDir);
+						sourceBasePath = Path.Combine(Configurables.Paths.MonoProfileDir);
 						break;
 
 					case TestAssemblyType.XUnit:
@@ -290,39 +308,42 @@ namespace Xamarin.Android.Prepare
 						break;
 
 					default:
-						throw new InvalidOperationException ($"Unsupported test assembly type: {tasm.TestType}");
+						throw new InvalidOperationException($"Unsupported test assembly type: {tasm.TestType}");
 				}
 
-				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (tasm);
-				CopyFile (Path.Combine (sourceBasePath, tasm.Name), destFilePath);
+				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths(tasm);
+				CopyFile(Path.Combine(sourceBasePath, tasm.Name), destFilePath);
 				if (debugSymbolsDestPath != null)
-					CopyFile (Path.Combine (sourceBasePath, Utilities.GetDebugSymbolsPath (tasm.Name)), debugSymbolsDestPath);
+					CopyFile(Path.Combine(sourceBasePath, Utilities.GetDebugSymbolsPath(tasm.Name)), debugSymbolsDestPath);
 			}
 
-			StatusSubStep (context, "Creating BCL tests archive");
-			Utilities.DeleteFileSilent (MonoRuntimesHelpers.BCLTestsArchivePath);
-			var sevenZip = new SevenZipRunner (context);
-			if (!await sevenZip.Zip (MonoRuntimesHelpers.BCLTestsArchivePath, MonoRuntimesHelpers.BCLTestsDestinationDir, new List<string> { "." })) {
-				Log.ErrorLine ("BCL tests archive creation failed, see the log files for details.");
+			StatusSubStep(context, "Creating BCL tests archive");
+			Utilities.DeleteFileSilent(MonoRuntimesHelpers.BCLTestsArchivePath);
+			var sevenZip = new SevenZipRunner(context);
+			if (!await sevenZip.Zip(MonoRuntimesHelpers.BCLTestsArchivePath, MonoRuntimesHelpers.BCLTestsDestinationDir, new List<string> { "." }))
+			{
+				Log.ErrorLine("BCL tests archive creation failed, see the log files for details.");
 				return false;
 			}
 
-			StatusStep (context, "Installing runtimes");
-			foreach (Runtime runtime in enabledRuntimes) {
-				StatusSubStep (context, $"Installing {runtime.Flavor} runtime {runtime.Name}");
+			StatusStep(context, "Installing runtimes");
+			foreach (Runtime runtime in enabledRuntimes)
+			{
+				StatusSubStep(context, $"Installing {runtime.Flavor} runtime {runtime.Name}");
 
 				string src, dst;
 				bool skipFile;
-				foreach (RuntimeFile rtf in allRuntimes.RuntimeFilesToInstall) {
+				foreach (RuntimeFile rtf in allRuntimes.RuntimeFilesToInstall)
+				{
 					if (rtf.Shared && rtf.AlreadyCopied)
 						continue;
 
-					(skipFile, src, dst) = MonoRuntimesHelpers.GetRuntimeFilePaths (runtime, rtf);
+					(skipFile, src, dst) = MonoRuntimesHelpers.GetRuntimeFilePaths(runtime, rtf);
 					if (skipFile)
 						continue;
 
-					CopyFile (src, dst);
-					if (!StripFile (runtime, rtf, dst))
+					CopyFile(src, dst);
+					if (!StripFile(runtime, rtf, dst))
 						return false;
 
 					if (rtf.Shared)
@@ -332,83 +353,87 @@ namespace Xamarin.Android.Prepare
 
 			return true;
 
-			bool StripFile (Runtime runtime, RuntimeFile rtf, string filePath)
+			bool StripFile(Runtime runtime, RuntimeFile rtf, string filePath)
 			{
 				if (rtf.Type != RuntimeFileType.StrippableBinary)
 					return true;
 
-				var monoRuntime = runtime.As<MonoRuntime> ();
+				var monoRuntime = runtime.As<MonoRuntime>();
 				if (monoRuntime == null || !monoRuntime.CanStripNativeLibrary || !rtf.Strip)
 					return true;
 
-				if (String.IsNullOrEmpty (monoRuntime.Strip)) {
-					Log.WarningLine ($"Binary stripping impossible, runtime {monoRuntime.Name} doesn't define the strip command");
+				if (String.IsNullOrEmpty(monoRuntime.Strip))
+				{
+					Log.WarningLine($"Binary stripping impossible, runtime {monoRuntime.Name} doesn't define the strip command");
 					return true;
 				}
 
 				bool result;
-				if (!String.IsNullOrEmpty (monoRuntime.StripFlags))
-					result = Utilities.RunCommand (monoRuntime.Strip, monoRuntime.StripFlags, filePath);
+				if (!String.IsNullOrEmpty(monoRuntime.StripFlags))
+					result = Utilities.RunCommand(monoRuntime.Strip, monoRuntime.StripFlags, filePath);
 				else
-					result = Utilities.RunCommand (monoRuntime.Strip, filePath);
+					result = Utilities.RunCommand(monoRuntime.Strip, filePath);
 
 				if (result)
 					return true;
 
-				Log.ErrorLine ($"Failed to strip the binary file {filePath}, see logs for error details");
+				Log.ErrorLine($"Failed to strip the binary file {filePath}, see logs for error details");
 				return false;
 			}
 
-			void CopyFile (string src, string dest)
+			void CopyFile(string src, string dest)
 			{
-				if (!CheckFileExists (src, true))
+				if (!CheckFileExists(src, true))
 					return;
 
-				Utilities.CopyFile (src, dest);
+				Utilities.CopyFile(src, dest);
 			}
 		}
 
-		async Task<bool> BuildRuntimes (Context context, List<string> makeArguments)
+		async Task<bool> BuildRuntimes(Context context, List<string> makeArguments)
 		{
-			var make = new MakeRunner (context);
+			// https://github.com/xamarin/xamarin-android/pull/3816
+			throw new NotImplementedException("Unable to build mono runtimes from sources.");
 
-			bool result = await make.Run (
+			var make = new MakeRunner(context);
+
+			bool result = await make.Run(
 				logTag: "mono-runtimes",
-				workingDirectory: GetWorkingDirectory (context),
+				workingDirectory: GetWorkingDirectory(context),
 				arguments: makeArguments
 			);
 
 			if (!result)
 				return false;
 
-			Utilities.SaveAbiChoice (context);
+			Utilities.SaveAbiChoice(context);
 
 			return true;
 		}
 
-		string GetWorkingDirectory (Context context)
+		string GetWorkingDirectory(Context context)
 		{
-			return Path.Combine (context.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath), "sdks", "builds");
+			return Path.Combine(context.Properties.GetRequiredValue(KnownProperties.MonoSourceFullPath), "sdks", "builds");
 		}
 
-		List<string> GetMakeArguments (Context context, List<Runtime> enabledRuntimes)
+		List<string> GetMakeArguments(Context context, List<Runtime> enabledRuntimes)
 		{
-			string workingDirectory = GetWorkingDirectory (context);
-			return PrepareMakeArguments (context, workingDirectory, enabledRuntimes);
+			string workingDirectory = GetWorkingDirectory(context);
+			return PrepareMakeArguments(context, workingDirectory, enabledRuntimes);
 		}
 
-		List<Runtime> GetEnabledRuntimes (bool enableLogging)
+		List<Runtime> GetEnabledRuntimes(bool enableLogging)
 		{
-			var enabledRuntimes = new List<Runtime> ();
+			var enabledRuntimes = new List<Runtime>();
 
 			if (allRuntimes == null)
-				allRuntimes = new Runtimes ();
-			return MonoRuntimesHelpers.GetEnabledRuntimes (allRuntimes, enableLogging);
+				allRuntimes = new Runtimes();
+			return MonoRuntimesHelpers.GetEnabledRuntimes(allRuntimes, enableLogging);
 		}
 
-		List<string> PrepareMakeArguments (Context context, string workingDirectory, List<Runtime> runtimes)
+		List<string> PrepareMakeArguments(Context context, string workingDirectory, List<Runtime> runtimes)
 		{
-			string toolchainsPrefix = Path.Combine (GetProperty (KnownProperties.AndroidToolchainDirectory), "toolchains");
+			string toolchainsPrefix = Path.Combine(GetProperty(KnownProperties.AndroidToolchainDirectory), "toolchains");
 
 			var ret = new List<string> {
 				 "DISABLE_IOS=1",
@@ -429,110 +454,116 @@ namespace Xamarin.Android.Prepare
 				$"MXE_SRC={Configurables.Paths.MxeSourceDir}"
 			};
 
-			runtimeBuildMakeOptions = new List<string> (ret);
-			runtimeBuildMakeTargets = new List<string> ();
+			runtimeBuildMakeOptions = new List<string>(ret);
+			runtimeBuildMakeTargets = new List<string>();
 
 			List<string> standardArgs = null;
-			var make = new MakeRunner (context);
-			make.GetStandardArguments (ref standardArgs, workingDirectory);
-			if (standardArgs != null && standardArgs.Count > 0) {
-				runtimeBuildMakeOptions.AddRange (standardArgs);
+			var make = new MakeRunner(context);
+			make.GetStandardArguments(ref standardArgs, workingDirectory);
+			if (standardArgs != null && standardArgs.Count > 0)
+			{
+				runtimeBuildMakeOptions.AddRange(standardArgs);
 			}
 
-			AddHostTargets (runtimes.Where (r => r is MonoHostRuntime));
-			AddPackageTargets (runtimes.Where (r => r is MonoJitRuntime));
-			AddPackageTargets (runtimes.Where (r => r is MonoCrossRuntime));
-			ret.Add ("package-android-bcl");
-			AddTargets ("provision-llvm", runtimes.Where (r => r is LlvmRuntime));
+			AddHostTargets(runtimes.Where(r => r is MonoHostRuntime));
+			AddPackageTargets(runtimes.Where(r => r is MonoJitRuntime));
+			AddPackageTargets(runtimes.Where(r => r is MonoCrossRuntime));
+			ret.Add("package-android-bcl");
+			AddTargets("provision-llvm", runtimes.Where(r => r is LlvmRuntime));
 
 			return ret;
 
-			void AddHostTargets (IEnumerable<Runtime> items)
+			void AddHostTargets(IEnumerable<Runtime> items)
 			{
-				AddTargets ("package-android-host", items);
+				AddTargets("package-android-host", items);
 			}
 
-			void AddPackageTargets (IEnumerable<Runtime> items)
+			void AddPackageTargets(IEnumerable<Runtime> items)
 			{
-				AddTargets ("package-android", items);
+				AddTargets("package-android", items);
 			}
 
-			void AddTargets (string prefix, IEnumerable<Runtime> items)
+			void AddTargets(string prefix, IEnumerable<Runtime> items)
 			{
-				foreach (Runtime runtime in items) {
+				foreach (Runtime runtime in items)
+				{
 					string target = $"{prefix}-{runtime.Name}";
-					ret.Add (target);
-					runtimeBuildMakeTargets.Add (target);
+					ret.Add(target);
+					runtimeBuildMakeTargets.Add(target);
 				}
 			}
 
-			string GetProperty (string name)
+			string GetProperty(string name)
 			{
-				return context.Properties.GetRequiredValue (name);
+				return context.Properties.GetRequiredValue(name);
 			}
 
-			string GetMinimumApi (string name)
+			string GetMinimumApi(string name)
 			{
-				return BuildAndroidPlatforms.NdkMinimumAPI [name].ToString ();
+				return BuildAndroidPlatforms.NdkMinimumAPI[name].ToString();
 			}
 		}
 
-		void MonoRuntime_RuleGenerator (GeneratedMakeRulesFile file, StreamWriter ruleWriter)
+		void MonoRuntime_RuleGenerator(GeneratedMakeRulesFile file, StreamWriter ruleWriter)
 		{
 			const string OptionsVariableName = "MONO_RUNTIME_SDKS_MAKE_OPTIONS";
 
-			if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null) {
-				List<Runtime> enabledRuntimes = GetEnabledRuntimes (false);
-				GetMakeArguments (Context.Instance, enabledRuntimes);
+			if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null)
+			{
+				List<Runtime> enabledRuntimes = GetEnabledRuntimes(false);
+				GetMakeArguments(Context.Instance, enabledRuntimes);
 
-				if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null) {
-					Log.DebugLine ("No rules to generate for Mono SDKs build");
+				if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null)
+				{
+					Log.DebugLine("No rules to generate for Mono SDKs build");
 					return;
 				}
 			}
 
-			ruleWriter.Write ($"{OptionsVariableName} =");
-			foreach (string opt in runtimeBuildMakeOptions) {
-				ruleWriter.WriteLine (" \\");
-				ruleWriter.Write ($"\t{opt}");
+			ruleWriter.Write($"{OptionsVariableName} =");
+			foreach (string opt in runtimeBuildMakeOptions)
+			{
+				ruleWriter.WriteLine(" \\");
+				ruleWriter.Write($"\t{opt}");
 			}
-			ruleWriter.WriteLine ();
+			ruleWriter.WriteLine();
 
-			foreach (string target in runtimeBuildMakeTargets) {
-				ruleWriter.WriteLine ();
-				ruleWriter.WriteLine ($"sdks-{target}:");
-				ruleWriter.WriteLine ($"\t$(MAKE) $({OptionsVariableName}) {target}");
+			foreach (string target in runtimeBuildMakeTargets)
+			{
+				ruleWriter.WriteLine();
+				ruleWriter.WriteLine($"sdks-{target}:");
+				ruleWriter.WriteLine($"\t$(MAKE) $({OptionsVariableName}) {target}");
 			}
 
-			ruleWriter.WriteLine ();
-			ruleWriter.WriteLine ("sdks-all:");
+			ruleWriter.WriteLine();
+			ruleWriter.WriteLine("sdks-all:");
 
-			string allTargets = String.Join (" ", runtimeBuildMakeTargets);
-			ruleWriter.WriteLine ($"\t$(MAKE) $({OptionsVariableName}) {allTargets}");
+			string allTargets = String.Join(" ", runtimeBuildMakeTargets);
+			ruleWriter.WriteLine($"\t$(MAKE) $({OptionsVariableName}) {allTargets}");
 		}
 
-		void StatusMessage (Context context, string indent, string message)
+		void StatusMessage(Context context, string indent, string message)
 		{
-			Log.StatusLine ($"{indent}{context.Characters.Bullet} {message}");
+			Log.StatusLine($"{indent}{context.Characters.Bullet} {message}");
 		}
 
-		void StatusStep (Context context, string name)
+		void StatusStep(Context context, string name)
 		{
-			StatusMessage (context, StatusIndent, name);;
+			StatusMessage(context, StatusIndent, name); ;
 		}
 
-		void StatusSubStep (Context context, string name)
+		void StatusSubStep(Context context, string name)
 		{
-			StatusMessage (context, SubStatusIndent, name);;
+			StatusMessage(context, SubStatusIndent, name); ;
 		}
 
-		bool CheckFileExists (string filePath, bool required)
+		bool CheckFileExists(string filePath, bool required)
 		{
-			if (File.Exists (filePath))
+			if (File.Exists(filePath))
 				return true;
 
 			if (required)
-				throw new InvalidOperationException ($"Required file not found: {filePath}");
+				throw new InvalidOperationException($"Required file not found: {filePath}");
 
 			return false;
 		}

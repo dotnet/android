@@ -35,7 +35,7 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ("Determining basic build information", ConsoleColor.DarkGreen);
 			await DetermineLastVersionChangeCommit (context);
 			Log.StatusLine ();
-			DetermineBundleHashes (context);
+			DetermineMonoHash (context);
 			Log.StatusLine ();
 		}
 
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		void DetermineBundleHashes (Context context)
+		void DetermineMonoHash (Context context)
 		{
 			GitRunner git = CreateGitRunner (context);
 
@@ -108,18 +108,6 @@ namespace Xamarin.Android.Prepare
 			FullMonoHash = mono?.Commit?.Trim ();
 			MonoHash = EnsureHash ("Mono", Utilities.ShortenGitHash (FullMonoHash));
 
-			if (Configurables.Paths.BundleVersionHashFiles == null || Configurables.Paths.BundleVersionHashFiles.Count == 0) {
-				Log.WarningLine ("Bundle version hash files not specified");
-				return;
-			}
-
-			Log.StatusLine ($"  {context.Characters.Bullet} Generating bundle version hash", ConsoleColor.Gray);
-			using (var ha = HashAlgorithm.Create (context.HashAlgorithm)) {
-				HashFiles (ha, Configurables.Paths.BundleVersionHashFiles);
-				VersionHash = FormatHash (ha.Hash).Substring (0, (int)Configurables.Defaults.AbbreviatedHashLength);
-				Log.StatusLine ("    Hash: ", VersionHash, tailColor: ConsoleColor.Cyan);
-			}
-
 			string EnsureHash (string name, string hash)
 			{
 				if (String.IsNullOrEmpty (hash))
@@ -129,49 +117,6 @@ namespace Xamarin.Android.Prepare
 
 				return hash;
 			}
-		}
-
-		void HashFiles (HashAlgorithm ha, List<string> globPatterns)
-		{
-			var block = new byte [4096];
-			foreach (string glob in globPatterns) {
-				string pattern = glob?.Trim ();
-				if (String.IsNullOrEmpty (pattern))
-					continue;
-
-				foreach (string file in Directory.EnumerateFiles (Path.GetDirectoryName (pattern), Path.GetFileName (pattern))) {
-					Log.StatusLine ("      file: ", Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, file), tailColor: ConsoleColor.Cyan);
-					HashFile (ha, file, block);
-				}
-			}
-			ha.TransformFinalBlock (block, 0, 0);
-		}
-
-		void HashFile (HashAlgorithm ha, string filePath, byte[] block)
-		{
-			using (var memoryStream = new MemoryStream ()) {
-				//Read the file into a MemoryStream, ignoring newlines
-				using (var file = File.OpenRead (filePath)) {
-					int readByte;
-					while ((readByte = file.ReadByte ()) != -1) {
-						byte b = (byte)readByte;
-						if (b != '\r' && b != '\n') {
-							memoryStream.WriteByte (b);
-						}
-					}
-				}
-				memoryStream.Seek (0, SeekOrigin.Begin);
-
-				int read;
-				while ((read = memoryStream.Read (block, 0, block.Length)) > 0) {
-					ha.TransformBlock (block, 0, read, block, 0);
-				}
-			}
-		}
-
-		string FormatHash (byte[] hash)
-		{
-			return string.Join (String.Empty, hash.Select (b => b.ToString ("x2")));
 		}
 
 		async Task DetermineLastVersionChangeCommit (Context context)

@@ -892,37 +892,6 @@ namespace Xamarin.Android.Prepare
 			{ "Mono.Btls.Interface.dll", (Type: BclFileType.ProfileAssembly, Target: BclFileTarget.DesignerWindows) },
 		};
 
-		static readonly List<BundleItem> UnixBundleItems = new List<BundleItem> {
-		};
-
-		static readonly List<BundleItem> MacOSBundleItems = new List<BundleItem> {
-		};
-
-		public List<BundleItem> BundleItems {
-			get {
-				if (bundleItems != null)
-					return bundleItems;
-
-				bundleItems = new List<BundleItem> ();
-				bundleItems.AddRange (BclFilesToInstall);
-				bundleItems.AddRange (DesignerHostBclFilesToInstall);
-				bundleItems.AddRange (DesignerWindowsBclFilesToInstall);
-				bundleItems.AddRange (TestAssemblies);
-				bundleItems.AddRange (RuntimeFilesToInstall);
-				bundleItems.AddRange (UtilityFilesToInstall);
-				bundleItems.Add (Configurables.Paths.FrameworkListInstallPath);
-				bundleItems.Add (Configurables.Paths.BCLTestsArchivePath);
-
-				AddUnixBundleItems (bundleItems);
-				AddMacOSBundleItems (bundleItems);
-
-				return bundleItems;
-			}
-		}
-
-		partial void AddUnixBundleItems (List<BundleItem> bundleItems);
-		partial void AddMacOSBundleItems (List<BundleItem> bundleItems);
-
 		/// <summary>
 		///   List of directories we'll be installing to. All the directories will be removed recursively before
 		///   installation starts. This is to ensure that no artifacts from previous builds remain.

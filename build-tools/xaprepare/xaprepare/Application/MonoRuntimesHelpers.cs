@@ -188,27 +188,5 @@ namespace Xamarin.Android.Prepare
 
 			return Path.Combine (Configurables.Paths.MonoSDKSRelativeOutputDir, $"android-{runtime.PrefixedName}-{Configurables.Defaults.MonoSdksConfiguration}");
 		}
-
-		public static bool AllBundleItemsPresent (Runtimes runtimes)
-		{
-			if (runtimes == null)
-				throw new ArgumentNullException (nameof (runtimes));
-
-			bool runtimesFoundAndComplete = true;
-			foreach (BundleItem item in runtimes.BundleItems) {
-				if (item == null)
-					continue;
-
-				// BundleItem.SourcePath is the path *after* the file is installed into our tree
-				if (File.Exists (item.SourcePath))
-					continue;
-
-				runtimesFoundAndComplete = false;
-				Log.Instance.DebugLine ($"{item.SourcePath} missing, skipping the rest of bundle item file scan");
-				break;
-			}
-
-			return runtimesFoundAndComplete;
-		}
 	}
 }
