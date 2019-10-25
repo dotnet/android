@@ -69,11 +69,8 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> DownloadCorretto (Context context, string localPackagePath, Uri url)
 		{
 			if (File.Exists (localPackagePath)) {
-				if (await Utilities.VerifyArchive (localPackagePath)) {
-					Log.StatusLine ("Corretto archive already downloaded and valid");
-					return true;
-				}
-				Utilities.DeleteFileSilent (localPackagePath);
+				Log.StatusLine ("Corretto archive already downloaded");
+				return true;
 			}
 
 			Log.StatusLine ("Downloading Corretto from ", url.ToString (), tailColor: ConsoleColor.White);
