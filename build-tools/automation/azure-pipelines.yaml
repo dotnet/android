@@ -754,7 +754,7 @@ stages:
       EnableRegressionTest: true
     steps:
     - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch d16-4
         cd designer
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -790,7 +790,7 @@ stages:
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
     - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch d16-4
         cd designer
         git submodule update -q --init --recursive
       displayName: Clone and update designer
