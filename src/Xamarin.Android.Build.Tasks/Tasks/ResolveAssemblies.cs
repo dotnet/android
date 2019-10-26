@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 						if (lockFile != null)
 							resolved_assembly = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, assembly.ItemSpec);
 						if (lockFile == null || resolved_assembly == null) {
-							LogCodedWarning ("XA0107", resolved_assembly, 0, "Ignoring {0} as it is a Reference Assembly", resolved_assembly);
+							LogCodedWarning ("XA0107", resolved_assembly, 0, "Ignoring {0} as it is a Reference Assembly", resolved_assembly ?? assembly.ItemSpec);
 							continue;
 						}
 					}
