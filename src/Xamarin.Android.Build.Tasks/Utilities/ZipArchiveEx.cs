@@ -143,7 +143,8 @@ namespace Xamarin.Android.Tasks
 			GC.SuppressFinalize (this);
 		}
 
-		protected virtual void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing)
+		{
 			if (disposing) {
 				if (zip != null) {
 					zip.Close ();
