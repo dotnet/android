@@ -48,7 +48,7 @@ namespace Xamarin.Android.Prepare
 
 				Log.StatusLine ("Mono already present, but the choice of ABIs changed since previous build, runtime refresh is necessary");
 			}
-			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download/rebuild/reinstall forced");
+			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download and extraction required");
 
 			bool result = await DownloadAndUpackIfNeeded (
 				context,
