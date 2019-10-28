@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks
 			this.archive = archive;
 			zip = ZipArchive.Open(archive, filemode, strictConsistencyChecks: true);
 			// make initial backup.
+			int threadId = Thread.CurrentThread.ManagedThreadId;
+			int processId = Process.GetCurrentProcess ().Id;
 			File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}_{processId}_{threadId}{Path.GetExtension(archive)}")}", overwrite: true);
 		}
 
