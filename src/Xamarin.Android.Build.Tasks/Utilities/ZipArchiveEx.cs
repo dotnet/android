@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Xamarin.Android.Tasks
 {
