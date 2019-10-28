@@ -298,7 +298,7 @@ namespace Xamarin.Android.Prepare
 		public readonly List<BclFile> DesignerHostBclFilesToInstall;
 		public readonly List<BclFile> DesignerWindowsBclFilesToInstall;
 
-		public static readonly List <TestAssembly> TestAssemblies = new List <TestAssembly> {
+		public readonly List <TestAssembly> TestAssemblies = new List <TestAssembly> {
 			new TestAssembly ("BinarySerializationOverVersionsTest.dll",                         TestAssemblyType.NUnit),
 			new TestAssembly ("monodroid_corlib_test.dll",                                       TestAssemblyType.NUnit),
 			new TestAssembly ("monodroid_corlib_xunit-test.dll",                                 TestAssemblyType.XUnit),

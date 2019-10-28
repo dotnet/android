@@ -188,5 +188,66 @@ namespace Xamarin.Android.Prepare
 
 			return Path.Combine (Configurables.Paths.MonoSDKSRelativeOutputDir, $"android-{runtime.PrefixedName}-{Configurables.Defaults.MonoSdksConfiguration}");
 		}
+
+		public static bool AreRuntimeItemsInstalled (Runtimes runtimes)
+		{
+			if (runtimes == null)
+				throw new ArgumentNullException (nameof (runtimes));
+
+			foreach (var bclFile in runtimes.BclFilesToInstall) {
+				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (bclFile);
+				if (!DoesItemExist (destFilePath, bclFile.ExcludeDebugSymbols, debugSymbolsDestPath))
+					return false;
+			}
+
+			foreach (var bclFile in runtimes.DesignerHostBclFilesToInstall) {
+				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (bclFile);
+				if (!DoesItemExist (destFilePath, bclFile.ExcludeDebugSymbols, debugSymbolsDestPath))
+					return false;
+			}
+
+			foreach (var bclFile in runtimes.DesignerWindowsBclFilesToInstall) {
+				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (bclFile);
+				if (!DoesItemExist (destFilePath, bclFile.ExcludeDebugSymbols, debugSymbolsDestPath))
+					return false;
+			}
+
+			foreach (var testFile in runtimes.TestAssemblies) {
+				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (testFile);
+				if (!DoesItemExist (destFilePath, true, debugSymbolsDestPath))
+					return false;
+			}
+
+			foreach (var utilFile in runtimes.UtilityFilesToInstall) {
+				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (utilFile);
+				if (!DoesItemExist (destFilePath, utilFile.IgnoreDebugInfo, debugSymbolsDestPath))
+					return false;
+			}
+
+			foreach (var runtime in GetEnabledRuntimes (runtimes, true)) {
+				foreach (var runtimeFile in runtimes.RuntimeFilesToInstall) {
+					(bool skipFile, string src, string dst) = GetRuntimeFilePaths (runtime, runtimeFile);
+
+					if (!skipFile && !File.Exists (dst)) {
+						Log.Instance.WarningLine ($"File '{dst}' missing, skipping the rest of runtime item file scan");
+						return false;
+					}
+				}
+			}
+
+			return true;
+
+			bool DoesItemExist (string destFilePath, bool shouldExcludeSymbols, string debugSymbolsDestPath)
+			{
+				if (File.Exists (destFilePath) && shouldExcludeSymbols)
+					return true;
+
+				if (File.Exists (destFilePath) && !shouldExcludeSymbols && File.Exists (debugSymbolsDestPath))
+					return true;
+
+				Log.Instance.DebugLine ($"File '{destFilePath}' or symbols '{debugSymbolsDestPath}' missing, skipping the rest of runtime item file scan");
+				return false;
+			}
+		}
 	}
 }

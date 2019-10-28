@@ -36,6 +36,20 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			Log.StatusLine ("Checking if all runtime files are present");
+			var allRuntimes = new Runtimes ();
+			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (allRuntimes)) {
+
+				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
+				if (!Utilities.AbiChoiceChanged (context)) {
+					Log.StatusLine ("Mono runtimes already present and complete. No need to download or build.");
+					return true;
+				}
+
+				Log.StatusLine ("Mono already present, but the choice of ABIs changed since previous build, runtime refresh is necessary");
+			}
+			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download/rebuild/reinstall forced");
+
 			bool result = await DownloadAndUpackIfNeeded (
 				context,
 				"Mono",

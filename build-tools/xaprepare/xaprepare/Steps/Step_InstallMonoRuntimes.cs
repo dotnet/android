@@ -268,7 +268,7 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> InstallRuntimes (Context context, List<Runtime> enabledRuntimes)
 		{
 			StatusStep (context, "Installing tests");
-			foreach (TestAssembly tasm in Runtimes.TestAssemblies) {
+			foreach (TestAssembly tasm in allRuntimes.TestAssemblies) {
 				string sourceBasePath;
 
 				switch (tasm.TestType) {
@@ -337,6 +337,11 @@ namespace Xamarin.Android.Prepare
 
 				if (String.IsNullOrEmpty (monoRuntime.Strip)) {
 					Log.WarningLine ($"Binary stripping impossible, runtime {monoRuntime.Name} doesn't define the strip command");
+					return true;
+				}
+
+				if (context.OS.IsWindows && context.IsWindowsCrossAotAbi (monoRuntime.Name)) {
+					Log.WarningLine ($"Unable to strip AOT compiler '{monoRuntime.Name}' on Windows.");
 					return true;
 				}
 
