@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks
 		ZipArchive zip;
 		string archive;
 		long entryCount = 0;
-		int flush = 1;
+		int flush = 0;
 
 		public ZipArchive Archive {
 			get { return zip; }
@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tasks
 			int threadId = Thread.CurrentThread.ManagedThreadId;
 			int processId = Process.GetCurrentProcess ().Id;
 			File.Copy (archive, $"{Path.ChangeExtension(archive, $"{flush}_{processId}_{threadId}{Path.GetExtension(archive)}")}", overwrite: true);
+			flush++;
 		}
 
 		public void Flush (bool force = false)
