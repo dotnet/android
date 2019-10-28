@@ -24,8 +24,8 @@
     </ItemGroup>
     <PropertyGroup>
       <_Arch Condition=" Exists ('/Library/Frameworks/') ">-m64</_Arch>
-      <_Cc Condition=" '%(ClCompile.Extension)' == '.c' ">gcc -std=c99</_Cc>
-      <_Cc Condition=" '%(ClCompile.Extension)' == '.cc' ">g++ -std=c++11</_Cc>
+      <_Cc Condition=" '%(ClCompile.Extension)' == '.c' ">gcc -std=c99 -fPIC</_Cc>
+      <_Cc Condition=" '%(ClCompile.Extension)' == '.cc' ">g++ -std=c++11 -fPIC</_Cc>
       <_Def>@(_Defines->'-D%(Identity)', ' ')</_Def>
       <_Inc>@(_Includes->'-I "%(Identity)"', ' ')</_Inc>
     </PropertyGroup>
