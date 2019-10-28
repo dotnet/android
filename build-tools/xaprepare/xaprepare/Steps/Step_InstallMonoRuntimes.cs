@@ -354,8 +354,8 @@ namespace Xamarin.Android.Prepare
 					return true;
 				}
 
-				if (context.OS.IsWindows && context.IsWindowsCrossAotAbi (monoRuntime.Name)) {
-					Log.WarningLine ($"Unable to strip AOT compiler '{monoRuntime.Name}' on Windows.");
+				if (context.OS.IsWindows && (context.IsWindowsCrossAotAbi (monoRuntime.Name) || context.IsMingwHostAbi (monoRuntime.Name))) {
+					Log.WarningLine ($"Unable to strip '{monoRuntime.Name}' on Windows.");
 					return true;
 				}
 

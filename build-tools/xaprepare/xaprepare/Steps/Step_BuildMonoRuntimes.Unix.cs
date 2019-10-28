@@ -274,7 +274,7 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> InstallRuntimes (Context context, List<Runtime> enabledRuntimes)
 		{
 			StatusStep (context, "Installing tests");
-			foreach (TestAssembly tasm in Runtimes.TestAssemblies) {
+			foreach (TestAssembly tasm in allRuntimes.TestAssemblies) {
 				string sourceBasePath;
 
 				switch (tasm.TestType) {
