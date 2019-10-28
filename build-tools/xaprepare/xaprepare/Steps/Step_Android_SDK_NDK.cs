@@ -134,12 +134,8 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($"  {context.Characters.Bullet} Installing ", pkg.Component.Name, tailColor: ConsoleColor.White);
 
 			if (File.Exists (pkg.LocalPackagePath)) {
-				bool valid = Utilities.VerifyArchive (pkg.LocalPackagePath).GetAwaiter ().GetResult ();
-				if (!valid || (RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
-					if (valid)
-						LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
-					else
-						LogStatus ("Downloaded package is invalid, re-download required. Deleting cache.", 4, ConsoleColor.Magenta);
+				if ((RefreshSdk && !IsNdk (pkg.Component)) || (RefreshNdk && IsNdk (pkg.Component))) {
+					LogStatus ("Reinstall requested, deleting cache", 4, ConsoleColor.Magenta);
 					Utilities.DeleteFile (pkg.LocalPackagePath);
 					toDownload.Add (pkg);
 				} else {

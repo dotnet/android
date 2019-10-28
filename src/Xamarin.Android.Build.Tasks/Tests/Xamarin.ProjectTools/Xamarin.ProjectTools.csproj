@@ -169,4 +169,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets')" />
+  <ItemGroup>
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
 </Project>
