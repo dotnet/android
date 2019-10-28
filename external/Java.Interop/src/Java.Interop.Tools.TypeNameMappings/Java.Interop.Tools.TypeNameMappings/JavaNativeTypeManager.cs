@@ -19,12 +19,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 	public
 #endif
 	enum PackageNamingPolicy {
-		/// <summary>
-		/// A hashed package name, currently defaults to LowercaseMD5
-		/// </summary>
+		[Obsolete ("No longer supported. Use PackageNamingPolicy.LowercaseCrc64 instead.", error: true)]
 		LowercaseHash = 0,
 		Lowercase = 1,
 		LowercaseWithAssemblyName = 2,
+		[Obsolete ("No longer supported. Use PackageNamingPolicy.LowercaseCrc64 instead.", error: true)]
 		LowercaseMD5 = LowercaseHash,
 		LowercaseCrc64 = 3,
 	}
@@ -43,7 +42,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 #endif
 	static class JavaNativeTypeManager {
 
-		public static PackageNamingPolicy PackageNamingPolicy { get; set; }
+		public static PackageNamingPolicy PackageNamingPolicy { get; set; } = PackageNamingPolicy.LowercaseCrc64;
 
 		public static string ApplicationJavaClass { get; set; }
 
@@ -203,10 +202,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseCrc64:
 				using (var crc = new Crc64 ())
 					return "crc64" + ToHash (type.Namespace + ":" + assemblyName, crc);
-			case PackageNamingPolicy.LowercaseMD5:
 			default:
-				using (var md5 = MD5.Create ())
-					return "md5" + ToHash (type.Namespace + ":" + assemblyName, md5);
+					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
 		}
 
@@ -528,10 +525,8 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseCrc64:
 				using (var crc = new Crc64 ())
 					return "crc64" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (), crc);
-			case PackageNamingPolicy.LowercaseMD5:
 			default:
-				using (var md5 = MD5.Create ())
-					return "md5" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (), md5);
+					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
 		}
 #endif

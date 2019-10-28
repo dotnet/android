@@ -176,7 +176,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 		ulong crc = ulong.MaxValue;
 		ulong length = 0;
 
-		public override void Initialize () { }
+		public override void Initialize ()
+		{
+			crc = ulong.MaxValue;
+			length = 0;
+		}
 
 		protected override void HashCore (byte [] array, int ibStart, int cbSize)
 		{

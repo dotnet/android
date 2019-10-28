@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
+using Java.Interop.Tools.JavaCallableWrappers;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
-using System.Collections.Generic;
 
 namespace generatortests
 {
@@ -93,10 +93,11 @@ namespace generatortests
 				byte[] f1 = ReadAllBytesIgnoringLineEndings (file1);
 				byte[] f2 = ReadAllBytesIgnoringLineEndings (file2);
 
-				var hash = MD5.Create ();
-				var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
-				var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-				result = f1hash.Equals (f2hash);
+				using (var hash = new Crc64 ()) {
+					var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
+					var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
+					result = f1hash.Equals (f2hash);
+				}
 			}
 
 			return result;

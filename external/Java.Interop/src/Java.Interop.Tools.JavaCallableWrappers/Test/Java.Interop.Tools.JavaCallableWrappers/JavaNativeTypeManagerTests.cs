@@ -26,13 +26,6 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		}
 
 		[Test]
-		public void MD5 ()
-		{
-			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseMD5;
-			Assert.AreEqual ("md5acb69d261d9efeb0927dd7ff443b9a3a", JavaNativeTypeManager.GetPackageName (typeof (string)));
-		}
-
-		[Test]
 		public void Crc64 ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseCrc64;

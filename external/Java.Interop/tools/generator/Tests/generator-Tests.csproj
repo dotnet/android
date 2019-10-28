@@ -86,6 +86,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
+      <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
+      <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
+    </ProjectReference>
     <ProjectReference Include="..\generator.csproj">
       <Project>{D14A1B5C-2060-4930-92BE-F7190256C735}</Project>
       <Name>generator</Name>
