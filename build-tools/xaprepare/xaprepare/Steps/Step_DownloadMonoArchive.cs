@@ -71,8 +71,8 @@ namespace Xamarin.Android.Prepare
 
 		async Task<bool> DownloadAndUpackIfNeeded (Context context, string name, string localPath, string archiveFileName, string destinationDirectory)
 		{
-			if (await Utilities.VerifyArchive (localPath)) {
-				Log.StatusLine ($"{name} archive already downloaded and valid");
+			if (File.Exists (localPath)) {
+				Log.StatusLine ($"{name} archive already downloaded");
 			} else {
 				Utilities.DeleteFileSilent (localPath);
 
