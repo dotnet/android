@@ -47,7 +47,7 @@ macro(xa_common_prepare)
     fvisibility=${DSO_SYMBOL_VISIBILITY}
     fstack-protector-strong
     fstrict-return
-    Wa,--noexecstack
+    Wa,-noexecstack
     fPIC
     )
 

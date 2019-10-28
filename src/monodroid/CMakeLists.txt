@@ -164,7 +164,6 @@ else()
   endif()
 
   if(UNIX)
-    set(EXTRA_COMPILER_FLAGS "${EXTRA_COMPILER_FLAGS} -Wa,--noexecstack")
     set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -shared -fpic")
   endif()
 
