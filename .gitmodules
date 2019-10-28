@@ -4,7 +4,7 @@
     branch = master
 [submodule "external/debugger-libs"]
     path = external/debugger-libs
-    url = git://github.com/mono/debugger-libs
+    url = https://github.com/mono/debugger-libs
     branch = master
 [submodule "external/dlfcn-win32"]
     path = external/dlfcn-win32
@@ -20,7 +20,7 @@
     branch = master
 [submodule "external/nrefactory"]
     path = external/nrefactory
-    url = git://github.com/icsharpcode/NRefactory.git
+    url = https://github.com/icsharpcode/NRefactory.git
     branch = master
 [submodule "external/opentk"]
     path = external/opentk
