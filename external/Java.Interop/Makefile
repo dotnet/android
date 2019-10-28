@@ -135,7 +135,7 @@ bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/J
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
 
 bin/GendarmeDebug/netstandard2.0/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
-	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` src/Java.Interop/Java.Interop.csproj
+	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` /p:LangVersion=Default /p:DiscoverEditorConfigFiles=False src/Java.Interop/Java.Interop.csproj
 
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \
