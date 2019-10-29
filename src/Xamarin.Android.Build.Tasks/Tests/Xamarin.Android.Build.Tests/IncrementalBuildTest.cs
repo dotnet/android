@@ -958,11 +958,11 @@ namespace Lib2
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
-			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseMD5");
+			proj.SetProperty ("AndroidPackageNamingPolicy", "Lowercase");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-				var className = "Lmd5aaee5c01293e648941eac447719ef3fb/Bar;";
+				var className = "Lfoo/Bar;";
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
 				proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
