@@ -28,12 +28,12 @@ variables:
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
-- stage: init
-  displayName: Init
+- stage: code_analysis
+  displayName: Code Analysis
   jobs:
-  # Check - "Xamarin.Android (Init Run Code Analysis)"
-  - job: run_code_analysis
-    displayName: Run Code Analysis
+  # Check - "Xamarin.Android (Code Analysis CredScan)"
+  - job: run_static_analysis
+    displayName: CredScan
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
@@ -120,7 +120,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-build-results
+        artifactName: Build Results - macOS
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -206,7 +206,7 @@ stages:
 
     - template: yaml-templates\upload-results.yaml
       parameters:
-        artifactName: win-build-test-results
+        artifactName: Build Results - Windows
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -486,7 +486,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        artifactName: mac-apk-test-results
+        artifactName: Test Results - APK Instrumentation - macOS
 
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
@@ -535,7 +535,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-bcl-test-results
+        artifactName: Test Results - BCL With Emulator - macOS
 
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
@@ -567,7 +567,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-msbuild-test-results
+        artifactName: Test Results - MSBuild - macOS
 
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
@@ -603,7 +603,7 @@ stages:
 
     - template: yaml-templates\upload-results.yaml
       parameters:
-        artifactName: win-msbuild-test-results
+        artifactName: Test Results - MSBuild - Windows
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -655,7 +655,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-msbuild-device-test-results
+        artifactName: Test Results - MSBuild With Emulator - macOS
 
   # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
   - job: mac_timezonedevice_tests
@@ -700,7 +700,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-timezoneinfo-test-results
+        artifactName: Test Results - TimeZoneInfo With Emulator - macOS
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
