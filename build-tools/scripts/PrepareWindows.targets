@@ -6,8 +6,6 @@
     <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
     <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
-    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
-    <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == '' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <Target Name="_BuildXAPrepare">
