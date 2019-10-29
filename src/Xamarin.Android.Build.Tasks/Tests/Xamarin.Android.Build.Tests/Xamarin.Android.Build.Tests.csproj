@@ -95,7 +95,6 @@
   <ItemGroup>
     <Compile Include="Tasks\AndroidRegExTests.cs" />
     <Compile Include="Tasks\CopyIfChangedTests.cs" />
-    <Compile Include="Tasks\GetAdditionalResourcesFromAssembliesTests.cs" />
     <Compile Include="Tasks\GetDependenciesTests.cs" />
     <Compile Include="Tasks\RemoveDirTests.cs" />
     <Compile Include="Tasks\ResolveMonoAndroidSdksTests.cs" />

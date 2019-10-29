@@ -1535,25 +1535,6 @@ namespace App1
 		}
 
 		[Test]
-		[Ignore ("Re enable when MergeResources work is complete")]
-		public void AaptErrorWhenDuplicateStringEntry ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationAaptErrorWithDuplicateEntry")) {
-				// Add a library project so that aapt gets multiple resource directory to include
-				proj.PackageReferences.Add (KnownPackages.SupportV7CardView);
-				proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\ExtraStrings.xml") {
-					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?><resources><string name=""Common.None"">None</string><string name=""Common.None"">None</string></resources>",
-				});
-
-				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should fail with an aapt error about duplicated string res entries");
-				StringAssertEx.Contains ("Resource entry Common.None is already defined", b.LastBuildOutput);
-				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
-			}
-		}
-
-		[Test]
 		public void CheckJavaError ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1623,10 +1604,10 @@ namespace App1
 					+ "\n}",
 				Encoding = Encoding.ASCII
 			});
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
-			proj.PackageReferences.Add (KnownPackages.GooglePlayServices_22_0_0_2);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
 			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "64m");
@@ -1823,25 +1804,23 @@ namespace App1
 		}
 
 		[Test]
-		[NonParallelizable]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
 		public void BuildLibraryWhichUsesResources ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidLibraryProject () { IsRelease = isRelease };
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Styles.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <resources>
 	<style name=""AppTheme"" parent=""Theme.AppCompat.Light.NoActionBar"" />
 </resources>"
 			});
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 			proj.SetProperty ("AndroidResgenClass", "Resource");
 			proj.SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + proj.Language.DefaultExtension);
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -2138,7 +2117,7 @@ namespace App1
 					},
 				},
 				PackageReferences = {
-					KnownPackages.Xamarin_Android_Support_v8_RenderScript_23_1_1_0,
+					KnownPackages.Xamarin_Android_Support_v8_RenderScript_28_0_0_3,
 				}
 			};
 			proj.SetProperty ("TargetFrameworkVersion", "v7.1");
@@ -2359,37 +2338,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[NonParallelizable] //This test deletes files in CachePath, a shared directory
-		public void ResourceExtraction ([Values (true, false)] bool useAapt2)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				PackageReferences = {
-					KnownPackages.AndroidSupportV4_23_1_1_0,
-					KnownPackages.AndroidSupportCustomTabs_23_1_1_0,
-					KnownPackages.SupportV7AppCompat_23_1_1_0,
-				},
-			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (builder.DesignTimeBuild (proj), "design-time build should have succeeded");
-				Assert.IsTrue (builder.Build (proj), "build should have succeeded");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA0121"), "Output should contain XA0121 warnings");
-				var targetAar = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0",
-					"content", "m2repository", "com", "android", "support", "appcompat-v7", "23.1.1", "appcompat-v7-23.1.1.aar");
-				if (File.Exists (targetAar)) {
-					File.Delete (targetAar);
-				}
-				var embedded = Path.Combine (CachePath, "Xamarin.Android.Support.v7.AppCompat", "23.1.1.0", "embedded");
-				if (Directory.Exists (embedded)) {
-					Directory.Delete (embedded, recursive: true);
-				}
-				Assert.IsTrue (builder.Build (proj), "Second Build should have succeeded");
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "`_BuildAdditionalResourcesCache` should not be skipped!");
-			}
-		}
-
-		[Test]
 		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -2401,7 +2349,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				},
 			};
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
 				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
@@ -2657,7 +2605,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.AndroidSupportV4_21_0_3_0,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
@@ -2665,37 +2613,11 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
 				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,
 					"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
-
-				//Since this is using an old support library, its main R.java should "match" the library one
 				var src = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
 				var main_r_java = Path.Combine (src, "unnamedproject", "unnamedproject", "R.java");
 				FileAssert.Exists (main_r_java);
-				var lib_r_java = Path.Combine (src, "android", "support", "v4", "R.java");
+				var lib_r_java = Path.Combine (src, "android", "support", "compat", "R.java");
 				FileAssert.Exists (lib_r_java);
-
-				void TrimHeader (List<string> lines)
-				{
-					for (int i = 0; i < lines.Count; i++) {
-						if (lines [i].StartsWith ("package ", StringComparison.Ordinal)) {
-							lines.RemoveRange (0, i + 1);
-							break;
-						}
-					}
-				}
-
-				//Beyond the `package com.foo;` line, each line should match: ignoring whitespace
-				var main_r_contents = File.ReadAllLines (main_r_java).ToList ();
-				TrimHeader (main_r_contents);
-				var lib_r_contents = File.ReadAllLines (lib_r_java).ToList ();
-				TrimHeader (lib_r_contents);
-				var regex = new Regex (@"\s", RegexOptions.Compiled);
-				for (int i = 0; i < main_r_contents.Count && i < lib_r_contents.Count; i++) {
-					var main = main_r_contents [i];
-					var lib = lib_r_contents [i];
-					var expected = regex.Replace (main, "");
-					var actual = regex.Replace (lib, "");
-					Assert.AreEqual (expected, actual, $"Main R.java `{main}` does not match library R.java `{lib}");
-				}
 			}
 		}
 
@@ -2814,15 +2736,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
-				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_24_2_1);
-				foreach (var reference in KnownPackages.SupportV7CardView_24_2_1.References) {
+				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+				foreach (var reference in KnownPackages.SupportV7CardView_27_0_2_1.References) {
 					reference.Timestamp = DateTimeOffset.UtcNow;
 					proj.References.Add (reference);
 				}
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				var doc = File.ReadAllText (Path.Combine (b.Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcepaths.cache"));
-				Assert.IsTrue (doc.Contains (Path.Combine ("Xamarin.Android.Support.v7.CardView", "24.2.1")), "CardView should be resolved as a reference.");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
@@ -2842,16 +2762,16 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 
 			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
@@ -2894,16 +2814,16 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 
 			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
@@ -3444,8 +3364,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				AotAssemblies = true,
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.AndroidSupportV4_21_0_3_0,
-					KnownPackages.GooglePlayServices_22_0_0_2,
+					KnownPackages.SupportDesign_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.GooglePlayServicesMaps_42_1021_1,
 				},
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies

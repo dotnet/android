@@ -19,12 +19,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="GetExtraLibraryLocationsForDesigner"
     DependsOnTargets="_SetupDesignTimeBuildForCompile"
     Returns="ExtraJarLocation;ExtraResourceLocation">
-  <ReadAdditionalResourcesFromAssemblyCache
-      Condition="Exists('$(_AndroidResourcePathsCache)')"
-      CacheFile="$(_AndroidResourcePathsCache)">
-    <Output TaskParameter="AdditionalAndroidResourcePaths"  ItemName="_AdditionalAndroidResourcePaths" />
-    <Output TaskParameter="AdditionalJavaLibraryReferences" ItemName="_AdditionalJavaLibraryReferences" />
-  </ReadAdditionalResourcesFromAssemblyCache>
   <ReadLibraryProjectImportsCache
       Condition="Exists('$(_AndroidLibraryProjectImportsCache)')"
       CacheFile="$(_AndroidLibraryProjectImportsCache)">
@@ -41,9 +35,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <ExtraJarLocation Include="@(AndroidJavaLibrary->'%(FullPath)')">
       <Source>AndroidJavaLibrary</Source>
     </ExtraJarLocation>
-    <ExtraResourceLocation Include="@(_AdditionalAndroidResourcePaths->'%(Identity)\res')">
-      <Source>AssemblyCache</Source>
-    </ExtraResourceLocation>
     <ExtraResourceLocation Include="@(_LibraryResourceDirectories)">
       <Source>LibraryImport</Source>
     </ExtraResourceLocation>

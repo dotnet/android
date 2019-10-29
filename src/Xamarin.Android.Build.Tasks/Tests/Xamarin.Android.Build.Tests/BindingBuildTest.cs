@@ -29,7 +29,6 @@ namespace Xamarin.Android.Build.Tests
 				"ResolveLibraryProjects",
 				"BuildDocumentation",
 				"_ResolveLibraryProjectImports",
-				"_BuildAdditionalResourcesCache",
 				"CoreCompile",
 			};
 
@@ -114,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 				UseLatestPlatformSdk = true,
 				IsRelease = true,
 			};
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
@@ -126,9 +125,9 @@ namespace Xamarin.Android.Build.Tests
 					<attr path=""/api/package[@name='com.soundcloud.android.crop']/class[@name='RotateBitmap']"" name='visibility'>public</attr>
 				</metadata>";
 			proj.AndroidClassParser = classParser;
-			var b = CreateDllBuilder (Path.Combine ("temp", TestName));
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			b.Dispose ();
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
 		}
 
 		[Test]
@@ -141,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.AndroidClassParser = classParser;
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
 				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
 			});
@@ -185,9 +184,9 @@ namespace Com.Ipaulpro.Afilechooser {
 	}                                                   
 }"
 			});
-			var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false);
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			b.Dispose ();
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
 		}
 
 		[Test]
@@ -416,7 +415,7 @@ namespace Foo {
 	<attr path=""/api/package[@name='com.actionbarsherlock.view']"" name=""managedName"">Xamarin.ActionbarSherlockBinding.Views</attr>
 </metadata>",
 			};
-			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 			}

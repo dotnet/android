@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
 					var assemblyDefinition = reader.GetAssemblyDefinition ();
-					var targetFrameworkIdentifier = assemblyDefinition.GetTargetFrameworkIdentifier (reader);
+					var targetFrameworkIdentifier = GetTargetFrameworkIdentifier (assemblyDefinition, reader);
 					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
 						output.Add (assemblyItem);
 						continue;
@@ -69,6 +69,40 @@ namespace Xamarin.Android.Tasks
 			OutputAssemblies = output.ToArray ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		string GetTargetFrameworkIdentifier (AssemblyDefinition assembly, MetadataReader reader)
+		{
+			string targetFrameworkIdentifier = null;
+			foreach (var handle in assembly.GetCustomAttributes ()) {
+				var attribute = reader.GetCustomAttribute (handle);
+				var name = reader.GetCustomAttributeFullName (attribute);
+				switch (name) {
+					case "System.Runtime.Versioning.TargetFrameworkAttribute":
+						var arguments = attribute.GetCustomAttributeArguments ();
+						foreach (var p in arguments.FixedArguments) {
+							// Of the form "MonoAndroid,Version=v8.1"
+							var value = p.Value?.ToString ();
+							if (!string.IsNullOrEmpty (value)) {
+								int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
+								if (commaIndex != -1) {
+									targetFrameworkIdentifier = value.Substring (0, commaIndex);
+									break;
+								}
+							}
+						}
+						break;
+					case "Android.IncludeAndroidResourcesFromAttribute":
+					case "Android.NativeLibraryReferenceAttribute":
+					case "Java.Interop.JavaLibraryReferenceAttribute":
+						Log.LogCodedError ("XA0121",
+							$"Assembly '{reader.GetString (assembly.Name)}' is using '[assembly: {name}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.");
+						break;
+					default:
+						break;
+				}
+			}
+			return targetFrameworkIdentifier;
 		}
 
 		bool HasReference (MetadataReader reader)

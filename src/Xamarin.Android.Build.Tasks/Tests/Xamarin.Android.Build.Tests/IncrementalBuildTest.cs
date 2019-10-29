@@ -348,7 +348,6 @@ namespace Lib2
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
-				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
 			};
