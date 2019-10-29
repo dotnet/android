@@ -4,8 +4,10 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
     <_XAPrepareExe>$(MSBuildThisFileDirectory)..\xaprepare\xaprepare\bin\$(Configuration)\xaprepare.exe</_XAPrepareExe>
-    <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -a -v:d</_XAPrepareStandardArgs>
+    <_XAPrepareStandardArgs Condition=" '$(RunningOnCI)' == 'true' ">--no-emoji --run-mode=CI -v:d</_XAPrepareStandardArgs>
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
+    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
+    <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == '' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <Target Name="_BuildXAPrepare">
@@ -22,6 +24,6 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
-    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) " WorkingDirectory="$(_TopDir)" />
+    <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
   </Target>
 </Project>
