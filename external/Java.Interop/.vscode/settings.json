@@ -1,0 +1,10 @@
+{
+    "nxunitExplorer.nunit": "packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe",
+    "nxunitExplorer.modules": [
+        "bin/TestDebug/generator-Tests.dll",
+        "bin/TestDebug/Java.Interop.Tools.JavaCallableWrappers-Tests.dll",
+        "bin/TestDebug/LogcatParse-Tests.dll",
+        "bin/TestDebug/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll",
+        "bin/TestDebug/Xamarin.Android.Tools.Bytecode-Tests.dll",
+    ]
+}
