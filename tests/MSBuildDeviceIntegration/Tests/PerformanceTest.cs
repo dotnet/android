@@ -55,6 +55,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_No_Changes ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -77,6 +78,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_CSharp_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -93,6 +95,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -108,6 +111,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_Designer_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -128,6 +132,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_JLO_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -144,6 +149,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Build_CSProj_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -176,6 +182,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (XAML_Change))]
+		[Repeat (10)] //TODO: remove this
 		public void Build_XAML_Change (bool produceReferenceAssembly, bool install)
 		{
 			if (install) {
@@ -253,6 +260,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Repeat (10)] //TODO: remove this
 		public void Install_CSharp_Change ()
 		{
 			DeviceRequired ();
