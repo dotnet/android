@@ -16,10 +16,10 @@
 		<AppendTargetFrameworkToOutputPath Condition="'$(AppendTargetFrameworkToOutputPath)' == ''">false</AppendTargetFrameworkToOutputPath>
 		<TargetFrameworkToOutputPath>$(TargetFrameworkVersion.TrimStart('v').Replace('.', ''))</TargetFrameworkToOutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(AppendTargetFrameworkToIntermediateOutputPath)' == 'True' And '$(UsingMicrosoftNETSdk)' != 'True' ">
+	<PropertyGroup Condition=" '$(AppendTargetFrameworkToIntermediateOutputPath)' == 'True' And '$(IsCrossTargetingBuild)' != 'True' ">
 		<IntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($(IntermediateOutputPath)))$(TargetFrameworkToOutputPath)</IntermediateOutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(AppendTargetFrameworkToOutputPath)' == 'True' And '$(UsingMicrosoftNETSdk)' != 'True' ">
+	<PropertyGroup Condition=" '$(AppendTargetFrameworkToOutputPath)' == 'True' And '$(IsCrossTargetingBuild)' != 'True' ">
 		<OutputPath>$([MSBuild]::EnsureTrailingSlash($(OutputPath)))$(TargetFrameworkToOutputPath)</OutputPath>
 	</PropertyGroup>
 </Project>
