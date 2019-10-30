@@ -550,6 +550,28 @@ namespace UnamedProject
 		}
 
 		[Test]
+		public void AndroidResourceNotExist ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = {
+					new Import (() => "foo.projitems") {
+						TextContent = () =>
+@"<Project>
+	<ItemGroup>
+		<AndroidResource Include=""Resources\layout\noexist.xml"" />
+	</ItemGroup>
+</Project>"
+					},
+				},
+			};
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA2001"), "Should recieve XA2001 error.");
+			}
+		}
+
+		[Test]
 		public void TargetFrameworkMonikerAssemblyAttributesPath ()
 		{
 			const string filePattern = "MonoAndroid,Version=v*.AssemblyAttributes.cs";

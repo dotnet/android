@@ -50,40 +50,53 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCaseSource (nameof (AndroidComputeResPathsChecks))]
 		public void AndroidComputeResPathsTest (string identity, string logicalName, string expectedIntermediateFile, string expectedResultFile)
 		{
-			var projectDir = Path.Combine (Root, "temp", TestName);
+			var hash = Tools.Files.HashString (identity + logicalName + expectedIntermediateFile + expectedResultFile);
+			var projectDir = Path.Combine (Root, "temp", $"{nameof (AndroidComputeResPathsTest)}_{hash}");
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDir;
 			var intermdiateDir = Path.Combine (projectDir, "assets");
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 
 			var metaData = new Dictionary<string, string> ();
 			if (!string.IsNullOrEmpty (logicalName))
-				metaData.Add ("LogicalName", logicalName.Replace ("%FOO%", Path.GetPathRoot (projectDir)));
+				metaData.Add ("LogicalName", logicalName.Replace ("%FOO%", "\\"));
+
+			// The file needs to exist on disk
+			var path = Path.Combine (projectDir, identity);
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			File.WriteAllText (path, contents: "");
 
 			var assets = new List<ITaskItem> () {
 				new TaskItem (identity, metaData),
 			};
 
-			var task = new AndroidComputeResPaths () {
-				BuildEngine = engine,
-				IntermediateDir = intermdiateDir,
-				ProjectDir = projectDir,
-				Prefixes = "Assets",
-				ResourceFiles = assets.ToArray (),
-			};
-			Assert.True (task.Execute (), "task should have succeeded.");
-			Assert.AreEqual (1, task.IntermediateFiles.Length, "Expected 1 entry in the IntermediateFiles Output");
-			Assert.AreEqual (1, task.ResolvedResourceFiles.Length, "Expected 1 entry in the ResolvedResourceFiles Output");
-			var expected = Path.GetFullPath (Path.Combine (intermdiateDir, expectedIntermediateFile));
-			StringAssert.AreEqualIgnoringCase (
-				expected,
-				task.IntermediateFiles [0].ItemSpec,
-				$"Expected {expected} in task.IntermediateFiles, but got {task.IntermediateFiles [0].ItemSpec}"
-			);
-			StringAssert.AreEqualIgnoringCase (
-				expectedResultFile,
-				task.ResolvedResourceFiles [0].ItemSpec,
-				$"Expected {expectedResultFile} in task.ResolvedResourceFiles, but got {task.ResolvedResourceFiles [0].ItemSpec}"
-			);
+			string previousWorking = Environment.CurrentDirectory;
+			try {
+				Environment.CurrentDirectory = projectDir;
+				var task = new AndroidComputeResPaths () {
+					BuildEngine = engine,
+					IntermediateDir = intermdiateDir,
+					ProjectDir = projectDir,
+					Prefixes = "Assets",
+					ResourceFiles = assets.ToArray (),
+				};
+				Assert.True (task.Execute (), "task should have succeeded.");
+				Assert.AreEqual (1, task.IntermediateFiles.Length, "Expected 1 entry in the IntermediateFiles Output");
+				Assert.AreEqual (1, task.ResolvedResourceFiles.Length, "Expected 1 entry in the ResolvedResourceFiles Output");
+				var expected = Path.GetFullPath (Path.Combine (intermdiateDir, expectedIntermediateFile));
+				StringAssert.AreEqualIgnoringCase (
+					expected,
+					task.IntermediateFiles [0].ItemSpec,
+					$"Expected {expected} in task.IntermediateFiles, but got {task.IntermediateFiles [0].ItemSpec}"
+				);
+				StringAssert.AreEqualIgnoringCase (
+					expectedResultFile,
+					task.ResolvedResourceFiles [0].ItemSpec,
+					$"Expected {expectedResultFile} in task.ResolvedResourceFiles, but got {task.ResolvedResourceFiles [0].ItemSpec}"
+				);
+			} finally {
+				Environment.CurrentDirectory = previousWorking;
+			}
 		}
 	}
 }
