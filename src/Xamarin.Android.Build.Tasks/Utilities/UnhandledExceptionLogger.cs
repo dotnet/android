@@ -67,8 +67,6 @@ namespace Xamarin.Android.Tasks
 				log.LogCodedError (prefix + "7027", ex.ToString ());
 			else if (ex is FileNotFoundException)		// IOException
 				log.LogCodedError (prefix + "7028", ex.ToString ());
-			else if (ex is PipeException)			// IOException
-				log.LogCodedError (prefix + "7029", ex.ToString ());
 			else if (ex is IOException) 
 				log.LogCodedError (prefix + "7024", ex.ToString ());
 
