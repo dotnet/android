@@ -610,8 +610,8 @@ when packaging Release applications.
 -   **AndroidPackageNamingPolicy** &ndash; An enum-style property for
     specifying the Java package names of generated Java source code.
     The default value is `LowercaseCrc64`. In previous versions of
-    Xamarin.Android, MD5-based names were used. You can restore the old
-    behavior by using `LowercaseMD5`.
+    Xamarin.Android, MD5-based names were used via `LowercaseMD5`
+    which is no longer supported.
 
     Added in Xamarin.Android 10.1.
 
