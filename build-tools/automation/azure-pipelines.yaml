@@ -605,7 +605,7 @@ stages:
   - job: mac_msbuilddevice_tests
     displayName: MSBuild With Emulator - macOS
     pool: $(HostedMac)
-    timeoutInMinutes: 240
+    timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all

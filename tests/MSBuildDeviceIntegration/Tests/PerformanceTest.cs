@@ -21,8 +21,12 @@ namespace Xamarin.Android.Build.Tests
 				var values = reader.ReadLine ().Split (',');
 				Assert.AreEqual (keys.Length, values.Length, $"{csv} is not a valid CSV file.");
 				for (int i = 0; i < values.Length; i++) {
-					int.TryParse (values [i], out int value);
-					csv_values [keys [i]] = value;
+					string text = values [i];
+					if (int.TryParse (text, out int value)) {
+						csv_values [keys [i]] = value;
+					} else {
+						Assert.Fail ($"'{text}' is not a valid integer!");
+					}
 				}
 			}
 		}
@@ -55,7 +59,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_No_Changes ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -78,7 +81,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_CSharp_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -95,7 +97,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -111,7 +112,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_Designer_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -132,7 +132,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_JLO_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -149,7 +148,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Build_CSProj_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -182,7 +180,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (XAML_Change))]
-		[Repeat (10)] //TODO: remove this
 		public void Build_XAML_Change (bool produceReferenceAssembly, bool install)
 		{
 			if (install) {
@@ -260,7 +257,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Repeat (10)] //TODO: remove this
 		public void Install_CSharp_Change ()
 		{
 			DeviceRequired ();
