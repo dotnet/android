@@ -271,7 +271,15 @@ class MemTest {
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
+				var targets = new [] {
+					"_CompileAndroidLibraryResources",
+					"_UpdateAndroidResgen",
+				};
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				}
 			}
 		}
 
@@ -546,6 +554,28 @@ namespace UnamedProject
 				var props = b.Output.GetIntermediaryPath("build.props");
 				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void AndroidResourceNotExist ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = {
+					new Import (() => "foo.projitems") {
+						TextContent = () =>
+@"<Project>
+	<ItemGroup>
+		<AndroidResource Include=""Resources\layout\noexist.xml"" />
+	</ItemGroup>
+</Project>"
+					},
+				},
+			};
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA2001"), "Should recieve XA2001 error.");
 			}
 		}
 

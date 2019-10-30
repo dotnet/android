@@ -60,8 +60,8 @@ namespace Xamarin.Android.Build.Tests
 			if (HasDevices && proj != null)
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 
-			if (TestContext.CurrentContext.Result.FailCount == 0 && builder != null && Directory.Exists (builder.ProjectDirectory))
-			    Directory.Delete (builder.ProjectDirectory, recursive: true);
+			if (TestContext.CurrentContext.Result.FailCount == 0 && builder != null && Directory.Exists (Path.Combine (Root, builder.ProjectDirectory)))
+				Directory.Delete (Path.Combine (Root, builder.ProjectDirectory), recursive: true);
 		}
 
 
