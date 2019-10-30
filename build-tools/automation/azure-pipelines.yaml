@@ -179,7 +179,7 @@ stages:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:RunNUnitTests /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-nunit-tests.binlog
-      timeoutInMinutes: 240
+      timeoutInMinutes: 150
 
     - task: MSBuild@1
       displayName: nunit Java.Interop Tests
