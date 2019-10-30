@@ -262,6 +262,9 @@
     <AndroidResource Include="Resources\layout\Toolbar.axml" />
     <AndroidResource Include="Resources\values\styles.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
   <Import Project="Xamarin.Forms.Performance.Integration.Droid.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="..\..\..\packages\Xamarin.Forms.4.0.0.425677\build\netstandard2.0\Xamarin.Forms.targets" Condition="Exists('..\..\..\packages\Xamarin.Forms.4.0.0.425677\build\netstandard2.0\Xamarin.Forms.targets')" />
