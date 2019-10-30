@@ -49,7 +49,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CollectLibraryResourceDirectories"
     Condition=" '$(_AndroidUseAapt2)' == 'True' "
   >
-  <CollectNonEmptyDirectories Directories="@(LibraryResourceDirectories);@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res')">
+  <CollectNonEmptyDirectories
+      Directories="@(LibraryResourceDirectories);@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res')"
+      LibraryProjectIntermediatePath="$(_AndroidLibrayProjectIntermediatePath)"
+      StampDirectory="$(_AndroidStampDirectory)">
     <Output TaskParameter="Output" ItemName="_LibraryResourceDirectories" />
   </CollectNonEmptyDirectories>
   <ComputeHash Source="@(_LibraryResourceDirectories)"  >
@@ -92,14 +95,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ToolExe="$(Aapt2ToolExe)"
   />
   <ItemGroup>
+    <_MissingStampFiles Include="@(_LibraryResourceHashDirectories->'%(StampFile)')" Condition="!Exists('%(StampFile)')" />
     <_HashStampFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).stamp')" />
     <_HashFlataFiles Include="@(_LibraryResourceHashDirectories->'$(_AndroidLibraryFlatArchivesDirectory)%(Hash).flata')" />
   </ItemGroup>
   <Touch
-      Files="@(_HashStampFiles)"
+      Files="@(_MissingStampFiles);@(_HashStampFiles)"
       AlwaysCreate="True"
   />
   <ItemGroup>
+    <FileWrites Include="@(_MissingStampFiles)" />
     <FileWrites Include="@(_HashStampFiles)" />
     <FileWrites Include="@(_HashFlataFiles)" />
   </ItemGroup>
