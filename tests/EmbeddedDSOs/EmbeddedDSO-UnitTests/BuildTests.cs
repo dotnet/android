@@ -83,6 +83,15 @@ namespace EmbeddedDSOUnitTests
 			androidSdkDir = AndroidSdkResolver.GetAndroidSdkPath ();
 		}
 
+		[OneTimeTearDown]
+		public void CleanUp ()
+		{
+			if (TestContext.CurrentContext.Result.FailCount == 0) {
+				FileSystemUtils.SetDirectoryWriteable (TestOutputDir);
+				Directory.Delete (TestOutputDir, recursive: true);
+			}
+		}
+
 		[Test]
 		public void BinariesExist ()
 		{
