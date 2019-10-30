@@ -1,1 +1,1 @@
-debug.mono.log gref
+debug.mono.log=gref
