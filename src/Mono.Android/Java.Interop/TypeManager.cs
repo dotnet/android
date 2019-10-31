@@ -133,6 +133,9 @@ namespace Java.Interop {
 
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
+			JNIEnv._monodroid_gref_log (
+					string.Format ("# jonp: n_Activate: Activating handle 0x{0} (key_handle 0x{1}).",
+						jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x")));
 			var o   = Java.Lang.Object.PeekObject (jobject);
 			var ex  = o as IJavaObjectEx;
 			if (ex != null) {
@@ -140,6 +143,7 @@ namespace Java.Interop {
 					return;
 			}
 			if (!ActivationEnabled) {
+				JNIEnv._monodroid_gref_log ($"# jonp: n_Activate: Activation not enabled.  Bailing!");
 				if (Logger.LogGlobalRef) {
 					Logger.Log (LogLevel.Info, "monodroid-gref",
 							string.Format ("warning: Skipping managed constructor invocation for handle 0x{0} (key_handle 0x{1}). " +
@@ -151,22 +155,26 @@ namespace Java.Interop {
 			}
 
 			Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer), throwOnError:true);
+			JNIEnv._monodroid_gref_log ($"# jonp: n_Activate: type={type}");
 			if (type.IsGenericTypeDefinition) {
 				throw new NotSupportedException (
 						"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
 						CreateJavaLocationException ());
 			}
 			Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
+			JNIEnv._monodroid_gref_log ($"# jonp: n_Activate: constructor parameter types: {string.Join (", ", (object[]) ptypes)}");
 			object[] parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
 			ConstructorInfo cinfo = type.GetConstructor (ptypes);
 			if (cinfo == null) {
 				throw CreateMissingConstructorException (type, ptypes);
 			}
 			if (o != null) {
+				JNIEnv._monodroid_gref_log ($"# jonp: n_Activate: invoking ctor on already created instance");
 				cinfo.Invoke (o, parms);
 				return;
 			}
 			try {
+				JNIEnv._monodroid_gref_log ($"# jonp: n_Activate: creating new instance");
 				var activator = ConstructorBuilder.CreateDelegate (type, cinfo, ptypes);
 				activator (jobject, parms);
 			} catch (Exception e) {
@@ -243,6 +251,7 @@ namespace Java.Interop {
 
 		internal static IJavaObject CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type targetType)
 		{
+			JNIEnv._monodroid_gref_log ($"# jonp: CreateInstance: handle=0x{handle.ToString ("x2")}, key_handle=0x{JNIEnv.IdentityHash (handle)}");
 			Type type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string class_name = GetClassName (class_ptr);
@@ -282,6 +291,8 @@ namespace Java.Interop {
 							CreateJavaLocationException ());
 				type = invokerType;
 			}
+
+			JNIEnv._monodroid_gref_log ($"# jonp: CreateInstance: type={type}");
 
 
 			IJavaObject result = null;

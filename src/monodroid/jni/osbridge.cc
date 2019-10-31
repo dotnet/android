@@ -222,6 +222,7 @@ OSBridge::_write_stack_trace (FILE *to, const char *from)
 void
 OSBridge::_monodroid_gref_log (const char *message)
 {
+	log_info (LOG_GREF, "%s", message);
 	if (!gref_log)
 		return;
 	fprintf (gref_log, "%s", message);
