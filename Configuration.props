@@ -75,6 +75,8 @@
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
     <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
+    <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == ''  And '$(HostOS)' == 'Windows' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
+    <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == ''  And '$(HostOS)' == 'Windows' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>

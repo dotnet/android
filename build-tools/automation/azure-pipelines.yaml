@@ -17,7 +17,6 @@ resources:
 
 # Global variables
 variables:
-  BundleArtifactName: bundle
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
@@ -29,12 +28,12 @@ variables:
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
-- stage: prepare
-  displayName: Prepare
+- stage: code_analysis
+  displayName: Code Analysis
   jobs:
-  # Check - "Xamarin.Android (Prepare Run Code Analysis)"
-  - job: run_code_analysis
-    displayName: Run Code Analysis
+  # Check - "Xamarin.Android (Code Analysis CredScan)"
+  - job: run_static_analysis
+    displayName: CredScan
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
@@ -45,50 +44,9 @@ stages:
       parameters:
         credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
-  # Check - "Xamarin.Android (Prepare bundle)"
-  - job: create_bundle
-    displayName: Bundle
-    pool: $(HostedMacMojave)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
-        version: $(DotNetCoreVersion)
-
-      # Update Mono in a separate step since xaprepare uses it as well and it will crash when Mono it runs with is updated
-      # The 'prepare' step creates the bundle
-    - script: |
-        make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--copy-bundle-to=bin/$(XA.Build.Configuration)" V=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: create bundle
-
-    - task: CopyFiles@2
-      displayName: copy bundle
-      inputs:
-        sourceFolder: bin/$(XA.Build.Configuration)
-        contents: bundle-*.7z
-        targetFolder: $(Build.ArtifactStagingDirectory)
-
-    - task: PublishPipelineArtifact@0
-      displayName: upload bundle
-      inputs:
-        artifactName: $(BundleArtifactName)
-        targetPath: $(Build.ArtifactStagingDirectory)
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: mac-prepare-results
-
 - stage: mac_build
   displayName: Mac
-  dependsOn: prepare
+  dependsOn: []
   jobs:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
@@ -110,12 +68,7 @@ stages:
       inputs:
         version: $(DotNetCoreVersion)
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(BundleArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)
-
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make prepare-update-mono
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
@@ -124,7 +77,7 @@ stages:
       env:
         GH_AUTH_SECRET: $(Github.Token)
 
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make jenkins
 
     - script: |
@@ -167,13 +120,13 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-build-results
+        artifactName: Build Results - macOS
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
-  dependsOn: prepare
+  dependsOn: []
   jobs:
   - job: win_build_test
     displayName: Build and Test
@@ -182,10 +135,6 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-      AndroidTargetAbiArgs: >-
-        /p:AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86:x86_64
-        /p:AndroidSupportedTargetAotAbis=armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64
     steps:
     - checkout: self
       submodules: recursive
@@ -197,37 +146,32 @@ stages:
       inputs:
         version: $(DotNetCoreVersion)
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(BundleArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)
-
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Prepare /p:AutoProvision=true $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Build
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build $(AndroidTargetAbiArgs) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog /p:BundleRootPath=$(System.DefaultWorkingDirectory)
+        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog $(AndroidTargetAbiArgs)
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog $(AndroidTargetAbiArgs)
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests
@@ -235,7 +179,7 @@ stages:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:RunNUnitTests /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-nunit-tests.binlog
-      timeoutInMinutes: 240
+      timeoutInMinutes: 150
 
     - task: MSBuild@1
       displayName: nunit Java.Interop Tests
@@ -258,7 +202,7 @@ stages:
 
     - template: yaml-templates\upload-results.yaml
       parameters:
-        artifactName: win-build-test-results
+        artifactName: Build Results - Windows
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -538,7 +482,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        artifactName: mac-apk-test-results
+        artifactName: Test Results - APK Instrumentation - macOS
 
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
@@ -587,7 +531,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-bcl-test-results
+        artifactName: Test Results - BCL With Emulator - macOS
 
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
@@ -619,7 +563,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-msbuild-test-results
+        artifactName: Test Results - MSBuild - macOS
 
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
@@ -655,7 +599,7 @@ stages:
 
     - template: yaml-templates\upload-results.yaml
       parameters:
-        artifactName: win-msbuild-test-results
+        artifactName: Test Results - MSBuild - Windows
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -707,7 +651,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-msbuild-device-test-results
+        artifactName: Test Results - MSBuild With Emulator - macOS
 
   # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
   - job: mac_timezonedevice_tests
@@ -752,7 +696,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-timezoneinfo-test-results
+        artifactName: Test Results - TimeZoneInfo With Emulator - macOS
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac

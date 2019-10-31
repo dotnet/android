@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Xamarin.Android.Tools.VSWhere;
 
@@ -70,6 +71,12 @@ namespace Xamarin.Android.Prepare
 
 			if (String.Compare ("msbuild", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
 				return vsInstance.MSBuildPath;
+			}
+
+			if (String.Compare ("sn", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
+				var netFXToolsPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "v10.0A", "bin");
+				var latestOrDefaultSn = Directory.EnumerateFiles (netFXToolsPath, "sn.exe", SearchOption.AllDirectories).LastOrDefault ();
+				return latestOrDefaultSn != null && File.Exists (latestOrDefaultSn) ? latestOrDefaultSn : base.Which (programPath, required);
 			}
 
 			return base.Which (programPath, required);

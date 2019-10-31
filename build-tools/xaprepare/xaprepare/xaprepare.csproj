@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -65,7 +65,6 @@
     <Compile Include="Application\BclFileTarget.cs" />
     <Compile Include="Application\BclFileType.cs" />
     <Compile Include="Application\BuildInfo.cs" />
-    <Compile Include="Application\BundleItem.cs" />
     <Compile Include="Application\Characters.cs" />
     <Compile Include="Application\CompressionFormat.cs" />
     <Compile Include="Application\Context.cs" />
@@ -73,7 +72,6 @@
     <Compile Include="Application\EssentialTools.cs" />
     <Compile Include="Application\ExecutionMode.cs" />
     <Compile Include="Application\Extensions.DictionaryOfProgramVersionParser.cs" />
-    <Compile Include="Application\Extensions.ListOfBundleItem.cs" />
     <Compile Include="Application\Extensions.Runtime.cs" />
     <Compile Include="Application\ExternalGitDependency.cs" />
     <Compile Include="Application\GeneratedFile.cs" />
@@ -139,11 +137,12 @@
     <Compile Include="Steps\Step_DownloadMonoArchive.cs" />
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
+    <Compile Include="Steps\Step_Get_Windows_Binutils.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.cs" />
+    <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />
     <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.cs" />
-    <Compile Include="Steps\Step_PrepareBundle.cs" />
     <Compile Include="Steps\Step_PrepareLocal.cs" />
     <Compile Include="Steps\Step_PrepareMSBuild.cs" />
     <Compile Include="Steps\Step_PrepareProps.cs" />
@@ -195,10 +194,7 @@
     <Compile Include="Scenarios\Scenario_Standard.Unix.cs" />
     <Compile Include="Scenarios\Scenario_UpdateMono.Unix.cs" />
     <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
-    <Compile Include="Steps\Step_CreateBundle.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
-    <Compile Include="Steps\Step_Get_Windows_Binutils.Unix.cs" />
-    <Compile Include="Steps\Step_PrepareBundle.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />
     <Compile Include="ToolRunners\MakeRunner.Unix.cs" />
@@ -236,12 +232,10 @@
     <Compile Include="ConfigAndData\Configurables.MacOS.cs" />
     <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.MacOS.cs" />
     <Compile Include="ConfigAndData\Dependencies\MacOS.cs" />
-    <Compile Include="ConfigAndData\Runtimes.MacOS.cs" />
     <Compile Include="OperatingSystems\MacOS.cs" />
     <Compile Include="Scenarios\Scenario_Standard.MacOS.cs" />
     <Compile Include="Steps\Step_ChangeLibMonoSgenDylibID.MacOS.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.MacOS.cs" />
-    <Compile Include="Steps\Step_PrepareBundle.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.MacOS.cs" />
     <Compile Include="ToolRunners\BrewRunner.MacOS.cs" />
     <Compile Include="ToolRunners\MakeRunner.MacOS.cs" />
@@ -264,7 +258,6 @@
     <Compile Include="Scenarios\Scenario_Standard.Windows.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Windows.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Windows.cs" />
-    <Compile Include="Steps\Step_PrepareBundle.Windows.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Windows.cs" />
   </ItemGroup>
   <ItemGroup>
