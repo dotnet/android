@@ -133,7 +133,7 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 		return;
 
 	p->name = ((char*) p) + sizeof (struct BundledProperty);
-	strncpy (p->name, name, name_len);
+	memcpy (p->name, name, name_len);
 	p->name [name_len] = '\0';
 
 	if (value == nullptr) {
@@ -192,8 +192,8 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 	//    ../../../jni/android-system.cc(206,10): warning G20816D19: ‘char* strncpy(char*, const char*, size_t)’ specified bound 93 equals destination size [-Wstringop-truncation] [/home/grendel/vc/xamarin/xamarin-android-worktrees/code-quality-improvements/src/monodroid/monodroid.csproj]
 	//    strncpy (sp_value, env_value, sp_value_len);
 	//
-	strncpy (sp_value, env_value, sp_value_len - 1);
-	sp_value[sp_value_len] = '\0';
+	strncpy (sp_value, env_value, sp_value_len - 2);
+	sp_value[sp_value_len - 1] = '\0';
 
 	return static_cast<int>(strlen (sp_value));
 }
