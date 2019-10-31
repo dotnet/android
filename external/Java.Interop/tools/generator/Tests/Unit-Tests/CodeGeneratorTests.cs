@@ -862,5 +862,22 @@ namespace generatortests
 			Assert.False (result.Contains ("cb_has-hyp$hen"));
 			Assert.True (result.Contains ("cb_has_x45_hyp_x36_hen"));
 		}
+
+		[Test]
+		public void WriteMethodWithInvalidParameterName ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "DoStuff");
+
+			method.Parameters.Add (new Parameter ("$this", "byte[]", "byte[]", false));
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
+			generator.WriteMethod (method, string.Empty, @class, true);
+
+			var result = writer.ToString ().NormalizeLineEndings ();
+
+			// Ensure we escape dollar signs
+			Assert.False (result.Contains ("$this"));
+		}
 	}
 }

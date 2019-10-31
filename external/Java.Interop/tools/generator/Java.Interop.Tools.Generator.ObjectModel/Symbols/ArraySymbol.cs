@@ -106,8 +106,8 @@ namespace MonoDroid.Generation {
 		{
 			string native_name = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name));
 			string[] result = new string [4];
-			result [0] = String.Format ("if ({0} != null) {{", var_name);
-			result [1] = String.Format ("\tJNIEnv.CopyArray ({0}, {1});", native_name, var_name);
+			result [0] = String.Format ("if ({0} != null) {{", opt.GetSafeIdentifier (var_name));
+			result [1] = String.Format ("\tJNIEnv.CopyArray ({0}, {1});", native_name, opt.GetSafeIdentifier (var_name));
 			result [2] = String.Format ("\tJNIEnv.DeleteLocalRef ({0});", native_name);
 			result [3] = "}";
 			return result;
