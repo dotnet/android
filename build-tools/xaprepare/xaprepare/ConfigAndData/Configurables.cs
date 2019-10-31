@@ -27,15 +27,6 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
-			/// <summary>
-			///   Base URL to download the XA binary bundle from
-			/// </summary>
-			public static Uri Bundle_XABundleDownloadPrefix => new Uri (Bundle_AzureBaseUri, $"{Bundle_AzureJobUri}/xamarin-android/bin/{Context.Instance.Configuration}/");
-			static readonly Uri Bundle_AzureBaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-jenkins/");
-			const string Bundle_AzureJobUri_Debug = "xamarin-android-debug";
-			const string Bundle_AzureJobUri_Release = "xamarin-android";
-			static string Bundle_AzureJobUri => ctx.IsDebugBuild ? Bundle_AzureJobUri_Debug : Bundle_AzureJobUri_Release;
-
 			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe");
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
@@ -123,11 +114,6 @@ namespace Xamarin.Android.Prepare
 			///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
 			/// </summary>
 			public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
-
-			/// <summary>
-			///   Version of the XA binary bundle downloaded/created by this tool.
-			/// </summary>
-			public const string XABundleVersion = "v22";
 
 			/// <summary>
 			///   Length to truncate the git commit hash to.
@@ -271,11 +257,9 @@ namespace Xamarin.Android.Prepare
 			public static readonly string RuntimeInstallRelativeLibDir     = "lib";
 			public static readonly string PackageImageDependenciesTemplate = Path.Combine (BuildToolsScriptsDir, "prepare-image-dependencies.sh.in");
 			public static readonly string PackageImageDependenciesOutput   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "prepare-image-dependencies.sh");
-			public static readonly string BundlePathTemplate               = Path.Combine (BuildToolsScriptsDir, "bundle-path.targets.in");
 
 			// Dynamic locations used throughout the code
 			public static string ExternalJavaInteropDir              => GetCachedPath (ref externalJavaInteropDir, ()              => ctx.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath));
-			public static string BundlePathOutput                    => GetCachedPath (ref bundlePathOutput, ()                    => Path.Combine (BuildBinDir, "bundle-path.targets"));
 			public static string MonoSDKSOutputDir                   => GetCachedPath (ref monoSDKsOutputDir, ()                   => Path.Combine (MonoSourceFullPath, MonoSDKSRelativeOutputDir));
 			public static string MonoProfileDir                      => GetCachedPath (ref monoProfileDir, ()                      => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid"));
 			public static string MonoProfileToolsDir                 => GetCachedPath (ref monoProfileToolsDir, ()                 => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid_tools"));
@@ -289,6 +273,10 @@ namespace Xamarin.Android.Prepare
 			public static string BCLWindowsAssembliesSourceDir       => GetCachedPath (ref bclWindowsAssembliesSourceDir, ()       => Path.Combine (BCLWindowsOutputDir, "android-bcl", "monodroid"));
 			public static string BCLWindowsFacadeAssembliesSourceDir => GetCachedPath (ref bclWindowsFacadeAssembliesSourceDir, () => Path.Combine (BCLWindowsAssembliesSourceDir, "Facades"));
 
+			public static string BCLAssembliesSourceDir              => MonoProfileDir;
+
+			public static string BCLTestsSourceDir                   => GetCachedPath (ref bclTestsSourceDir, ()                   => Path.Combine (MonoProfileDir, "tests"));
+
 			public static string BCLTestsDestDir                     => GetCachedPath (ref bclTestsDestDir, ()                     => Path.Combine (XAInstallPrefix, "..", "..", "bcl-tests"));
 			public static string BCLTestsArchivePath                 => GetCachedPath (ref bclTestsArchivePath, ()                 => Path.Combine (BCLTestsDestDir, BCLTestsArchiveName));
 
@@ -297,9 +285,6 @@ namespace Xamarin.Android.Prepare
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
-
-			public static string BundleArchivePath                   => GetCachedPath (ref bundleArchivePath, ()                    => Path.Combine (ctx.XABundlePath ?? ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), XABundleFileName));
-			public static string BundleInstallDir                    => BinDir;
 
 			// Mono Runtimes
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
@@ -330,7 +315,6 @@ namespace Xamarin.Android.Prepare
 			public static string CorrettoInstallDir                  => GetCachedPath (ref correttoInstallDir, ()                  => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 
 			// bundle
-			public static string XABundleFileName                    => $"bundle-{Defaults.XABundleVersion}-h{ctx.BuildInfo.VersionHash}-{ctx.Configuration}-{BundleOSType},mono={ctx.BuildInfo.MonoHash}.{ctx.CompressionFormat.Extension}";
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
 
 			// Mono Archive
@@ -343,18 +327,6 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
 			// Other
-
-			// All the entries are treated as glob patterns and processed as follows:
-			//
-			//   * Base path (i.e. the result of Path.GetDirectoryName) is treated as the target directory
-			//   * The "file" part is treated as the glob patter passed to Directory.EnumerateFiles
-			//   * The "file" part must always be a valid glob pattern
-			//
-			public static readonly List<string> BundleVersionHashFiles = new List<string> {
-				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "BuildAndroidPlatforms.cs"),
-				Path.Combine (BuildPaths.XAPrepareSourceDir, "ConfigAndData", "Runtimes.cs"),
-			};
-
 			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
@@ -389,7 +361,6 @@ namespace Xamarin.Android.Prepare
 			static string androidToolchainBinDirectory;
 			static string monoProfileDir;
 			static string monoProfileToolsDir;
-			static string bundleArchivePath;
 			static string bclTestsDestDir;
 			static string bclTestsArchivePath;
 			static string bclFacadeAssembliesSourceDir;
@@ -410,7 +381,6 @@ namespace Xamarin.Android.Prepare
 			static string correttoCacheDir;
 			static string correttoInstallDir;
 			static string profileAssembliesProjitemsPath;
-			static string bundlePathOutput;
 			static string bclTestsSourceDir;
 			static string installHostBCLDir;
 			static string installHostBCLFacadesDir;

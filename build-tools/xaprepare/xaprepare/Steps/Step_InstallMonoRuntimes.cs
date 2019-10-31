@@ -9,19 +9,16 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Prepare
 {
-	class Step_BuildMonoRuntimes : StepWithDownloadProgress
+	class Step_InstallMonoRuntimes : StepWithDownloadProgress
 	{
 		const string StatusIndent    = "  ";
 		const string SubStatusIndent = "    ";
 
-		List<string> runtimeBuildMakeOptions;
-		List<string> runtimeBuildMakeTargets;
 		Runtimes     allRuntimes;
 
-		public Step_BuildMonoRuntimes ()
-			: base ("Preparing Mono runtimes")
+		public Step_InstallMonoRuntimes ()
+			: base ("Installing Mono runtimes")
 		{
-			Context.Instance.RuleGenerators.Add (MonoRuntime_RuleGenerator);
 		}
 
 		protected override async Task<bool> Execute (Context context)
@@ -33,12 +30,23 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (!context.MonoArchiveDownloaded) {
-				List<string> makeArguments = GetMakeArguments (context, enabledRuntimes);
-				if (!await BuildRuntimes (context, makeArguments)) {
-					Log.ErrorLine ("Mono runtime build failed");
-					return false;
-				}
+				// https://github.com/xamarin/xamarin-android/pull/3816
+				throw new NotImplementedException ("Unable to build mono runtimes from sources.");
 			}
+
+			Log.StatusLine ("Checking if all runtime files are present");
+			var allRuntimes = new Runtimes ();
+			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (allRuntimes)) {
+
+				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
+				if (!Utilities.AbiChoiceChanged (context)) {
+					Log.StatusLine ("Mono runtimes already present and complete. No need to download or build.");
+					return true;
+				}
+
+				Log.StatusLine ("Mono already present, but the choice of ABIs changed since previous build, runtime refresh is necessary");
+			}
+			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, rebuild/reinstall forced");
 
 			CleanupBeforeInstall ();
 			Log.StatusLine ();
@@ -346,6 +354,11 @@ namespace Xamarin.Android.Prepare
 					return true;
 				}
 
+				if (context.OS.IsWindows && (context.IsWindowsCrossAotAbi (monoRuntime.Name) || context.IsMingwHostAbi (monoRuntime.Name))) {
+					Log.WarningLine ($"Unable to strip '{monoRuntime.Name}' on Windows.");
+					return true;
+				}
+
 				bool result;
 				if (!String.IsNullOrEmpty (monoRuntime.StripFlags))
 					result = Utilities.RunCommand (monoRuntime.Strip, monoRuntime.StripFlags, filePath);
@@ -355,7 +368,7 @@ namespace Xamarin.Android.Prepare
 				if (result)
 					return true;
 
-				Log.ErrorLine ($"Failed to strip the binary file {filePath}, see logs for error details");
+				Log.ErrorLine ($"Failed to {monoRuntime.Strip} the binary file {filePath}, see logs for error details");
 				return false;
 			}
 
@@ -368,35 +381,6 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		async Task<bool> BuildRuntimes (Context context, List<string> makeArguments)
-		{
-			var make = new MakeRunner (context);
-
-			bool result = await make.Run (
-				logTag: "mono-runtimes",
-				workingDirectory: GetWorkingDirectory (context),
-				arguments: makeArguments
-			);
-
-			if (!result)
-				return false;
-
-			Utilities.SaveAbiChoice (context);
-
-			return true;
-		}
-
-		string GetWorkingDirectory (Context context)
-		{
-			return Path.Combine (context.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath), "sdks", "builds");
-		}
-
-		List<string> GetMakeArguments (Context context, List<Runtime> enabledRuntimes)
-		{
-			string workingDirectory = GetWorkingDirectory (context);
-			return PrepareMakeArguments (context, workingDirectory, enabledRuntimes);
-		}
-
 		List<Runtime> GetEnabledRuntimes (bool enableLogging)
 		{
 			var enabledRuntimes = new List<Runtime> ();
@@ -406,111 +390,6 @@ namespace Xamarin.Android.Prepare
 			return MonoRuntimesHelpers.GetEnabledRuntimes (allRuntimes, enableLogging);
 		}
 
-		List<string> PrepareMakeArguments (Context context, string workingDirectory, List<Runtime> runtimes)
-		{
-			string toolchainsPrefix = Path.Combine (GetProperty (KnownProperties.AndroidToolchainDirectory), "toolchains");
-
-			var ret = new List<string> {
-				 "DISABLE_IOS=1",
-				 "DISABLE_MAC=1",
-				$"CONFIGURATION={Configurables.Defaults.MonoSdksConfiguration}",
-				 "IGNORE_PROVISION_MXE=false",
-				 "IGNORE_PROVISION_ANDROID=true",
-				$"ANDROID_CMAKE_VERSION={GetProperty (KnownProperties.AndroidCmakeVersionPath)}",
-				 $"ANDROID_NDK_VERSION=r{BuildAndroidPlatforms.AndroidNdkVersion}",
-				$"ANDROID_SDK_VERSION_armeabi-v7a={GetMinimumApi (AbiNames.TargetJit.AndroidArmV7a)}",
-				$"ANDROID_SDK_VERSION_arm64-v8a={GetMinimumApi (AbiNames.TargetJit.AndroidArmV8a)}",
-				$"ANDROID_SDK_VERSION_x86={GetMinimumApi (AbiNames.TargetJit.AndroidX86)}",
-				$"ANDROID_SDK_VERSION_x86_64={GetMinimumApi (AbiNames.TargetJit.AndroidX86_64)}",
-				$"ANDROID_TOOLCHAIN_DIR={GetProperty (KnownProperties.AndroidToolchainDirectory)}",
-				$"ANDROID_TOOLCHAIN_CACHE_DIR={GetProperty (KnownProperties.AndroidToolchainCacheDirectory)}",
-				$"ANDROID_TOOLCHAIN_PREFIX={toolchainsPrefix}",
-				$"MXE_PREFIX_DIR={GetProperty (KnownProperties.AndroidToolchainDirectory)}",
-				$"MXE_SRC={Configurables.Paths.MxeSourceDir}"
-			};
-
-			runtimeBuildMakeOptions = new List<string> (ret);
-			runtimeBuildMakeTargets = new List<string> ();
-
-			List<string> standardArgs = null;
-			var make = new MakeRunner (context);
-			make.GetStandardArguments (ref standardArgs, workingDirectory);
-			if (standardArgs != null && standardArgs.Count > 0) {
-				runtimeBuildMakeOptions.AddRange (standardArgs);
-			}
-
-			AddHostTargets (runtimes.Where (r => r is MonoHostRuntime));
-			AddPackageTargets (runtimes.Where (r => r is MonoJitRuntime));
-			AddPackageTargets (runtimes.Where (r => r is MonoCrossRuntime));
-			ret.Add ("package-android-bcl");
-			AddTargets ("provision-llvm", runtimes.Where (r => r is LlvmRuntime));
-
-			return ret;
-
-			void AddHostTargets (IEnumerable<Runtime> items)
-			{
-				AddTargets ("package-android-host", items);
-			}
-
-			void AddPackageTargets (IEnumerable<Runtime> items)
-			{
-				AddTargets ("package-android", items);
-			}
-
-			void AddTargets (string prefix, IEnumerable<Runtime> items)
-			{
-				foreach (Runtime runtime in items) {
-					string target = $"{prefix}-{runtime.Name}";
-					ret.Add (target);
-					runtimeBuildMakeTargets.Add (target);
-				}
-			}
-
-			string GetProperty (string name)
-			{
-				return context.Properties.GetRequiredValue (name);
-			}
-
-			string GetMinimumApi (string name)
-			{
-				return BuildAndroidPlatforms.NdkMinimumAPI [name].ToString ();
-			}
-		}
-
-		void MonoRuntime_RuleGenerator (GeneratedMakeRulesFile file, StreamWriter ruleWriter)
-		{
-			const string OptionsVariableName = "MONO_RUNTIME_SDKS_MAKE_OPTIONS";
-
-			if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null) {
-				List<Runtime> enabledRuntimes = GetEnabledRuntimes (false);
-				GetMakeArguments (Context.Instance, enabledRuntimes);
-
-				if (runtimeBuildMakeOptions == null || runtimeBuildMakeTargets == null) {
-					Log.DebugLine ("No rules to generate for Mono SDKs build");
-					return;
-				}
-			}
-
-			ruleWriter.Write ($"{OptionsVariableName} =");
-			foreach (string opt in runtimeBuildMakeOptions) {
-				ruleWriter.WriteLine (" \\");
-				ruleWriter.Write ($"\t{opt}");
-			}
-			ruleWriter.WriteLine ();
-
-			foreach (string target in runtimeBuildMakeTargets) {
-				ruleWriter.WriteLine ();
-				ruleWriter.WriteLine ($"sdks-{target}:");
-				ruleWriter.WriteLine ($"\t$(MAKE) $({OptionsVariableName}) {target}");
-			}
-
-			ruleWriter.WriteLine ();
-			ruleWriter.WriteLine ("sdks-all:");
-
-			string allTargets = String.Join (" ", runtimeBuildMakeTargets);
-			ruleWriter.WriteLine ($"\t$(MAKE) $({OptionsVariableName}) {allTargets}");
-		}
-
 		void StatusMessage (Context context, string indent, string message)
 		{
 			Log.StatusLine ($"{indent}{context.Characters.Bullet} {message}");
@@ -518,12 +397,12 @@ namespace Xamarin.Android.Prepare
 
 		void StatusStep (Context context, string name)
 		{
-			StatusMessage (context, StatusIndent, name);;
+			StatusMessage (context, StatusIndent, name);
 		}
 
 		void StatusSubStep (Context context, string name)
 		{
-			StatusMessage (context, SubStatusIndent, name);;
+			StatusMessage (context, SubStatusIndent, name);
 		}
 
 		bool CheckFileExists (string filePath, bool required)

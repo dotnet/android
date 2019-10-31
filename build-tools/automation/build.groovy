@@ -263,12 +263,6 @@ timestamps {
                 publishBuildFilePaths = "xamarin.android*.pkg,Xamarin.Android*.vsix,build-status*,xa-build-status*,*updateinfo"
             }
 
-            if (!isPr) {
-                if (!isCommercial) {
-                    publishBuildFilePaths = "${publishBuildFilePaths},${XADir}/bin/${env.BuildFlavor}/bundle-*"
-                }
-            }
-
             dir(publishRootDir) {
                 echo "publishBuildFilePaths: ${publishBuildFilePaths}"
                 def commandStatus = utils.publishPackages(env.StorageCredentialId, env.ContainerName, storageVirtualPath, publishBuildFilePaths)
