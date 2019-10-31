@@ -341,10 +341,10 @@ use `Inputs` or `Outputs`.
 
 ## Should I use BeforeTargets or AfterTargets?
 
-NO!
+It depends, but probably not.
 
-Let's look at a simple example of why. Let's assume we have a target
-that runs the linker after `Build`:
+Let's look at a simple example of why you might not want to 
+do so. Let's assume we have a target that runs the linker after `Build`:
 
 ```xml
 <Target Name="_LinkAssemblies" AfterTargets="Build">
@@ -372,7 +372,10 @@ Instead you should use:
 
 Unfortunately, not all targets will have a `$(XDependsOn)` property.
 In some cases, `BeforeTargets` or `AfterTargets` is the only option.
-Consider what happens if the target fails in that case.
+Consider what happens if the target fails in that case, and consider 
+using `$(MSBuildLastTaskResult)` if available to check for the last 
+task execution state (see [docs](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-reserved-and-well-known-properties?view=vs-2019) 
+on possible states for that property).
 
 ## Caching in MSBuild Tasks
 
