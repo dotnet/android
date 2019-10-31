@@ -25,7 +25,7 @@
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*log">
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*log" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*">
       <SubDirectory>temp\</SubDirectory>
     </_TestResultFiles>
