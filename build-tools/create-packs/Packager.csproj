@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PackageId>Xamarin.Android.Sdk</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>Xamarin</Authors>
+    <Description>C# Tools and Bindings for the Android SDK</Description>
+    <OutputPath>..\..\bin\packs</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\installers\create-installers.targets" />
+
+  <PropertyGroup>
+    <BeforePack>
+      _GenerateXAPackContent;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GenerateXAPackContent"
+      DependsOnTargets="ConstructInstallerItems" >
+    <ItemGroup>
+      <Content Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**" >
+        <Pack>true</Pack>
+        <PackagePath>\</PackagePath>
+      </Content>
+      <!-- Only copy @(FrameworkItemsWin), as it is a superset of @(FrameworkItemsUnix) -->
+      <Content Include="@(FrameworkItemsWin)" >
+        <Pack>true</Pack>
+        <PackagePath>lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)</PackagePath>
+      </Content>
+    </ItemGroup>
+
+    <!-- TODO Improve distribution of Host OS specific components. -->
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+      <Content Include="@(MSBuildItemsWin)" >
+        <Pack>true</Pack>
+        <PackagePath>tools\%(MSBuildItemsWin.RelativePath)</PackagePath>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('osx'))">
+      <Content Include="@(MSBuildItemsUnix)" >
+        <Pack>true</Pack>
+        <PackagePath>tools\%(MSBuildItemsUnix.RelativePath)</PackagePath>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+</Project>

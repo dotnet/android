@@ -17,6 +17,7 @@ resources:
 
 # Global variables
 variables:
+  NuGetArtifactName: nupkgs
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
@@ -139,6 +140,17 @@ stages:
       inputs:
         artifactName: $(InstallerArtifactName)
         targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: pack
+        projects: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload nupkgs
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        targetPath: bin/packs
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -621,6 +633,11 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/packs
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: CodeBehindUnitTests - macOS
@@ -677,6 +694,11 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\packs
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:

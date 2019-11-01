@@ -3066,7 +3066,7 @@ because xbuild doesn't support framework reference assemblies.
     _Sign;
   </SignAndroidPackageDependsOn>
 </PropertyGroup>
-<Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)" BeforeTargets="Publish">
+<Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
 <PropertyGroup>

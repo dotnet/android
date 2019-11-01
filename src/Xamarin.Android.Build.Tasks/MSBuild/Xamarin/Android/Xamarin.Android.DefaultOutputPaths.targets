@@ -12,14 +12,14 @@
 		<!-- Only change IntermediateOutputPath on Windows by default to avoid backward compatibility issues -->
 		<AppendTargetFrameworkToIntermediateOutputPath Condition=" '$(AppendTargetFrameworkToIntermediateOutputPath)' == '' And '$(OS)' == 'Windows_NT' ">True</AppendTargetFrameworkToIntermediateOutputPath>
 		<AppendTargetFrameworkToIntermediateOutputPath Condition="'$(AppendTargetFrameworkToIntermediateOutputPath)' == ''">False</AppendTargetFrameworkToIntermediateOutputPath>
-		<!-- We don't change the OutputPath by default to avoid backward compatibility issues -->
-		<AppendTargetFrameworkToOutputPath Condition="'$(AppendTargetFrameworkToOutputPath)' == ''">false</AppendTargetFrameworkToOutputPath>
+		<!-- We don't change the OutputPath by default to avoid backward compatibility issues, unless we're using Microsoft.NET.Sdk -->
+		<AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' And '$(UsingMicrosoftNETSdk)' != 'True' ">false</AppendTargetFrameworkToOutputPath>
 		<TargetFrameworkToOutputPath>$(TargetFrameworkVersion.TrimStart('v').Replace('.', ''))</TargetFrameworkToOutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(AppendTargetFrameworkToIntermediateOutputPath)' == 'True' And '$(IsCrossTargetingBuild)' != 'True' ">
+	<PropertyGroup Condition=" '$(AppendTargetFrameworkToIntermediateOutputPath)' == 'True' And '$(UsingMicrosoftNETSdk)' != 'True' ">
 		<IntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($(IntermediateOutputPath)))$(TargetFrameworkToOutputPath)</IntermediateOutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(AppendTargetFrameworkToOutputPath)' == 'True' And '$(IsCrossTargetingBuild)' != 'True' ">
+	<PropertyGroup Condition=" '$(AppendTargetFrameworkToOutputPath)' == 'True' And '$(UsingMicrosoftNETSdk)' != 'True' ">
 		<OutputPath>$([MSBuild]::EnsureTrailingSlash($(OutputPath)))$(TargetFrameworkToOutputPath)</OutputPath>
 	</PropertyGroup>
 </Project>

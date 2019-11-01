@@ -1,36 +1,30 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+
   <PropertyGroup>
-    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-    <!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
-         our mscorlib.dll isn't properly signed, as far as its concerned.
-         Disable generation to avoid "bizarre" build errors. -->
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
-    <IsXBuild Condition="'$(MSBuildRuntimeVersion)' == ''">true</IsXBuild>
+    <!-- We should always override the framework path so that XA resolves to its own mscorlib.dll -->
+    <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)..\lib\</TargetFrameworkRootPath>
+    <FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' And '$(OS)' != 'Windows_NT' ">false</EnableDefaultOutputPaths>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' ">true</EnableDefaultOutputPaths>
-    <EnableDefaultAndroidResources Condition=" '$(EnableDefaultAndroidResources)' == '' ">true</EnableDefaultAndroidResources>
-    <EnableDefaultAndroidAssets Condition=" '$(EnableDefaultAndroidAssets)' == '' ">true</EnableDefaultAndroidAssets>
+    <EnableDefaultAndroidResourceItems Condition=" '$(EnableDefaultAndroidResourceItems)' == '' ">true</EnableDefaultAndroidResourceItems>
+    <EnableDefaultAndroidAssetItems Condition=" '$(EnableDefaultAndroidAssetItems)' == '' ">true</EnableDefaultAndroidAssetItems>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
+    <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
   </PropertyGroup>
-
-  <!-- Import conditional IntermediateOutputPath property reassignment -->
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(IsXBuild)' != 'true' and '$(EnableDefaultOutputPaths)' == 'true'" />
 
   <!-- User-facing configuration-agnostic defaults -->
   <PropertyGroup>
-    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">Properties\AndroidManifest.xml</AndroidManifest>
-    <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
+    <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
+    <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">$(MonoAndroidResourcePrefix)\$(_AndroidResourceDesigner)</AndroidResgenFile>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And !Exists('$(AndroidManifest)') ">false</AndroidApplication>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And Exists('$(AndroidManifest)') ">true</AndroidApplication>
-    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.4</TargetFrameworkVersion>
-    <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
-    <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+    <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
+    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
@@ -46,24 +40,11 @@
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
-  <!-- Default Resource file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidResources)' == 'true' ">
-    <AndroidResource Include="Resources\**\*.xml" />
-    <AndroidResource Include="Resources\**\*.axml" />
-    <AndroidResource Include="Resources\**\*.png" />
-    <AndroidResource Include="Resources\**\*.jpg" />
-    <AndroidResource Include="Resources\**\*.gif" />
-  </ItemGroup>
+  <!-- Default item includes (globs and implicit references) -->
+  <Import Project="Xamarin.Android.Sdk.DefaultItems.props" />
 
-  <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidAssets)' == 'true' ">
-    <AndroidAsset Include="Assets\**\*" />
-  </ItemGroup>
-
-  <!-- [HACK] Add some default references until a NuGet or Framework target pack is implemented -->
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Mono.Android" />
-  </ItemGroup>
+	<PropertyGroup>
+		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+	</PropertyGroup>
 
 </Project>
