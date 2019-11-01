@@ -106,6 +106,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }
 		}
 
+		public bool AndroidLegacySymbols {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidLegacySymbols), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidLegacySymbols, value.ToString ()); }
+		}
+
 		public string DexTool {
 			get { return GetProperty (KnownProperties.AndroidDexTool); }
 			set { SetProperty (KnownProperties.AndroidDexTool, value); }

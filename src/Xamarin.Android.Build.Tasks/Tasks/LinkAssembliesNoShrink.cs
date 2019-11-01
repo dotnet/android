@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Deterministic { get; set; }
 
+		public bool LegacySymbols { get; set; }
+
 		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
@@ -65,7 +67,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 
-					if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
+					if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec, LegacySymbols)) {
 						Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
 					} else {
 						Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");

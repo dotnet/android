@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] PortablePdbFiles { get; set; }
 
+		public bool LegacySymbols { get; set; }
+
 		public override bool RunTask ()
 		{
 			var pdbFiles = new List<ITaskItem> ();
@@ -35,6 +37,14 @@ namespace Xamarin.Android.Tasks
 					portablePdbFiles.Add (file);
 				} else {
 					pdbFiles.Add (file);
+					if (!LegacySymbols) {
+						// Warn for <ProjectReference/> where a non-portable pdb was found
+						var project = file.GetMetadata ("MSBuildSourceProjectFile");
+						if (!string.IsNullOrEmpty (project)) {
+							Log.LogCodedWarning ("XA0122", project, lineNumber: 0,
+								message: $"{project} is generating legacy symbols that disables debugging for this project. Use 'DebugType=portable' instead.");
+						}
+					}
 				}
 			}
 

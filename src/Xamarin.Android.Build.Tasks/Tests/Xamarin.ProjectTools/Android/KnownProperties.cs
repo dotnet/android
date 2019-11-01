@@ -12,7 +12,7 @@ namespace Xamarin.ProjectTools
 		public const string EmbedAssembliesIntoApk = "EmbedAssembliesIntoApk";
 		public const string AndroidUseLatestPlatformSdk = "AndroidUseLatestPlatformSdk";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
-
+		public const string AndroidLegacySymbols = "AndroidLegacySymbols";
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 
 		public const string Deterministic = "Deterministic";

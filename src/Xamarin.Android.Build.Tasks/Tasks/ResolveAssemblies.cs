@@ -40,6 +40,7 @@ namespace Xamarin.Android.Tasks
 
 		public string I18nAssemblies { get; set; }
 		public string LinkMode { get; set; }
+		public bool LegacySymbols { get; set; }
 
 		// The user's assemblies, and all referenced assemblies
 		[Output]
@@ -137,7 +138,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var assembly in assemblies.Values) {
 				var mdb = assembly + ".mdb";
 				var pdb = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-				if (File.Exists (mdb))
+				if (LegacySymbols && File.Exists (mdb))
 					resolvedSymbols.Add (new TaskItem (mdb));
 				if (File.Exists (pdb) && Files.IsPortablePdb (pdb))
 					resolvedSymbols.Add (new TaskItem (pdb));

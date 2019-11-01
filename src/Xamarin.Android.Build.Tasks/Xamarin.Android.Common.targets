@@ -385,6 +385,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		.pdb;
 		.xml;
 		.dll.config;
+	</AllowedReferenceRelatedFileExtensions>
+	<AllowedReferenceRelatedFileExtensions Condition=" '$(AndroidLegacySymbols)' == 'True' ">
+		$(AllowedReferenceRelatedFileExtensions);
 		.dll.mdb;
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
@@ -460,15 +463,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="Value" PropertyName="BundledWearApplicationPackageName" />
 	</CreateProperty>
 </Target>
-
-<!-- When looking for related files to copy, look for Mono debugging files as well -->
-<PropertyGroup>
-	<AllowedReferenceRelatedFileExtensions>
-		$(AllowedReferenceRelatedFileExtensions);
-		.dll.mdb;
-		.exe.mdb
-	</AllowedReferenceRelatedFileExtensions>
-</PropertyGroup>
 
 <Target Name="_SetupDesignTimeBuildForBuild">
 	<PropertyGroup>
@@ -1814,6 +1808,7 @@ because xbuild doesn't support framework reference assemblies.
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
+		LegacySymbols="$(AndroidLegacySymbols)"
 		ProjectFile="$(MSBuildProjectFullPath)"
 		TargetFrameworkVersion="$(TargetFrameworkVersion)"
 		ProjectAssetFile="$(ProjectLockFile)"
@@ -1947,24 +1942,18 @@ because xbuild doesn't support framework reference assemblies.
 	<Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_CollectMdbFiles"
-		DependsOnTargets="_CollectPdbFiles">
-	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
-			IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
-	>
-		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
-	</GetFilesThatExist>
-</Target>
-
 <Target Name="_CollectPdbFiles">
 	<CollectPdbFiles
+			LegacySymbols="$(AndroidLegacySymbols)"
 			ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
 		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
 		<Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
 	</CollectPdbFiles>
 	<ItemGroup>
-		<_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
+		<_ConvertedMdbFiles
+				Condition=" '$(AndroidLegacySymbols)' == 'True' "
+				Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
+		/>
 	</ItemGroup>
 </Target>
 
@@ -1972,7 +1961,10 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="@(_ResolvedPdbFiles)"
 		Outputs="@(_ConvertedMdbFiles)"
 		DependsOnTargets="_CollectPdbFiles">
-	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+	<ConvertDebuggingFiles
+			Condition=" '$(AndroidLegacySymbols)' == 'True' "
+			Files="@(_ResolvedPdbFiles)"
+	/>
 	<Touch Files="@(_ConvertedMdbFiles)" />
 	<ItemGroup>
 		<FileWrites Include="@(_ConvertedMdbFiles)" />
@@ -2023,6 +2015,7 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
       Deterministic="$(Deterministic)"
+      LegacySymbols="$(AndroidLegacySymbols)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
@@ -2067,6 +2060,7 @@ because xbuild doesn't support framework reference assemblies.
       PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
       EnableProguard="$(AndroidEnableProguard)"
       Deterministic="$(Deterministic)"
+      LegacySymbols="$(AndroidLegacySymbols)"
       DumpDependencies="$(LinkerDumpDependencies)"
       ResolvedAssemblies="@(_AssembliesToLink)"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"

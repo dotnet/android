@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -227,31 +228,49 @@ namespace ${ROOT_NAMESPACE} {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* debugType */          "portable",
+			},
+			new object[] {
+				/* useSharedRuntime */   false,
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* debugType */          "full",
 			},
 			new object[] {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* debugType */          "portable",
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* debugType */          "portable",
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* debugType */          "portable",
+			},
+			new object[] {
+				/* useSharedRuntime */   true,
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* debugType */          "full",
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* debugType */          "portable",
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* debugType */          "portable",
 			},
 		};
 #pragma warning restore 414
@@ -259,7 +278,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (1)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, string debugType)
 		{
 			if (!CommercialBuildAvailable) {
 				Assert.Ignore ("Test does not run on the Open Source Builds.");
@@ -269,28 +288,58 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.Ignore ("Test needs a device attached.");
 				return;
 			}
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var path = Path.Combine ("temp", $"ARWDAB_{MonoAndroidHelper.HashString (TestName)}");
+			var lib = new XamarinPCLProject {
+				ProjectName = "MyPCL",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () =>
+@"public class Foo
+{
+	public Foo ()
+	{
+	}
+}",
+					}
+				}
+			};
+			lib.SetProperty (lib.DebugProperties, "DebugType", debugType);
+			var app = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "MyApp",
 				IsRelease = false,
 				AndroidUseSharedRuntime = useSharedRuntime,
 				EmbedAssembliesIntoApk = embedAssemblies,
-				AndroidFastDeploymentType = fastDevType
+				AndroidFastDeploymentType = fastDevType,
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				}
 			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+			if (string.Compare (debugType, "full", StringComparison.OrdinalIgnoreCase) == 0) {
+				app.AndroidLegacySymbols = true;
+			}
+			app.MainActivity = app.MainActivity.Replace ("base.OnCreate (savedInstanceState);", "base.OnCreate (savedInstanceState); new Foo ();");
+			app.SetProperty (app.DebugProperties, "DebugType", debugType);
 			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
-			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			app.SetDefaultTargetDevice ();
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.True (libBuilder.Build (lib), "Library should have built.");
 				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+				app.TargetFrameworkVersion = appBuilder.LatestTargetFrameworkVersion (out apiLevel);
+				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";
-				b.Save (proj, saveProject: true);
-				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
-				Assert.True (b.Build (proj), "Project should have built.");
-				Assert.True (b.Install (proj), "Project should have installed.");
+				appBuilder.Save (app, saveProject: true);
+				app.NuGetRestore (Path.Combine (Root, appBuilder.ProjectDirectory), appBuilder.PackagesDirectory);
+				Assert.True (appBuilder.Build (app), "Project should have built.");
+				Assert.True (appBuilder.Install (app), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -298,13 +347,14 @@ namespace ${ROOT_NAMESPACE} {
 				// setup the debugger
 				var session = new SoftDebuggerSession ();
 				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  19 },
-					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 14 },
-					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 19 },
-					{ Path.Combine (Root, b.ProjectDirectory, "App.xaml.cs"), 12 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainActivity.cs"),  19 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 14 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "MainPage.xaml.cs"), 19 },
+					{ Path.Combine (Root, appBuilder.ProjectDirectory, "App.xaml.cs"), 12 },
+					{ Path.Combine (Root, libBuilder.ProjectDirectory, "Foo.cs"), 4 },
 				};
 				session.TargetHitBreakpoint += (sender, e) => {
-					Console.WriteLine ($"BREAK {e.Type}");
+					TestContext.Out.WriteLine ($"BREAK: {e.Backtrace.GetFrame (0)}");
 					breakcountHitCount++;
 					session.Continue ();
 				};
@@ -315,20 +365,20 @@ namespace ${ROOT_NAMESPACE} {
 					MaxConnectionAttempts = 10,
 				};
 				var startInfo = new SoftDebuggerStartInfo (args) {
-					WorkingDirectory = Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
+					WorkingDirectory = Path.Combine (appBuilder.ProjectDirectory, app.IntermediateOutputPath, "android", "assets"),
 				};
 				var options = new DebuggerSessionOptions () {
 					EvaluationOptions = EvaluationOptions.DefaultOptions,
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				Assert.True (b.RunTarget (proj, "_Run", parameters: new string [] {
+				Assert.True (appBuilder.RunTarget (app, "_Run", parameters: new string [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
 				}), "Project should have run.");
 
-				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
@@ -340,8 +390,8 @@ namespace ${ROOT_NAMESPACE} {
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
-				int expected = 3;
-				while (session.IsConnected && breakcountHitCount < 3 && timeout >= TimeSpan.Zero) {
+				int expected = session.Breakpoints.Count - 1;
+				while (session.IsConnected && breakcountHitCount < expected && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
@@ -349,14 +399,14 @@ namespace ${ROOT_NAMESPACE} {
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
 				breakcountHitCount = 0;
 				ClearAdbLogcat ();
-				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
+				ClickButton (app.PackageName, "myXFButton", "CLICK ME");
 				while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 					Thread.Sleep (10);
 					timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
 				}
 				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.True (appBuilder.Uninstall (app), "Project should have uninstalled.");
 				session.Exit ();
 			}
 		}

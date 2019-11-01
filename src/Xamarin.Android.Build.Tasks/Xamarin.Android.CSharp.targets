@@ -45,6 +45,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <PropertyGroup>
         <DebugSymbols Condition=" '$(DebugType)' == 'None' ">true</DebugSymbols>
         <DebugType Condition=" '$(DebugType)' == 'None' Or '$(DebugType)' == '' ">portable</DebugType>
+        <DebugType Condition="('$(DebugType)' == 'Full' Or '$(DebugType)' == 'PdbOnly') And '$(AndroidLegacySymbols)' != 'True' ">portable</DebugType>
     </PropertyGroup>
     <Import Project="Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(IsXBuild)' != 'true' and '$(EnableDefaultOutputPaths)' == 'true'" />
     <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

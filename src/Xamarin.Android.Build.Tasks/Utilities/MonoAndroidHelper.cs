@@ -389,13 +389,15 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static bool CopyAssemblyAndSymbols (string source, string destination)
+		public static bool CopyAssemblyAndSymbols (string source, string destination, bool includeLegacySymbols)
 		{
 			bool changed = CopyIfChanged (source, destination);
-			var mdb = source + ".mdb";
-			if (File.Exists (mdb)) {
-				var mdbDestination = destination + ".mdb";
-				CopyIfChanged (mdb, mdbDestination);
+			if (includeLegacySymbols) {
+				var mdb = source + ".mdb";
+				if (File.Exists (mdb)) {
+					var mdbDestination = destination + ".mdb";
+					CopyIfChanged (mdb, mdbDestination);
+				}
 			}
 			var pdb = Path.ChangeExtension (source, "pdb");
 			if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
@@ -473,6 +475,11 @@ namespace Xamarin.Android.Tasks
 		public static string HashBytes (byte[] bytes)
 		{
 			return Files.HashBytes (bytes);
+		}
+
+		public static string HashString (string s)
+		{
+			return Files.HashString (s);
 		}
 
 		public static bool HasFileChanged (string source, string destination)

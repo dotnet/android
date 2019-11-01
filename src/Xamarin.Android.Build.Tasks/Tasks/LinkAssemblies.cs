@@ -56,6 +56,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Deterministic { get; set; }
 
+		public bool LegacySymbols { get; set; }
+
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
@@ -133,7 +135,7 @@ namespace Xamarin.Android.Tasks
 					if (!MonoAndroidHelper.IsForceRetainedAssembly (filename))
 						continue;
 
-					MonoAndroidHelper.CopyAssemblyAndSymbols (copysrc, assemblyDestination);
+					MonoAndroidHelper.CopyAssemblyAndSymbols (copysrc, assemblyDestination, LegacySymbols);
 				}
 			} catch (ResolutionException ex) {
 				Diagnostic.Error (2006, ex, "Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.", ex.Member, ex.Member.Module.Assembly, ex.Scope);

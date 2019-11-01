@@ -39,6 +39,7 @@ Copyright (C) 2012 Xamarin. All rights reserved.
     <PropertyGroup>
         <DebugSymbols Condition=" '$(DebugType)' == 'None' ">true</DebugSymbols>
         <DebugType Condition=" '$(DebugType)' == 'None' Or '$(DebugType)' == '' ">portable</DebugType>
+        <DebugType Condition="('$(DebugType)' == 'Full' Or '$(DebugType)' == 'PdbOnly') And '$(AndroidLegacySymbols)' != 'True' ">portable</DebugType>
     </PropertyGroup>
     <!-- xbuild searches multiple MSBuildExtensionsPath32, but only in the Import element, so we can't determine this with a variable -->
     <Import

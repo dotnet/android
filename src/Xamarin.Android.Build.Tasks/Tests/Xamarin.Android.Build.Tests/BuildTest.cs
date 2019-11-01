@@ -1419,7 +1419,9 @@ namespace App1
 		[Test]
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidLegacySymbols = true,
+			};
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbAndPortablePdb")) {
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
@@ -2926,6 +2928,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 				AndroidUseSharedRuntime = false,
+				AndroidLegacySymbols = true,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
@@ -2988,6 +2991,48 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.Less (lastTime,
 					File.GetLastWriteTimeUtc (pdbToMdbPath),
 					"{0} should have been updated", pdbToMdbPath);
+			}
+		}
+
+		[Test]
+		public void WarningForDebugTypeFull ()
+		{
+			if (IsWindows) {
+				Assert.Ignore ("This test is only applicable on Windows.");
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinPCLProject {
+				ProjectName = "MyPCL",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () =>
+@"public class Foo
+{
+	public Foo ()
+	{
+	}
+}",
+					}
+				}
+			};
+			lib.SetProperty (lib.DebugProperties, "DebugType", "Full");
+			var app = new XamarinFormsAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				}
+			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.True (libBuilder.Build (lib), "Library should have built.");
+				Assert.True (appBuilder.Build (app), "App should have built.");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "XA0122"), "Output should contain XA0122 warnings");
 			}
 		}
 

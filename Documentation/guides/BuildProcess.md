@@ -498,6 +498,14 @@ when packaging Release applications.
 
     Added in Xamarin.Android 6.1.
 
+-   **AndroidLegacySymbols** &ndash; If set to `True`, opts back into
+    supporting `DebugType=Full` and `DebugType=PdbOnly`. These are
+    Windows-specific symbol formats and `DebugType=Portable` is
+    generally preferred. See the [msbuild documentation][msbuild_common]
+    for details.
+
+    [msbuild_common]: https://docs.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-properties
+
 -   **AndroidLinkMode** &ndash; Specifies which type of
     [linking](~/android/deploy-test/linker.md) should be
     performed on assemblies contained within the Android package. Only
