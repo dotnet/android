@@ -68,6 +68,7 @@ stages:
       inputs:
         version: $(DotNetCoreVersion)
 
+    # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make prepare-update-mono
 
@@ -80,6 +81,25 @@ stages:
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       displayName: make jenkins
 
+    # Build and package test assemblies
+    - task: MSBuild@1
+      displayName: msbuild tests/CodeBehind/UnitTests/CodeBehindUnitTests.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/tests/CodeBehind/UnitTests/CodeBehindUnitTests.csproj
+        configuration: $(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: msbuild tests/CodeGen-MkBundle/Xamarin.Android.MakeBundle-UnitTests/Xamarin.Android.MakeBundle-UnitTests.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/tests/CodeGen-MkBundle/Xamarin.Android.MakeBundle-UnitTests/Xamarin.Android.MakeBundle-UnitTests.csproj
+        configuration: $(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: msbuild tests/EmbeddedDSOs/EmbeddedDSO-UnitTests/EmbeddedDSO-UnitTests.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/tests/EmbeddedDSOs/EmbeddedDSO-UnitTests/EmbeddedDSO-UnitTests.csproj
+        configuration: $(XA.Build.Configuration)
+
     - script: |
         cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
@@ -91,6 +111,7 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         targetPath: bin/Test$(XA.Build.Configuration)
 
+    # Create installers
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
@@ -548,6 +569,24 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: CodeBehindUnitTests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
+        testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
+        testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: EmbeddedDSOUnitTests - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
+        testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:

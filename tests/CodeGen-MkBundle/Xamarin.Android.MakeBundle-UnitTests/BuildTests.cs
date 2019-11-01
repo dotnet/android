@@ -90,6 +90,15 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 			Assert.That (success, Is.True, "Should have been built");
 		}
 
+		[OneTimeTearDown]
+		public void CleanUp ()
+		{
+			if (TestContext.CurrentContext.Result.FailCount == 0) {
+				FileSystemUtils.SetDirectoryWriteable (TestOutputDir);
+				Directory.Delete (TestOutputDir, recursive: true);
+			}
+		}
+
 		[Test]
 		public void BinariesExist ()
 		{
