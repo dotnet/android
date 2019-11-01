@@ -1,2 +1,13 @@
-Build_No_Changes,Build_CSharp_Change,Build_AndroidResource_Change,Build_Designer_Change,Build_JLO_Change,Build_CSProj_Change,Build_XAML_Change,Build_XAML_Change_RefAssembly,Install_CSharp_Change,Install_XAML_Change
-3250,4000,4750,4250,9000,9500,9500,6250,6000,7500
+# Comments and blank lines are ignored
+# First non-comment row is human description of columns
+# Test Name,Time in ms (int)
+Build_No_Changes,3250
+Build_CSharp_Change,4000
+Build_AndroidResource_Change,4750
+Build_Designer_Change,4250
+Build_JLO_Change,9000
+Build_CSProj_Change,9500
+Build_XAML_Change,9500
+Build_XAML_Change_RefAssembly,6250
+Install_CSharp_Change,6000
+Install_XAML_Change,7500

@@ -10,20 +10,23 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture, NonParallelizable]
 	public class PerformanceTest : DeviceTest
 	{
-		readonly Dictionary<string, int> csv_values = new Dictionary<string, int> ();
+		static readonly Dictionary<string, int> csv_values = new Dictionary<string, int> ();
 
-		[SetUp]
-		public void Setup ()
+		[OneTimeSetUp]
+		public static void Setup ()
 		{
 			var csv = Path.Combine (XABuildPaths.TopDirectory, "tests", "msbuild-times-reference", "MSBuildDeviceIntegration.csv");
 			using (var reader = File.OpenText (csv)) {
-				var keys = reader.ReadLine ().Split (',');
-				var values = reader.ReadLine ().Split (',');
-				Assert.AreEqual (keys.Length, values.Length, $"{csv} is not a valid CSV file.");
-				for (int i = 0; i < values.Length; i++) {
-					string text = values [i];
+				while (!reader.EndOfStream) {
+					var line = reader.ReadLine ();
+					if (line.StartsWith ("#") || string.IsNullOrWhiteSpace (line)) {
+						continue;
+					}
+					var split = line.Split (',');
+					Assert.AreEqual (2, split.Length, $"{csv} should have two entries per line.");
+					string text = split [1];
 					if (int.TryParse (text, out int value)) {
-						csv_values [keys [i]] = value;
+						csv_values [split [0]] = value;
 					} else {
 						Assert.Fail ($"'{text}' is not a valid integer!");
 					}
