@@ -17,6 +17,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var csv = Path.Combine (XABuildPaths.TopDirectory, "tests", "msbuild-times-reference", "MSBuildDeviceIntegration.csv");
 			using (var reader = File.OpenText (csv)) {
+				bool foundHeader = false;
 				while (!reader.EndOfStream) {
 					var line = reader.ReadLine ();
 					if (line.StartsWith ("#") || string.IsNullOrWhiteSpace (line)) {
@@ -24,6 +25,11 @@ namespace Xamarin.Android.Build.Tests
 					}
 					var split = line.Split (',');
 					Assert.AreEqual (2, split.Length, $"{csv} should have two entries per line.");
+					if (!foundHeader) {
+						// Ignore the first-line header
+						foundHeader = true;
+						continue;
+					}
 					string text = split [1];
 					if (int.TryParse (text, out int value)) {
 						csv_values [split [0]] = value;
