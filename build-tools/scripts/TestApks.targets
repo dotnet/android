@@ -83,7 +83,7 @@
         WriteOutputAsMessage="True"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) shell setprop debug.mono.log timing,gref"
+        Arguments="$(_AdbTarget) shell setprop debug.mono.log timing"
         IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
@@ -273,7 +273,6 @@
         AddResults="true"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         Activity="%(_AllArchives.Activity)" />
-<Exec Command="adb shell run-as %(_AllArchives.Package) cat files/.__override__/grefs.txt" IgnoreExitCode="True" />
   </Target>
   <Target Name="RenameTestCases">
     <Error

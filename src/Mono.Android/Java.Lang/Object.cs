@@ -72,9 +72,7 @@ namespace Java.Lang {
 		public Object (IntPtr handle, JniHandleOwnership transfer)
 		{
 			// Check if handle was preset by our java activation mechanism
-			JNIEnv._monodroid_gref_log ($"# jonp: Object:.ctor: this.handle=0x{this.handle.ToString("x2")}; handle=0x{handle.ToString("x2")}; transfer={transfer}\n");
 			if (this.handle != IntPtr.Zero) {
-				JNIEnv._monodroid_gref_log ($"# jonp: Object:.ctor: ACTIVATION SCENARIO\n");
 				needsActivation = true;
 				handle = this.handle;
 				if (handle_type != 0)
