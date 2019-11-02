@@ -244,7 +244,5 @@ namespace Xamarin.Android.Prepare
 		}
 
 		partial void PopulateDesignerBclFiles (List<BclFile> designerHostBclFilesToInstall, List<BclFile> designerWindowsBclFilesToInstall);
-
-		List<BundleItem> bundleItems;
 	}
 }

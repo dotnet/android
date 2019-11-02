@@ -30,8 +30,6 @@ namespace Xamarin.Android.Prepare
 			public bool IgnoreMaxMonoVersion   { get; set; }
 			public bool IgnoreMinMonoVersion   { get; set; }
 			public bool EnableAll              { get; set; }
-			public string XABundlePath         { get; set; }
-			public string XABundleCopyDir      { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
 		}
 
@@ -100,8 +98,6 @@ namespace Xamarin.Android.Prepare
 				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim ()},
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
 				{"a|enable-all", "Enable preparation of all the supported targets, ABIs etc", v => parsedOptions.EnableAll = true},
-				{"b|bundle-path=", "Full path to the {{DIRECTORY}} where Xamarin.Android bundle can be found (excluding the file name)", v => parsedOptions.XABundlePath = v?.Trim ()},
-				{"copy-bundle-to=", "Full path to the {{DIRECTORY}} where downloaded bundle should be copied (excluding the file name)", v => parsedOptions.XABundleCopyDir = v?.Trim ()},
 				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim ())},
 				"",
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
@@ -143,21 +139,11 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 
-			if (!String.IsNullOrEmpty (parsedOptions.XABundlePath))
-				Context.Instance.XABundlePath = parsedOptions.XABundlePath;
-
 			if (!String.IsNullOrEmpty (parsedOptions.Configuration))
 				Context.Instance.Configuration = parsedOptions.Configuration;
 
 			if (!String.IsNullOrEmpty (parsedOptions.HashAlgorithm))
 				Context.Instance.HashAlgorithm = parsedOptions.HashAlgorithm;
-
-			if (!String.IsNullOrEmpty (parsedOptions.XABundleCopyDir)) {
-				if (Path.IsPathRooted (parsedOptions.XABundleCopyDir))
-					Context.Instance.XABundleCopyDir = parsedOptions.XABundleCopyDir;
-				else
-					Context.Instance.XABundleCopyDir = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, parsedOptions.XABundleCopyDir);
-			}
 
 			SetCompressionFormat (parsedOptions.CompressionFormat);
 

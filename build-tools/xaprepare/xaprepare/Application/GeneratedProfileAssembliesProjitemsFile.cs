@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 
 			IEnumerable<BclFile> facadeAssemblies = runtimes.BclFilesToInstall.Where (f => f.Type == BclFileType.FacadeAssembly);
 			IEnumerable<BclFile> profileAssemblies = runtimes.BclFilesToInstall.Where (f => f.Type == BclFileType.ProfileAssembly);
-			IEnumerable<TestAssembly> testAssemblies = Runtimes.TestAssemblies;
+			IEnumerable<TestAssembly> testAssemblies = runtimes.TestAssemblies;
 
 			EnsureNoDiscrepancies (facadeAssemblies, profileAssemblies, testAssemblies.Where (ta => ta.TestType != TestAssemblyType.Reference && ta.TestType != TestAssemblyType.TestRunner));
 

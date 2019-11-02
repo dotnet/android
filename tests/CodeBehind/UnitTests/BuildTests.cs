@@ -553,8 +553,15 @@ namespace CodeBehindUnitTests
 				}
 			} catch {
 				CopyLogs (testInfo, false);
+				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file);
+				}
 				throw;
 			}
+
+			// Clean up successful tests
+			FileSystemUtils.SetDirectoryWriteable (testInfo.OutputDirectory);
+			Directory.Delete (testInfo.OutputDirectory, recursive: true);
 		}
 
 		bool WasParsedInParallel (TestProjectInfo testInfo)
