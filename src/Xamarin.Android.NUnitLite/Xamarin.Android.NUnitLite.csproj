@@ -16,6 +16,12 @@
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <NoStdLib>true</NoStdLib>
+    <!-- Disable XML doc warnings:
+         CS1570: XML comment has badly formed XML - 'Whitespace is not allowed at this location.'
+         CS1572: XML comment has a param tag for 'Bar', but there is no parameter by that name
+         CS1591: Missing XML comment for publicly visible type or member 'Foo'
+    -->
+    <NoWarn>1570;1572;1591</NoWarn>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
