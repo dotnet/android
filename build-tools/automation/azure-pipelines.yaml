@@ -557,7 +557,7 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
     displayName: MSBuild - macOS
-    pool: $(HostedMacMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
