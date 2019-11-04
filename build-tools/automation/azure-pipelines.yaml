@@ -557,13 +557,16 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
     displayName: MSBuild - macOS
-    pool: $(HostedMac)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
+
+    - script: mount
+      displayName: List FileSystems
 
     - task: DownloadPipelineArtifact@1
       inputs:
