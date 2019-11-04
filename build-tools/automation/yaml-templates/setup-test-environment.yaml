@@ -1,6 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
-  provisionExtraArgs: -vv
+  provisionExtraArgs: -vv -f
 
 steps:
 - template: run-installer.yaml

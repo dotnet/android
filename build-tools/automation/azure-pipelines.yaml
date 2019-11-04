@@ -617,7 +617,7 @@ stages:
     steps:
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
-        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)"
+        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
 
     - task: DownloadPipelineArtifact@1
       inputs:
