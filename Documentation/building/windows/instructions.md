@@ -90,7 +90,7 @@ So for example:
 Once `msbuild Xamarin.Android.sln` has completed, the unit tests may
 be built with:
 
-	msbuild Xamarin.Android-Tests.sln /p:XAIntegratedTests=False
+	msbuild Xamarin.Android-Tests.sln
 
 *NOTE*: There is currently no equivalent to [`make
 jenkins`](../unix/instructions.md) on Windows.

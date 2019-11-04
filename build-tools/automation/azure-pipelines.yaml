@@ -192,7 +192,7 @@ stages:
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests
