@@ -1,5 +1,5 @@
 parameters:
-  provisionExtraArgs: -vv
+  provisionExtraArgs: -vv -f
 
 steps:
 - task: DownloadPipelineArtifact@2
