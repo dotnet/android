@@ -38,11 +38,19 @@ namespace Android.Runtime {
 				il.Emit (OpCodes.Ldc_I4, i);
 				il.Emit (OpCodes.Ldelem_Ref);
 			}
-			il.EmitWriteLine("# jonp: Inside activation constructor for type `{type}`: before invoke!!");
+			il.EmitWriteLine($"# jonp: Inside activation constructor for type `{type}`: before invoke!!");
+
+			Console.WriteLine ("CTOR: " + typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
+			il.Emit (OpCodes.Ldloc_0);
+			il.Emit (OpCodes.Ldfld, handle);
+			il.Emit (OpCodes.Box, typeof (IntPtr));
+			il.Emit (OpCodes.Call, typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
+			il.Emit (OpCodes.Ldloc_0);
+			il.Emit (OpCodes.Call, typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
 
 			il.Emit (OpCodes.Call, cinfo);
 
-			il.EmitWriteLine("# jonp: Inside activation constructor for type `{type}`: after invoke!!");
+			il.EmitWriteLine($"# jonp: Inside activation constructor for type `{type}`: after invoke!!");
 
 			il.Emit (OpCodes.Ret);
 
