@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.BootstrapTasks", "build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj", "{E8492EFB-D14A-4F32-AA28-88848322ECEA}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tests", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.csproj", "{53E4ABF0-1085-45F9-B964-DCAE4B819998}"
@@ -36,6 +38,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8492EFB-D14A-4F32-AA28-88848322ECEA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
