@@ -770,7 +770,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_ApkSetIntermediate>$(IntermediateOutputPath)android\bin\$(_AndroidPackage).apks</_ApkSetIntermediate>
 		<ApkFile>$(OutDir)$(_AndroidPackage).apk</ApkFile>
 		<ApkFileSigned>$(OutDir)$(_AndroidPackage)-Signed.apk</ApkFileSigned>
+		<_AabFile>$(OutDir)$(_AndroidPackage).aab</_AabFile>
 		<_AabFileSigned>$(OutDir)$(_AndroidPackage)-Signed.aab</_AabFileSigned>
+		<_MSYMDirectory>$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM</_MSYMDirectory>
 	</PropertyGroup>
 </Target>
 
@@ -2967,6 +2969,16 @@ because xbuild doesn't support framework reference assemblies.
 			;$(_AndroidBuildPropertiesCache)
 			;@(ApkFiles)
 		</_CopyPackageInputs>
+		<_CopyPackageInputs Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+			$(_CopyPackageInputs)
+			;$(_AppBundleIntermediate)
+		</_CopyPackageInputs>
+		<_CopyPackageOutputs Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+			$(ApkFile)
+		</_CopyPackageOutputs>
+		<_CopyPackageOutputs Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+			$(_AabFile)
+		</_CopyPackageOutputs>
 	</PropertyGroup>
 </Target>
 
@@ -2991,15 +3003,17 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CopyPackage"
   DependsOnTargets="$(_CopyPackageDependsOn)"
   Inputs="$(_CopyPackageInputs)"
-  Outputs="$(ApkFile)">
+  Outputs="$(_CopyPackageOutputs)">
 
   <Delete Files="$(ApkFile)" Condition="Exists ('$(ApkFile)')" />
+  <Delete Files="$(_AabFile)" Condition="Exists ('$(_AabFile)')" />
 
-  <Copy SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
+  <Copy Condition=" '$(AndroidPackageFormat)' != 'aab' " SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
+  <Copy Condition=" '$(AndroidPackageFormat)' == 'aab' " SourceFiles="$(_AppBundleIntermediate)" DestinationFolder="$(OutDir)" />
 
-  <MakeDir Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(MonoSymbolArchive)' == 'True' " />
+  <MakeDir Directories="$(_MSYMDirectory)" Condition=" '$(MonoSymbolArchive)' == 'True' " />
   <Exec
-    Command="&quot;$(MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(OutDir)$(_AndroidPackage).apk.mSYM&quot; &quot;$(IntermediateOutputPath)android/assets&quot;"
+    Command="&quot;$(MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(_MSYMDirectory)&quot; &quot;$(IntermediateOutputPath)android/assets&quot;"
     Condition=" '$(MonoSymbolArchive)' == 'True' "
   />
 
@@ -3009,7 +3023,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     SourceFiles="%(_SymbolicateFiles.Identity)"
-    DestinationFolder="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)"
+    DestinationFolder="$(_MSYMDirectory)\%(_SymbolicateFiles.RecursiveDir)"
     SkipUnchangedFiles="true"
   />
 		
@@ -3021,19 +3035,19 @@ because xbuild doesn't support framework reference assemblies.
      Condition=" '$(_XamarinBuildId)' != '' And '$(MonoSymbolArchive)' == 'True' "
      BuildId="$(_XamarinBuildId)"
      PackageName="$(_AndroidPackage)"
-     OutputDirectory="$(OutDir)$(_AndroidPackage).apk.mSYM"
+     OutputDirectory="$(_MSYMDirectory)"
    />
 
   <WriteLinesToFile
     Condition=" '$(MonoSymbolArchive)' == 'True' "
     File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="@(_SymbolicateFiles->'$(OutDir)$(_AndroidPackage).apk.mSYM\%(Filename)%(Extension)')"
+    Lines="@(_SymbolicateFiles->'$(_MSYMDirectory)\%(Filename)%(Extension)')"
     Overwrite="false"/>
 
   <WriteLinesToFile
     Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
     File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="$(OutDir)$(_AndroidPackage).apk.mSYM\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
+    Lines="$(_MSYMDirectory)\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
     Overwrite="false"/>
 
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
@@ -3259,7 +3273,7 @@ because xbuild doesn't support framework reference assemblies.
 	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">
 		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
 	</GetAndroidPackageName>
-	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).apk.mSYM" Condition=" '$(_AndroidPackage)' != '' And Exists ('$(OutDir)$(_AndroidPackage).apk.mSYM')" />
+	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM" Condition=" '$(_AndroidPackage)' != '' " />
 </Target>
 
 <Target Name="_CleanDesignTimeIntermediateDir">
@@ -3326,6 +3340,9 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(ApkFileIntermediate)">
+		<Output TaskParameter="Include" ItemName="FileWrites"/>
+	</CreateItem>
+	<CreateItem Include="$(_AabFile)">
 		<Output TaskParameter="Include" ItemName="FileWrites"/>
 	</CreateItem>
 	<CreateItem Include="$(_AabFileSigned)">
