@@ -373,21 +373,23 @@ AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
 	if (path == nullptr || *path == '\0')
 		return nullptr;
 
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
+	log_warn (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
 	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !utils.file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
+		log_warn (LOG_ASSEMBLY, "Shared library '%s' not found", path);
 		return nullptr;
 	}
 
 	void *handle = dlopen (path, dl_flags);
-	if (handle == nullptr && utils.should_log (LOG_ASSEMBLY))
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
+	if (handle == nullptr)
+		log_warn (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
 	return handle;
 }
 
 void*
 AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags)
 {
+	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
+	log_warn (LOG_DEFAULT, "  dso_name == %s", dso_name);
 	assert (directories != nullptr);
 	if (dso_name == nullptr)
 		return nullptr;
@@ -396,6 +398,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 	char *full_path = nullptr;
 	for (size_t i = 0; i < num_entries; i++) {
 		full_path = get_full_dso_path (directories [i], dso_name, needs_free);
+		log_warn (LOG_DEFAULT, "  trying %s", full_path);
 		void *handle = load_dso (full_path, dl_flags, false);
 		if (needs_free)
 			delete[] full_path;
