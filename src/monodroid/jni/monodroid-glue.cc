@@ -1052,6 +1052,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 		delete[] full_name;
 	}
 
+	log_warn (LOG_DEFAULT, "  returning handle == %p", handle);
 	return handle;
 }
 
@@ -1059,7 +1060,7 @@ void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
 {
 	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
-	log_warn (LOG_DEFAULT, "  name == %s; flags == 0x%X", name == nullptr ? "<null>" : name, flags);
+	log_warn (LOG_DEFAULT, "  name == %s; flags == 0x%X; err == %p", name == nullptr ? "<null>" : name, flags, err);
 
 	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
@@ -1068,15 +1069,18 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, voi
 	if (name == nullptr) {
 		name = "libmonodroid.so";
 		libmonodroid_fallback = TRUE;
+		log_warn (LOG_DEFAULT, "  internal call, name remapped to %s", name);
 	}
 
 	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	log_warn (LOG_DEFAULT, "  first load attempt, h == %p", h);
 	if (h != nullptr) {
 		return monodroid_dlopen_log_and_return (h, err, name, false);
 	}
 
 	if (libmonodroid_fallback) {
 		char *full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, "libmonodroid.so");
+		log_warn (LOG_DEFAULT,"  fallback, looking in %s", full_name);
 		h = androidSystem.load_dso (full_name, dl_flags, false);
 		return monodroid_dlopen_log_and_return (h, err, full_name, true);
 	}
