@@ -32,21 +32,23 @@ namespace Android.Runtime {
 			il.Emit (OpCodes.Ldarg_0);
 			il.Emit (OpCodes.Stfld, handle);
 
-			il.Emit (OpCodes.Ldloc_0);
-			for (int i = 0; i < parameter_types.Length; i++) {
-				il.Emit (OpCodes.Ldarg, 1);
-				il.Emit (OpCodes.Ldc_I4, i);
-				il.Emit (OpCodes.Ldelem_Ref);
-			}
-			il.EmitWriteLine($"# jonp: Inside activation constructor for type `{type}`: before invoke!!");
-
 			Console.WriteLine ("CTOR: " + typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
+			Console.WriteLine ("CTOR2: " + cinfo);
 			il.Emit (OpCodes.Ldloc_0);
 			il.Emit (OpCodes.Ldfld, handle);
 			il.Emit (OpCodes.Box, typeof (IntPtr));
 			il.Emit (OpCodes.Call, typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
 			il.Emit (OpCodes.Ldloc_0);
 			il.Emit (OpCodes.Call, typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
+
+			il.EmitWriteLine($"# jonp: Inside activation constructor for type `{type}`: before invoke!!");
+
+			il.Emit (OpCodes.Ldloc_0);
+			for (int i = 0; i < parameter_types.Length; i++) {
+				il.Emit (OpCodes.Ldarg, 1);
+				il.Emit (OpCodes.Ldc_I4, i);
+				il.Emit (OpCodes.Ldelem_Ref);
+			}
 
 			il.Emit (OpCodes.Call, cinfo);
 
