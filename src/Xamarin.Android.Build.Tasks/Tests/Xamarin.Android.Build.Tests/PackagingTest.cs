@@ -15,16 +15,17 @@ namespace Xamarin.Android.Build.Tests
 	{
 #pragma warning disable 414
 		static object [] ManagedSymbolsArchiveSource = new object [] {
-			//           isRelease, monoSymbolArchive, archiveShouldExists,
-			new object[] { false    , false              , false },
-			new object[] { true     , true               , true },
-			new object[] { true     , false              , false },
+			//           isRelease, monoSymbolArchive, packageFormat,
+			new object[] { false    , false              , "apk" },
+			new object[] { true     , true               , "apk" },
+			new object[] { true     , false              , "apk" },
+			new object[] { true     , true               , "aab" },
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof(ManagedSymbolsArchiveSource))]
-		public void CheckManagedSymbolsArchive (bool isRelease, bool monoSymbolArchive, bool archiveShouldExists)
+		public void CheckManagedSymbolsArchive (bool isRelease, bool monoSymbolArchive, string packageFormat)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -32,19 +33,20 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, proj.PackageName + ".apk.mSYM");
-				Assert.AreEqual (archiveShouldExists, Directory.Exists (archivePath),
-					string.Format ("The msym archive {0} exist.", archiveShouldExists ? "should" : "should not"));
+				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
+				Assert.AreEqual (monoSymbolArchive, Directory.Exists (archivePath),
+					string.Format ("The msym archive {0} exist.", monoSymbolArchive ? "should" : "should not"));
 			}
 		}
 
 		[Test]
-		public void CheckBuildIdIsUnique ()
+		public void CheckBuildIdIsUnique ([Values ("apk", "aab")] string packageFormat)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
 
@@ -57,12 +59,13 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "PdbOnly");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, proj.PackageName + ".apk.mSYM");
+				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
 				var allFilesInArchive = Directory.GetFiles (archivePath, "*", SearchOption.AllDirectories);
 				string extension = "dll";
 				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
@@ -78,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (envvars.TryGetValue ("XAMARIN_BUILD_ID", out buildID), "The environment should contain a XAMARIN_BUILD_ID");
 				buildIds.Add ("all", buildID);
 
-				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
+				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
 				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);
 				var doc = XDocument.Load (Path.Combine (msymDirectory, "manifest.xml"));
 
