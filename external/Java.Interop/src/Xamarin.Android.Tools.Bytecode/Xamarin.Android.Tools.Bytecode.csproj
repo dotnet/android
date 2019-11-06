@@ -1,74 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.Android.Tools.Bytecode</RootNamespace>
-    <AssemblyName>Xamarin.Android.Tools.Bytecode</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <LangVersion>7.2</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="protobuf-net, Version=2.4.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\protobuf-net.2.4.0\lib\net40\protobuf-net.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.IO.Compression" />
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Annotation.cs" />
-    <Compile Include="AnnotationElementValue.cs" />
-    <Compile Include="ClassFile.cs" />
-    <Compile Include="ConstantPool.cs" />
-    <Compile Include="Kotlin\JvmNameResolver.cs" />
-    <Compile Include="Kotlin\KotlinBitEncoding.cs" />
-    <Compile Include="Kotlin\KotlinClassMetadata.cs" />
-    <Compile Include="Kotlin\KotlinFixups.cs" />
-    <Compile Include="Kotlin\KotlinMetadata.cs" />
-    <Compile Include="Kotlin\KotlinProtobufDefinition.cs" />
-    <Compile Include="Kotlin\PartialStream.cs" />
-    <Compile Include="StreamCoda.cs" />
-    <Compile Include="Interfaces.cs" />
-    <Compile Include="Fields.cs" />
-    <Compile Include="Methods.cs" />
-    <Compile Include="AttributeInfo.cs" />
-    <Compile Include="Signatures.cs" />
-    <Compile Include="XmlClassDeclarationBuilder.cs" />
-    <Compile Include="JavaDocumentScraper.cs" />
-    <Compile Include="ClassPath.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="JavaParameterNamesLoader.cs" />
+    <PackageReference Include="protobuf-net" Version="2.4.1" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
 </Project>

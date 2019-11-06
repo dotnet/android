@@ -1,57 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.Android.Tools.ApiXmlAdjuster</RootNamespace>
-    <AssemblyName>Xamarin.Android.Tools.ApiXmlAdjuster</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml" />
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="JavaApi.XmlModel.cs" />
-    <Compile Include="JavaApiXmlLoaderExtensions.cs" />
-    <Compile Include="XmlUtil.cs" />
-    <Compile Include="JavaTypeName.cs" />
-    <Compile Include="JavaApiTypeResolverExtensions.cs" />
-    <Compile Include="JavaApiOverrideMarkerExtensions.cs" />
-    <Compile Include="JavaApiGeneralExtensions.cs" />
-    <Compile Include="JavaApiNonBindableStripper.cs" />
-    <Compile Include="JavaApi.RelationAnalysisModel.cs" />
-    <Compile Include="JavaTypeReference.cs" />
-    <Compile Include="JavaApiGenericInheritanceMapperExtensions.cs" />
-    <Compile Include="JavaApiXmlGeneratorExtensions.cs" />
-    <Compile Include="JavaApiDefectFinderExtensions.cs" />
-    <Compile Include="JavaTypeResolutionUtil.cs" />
-    <Compile Include="JavaApiFixVisibilityExtensions.cs" />
-    <Compile Include="Log.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
 </Project>

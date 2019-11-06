@@ -1,61 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{07BC4495-1267-4B78-9EA6-B76FEEA2A64A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.AndroidTools.AnnotationSupport</RootNamespace>
-    <AssemblyName>Xamarin.Android.Tools.AnnotationSupport</AssemblyName>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="HtmlAgilityPack">
-      <HintPath>..\..\packages\HtmlAgilityPack.1.8.14\lib\Net45\HtmlAgilityPack.dll</HintPath>
-    </Reference>
+    <PackageReference Include="HtmlAgilityPack" Version="1.8.14" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AndroidAnnotationsSupport.cs" />
-    <Compile Include="AnnotationExtensions.cs" />
-    <Compile Include="AnnotationParserExtension.cs" />
-    <Compile Include="ManagedApiQuery.cs" />
-    <Compile Include="ManagedTypeFinders\ConstantDefinitionExtension.cs" />
-    <Compile Include="ManagedTypeFinders\DefinitionManagedTypeFinderExtension.cs" />
-    <Compile Include="ManagedTypeFinders\ManagedTypeFinder.cs" />
-    <Compile Include="ManagedTypeFinders\ManagedTypeFinderDefault.cs" />
-    <Compile Include="ManagedTypeFinders\ManagedTypeFinderExtension.cs" />
-    <Compile Include="ManagedTypeFinders\PermissionManagedTypeFinderExtension.cs" />
-    <Compile Include="ManagedTypeFinders\RequiresPermissionExtension.cs" />
-    <Compile Include="Objects\AnnotatedItem.cs" />
-    <Compile Include="Objects\AnnotationData.cs" />
-    <Compile Include="Objects\AnnotationObject.cs" />
-    <Compile Include="Objects\AnnotationValue.cs" />
-    <Compile Include="Objects\ManagedMemberInfo.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
 </Project>
