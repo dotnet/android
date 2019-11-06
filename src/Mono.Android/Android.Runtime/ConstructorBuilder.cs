@@ -33,7 +33,7 @@ namespace Android.Runtime {
 			il.Emit (OpCodes.Stfld, handle);
 
 			Console.WriteLine ("CTOR: " + typeof (Console).GetMethod ("WriteLine", new Type [] { typeof (object) }));
-			Console.WriteLine ("CTOR2: " + cinfo.FullName + " " + parameter_types.Length);
+			Console.WriteLine ("CTOR2: " + cinfo.DeclaringType.FullName + " " + parameter_types.Length);
 			il.Emit (OpCodes.Ldloc_0);
 			il.Emit (OpCodes.Ldfld, handle);
 			il.Emit (OpCodes.Box, typeof (IntPtr));
