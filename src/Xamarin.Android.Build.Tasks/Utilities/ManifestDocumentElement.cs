@@ -192,6 +192,7 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (UiOptions),           (value, p, r, v) => ToString ((UiOptions) value) },
 			{ typeof (Type),                (value, p, r, v) => ToString (value.ToString (), p, r) },
 			{ typeof (WindowRotationAnimation),     (value, p, r, v) => ToString ((WindowRotationAnimation) value) },
+			{ typeof (ForegroundService),     (value, p, r, v) => ToString ((ForegroundService) value) },
 		};
 
 		static string ToString (bool value)
@@ -365,6 +366,19 @@ namespace Xamarin.Android.Manifest {
 			return ToString (typeDef);
 		}
 
+		static string ToString (ForegroundService value)
+		{
+			switch (value) {
+				case ForegroundService.TypeConnectedDevice:	return "connectedDevice";
+				case ForegroundService.TypeDataSync:		return "dataSync";
+				case ForegroundService.TypeLocation:		return "location";
+				case ForegroundService.TypeMediaPlayback:	return "mediaPlayback";
+				case ForegroundService.TypeMediaProjection:	return "mediaProjection";
+				case ForegroundService.TypePhoneCall:		return "phoneCall";
+				default:
+					throw new ArgumentException ($"Unsupported ForegroundServiceType value '{value}'.", nameof (value));
+			}
+		}
 		IEnumerator<string> IEnumerable<string>.GetEnumerator ()
 		{
 			return Mappings.Keys.GetEnumerator ();
