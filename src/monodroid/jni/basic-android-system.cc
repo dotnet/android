@@ -49,7 +49,11 @@ BasicAndroidSystem::add_apk_libdir (const char *apk, size_t index, size_t apk_co
 {
 	assert (user_data != nullptr);
 	assert (index >= 0 && index < app_lib_directories_size);
+	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
+	log_warn (LOG_DEFAULT, "   apk #%u out of %u == %s", index, apk_count, apk);
+	log_warn (LOG_DEFAULT, "   user_data == %s", static_cast<const char*>(user_data));
 	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", static_cast<const char*>(user_data));
+	log_warn (LOG_DEFAULT, "   added path: %s", app_lib_directories [index]);
 }
 
 void
