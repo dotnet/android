@@ -381,7 +381,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
         artifactName: Mono.Android_Tests-Signed.apk
-        artifactFolder: Aot
+        artifactFolder: AotLlvm
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
