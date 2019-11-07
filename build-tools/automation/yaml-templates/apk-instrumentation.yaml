@@ -24,8 +24,8 @@ steps:
 - script: |
     SOURCE=$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}
     DEST=$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/
-    mkdir $DEST
-    cp $SOURCE $DEST
+    mkdir "$DEST"
+    cp "$SOURCE" "$DEST"
   displayName: copy apk/aab
   condition: succeededOrFailed()
 
