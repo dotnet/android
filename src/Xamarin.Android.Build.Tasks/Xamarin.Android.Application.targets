@@ -12,17 +12,18 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <Target Name="Run"
+  <Target Name="StartAndroidActivity"
       DependsOnTargets="_ResolveMonoAndroidSdks">
     <GetAndroidActivityName
+        Condition=" '$(AndroidLaunchActivity)' == '' "
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
-      <Output TaskParameter="ActivityName" PropertyName="_AndroidActivityName" />
+      <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
     <GetAndroidPackageName
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
         AssemblyName="$(AssemblyName)">
       <Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
     </GetAndroidPackageName>
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -n &quot;$(_AndroidPackage)/$(_AndroidActivityName)&quot;" />
+    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
   </Target>
 </Project>
