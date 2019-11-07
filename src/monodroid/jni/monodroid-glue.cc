@@ -1392,6 +1392,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobjectArray externalStorageDirs, jobjectArray assembliesJava,
                                                           jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
 {
+	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
+	log_warn (LOG_DEFAULT, "  embeddedDSOsEnabled == %u", embeddedDSOsEnabled);
 	init_logging_categories ();
 
 	timing_period total_time;
