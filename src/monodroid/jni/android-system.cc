@@ -356,15 +356,22 @@ AndroidSystem::create_update_dir (char *override_dir)
 char*
 AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, bool &needs_free)
 {
+	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
+	log_warn (LOG_DEFAULT, "  base_dir == %s", base_dir);
+	log_warn (LOG_DEFAULT, "  dso_path == %s", dso_path);
 	needs_free = false;
 	if (dso_path == nullptr)
 		return nullptr;
 
-	if (base_dir == nullptr || utils.is_path_rooted (dso_path))
+	if (base_dir == nullptr || utils.is_path_rooted (dso_path)) {
+		log_warn (LOG_DEFAULT, "  no base dir or dso_path rooted, returning: %s", dso_path);
 		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
+	}
 
 	needs_free = true;
-	return utils.path_combine (base_dir, dso_path);
+	char *ret = utils.path_combine (base_dir, dso_path);
+	log_warn (LOG_DEFAULT, "  returning %s", ret);
+	return ret;
 }
 
 void*
@@ -390,6 +397,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 {
 	log_warn (LOG_DEFAULT, "%s called", __PRETTY_FUNCTION__);
 	log_warn (LOG_DEFAULT, "  dso_name == %s", dso_name);
+	log_warn (LOG_DEFAULT, "  num_entries == %u", num_entries);
 	assert (directories != nullptr);
 	if (dso_name == nullptr)
 		return nullptr;
