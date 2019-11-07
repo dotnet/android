@@ -19,17 +19,23 @@ BasicAndroidSystem::setup_app_library_directories (JNIEnv *env, jstring_array_wr
 	if (androidApiLevel < 23 || !is_embedded_dso_mode_enabled ()) {
 		log_warn (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
-		BasicAndroidSystem::app_lib_directories = reinterpret_cast<const char**>(new char[app_lib_directories_size]());
-		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[2].get_cstr ());
+		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
+		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[2].get_cstr());
 	} else {
 		log_warn (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
-		BasicAndroidSystem::app_lib_directories = reinterpret_cast<const char**>(new char[app_lib_directories_size]());
+		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 
 		unsigned short built_for_cpu = 0, running_on_cpu = 0;
 		unsigned char is64bit = 0;
 		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
 		setup_apk_directories (env, running_on_cpu, runtimeApks);
+	}
+
+	log_warn (LOG_DEFAULT, "   app_lib_directories_size == %u", app_lib_directories_size);
+	log_warn (LOG_DEFAULT, "   directories:");
+	for (size_t i = 0; i < app_lib_directories_size; i++) {
+		log_warn (LOG_DEFAULT, "      app_lib_directories [%u] == %s", i, BasicAndroidSystem::app_lib_directories [i]);
 	}
 }
 
