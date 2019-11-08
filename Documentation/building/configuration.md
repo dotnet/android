@@ -154,3 +154,10 @@ Overridable MSBuild properties include:
     Xamarin.Android install to the local build output. This enables proprietary
     features such as debugging and fast deployment. Since a "normal" OSS build would
     not include proprietary files, this flag also emits a warning when enabled.
+
+  * `$(AndroidBoundExceptionType)`: defaults to `Java`
+    When set to the `Java` value, keep throwing Java exceptions in all contexts. This is the current,
+    and default, behavior of Xamarin.Android.
+    If the value is set to `System`, however, the affected Java classes will wrap all exceptions
+    derived from `Java.Lang.Throwable` in one of the BCL exception types (depending on context) with
+    the original Java exception placed in the wrapping exceptions `InnerException` property.

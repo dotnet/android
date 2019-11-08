@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		public string MonoAOTMode { get; set; }
 		public string AndroidPackageName { get; set; }
 		public bool BrokenExceptionTransitions { get; set; }
+		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
+
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties)
@@ -59,6 +61,9 @@ namespace Xamarin.Android.Tasks
 
 				WriteCommentLine (output, "broken_exception_transitions");
 				size += WriteData (output, BrokenExceptionTransitions);
+
+				WriteCommentLine (output, "bound_exception_type");
+				size += WriteData (output, (byte)BoundExceptionType);
 
 				WriteCommentLine (output, "package_naming_policy");
 				size += WriteData (output, (uint)PackageNamingPolicy);

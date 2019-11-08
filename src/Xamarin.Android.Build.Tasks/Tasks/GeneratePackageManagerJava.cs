@@ -58,6 +58,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		public string BoundExceptionType { get; set; }
+
 		public string PackageNamingPolicy { get; set; }
 		public string Debug { get; set; }
 		public ITaskItem[] Environments { get; set; }
@@ -239,6 +241,15 @@ namespace Xamarin.Android.Tasks
 					AddEnvironmentVariable ("MONO_GC_PARAMS", "major=marksweep");
 			}
 
+			global::Android.Runtime.BoundExceptionType boundExceptionType;
+			if (String.IsNullOrEmpty (BoundExceptionType) || String.Compare (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase) == 0) {
+				boundExceptionType = global::Android.Runtime.BoundExceptionType.System;
+			} else if (String.Compare (BoundExceptionType, "Java", StringComparison.OrdinalIgnoreCase) == 0) {
+				boundExceptionType = global::Android.Runtime.BoundExceptionType.Java;
+			} else {
+				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
+			}
+
 			using (var ms = new MemoryStream ()) {
 				var utf8Encoding = new UTF8Encoding (false);
 				foreach (string abi in SupportedAbis) {
@@ -275,6 +286,7 @@ namespace Xamarin.Android.Tasks
 						AndroidPackageName = AndroidPackageName,
 						BrokenExceptionTransitions = brokenExceptionTransitions,
 						PackageNamingPolicy = pnp,
+						BoundExceptionType = boundExceptionType,
 					};
 
 					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
