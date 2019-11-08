@@ -162,13 +162,15 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"first `{target}` should have succeeded.");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"second `{target}` should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"second `{target}` should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GeneratePackageManagerJavaForDesigner"), "`_GeneratePackageManagerJavaForDesigner` should be skipped!");
 
 				// Change a java file, run SetupDependenciesForDesigner
 				proj.Touch ("Foo.java");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"third `{target}` should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"third `{target}` should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GeneratePackageManagerJavaForDesigner"), "`_GeneratePackageManagerJavaForDesigner` should be skipped!");
 			}
 		}
 
