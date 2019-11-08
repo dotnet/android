@@ -1,0 +1,116 @@
+# Java.Interop Pipelines
+
+trigger:
+  - master
+  - d16-*
+
+# Global variables
+variables:
+  DotNetCoreVersion: 2.1.701
+  HostedMac: Hosted Mac Internal
+  HostedWinVS2019: Hosted Windows 2019 with VS2019
+
+jobs:
+- job: windows_build
+  displayName: Windows Build and Test
+  pool: $(HostedWinVS2019)
+  timeoutInMinutes: 20
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    submodules: recursive
+
+  - task: UseDotNet@2
+    displayName: Use .NET Core $(DotNetCoreVersion)
+    inputs:
+      version: $(DotNetCoreVersion)
+
+  - task: MSBuild@1
+    displayName: MSBuild Java.Interop.sln /t:Prepare
+    inputs:
+      solution: Java.Interop.sln
+      configuration: $(Build.Configuration)
+      msbuildArguments: /t:Prepare
+
+  - task: MSBuild@1
+    displayName: MSBuild Java.Interop.sln
+    inputs:
+      solution: Java.Interop.sln
+      configuration: $(Build.Configuration)
+
+  - task: MSBuild@1
+    displayName: MSBuild RunNUnitTests.targets
+    inputs:
+      solution: build-tools/scripts/RunNUnitTests.targets
+      configuration: $(Build.Configuration)
+      msbuildArguments: /p:TestAssembly="bin\Test$(Build.Configuration)\generator-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Build.Configuration)\LogcatParse-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
+    condition: succeededOrFailed()
+
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    inputs:
+      testResultsFormat: NUnit
+      testResultsFiles: TestResult-*.xml
+    condition: succeededOrFailed()
+
+- job: mac_build
+  displayName: Mac Build and Test
+  pool: $(HostedMac)
+  timeoutInMinutes: 20
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    submodules: recursive
+
+  - task: UseDotNet@2
+    displayName: Use .NET Core $(DotNetCoreVersion)
+    inputs:
+      version: $(DotNetCoreVersion)
+    
+  - script: |
+      dotnet tool install --global boots --version 1.0.0.291   
+      boots https://download.mono-project.com/archive/6.4.0/macos-10-universal/MonoFramework-MDK-6.4.0.198.macos10.xamarin.universal.pkg
+    displayName: Install Mono 6.4
+    
+  - script: make prepare CONFIGURATION=$(Build.Configuration)
+    displayName: make prepare
+    
+  - script: make all CONFIGURATION=$(Build.Configuration)
+    displayName: make all
+    
+  - script: make fxcop
+    displayName: Run Gendarme
+    
+  - script: |
+      r=0
+      make run-all-tests CONFIGURATION=$(Build.Configuration) || r=$?
+      jar cf xatb.jar -C src/Xamarin.Android.Tools.Bytecode/Tests/obj/*/classes .
+      zip -r bin.zip bin
+      exit $r
+    displayName: Run Tests
+
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    inputs:
+      testResultsFormat: NUnit
+      testResultsFiles: TestResult-*.xml
+    condition: succeededOrFailed()
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: Artifact Staging Directory'
+    inputs:
+      SourceFolder: $(System.DefaultWorkingDirectory)
+      Contents: |
+        gendarme.*
+        xatb.jar
+        bin.zip 
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+    condition: succeededOrFailed()
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: debug'
+    inputs:
+      ArtifactName: debug
+    condition: succeededOrFailed()
