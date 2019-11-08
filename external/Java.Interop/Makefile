@@ -109,7 +109,7 @@ NATIVE_TIMING_LIB   = libNativeTiming$(NATIVE_EXT)
 
 bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB): tests/NativeTiming/timing.c $(wildcard $(JI_JDK_INCLUDE_PATHS)/jni.h)
 	mkdir -p `dirname "$@"`
-	gcc -g -shared -m64 -o $@ $< $(JI_JDK_INCLUDE_PATHS:%=-I%)
+	gcc -g -shared -m64 -fPIC -o $@ $< $(JI_JDK_INCLUDE_PATHS:%=-I%)
 
 # Usage: $(call TestAssemblyTemplate,assembly-basename)
 define TestAssemblyTemplate

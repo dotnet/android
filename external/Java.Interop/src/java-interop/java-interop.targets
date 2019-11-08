@@ -43,7 +43,7 @@
       <_Libs>$(MonoLibs)</_Libs>
       <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
     </PropertyGroup>
-    <Exec Command="gcc -g -shared -m64 -std=c99 -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
+    <Exec Command="gcc -g -shared -m64 -std=c99 -fPIC -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
     <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;$(_MacLib)&quot;" />
   </Target>

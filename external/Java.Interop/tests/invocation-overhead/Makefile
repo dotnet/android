@@ -28,7 +28,7 @@ jni.c jni.cs: $(JNIENV_GEN)
 	$(RUNTIME) $< jni.cs jni.c
 
 libjava-interop.dylib: jni.c
-	gcc -g -shared -o $@ $< -m64 -DJI_DLL_EXPORT -fvisibility=hidden $(JI_JDK_INCLUDE_PATHS:%=-I%)
+	gcc -g -shared -fPIC -o $@ $< -m64 -DJI_DLL_EXPORT -fvisibility=hidden $(JI_JDK_INCLUDE_PATHS:%=-I%)
 
 run:
 	$(RUNTIME) test-overheads.exe
