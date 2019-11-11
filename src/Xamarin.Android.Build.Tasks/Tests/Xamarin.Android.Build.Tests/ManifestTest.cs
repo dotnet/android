@@ -579,13 +579,13 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {

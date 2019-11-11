@@ -2,25 +2,33 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\Jar.targets" />
   <UsingTask AssemblyFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <ItemGroup>
+    <_Abi Include="arm64-v8a" />
+    <_Abi Include="armeabi-v7a" />
+    <_Abi Include="x86" />
+    <_Abi Include="x86_64" />
+    <_NativeLibs Include="@(_Abi->'libs\%(Identity)\libsimple.so')" />
+  </ItemGroup>
   <Target Name="BuildNativeLibs"
       DependsOnTargets="AndroidPrepareForBuild;_GetJavacVersions"
       Inputs="jni\simple-lib.c;jni\Android.mk"
-      Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-1\NativeLib.zip">
+      Outputs="@(_NativeLibs2)">
     <Error
         Condition="!Exists ('$(NdkBuildPath)')"
         Text="Could not locate Android NDK."
     />
     <Exec Command="&quot;$(NdkBuildPath)&quot;" />
-    <MakeDir Directories="$(OutputPath)\native-lib-1" />
-    <Exec
-        Command="&quot;$(JarPath)&quot; cf ../$(OutputPath)/native-lib-1/NativeLib.zip arm64-v8a armeabi-v7a x86 x86_64"
-        WorkingDirectory="libs"
-    />
+    <ItemGroup>
+      <EmbeddedNativeLibrary Include="@(_NativeLibs)" />
+    </ItemGroup>
   </Target>
+  <ItemGroup>
+    <_NativeLibs2 Include="@(_Abi->'simple2\libs\%(Identity)\libsimple2.so')" />
+  </ItemGroup>
   <Target Name="BuildNativeLibs2"
       DependsOnTargets="AndroidPrepareForBuild;_GetJavacVersions"
       Inputs="simple2\jni\simple2-lib.c;simple2\jni\Android.mk"
-      Outputs="@(AndroidNativeLibrary);$(OutputPath)\native-lib-2\NativeLib2.zip">
+      Outputs="@(_NativeLibs2)">
     <Error
         Condition="!Exists ('$(NdkBuildPath)')"
         Text="Could not locate Android NDK."
@@ -29,21 +37,14 @@
         Command="&quot;$(NdkBuildPath)&quot;"
         WorkingDirectory="simple2"
     />
-    <MakeDir Directories="$(OutputPath)\native-lib-2" />
-    <MakeDir Directories="$(OutputPath)\native-lib-2\aar-test" />
-    <Exec
-        Command="&quot;$(JarPath)&quot; cf ../../$(OutputPath)/native-lib-2/aar-test/EmbeddedNativeLib.zip arm64-v8a armeabi-v7a x86 x86_64"
-        WorkingDirectory="simple2/libs"
-    />
-    <Exec
-        Command="&quot;$(JarPath)&quot; cf NativeLib2.zip aar-test"
-        WorkingDirectory="$(OutputPath)\native-lib-2"
-    />
+    <ItemGroup>
+      <EmbeddedNativeLibrary Include="@(_NativeLibs2)" />
+    </ItemGroup>
   </Target>
   <Target Name="BuildJavaLibs"
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="java\JavaLib\project.properties;java\JavaLib\library\build.gradle"
-      Outputs="$(OutputPath)JavaLib.zip">
+      Outputs="$(OutputPath)JavaLib.aar">
     <PropertyGroup>
       <_Jdk9Modules Condition="$(_JdkVersion.StartsWith ('9'))">JAVA_OPTS="--add-modules java.xml.bind"</_Jdk9Modules>
     </PropertyGroup>
@@ -53,10 +54,10 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />
-    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library.aar" DestinationFiles="$(OutputPath)JavaLib.zip" />
+    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library.aar" DestinationFiles="$(OutputPath)JavaLib.aar" />
   </Target>
   <Target Name="CleanLocal">
-    <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;bin;obj;libs;simple2\libs" />
-    <Delete Files="java\JavaLib\build.xml" />
+    <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;java\JavaLib\library\build;bin;obj;libs;simple2\libs" />
+    <Delete Files="java\JavaLib\build.xml;$(OutputPath)JavaLib.aar" />
   </Target>
 </Project>

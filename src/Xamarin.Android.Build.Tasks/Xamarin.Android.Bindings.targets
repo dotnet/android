@@ -23,9 +23,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryInputJars" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GetAdditionalResourcesFromAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ReadAdditionalResourcesFromAssemblyCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -113,7 +111,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
 	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'==''">library_project_imports</_LibraryProjectImportsDirectoryName>
 	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'==''">native_library_imports</_NativeLibraryImportsDirectoryName>
-	<_AndroidResourcePathsCache>$(IntermediateOutputPath)resourcepaths.cache</_AndroidResourcePathsCache>
 	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
 	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
 	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'True' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
@@ -291,32 +288,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
     </PropertyGroup>
   </Target>
-  
-  <Target Name="_BuildAdditionalResourcesCache"
-    Inputs="@(ReferencePath);@(ReferenceDependencyPaths)"
-    Outputs="$(_AndroidResourcePathsCache)"
-  >
-    <GetAdditionalResourcesFromAssemblies
-      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-      Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
-      CacheFile="$(IntermediateOutputPath)resourcepaths.cache"
-      YieldDuringToolExecution="$(YieldDuringToolExecution)"
-      DesignTimeBuild="$(DesignTimeBuild)"
-      Condition=" '$(DesignTimeBuild)' == '' Or '$(DesignTimeBuild)' == 'false' "
-    />
-  <Message Text="Skipping GetAdditionalResourcesFromAssemblies in DesignTime build" Condition=" '$(DesignTimeBuild)' == 'true' " />
-  </Target>
-
-  <Target Name="_GetAdditionalResourcesFromAssemblies" DependsOnTargets="_BuildAdditionalResourcesCache">
-	<ReadAdditionalResourcesFromAssemblyCache
-			CacheFile="$(_AndroidResourcePathsCache)"
-	>
-		<Output TaskParameter="AdditionalAndroidResourcePaths"  ItemName="_AdditionalAndroidResourcePaths" />
-		<Output TaskParameter="AdditionalJavaLibraryReferences" ItemName="_AdditionalJavaLibraryReferences" />
-		<Output TaskParameter="AdditionalNativeLibraryReferences" ItemName="_AdditionalNativeLibraryReferences" />
-	</ReadAdditionalResourcesFromAssemblyCache>
-  </Target>
 
 <Target Name="_ResolveLibraryProjectImports"
 		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
@@ -367,7 +338,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 <PropertyGroup>
 	<ExportJarToXmlDependsOnTargets>
 		_ResolveMonoAndroidSdks
-		;_GetAdditionalResourcesFromAssemblies
 		;_ExtractLibraryProjectImports
 		;_GetLibraryImports
 		;_ExtractJavaDocJars
@@ -612,7 +582,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   
   <Target Name="CleanLibraryProjectIntermediaries">
     <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
-    <Delete Files="$(_AndroidResourcePathsCache)" />
     <Delete Files="$(_AndroidLibraryImportsCache)" />
     <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
     <Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />

@@ -23,7 +23,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)MaxPathTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MSBuildSdkExtrasTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PackagingTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SupportV7RecyclerViewTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\BaseTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\DeviceTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\BuildHelper.cs" />

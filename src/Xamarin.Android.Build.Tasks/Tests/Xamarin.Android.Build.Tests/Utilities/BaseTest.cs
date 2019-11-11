@@ -106,20 +106,6 @@ namespace Xamarin.Android.Build.Tests
 
 		protected bool IsLinux => TestEnvironment.IsLinux;
 
-		public string CacheRootPath {
-			get {
-				return IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData)
-					: Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-			}
-		}
-
-		public string CachePath {
-			get {
-				return IsWindows ? Path.Combine (CacheRootPath, "Xamarin")
-					: Path.Combine (CacheRootPath, ".local", "share", "Xamarin");
-			}
-		}
-
 		public string StagingPath {
 			get { return Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments); }
 		}
@@ -442,26 +428,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var exe = IsWindows ? "aapt.exe" : "aapt";
 			return GetPathToLatestBuildTools (exe);
-		}
-
-		[OneTimeSetUp]
-		public void FixtureSetup ()
-		{
-			// Clean the Resource Cache.
-			if (!TestEnvironment.IsRunningOnCI)
-				return;
-			if (Directory.Exists (CachePath)) {
-				foreach (var subDir in Directory.GetDirectories (CachePath, "*", SearchOption.TopDirectoryOnly)) {
-					// ignore known useful directories.
-					if (subDir.EndsWith ("Mono for Android", StringComparison.OrdinalIgnoreCase) ||
-						subDir.EndsWith ("Cache", StringComparison.OrdinalIgnoreCase) ||
-						subDir.EndsWith ("Log", StringComparison.OrdinalIgnoreCase)
-						|| subDir.EndsWith ("Logs", StringComparison.OrdinalIgnoreCase))
-						continue;
-					Console.WriteLine ("[FixtureSetup] Removing Resource Cache Directory {0}", subDir);
-					Directory.Delete (subDir, recursive: true);
-				}
-			}
 		}
 
 		[SetUp]

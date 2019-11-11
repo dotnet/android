@@ -262,7 +262,6 @@
     <Compile Include="Mono.Android\SupportsGLTextureAttribute.Partial.cs" />
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
     <Compile Include="Tasks\GetImportedLibraries.cs" />
-    <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
     <Compile Include="Tasks\ImportJavaDoc.cs" />
     <Compile Include="Tasks\MDoc.cs" />
@@ -284,7 +283,6 @@
     <Compile Include="Tasks\LogWarningsForFiles.cs" />
     <Compile Include="Tasks\DetermineJavaLibrariesToCompile.cs" />
     <Compile Include="Tasks\CreateMultiDexMainDexClassList.cs" />
-    <Compile Include="Tasks\ReadAdditionalResourcesFromAssemblyCache.cs" />
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\GenerateLayoutBindings.cs" />

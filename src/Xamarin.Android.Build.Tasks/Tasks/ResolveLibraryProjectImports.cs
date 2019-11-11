@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RLP";
 
+		internal const string AndroidSkipResourceExtraction = "AndroidSkipResourceExtraction";
+
 		[Required]
 		public string ImportsDirectory { get; set; }
 
@@ -167,7 +169,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
 					continue;
 				}
-				if (bool.TryParse (assemblyItem.GetMetadata (GetAdditionalResourcesFromAssemblies.AndroidSkipResourceExtraction), out skip) && skip) {
+				if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceExtraction), out skip) && skip) {
 					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
 					continue;
 				}
