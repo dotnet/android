@@ -55,7 +55,7 @@ stages:
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - checkout: self
       submodules: recursive
@@ -155,7 +155,7 @@ stages:
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - checkout: self
       submodules: recursive
@@ -237,7 +237,7 @@ stages:
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
-      clean: all
+      clean: resources
     variables:
     - group: Xamarin Notarization
     steps:
@@ -298,7 +298,7 @@ stages:
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
-      clean: all
+      clean: resources
     steps:
     - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
@@ -326,7 +326,7 @@ stages:
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - checkout: self
       submodules: recursive
@@ -356,7 +356,7 @@ stages:
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     variables:
       ApkTestConfiguration: Release
     steps:
@@ -577,7 +577,7 @@ stages:
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
@@ -627,7 +627,7 @@ stages:
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
@@ -663,7 +663,7 @@ stages:
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
@@ -715,7 +715,7 @@ stages:
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
@@ -760,7 +760,7 @@ stages:
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     variables:
       EnableRegressionTest: true
     steps:
@@ -794,7 +794,7 @@ stages:
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
-      clean: all
+      clean: resources
     variables:
       EnableRegressionTest: true
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
@@ -834,7 +834,7 @@ stages:
     cancelTimeoutInMinutes: 5
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
-      clean: all
+      clean: resources
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
 
@@ -849,7 +849,7 @@ stages:
     cancelTimeoutInMinutes: 5
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
-      clean: all
+      clean: resources
     variables:
       XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
     steps:
