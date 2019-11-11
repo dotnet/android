@@ -42,30 +42,9 @@ namespace Xamarin.Android.Build.Tests
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
 
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
-			var cachePath = Path.Combine (path, "Cache");
-			var envVar = new Dictionary<string, string> () {
-				{ "XAMARIN_CACHEPATH", cachePath },
-			};
-			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
-			var hash = Files.HashString (url);
-			var zipPath = Path.Combine (cachePath, "zips", $"{hash}.zip");
-			if (File.Exists (zipPath))
-				File.Delete (zipPath);
-
-			var extractedDir = Path.Combine (cachePath, "Lib1");
-			if (Directory.Exists (extractedDir))
-				Directory.Delete (extractedDir, recursive: true);
-
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib1",
 				IsRelease = isRelease,
-				AssemblyInfo = @"using System.Reflection;
-using System.Runtime.CompilerServices;
-
-[assembly: Android.NativeLibraryReferenceAttribute (""android-N/renderscript/lib/packaged/x86/librsjni.so"",
-	SourceUrl="""+ url +@""",
-	Version=""1"", PackageName=""Lib1"")]
-",
 			};
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
@@ -87,20 +66,15 @@ using System.Runtime.CompilerServices;
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
-					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
 						"first build failed");
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "DesignTimeBuild=True. Skipping download of "),
-						"failed to skip the downloading of files.");
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					}
 					WaitFor (1000);
 					b.Target = "Build";
-					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
-					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
-					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "res.flag"), "res.flag should exist after IncrementalClean!");
 					if (useManagedParser) {
@@ -125,13 +99,13 @@ using System.Runtime.CompilerServices;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 				TargetFrameworkVersion = "v7.1",
 			};
@@ -274,12 +248,12 @@ using System.Runtime.CompilerServices;
 					proj.AndroidResources.Add (image1); 
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
-				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.GooglePlayServices_22_0_0_2);
+				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
+				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				proj.AndroidExplicitCrunch = explicitCrunch;
-				proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -294,18 +268,17 @@ using System.Runtime.CompilerServices;
 						proj.IntermediateOutputPath);
 					png = PNGChecker.LoadFromBytes (data);
 					Assert.IsTrue (png.Is9Patch, "image2.9.png should have been processed into a 9 patch image.");
-					data = ZipHelper.ReadFileFromZip (path, "res/drawable-hdpi-v4/common_signin_btn_icon_normal_dark.9.png");
-					Assert.IsNotNull (data, "common_signin_btn_icon_normal_dark.9.png should be in {0}android/bin/packaged_resources",
+					data = ZipHelper.ReadFileFromZip (path, "res/drawable-hdpi-v4/common_google_signin_btn_icon_dark_normal_background.9.png");
+					Assert.IsNotNull (data, "common_google_signin_btn_icon_dark_normal_background.9.png.png should be in {0}android/bin/packaged_resources",
 						proj.IntermediateOutputPath);
 					png = PNGChecker.LoadFromBytes (data);
-					Assert.IsTrue (png.Is9Patch, "common_signin_btn_icon_normal_dark.9.png should have been processed into a 9 patch image.");
+					Assert.IsTrue (png.Is9Patch, "common_google_signin_btn_icon_dark_normal_background.9.png should have been processed into a 9 patch image.");
 					Directory.Delete (Path.Combine (Root,projectPath), recursive: true);
 				}
 			}
 		}
 
 		[Test]
-		[NonParallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
@@ -421,10 +394,8 @@ namespace UnnamedProject
 	}
 }"
 			});
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7Palette_22_1_1_1);
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), cleanupOnDispose: false))
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), cleanupOnDispose: false)) {
 				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
@@ -1023,9 +994,8 @@ namespace UnnamedProject
 					}
 				},
 				PackageReferences = {
-					new Package (KnownPackages.AndroidSupportV13_21_0_3_0, audoAddReferences:true),
-					new Package (KnownPackages.AndroidSupportV4_21_0_3_0, audoAddReferences:true),
-					new Package (KnownPackages.SupportV7AppCompat_21_0_3_0, audoAddReferences:true),
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
@@ -1183,13 +1153,13 @@ namespace Lib1 {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");

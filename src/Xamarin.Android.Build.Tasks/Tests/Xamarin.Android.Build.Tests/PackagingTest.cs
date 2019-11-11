@@ -374,20 +374,20 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			//https://github.com/xamarin/xamarin-android/issues/3083
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFrameworkVersion = "v7.1",
+				TargetFrameworkVersion = Versions.Oreo_27,
 				UseLatestPlatformSdk = false,
 			};
 			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_25_4_0_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_25_4_0_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -442,7 +442,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				IsRelease = true,
 				PackageTargetFallback = "portable-net45+win8+wpa81+wp8",
 				PackageReferences = {
-					KnownPackages.XamarinFormsPCL_2_3_4_231,
+					KnownPackages.XamarinForms_2_3_4_231,
 					new Package () {
 						Id = "System.IO.Packaging",
 						Version = "4.4.0",
@@ -535,15 +535,16 @@ namespace XamFormsSample
 						netStandardProject.ProjectName, netStandardProject.ProjectGuid),
 				},
 				PackageReferences = {
-					KnownPackages.SupportDesign_25_4_0_1,
-					KnownPackages.SupportV7CardView_24_2_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportDesign_27_0_2_1,
+					KnownPackages.SupportV7CardView_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.SupportV7MediaRouter_27_0_2_1,
 					KnownPackages.XamarinForms_2_3_4_231,
 					new Package () {
 						Id = "System.Runtime.Loader",
@@ -587,6 +588,9 @@ namespace App1
 				"Mono.Android.Export.dll",
 				"App1.dll",
 				"FormsViewGroup.dll",
+				"Xamarin.Android.Arch.Core.Common.dll",
+				"Xamarin.Android.Arch.Lifecycle.Common.dll",
+				"Xamarin.Android.Arch.Lifecycle.Runtime.dll",
 				"Xamarin.Android.Support.Compat.dll",
 				"Xamarin.Android.Support.Core.UI.dll",
 				"Xamarin.Android.Support.Core.Utils.dll",
@@ -602,6 +606,7 @@ namespace App1
 				"Xamarin.Android.Support.v7.RecyclerView.dll",
 				"Xamarin.Android.Support.Annotations.dll",
 				"Xamarin.Android.Support.v7.CardView.dll",
+				"Xamarin.Android.Support.v7.Palette.dll",
 				"Xamarin.Forms.Core.dll",
 				"Xamarin.Forms.Platform.Android.dll",
 				"Xamarin.Forms.Platform.dll",

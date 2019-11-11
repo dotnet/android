@@ -69,10 +69,7 @@
     </BuildDependsOn>
   </PropertyGroup>
   <ItemGroup>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\x86\libsimple.so" />
-    <AndroidNativeLibrary Include="libs\x86_64\libsimple.so" />
+    <LibraryProjectZip Include="$(OutputPath)JavaLib.aar" />
   </ItemGroup>
   <ItemGroup>
     <InputJar Include="java\JavaLib\library\build\intermediates\packaged-classes\debug\classes.jar">

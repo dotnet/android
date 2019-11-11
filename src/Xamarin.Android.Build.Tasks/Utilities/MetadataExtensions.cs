@@ -28,33 +28,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 		/// <summary>
-		/// Returns the TargetFrameworkIdentifier of an assembly, or null if not found
-		/// </summary>
-		public static string GetTargetFrameworkIdentifier (this AssemblyDefinition assembly, MetadataReader reader)
-		{
-			foreach (var handle in assembly.GetCustomAttributes ()) {
-				var attribute = reader.GetCustomAttribute (handle);
-				var name = reader.GetCustomAttributeFullName (attribute);
-				if (name == "System.Runtime.Versioning.TargetFrameworkAttribute") {
-					var arguments = attribute.GetCustomAttributeArguments ();
-					foreach (var p in arguments.FixedArguments) {
-						// Of the form "MonoAndroid,Version=v8.1"
-						var value = p.Value?.ToString ();
-						if (!string.IsNullOrEmpty (value)) {
-							int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
-							if (commaIndex != -1) {
-								return value.Substring (0, commaIndex);
-							}
-						}
-					}
-					return null;
-				}
-			}
-			return null;
-		}
-
-
-		/// <summary>
 		/// Get the bytes in an embedded resource as a Stream.
 		/// WARNING: It is incorrect to read from this stream after the PEReader has been disposed.
 		/// 

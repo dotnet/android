@@ -20,32 +20,3 @@ using Android.App;
 // if desired. See the Mono documentation for more information about signing.
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
-
-[assembly: Android.IncludeAndroidResourcesFromAttribute ("./",
-	SourceUrl="file:///JavaLib.zip")]
-[assembly: Java.Interop.JavaLibraryReference ("classes.jar",
-	SourceUrl="file:///JavaLib.zip")]
-
-// native library path should contain abi
-[assembly: Android.NativeLibraryReference ("arm64-v8a/libsimple.so",
-	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
-[assembly: Android.NativeLibraryReference ("armeabi-v7a/libsimple.so",
-	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
-[assembly: Android.NativeLibraryReference ("x86/libsimple.so",
-	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
-[assembly: Android.NativeLibraryReference ("x86_64/libsimple.so",
-	SourceUrl="file:///NativeLib.zip", Version="native-lib-1")]
-
-// native library path should contain abi
-[assembly: Android.NativeLibraryReference ("arm64-v8a/libsimple2.so",
-	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
-	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
-[assembly: Android.NativeLibraryReference ("armeabi-v7a/libsimple2.so",
-	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
-	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
-[assembly: Android.NativeLibraryReference ("x86/libsimple2.so",
-	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
-	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
-[assembly: Android.NativeLibraryReference ("x86_64/libsimple2.so",
-	EmbeddedArchive="aar-test/EmbeddedNativeLib.zip",
-	SourceUrl="file:///NativeLib2.zip", Version="native-lib-2")]
