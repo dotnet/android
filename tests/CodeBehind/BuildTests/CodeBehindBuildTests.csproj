@@ -19,6 +19,7 @@
     <AndroidGenerateLayoutBindings>True</AndroidGenerateLayoutBindings>
     <DebugType>portable</DebugType>
   </PropertyGroup>
+  <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
