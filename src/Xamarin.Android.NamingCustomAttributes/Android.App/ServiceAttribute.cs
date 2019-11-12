@@ -7,8 +7,8 @@ using Android.Views;
 namespace Android.App {
 
 	[Serializable]
-	[AttributeUsage (AttributeTargets.Class, 
-			AllowMultiple=false, 
+	[AttributeUsage (AttributeTargets.Class,
+			AllowMultiple=false,
 			Inherited=false)]
 	public sealed partial class ServiceAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
@@ -23,6 +23,9 @@ namespace Android.App {
 #endif
 		public bool                   Enabled                 {get; set;}
 		public bool                   Exported                {get; set;}
+#if ANDROID_29
+		public ForegroundService      ForegroundServiceType   {get; set;}
+#endif
 		[Category ("@drawable;@mipmap")]
 		public string                 Icon                    {get; set;}
 #if ANDROID_16
