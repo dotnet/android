@@ -185,6 +185,7 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
 			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
 			{ typeof (DocumentLaunchMode),  (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
+			{ typeof (ForegroundService),   (value, p, r, v) => ToString ((ForegroundService) value) },
 			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
 			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
 			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
@@ -192,7 +193,6 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (UiOptions),           (value, p, r, v) => ToString ((UiOptions) value) },
 			{ typeof (Type),                (value, p, r, v) => ToString (value.ToString (), p, r) },
 			{ typeof (WindowRotationAnimation),     (value, p, r, v) => ToString ((WindowRotationAnimation) value) },
-			{ typeof (ForegroundService),     (value, p, r, v) => ToString ((ForegroundService) value) },
 		};
 
 		static string ToString (bool value)
