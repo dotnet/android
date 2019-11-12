@@ -19,9 +19,9 @@ The recommended steps to install these dependencies are:
     the **Optional** items for the workload, ensure the following items are
     installed:
 
-      * **.NET Framework 4 &ndash; 4.6 development tools**
-      * **.NET Framework 4.6.2 development tools**
-      * **.NET Framework 4.7 development tools**
+      * **.NET Framework 4 &ndash; 4.6 SDKs**
+      * **.NET Framework 4.6.2 SDK**
+      * **.NET Framework 4.7 SDK**
       * **.NET Core 2.0 development tools**
 
     The following items are also recommended:
@@ -35,10 +35,3 @@ The recommended steps to install these dependencies are:
  5. Ensure the .NET Framework 3.5 SP1 Runtime is installed by downloading and
     running the installer from
     <https://www.microsoft.com/net/download/visual-studio-sdks>.
-
- 6. Download and install the Java SE 8 JDK from the [Oracle
-    website][oracle-jdk].  You can use either the Windows x64 or Windows x86
-    version.  Make sure **Development Tools** is selected for installation when
-    running the installer.
-
-[oracle-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
