@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
+  <Import Project="..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.props" Condition="Exists('..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -186,6 +187,11 @@
     <Compile Include="Tasks\AndroidToolTask.cs" />
     <Compile Include="Tasks\PrepareAbiItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Mono.Android\ApplicationAttribute.Partial.cs" />
     <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
@@ -589,6 +595,26 @@
     <Compile Include="Tasks\GetAndroidActivityName.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="Properties\xlf\Resources.fr.xlf" />
+    <None Include="Properties\xlf\Resources.cs.xlf" />
+    <None Include="Properties\xlf\Resources.de.xlf" />
+    <None Include="Properties\xlf\Resources.es.xlf" />
+    <None Include="Properties\xlf\Resources.it.xlf" />
+    <None Include="Properties\xlf\Resources.ja.xlf" />
+    <None Include="Properties\xlf\Resources.ko.xlf" />
+    <None Include="Properties\xlf\Resources.pl.xlf" />
+    <None Include="Properties\xlf\Resources.pt-BR.xlf" />
+    <None Include="Properties\xlf\Resources.ru.xlf" />
+    <None Include="Properties\xlf\Resources.tr.xlf" />
+    <None Include="Properties\xlf\Resources.zh-Hans.xlf" />
+    <None Include="Properties\xlf\Resources.zh-Hant.xlf" />
+  </ItemGroup>
+  <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
@@ -752,4 +778,5 @@
   </ItemGroup>
   <Import Project="ILRepack.targets" />
   <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.targets" Condition="Exists('..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.targets')" />
 </Project>
