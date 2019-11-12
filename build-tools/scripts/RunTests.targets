@@ -12,7 +12,7 @@
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>
     <_XABinLogPrefix>/v:normal /binaryLogger:"$(MSBuildThisFileDirectory)\..\..\bin\Test$(Configuration)\msbuild</_XABinLogPrefix>
     <_XABuildDiag Condition=" '$(USE_MSBUILD)' == '0' And '$(V)' != '' ">/v:diag </_XABuildDiag>
-    <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration) /p:XAIntegratedTests=$(XAIntegratedTests)</_XABuildProperties>
+    <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration)</_XABuildProperties>
   </PropertyGroup>
   <ItemGroup>
     <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.Build.Tests.dll" />
