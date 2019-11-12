@@ -1011,7 +1011,7 @@ namespace UnamedProject
 		[Test]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				DexTool = dexTool,
 				LinkTool = linkTool,
@@ -1023,6 +1023,11 @@ namespace UnamedProject
 					var proguardProjectPrimary = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "proguard", "proguard_project_primary.cfg");
 					FileAssert.Exists (proguardProjectPrimary);
 					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+
+					var toolbar_class = "android.support.v7.widget.Toolbar";
+					var aapt_rules = b.Output.GetIntermediaryPath ("aapt_rules.txt");
+					FileAssert.Exists (aapt_rules);
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (aapt_rules), $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
 				}
 
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
@@ -1030,6 +1035,7 @@ namespace UnamedProject
 				var classes = new [] {
 					"Lmono/MonoRuntimeProvider;",
 					"Landroid/runtime/UncaughtExceptionHandler;",
+					"Landroid/support/v7/widget/Toolbar;"
 				};
 				foreach (var className in classes) {
 					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
