@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 				/* xamarinForms */  true,
 			},
 			new object[] {
-				/* limit */         77,
+				/* limit */         71,
 				/* xamarinForms */  false,
 			},
 		};
@@ -41,9 +41,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
-			// Force the old MD5 naming policy, and remove [Register]
-			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseHash");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("Register (\"${JAVA_PACKAGENAME}.MainActivity\"), ", "");
 			return proj;
 		}
 
@@ -67,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 				/* xamarinForms */  true,
 			},
 			new object[] {
-				/* limit */         76,
+				/* limit */         70,
 				/* xamarinForms */  false,
 			},
 		};
