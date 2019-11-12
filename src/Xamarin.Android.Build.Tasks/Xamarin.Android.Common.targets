@@ -1172,7 +1172,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
-<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion">
+<Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
 	<ItemGroup>
 		<!--- List of items we want to trigger a build if changed -->
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
@@ -1206,7 +1206,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
-			Lines="@(_PropertyCacheItems)"
+			Lines="@(_PropertyCacheItems->ToLowerInvariant())"
 			Overwrite="true"
 			WriteOnlyWhenDifferent="true"
 	/>
