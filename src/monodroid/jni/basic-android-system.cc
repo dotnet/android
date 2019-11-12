@@ -16,12 +16,12 @@ BasicAndroidSystem::setup_app_library_directories (JNIEnv *env, jstring_array_wr
 	if (androidApiLevel < 23 || !is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
-		BasicAndroidSystem::app_lib_directories = reinterpret_cast<const char**>(new char[app_lib_directories_size]());
+		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[2].get_cstr ());
 	} else {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
-		BasicAndroidSystem::app_lib_directories = reinterpret_cast<const char**>(new char[app_lib_directories_size]());
+		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 
 		unsigned short built_for_cpu = 0, running_on_cpu = 0;
 		unsigned char is64bit = 0;
