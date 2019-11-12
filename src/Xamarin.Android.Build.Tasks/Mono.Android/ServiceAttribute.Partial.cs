@@ -8,12 +8,15 @@ using Java.Interop.Tools.Cecil;
 
 using Xamarin.Android.Manifest;
 
+using Android.Content.PM;
+
 namespace Android.App {
 
 	partial class ServiceAttribute {
 
 		bool  _IsolatedProcess;
 		string _RoundIcon;
+		ForegroundService _ForegroundServiceType;
 
 		static ManifestDocumentElement<ServiceAttribute> mapping = new ManifestDocumentElement<ServiceAttribute> ("service") {
 			{
@@ -31,6 +34,11 @@ namespace Android.App {
 			  "exported",
 			  self          => self.Exported,
 			  (self, value) => self.Exported  = (bool) value
+			}, {
+			  "ForegroundServiceType",
+			  "foregroundServiceType",
+			  self          => self._ForegroundServiceType,
+			  (self, value) => self._ForegroundServiceType  = (ForegroundService) value
 			}, {
 			  "Icon",
 			  "icon",
