@@ -7,9 +7,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Mono.Cecil;
-
-using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
@@ -115,27 +112,24 @@ namespace Xamarin.Android.Tasks
 
 			// Create static resource overwrite methods for each Resource class in libraries.
 			if (IsApplication && References != null && References.Length > 0) {
-				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
-				var assemblies = new List<AssemblyDefinition> (References.Length);
-				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-					foreach (var assembly in References) {
-						var assemblyPath = assembly.ItemSpec;
-						var fileName = Path.GetFileName (assemblyPath);
-						if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-								!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName)) {
-							Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
-							continue;
-						}
-						if (!File.Exists (assemblyPath)) {
-							Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
-							continue;
-						}
-						assemblies.Add (resolver.Load (assemblyPath));
-						Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
+				var assemblies = new List<string> (References.Length);
+				foreach (var assembly in References) {
+					var assemblyPath = assembly.ItemSpec;
+					var fileName = Path.GetFileName (assemblyPath);
+					if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
+							!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName)) {
+						Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
+						continue;
 					}
-					new ResourceDesignerImportGenerator (Namespace, resources, Log)
-						.CreateImportMethods (assemblies);
+					if (!File.Exists (assemblyPath)) {
+						Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
+						continue;
+					}
+					assemblies.Add (assemblyPath);
+					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
+				new ResourceDesignerImportGenerator (Namespace, resources, Log)
+					.CreateImportMethods (assemblies);
 			}
 
 			AdjustConstructor (isFSharp, resources);
