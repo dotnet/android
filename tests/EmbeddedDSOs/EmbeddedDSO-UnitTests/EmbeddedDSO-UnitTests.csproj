@@ -4,13 +4,12 @@
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>EmbeddedDSOUnitTests</RootNamespace>
     <AssemblyName>EmbeddedDSOUnitTests</AssemblyName>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
 
   <ItemGroup>
     <Reference Include="Xamarin.Android.Build.Tasks">

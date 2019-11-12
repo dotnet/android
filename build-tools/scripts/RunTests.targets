@@ -5,8 +5,8 @@
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
     <_Test Condition=" '$(TEST)' != '' ">--test=&quot;$(TEST)&quot;</_Test>
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>

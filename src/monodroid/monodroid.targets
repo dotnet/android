@@ -5,8 +5,8 @@
   <Import Project="monodroid.projitems" />
   <Import Project="..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
   <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <ItemGroup>
     <_EmbeddedBlobSource Include="config.xml" />
     <_EmbeddedBlobDestination Include="jni\config.include" />

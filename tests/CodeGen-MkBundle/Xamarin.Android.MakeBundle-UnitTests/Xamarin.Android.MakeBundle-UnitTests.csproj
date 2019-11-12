@@ -4,7 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xamarin.Android.MakeBundle.UnitTests</RootNamespace>
     <AssemblyName>Xamarin.Android.MakeBundle-UnitTests</AssemblyName>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
