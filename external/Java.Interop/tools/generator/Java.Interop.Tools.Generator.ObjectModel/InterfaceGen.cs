@@ -46,7 +46,7 @@ namespace MonoDroid.Generation
 		public override void FixupAccessModifiers (CodeGenerationOptions opt)
 		{
 			if (!IsAnnotation) {
-				foreach (var implementedInterface in ImplementedInterfaces) { 
+				foreach (var implementedInterface in ImplementedInterfaces) {
 					if (string.IsNullOrEmpty (implementedInterface)) {
 						System.Diagnostics.Debug.Assert (false, "BUGBUG - We should never have an empty or null string added on the implemented interface list.");
 						continue;
@@ -62,7 +62,7 @@ namespace MonoDroid.Generation
 					}
 				}
 			}
-			
+
 
 			base.FixupAccessModifiers (opt);
 		}
@@ -77,13 +77,18 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("using Java.Interop;");
 				}
 				sw.WriteLine ();
-				sw.WriteLine ("namespace {0} {{", Namespace);
-				sw.WriteLine ();
+				var hasNamespace = !string.IsNullOrWhiteSpace (Namespace);
+				if (hasNamespace) {
+					sw.WriteLine ("namespace {0} {{", Namespace);
+					sw.WriteLine ();
+				}
 
 				var generator = opt.CreateCodeGenerator (sw);
-				generator.WriteInterface (this, "\t", gen_info);
+				generator.WriteInterface (this, hasNamespace ? "\t" : string.Empty, gen_info);
 
-				sw.WriteLine ("}");
+				if (hasNamespace) {
+					sw.WriteLine ("}");
+				}
 			}
 
 			GenerateAnnotationAttribute (opt, gen_info);

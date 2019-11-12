@@ -131,7 +131,7 @@ namespace MonoDroid.Generation
 				PackageName = pkg.XGetAttribute ("name"),
 				Visibility = elem.XGetAttribute ("visibility")
 			};
-			
+
 			if (support.IsDeprecated) {
 				support.DeprecatedComment = elem.XGetAttribute ("deprecated");
 
@@ -165,7 +165,7 @@ namespace MonoDroid.Generation
 
 			if (elem.Attribute ("managedName") != null) {
 				support.Name = elem.XGetAttribute ("managedName");
-				support.FullName = string.Format ("{0}.{1}", support.Namespace, support.Name);
+				support.FullName = string.IsNullOrWhiteSpace(support.Namespace) ? support.Name : $"{support.Namespace}.{support.Name}";
 				int idx = support.Name.LastIndexOf ('.');
 				support.Name = idx > 0 ? support.Name.Substring (idx + 1) : support.Name;
 				raw_name = support.Name;
@@ -177,7 +177,9 @@ namespace MonoDroid.Generation
 				raw_name = support.Name;
 				support.TypeNamePrefix = isInterface ? IsPrefixableName (raw_name) ? "I" : string.Empty : string.Empty;
 				support.Name = EnsureValidIdentifer (support.TypeNamePrefix + raw_name);
-				support.FullName = string.Format ("{0}.{1}{2}", support.Namespace, idx > 0 ? StringRocks.TypeToPascalCase (support.JavaSimpleName.Substring (0, idx + 1)) : string.Empty, support.Name);
+				var supportNamespace = string.IsNullOrWhiteSpace (support.Namespace) ? string.Empty : $"{support.Namespace}.";
+				var supportSimpleName = idx > 0 ? StringRocks.TypeToPascalCase (support.JavaSimpleName.Substring (0, idx + 1)) : string.Empty;
+				support.FullName = string.Format ("{0}{1}{2}", supportNamespace, supportSimpleName, support.Name);
 			}
 
 			support.IsObfuscated = IsObfuscatedName (pkg.Elements ().Count (), support.JavaSimpleName) && elem.XGetAttribute ("obfuscated") != "false";

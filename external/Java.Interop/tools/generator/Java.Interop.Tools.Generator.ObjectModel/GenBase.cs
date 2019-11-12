@@ -170,8 +170,9 @@ namespace MonoDroid.Generation
 
 		// not: not currently assembly qualified, but it uses needed
 		// Type.GetType() conventions such as '/' for nested types.
-		public string AssemblyQualifiedName =>
-			$"{Namespace}.{FullName.Substring (Namespace.Length + 1).Replace ('.', '/')}";
+		public string AssemblyQualifiedName => string.IsNullOrWhiteSpace (Namespace)
+			? $"{FullName.Replace ('.', '/')}"
+			: $"{Namespace}." + $"{FullName.Substring (Namespace.Length + 1).Replace ('.', '/')}";
 
 		public int ApiAvailableSince { get; set; }
 
@@ -590,7 +591,9 @@ namespace MonoDroid.Generation
 
 		public bool IsValid { get; set; } = true;
 
-		public string JavaName => $"{PackageName}.{JavaSimpleName}";
+		public string JavaName => string.IsNullOrWhiteSpace (PackageName)
+			? JavaSimpleName
+			: $"{PackageName}.{JavaSimpleName}";
 
 		public string JavaSimpleName => support.JavaSimpleName;
 
@@ -718,7 +721,7 @@ namespace MonoDroid.Generation
 
 		public string [] PostCallback (CodeGenerationOptions opt, string var_name) => new string [] { };
 
-		public string RawJniName => PackageName.Replace ('.', '/') + "/" + JavaSimpleName.Replace ('.', '$');
+		public string RawJniName => (string.IsNullOrWhiteSpace (PackageName) ? string.Empty : PackageName.Replace ('.', '/') + "/") + JavaSimpleName.Replace ('.', '$');
 
 		public string RawVisibility => support.Visibility;
 

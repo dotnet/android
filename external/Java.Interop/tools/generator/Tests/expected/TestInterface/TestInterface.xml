@@ -50,7 +50,7 @@
 			<implements name="test.me.TestInterface" name-generic-aware="test.me.TestInterface" />
 			<constructor deprecated="not deprecated" final="false" name="TestInterfaceImplementation" static="false" visibility="public" />
 		</class>
-		<!-- 
+		<!--
 			public interface GenericInterface<T> {
 				void SetObject(T item);
 			}
@@ -87,7 +87,7 @@
 				<parameter name="value" type="java.lang.String[]" />
 			</method>
 		</class>
-		<!-- 
+		<!--
 			public interface GenericPropertyInterface<T> {
 				T getObject();
 				void setObject(T value);
@@ -136,6 +136,15 @@
 			<method abstract="false" deprecated="not deprecated" final="false" name="SetObject" native="false" return="void" static="false" synchronized="false" visibility="public">
 				<parameter name="value" type="java.lang.String" />
 			</method>
+		</class>
+	</package>
+  <package name="">
+    <interface abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="InterfaceWithoutNamespace" static="false" visibility="public">
+      <method abstract="true" deprecated="not deprecated" final="false" name="Foo" native="false" return="void" static="false" synchronized="false" visibility="public" />
+		</interface>
+    <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="ClassWithoutNamespace" static="false" visibility="public">
+			<implements name="InterfaceWithoutNamespace" name-generic-aware="InterfaceWithoutNamespace" />
+			<constructor deprecated="not deprecated" final="false" name="ClassWithoutNamespace" static="false" visibility="public" />
 		</class>
 	</package>
 </api>

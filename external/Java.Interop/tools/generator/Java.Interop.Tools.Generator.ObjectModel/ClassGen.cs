@@ -137,13 +137,18 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("using Java.Interop;");
 				}
 				sw.WriteLine ();
-				sw.WriteLine ("namespace {0} {{", Namespace);
-				sw.WriteLine ();
+				var hasNamespace = !string.IsNullOrWhiteSpace (Namespace);
+				if (hasNamespace) {
+					sw.WriteLine ("namespace {0} {{", Namespace);
+					sw.WriteLine ();
+				}
 
 				var generator = opt.CreateCodeGenerator (sw);
-				generator.WriteClass (this, "\t", gen_info);
+				generator.WriteClass (this, hasNamespace ? "\t" : string.Empty, gen_info);
 
-				sw.WriteLine ("}");
+				if (hasNamespace) {
+					sw.WriteLine ("}");
+				}
 			}
 		}
 
