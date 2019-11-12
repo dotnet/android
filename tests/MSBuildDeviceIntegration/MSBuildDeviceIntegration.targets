@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="_RemapAssemblies" AfterTargets="Build">
     <ItemGroup>
-      <_Source Include="..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\Mono.Debugging.Soft.dll">
+      <_Source Include="..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\net472\Mono.Debugging.Soft.dll">
         <From>Mono.Cecil</From>
-        <To>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\Xamarin.Android.Cecil.dll</To>
+        <To>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\net472\Xamarin.Android.Cecil.dll</To>
       </_Source>
-      <_Source Include="..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\Mono.Debugger.Soft.dll">
+      <_Source Include="..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\net472\Mono.Debugger.Soft.dll">
         <From>Mono.Cecil</From>
-        <To>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\Xamarin.Android.Cecil.dll</To>
+        <To>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\net472\Xamarin.Android.Cecil.dll</To>
       </_Source>
     </ItemGroup>
     <Copy SourceFiles="..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll"

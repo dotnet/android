@@ -3,7 +3,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(CrossTargetingFrameworks)</TargetFrameworks>
+    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <RootNamespace>Xamarin.Android.BuildTools.PrepTasks</RootNamespace>
     <OutputPath>$(SupportingBuildTasksOutputRoot)</OutputPath>
   </PropertyGroup>

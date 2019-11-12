@@ -9,7 +9,7 @@
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
-    <_GeneratedProfileClass>Profile.g.cs</_GeneratedProfileClass>
+    <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
     <BuildDependsOn>
       _CopyNDKTools;
       _GenerateXACommonProps;
@@ -213,7 +213,7 @@
   </Target>
   <Target Name="_GenerateXACommonProps"
       DependsOnTargets="GetXAVersionInfo"
-      BeforeTargets="CoreCompile"
+      BeforeTargets="DeployOutputFiles"
       Inputs="Xamarin.Android.Common.props.in;Xamarin.Android.BuildInfo.txt.in;..\..\build-tools\scripts\Ndk.targets"
       Outputs="Xamarin.Android.Common.props;Xamarin.Android.BuildInfo.txt">
     <ReplaceFileContents
@@ -230,17 +230,17 @@
   <Target Name="_GenerateProfileClass"
       BeforeTargets="CoreCompile"
       Inputs="@(_SharedRuntimeAssemblies)"
-      Outputs="$(IntermediateOutputPath)(_GeneratedProfileClass)">
+      Outputs="$(_GeneratedProfileClass)">
     <ItemGroup>
       <_SharedRuntimeAssemblies Remove="$(_SharedRuntimeBuildPath)v1.0\FSharp.Core.dll" />
     </ItemGroup>
-    <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(IntermediateOutputPath)$(_GeneratedProfileClass)" />
+    <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
-        Lines="$(IntermediateOutputPath)$(_GeneratedProfileClass)"
+        Lines="$(_GeneratedProfileClass)"
         Overwrite="false"/>
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)$(_GeneratedProfileClass)" />
+      <FileWrites Include="$(_GeneratedProfileClass)" />
     </ItemGroup>
   </Target>
   

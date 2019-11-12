@@ -4,7 +4,7 @@
   <Import Project="..\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <RootBuildDir>$(XamarinAndroidSourcePath)bin\$(Configuration)\</RootBuildDir>
     <FrameworkSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
@@ -193,6 +193,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\manifestmerger.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />

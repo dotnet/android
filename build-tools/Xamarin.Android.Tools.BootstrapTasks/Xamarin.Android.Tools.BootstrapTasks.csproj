@@ -3,7 +3,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(CrossTargetingFrameworks)</TargetFrameworks>
+    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>$(SupportingBuildTasksOutputRoot)</OutputPath>
   </PropertyGroup>

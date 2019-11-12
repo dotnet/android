@@ -1,13 +1,13 @@
 ﻿﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\..\..\..\Configuration.props" />
+  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
+
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
-
-  <Import Project="..\..\..\..\Configuration.props" />
-  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
 
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
