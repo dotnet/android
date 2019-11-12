@@ -24,7 +24,7 @@ variables:
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: VSEng-MicroBuildVS2019
+  VSEngWinVS2019: VSEng-Xamarin-Android
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
